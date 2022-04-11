@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="ChannelListView">
+        <attr name="titleColor" format="color" />
+        <attr name="descColor" format="color" />
+        <attr name="unreadCountColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="Avatar">
+        <attr name="imageUrl" format="string" />
+        <attr name="fullName" format="string" />
+        <attr name="isGroup" format="boolean" />
+    </declare-styleable>
+</resources>
