@@ -5,15 +5,13 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
-import android.view.ViewGroup
-import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.bumptech.glide.request.transition.DrawableCrossFadeFactory
 import com.sceyt.chat.ui.R
-import kotlin.math.abs
+import com.sceyt.chat.ui.extencions.glideRequestListener
 
 
 class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -22,6 +20,8 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     private var fullName: String? = null
     private var imageUrl: String? = null
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
+    private val backgroundColor by lazy { getAvatarColor() }
 
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -37,29 +37,11 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
 
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
-
-        if (!imageUrl.isNullOrBlank()) {
-            val drawableTransitionOptions = DrawableTransitionOptions().crossFade(DrawableCrossFadeFactory.Builder().setCrossFadeEnabled(true).build())
-
-            Glide.with(context)
-                .load(imageUrl)
-                .transition(drawableTransitionOptions)
-                .error(R.color.colorAccent)
-                .placeholder(R.drawable.bg_circle_gray)
-                /* .listener(glideRequestListener {
-                     // progress.isVisible=false
-                 })*/
-                .circleCrop()
-                .into(this)
-        } else {
+        if (imageUrl.isNullOrBlank()) {
             setImageResource(0)
             drawBackgroundColor(canvas)
             drawName(canvas)
         }
-        /*val progress = ProgressBar(context)
-        progress.setBackgroundColor(Color.YELLOW)
-        progress.layoutParams = ViewGroup.LayoutParams(width / 2, width / 2)
-        progress.draw(canvas)*/
     }
 
     private fun drawName(canvas: Canvas) {
@@ -76,7 +58,7 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     private fun drawBackgroundColor(canvas: Canvas) {
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
-            color = getAvatarColor(arrayListOf(1, 2, 4, 5, 45, 5, 6, 4, 3, 2, 4, 56).random().toLong()).toColorInt()
+            color = backgroundColor.toColorInt()
         })
     }
 
@@ -88,33 +70,43 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         } else strings[0].first().uppercase()
     }
 
-    private fun getAvatarColor(channelCreateTime: Long): String {
-
+    private fun getAvatarColor(): String {
         val colors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
+        var colorIndex: Int = (0..6).random()
 
-        var colorIndex: Int = abs(channelCreateTime % 10).toInt()
-
-        if (colorIndex >= colors.size) {
+        if (colorIndex >= colors.size)
             colorIndex -= colors.size
-        }
 
         return colors[colorIndex]
     }
 
-    fun setImageUrl(url: String?) {
-        imageUrl = url
-        invalidate()
-    }
+    private fun loadAvatarImage() {
+        if (!imageUrl.isNullOrBlank()) {
+            avatarLoadCb?.invoke(true)
 
-    fun setName(name: String) {
-        fullName = name
-        invalidate()
+            Glide.with(context)
+                .load(imageUrl)
+                .override(width)
+                .transition(DrawableTransitionOptions.withCrossFade(100))
+                .error(R.drawable.bg_circle_gray)
+                .placeholder(R.drawable.bg_circle_gray)
+                .listener(glideRequestListener {
+                    avatarLoadCb?.invoke(false)
+                })
+                .circleCrop()
+                .into(this)
+        }
     }
 
     fun setNameAndImageUrl(name: String, url: String?) {
         fullName = name
         imageUrl = url
         invalidate()
+        loadAvatarImage()
+    }
+
+    fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {
+        avatarLoadCb = cb
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

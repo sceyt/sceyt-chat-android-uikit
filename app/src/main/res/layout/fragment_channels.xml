@@ -4,11 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.sceyt.chat.ui.presentation.ChannelListView
-        android:id="@+id/rvChannels"
+    <com.sceyt.chat.ui.presentation.channels.components.ChannelListView
+        android:id="@+id/channelListView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!--app:titleColor="@color/teal_200"-->
+        android:layout_height="match_parent"
+        app:sceytUiUnreadMessageCounterTextColor="@color/teal_200"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

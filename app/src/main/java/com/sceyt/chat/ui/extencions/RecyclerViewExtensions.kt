@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.extencions
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -112,7 +113,7 @@ fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, call
 
 
 inline fun RecyclerView.addRVScrollListener(crossinline onScrollStateChanged: (recyclerView: RecyclerView, newState: Int) -> Unit = { _, _ -> },
-                                            crossinline onAnimationStart: (recyclerView: RecyclerView, dx: Int, dy: Int) -> Unit = { _, _, _ -> }) {
+                                            crossinline onScrolled: (recyclerView: RecyclerView, dx: Int, dy: Int) -> Unit = { _, _, _ -> }) {
     addOnScrollListener(object : RecyclerView.OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
@@ -121,7 +122,9 @@ inline fun RecyclerView.addRVScrollListener(crossinline onScrollStateChanged: (r
 
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            onAnimationStart(recyclerView, dx, dy)
+            if (dx == 0 && dy == 0)
+                return
+            onScrolled(recyclerView, dx, dy)
         }
     })
 }
