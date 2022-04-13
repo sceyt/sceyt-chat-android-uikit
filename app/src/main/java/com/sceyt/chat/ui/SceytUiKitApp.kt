@@ -2,7 +2,6 @@ package com.sceyt.chat.ui
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.android.volley.Request
@@ -23,6 +22,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserPresenceStatus
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.sceyt_listeners.MessageListener
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import org.json.JSONObject
 import java.util.*
 
@@ -50,6 +50,7 @@ class SceytUiKitApp : Application() {
         initSceyt()
         setSceytListeners()
         connect()
+        SceytUIKitConfig.initApp(this)
     }
 
     private fun initSceyt() {
