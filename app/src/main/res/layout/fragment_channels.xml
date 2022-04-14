@@ -8,6 +8,7 @@
         android:id="@+id/channelListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:sceytUiUnreadMessageCounterTextColor="@color/teal_200"/>
+        app:sceytUiChannelTitleTextSize="@dimen/_50sdp"
+        app:sceytUiUnreadMessageCounterTextColor="@color/colorGreen" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

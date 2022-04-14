@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.utils
 
 import android.annotation.SuppressLint
+import android.text.format.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -141,5 +142,12 @@ object DateTimeUtil {
                     TimeUnit.MILLISECONDS.toHours(millis)
                 )
             )
+    }
+
+    fun getDateTimeString(time: Long?): String {
+        if (time == null) return ""
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = time
+        return DateFormat.format("HH:mm", cal).toString()
     }
 }

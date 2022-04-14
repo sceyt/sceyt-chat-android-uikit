@@ -8,7 +8,6 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorSecondary">@color/colorPrimary</item>
         <item name="colorControlNormal">@color/colorPrimary</item>
-        <item name="android:textColor">@color/colorFontDark</item>
         <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
@@ -18,9 +17,7 @@
     <style name="AppTheme.NoActionBar">
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item><!--
-        <item name="colorControlNormal">@color/white</item>
-        <item name="android:statusBarColor">@color/white</item>-->
+        <item name="windowNoTitle">true</item>
     </style>
 
     <style name="AppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">

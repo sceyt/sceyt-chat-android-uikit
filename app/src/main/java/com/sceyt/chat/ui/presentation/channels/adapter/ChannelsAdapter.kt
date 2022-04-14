@@ -24,7 +24,11 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val begin = System.nanoTime()
         (holder as BaseChannelViewHolder).bindViews(item = channels[position])
+        val end = System.nanoTime()
+
+        println("onBindViewHolderElapsed time in nanoseconds: ${end - begin}")
     }
 
     override fun getItemCount(): Int = channels.size
@@ -36,6 +40,11 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>)
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         super.onViewDetachedFromWindow(holder)
         (holder as BaseChannelViewHolder).onViewDetachedFromWindow()
+    }
+
+    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        (holder as BaseChannelViewHolder).onViewAttachedFromWindow()
     }
 
     private fun removeLoading() {

@@ -2,6 +2,8 @@ package com.sceyt.chat.ui.extencions
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
@@ -17,8 +19,21 @@ import androidx.datastore.preferences.preferencesDataStore
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
+
+fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
+    val res = resources
+    val configuration = Configuration(res.configuration)
+    configuration.uiMode = Configuration.UI_MODE_NIGHT_YES
+    return createConfigurationContext(configuration).getCompatColor(colorId)
+}
+
+fun Context.getCompatColorByTheme(@ColorRes colorId: Int, isDark: Boolean): Int {
+    val res = resources
+    val configuration = Configuration(res.configuration)
+    configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+    return createConfigurationContext(configuration).getCompatColor(colorId)
+}
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)
 

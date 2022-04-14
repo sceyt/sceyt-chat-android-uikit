@@ -6,6 +6,8 @@
 
     <data>
 
+        <import type="com.sceyt.chat.ui.R"/>
+
         <variable
             name="channel"
             type="com.sceyt.chat.ui.data.models.SceytUiChannel" />
@@ -60,6 +62,7 @@
             app:layout_constraintEnd_toStartOf="@id/infoBarrier"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintTop_toTopOf="@id/avatar"
+            bind:themedTextColor="@{R.color.colorFontDark}"
             tools:text="Title" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -100,12 +103,13 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp"
             android:src="@drawable/ic_status_read"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/updateDate"
             app:layout_constraintEnd_toStartOf="@id/updateDate"
             app:layout_constraintTop_toTopOf="@id/updateDate"
             bind:incoming="@{channel.lastMessage.incoming}"
             bind:status="@{channel.lastMessage.deliveryStatus}"
-            bind:visibleIf="@{!channel.lastMessage.incoming}" />
+            tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/messageCount"
@@ -124,7 +128,8 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/updateDate"
-            tools:text="9" />
+            tools:text="9"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

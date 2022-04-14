@@ -1,21 +1,22 @@
 package com.sceyt.chat.ui.sceytconfigs
 
-import android.app.Application
+import androidx.databinding.BaseObservable
+import androidx.databinding.Bindable
+import androidx.databinding.library.baseAdapters.BR
 
 object SceytUIKitConfig {
+    val SceytUITheme = ThemeConfig()
+
     const val CHANNELS_LOAD_SIZE = 20
 
-    private lateinit var app: Application
+    val isDarkMode get() =  SceytUITheme.isDarkMode
 
-    fun initApp(application: Application) {
-        app = application
-    }
-
-    private lateinit var mChannelStyle: ChannelStyle
-
-    fun getChannelsListStyle(): ChannelStyle {
-        return if (::mChannelStyle.isInitialized)
-            mChannelStyle
-        else ChannelStyle(app).also { mChannelStyle = it }
+    class ThemeConfig : BaseObservable() {
+        @Bindable
+        var isDarkMode = false
+            set(value) {
+                field = value
+                notifyPropertyChanged(BR.isDarkMode)
+            }
     }
 }
