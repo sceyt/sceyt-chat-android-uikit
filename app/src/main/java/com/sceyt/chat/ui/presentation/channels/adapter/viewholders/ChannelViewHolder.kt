@@ -2,8 +2,10 @@ package com.sceyt.chat.ui.presentation.channels.adapter.viewholders
 
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
-import android.text.format.DateFormat
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.view.View
+import androidx.appcompat.app.AppCompatDelegate
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
@@ -12,10 +14,12 @@ import com.sceyt.chat.ui.data.models.SceytUiChannel
 import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.SceytUiGroupChannel
 import com.sceyt.chat.ui.databinding.ItemChannelBinding
+import com.sceyt.chat.ui.extencions.getCompatColor
+import com.sceyt.chat.ui.extencions.getCompatColorNight
 import com.sceyt.chat.ui.extencions.getPresentableName
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import java.util.*
+import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
+import com.sceyt.chat.ui.utils.DateTimeUtil
 
 class ChannelViewHolder(private val binding: ItemChannelBinding) : BaseChannelViewHolder(binding.root) {
 
@@ -86,22 +90,18 @@ class ChannelViewHolder(private val binding: ItemChannelBinding) : BaseChannelVi
         if (channel == null) return ""
         val lastMsgCreatedAt = channel.lastMessage?.createdAt
         return if (lastMsgCreatedAt != null && lastMsgCreatedAt.time != 0L)
-            getDateTimeString(lastMsgCreatedAt.time)
+            DateTimeUtil.getDateTimeString(lastMsgCreatedAt.time)
         else
-            getDateTimeString(channel.updatedAt)
-    }
-
-    private fun getDateTimeString(time: Long?): String {
-        if (time == null) return ""
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = time
-        return DateFormat.format("HH:mm", cal).toString()
+            DateTimeUtil.getDateTimeString(channel.updatedAt)
     }
 
     private fun ItemChannelBinding.setChannelItemStyle() {
-        val style = SceytUIKitConfig.getChannelsListStyle()
-        channelTitle.setTextColor(style.titleColor)
-        lastMessage.setTextColor(style.lastMessageTextColor)
-        messageCount.backgroundTintList = ColorStateList.valueOf(style.unreadCountColor)
+        with(root.context) {
+            channelTitle.setTextColor(getCompatColor(ChannelStyle.titleColor))
+            lastMessage.setTextColor(getCompatColor(ChannelStyle.lastMessageTextColor))
+            messageCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
+        }
+
+        //channelTitle.setTextColor( root.context.getCompatColorNight(R.color.colorFontDark))
     }
 }

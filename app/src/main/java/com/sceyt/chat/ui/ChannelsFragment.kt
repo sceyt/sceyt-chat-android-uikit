@@ -29,14 +29,11 @@ class ChannelsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        ChannelViewHolderFactory.clearCash()
-        ChannelViewHolderFactory.cash(requireActivity() as AppCompatActivity)
         (requireActivity().application as SceytUiKitApp).sceytConnectionStatus.observe(viewLifecycleOwner) {
             if (it == Types.ConnectStatus.StatusConnected) {
                 mViewModel.bindView(mBinding.channelListView, viewLifecycleOwner)
             }
         }
-
     }
 
     class MyViewModelFactory : ViewModelProvider.Factory {

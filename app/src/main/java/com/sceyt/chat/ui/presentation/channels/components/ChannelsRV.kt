@@ -8,6 +8,7 @@ import com.sceyt.chat.ui.extencions.addRVScrollListener
 import com.sceyt.chat.ui.extencions.dpToPx
 import com.sceyt.chat.ui.extencions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.channels.adapter.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelsAdapter
 
 class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -18,6 +19,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     init {
         init()
+        ChannelViewHolderFactory.cashViews(context)
     }
 
     private fun init() {
@@ -53,5 +55,10 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun addNewChannels(channels: List<ChannelListItem>) {
         mAdapter.addList(channels as MutableList<ChannelListItem>)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        ChannelViewHolderFactory.clearCash()
     }
 }

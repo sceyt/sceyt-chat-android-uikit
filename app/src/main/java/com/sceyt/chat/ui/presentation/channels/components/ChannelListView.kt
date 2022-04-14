@@ -5,9 +5,10 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.SceytUiChannel
+import com.sceyt.chat.ui.extencions.getCompatColor
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
+import com.sceyt.chat.ui.utils.BindingUtil
 
 class ChannelListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
@@ -15,10 +16,11 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var mChannelsRV: ChannelsRV
 
     init {
-        val chatStyle = SceytUIKitConfig.getChannelsListStyle()
+        setBackgroundColor(context.getCompatColor(R.color.colorBackground))
+        BindingUtil.themedBackgroundColor(this, R.color.colorBackground)
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView)
-            chatStyle.updateWithAttributes(a)
+            ChannelStyle.updateWithAttributes(a)
             a.recycle()
         }
 

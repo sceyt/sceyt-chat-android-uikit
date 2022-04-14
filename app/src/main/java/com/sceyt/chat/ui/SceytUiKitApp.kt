@@ -22,7 +22,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserPresenceStatus
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.sceyt_listeners.MessageListener
-import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import org.json.JSONObject
 import java.util.*
 
@@ -50,7 +49,6 @@ class SceytUiKitApp : Application() {
         initSceyt()
         setSceytListeners()
         connect()
-        SceytUIKitConfig.initApp(this)
     }
 
     private fun initSceyt() {
@@ -88,7 +86,7 @@ class SceytUiKitApp : Application() {
     }
 
     fun connect() {
-      //  val token = getToken()
+        //  val token = getToken()
         if (/*token.isEmpty()*/ true) {
             connectWithoutToken("37494202829")
         }/* else {
@@ -137,7 +135,7 @@ class SceytUiKitApp : Application() {
 
             }, {
                 success.postValue(false)
-            },this)
+            }, this)
         }
 
         return success
