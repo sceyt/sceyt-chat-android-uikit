@@ -21,6 +21,13 @@ class ChannelsRepositoryImpl {
                 .limit(SceytUIKitConfig.CHANNELS_LOAD_SIZE)
                 .build()
 
+    private val querySearch =
+            ChannelListQuery.Builder()
+                .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
+                .order(ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage)
+                .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeySubject)
+                .queryType(ChannelListQuery.ChannelListFilterQueryType.ListQueryFilterContains)
+
     fun getChannels(offset: Int): Flow<SceytResponse<List<SceytUiChannel>>> {
         return flow {
             emit(SceytResponse.Loading(true))
@@ -30,10 +37,43 @@ class ChannelsRepositoryImpl {
         }
     }
 
+    fun searchChannels(offset: Int, query: String): Flow<SceytResponse<List<SceytUiChannel>>> {
+        return flow {
+            emit(SceytResponse.Loading(true))
+
+            val response = getSearchChannelsCoroutine(offset, query)
+            emit(response)
+        }
+    }
+
     private suspend fun getChannelsCoroutine(offset: Int): SceytResponse<List<SceytUiChannel>> {
         return suspendCancellableCoroutine { continuation ->
             query.offset = offset
             query.loadNext(object : ChannelsCallback {
+                override fun onResult(channels: MutableList<Channel>?) {
+                    if (channels.isNullOrEmpty())
+                        continuation.resume(SceytResponse.Success(emptyList()))
+                    else {
+                        continuation.resume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                    }
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    private suspend fun getSearchChannelsCoroutine(offset: Int, searchQuery: String): SceytResponse<List<SceytUiChannel>> {
+        return suspendCancellableCoroutine { continuation ->
+            val channelListQuery = querySearch
+                .query(searchQuery)
+                .offset(offset)
+                .limit(SceytUIKitConfig.CHANNELS_LOAD_SIZE)
+                .build()
+
+            channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
                         continuation.resume(SceytResponse.Success(emptyList()))

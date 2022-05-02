@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.SearchView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/searchView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:background="@drawable/bg_corners_20"
+    android:backgroundTint="#C3C0C0"
+    app:closeIcon="@drawable/ic_cancel"
+    app:iconifiedByDefault="false"
+    app:layout_constraintTop_toTopOf="parent"
+    app:queryBackground="@null"
+    app:queryHint="@string/search"
+    app:searchIcon="@drawable/ic_search" />

@@ -3,36 +3,45 @@ package com.sceyt.chat.ui.presentation.channels.viewmodels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.data.SceytResponse
-import com.sceyt.chat.ui.presentation.channels.components.ChannelListView
+import com.sceyt.chat.ui.extencions.customToastSnackBar
+import com.sceyt.chat.ui.presentation.channels.components.SearchInputView
+import com.sceyt.chat.ui.presentation.channels.components.channels.ChannelsListView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-fun ChannelsViewModel.bindView(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
-
-    loadChannels(0, false)
+fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
     lifecycleOwner.lifecycleScope.launch {
         channelsFlow.collect {
-            if (it is SceytResponse.Success && it.data != null)
-                channelListView.setChannelsList(it.data)
-
-            isLoadingMore = it is SceytResponse.Loading && it.isLoading
+            when (it) {
+                is SceytResponse.Success -> {
+                    it.data?.let { data -> channelsListView.setChannelsList(data) }
+                }
+                is SceytResponse.Error -> {
+                    customToastSnackBar(channelsListView, it.message ?: "")
+                }
+                is SceytResponse.Loading -> channelsListView.showHideLoading(it.isLoading)
+            }
         }
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        loadMoreChannelsFlow.collect {
+        loadMoreChannelsLiveData.collect {
             if (it is SceytResponse.Success && it.data != null)
-                channelListView.addNewChannels(it.data)
-
-            isLoadingMore = it is SceytResponse.Loading && it.isLoading
+                channelsListView.addNewChannels(it.data)
         }
     }
 
-    channelListView.setReachToEndListener { offset ->
+    channelsListView.setReachToEndListener { offset ->
         if (!isLoadingMore && hasNext) {
             isLoadingMore = true
-            loadChannels(offset, true)
+            loadChannels(offset, loadingMore = true)
         }
+    }
+}
+
+fun ChannelsViewModel.bindSearchView(searchView: SearchInputView) {
+    searchView.setDebouncedTextChangeListener {
+        loadChannels(0, query = it.toString(), false)
     }
 }

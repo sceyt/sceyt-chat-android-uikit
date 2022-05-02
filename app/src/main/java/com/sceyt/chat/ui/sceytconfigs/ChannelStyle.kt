@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.sceytconfigs
 
-import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
 import com.sceyt.chat.ui.R
@@ -38,9 +37,9 @@ object ChannelStyle {
 
 
     internal fun updateWithAttributes(typedArray: TypedArray): ChannelStyle {
-        titleColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiChannelTitleTextColor, titleColor)
-        lastMessageTextColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiLastMessageTextColor, lastMessageTextColor)
-        unreadCountColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor)
+        titleColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelTitleTextColor, titleColor)
+        lastMessageTextColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiLastMessageTextColor, lastMessageTextColor)
+        unreadCountColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor)
         return this
     }
 }
