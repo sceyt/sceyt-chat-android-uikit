@@ -14,16 +14,19 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.forEach
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.sceyt.chat.ui.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -264,6 +267,26 @@ fun Long.convertMSIntoHourMinSeconds(): String {
                 TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(this)),
         TimeUnit.MILLISECONDS.toSeconds(this) -
                 TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(this)))
+}
+
+fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
+    if (Build.VERSION.SDK_INT >= M) {
+        window.statusBarColor = getCompatColorByTheme(R.color.colorPrimary, isDark)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.setSystemBarsAppearance(
+                if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            )
+        } else if (Build.VERSION.SDK_INT >= M) {
+            val wic = WindowInsetsControllerCompat(window, window.decorView)
+            wic.isAppearanceLightStatusBars = !isDark
+        }
+    } else {
+        val color = if (isDark) getCompatColorByTheme(R.color.colorPrimary, true)
+        else getCompatColor(R.color.colorPrimaryDark)
+        window.statusBarColor = color
+    }
 }
 
 inline fun <reified T> Any.castSafety(): T? {

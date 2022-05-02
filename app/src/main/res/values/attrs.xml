@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="ChannelListView">
+    <declare-styleable name="ChannelsListView">
 
         <!-- Channel list items separator drawable TODO-->
         <attr name="sceytUiChannelsItemSeparatorDrawable" format="reference" />

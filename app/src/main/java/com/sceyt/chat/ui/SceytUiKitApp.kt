@@ -19,7 +19,7 @@ import com.sceyt.chat.models.Status
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserPresenceStatus
+import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.sceyt_listeners.MessageListener
 import org.json.JSONObject
@@ -27,8 +27,8 @@ import java.util.*
 
 class SceytUiKitApp : Application() {
 
-    private val mSceytConnectionStatus: MutableLiveData<Types.ConnectStatus> = MutableLiveData()
-    val sceytConnectionStatus: LiveData<Types.ConnectStatus>
+    private val mSceytConnectionStatus: MutableLiveData<Types.ConnectState> = MutableLiveData()
+    val sceytConnectionStatus: LiveData<Types.ConnectState>
         get() = mSceytConnectionStatus
 
     private val mCurrentUser: MutableLiveData<User> = MutableLiveData()
@@ -58,7 +58,7 @@ class SceytUiKitApp : Application() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         chatClient = ChatClient.setup(this, serverUrl, "89p65954oj", userId)
 //        ChatClient.setSceytLogLevel(SCTLogLevel.Verbose)
-        mSceytConnectionStatus.postValue(Types.ConnectStatus.StatusDisconnect)
+        mSceytConnectionStatus.postValue(Types.ConnectState.StateDisconnect)
     }
 
     private fun setSceytListeners() {
@@ -110,21 +110,21 @@ class SceytUiKitApp : Application() {
 
                 chatClient.addClientListener("main", object : ClientListener {
                     override fun onChangedConnectStatus(
-                            connectStatus: Types.ConnectStatus?,
+                            connectStatus: Types.ConnectState?,
                             status: Status?
                     ) {
 
-                        if (connectStatus == Types.ConnectStatus.StatusConnected) {
+                        if (connectStatus == Types.ConnectState.StateConnected) {
                             /*fetchCurrentUser()
                             saveToken(token)
                             registerPushToken()*/
                             success.postValue(true)
-                            ClientWrapper.updatePresence(UserPresenceStatus.Online, "") {
+                            ClientWrapper.setPresence(PresenceState.Online, "") {
 
                             }
 
                         } else {
-                            mSceytConnectionStatus.postValue(Types.ConnectStatus.StatusFailed)
+                            mSceytConnectionStatus.postValue(Types.ConnectState.StateFailed)
                             mConnectionError.postValue(status?.error)
                             success.postValue(false)
                         }

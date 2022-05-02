@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.ColorRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.doOnAttach
@@ -13,7 +14,7 @@ import androidx.core.view.isVisible
 import androidx.databinding.BindingAdapter
 import androidx.databinding.Observable
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.user.UserPresenceStatus
+import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.SceytUiChannel
@@ -30,22 +31,26 @@ object BindingUtil {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
                 val isDark = SceytUIKitConfig.isDarkMode
                 themeTextColorsViews.forEach {
-                    it.first.let { view ->
-                        val color = view.context.getCompatColorByTheme(it.second, isDark)
-                        when (view) {
-                            is TextView -> view.setTextColor(color)
-                            is Toolbar -> view.setTitleTextColor(color)
-                            is SwitchCompat -> view.setTextColor(color)
-                        }
-                    }
+                    setThemedColor(it.first, it.second, isDark)
                 }
                 backgroundColorsViews.forEach {
-                    it.first.let { view ->
-                        view.background = ColorDrawable(view.context.getCompatColorByTheme(it.second, isDark))
-                    }
+                    setThemedBackground(it.first, it.second, isDark)
                 }
             }
         })
+    }
+
+    private fun setThemedColor(view: View, colorId: Int, isDark: Boolean) {
+        val color = view.context.getCompatColorByTheme(colorId, isDark)
+        when (view) {
+            is TextView -> view.setTextColor(color)
+            is Toolbar -> view.setTitleTextColor(color)
+            is SwitchCompat -> view.setTextColor(color)
+        }
+    }
+
+    private fun setThemedBackground(view: View, color: Int, isDark: Boolean) {
+        view.background = ColorDrawable(view.context.getCompatColorByTheme(color, isDark))
     }
 
     @BindingAdapter("bind:status", "bind:incoming")
@@ -78,13 +83,15 @@ object BindingUtil {
     @JvmStatic
     fun setOnlineStatus(view: View, channel: SceytUiChannel?) {
         view.isVisible = (channel?.channelType == ChannelTypeEnum.Direc)
-                && (channel as? SceytUiDirectChannel)?.peer?.presenceStatus == UserPresenceStatus.Online
+                && (channel as? SceytUiDirectChannel)?.peer?.presence?.state == PresenceState.Online
     }
 
     @BindingAdapter("bind:themedTextColor")
     @JvmStatic
-    fun themedTextColor(view: View, color: Int) {
-        val pair = Pair(view, color)
+    fun themedTextColor(view: View, @ColorRes colorId: Int) {
+        setThemedColor(view, colorId, SceytUIKitConfig.isDarkMode)
+
+        val pair = Pair(view, colorId)
 
         view.doOnDetach {
             themeTextColorsViews.remove(pair)
@@ -95,24 +102,11 @@ object BindingUtil {
         }
     }
 
-    /*  @BindingAdapter("bind:themedBackgroundColor")
-      @JvmStatic
-      fun themedBackgroundColor(view: View, color: Int) {
-          val pair = Pair(view, color)
-
-          view.doOnDetach {
-              themedBackgroundColor().remove(pair)
-          }
-
-          view.doOnAttach {
-              themeTextColorsViews.add(pair)
-          }
-      }*/
-
     @BindingAdapter("bind:themedBackgroundColor")
     @JvmStatic
-    fun themedBackgroundColor(view: ViewGroup, color: Int) {
-        val pair = Pair(view, color)
+    fun themedBackgroundColor(view: ViewGroup, @ColorRes colorId: Int) {
+        setThemedBackground(view, colorId, SceytUIKitConfig.isDarkMode)
+        val pair = Pair(view, colorId)
 
         view.doOnDetach {
             backgroundColorsViews.remove(pair)
@@ -121,9 +115,5 @@ object BindingUtil {
         view.doOnAttach {
             backgroundColorsViews.add(pair)
         }
-    }
-
-    private fun addOnPropertyLister() {
-
     }
 }

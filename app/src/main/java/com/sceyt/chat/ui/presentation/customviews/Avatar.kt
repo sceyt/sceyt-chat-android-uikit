@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extencions.glideRequestListener
+import com.sceyt.chat.ui.extencions.isFinishingOrDestroyed
 
 
 class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -81,6 +82,7 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     }
 
     private fun loadAvatarImage() {
+        if ((context as? AppCompatActivity)?.isFinishingOrDestroyed() == true) return
         if (!imageUrl.isNullOrBlank()) {
             avatarLoadCb?.invoke(true)
 
