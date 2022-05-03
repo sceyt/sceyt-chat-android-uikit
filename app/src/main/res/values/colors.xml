@@ -7,6 +7,7 @@
     <color name="black">#FF000000</color>
     <color name="whiteThemed">#FFFFFFFF</color>
     <color name="white_final">#FFFFFFFF</color>
+    <color name="hintColor">#BAB8B8</color>
     <color name="colorBackground">#FFFFFF</color>
     <color name="colorFontDark">#060A26</color>
     <color name="colorFontGray">#676A7C</color>

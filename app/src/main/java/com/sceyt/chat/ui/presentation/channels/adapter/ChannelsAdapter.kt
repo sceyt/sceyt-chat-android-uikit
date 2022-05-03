@@ -13,22 +13,11 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>)
     private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val begin = System.nanoTime()
-
-        val h = ChannelViewHolderFactory.createViewHolder(parent, viewType)
-
-        val end = System.nanoTime()
-
-        println("Elapsed time in nanoseconds: ${end - begin}")
-        return h
+        return ChannelViewHolderFactory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val begin = System.nanoTime()
         (holder as BaseChannelViewHolder).bindViews(item = channels[position])
-        val end = System.nanoTime()
-
-        println("onBindViewHolderElapsed time in nanoseconds: ${end - begin}")
     }
 
     override fun getItemCount(): Int = channels.size

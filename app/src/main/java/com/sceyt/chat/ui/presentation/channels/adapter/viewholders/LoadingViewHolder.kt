@@ -5,7 +5,7 @@ import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
 
 class LoadingViewHolder(binding: ItemLoadingBinding) : BaseChannelViewHolder(binding.root) {
 
-    override fun bindViews(channel: ChannelListItem) {
+    override fun bindViews(item: ChannelListItem) {
 
     }
 }

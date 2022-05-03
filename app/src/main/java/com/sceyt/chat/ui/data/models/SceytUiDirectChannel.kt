@@ -15,5 +15,5 @@ class SceytUiDirectChannel(
         channelType: ChannelTypeEnum = ChannelTypeEnum.Direc,
         var peer: Member?,
 
-) : SceytUiChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, channelType)
+        ) : SceytUiChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, channelType)
 

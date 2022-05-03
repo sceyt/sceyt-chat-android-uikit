@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui
+package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel

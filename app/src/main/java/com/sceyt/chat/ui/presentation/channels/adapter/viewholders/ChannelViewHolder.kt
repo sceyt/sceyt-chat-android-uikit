@@ -2,10 +2,7 @@ package com.sceyt.chat.ui.presentation.channels.adapter.viewholders
 
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
-import android.content.res.Configuration
-import android.content.res.Resources
 import android.view.View
-import androidx.appcompat.app.AppCompatDelegate
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
@@ -15,7 +12,6 @@ import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.SceytUiGroupChannel
 import com.sceyt.chat.ui.databinding.ItemChannelBinding
 import com.sceyt.chat.ui.extencions.getCompatColor
-import com.sceyt.chat.ui.extencions.getCompatColorNight
 import com.sceyt.chat.ui.extencions.getPresentableName
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle

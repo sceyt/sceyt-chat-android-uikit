@@ -95,10 +95,7 @@ fun View.invokeSuspendInLifecycle(
     }
 }
 
-fun View.getLifecycleScope() {
-
-    findViewTreeLifecycleOwner()?.lifecycleScope
-}
+fun View.getLifecycleScope() = findViewTreeLifecycleOwner()?.lifecycleScope
 
 fun Fragment.delayOnLifecycle(
         delayMillis: Long,

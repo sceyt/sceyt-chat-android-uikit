@@ -20,28 +20,48 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
                 is SceytResponse.Error -> {
                     customToastSnackBar(channelsListView, it.message ?: "")
                 }
-                is SceytResponse.Loading -> channelsListView.showHideLoading(it.isLoading)
+                is SceytResponse.Loading -> {
+
+
+                }
             }
         }
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        loadMoreChannelsLiveData.collect {
+        loadMoreChannelsFlow.collect {
             if (it is SceytResponse.Success && it.data != null)
                 channelsListView.addNewChannels(it.data)
         }
     }
 
+    pageStateLiveData.observe(lifecycleOwner) {
+        channelsListView.updateState(it)
+    }
+
     channelsListView.setReachToEndListener { offset ->
         if (!isLoadingMore && hasNext) {
             isLoadingMore = true
-            loadChannels(offset, loadingMore = true)
+            loadChannels(offset)
         }
     }
 }
 
 fun ChannelsViewModel.bindSearchView(searchView: SearchInputView) {
     searchView.setDebouncedTextChangeListener {
-        loadChannels(0, query = it.toString(), false)
+        loadChannels(0, query = it)
     }
+
+    searchView.setOnQuerySubmitListener {
+        loadChannels(0, query = it)
+    }
+}
+
+
+fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
+    viewModel.bindView(channelsListView, lifecycleOwner)
+}
+
+fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchInputView) {
+    viewModel.bindSearchView(searchView)
 }
