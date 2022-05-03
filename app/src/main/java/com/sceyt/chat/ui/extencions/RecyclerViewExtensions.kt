@@ -2,7 +2,6 @@ package com.sceyt.chat.ui.extencions
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView

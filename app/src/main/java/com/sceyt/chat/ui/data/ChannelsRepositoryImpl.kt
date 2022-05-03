@@ -6,7 +6,6 @@ import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
 import com.sceyt.chat.ui.data.models.SceytUiChannel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import com.sceyt.chat.ui.toSceytUiChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -30,7 +29,7 @@ class ChannelsRepositoryImpl {
 
     fun getChannels(offset: Int): Flow<SceytResponse<List<SceytUiChannel>>> {
         return flow {
-            emit(SceytResponse.Loading(true))
+            emit(SceytResponse.Loading())
 
             val response = getChannelsCoroutine(offset)
             emit(response)
@@ -39,7 +38,7 @@ class ChannelsRepositoryImpl {
 
     fun searchChannels(offset: Int, query: String): Flow<SceytResponse<List<SceytUiChannel>>> {
         return flow {
-            emit(SceytResponse.Loading(true))
+            emit(SceytResponse.Loading())
 
             val response = getSearchChannelsCoroutine(offset, query)
             emit(response)

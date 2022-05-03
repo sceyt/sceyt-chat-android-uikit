@@ -95,4 +95,6 @@
     <string name="replays">Replays</string>
     <string name="thread_replay">Thread replay</string>
     <string name="with">with</string>
+
+    <string name="sceyt_ui_channel_list_empty">No channels found</string>
 </resources>

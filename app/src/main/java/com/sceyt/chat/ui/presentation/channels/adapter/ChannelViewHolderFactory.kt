@@ -32,7 +32,9 @@ object ChannelViewHolderFactory {
                     if (cachedViews.size < SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
                         cashViews(parent.context, SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
 
-                    cachedViews.pop().also { it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+                    cachedViews.pop().also {
+                        it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    }
                 }
                 return ChannelViewHolder(view)
 

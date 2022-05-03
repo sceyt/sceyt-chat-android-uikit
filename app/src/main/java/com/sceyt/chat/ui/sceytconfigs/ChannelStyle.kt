@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.sceytconfigs
 
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
+import androidx.annotation.LayoutRes
 import com.sceyt.chat.ui.R
 
 object ChannelStyle {
@@ -13,6 +14,15 @@ object ChannelStyle {
 
     @ColorRes
     var unreadCountColor: Int = R.color.colorAccent
+
+    @LayoutRes
+    var emptyState: Int = R.layout.sceyt_ui_channel_list_empty_state
+
+    @LayoutRes
+    var emptySearchState: Int = R.layout.sceyt_ui_search_channels_empty_state
+
+    @LayoutRes
+    var loadingState: Int = R.layout.sceyt_ui_loading_state
 
     /*internal constructor(context: Context) : this(
         titleColor = context.getCompatColor(R.color.colorFontDark),
