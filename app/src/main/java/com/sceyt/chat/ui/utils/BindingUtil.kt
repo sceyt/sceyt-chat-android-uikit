@@ -8,18 +8,17 @@ import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.doOnAttach
-import androidx.core.view.doOnDetach
 import androidx.core.view.isVisible
 import androidx.databinding.BindingAdapter
 import androidx.databinding.Observable
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chat.ui.BR
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.SceytUiChannel
 import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
-import com.sceyt.chat.ui.extencions.getCompatColorByTheme
+import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 object BindingUtil {
@@ -29,12 +28,14 @@ object BindingUtil {
     init {
         SceytUIKitConfig.SceytUITheme.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                val isDark = SceytUIKitConfig.isDarkMode
-                themeTextColorsViews.forEach {
-                    setThemedColor(it.first, it.second, isDark)
-                }
-                backgroundColorsViews.forEach {
-                    setThemedBackground(it.first, it.second, isDark)
+                if (propertyId == BR.isDarkMode) {
+                    val isDark = SceytUIKitConfig.isDarkMode
+                    themeTextColorsViews.forEach {
+                        setThemedColor(it.first, it.second, isDark)
+                    }
+                    backgroundColorsViews.forEach {
+                        setThemedBackground(it.first, it.second, isDark)
+                    }
                 }
             }
         })
@@ -82,24 +83,26 @@ object BindingUtil {
     @BindingAdapter("bind:channel")
     @JvmStatic
     fun setOnlineStatus(view: View, channel: SceytUiChannel?) {
-        view.isVisible = (channel?.channelType == ChannelTypeEnum.Direc)
+        view.isVisible = (channel?.channelType == ChannelTypeEnum.Direct)
                 && (channel as? SceytUiDirectChannel)?.peer?.presence?.state == PresenceState.Online
     }
 
     @BindingAdapter("bind:themedTextColor")
     @JvmStatic
     fun themedTextColor(view: View, @ColorRes colorId: Int) {
-        setThemedColor(view, colorId, SceytUIKitConfig.isDarkMode)
-
         val pair = Pair(view, colorId)
+        themeTextColorsViews.add(pair)
 
-        view.doOnDetach {
-            themeTextColorsViews.remove(pair)
-        }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(p0: View) {
+                setThemedColor(view, colorId, SceytUIKitConfig.isDarkMode)
+                themeTextColorsViews.add(pair)
+            }
 
-        view.doOnAttach {
-            themeTextColorsViews.add(pair)
-        }
+            override fun onViewDetachedFromWindow(p0: View) {
+                themeTextColorsViews.remove(pair)
+            }
+        })
     }
 
     @BindingAdapter("bind:themedBackgroundColor")
@@ -107,13 +110,17 @@ object BindingUtil {
     fun themedBackgroundColor(view: ViewGroup, @ColorRes colorId: Int) {
         setThemedBackground(view, colorId, SceytUIKitConfig.isDarkMode)
         val pair = Pair(view, colorId)
+        backgroundColorsViews.add(pair)
 
-        view.doOnDetach {
-            backgroundColorsViews.remove(pair)
-        }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(p0: View) {
+                setThemedBackground(view, colorId, SceytUIKitConfig.isDarkMode)
+                backgroundColorsViews.add(pair)
+            }
 
-        view.doOnAttach {
-            backgroundColorsViews.add(pair)
-        }
+            override fun onViewDetachedFromWindow(p0: View) {
+                backgroundColorsViews.remove(pair)
+            }
+        })
     }
 }

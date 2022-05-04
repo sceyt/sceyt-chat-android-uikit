@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.extencions.addRVScrollListener
-import com.sceyt.chat.ui.extencions.isLastItemDisplaying
+import com.sceyt.chat.ui.extensions.addRVScrollListener
+import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelsAdapter
@@ -46,12 +46,17 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             mAdapter.notifyUpdate(channels)
     }
 
+    fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
+
     fun setRichToEndListeners(listener: (offset: Int) -> Unit) {
         mRichToEndListener = listener
     }
 
     fun addNewChannels(channels: List<ChannelListItem>) {
-        mAdapter.addList(channels as MutableList<ChannelListItem>)
+        if (::mAdapter.isInitialized.not())
+            setData(channels)
+        else
+            mAdapter.addList(channels as MutableList<ChannelListItem>)
     }
 
     override fun onDetachedFromWindow() {

@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.extencions
+package com.sceyt.chat.ui.extensions
 
 import android.app.Activity
 import android.app.ActivityManager
@@ -287,6 +287,10 @@ fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
         else getCompatColor(R.color.colorPrimaryDark)
         window.statusBarColor = color
     }
+}
+
+fun Activity.statusBarBackgroundColor(color: Int) {
+    window.statusBarColor = color
 }
 
 inline fun <reified T> Any.castSafety(): T? {

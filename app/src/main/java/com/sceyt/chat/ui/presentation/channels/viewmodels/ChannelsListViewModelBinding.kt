@@ -2,8 +2,8 @@ package com.sceyt.chat.ui.presentation.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.ui.data.SceytResponse
-import com.sceyt.chat.ui.extencions.customToastSnackBar
+import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.channels.components.SearchInputView
 import com.sceyt.chat.ui.presentation.channels.components.channels.ChannelsListView
 import kotlinx.coroutines.flow.collect
@@ -13,17 +13,10 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     lifecycleOwner.lifecycleScope.launch {
         channelsFlow.collect {
-            when (it) {
-                is SceytResponse.Success -> {
-                    it.data?.let { data -> channelsListView.setChannelsList(data) }
-                }
-                is SceytResponse.Error -> {
-                    customToastSnackBar(channelsListView, it.message ?: "")
-                }
-                is SceytResponse.Loading -> {
-
-
-                }
+            if (it is SceytResponse.Success) {
+                it.data?.let { data -> channelsListView.setChannelsList(data) }
+            } else if (it is SceytResponse.Error) {
+                customToastSnackBar(channelsListView, it.message ?: "")
             }
         }
     }
@@ -40,8 +33,8 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     }
 
     channelsListView.setReachToEndListener { offset ->
-        if (!isLoadingMore && hasNext) {
-            isLoadingMore = true
+        if (!isLoadingChannels && hasNext) {
+            isLoadingChannels = true
             loadChannels(offset)
         }
     }
