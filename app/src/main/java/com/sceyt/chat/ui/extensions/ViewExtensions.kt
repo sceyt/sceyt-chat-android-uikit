@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.extencions
+package com.sceyt.chat.ui.extensions
 
 import android.animation.AnimatorSet
 import android.animation.LayoutTransition
@@ -12,6 +12,9 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.ViewCompat
+import androidx.core.view.doOnAttach
+import androidx.core.view.doOnDetach
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
@@ -213,4 +216,34 @@ fun ViewGroup.setTransitionListener(startListener: ((transition: LayoutTransitio
     }
     layoutTransition.addTransitionListener(listener)
     return listener
+}
+
+public inline fun View.doOnAttachWithout(crossinline action: (view: View) -> Unit) {
+    if (ViewCompat.isAttachedToWindow(this)) {
+        action(this)
+    } else {
+        addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                action(view)
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+               // removeOnAttachStateChangeListener(this)
+            }
+        })
+    }
+}
+
+public inline fun View.doOnDetachWithout(crossinline action: (view: View) -> Unit) {
+    if (!ViewCompat.isAttachedToWindow(this)) {
+        action(this)
+    } else {
+        addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {}
+
+            override fun onViewDetachedFromWindow(view: View) {
+                action(view)
+            }
+        })
+    }
 }

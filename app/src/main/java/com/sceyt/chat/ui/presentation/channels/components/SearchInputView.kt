@@ -8,10 +8,11 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.databinding.SearchViewBinding
-import com.sceyt.chat.ui.extencions.getCompatColor
-import com.sceyt.chat.ui.extencions.getCompatDrawable
+import com.sceyt.chat.ui.databinding.SceytUiSearchViewBinding
+import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.extensions.getCompatDrawable
 import com.sceyt.chat.ui.sceytconfigs.SearchInputViewStyle
+import com.sceyt.chat.ui.utils.BindingUtil
 
 
 class SearchInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -21,7 +22,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         private const val TYPING_DEBOUNCE_MS = 300L
     }
 
-    private var binding: SearchViewBinding
+    private var binding: SceytUiSearchViewBinding
 
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS) }
     private val debounceHelper by debounceInitDelegate
@@ -30,14 +31,15 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var inputChangedListener: InputChangedListener? = null
     private var querySubmitListener: InputTextSubmitListener? = null
 
-    val query: String
+    private val query: String
         get() = binding.input.text.toString().trim()
 
     private var disableDebouncedSearchDuringTyping = false
 
     init {
         isSaveFromParentEnabled = false
-        binding = SearchViewBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytUiSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
+        BindingUtil.themedBackgroundColor(this, R.color.whiteThemed)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SearchInputView)
@@ -72,7 +74,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
     }
 
-    private fun SearchViewBinding.setWithStyle() {
+    private fun SceytUiSearchViewBinding.setWithStyle() {
         icSearch.setImageResource(SearchInputViewStyle.searchIcon)
         icClear.setImageResource(SearchInputViewStyle.clearIcon)
         input.setTextColor(context.getCompatColor(SearchInputViewStyle.textColor))

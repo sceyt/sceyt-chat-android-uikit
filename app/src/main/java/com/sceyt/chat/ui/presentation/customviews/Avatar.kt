@@ -5,14 +5,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.extencions.glideRequestListener
-import com.sceyt.chat.ui.extencions.isFinishingOrDestroyed
+import com.sceyt.chat.ui.extensions.glideRequestListener
 
 
 class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -82,11 +80,10 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     }
 
     private fun loadAvatarImage() {
-        if ((context as? AppCompatActivity)?.isFinishingOrDestroyed() == true) return
         if (!imageUrl.isNullOrBlank()) {
             avatarLoadCb?.invoke(true)
 
-            Glide.with(context)
+            Glide.with(context.applicationContext)
                 .load(imageUrl)
                 .override(width)
                 .transition(DrawableTransitionOptions.withCrossFade(100))

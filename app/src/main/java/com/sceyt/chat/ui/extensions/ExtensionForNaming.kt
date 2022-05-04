@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.extencions
+package com.sceyt.chat.ui.extensions
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User

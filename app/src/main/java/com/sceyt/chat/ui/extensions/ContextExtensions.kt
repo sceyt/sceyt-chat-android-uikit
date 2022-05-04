@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.extencions
+package com.sceyt.chat.ui.extensions
 
 import android.content.Context
 import android.content.Intent
@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -27,7 +28,7 @@ fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
     return createConfigurationContext(configuration).getCompatColor(colorId)
 }
 
-fun Context.getCompatColorByTheme(@ColorRes colorId: Int, isDark: Boolean): Int {
+fun Context.getCompatColorByTheme(@ColorRes colorId: Int, isDark: Boolean = SceytUIKitConfig.isDarkMode): Int {
     val res = resources
     val configuration = Configuration(res.configuration)
     configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
@@ -96,6 +97,10 @@ fun Context.gpsIsEnabled(): Boolean {
         //here you need to check GPS only, as network is OFF for sure
         locMan.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
+}
+
+fun Context.isNightTheme(): Boolean {
+    return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }
 
 

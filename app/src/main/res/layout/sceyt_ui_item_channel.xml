@@ -6,6 +6,8 @@
 
     <data>
 
+        <import type="com.sceyt.chat.ui.R" />
+
         <variable
             name="channel"
             type="com.sceyt.chat.ui.data.models.SceytUiChannel" />
@@ -60,6 +62,7 @@
             app:layout_constraintEnd_toStartOf="@id/infoBarrier"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintTop_toTopOf="@id/avatar"
+            bind:themedTextColor="@{R.color.colorFontDark}"
             tools:text="Title" />
 
         <androidx.appcompat.widget.AppCompatTextView

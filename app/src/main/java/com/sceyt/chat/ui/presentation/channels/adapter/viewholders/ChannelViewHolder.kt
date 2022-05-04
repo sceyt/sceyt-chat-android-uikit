@@ -10,14 +10,15 @@ import com.sceyt.chat.ui.data.models.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.SceytUiChannel
 import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.SceytUiGroupChannel
-import com.sceyt.chat.ui.databinding.ItemChannelBinding
-import com.sceyt.chat.ui.extencions.getCompatColor
-import com.sceyt.chat.ui.extencions.getPresentableName
+import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
+import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.extensions.getPresentableName
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil
 
-class ChannelViewHolder(private val binding: ItemChannelBinding) : BaseChannelViewHolder(binding.root) {
+class ChannelViewHolder(private val binding: SceytUiItemChannelBinding) : BaseChannelViewHolder(binding.root) {
 
     init {
         binding.setChannelItemStyle()
@@ -53,7 +54,7 @@ class ChannelViewHolder(private val binding: ItemChannelBinding) : BaseChannelVi
     }
 
     @SuppressLint("SetTextI18n")
-    private fun ItemChannelBinding.setUnreadCount(channel: SceytUiChannel) {
+    private fun SceytUiItemChannelBinding.setUnreadCount(channel: SceytUiChannel) {
         if (channel.unreadMessageCount == 0L) {
             messageCount.visibility = View.GONE
         } else {
@@ -91,13 +92,11 @@ class ChannelViewHolder(private val binding: ItemChannelBinding) : BaseChannelVi
             DateTimeUtil.getDateTimeString(channel.updatedAt)
     }
 
-    private fun ItemChannelBinding.setChannelItemStyle() {
+    private fun SceytUiItemChannelBinding.setChannelItemStyle() {
         with(root.context) {
-            channelTitle.setTextColor(getCompatColor(ChannelStyle.titleColor))
+            channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
             lastMessage.setTextColor(getCompatColor(ChannelStyle.lastMessageTextColor))
             messageCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
         }
-
-        //channelTitle.setTextColor( root.context.getCompatColorNight(R.color.colorFontDark))
     }
 }

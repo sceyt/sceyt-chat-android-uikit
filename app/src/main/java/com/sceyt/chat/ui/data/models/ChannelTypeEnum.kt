@@ -5,12 +5,12 @@ import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.PrivateChannel
 
 enum class ChannelTypeEnum {
-    Direc, Private, Group
+    Direct, Private, Group
 }
 
 fun getChannelType(channel: Channel): ChannelTypeEnum {
     return when (channel) {
-        is DirectChannel -> ChannelTypeEnum.Direc
+        is DirectChannel -> ChannelTypeEnum.Direct
         is PrivateChannel -> ChannelTypeEnum.Private
         else -> ChannelTypeEnum.Group
     }

@@ -62,7 +62,7 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>)
         if (channels.size == items.size)
             notifyDataSetChanged()
         else
-        notifyItemRangeInserted(channels.size - items.size, items.size)
+            notifyItemRangeInserted(channels.size - items.size, items.size)
     }
 
     fun getSkip() = channels.filter { it !is ChannelListItem.LoadingMoreItem }.size

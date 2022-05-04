@@ -9,37 +9,40 @@ import androidx.asynclayoutinflater.view.AsyncLayoutInflater
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.databinding.ItemChannelBinding
-import com.sceyt.chat.ui.databinding.ItemLoadingBinding
+import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
+import com.sceyt.chat.ui.databinding.SceytUiItemLoadingMoreBinding
 import com.sceyt.chat.ui.presentation.channels.adapter.viewholders.ChannelViewHolder
 import com.sceyt.chat.ui.presentation.channels.adapter.viewholders.LoadingViewHolder
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 
 object ChannelViewHolderFactory {
     private lateinit var asyncLayoutInflater: AsyncLayoutInflater
-    private val cachedViews = Stack<ItemChannelBinding>()
+    private var cachedViews: Stack<SceytUiItemChannelBinding>? = Stack<SceytUiItemChannelBinding>()
+    private var cashJob: Job? = null
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             ChannelType.Default.ordinal -> {
-                val view: ItemChannelBinding = if (cachedViews.isEmpty()) {
+                val view: SceytUiItemChannelBinding = if (cachedViews.isNullOrEmpty()) {
                     cashViews(parent.context)
-                    ItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                    SceytUiItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 } else {
-                    if (cachedViews.size < SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
+                    if (cachedViews!!.size < SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
                         cashViews(parent.context, SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
 
-                    cachedViews.pop().also {
+                    cachedViews!!.pop().also {
                         it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                     }
                 }
                 return ChannelViewHolder(view)
-
             }
-            ChannelType.Loading.ordinal -> LoadingViewHolder(ItemLoadingBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+            ChannelType.Loading.ordinal -> LoadingViewHolder(
+                SceytUiItemLoadingMoreBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            )
             else -> throw Exception("Not supported view type")
         }
     }
@@ -47,10 +50,10 @@ object ChannelViewHolderFactory {
     fun cashViews(context: Context, count: Int = SceytUIKitConfig.CHANNELS_LOAD_SIZE) {
         asyncLayoutInflater = AsyncLayoutInflater(context)
 
-        (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {
+        cashJob = (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {
             for (i in 0..count) {
-                asyncLayoutInflater.inflate(R.layout.item_channel, null) { view, _, _ ->
-                    cachedViews.push(ItemChannelBinding.bind(view))
+                asyncLayoutInflater.inflate(R.layout.sceyt_ui_item_channel, null) { view, _, _ ->
+                    cachedViews?.push(SceytUiItemChannelBinding.bind(view))
                 }
             }
         }
@@ -63,7 +66,9 @@ object ChannelViewHolderFactory {
     }
 
     fun clearCash() {
-        cachedViews.clear()
+        cashJob?.cancel()
+        cachedViews?.clear()
+        cachedViews = null
     }
 
     enum class ChannelType {
