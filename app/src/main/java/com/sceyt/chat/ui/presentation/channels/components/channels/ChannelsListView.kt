@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListeners
 import com.sceyt.chat.ui.presentation.channels.components.PageStateView
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
@@ -53,5 +54,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun updateState(state: BaseViewModel.PageState) {
         pageStateView?.updateState(state, channelsRV.isEmpty())
+    }
+
+    fun setChannelListener(listener: ChannelListeners) {
+        channelsRV.setChannelListener(listener)
     }
 }

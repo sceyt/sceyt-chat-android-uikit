@@ -7,13 +7,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.presentation.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.chat.ui.utils.MyDiffUtil
 
-class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>)
-    : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
+                      private var viewHolderFactory: ChannelViewHolderFactory) :
+        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return ChannelViewHolderFactory.createViewHolder(parent, viewType)
+        return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -23,7 +24,7 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>)
     override fun getItemCount(): Int = channels.size
 
     override fun getItemViewType(position: Int): Int {
-        return ChannelViewHolderFactory.getItemViewType(channels[position])
+        return viewHolderFactory.getItemViewType(channels[position])
     }
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {

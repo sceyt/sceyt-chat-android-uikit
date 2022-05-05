@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListeners
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelsAdapter
 
@@ -14,7 +15,8 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     : RecyclerView(context, attrs, defStyleAttr) {
 
     private lateinit var mAdapter: ChannelsAdapter
-    private var mRichToEndListener: ((offset: Int) -> Unit)? = null
+    private var richToEndListener: ((offset: Int) -> Unit)? = null
+    private val viewHolderFactory = ChannelViewHolderFactory()
 
     init {
         init()
@@ -34,29 +36,34 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         post {
             addRVScrollListener { _: RecyclerView, _: Int, _: Int ->
                 if (isLastItemDisplaying() && mAdapter.itemCount != 0)
-                    mRichToEndListener?.invoke(mAdapter.getSkip())
+                    richToEndListener?.invoke(mAdapter.getSkip())
             }
         }
     }
 
     fun setData(channels: List<ChannelListItem>) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = ChannelsAdapter(channels as ArrayList<ChannelListItem>).also { mAdapter = it }
+            adapter = ChannelsAdapter(channels as ArrayList<ChannelListItem>, viewHolderFactory)
+                .also { mAdapter = it }
         } else
             mAdapter.notifyUpdate(channels)
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
 
-    fun setRichToEndListeners(listener: (offset: Int) -> Unit) {
-        mRichToEndListener = listener
-    }
-
     fun addNewChannels(channels: List<ChannelListItem>) {
         if (::mAdapter.isInitialized.not())
             setData(channels)
         else
             mAdapter.addList(channels as MutableList<ChannelListItem>)
+    }
+
+    fun setRichToEndListeners(listener: (offset: Int) -> Unit) {
+        richToEndListener = listener
+    }
+
+    fun setChannelListener(listener: ChannelListeners) {
+        viewHolderFactory.setChannelListener(listener)
     }
 
     override fun onDetachedFromWindow() {

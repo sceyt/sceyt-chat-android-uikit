@@ -1,8 +1,7 @@
 package com.sceyt.chat.ui.presentation.channels.adapter.viewholders
 
-import android.annotation.SuppressLint
 import android.content.res.ColorStateList
-import android.view.View
+import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
@@ -11,14 +10,15 @@ import com.sceyt.chat.ui.data.models.SceytUiChannel
 import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.SceytUiGroupChannel
 import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
-import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
 import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.channels.adapter.ChannelsListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil
 
-class ChannelViewHolder(private val binding: SceytUiItemChannelBinding) : BaseChannelViewHolder(binding.root) {
+class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
+                        private var listeners: ChannelsListenersImpl) : BaseChannelViewHolder(binding.root) {
 
     init {
         binding.setChannelItemStyle()
@@ -46,23 +46,23 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding) : BaseCh
                     channelTitle.text = name
                     lastMessage.text = getLastMessageTxt(channel.lastMessage)
                     updateDate.text = getDateTxt(channel)
-                    setUnreadCount(channel = channel)
+                    messageCount.isVisible = false
+
+                    root.setOnClickListener {
+                        listeners.onChannelClick(item)
+                    }
+
+                    root.setOnLongClickListener {
+                        listeners.onChannelLongClick(item)
+                        return@setOnLongClickListener true
+                    }
+
+                    avatar.setOnClickListener {
+                        listeners.onAvatarClick(item)
+                    }
                 }
             }
             ChannelListItem.LoadingMoreItem -> Unit
-        }
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun SceytUiItemChannelBinding.setUnreadCount(channel: SceytUiChannel) {
-        if (channel.unreadMessageCount == 0L) {
-            messageCount.visibility = View.GONE
-        } else {
-            messageCount.visibility = View.VISIBLE
-            if (channel.unreadMessageCount > 99L)
-                messageCount.text = "99+"
-            else
-                messageCount.text = channel.unreadMessageCount.toString()
         }
     }
 
@@ -95,8 +95,8 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding) : BaseCh
     private fun SceytUiItemChannelBinding.setChannelItemStyle() {
         with(root.context) {
             channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
-            lastMessage.setTextColor(getCompatColor(ChannelStyle.lastMessageTextColor))
-            messageCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
+            lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))
+            messageCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
         }
     }
 }

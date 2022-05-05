@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.sceyt.chat.Types
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
+import com.sceyt.chat.ui.extensions.shortToast
+import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListeners
 import com.sceyt.chat.ui.presentation.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.channels.viewmodels.bindSearchView
 import com.sceyt.chat.ui.presentation.channels.viewmodels.bindView
@@ -29,6 +31,23 @@ class ChannelsFragment : Fragment() {
         mViewModel.bindView(mBinding.channelListView, viewLifecycleOwner)
         mViewModel.bindSearchView(mBinding.searchView)
 
+        mBinding.channelListView.setChannelListener(ChannelListeners.ChannelClickListener {
+            requireActivity().shortToast(it.channel.lastMessage?.body ?: "")
+        })
+
+       /* mBinding.channelListView.setChannelListener(object :ChannelListListeners.Listeners {
+            override fun onChannelClick(item: ChannelListItem.ChannelItem) {
+                requireActivity().shortToast(item.channel.lastMessage?.body ?: "")
+            }
+
+            override fun onChannelLongClick() {
+                requireActivity().shortToast("Long")
+            }
+
+            override fun onAvatarClick() {
+                requireActivity().shortToast("Avatar")
+            }
+        })*/
 
         (requireActivity().application as SceytUiKitApp).sceytConnectionStatus.observe(viewLifecycleOwner) {
             if (it == Types.ConnectState.StateConnected) {
