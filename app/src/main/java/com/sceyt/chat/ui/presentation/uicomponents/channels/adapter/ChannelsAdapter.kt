@@ -1,10 +1,11 @@
-package com.sceyt.chat.ui.presentation.channels.adapter
+package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.presentation.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.utils.MyDiffUtil
 
 class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,

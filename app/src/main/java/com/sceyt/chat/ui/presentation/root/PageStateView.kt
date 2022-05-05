@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.channels.components
+package com.sceyt.chat.ui.presentation.root
 
 import android.content.Context
 import android.util.AttributeSet
@@ -9,7 +9,6 @@ import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import com.sceyt.chat.ui.presentation.root.BaseViewModel
 
 class PageStateView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {

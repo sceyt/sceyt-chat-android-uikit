@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.channels.adapter.viewholders
+package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
@@ -12,8 +12,8 @@ import com.sceyt.chat.ui.data.models.SceytUiGroupChannel
 import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelsListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil
 

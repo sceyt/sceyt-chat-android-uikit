@@ -1,10 +1,10 @@
-package com.sceyt.chat.ui.presentation.channels.viewmodels
+package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.SceytUiChannel
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers

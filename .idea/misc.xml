@@ -15,6 +15,7 @@
         <entry key="app/src/main/res/drawable/date_transparent_background.xml" value="0.23" />
         <entry key="app/src/main/res/drawable/ic_baseline_clear_24.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_cancel.xml" value="0.244" />
+        <entry key="app/src/main/res/drawable/ic_empty_channels.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.2135" />
         <entry key="app/src/main/res/drawable/ic_profile_check.xml" value="0.1675" />
         <entry key="app/src/main/res/drawable/ic_status_read.xml" value="0.246" />
