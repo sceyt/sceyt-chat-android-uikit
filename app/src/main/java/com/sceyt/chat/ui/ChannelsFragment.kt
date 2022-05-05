@@ -8,11 +8,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.sceyt.chat.Types
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
-import com.sceyt.chat.ui.extensions.shortToast
+import com.sceyt.chat.ui.extensions.launchActivity
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindSearchView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
+import com.sceyt.chat.ui.presentation.uicomponents.conversatin.ConversationActivity
 
 
 class ChannelsFragment : Fragment() {
@@ -32,7 +33,7 @@ class ChannelsFragment : Fragment() {
         mViewModel.bindSearchView(mBinding.searchView)
 
         mBinding.channelListView.setChannelListener(ChannelListeners.ChannelClickListener {
-            requireActivity().shortToast(it.channel.lastMessage?.body ?: "")
+           requireActivity().launchActivity<ConversationActivity>()
         })
 
        /* mBinding.channelListView.setChannelListener(object :ChannelListListeners.Listeners {

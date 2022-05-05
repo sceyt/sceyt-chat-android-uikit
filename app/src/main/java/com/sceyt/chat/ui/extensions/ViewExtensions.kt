@@ -217,33 +217,3 @@ fun ViewGroup.setTransitionListener(startListener: ((transition: LayoutTransitio
     layoutTransition.addTransitionListener(listener)
     return listener
 }
-
-public inline fun View.doOnAttachWithout(crossinline action: (view: View) -> Unit) {
-    if (ViewCompat.isAttachedToWindow(this)) {
-        action(this)
-    } else {
-        addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View) {
-                action(view)
-            }
-
-            override fun onViewDetachedFromWindow(view: View) {
-               // removeOnAttachStateChangeListener(this)
-            }
-        })
-    }
-}
-
-public inline fun View.doOnDetachWithout(crossinline action: (view: View) -> Unit) {
-    if (!ViewCompat.isAttachedToWindow(this)) {
-        action(this)
-    } else {
-        addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View) {}
-
-            override fun onViewDetachedFromWindow(view: View) {
-                action(view)
-            }
-        })
-    }
-}
