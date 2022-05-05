@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.channels.adapter
+package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -11,8 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
 import com.sceyt.chat.ui.databinding.SceytUiItemLoadingMoreBinding
-import com.sceyt.chat.ui.presentation.channels.adapter.viewholders.ChannelViewHolder
-import com.sceyt.chat.ui.presentation.channels.adapter.viewholders.LoadingViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

@@ -1,11 +1,11 @@
-package com.sceyt.chat.ui.presentation.channels.viewmodels
+package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.presentation.channels.components.SearchInputView
-import com.sceyt.chat.ui.presentation.channels.components.channels.ChannelsListView
+import com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
+import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 

@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.channels.components
+package com.sceyt.chat.ui.presentation.uicomponents.searchinput
 
 import android.content.Context
 import android.util.AttributeSet

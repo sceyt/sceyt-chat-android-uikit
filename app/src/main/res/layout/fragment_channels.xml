@@ -10,7 +10,7 @@
         android:background="@color/whiteThemed"
         app:elevation="0dp">
 
-        <com.sceyt.chat.ui.presentation.channels.components.SearchInputView
+        <com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -25,7 +25,7 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.sceyt.chat.ui.presentation.channels.components.channels.ChannelsListView
+    <com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
         android:id="@+id/channelListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

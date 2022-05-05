@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 
 open class BaseViewModel : ViewModel() {
     private val _pageStateLiveData = MutableLiveData<PageState>()

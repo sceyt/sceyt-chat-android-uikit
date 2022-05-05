@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.channels.components.channels
+package com.sceyt.chat.ui.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
@@ -6,9 +6,9 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.getCompatColor
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListeners
-import com.sceyt.chat.ui.presentation.channels.components.PageStateView
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
+import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.BindingUtil

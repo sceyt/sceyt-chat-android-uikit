@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.channels.components.channels
+package com.sceyt.chat.ui.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
@@ -6,10 +6,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelListeners
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelViewHolderFactory
-import com.sceyt.chat.ui.presentation.channels.adapter.ChannelsAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsAdapter
 
 class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
