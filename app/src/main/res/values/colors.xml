@@ -17,4 +17,5 @@
     <color name="colorYellow">#FBB019</color>
     <color name="colorFontWarning">#ED4D60</color>
     <color name="colorGray">#F1F2F6</color>
+    <color name="colorGrayThemed">#F1F2F6</color>
 </resources>

@@ -7,28 +7,7 @@
         <attr name="isGroup" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="ExpandableSearchBar">
-
-        <!-- ExpandableSearchBar Base Attributes-->
-        <attr name="isRounded" format="boolean"/> //(API 21+ , Will Revert To Default Shape On Lower
-        <attr name="autoCollapse" format="boolean"/>
-        <attr name="searchBarBackgroundColor" format="color"/>
-        <attr name="searchBarBackgroundColorFocused" format="color"/>
-        <attr name="searchBarElevation" format="dimension"/>
-        <attr name="searchBarCornerRadius" format="dimension"/>
-
-        <!-- ExpandableSearchBar Icons Attributes -->
-        <attr name="searchIconDrawable" format="reference"/>
-        <attr name="backIconDrawable" format="reference"/>
-        <attr name="clearIconDrawable" format="reference"/>
-        <attr name="searchIconTint" format="color"/>
-        <attr name="backIconTint" format="color"/>
-        <attr name="clearIconTint" format="color"/>
-
-        <!-- ExpandableSearchBar Text Attributes -->
-        <attr name="textColor" format="color"/>
-        <attr name="hint" format="string"/>
-        <attr name="hintColor" format="color"/>
-
+    <declare-styleable name="ToReplayLineView">
+        <attr name="toLeft" format="boolean" />
     </declare-styleable>
 </resources>

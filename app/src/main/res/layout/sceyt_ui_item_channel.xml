@@ -13,78 +13,77 @@
             type="com.sceyt.chat.ui.data.models.SceytUiChannel" />
     </data>
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <com.sceyt.chat.ui.presentation.customviews.Avatar
             android:id="@+id/avatar"
-            android:layout_width="@dimen/_43sdp"
-            android:layout_height="@dimen/_43sdp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:layout_marginVertical="8dp"
-            android:layout_marginTop="8dp"
-            app:cardBackgroundColor="@color/colorGreen" />
+            app:cardBackgroundColor="@color/colorGreen"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent=".15" />
 
         <View
             android:id="@+id/onlineStatus"
             android:layout_width="14dp"
             android:layout_height="14dp"
-            android:layout_alignEnd="@+id/avatar"
-            android:layout_alignBottom="@+id/avatar"
-            android:layout_marginStart="1dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginEnd="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_margin="1dp"
             android:background="@drawable/bg_online"
             android:elevation="1dp"
             android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/avatar"
+            app:layout_constraintEnd_toEndOf="@id/avatar"
             bind:channel="@{channel}"
             tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/channelTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/avatar"
             android:layout_marginStart="12dp"
-            android:layout_toEndOf="@+id/avatar"
             android:ellipsize="end"
             android:lines="1"
             android:textColor="@color/colorFontDark"
             android:textSize="@dimen/mediumTextSize"
             android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/messageStatus"
+            app:layout_constraintStart_toEndOf="@+id/avatar"
+            app:layout_constraintTop_toTopOf="@id/avatar"
             bind:themedTextColor="@{R.color.colorFontDark}"
             tools:text="Title" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/lastMessage"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/channelTitle"
-            android:layout_alignStart="@+id/channelTitle"
             android:layout_marginTop="4dp"
-            android:layout_toStartOf="@+id/messageStatus"
             android:ellipsize="end"
             android:lines="1"
             android:textColor="@color/colorFontGray"
             android:textSize="@dimen/smallTextSize"
+            app:layout_constraintEnd_toEndOf="@+id/channelTitle"
+            app:layout_constraintStart_toStartOf="@id/channelTitle"
+            app:layout_constraintTop_toBottomOf="@+id/channelTitle"
             tools:text="Description" />
 
         <View
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="0.5dp"
-            android:layout_alignParentBottom="true"
             android:background="@color/colorDivider"
-            android:layout_alignStart="@+id/channelTitle"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/channelTitle" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/updateDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignTop="@+id/avatar"
             android:textColor="@color/colorFontGray"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -95,10 +94,7 @@
             android:id="@+id/messageStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/updateDate"
-            android:layout_alignBottom="@+id/updateDate"
             android:layout_marginEnd="4dp"
-            android:layout_toStartOf="@+id/updateDate"
             android:src="@drawable/ic_status_read"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/updateDate"
@@ -113,8 +109,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_alignParentEnd="true"
-            android:layout_below="@+id/updateDate"
             android:layout_marginTop="5dp"
             android:background="@drawable/bg_unread_count"
             android:includeFontPadding="false"
@@ -131,5 +125,5 @@
             tools:text="9"
             tools:visibility="visible" />
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
