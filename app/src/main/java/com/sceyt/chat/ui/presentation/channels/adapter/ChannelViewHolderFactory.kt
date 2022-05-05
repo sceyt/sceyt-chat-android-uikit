@@ -19,10 +19,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 
-object ChannelViewHolderFactory {
-    private lateinit var asyncLayoutInflater: AsyncLayoutInflater
-    private var cachedViews: Stack<SceytUiItemChannelBinding>? = Stack<SceytUiItemChannelBinding>()
-    private var cashJob: Job? = null
+class ChannelViewHolderFactory {
+
+    private var listeners = ChannelsListenersImpl()
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -38,7 +37,7 @@ object ChannelViewHolderFactory {
                         it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                     }
                 }
-                return ChannelViewHolder(view)
+                return ChannelViewHolder(view, listeners)
             }
             ChannelType.Loading.ordinal -> LoadingViewHolder(
                 SceytUiItemLoadingMoreBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -47,15 +46,31 @@ object ChannelViewHolderFactory {
         }
     }
 
-    fun cashViews(context: Context, count: Int = SceytUIKitConfig.CHANNELS_LOAD_SIZE) {
-        asyncLayoutInflater = AsyncLayoutInflater(context)
+    fun setChannelListener(listener: ChannelListeners) {
+        listeners.setListener(listener)
+    }
 
-        cashJob = (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {
-            for (i in 0..count) {
-                asyncLayoutInflater.inflate(R.layout.sceyt_ui_item_channel, null) { view, _, _ ->
-                    cachedViews?.push(SceytUiItemChannelBinding.bind(view))
+    companion object {
+        private lateinit var asyncLayoutInflater: AsyncLayoutInflater
+        private var cachedViews: Stack<SceytUiItemChannelBinding>? = Stack<SceytUiItemChannelBinding>()
+        private var cashJob: Job? = null
+
+        fun cashViews(context: Context, count: Int = SceytUIKitConfig.CHANNELS_LOAD_SIZE) {
+            asyncLayoutInflater = AsyncLayoutInflater(context)
+
+            cashJob = (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {
+                for (i in 0..count) {
+                    asyncLayoutInflater.inflate(R.layout.sceyt_ui_item_channel, null) { view, _, _ ->
+                        cachedViews?.push(SceytUiItemChannelBinding.bind(view))
+                    }
                 }
             }
+        }
+
+        fun clearCash() {
+            cashJob?.cancel()
+            cachedViews?.clear()
+            cachedViews = null
         }
     }
 
@@ -65,11 +80,6 @@ object ChannelViewHolderFactory {
         else ChannelType.Default.ordinal
     }
 
-    fun clearCash() {
-        cashJob?.cancel()
-        cachedViews?.clear()
-        cachedViews = null
-    }
 
     enum class ChannelType {
         Loading, Default

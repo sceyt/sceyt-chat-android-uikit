@@ -6,6 +6,8 @@ import android.animation.ObjectAnimator
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import android.view.animation.ScaleAnimation
+import androidx.core.view.isVisible
 import androidx.transition.Transition
 
 fun View.changeAlphaWithAnimation(fromAlpha: Float, toAlpha: Float, animDuration: Long, endListener: () -> Unit = {}) {
@@ -72,6 +74,69 @@ fun View.awaitAnimationEnd(animLister: Animation.AnimationListener? = null) {
 
 fun View.hasAnimation(): Boolean {
     return animation != null && !animation.hasEnded()
+}
+
+fun View.hasNotAnimation(): Boolean {
+    return animation == null || !animation.hasStarted() || animation.hasEnded()
+}
+
+fun View.scaleViewOut(startScale: Float, endScale: Float, duration: Long = 200,
+                      pivotX: Float = 0.5f, pivotY: Float = 0.5f,
+                      finishedListener: ((Animation?) -> Unit) = { }) {
+    val anim: Animation = ScaleAnimation(
+        startScale, endScale,  // Start and end values for the X axis scaling
+        startScale, endScale,  // Start and end values for the Y axis scaling
+        Animation.RELATIVE_TO_SELF, pivotX,  // Pivot point of X scaling
+        Animation.RELATIVE_TO_SELF, pivotY) // Pivot point of Y scaling
+    anim.fillAfter = true // Needed to keep the result of the animation
+    anim.duration = duration
+    anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
+    startAnimation(anim)
+}
+
+fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 200,
+                           pivotX: Float = 0.5f, pivotY: Float = 0.5f,
+                           finishedListener: ((Animation?) -> Unit) = { }) {
+    val anim: Animation = ScaleAnimation(
+        startScale, endScale,  // Start and end values for the X axis scaling
+        startScale, endScale,  // Start and end values for the Y axis scaling
+        Animation.RELATIVE_TO_SELF, pivotX,  // Pivot point of X scaling
+        Animation.RELATIVE_TO_SELF, pivotY) // Pivot point of Y scaling
+    anim.fillAfter = true // Needed to keep the result of the animation
+    anim.duration = duration
+    anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
+    startAnimation(anim)
+}
+
+fun View.visibleGoneWithScaleAnim(visible: Boolean) {
+    if (hasNotAnimation()) {
+        isClickable = false
+        if (visible) {
+            if (!isVisible) {
+                isVisible = true
+                scaleViewOut(0f, 1f) {
+                    isClickable = true
+                }
+            } else isClickable = true
+        } else {
+            if (isVisible) {
+                scaleViewWithAnim(1f, 0f) {
+                    isVisible = false
+                }
+            }
+        }
+    }
+}
+
+fun View.visibleWithScaleAnim() {
+    if (hasNotAnimation()) {
+        if (!isVisible) {
+            isVisible = true
+            scaleViewOut(0f, 1f) {
+
+            }
+        }
+    }
 }
 
 inline fun animationListener(
