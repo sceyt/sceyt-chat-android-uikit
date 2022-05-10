@@ -15,15 +15,20 @@ class ToReplayLineView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokeWidth = 5f
     private var isToLeft = false
+    private var connectedViewHalfHeight = 0
+    private var connectedViewId: Int
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.ToReplayLineView)
         isToLeft = a.getBoolean(R.styleable.ToReplayLineView_toLeft, false)
+        connectedViewId = a.getResourceId(R.styleable.ToReplayLineView_connectedView, 0)
+        //val view = rootView.findViewById<View>(connectedView)
         a.recycle()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        if (height - width < 0) connectedViewHalfHeight = 0
         if (isToLeft)
             drawToLeft(canvas)
         else drawToRight(canvas)

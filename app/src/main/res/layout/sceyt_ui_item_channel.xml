@@ -10,7 +10,7 @@
 
         <variable
             name="channel"
-            type="com.sceyt.chat.ui.data.models.SceytUiChannel" />
+            type="com.sceyt.chat.ui.data.models.channels.SceytUiChannel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -48,11 +48,12 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:ellipsize="end"
+            android:includeFontPadding="false"
             android:lines="1"
             android:textColor="@color/colorFontDark"
             android:textSize="@dimen/mediumTextSize"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/messageStatus"
+            app:layout_constraintEnd_toStartOf="@+id/updateDate"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintTop_toTopOf="@id/avatar"
             bind:themedTextColor="@{R.color.colorFontDark}"
@@ -80,29 +81,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/channelTitle" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <com.sceyt.chat.ui.presentation.customviews.DateStatusView
             android:id="@+id/updateDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorFontGray"
-            android:textSize="13sp"
+            android:layout_marginTop="2dp"
+            app:dateTextColor="@color/colorFontGray"
+            app:dateTextSize="13sp"
+            app:firstStatus="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/avatar"
-            tools:text="12:28" />
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/messageStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:src="@drawable/ic_status_read"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/updateDate"
-            app:layout_constraintEnd_toStartOf="@id/updateDate"
-            app:layout_constraintTop_toTopOf="@id/updateDate"
+            app:statusIconMargin="4dp"
+            app:statusIconSize="24dp"
             bind:incoming="@{channel.lastMessage.incoming}"
             bind:status="@{channel.lastMessage.deliveryStatus}"
-            tools:visibility="visible" />
+            tools:dateText="12:28"
+            tools:statusIcon="@drawable/ic_status_read" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/messageCount"

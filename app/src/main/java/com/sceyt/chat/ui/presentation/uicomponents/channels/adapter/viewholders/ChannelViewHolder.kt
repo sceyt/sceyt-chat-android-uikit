@@ -5,10 +5,10 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.ChannelTypeEnum
-import com.sceyt.chat.ui.data.models.SceytUiChannel
-import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
-import com.sceyt.chat.ui.data.models.SceytUiGroupChannel
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
+import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
+import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
+import com.sceyt.chat.ui.data.models.channels.SceytUiGroupChannel
 import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
@@ -18,7 +18,7 @@ import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil
 
 class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
-                        private var listeners: ChannelsListenersImpl) : BaseChannelViewHolder(binding.root) {
+                        private var listeners: ChannelsListenersImpl) : BaseViewHolder<ChannelListItem>(binding.root) {
 
     init {
         binding.setChannelItemStyle()
@@ -45,7 +45,7 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
                     avatar.setNameAndImageUrl(name, url)
                     channelTitle.text = name
                     lastMessage.text = getLastMessageTxt(channel.lastMessage)
-                    updateDate.text = getDateTxt(channel)
+                    updateDate.setDateText(getDateTxt(channel))
                     messageCount.isVisible = false
 
                     root.setOnClickListener {

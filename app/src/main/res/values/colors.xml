@@ -10,6 +10,7 @@
     <color name="hintColor">#BAB8B8</color>
     <color name="colorBackground">#FFFFFF</color>
     <color name="colorFontDark">#060A26</color>
+    <color name="colorFontDarkFinal">#060A26</color>
     <color name="colorFontGray">#676A7C</color>
     <color name="colorTextWhite">#ffffff</color>
     <color name="colorDivider">#CCCDCDCF</color>

@@ -1,6 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter
 
-import com.sceyt.chat.ui.data.models.SceytUiChannel
+import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
 
 sealed class ChannelListItem {
     data class ChannelItem(val channel: SceytUiChannel) : ChannelListItem()

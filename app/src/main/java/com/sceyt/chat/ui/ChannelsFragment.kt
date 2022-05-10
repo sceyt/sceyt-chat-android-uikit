@@ -13,7 +13,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelLis
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindSearchView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
-import com.sceyt.chat.ui.presentation.uicomponents.conversatin.ConversationActivity
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 
 
 class ChannelsFragment : Fragment() {
@@ -33,22 +33,24 @@ class ChannelsFragment : Fragment() {
         mViewModel.bindSearchView(mBinding.searchView)
 
         mBinding.channelListView.setChannelListener(ChannelListeners.ChannelClickListener {
-           requireActivity().launchActivity<ConversationActivity>()
+            requireActivity().launchActivity<ConversationActivity> {
+                putExtra("channelId", it.channel.id)
+            }
         })
 
-       /* mBinding.channelListView.setChannelListener(object :ChannelListListeners.Listeners {
-            override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-                requireActivity().shortToast(item.channel.lastMessage?.body ?: "")
-            }
+        /* mBinding.channelListView.setChannelListener(object :ChannelListListeners.Listeners {
+             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
+                 requireActivity().shortToast(item.channel.lastMessage?.body ?: "")
+             }
 
-            override fun onChannelLongClick() {
-                requireActivity().shortToast("Long")
-            }
+             override fun onChannelLongClick() {
+                 requireActivity().shortToast("Long")
+             }
 
-            override fun onAvatarClick() {
-                requireActivity().shortToast("Avatar")
-            }
-        })*/
+             override fun onAvatarClick() {
+                 requireActivity().shortToast("Avatar")
+             }
+         })*/
 
         (requireActivity().application as SceytUiKitApp).sceytConnectionStatus.observe(viewLifecycleOwner) {
             if (it == Types.ConnectState.StateConnected) {
