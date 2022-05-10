@@ -7,7 +7,6 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.asynclayoutinflater.view.AsyncLayoutInflater
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
 import com.sceyt.chat.ui.databinding.SceytUiItemLoadingMoreBinding
@@ -20,16 +19,17 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 
-class ChannelViewHolderFactory {
+class ChannelViewHolderFactory(context: Context) {
 
     private var listeners = ChannelsListenersImpl()
+    private val layoutInflater = LayoutInflater.from(context)
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ChannelListItem> {
         return when (viewType) {
             ChannelType.Default.ordinal -> {
                 val view: SceytUiItemChannelBinding = if (cachedViews.isNullOrEmpty()) {
                     cashViews(parent.context)
-                    SceytUiItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                    SceytUiItemChannelBinding.inflate(layoutInflater, parent, false)
                 } else {
                     if (cachedViews!!.size < SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
                         cashViews(parent.context, SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
@@ -41,7 +41,7 @@ class ChannelViewHolderFactory {
                 return ChannelViewHolder(view, listeners)
             }
             ChannelType.Loading.ordinal -> LoadingViewHolder(
-                SceytUiItemLoadingMoreBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                SceytUiItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
             )
             else -> throw Exception("Not supported view type")
         }
@@ -76,11 +76,11 @@ class ChannelViewHolderFactory {
     }
 
     fun getItemViewType(item: ChannelListItem): Int {
-        return if (item is ChannelListItem.LoadingMoreItem)
-            return ChannelType.Loading.ordinal
-        else ChannelType.Default.ordinal
+        return when (item) {
+            is ChannelListItem.ChannelItem -> ChannelType.Default.ordinal
+            is ChannelListItem.LoadingMoreItem -> return ChannelType.Loading.ordinal
+        }
     }
-
 
     enum class ChannelType {
         Loading, Default

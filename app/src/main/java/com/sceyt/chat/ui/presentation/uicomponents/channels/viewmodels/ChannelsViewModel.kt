@@ -3,9 +3,9 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.data.models.SceytUiChannel
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,13 +30,14 @@ class ChannelsViewModel : BaseViewModel() {
     fun loadChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
         isLoadingChannels = true
+        val isLoadingMore = offset > 0
 
-        notifyPageLoadingState(false, searchQuery)
+        notifyPageLoadingState(isLoadingMore, searchQuery)
 
         viewModelScope.launch(Dispatchers.IO) {
             if (searchQuery.isBlank()) {
-                getChannelsList(offset, offset > 0)
-            } else searchChannels(offset, query, offset > 0)
+                getChannelsList(offset, isLoadingMore)
+            } else searchChannels(offset, query, isLoadingMore)
         }
     }
 
@@ -64,7 +65,7 @@ class ChannelsViewModel : BaseViewModel() {
             _loadMoreChannelsFlow.value = response
         else _channelsFlow.value = response
 
-        notifyPageStateWithResponse(response, loadingNext, searchQuery)
+        notifyPageStateWithResponse(loadingNext, response.data.isNullOrEmpty(), searchQuery)
     }
 
     private fun mapToChannelItem(data: List<SceytUiChannel>?, hasNext: Boolean): List<ChannelListItem> {

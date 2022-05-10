@@ -9,5 +9,17 @@
 
     <declare-styleable name="ToReplayLineView">
         <attr name="toLeft" format="boolean" />
+        <attr name="connectedView" format="reference" />
     </declare-styleable>
+
+    <declare-styleable name="DateStatusView">
+        <attr name="statusIcon" format="reference" />
+        <attr name="statusIconSize" format="dimension" />
+        <attr name="statusIconMargin" format="dimension" />
+        <attr name="dateTextSize" format="dimension" />
+        <attr name="dateTextColor" format="reference|color" />
+        <attr name="dateText" format="string" />
+        <attr name="firstStatus" format="boolean" />
+    </declare-styleable>
+
 </resources>

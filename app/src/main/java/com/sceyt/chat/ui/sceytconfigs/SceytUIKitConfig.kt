@@ -8,6 +8,7 @@ object SceytUIKitConfig {
     val SceytUITheme = ThemeConfig()
 
     const val CHANNELS_LOAD_SIZE = 20
+    const val MESSAGES_LOAD_SIZE = 20
 
     val isDarkMode get() =  SceytUITheme.isDarkMode
 

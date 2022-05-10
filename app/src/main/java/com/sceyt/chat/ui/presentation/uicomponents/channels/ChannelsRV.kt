@@ -16,7 +16,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private lateinit var mAdapter: ChannelsAdapter
     private var richToEndListener: ((offset: Int) -> Unit)? = null
-    private val viewHolderFactory = ChannelViewHolderFactory()
+    private val viewHolderFactory = ChannelViewHolderFactory(context)
 
     init {
         init()

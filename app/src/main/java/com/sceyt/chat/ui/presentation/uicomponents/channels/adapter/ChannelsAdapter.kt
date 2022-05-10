@@ -4,22 +4,22 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.utils.MyDiffUtil
 
 class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
                       private var viewHolderFactory: ChannelViewHolderFactory) :
-        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        RecyclerView.Adapter<BaseViewHolder<ChannelListItem>>() {
 
     private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ChannelListItem> {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as BaseChannelViewHolder).bindViews(item = channels[position])
+    override fun onBindViewHolder(holder: BaseViewHolder<ChannelListItem>, position: Int) {
+        holder.bindViews(item = channels[position])
     }
 
     override fun getItemCount(): Int = channels.size
@@ -28,14 +28,14 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
         return viewHolderFactory.getItemViewType(channels[position])
     }
 
-    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
+    override fun onViewDetachedFromWindow(holder: BaseViewHolder<ChannelListItem>) {
         super.onViewDetachedFromWindow(holder)
-        (holder as BaseChannelViewHolder).onViewDetachedFromWindow()
+        holder.onViewDetachedFromWindow()
     }
 
-    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+    override fun onViewAttachedToWindow(holder: BaseViewHolder<ChannelListItem>) {
         super.onViewAttachedToWindow(holder)
-        (holder as BaseChannelViewHolder).onViewAttachedFromWindow()
+        holder.onViewAttachedFromWindow()
     }
 
     private fun removeLoading() {

@@ -3,7 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="../../../../layout/custom_preview.xml" value="0.4117948717948718" />
+        <entry key="../../../../layout/custom_preview.xml" value="0.41822916666666665" />
         <entry key="app/src/main/res/drawable-v24/bg_circle_blue.xml" value="0.23" />
         <entry key="app/src/main/res/drawable-v24/bg_online.xml" value="0.23" />
         <entry key="app/src/main/res/drawable/bg_circle_blue.xml" value="0.23" />
@@ -13,7 +13,9 @@
         <entry key="app/src/main/res/drawable/bg_line.xml" value="0.1675" />
         <entry key="app/src/main/res/drawable/bg_message_day.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/bg_online.xml" value="0.1675" />
+        <entry key="app/src/main/res/drawable/bg_out_message.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/bg_search_view.xml" value="0.2" />
+        <entry key="app/src/main/res/drawable/bg_stroke.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/date_transparent_background.xml" value="0.23" />
         <entry key="app/src/main/res/drawable/ic_baseline_clear_24.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_cancel.xml" value="0.244" />
@@ -24,23 +26,29 @@
         <entry key="app/src/main/res/layout/activity_conversation.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.18" />
         <entry key="app/src/main/res/layout/fragment_channels.xml" value="0.31971153846153844" />
+        <entry key="app/src/main/res/layout/item_add_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/item_channel.xml" value="0.22" />
         <entry key="app/src/main/res/layout/item_loading.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/item_reaction.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/item_reaction.xml" value="0.67" />
         <entry key="app/src/main/res/layout/recyclerview_channel.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_channel_list_empty_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_channel_list_empty_state_view.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_ui_item_channel.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_channel.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_channel_test.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_text_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_text_message.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_text_message_2.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_loading_more.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_message_inc.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_out_text_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_out_text_message2.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_loading_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_page_loading.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_search_channels_empty_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/search_view.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/layout/st.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/stete_container.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/layout/te.xml" value="0.67" />
+        <entry key="app/src/main/res/layout/view_message_box.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/menu/menu_bottom_navigation.xml" value="0.3776041666666667" />
       </map>
     </option>

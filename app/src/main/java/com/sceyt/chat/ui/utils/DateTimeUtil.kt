@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.utils
 
 import android.annotation.SuppressLint
 import android.text.format.DateFormat
+import androidx.annotation.IntRange
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -149,5 +150,10 @@ object DateTimeUtil {
         val cal = Calendar.getInstance()
         cal.timeInMillis = time
         return DateFormat.format("HH:mm", cal).toString()
+    }
+
+    fun isSameDay(@IntRange(from = 0) epochOne: Long, @IntRange(from = 0) epochTwo: Long): Boolean {
+        val fmt = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+        return (fmt.format(epochOne) == fmt.format(epochTwo))
     }
 }

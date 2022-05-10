@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".presentation.uicomponents.conversatin.ConversationActivity"
+            android:name=".presentation.uicomponents.conversation.ConversationActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

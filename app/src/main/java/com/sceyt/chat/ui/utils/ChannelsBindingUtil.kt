@@ -9,9 +9,11 @@ import androidx.databinding.BindingAdapter
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.ChannelTypeEnum
-import com.sceyt.chat.ui.data.models.SceytUiChannel
-import com.sceyt.chat.ui.data.models.SceytUiDirectChannel
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
+import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
+import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
+import com.sceyt.chat.ui.extensions.getCompatDrawable
+import com.sceyt.chat.ui.presentation.customviews.DateStatusView
 
 object ChannelsBindingUtil {
 
@@ -39,6 +41,26 @@ object ChannelsBindingUtil {
         iconResId?.let {
             imageView.setImageResource(it)
             imageView.isVisible = true
+        }
+    }
+
+    @BindingAdapter("bind:status", "bind:incoming")
+    @JvmStatic
+    fun setMessageStatusIcon(dateStatusView: DateStatusView, status: DeliveryStatus?, incoming: Boolean?) {
+        if (status == null || incoming == true) {
+            dateStatusView.setStatusIcon(null)
+            return
+        }
+        val iconResId = when (status) {
+            DeliveryStatus.Pending -> R.drawable.ic_status_not_sent
+            DeliveryStatus.Sent -> R.drawable.ic_status_on_server
+            DeliveryStatus.Delivered -> R.drawable.ic_status_delivered
+            DeliveryStatus.Read -> R.drawable.ic_status_read
+            else -> null
+        }
+        iconResId?.let {
+            dateStatusView.setStatusIcon(dateStatusView.context.getCompatDrawable(it))
+            dateStatusView.isVisible = true
         }
     }
 

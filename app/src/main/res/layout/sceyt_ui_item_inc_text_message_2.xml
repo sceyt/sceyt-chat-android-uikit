@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="message"
+            type="com.sceyt.chat.ui.data.models.messages.SceytUiMessage" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="4dp">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/messageDay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_message_day"
+            android:includeFontPadding="false"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/colorFontGray"
+            android:textSize="@dimen/extraSmallTextSize"
+            android:visibility="gone"
+            tools:text="Feb 24" />
+
+        <com.sceyt.chat.ui.presentation.customviews.Avatar
+            android:id="@+id/avatar2"
+            android:layout_width="@dimen/_27sdp"
+            android:layout_height="@dimen/_27sdp"
+            android:layout_below="@+id/messageDay"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@+id/viewBg"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/viewBg"
+            tools:visibility="visible" />
+
+        <com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
+            android:id="@+id/toReplayLine"
+            android:layout_width="10dp"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/viewBg"
+            android:layout_alignTop="@+id/viewBg"
+            android:layout_alignBottom="@+id/tvReplayCount"
+            android:visibility="gone" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/viewBg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/messageDay"
+            android:layout_toEndOf="@+id/avatar2"
+            android:background="@drawable/bg_inc_message">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/messageBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/colorFontDark"
+                android:textSize="@dimen/mediumTextSize"
+                app:layout_constraintBottom_toBottomOf="@+id/viewBg"
+                app:layout_constraintEnd_toEndOf="@+id/viewBg"
+                app:layout_constraintStart_toStartOf="@+id/viewBg"
+                app:layout_constraintTop_toTopOf="@+id/viewBg"
+                app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
+                tools:text="Lore ipsum  is the correct text which" />
+
+            <com.sceyt.chat.ui.presentation.customviews.DateStatusView
+                android:id="@+id/messageDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="6dp"
+                app:dateTextColor="#7C7E8E"
+                app:dateTextSize="@dimen/tinyTextSize"
+                app:firstStatus="false"
+                app:layout_constraintBottom_toBottomOf="@id/viewBg"
+                app:layout_constraintEnd_toEndOf="@id/viewBg"
+                bind:incoming="@{message.incoming}"
+                bind:status="@{message.deliveryStatus}"
+                tools:dateText="00:37" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvReplayCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/rvReactions"
+            android:layout_marginStart="2dp"
+            android:layout_toEndOf="@+id/toReplayLine"
+            android:paddingTop="3dp"
+            android:textColor="@color/colorAccent"
+            android:textSize="@dimen/tinyTextSize"
+            android:visibility="gone"
+            tools:text="34 reply" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvReactions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/viewBg"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="3dp"
+            android:orientation="horizontal"
+            android:paddingTop="4dp"
+            android:visibility="gone"
+            tools:itemCount="3"
+            tools:listitem="@layout/item_reaction" />
+
+    </RelativeLayout>
+</layout>
