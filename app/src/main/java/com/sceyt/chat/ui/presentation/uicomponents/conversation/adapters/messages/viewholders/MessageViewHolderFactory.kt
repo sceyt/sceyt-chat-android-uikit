@@ -24,17 +24,17 @@ class MessageViewHolderFactory(context: Context) {
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MessageListItem> {
         return when (viewType) {
             MessageTypeEnum.IncText.ordinal -> {
-                IncTextMsgViewHolder(SceytUiItemIncTextMessage2Binding.inflate(layoutInflater, parent, false), viewPool)
+                IncTextMsgViewHolder(SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
             }
             MessageTypeEnum.OutText.ordinal -> {
-                OutTextMsgViewHolder(SceytUiItemOutTextMessage2Binding.inflate(layoutInflater, parent, false), viewPool)
+                OutTextMsgViewHolder(SceytUiItemOutTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
             }
             MessageTypeEnum.Loading.ordinal -> LoadingViewHolder(
                 SceytUiItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
             )
             // else -> throw Exception("Not supported view type")
             else -> {
-                IncTextMsgViewHolder(SceytUiItemIncTextMessage2Binding.inflate(layoutInflater, parent, false), viewPool)
+                IncTextMsgViewHolder(SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
             }
         }
     }

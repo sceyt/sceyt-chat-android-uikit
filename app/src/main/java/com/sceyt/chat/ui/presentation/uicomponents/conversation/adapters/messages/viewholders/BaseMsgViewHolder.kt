@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -17,7 +16,6 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
-import com.sceyt.chat.ui.utils.DateTimeUtil.isSameDay
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 import kotlin.math.min
 
