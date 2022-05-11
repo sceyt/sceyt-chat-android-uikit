@@ -7,19 +7,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isFirstCompletelyItemDisplaying
-import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.ChatItemOffsetDecoration
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.MessageListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.MessagesAdapter
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.MessageViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
 
     private lateinit var mAdapter: MessagesAdapter
-    private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private val viewHolderFactory = MessageViewHolderFactory(context)
 
@@ -40,9 +38,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun addOnScrollListener() {
         post {
             addRVScrollListener { _: RecyclerView, _: Int, _: Int ->
-                if (isLastItemDisplaying() && mAdapter.itemCount != 0)
-                    richToEndListener?.invoke(mAdapter.getSkip(), mAdapter.getLastItem())
-
                 if (isFirstCompletelyItemDisplaying() && mAdapter.itemCount != 0)
                     richToStartListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstItem())
             }
@@ -64,10 +59,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             setData(messages)
         else
             mAdapter.addList(messages as MutableList<MessageListItem>)
-    }
-
-    fun setRichToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        richToEndListener = listener
     }
 
     fun setRichToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {

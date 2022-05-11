@@ -30,6 +30,7 @@
             android:textColor="@color/colorFontGray"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
 
         <com.sceyt.chat.ui.presentation.customviews.Avatar

@@ -29,12 +29,13 @@
             android:paddingVertical="4dp"
             android:textColor="@color/colorFontGray"
             android:textSize="@dimen/extraSmallTextSize"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
+            bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
 
         <com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
@@ -44,7 +45,7 @@
             android:layout_alignTop="@+id/layoutDetails"
             android:layout_alignBottom="@+id/tvReplayCount"
             android:layout_alignParentEnd="true"
-            android:visibility="gone"
+            android:visibility="visible"
             app:toLeft="true" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -53,12 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/messageDay"
             android:layout_alignParentEnd="true"
-            android:background="@drawable/bg_out_message"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/messageDay"
-            app:layout_constraintWidth_percent=".6">
+            android:background="@drawable/bg_out_message">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/messageBody"
@@ -73,7 +69,7 @@
                 app:layout_constraintStart_toStartOf="@+id/layoutDetails"
                 app:layout_constraintTop_toTopOf="@+id/layoutDetails"
                 app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
-                tools:text="Lore ipsum description is created" />
+                tools:text="Lore ipsum description is created from" />
 
             <com.sceyt.chat.ui.presentation.customviews.DateStatusView
                 android:id="@+id/messageDate"
@@ -105,7 +101,7 @@
             android:layout_marginEnd="3dp"
             android:orientation="horizontal"
             android:paddingTop="4dp"
-            android:visibility="gone"
+            android:visibility="visible"
             app:stackFromEnd="true"
             tools:itemCount="3"
             tools:listitem="@layout/item_reaction" />
@@ -120,7 +116,7 @@
             android:paddingTop="3dp"
             android:textColor="@color/colorAccent"
             android:textSize="@dimen/tinyTextSize"
-            android:visibility="gone"
+            android:visibility="visible"
             tools:text="34 reply" />
 
     </RelativeLayout>

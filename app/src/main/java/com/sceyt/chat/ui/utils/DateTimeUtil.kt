@@ -152,7 +152,7 @@ object DateTimeUtil {
         return DateFormat.format("HH:mm", cal).toString()
     }
 
-    fun isSameDay(@IntRange(from = 0) epochOne: Long, @IntRange(from = 0) epochTwo: Long): Boolean {
+    fun isSameDay(epochOne: Long, epochTwo: Long): Boolean {
         val fmt = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
         return (fmt.format(epochOne) == fmt.format(epochTwo))
     }

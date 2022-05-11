@@ -1,12 +1,12 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.MessageViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
+import com.sceyt.chat.ui.utils.DateTimeUtil
 import com.sceyt.chat.ui.utils.MyDiffUtil
 
 class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
@@ -33,18 +33,21 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
 
     fun getSkip() = messages.filter { it !is MessageListItem.LoadingMoreItem }.size
 
-    fun getFirstItem(): MessageListItem? {
-
-        val item = messages.find { it !is MessageListItem.LoadingMoreItem }
-        Log.i("xcsdfs", (item as MessageListItem.MessageItem).message.body)
-        return item
-    }
-
-    fun getLastItem() = messages.findLast { it !is MessageListItem.LoadingMoreItem }
+    fun getFirstItem(): MessageListItem.MessageItem = messages.find {
+        it !is MessageListItem.LoadingMoreItem
+    } as MessageListItem.MessageItem
 
     private fun removeLoading() {
         if (messages.remove(mLoadingItem))
             notifyItemRemoved(0)
+    }
+
+    private fun updateDate(newItem: MessageListItem, firstItem: MessageListItem) {
+        if (newItem is MessageListItem.MessageItem) {
+            (firstItem as MessageListItem.MessageItem).message.apply {
+                showDate = !DateTimeUtil.isSameDay(createdAt, newItem.message.createdAt)
+            }
+        }
     }
 
     fun notifyUpdate(messages: List<MessageListItem>) {
@@ -58,11 +61,14 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
     @SuppressLint("NotifyDataSetChanged")
     fun addList(items: List<MessageListItem>) {
         removeLoading()
+        val firstItem = getFirstItem()
         messages.addAll(0, items)
         if (messages.size == items.size)
             notifyDataSetChanged()
-        else
+        else {
             notifyItemRangeInserted(0, items.size)
+            updateDate(items.last(), firstItem)
+        }
     }
 
     fun needTopOffset(position: Int): Boolean {

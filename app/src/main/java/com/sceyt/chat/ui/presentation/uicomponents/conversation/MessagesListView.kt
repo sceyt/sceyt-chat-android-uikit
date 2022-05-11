@@ -8,7 +8,7 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.BindingUtil
 
@@ -41,10 +41,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             it.setEmptyStateView(ChannelStyle.emptyState)
             it.setEmptySearchStateView(ChannelStyle.emptySearchState)
         })
-    }
-
-    fun setReachToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToEndListener(listener)
     }
 
     fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {

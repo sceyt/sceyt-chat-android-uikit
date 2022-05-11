@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages
 
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 
