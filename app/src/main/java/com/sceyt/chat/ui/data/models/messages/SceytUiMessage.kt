@@ -1,5 +1,8 @@
 package com.sceyt.chat.ui.data.models.messages
 
+import androidx.databinding.BaseObservable
+import androidx.databinding.Bindable
+import androidx.databinding.library.baseAdapters.BR
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
@@ -30,6 +33,12 @@ open class SceytUiMessage(var id: Long,
                           var mentionedUsers: Array<User?>,
                           var parent: Message?,
                           var replyInThread: Boolean = false,
-                          var replyCount: Long = 0) {
+                          var replyCount: Long = 0) : BaseObservable() {
 
+    @Bindable
+    var showDate = false
+        set(value) {
+            field = value
+            notifyPropertyChanged(BR.showDate)
+        }
 }

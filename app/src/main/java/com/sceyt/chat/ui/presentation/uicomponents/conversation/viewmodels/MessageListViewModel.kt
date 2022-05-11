@@ -5,8 +5,9 @@ import com.sceyt.chat.ui.data.MessagesRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import com.sceyt.chat.ui.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,7 +63,14 @@ class MessageListViewModel(channelId: Long) : BaseViewModel() {
     private fun mapToMessageListItem(data: List<SceytUiMessage>?, hasNext: Boolean): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
-        val messageItems: List<MessageListItem> = data.map { item -> MessageListItem.MessageItem(item) }
+        val messageItems: List<MessageListItem> = data.mapIndexed { index, item ->
+            MessageListItem.MessageItem(item.apply {
+                showDate = if (index > 0) {
+                    val prevTime = data[index - 1].createdAt
+                    !DateTimeUtil.isSameDay(createdAt, prevTime)
+                } else true
+            })
+        }
         if (hasNext)
             (messageItems as ArrayList).add(0, MessageListItem.LoadingMoreItem)
         return messageItems

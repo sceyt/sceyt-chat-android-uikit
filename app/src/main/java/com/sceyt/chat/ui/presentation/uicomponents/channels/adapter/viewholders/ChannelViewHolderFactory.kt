@@ -78,7 +78,7 @@ class ChannelViewHolderFactory(context: Context) {
     fun getItemViewType(item: ChannelListItem): Int {
         return when (item) {
             is ChannelListItem.ChannelItem -> ChannelType.Default.ordinal
-            is ChannelListItem.LoadingMoreItem -> return ChannelType.Loading.ordinal
+            is ChannelListItem.LoadingMoreItem -> ChannelType.Loading.ordinal
         }
     }
 

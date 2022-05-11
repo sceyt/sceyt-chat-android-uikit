@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages
 
 import android.content.Context
 import android.graphics.Rect
@@ -12,7 +12,7 @@ class ChatItemOffsetDecoration(private val mItemOffset: Int) : RecyclerView.Item
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         super.getItemOffsets(outRect, view, parent, state)
         try {
-            val viewHolder = parent.getChildViewHolder(view);
+            val viewHolder = parent.getChildViewHolder(view)
             val bindPos = viewHolder.bindingAdapterPosition
             val needOffset = (viewHolder.bindingAdapter as? MessagesAdapter)?.needTopOffset(bindPos)
                     ?: false

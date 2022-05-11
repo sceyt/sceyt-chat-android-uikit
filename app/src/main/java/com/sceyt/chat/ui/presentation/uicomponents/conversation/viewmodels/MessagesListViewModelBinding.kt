@@ -5,7 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 

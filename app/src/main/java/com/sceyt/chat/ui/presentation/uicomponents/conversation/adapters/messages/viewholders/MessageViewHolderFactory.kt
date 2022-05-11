@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -12,9 +12,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.LoadingViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsListenersImpl
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.MessageListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.viewholders.IncTextMsgViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.viewholders.OutTextMsgViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 
 class MessageViewHolderFactory(context: Context) {
 
