@@ -29,6 +29,12 @@ class MessageViewHolderFactory(context: Context) {
             MessageTypeEnum.OutText.ordinal -> {
                 OutTextMsgViewHolder(SceytUiItemOutTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
             }
+            MessageTypeEnum.IncFiles.ordinal -> {
+                IncFilesMsgViewHolder(SceytUiItemIncFilesMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+            }
+            MessageTypeEnum.OutFiles.ordinal -> {
+                OutFilesMsgViewHolder(SceytUiItemOutFilesMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+            }
             MessageTypeEnum.Loading.ordinal -> LoadingViewHolder(
                 SceytUiItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
             )
@@ -52,13 +58,13 @@ class MessageViewHolderFactory(context: Context) {
 
     private fun getMessageType(message: SceytUiMessage): MessageTypeEnum {
         val inc = message.incoming
-
         return when {
             message.state == MessageState.Deleted -> if (inc) MessageTypeEnum.IncDeleted else MessageTypeEnum.IncDeleted
             message.attachments.isNullOrEmpty() -> if (inc) MessageTypeEnum.IncText else MessageTypeEnum.OutText
+            //todo
             message.attachments?.size == 1 && message.attachments?.getOrNull(0)?.type.isEqualsVideoOrImage() ->
-                if (inc) MessageTypeEnum.IncSingleVideoOrImage else MessageTypeEnum.IncSingleVideoOrImage
-            else -> if (inc) MessageTypeEnum.IncAttachments else MessageTypeEnum.IncAttachments
+                if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
+            else -> if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
         }
     }
 
@@ -67,7 +73,9 @@ class MessageViewHolderFactory(context: Context) {
         IncText,
         OutText,
         IncDeleted,
+        OutDeleted,
         IncSingleVideoOrImage,
-        IncAttachments;
+        IncFiles,
+        OutFiles;
     }
 }

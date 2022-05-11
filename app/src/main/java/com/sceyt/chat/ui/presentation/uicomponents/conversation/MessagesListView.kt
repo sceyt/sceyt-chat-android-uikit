@@ -33,6 +33,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
          }*/
 
         messagesRV = MessagesRV(context)
+        messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
+        messagesRV.clipToPadding = clipToPadding
+        setPadding(0, 0, 0, 0)
+
         addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
         addView(PageStateView(context).also {

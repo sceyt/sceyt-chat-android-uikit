@@ -145,11 +145,11 @@ object DateTimeUtil {
             )
     }
 
-    fun getDateTimeString(time: Long?): String {
+    fun getDateTimeString(time: Long?, format: String = "HH:mm"): String {
         if (time == null) return ""
         val cal = Calendar.getInstance()
         cal.timeInMillis = time
-        return DateFormat.format("HH:mm", cal).toString()
+        return DateFormat.format(format, cal).toString()
     }
 
     fun isSameDay(epochOne: Long, epochTwo: Long): Boolean {

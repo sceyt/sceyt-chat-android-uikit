@@ -10,6 +10,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListI
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesRV
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.BindingUtil
 
@@ -30,6 +31,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         channelsRV = ChannelsRV(context)
+        channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
+        channelsRV.clipToPadding = clipToPadding
+        setPadding(0, 0, 0, 0)
+
         addView(channelsRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
         addView(PageStateView(context).also {

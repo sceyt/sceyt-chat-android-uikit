@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="isLoading"
+            type="Boolean" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icFile"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_circle_blue"
+            android:padding="8dp"
+            android:src="@{isLoading ? null : @drawable/ic_file}"
+            app:layout_constraintBottom_toBottomOf="@+id/tvFileSize"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/circularProgressbar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="1"
+            android:progressDrawable="@drawable/progress_circle_small_paddings"
+            app:layout_constraintBottom_toBottomOf="@+id/icFile"
+            app:layout_constraintEnd_toEndOf="@id/icFile"
+            app:layout_constraintStart_toStartOf="@+id/icFile"
+            app:layout_constraintTop_toTopOf="@+id/icFile"
+            bind:visibleIf="@{isLoading}"
+            tools:visibility="visible" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvFileName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:ellipsize="middle"
+            android:singleLine="true"
+            android:textColor="@color/colorFontDark"
+            android:textSize="@dimen/mediumTextSize"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/icFile"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Montagabold.otf" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvFileSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:includeFontPadding="false"
+            android:textColor="@color/colorFontGray"
+            android:textSize="@dimen/tinyTextSize"
+            app:layout_constraintStart_toStartOf="@+id/tvFileName"
+            app:layout_constraintTop_toBottomOf="@+id/tvFileName"
+            tools:text="67 KB" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

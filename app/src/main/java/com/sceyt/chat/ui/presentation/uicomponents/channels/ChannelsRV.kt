@@ -24,7 +24,6 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     private fun init() {
-        clipToPadding = false
         setHasFixedSize(true)
         setItemViewCacheSize(10)
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)

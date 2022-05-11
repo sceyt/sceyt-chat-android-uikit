@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.extensions
 
 import java.math.RoundingMode
+import java.text.DecimalFormat
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -31,4 +32,15 @@ private fun getPow10(skip: Double): Double {
         val k = (value.length) - value.indexOf(".")
         10.0.pow(k.toDouble())
     } else 10.0
+}
+
+fun Long.toPrettySize(): String {
+    val sizeInKb = (this / 1024f).toDouble()
+    val sizeInMb = sizeInKb / 1024f
+    val format = DecimalFormat("##.##")
+    return when {
+        sizeInMb >= 1 -> format.format(sizeInMb) + "MB"
+        sizeInKb >= 1 -> format.format(sizeInKb) + "KB"
+        else -> "${this}B"
+    }
 }

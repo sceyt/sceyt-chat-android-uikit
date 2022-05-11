@@ -8,7 +8,11 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.extensions.getCompatDrawable
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
@@ -27,6 +31,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     private var firstStatusIcon = true
     private var mMargin = 0
     private var mIconSize = 0
+    private var isHighlighted = false
 
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -51,6 +56,8 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         mIconSize = statusIconSize
         textBoundsRect = Rect()
         iconBoundsRect = Rect()
+
+        setHighlightedState(isHighlighted)
 
         checkSizesAndMargins()
         if (firstStatusIcon)
@@ -140,6 +147,18 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         } else 0
     }
 
+    private fun setHighlightedState(highlighted: Boolean) {
+        if (highlighted) {
+            textPaint.color = Color.WHITE
+            statusDrawable?.setTint(Color.WHITE)
+            background = context.getCompatDrawable(R.drawable.date_transparent_background)
+        } else {
+            textPaint.color = textColor
+            statusDrawable?.setTintList(null)
+            background = null
+        }
+    }
+
     fun setStatusIcon(drawable: Drawable?) {
         statusDrawable = drawable
         init()
@@ -150,6 +169,23 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         dateText = text
         init()
         requestLayout()
+    }
+
+    fun setTextColorRes(@ColorRes color: Int) {
+        textPaint.color = context.getCompatColorByTheme(color)
+        invalidate()
+    }
+
+    fun setTextColor(@ColorInt color: Int) {
+        textPaint.color = color
+        invalidate()
+    }
+
+    fun setHighlighted(highlighted: Boolean) {
+        if (isHighlighted == highlighted) return
+        isHighlighted = highlighted
+        setHighlightedState(highlighted)
+        invalidate()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

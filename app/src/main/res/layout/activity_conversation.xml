@@ -7,13 +7,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorBackground"
-        
+
         tools:context=".presentation.uicomponents.conversation.ConversationActivity">
 
         <com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
             android:id="@+id/messagesListView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingHorizontal="10dp"
             app:layout_constraintBottom_toTopOf="@+id/include"

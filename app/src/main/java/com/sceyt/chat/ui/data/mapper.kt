@@ -1,11 +1,9 @@
 package com.sceyt.chat.ui.data
 
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.chat.models.message.*
-import com.sceyt.chat.models.user.User
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
 import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytUiGroupChannel
@@ -56,7 +54,7 @@ fun Message.toSceytUiMessage() = SceytUiMessage(
     body = body,
     type = type,
     metadata = metadata,
-    createdAt = channelId,
+    createdAt = createdAt.time,
     updatedAt = updatedAt,
     incoming = incoming,
     receipt = receipt,

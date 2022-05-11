@@ -3,9 +3,11 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 import androidx.core.text.HtmlCompat
 import androidx.core.text.HtmlCompat.fromHtml
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.databinding.SceytUiItemOutTextMessageBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.OUT_DEFAULT_SPACE
+import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
 import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
 
 class OutTextMsgViewHolder(
@@ -24,15 +26,16 @@ class OutTextMsgViewHolder(
                     val message = item.message
                     this.message = message
 
-                    messageDate.setDateText(getDateTimeString(message.createdAt))
-                    messageBody.text = fromHtml("${message.body} $OUT_DEFAULT_SPACE", HtmlCompat.FROM_HTML_MODE_LEGACY)
+                    val space = if (message.state == MessageState.Edited) OUT_EDITED_SPACE else OUT_DEFAULT_SPACE
+                    messageBody.text = fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
 
                     setReplayCount(layoutDetails, tvReplayCount, toReplayLine, message.replyCount)
                     setOrUpdateReactions(message.reactionScores, rvReactions, viewPool)
-                    setDate(message.createdAt, message.showDate, binding.messageDay)
+                    setMessageDay(message.createdAt, message.showDate, binding.messageDay)
+                    setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
                 }
             }
-            MessageListItem.LoadingMoreItem -> Unit
+            MessageListItem.LoadingMoreItem -> return
         }
     }
 
