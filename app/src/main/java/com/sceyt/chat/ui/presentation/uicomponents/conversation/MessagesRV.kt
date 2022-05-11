@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
@@ -23,12 +24,17 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     init {
         init()
-        ChannelViewHolderFactory.cashViews(context)
     }
 
     private fun init() {
         clipToPadding = false
+        setHasFixedSize(true)
+        itemAnimator = DefaultItemAnimator().apply {
+            addDuration = 0
+            removeDuration = 100
+        }
         addItemDecoration(ChatItemOffsetDecoration(context, R.dimen.margin_top))
+        scheduleLayoutAnimation()
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
             stackFromEnd = true
         }
@@ -63,14 +69,5 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setRichToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         richToStartListener = listener
-    }
-
-    fun setChannelListener(listener: ChannelListeners) {
-        viewHolderFactory.setChannelListener(listener)
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        ChannelViewHolderFactory.clearCash()
     }
 }

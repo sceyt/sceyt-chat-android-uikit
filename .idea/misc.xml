@@ -25,6 +25,7 @@
         <entry key="app/src/main/res/drawable/ic_status_read.xml" value="0.246" />
         <entry key="app/src/main/res/layout/activity_conversation.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.18" />
+        <entry key="app/src/main/res/layout/container_reaction.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/fragment_channels.xml" value="0.31971153846153844" />
         <entry key="app/src/main/res/layout/item_add_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/item_channel.xml" value="0.22" />
@@ -43,6 +44,8 @@
         <entry key="app/src/main/res/layout/sceyt_ui_item_out_text_message2.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_loading_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_page_loading.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_recycler_replay_container.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/sceyt_ui_replay_message_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_search_channels_empty_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/search_view.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/st.xml" value="0.39166666666666666" />
