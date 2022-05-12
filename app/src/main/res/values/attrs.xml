@@ -9,7 +9,8 @@
 
     <declare-styleable name="ToReplayLineView">
         <attr name="toLeft" format="boolean" />
-        <attr name="connectedView" format="reference" />
+        <attr name="connectedViewTop" format="reference" />
+        <attr name="connectedViewBottom" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="DateStatusView">
@@ -20,6 +21,13 @@
         <attr name="dateTextColor" format="reference|color" />
         <attr name="dateText" format="string" />
         <attr name="firstStatus" format="boolean" />
+        <attr name="android:paddingStart" format="dimension" />
+        <attr name="android:paddingEnd" format="dimension" />
+        <attr name="android:paddingBottom" format="dimension" />
+        <attr name="android:paddingTop" format="dimension" />
+        <attr name="android:padding" format="dimension" />
+        <attr name="android:paddingVertical" format="dimension" />
+        <attr name="android:paddingHorizontal" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="RoundishImageView">

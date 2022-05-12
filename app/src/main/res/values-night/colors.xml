@@ -10,4 +10,5 @@
     <color name="colorFontGray">#696C80</color>
     <color name="colorBackground">#131313</color>
     <color name="colorGrayThemed">#1E1D1D</color>
+    <color name="colorBgOutMessage">#B2BAEC</color>
 </resources>

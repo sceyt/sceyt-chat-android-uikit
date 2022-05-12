@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.presentation.customviews
 
 import android.content.Context
+import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -32,6 +33,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     private var mMargin = 0
     private var mIconSize = 0
     private var isHighlighted = false
+    private lateinit var paddings: IntArray
 
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -44,9 +46,28 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
             statusIconMargin = a.getDimensionPixelSize(R.styleable.DateStatusView_statusIconMargin, statusIconMargin)
             statusIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_statusIconSize, 0)
             firstStatusIcon = a.getBoolean(R.styleable.DateStatusView_firstStatus, firstStatusIcon)
+            getPaddingsFromAttr(a)
             a.recycle()
         }
         init()
+    }
+
+    private fun getPaddingsFromAttr(typedArray: TypedArray) {
+        /** For highlighted state.
+         *  After removing state, need to set initial paddings.*/
+        paddings = IntArray(4)
+        // padding start
+        paddings[0] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingStart,
+            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
+        // padding top
+        paddings[1] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingTop,
+            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
+        // padding end
+        paddings[2] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingEnd,
+            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
+        // padding bottom
+        paddings[3] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingBottom,
+            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
     }
 
     private fun init() {
@@ -156,6 +177,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
             textPaint.color = textColor
             statusDrawable?.setTintList(null)
             background = null
+            setPadding(paddings[0], paddings[1], paddings[2], paddings[3])
         }
     }
 

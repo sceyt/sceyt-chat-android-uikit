@@ -13,10 +13,6 @@ class IncTextMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
 ) : BaseMsgViewHolder(binding.root) {
 
-    /*init {
-        binding.setChannelItemStyle()
-    }
-*/
     override fun bindViews(item: MessageListItem) {
         when (item) {
             is MessageListItem.MessageItem -> {
@@ -27,10 +23,11 @@ class IncTextMsgViewHolder(
                     val space = if (message.state == MessageState.Edited) INC_EDITED_SPACE else INC_DEFAULT_SPACE
                     messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
 
-                    setReplayCount(layoutDetails, tvReplayCount, toReplayLine, message.replyCount)
+                    setReplayCount(tvReplayCount, toReplayLine, message.replyCount)
                     setOrUpdateReactions(message.reactionScores, rvReactions, viewPool)
                     setMessageDay(message.createdAt, message.showDate, messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
+                    setReplayedMessageContainer(message, binding.viewReplay)
                 }
             }
             MessageListItem.LoadingMoreItem -> return

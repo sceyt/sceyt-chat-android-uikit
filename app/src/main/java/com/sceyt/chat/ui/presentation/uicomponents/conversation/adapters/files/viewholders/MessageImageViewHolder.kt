@@ -2,12 +2,12 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.
 
 import android.view.View
 import com.bumptech.glide.Glide
-import com.sceyt.chat.ui.databinding.RecyclerviewMessageImageItemBinding
+import com.sceyt.chat.ui.databinding.SceytUiMessageImageItemBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
 class MessageImageViewHolder(
-        private val binding: RecyclerviewMessageImageItemBinding) : BaseFileViewHolder(binding.root) {
+        private val binding: SceytUiMessageImageItemBinding) : BaseFileViewHolder(binding.root) {
 
     init {
         with(itemView) {
@@ -23,6 +23,7 @@ class MessageImageViewHolder(
         // todo temporary
         Glide.with(binding.root)
             .load(file.url)
+            .override(binding.root.width,binding.root.height)
             .into(binding.fileImage)
 
         /*  itemView.imageCont.apply {

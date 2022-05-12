@@ -4,16 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import com.sceyt.chat.ui.databinding.SceytUiFileItemBinding
+import com.sceyt.chat.ui.databinding.SceytUiMessageFileItemBinding
 import com.sceyt.chat.ui.extensions.toPrettySize
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 class MessageFileViewHolder(
-        private val binding: SceytUiFileItemBinding
+        private val binding: SceytUiMessageFileItemBinding
 ) : BaseFileViewHolder(binding.root) {
-
-    private var mIsUploadingOrDownloading = false
-    private var mProgress = 0
 
     init {
         with(binding.root) {

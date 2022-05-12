@@ -24,4 +24,9 @@
         <item name="android:background">@drawable/rounded_dialog</item>
     </style>
 
+    <style name="ShapeAppearanceOverlay.CornerSize18" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">18dp</item>
+    </style>
+
 </resources>
