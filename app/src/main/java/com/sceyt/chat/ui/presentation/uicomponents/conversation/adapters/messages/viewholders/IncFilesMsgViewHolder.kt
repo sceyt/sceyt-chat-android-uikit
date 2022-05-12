@@ -14,7 +14,8 @@ import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 
 class IncFilesMsgViewHolder(
         private val binding: SceytUiItemIncFilesMessageBinding,
-        private val viewPool: RecyclerView.RecycledViewPool,
+        private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        private val viewPoolFiles: RecyclerView.RecycledViewPool,
 ) : BaseMsgViewHolder(binding.root) {
 
     override fun bindViews(item: MessageListItem) {
@@ -24,11 +25,11 @@ class IncFilesMsgViewHolder(
                     val message = item.message
                     this.message = message
 
-                    setReplayCount(layoutDetails, tvReplayCount, toReplayLine, message.replyCount)
-                    setOrUpdateReactions(message.reactionScores, rvReactions, viewPool)
+                    setReplayCount(tvReplayCount, toReplayLine, message.replyCount)
+                    setOrUpdateReactions(message.reactionScores, rvReactions, viewPoolReactions)
                     setMessageDay(message.createdAt, message.showDate, messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
-
+                    setReplayedMessageContainer(message, binding.viewReplay)
                     setFilesAdapter(message)
                 }
             }
@@ -37,16 +38,14 @@ class IncFilesMsgViewHolder(
     }
 
     private fun setFilesAdapter(item: SceytUiMessage) {
-        if (item.attachments?.lastOrNull()?.type.isEqualsVideoOrImage()) {
-            binding.messageDate.setHighlighted(true)
-        }
+        binding.messageDate.setHighlighted(item.attachments?.lastOrNull()?.type.isEqualsVideoOrImage())
         with(binding.rvFiles) {
             setHasFixedSize(true)
             if (itemDecorationCount == 0) {
                 val offset = dpToPx(4f)
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
-            setRecycledViewPool(viewPool)
+            setRecycledViewPool(viewPoolFiles)
             adapter = MessageFilesAdapter(ArrayList(item.attachments!!.map {
                 when (it.type) {
                     "image" -> FileListItem.Image(it)

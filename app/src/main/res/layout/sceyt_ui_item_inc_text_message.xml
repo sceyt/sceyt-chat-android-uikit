@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="8dp"
+            android:layout_marginVertical="8dp"
             android:background="@drawable/bg_message_day"
             android:includeFontPadding="false"
             android:paddingHorizontal="8dp"
@@ -54,7 +54,9 @@
             android:layout_alignStart="@+id/layoutDetails"
             android:layout_alignTop="@+id/layoutDetails"
             android:layout_alignBottom="@+id/tvReplayCount"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:connectedViewBottom="@id/tvReplayCount"
+            app:connectedViewTop="@id/layoutDetails" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutDetails"
@@ -64,19 +66,31 @@
             android:layout_toEndOf="@+id/avatar"
             android:background="@drawable/bg_inc_message">
 
+            <include
+                android:id="@+id/viewReplay"
+                layout="@layout/sceyt_ui_recycler_replay_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="@+id/messageBody"
+                app:layout_constraintStart_toStartOf="@+id/messageBody"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/messageBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="8dp"
                 android:layout_marginStart="12dp"
+                android:layout_marginTop="4dp"
                 android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
                 android:textColor="@color/colorFontDark"
                 android:textSize="@dimen/mediumTextSize"
                 app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
                 app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
                 app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-                app:layout_constraintTop_toTopOf="@+id/layoutDetails"
+                app:layout_constraintTop_toBottomOf="@+id/viewReplay"
                 app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
                 tools:text="Lore ipsum  is the correct text which" />
 
@@ -101,8 +115,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/rvReactions"
             android:layout_marginStart="2dp"
+            android:layout_marginTop="4dp"
             android:layout_toEndOf="@+id/toReplayLine"
-            android:paddingTop="3dp"
+            android:includeFontPadding="false"
             android:textColor="@color/colorAccent"
             android:textSize="@dimen/tinyTextSize"
             android:visibility="gone"

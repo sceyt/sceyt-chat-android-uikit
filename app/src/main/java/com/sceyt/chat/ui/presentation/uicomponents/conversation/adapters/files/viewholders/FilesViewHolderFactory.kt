@@ -3,10 +3,9 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.databinding.RecyclerviewMessageImageItemBinding
-import com.sceyt.chat.ui.databinding.RecyclerviewMessageVideoItemBinding
-import com.sceyt.chat.ui.databinding.SceytUiFileItemBinding
+import com.sceyt.chat.ui.databinding.SceytUiMessageFileItemBinding
+import com.sceyt.chat.ui.databinding.SceytUiMessageImageItemBinding
+import com.sceyt.chat.ui.databinding.SceytUiMessageVideoItemBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 class FilesViewHolderFactory(context: Context) {
@@ -16,13 +15,13 @@ class FilesViewHolderFactory(context: Context) {
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
         return when (viewType) {
             FileViewType.File.ordinal -> {
-                MessageFileViewHolder(SceytUiFileItemBinding.inflate(layoutInflater, parent, false))
+                MessageFileViewHolder(SceytUiMessageFileItemBinding.inflate(layoutInflater, parent, false))
             }
             FileViewType.Image.ordinal -> {
-                MessageImageViewHolder(RecyclerviewMessageImageItemBinding.inflate(layoutInflater, parent, false))
+                MessageImageViewHolder(SceytUiMessageImageItemBinding.inflate(layoutInflater, parent, false))
             }
             FileViewType.Video.ordinal -> {
-                MessageVideoViewHolder(RecyclerviewMessageVideoItemBinding.inflate(layoutInflater, parent, false))
+                MessageVideoViewHolder(SceytUiMessageVideoItemBinding.inflate(layoutInflater, parent, false))
             }
             else -> throw Exception("Not supported view type")
         }

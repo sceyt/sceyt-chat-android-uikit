@@ -58,7 +58,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/icFile"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Montagabold.otf" />
+            tools:text="Montagabold.pdf" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFileSize"

@@ -18,29 +18,39 @@ class MessageViewHolderFactory(context: Context) {
 
     private var listeners = ChannelsListenersImpl()
     private val layoutInflater = LayoutInflater.from(context)
-    private val viewPool = RecyclerView.RecycledViewPool()
+    private val viewPoolReactions = RecyclerView.RecycledViewPool()
+    private val viewPoolFiles = RecyclerView.RecycledViewPool()
 
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MessageListItem> {
         return when (viewType) {
             MessageTypeEnum.IncText.ordinal -> {
-                IncTextMsgViewHolder(SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+                IncTextMsgViewHolder(
+                    SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false),
+                    viewPoolReactions)
             }
             MessageTypeEnum.OutText.ordinal -> {
-                OutTextMsgViewHolder(SceytUiItemOutTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+                OutTextMsgViewHolder(SceytUiItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
+                    viewPoolReactions)
             }
             MessageTypeEnum.IncFiles.ordinal -> {
-                IncFilesMsgViewHolder(SceytUiItemIncFilesMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+                IncFilesMsgViewHolder(
+                    SceytUiItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
+                    viewPoolReactions,
+                    viewPoolFiles)
             }
             MessageTypeEnum.OutFiles.ordinal -> {
-                OutFilesMsgViewHolder(SceytUiItemOutFilesMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+                OutFilesMsgViewHolder(
+                    SceytUiItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
+                    viewPoolReactions,
+                    viewPoolFiles)
             }
             MessageTypeEnum.Loading.ordinal -> LoadingViewHolder(
                 SceytUiItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
             )
             // else -> throw Exception("Not supported view type")
             else -> {
-                IncTextMsgViewHolder(SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false), viewPool)
+                IncTextMsgViewHolder(SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false), viewPoolReactions)
             }
         }
     }

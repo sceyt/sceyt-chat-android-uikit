@@ -5,12 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import android.widget.VideoView
-import com.sceyt.chat.ui.databinding.RecyclerviewMessageVideoItemBinding
+import com.sceyt.chat.ui.databinding.SceytUiMessageVideoItemBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
 class MessageVideoViewHolder(
-        private val binding: RecyclerviewMessageVideoItemBinding,
+        private val binding: SceytUiMessageVideoItemBinding,
 ) : BaseFileViewHolder(binding.root) {
 
     init {
@@ -27,6 +27,21 @@ class MessageVideoViewHolder(
         var openUrl: Uri? = null
 
         binding.apply {
+            videoView.setVideoURI(Uri.parse("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"))
+            videoView.setOnPreparedListener { mediaPlayer ->
+                val videoRatio = mediaPlayer.videoWidth / mediaPlayer.videoHeight.toFloat()
+                val screenRatio = binding.videoView.width / binding.videoView.height.toFloat()
+                val scaleX = videoRatio / screenRatio
+                if (scaleX >= 1f) {
+                    binding.videoView.scaleX = scaleX
+                } else {
+                    binding.videoView.scaleY = 1f / scaleX
+                }
+            }
+            videoView.start()
+
+            parentLayout.clipToOutline = true
+
 
             /* uploadMutableLiveData.observe(itemView.context as LifecycleOwner) {
                  if (item.url != null && it[item.url] != null) {
@@ -73,12 +88,13 @@ class MessageVideoViewHolder(
                      }
              }*/
 
-          /*  root.setOnLongClickListener {
-                callbacks.onLongClick(it)
-                return@setOnLongClickListener false
-            }*/
+            /*  root.setOnLongClickListener {
+                  callbacks.onLongClick(it)
+                  return@setOnLongClickListener false
+              }*/
         }
     }
+
 
     private fun startVideo(videoView: VideoView, uri: Uri?) {
         videoView.setVideoURI(uri)
