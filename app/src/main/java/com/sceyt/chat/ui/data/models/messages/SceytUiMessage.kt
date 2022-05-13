@@ -43,5 +43,5 @@ open class SceytUiMessage(var id: Long,
         }
 
     var isGroup = false
-    var showAvatarAndName = false
+    var canSowAvatarAndName = false
 }

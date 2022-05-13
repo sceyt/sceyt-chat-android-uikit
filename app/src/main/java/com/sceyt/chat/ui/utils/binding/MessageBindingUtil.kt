@@ -13,7 +13,7 @@ object MessageBindingUtil {
     @JvmStatic
     fun setMessageAvatar(avatar: Avatar, message: SceytUiMessage) {
         if (message.isGroup) {
-            if (message.showAvatarAndName) {
+            if (message.canSowAvatarAndName) {
                 avatar.setNameAndImageUrl(message.from.fullName, message.from.avatarURL)
                 avatar.isVisible = true
             } else
@@ -25,7 +25,7 @@ object MessageBindingUtil {
     @BindingAdapter("bind:setMessageMemberName")
     @JvmStatic
     fun setMessageMemberName(tvName: TextView, message: SceytUiMessage) {
-        if (message.showAvatarAndName) {
+        if (message.canSowAvatarAndName && message.isGroup) {
             tvName.text = message.from.fullName.trim()
             tvName.isVisible = true
         } else

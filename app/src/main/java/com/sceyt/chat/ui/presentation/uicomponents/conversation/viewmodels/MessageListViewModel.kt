@@ -67,10 +67,10 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
             MessageListItem.MessageItem(item.apply {
                 showDate = if (index > 0) {
                     val prevMessage = data[index - 1]
-                    showAvatarAndName = prevMessage.from.id != item.from.id
+                    canSowAvatarAndName = prevMessage.from.id != item.from.id
                     !DateTimeUtil.isSameDay(createdAt, prevMessage.createdAt)
                 } else {
-                    showAvatarAndName = true
+                    canSowAvatarAndName = true
                     true
                 }
                 isGroup = this@MessageListViewModel.isGroup
