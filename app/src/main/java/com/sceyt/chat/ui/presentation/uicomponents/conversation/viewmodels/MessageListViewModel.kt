@@ -1,11 +1,15 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.data.MessagesRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +31,9 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
     private val _loadMoreMessagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val loadMoreMessagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _loadMoreMessagesFlow
 
+    private val _addReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
+    val addReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _addReactionLiveData
+
 
     fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean) {
         isLoadingMessages = true
@@ -34,8 +41,6 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            isLoadingMessages = false
-
             val response = repo.getMessages(lastMessageId)
             initResponse(response, isLoadingMore)
         }
@@ -79,5 +84,20 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         if (hasNext)
             (messageItems as ArrayList).add(0, MessageListItem.LoadingMoreItem)
         return messageItems
+    }
+
+    private fun addReaction(message: SceytUiMessage, score: ReactionScore) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.addReaction(message, score)
+            _addReactionLiveData.postValue(response)
+        }
+    }
+
+    fun onReactionEvent(event: ReactionEvent) {
+        when (event) {
+            is ReactionEvent.AddReaction -> {
+                addReaction(event.message, event.score)
+            }
+        }
     }
 }

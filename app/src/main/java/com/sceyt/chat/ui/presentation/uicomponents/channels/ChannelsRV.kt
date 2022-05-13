@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsAdapter
 
@@ -61,7 +61,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         richToEndListener = listener
     }
 
-    fun setChannelListener(listener: ChannelListeners) {
+    fun setChannelListener(listener: ChannelClickListeners) {
         viewHolderFactory.setChannelListener(listener)
     }
 

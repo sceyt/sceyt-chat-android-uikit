@@ -5,13 +5,17 @@ import android.util.AttributeSet
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -72,5 +76,15 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setRichToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         richToStartListener = listener
+    }
+
+    fun setMessageListener(listener: MessageClickListeners) {
+        viewHolderFactory.setMessageListener(listener)
+    }
+
+    fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
+        val pos= mAdapter.getData().indexOf(MessageListItem.MessageItem(message))
+        if (pos!= NO_POSITION)
+        (findViewHolderForAdapterPosition(pos) as? BaseMsgViewHolder)?.updateReaction(scores, message)
     }
 }

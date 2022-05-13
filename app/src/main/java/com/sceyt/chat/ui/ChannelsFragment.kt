@@ -10,7 +10,7 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.extensions.launchActivity
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindSearchView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
@@ -33,7 +33,7 @@ class ChannelsFragment : Fragment() {
         mViewModel.bindView(mBinding.channelListView, viewLifecycleOwner)
         mViewModel.bindSearchView(mBinding.searchView)
 
-        mBinding.channelListView.setChannelListener(ChannelListeners.ChannelClickListener {
+        mBinding.channelListView.setChannelListener(ChannelClickListeners.ChannelClickClickListener {
             requireActivity().launchActivity<ConversationActivity> {
                 putExtra("channelId", it.channel.id)
                 putExtra("isGroup", it.channel.channelType != ChannelTypeEnum.Direct)

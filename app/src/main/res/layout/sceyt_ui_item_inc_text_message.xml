@@ -46,7 +46,6 @@
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/layoutDetails"
-            bind:setMessageAvatar="@{message}"
             tools:avatarFullName="a"
             tools:visibility="visible" />
 
@@ -83,7 +82,6 @@
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                bind:setMessageMemberName="@{message}"
                 tools:text="Henry Willian" />
 
             <include

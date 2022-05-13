@@ -3,7 +3,6 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reacti
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.AddReactionViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
@@ -11,11 +10,7 @@ import com.sceyt.chat.ui.utils.MyDiffUtil
 
 class ReactionsAdapter(
         private val reactions: ArrayList<ReactionItem>,
-        private val viewHolderFactory: ReactionViewHolderFactory/*
-        private val onAddNewReactionCb: () -> Unit,
-        private var onAddReactionCb: (ReactionScore) -> Unit,
-        private var onReduceReactionCb: (ReactionScore) -> Unit,
-        private var onDeleteReactionCb: (ReactionScore) -> Unit,*/
+        private val viewHolderFactory: ReactionViewHolderFactory
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -28,7 +23,7 @@ class ReactionsAdapter(
                 (holder as ReactionViewHolder).bind(reactions[position])
             }
             ReactionViewHolderFactory.ReactionViewType.Add.ordinal -> {
-                (holder as AddReactionViewHolder).bind()
+                (holder as AddReactionViewHolder).bind(reactions[position])
             }
         }
     }

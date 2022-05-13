@@ -6,6 +6,7 @@ import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -29,8 +30,20 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
+    addReactionLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success) {
+            it.data?.let { data -> messagesListView.updateReaction(data) }
+        } else if (it is SceytResponse.Error) {
+            customToastSnackBar(messagesListView, it.message ?: "")
+        }
+    }
+
     pageStateLiveData.observe(lifecycleOwner) {
         messagesListView.updateState(it)
+    }
+
+    messagesListView.setMessageReactionsEventListener {
+        onReactionEvent(it)
     }
 
     messagesListView.setReachToStartListener { _, message ->
@@ -40,7 +53,10 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             loadMessages(lastMessageId, true)
         }
     }
+
+
 }
+
 
 /*
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {

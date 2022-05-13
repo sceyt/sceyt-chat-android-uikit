@@ -2,11 +2,11 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.listeners
 
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 
-class ChannelsListenersImpl : ChannelListeners.Listeners {
+class ChannelsClickListenersImpl : ChannelClickListeners.ClickListeners {
 
-    private var channelClickListener: ChannelListeners.ChannelClickListener? = null
-    private var channelLongClickListener: ChannelListeners.ChannelLongClickListener? = null
-    private var avatarClickListener: ChannelListeners.AvatarClickListener? = null
+    private var channelClickListener: ChannelClickListeners.ChannelClickClickListener? = null
+    private var channelLongClickListener: ChannelClickListeners.ChannelClickLongClickListener? = null
+    private var avatarClickListener: ChannelClickListeners.AvatarClickListener? = null
 
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
         channelClickListener?.onChannelClick(item)
@@ -22,20 +22,20 @@ class ChannelsListenersImpl : ChannelListeners.Listeners {
         }
     }
 
-    fun setListener(listener: ChannelListeners) {
+    fun setListener(listener: ChannelClickListeners) {
         when (listener) {
-            is ChannelListeners.Listeners -> {
+            is ChannelClickListeners.ClickListeners -> {
                 channelClickListener = listener
                 channelLongClickListener = listener
                 avatarClickListener = listener
             }
-            is ChannelListeners.ChannelClickListener -> {
+            is ChannelClickListeners.ChannelClickClickListener -> {
                 channelClickListener = listener
             }
-            is ChannelListeners.ChannelLongClickListener -> {
+            is ChannelClickListeners.ChannelClickLongClickListener -> {
                 channelLongClickListener = listener
             }
-            is ChannelListeners.AvatarClickListener -> {
+            is ChannelClickListeners.AvatarClickListener -> {
                 avatarClickListener = listener
             }
         }

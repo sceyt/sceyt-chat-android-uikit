@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.extensions
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.Configuration
 import android.location.LocationManager
@@ -11,10 +12,12 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.fragment.app.FragmentManager
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -103,6 +106,13 @@ fun Context.isNightTheme(): Boolean {
     return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }
 
+internal fun Context?.getFragmentManager(): FragmentManager? {
+    return when (this) {
+        is AppCompatActivity -> supportFragmentManager
+        is ContextWrapper -> baseContext.getFragmentManager()
+        else -> null
+    }
+}
 
 
 

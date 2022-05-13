@@ -13,12 +13,12 @@ import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil
 
 class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
-                        private var listeners: ChannelsListenersImpl) : BaseViewHolder<ChannelListItem>(binding.root) {
+                        private var listeners: ChannelsClickListenersImpl) : BaseViewHolder<ChannelListItem>(binding.root) {
 
     init {
         binding.setChannelItemStyle()

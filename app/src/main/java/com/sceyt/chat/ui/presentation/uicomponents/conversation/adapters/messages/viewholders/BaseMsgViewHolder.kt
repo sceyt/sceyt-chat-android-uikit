@@ -5,6 +5,7 @@ import android.text.format.DateUtils
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,6 +16,7 @@ import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.databinding.SceytUiRecyclerReplayContainerBinding
 import com.sceyt.chat.ui.extensions.getAttachmentUrl
 import com.sceyt.chat.ui.extensions.getShowBody
+import com.sceyt.chat.ui.presentation.customviews.Avatar
 import com.sceyt.chat.ui.presentation.customviews.DateStatusView
 import com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
@@ -22,43 +24,52 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.message
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 import kotlin.math.min
 
-abstract class BaseMsgViewHolder(view: View) : BaseViewHolder<MessageListItem>(view) {
+abstract class BaseMsgViewHolder(view: View,
+                                 private val messageListeners: MessageClickListenersImpl) : BaseViewHolder<MessageListItem>(view) {
+
     private var reactionsAdapter: ReactionsAdapter? = null
     private val editedString = view.context.getString(R.string.edited)
 
     @SuppressLint("SetTextI18n")
-    protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: ToReplayLineView, replayCount: Long) {
+    protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: ToReplayLineView, item: MessageListItem.MessageItem) {
+        val replayCount = item.message.replyCount
         if (replayCount > 0) {
             tvReplayCount.text = "$replayCount ${itemView.context.getString(R.string.replays)}"
             tvReplayCount.isVisible = true
             toReplayLine.isVisible = true
+
+            tvReplayCount.setOnClickListener { messageListeners.onReplayCountClick(item) }
         } else {
             tvReplayCount.isVisible = false
             toReplayLine.isVisible = false
         }
     }
 
-    protected fun setOrUpdateReactions(reactionScores: Array<ReactionScore>?, rvReactions: RecyclerView,
+    protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactions: RecyclerView,
                                        viewPool: RecyclerView.RecycledViewPool) {
+        val reactionScores = item.message.reactionScores
         if (reactionScores.isNullOrEmpty()) {
             rvReactions.isVisible = false
             return
         }
 
         val reactions = ArrayList<ReactionItem>(reactionScores.sortedByDescending { it.score }.map {
-            ReactionItem.Reaction(it)
+            ReactionItem.Reaction(it, item)
         }).also {
-            it.add(ReactionItem.AddItem)
+            it.add(ReactionItem.AddItem(item))
         }
 
         val spanCount = min(4, reactions.size)
 
         if (reactionsAdapter == null) {
-            reactionsAdapter = ReactionsAdapter(reactions, ReactionViewHolderFactory(itemView.context))
+            reactionsAdapter = ReactionsAdapter(reactions,
+                ReactionViewHolderFactory(itemView.context, messageListeners)
+            )
 
             with(rvReactions) {
                 setRecycledViewPool(viewPool)
@@ -116,5 +127,29 @@ abstract class BaseMsgViewHolder(view: View) : BaseViewHolder<MessageListItem>(v
         val text = if (isEdited) "$editedString ${getDateTimeString(createdAt)}"
         else getDateTimeString(createdAt)
         messageDate.setDateText(text)
+    }
+
+    protected fun setMessageUserAvatarAndName(avatar: Avatar, tvName: TextView, message: SceytUiMessage) {
+        if (!message.isGroup) return
+
+        if (message.canSowAvatarAndName) {
+            avatar.setNameAndImageUrl(message.from.fullName, message.from.avatarURL)
+            tvName.text = message.from.fullName.trim()
+            tvName.isVisible = true
+            avatar.isVisible = true
+        } else {
+            avatar.isInvisible = true
+            tvName.isVisible = false
+        }
+    }
+
+    fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
+        val reactions = ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
+            ReactionItem.Reaction(it, MessageListItem.MessageItem(message))
+        }).also {
+            it.add(ReactionItem.AddItem(MessageListItem.MessageItem(message)))
+        }
+
+        reactionsAdapter?.submitData(reactions)
     }
 }
