@@ -45,9 +45,9 @@
             android:layout_alignTop="@+id/layoutDetails"
             android:layout_alignBottom="@+id/tvReplayCount"
             android:layout_alignParentEnd="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="5sp"
             android:visibility="gone"
-            app:connectedViewBottom="@id/tvReplayCount"
-            app:connectedViewTop="@id/layoutDetails"
             app:toLeft="true" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -63,10 +63,11 @@
                 layout="@layout/sceyt_ui_recycler_replay_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
                 android:layout_marginTop="8dp"
                 android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="@+id/messageBody"
-                app:layout_constraintStart_toStartOf="@+id/messageBody"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -124,7 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/rvReactions"
-            android:layout_marginTop="4dp"
+            android:layout_marginVertical="4dp"
             android:layout_marginEnd="2dp"
             android:layout_toStartOf="@+id/toReplayLine"
             android:includeFontPadding="false"

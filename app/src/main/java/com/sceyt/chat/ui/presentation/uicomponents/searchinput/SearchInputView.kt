@@ -12,7 +12,7 @@ import com.sceyt.chat.ui.databinding.SceytUiSearchViewBinding
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getCompatDrawable
 import com.sceyt.chat.ui.sceytconfigs.SearchInputViewStyle
-import com.sceyt.chat.ui.utils.BindingUtil
+import com.sceyt.chat.ui.utils.binding.BindingUtil
 
 
 class SearchInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)

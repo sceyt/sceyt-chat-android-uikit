@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.utils
+package com.sceyt.chat.ui.utils.binding
 
 import android.annotation.SuppressLint
 import android.view.View

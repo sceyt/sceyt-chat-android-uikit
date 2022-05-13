@@ -19,6 +19,7 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     private var fullName: String? = null
     private var imageUrl: String? = null
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var textSize = 50
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private val backgroundColor by lazy { getAvatarColor() }
 
@@ -26,9 +27,10 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         setLayerType(LAYER_TYPE_SOFTWARE, null)
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.Avatar)
-            isGroup = a.getBoolean(R.styleable.Avatar_isGroup, false)
-            fullName = a.getString(R.styleable.Avatar_fullName)
-            imageUrl = a.getString(R.styleable.Avatar_imageUrl)
+            isGroup = a.getBoolean(R.styleable.Avatar_avatarIsGroup, false)
+            fullName = a.getString(R.styleable.Avatar_avatarFullName)
+            imageUrl = a.getString(R.styleable.Avatar_avatarImageUrl)
+            textSize = a.getDimensionPixelSize(R.styleable.Avatar_avatarTextSize, 50)
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
@@ -45,7 +47,7 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
 
     private fun drawName(canvas: Canvas) {
         textPaint.textAlign = Paint.Align.CENTER
-        textPaint.textSize = 50f
+        textPaint.textSize = textSize.toFloat()
         textPaint.color = Color.WHITE
 
         val xPos = (width / 2).toFloat()

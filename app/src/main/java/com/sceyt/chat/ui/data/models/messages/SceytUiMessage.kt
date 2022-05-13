@@ -41,4 +41,7 @@ open class SceytUiMessage(var id: Long,
             field = value
             notifyPropertyChanged(BR.showDate)
         }
+
+    var isGroup = false
+    var showAvatarAndName = false
 }

@@ -82,6 +82,16 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
         return true
     }
 
+    override fun onViewAttachedToWindow(holder: BaseViewHolder<MessageListItem>) {
+        super.onViewAttachedToWindow(holder)
+        holder.onViewAttachedFromWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: BaseViewHolder<MessageListItem>) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
+    }
+
     /*  fun needToShowName(position: Int): Boolean {
           try {
               val prevItem = getItem(position - 1)

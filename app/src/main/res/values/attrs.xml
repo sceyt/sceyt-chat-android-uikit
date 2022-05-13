@@ -2,9 +2,10 @@
 <resources>
 
     <declare-styleable name="Avatar">
-        <attr name="imageUrl" format="string" />
-        <attr name="fullName" format="string" />
-        <attr name="isGroup" format="boolean" />
+        <attr name="avatarImageUrl" format="string" />
+        <attr name="avatarFullName" format="string" />
+        <attr name="avatarIsGroup" format="boolean" />
+        <attr name="avatarTextSize" format="dimension|integer" />
     </declare-styleable>
 
     <declare-styleable name="ToReplayLineView">

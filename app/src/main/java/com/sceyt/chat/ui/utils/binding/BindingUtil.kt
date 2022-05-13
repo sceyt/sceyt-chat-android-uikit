@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.utils
+package com.sceyt.chat.ui.utils.binding
 
 import android.graphics.drawable.ColorDrawable
 import android.view.View

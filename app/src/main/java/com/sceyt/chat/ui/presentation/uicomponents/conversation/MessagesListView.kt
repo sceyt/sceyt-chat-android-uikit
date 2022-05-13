@@ -10,13 +10,13 @@ import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
-import com.sceyt.chat.ui.utils.BindingUtil
+import com.sceyt.chat.ui.utils.binding.BindingUtil
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
 
     private var messagesRV: MessagesRV
-    private var pageStateView: PageStateView? = null
+    private var pageStateView: PageStateView?
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.colorBackground))
