@@ -42,9 +42,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 }
 
-
 /*
-
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
     viewModel.bindView(channelsListView, lifecycleOwner)
 }

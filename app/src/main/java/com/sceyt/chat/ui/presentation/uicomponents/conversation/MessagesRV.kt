@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
-import com.sceyt.chat.ui.extensions.isFirstCompletelyItemDisplaying
 import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -23,7 +22,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private val viewHolderFactory = MessageViewHolderFactory(context)
     private var richToStartInvoked = AtomicBoolean(false)
 
-    init { init() }
+    init {
+        init()
+    }
 
     private fun init() {
         setHasFixedSize(true)
@@ -48,9 +49,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                         richToStartListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstItem())
                     }
                 } else richToStartInvoked.set(false)
-
-                if (isFirstCompletelyItemDisplaying())
-                    richToStartListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstItem())
             }
         }
     }
