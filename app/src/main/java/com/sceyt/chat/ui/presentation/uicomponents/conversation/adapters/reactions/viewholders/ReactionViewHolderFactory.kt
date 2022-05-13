@@ -7,18 +7,22 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.databinding.ItemAddReactionBinding
 import com.sceyt.chat.ui.databinding.ItemReactionBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
-class ReactionViewHolderFactory(context: Context) {
+class ReactionViewHolderFactory(context: Context,
+                                private val messageListeners: MessageClickListenersImpl) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             ReactionViewType.Default.ordinal -> {
-                ReactionViewHolder(ItemReactionBinding.inflate(layoutInflater, parent, false))
+                ReactionViewHolder(ItemReactionBinding.inflate(layoutInflater, parent, false),
+                    messageListeners)
             }
             ReactionViewType.Add.ordinal -> {
-                AddReactionViewHolder(ItemAddReactionBinding.inflate(layoutInflater, parent, false))
+                AddReactionViewHolder(ItemAddReactionBinding.inflate(layoutInflater, parent, false),
+                    messageListeners)
             }
             else -> throw Exception("Not supported view type")
         }

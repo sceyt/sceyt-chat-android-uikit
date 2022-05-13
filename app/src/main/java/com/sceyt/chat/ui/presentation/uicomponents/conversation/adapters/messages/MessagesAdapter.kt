@@ -71,6 +71,8 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
         }
     }
 
+    fun getData() = messages
+
     fun needTopOffset(position: Int): Boolean {
         try {
             val prevItem = (messages.getOrNull(position - 1) as? MessageListItem.MessageItem)
@@ -91,17 +93,4 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
         super.onViewDetachedFromWindow(holder)
         holder.onViewDetachedFromWindow()
     }
-
-    /*  fun needToShowName(position: Int): Boolean {
-          try {
-              val prevItem = getItem(position - 1)
-              val currentItem = getItem(position)
-              if (prevItem != null && currentItem != null) {
-                  return prevItem.incoming != currentItem.incoming ||
-                          prevItem.from.id != currentItem.from.id
-              }
-          } catch (ex: Exception) {
-          }
-          return true
-      }*/
 }

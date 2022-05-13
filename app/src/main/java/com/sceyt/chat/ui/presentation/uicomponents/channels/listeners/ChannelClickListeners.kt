@@ -3,24 +3,24 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.listeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 
 
-sealed interface ChannelListeners {
+sealed interface ChannelClickListeners {
 
-    fun interface ChannelClickListener : ChannelListeners {
+    fun interface ChannelClickClickListener : ChannelClickListeners {
         fun onChannelClick(item: ChannelListItem.ChannelItem)
     }
 
-    fun interface ChannelLongClickListener : ChannelListeners {
+    fun interface ChannelClickLongClickListener : ChannelClickListeners {
         fun onChannelLongClick(item: ChannelListItem.ChannelItem)
     }
 
-    fun interface AvatarClickListener : ChannelListeners {
+    fun interface AvatarClickListener : ChannelClickListeners {
         fun onAvatarClick(item: ChannelListItem.ChannelItem)
     }
 
     /** User this if you want to implement all callbacks */
-    interface Listeners :
-            ChannelClickListener,
-            ChannelLongClickListener,
+    interface ClickListeners :
+            ChannelClickClickListener,
+            ChannelClickLongClickListener,
             AvatarClickListener,
-            ChannelListeners
+            ChannelClickListeners
 }

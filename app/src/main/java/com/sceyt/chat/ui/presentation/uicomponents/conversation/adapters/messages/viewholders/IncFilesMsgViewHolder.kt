@@ -10,13 +10,15 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.F
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 
 class IncFilesMsgViewHolder(
         private val binding: SceytUiItemIncFilesMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
-) : BaseMsgViewHolder(binding.root) {
+        messageListeners: MessageClickListenersImpl,
+) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     override fun bindViews(item: MessageListItem) {
         when (item) {
@@ -25,11 +27,12 @@ class IncFilesMsgViewHolder(
                     val message = item.message
                     this.message = message
 
-                    setReplayCount(tvReplayCount, toReplayLine, message.replyCount)
-                    setOrUpdateReactions(message.reactionScores, rvReactions, viewPoolReactions)
+                    setReplayCount(tvReplayCount, toReplayLine, item)
+                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
                     setMessageDay(message.createdAt, message.showDate, messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
                     setReplayedMessageContainer(message, binding.viewReplay)
+                    setMessageUserAvatarAndName(avatar, tvUserName, message)
                     setFilesAdapter(message)
                 }
             }

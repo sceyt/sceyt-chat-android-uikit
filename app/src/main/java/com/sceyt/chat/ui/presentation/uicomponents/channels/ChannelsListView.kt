@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.binding.BindingUtil
 
@@ -60,7 +60,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
 
-    fun setChannelListener(listener: ChannelListeners) {
+    fun setChannelListener(listener: ChannelClickListeners) {
         channelsRV.setChannelListener(listener)
     }
 }
