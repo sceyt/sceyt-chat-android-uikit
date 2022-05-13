@@ -6,13 +6,12 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
-import com.sceyt.chat.ui.presentation.root.PageStateView
-import com.sceyt.chat.ui.presentation.root.BaseViewModel
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesRV
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
-import com.sceyt.chat.ui.utils.BindingUtil
+import com.sceyt.chat.ui.utils.binding.BindingUtil
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {

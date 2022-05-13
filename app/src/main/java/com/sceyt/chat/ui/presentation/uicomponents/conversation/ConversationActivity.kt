@@ -15,21 +15,27 @@ class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
     private val viewModel: MessageListViewModel by viewModels { MyViewModelFactory() }
     private var channelId: Long = 0L
+    private var isGroup: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversation)
 
 
-        channelId = intent.getLongExtra("channelId", 0)
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.loadMessages(0, false)
+    }
+
+    private fun getDataFromIntent() {
+        channelId = intent.getLongExtra("channelId", 0)
+        isGroup = intent.getBooleanExtra("isGroup", false)
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
         @SuppressWarnings("unchecked")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MessageListViewModel(intent.getLongExtra("channelId", 0)) as T
+            getDataFromIntent()
+            return MessageListViewModel(channelId, isGroup) as T
         }
     }
 }

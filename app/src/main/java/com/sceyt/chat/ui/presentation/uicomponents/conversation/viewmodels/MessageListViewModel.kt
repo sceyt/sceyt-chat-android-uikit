@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class MessageListViewModel(channelId: Long) : BaseViewModel() {
+class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : BaseViewModel() {
 
     var isLoadingMessages = false
     var hasNext = false
@@ -66,9 +66,14 @@ class MessageListViewModel(channelId: Long) : BaseViewModel() {
         val messageItems: List<MessageListItem> = data.mapIndexed { index, item ->
             MessageListItem.MessageItem(item.apply {
                 showDate = if (index > 0) {
-                    val prevTime = data[index - 1].createdAt
-                    !DateTimeUtil.isSameDay(createdAt, prevTime)
-                } else true
+                    val prevMessage = data[index - 1]
+                    showAvatarAndName = prevMessage.from.id != item.from.id
+                    !DateTimeUtil.isSameDay(createdAt, prevMessage.createdAt)
+                } else {
+                    showAvatarAndName = true
+                    true
+                }
+                isGroup = this@MessageListViewModel.isGroup
             })
         }
         if (hasNext)

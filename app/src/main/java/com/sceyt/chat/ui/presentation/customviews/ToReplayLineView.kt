@@ -39,6 +39,7 @@ class ToReplayLineView @JvmOverloads constructor(context: Context, attrs: Attrib
         else drawToRight(canvas)
     }
 
+    // This is working fine, when connected view size not changing
     private fun measureConnectedViews() {
         if (connectedViewTopId != 0 && connectedViewTopHalfHeight == 0f) {
             val viewTop = rootView.findViewById<View>(connectedViewTopId)

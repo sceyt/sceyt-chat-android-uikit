@@ -35,17 +35,19 @@
 
         <com.sceyt.chat.ui.presentation.customviews.Avatar
             android:id="@+id/avatar"
-            android:layout_width="@dimen/_27sdp"
-            android:layout_height="@dimen/_27sdp"
+            android:layout_width="@dimen/_28sdp"
+            android:layout_height="@dimen/_28sdp"
             android:layout_below="@+id/messageDay"
             android:layout_marginEnd="8dp"
             android:visibility="gone"
-            app:isGroup="false"
+            app:avatarTextSize="15sp"
             app:layout_constraintEnd_toStartOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/layoutDetails"
+            bind:setMessageAvatar="@{message}"
+            tools:avatarFullName="Ar"
             tools:visibility="visible" />
 
         <com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
@@ -55,9 +57,9 @@
             android:layout_alignStart="@+id/layoutDetails"
             android:layout_alignTop="@+id/layoutDetails"
             android:layout_alignBottom="@+id/tvReplayCount"
-            android:visibility="gone"
-            app:connectedViewBottom="@id/tvReplayCount"
-            app:connectedViewTop="@id/layoutDetails" />
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="5sp"
+            android:visibility="gone" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutDetails"
@@ -69,16 +71,34 @@
             android:maxWidth="@dimen/bodyMaxWidth"
             android:minWidth="@dimen/bodyMaxWidth">
 
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvUserName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginTop="8dp"
+                android:singleLine="true"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/extraSmallTextSize"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                bind:setMessageMemberName="@{message}"
+                tools:text="Henry Willian" />
+
             <include
                 android:id="@+id/viewReplay"
                 layout="@layout/sceyt_ui_recycler_replay_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
                 android:layout_marginTop="8dp"
                 android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="@+id/messageBody"
-                app:layout_constraintStart_toStartOf="@+id/messageBody"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvUserName" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/messageBody"
@@ -133,7 +153,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/rvReactions"
             android:layout_marginStart="2dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginVertical="4dp"
             android:layout_toEndOf="@+id/toReplayLine"
             android:includeFontPadding="false"
             android:textColor="@color/colorAccent"
@@ -146,8 +166,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/layoutDetails"
-            android:layout_alignParentStart="true"
             android:layout_marginStart="3dp"
+            android:layout_toEndOf="@+id/avatar"
             android:orientation="horizontal"
             android:paddingTop="4dp"
             android:visibility="gone"

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.sceyt.chat.Types
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.extensions.launchActivity
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelListeners
@@ -35,6 +36,7 @@ class ChannelsFragment : Fragment() {
         mBinding.channelListView.setChannelListener(ChannelListeners.ChannelClickListener {
             requireActivity().launchActivity<ConversationActivity> {
                 putExtra("channelId", it.channel.id)
+                putExtra("isGroup", it.channel.channelType != ChannelTypeEnum.Direct)
             }
         })
 
