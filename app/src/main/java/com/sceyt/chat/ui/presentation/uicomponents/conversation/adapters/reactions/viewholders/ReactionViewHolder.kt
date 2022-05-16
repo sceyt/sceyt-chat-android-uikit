@@ -13,8 +13,7 @@ class ReactionViewHolder(private val binding: ItemReactionBinding,
 
     fun bind(data: ReactionItem) {
         data as ReactionItem.Reaction
-        binding.tvEmoji.text = data.reactionScore.key
-        binding.tvCount.text = data.reactionScore.score.toString()
+        binding.reactionView.setCountAndSmile(data.reactionScore.score, data.reactionScore.key)
 
         binding.root.setOnLongClickListener {
             messageListeners.onReactionLongClick(it, data)
