@@ -41,4 +41,19 @@
             <flag name="all" value="15" />
         </attr>
     </declare-styleable>
+
+    <declare-styleable name="ReactionView">
+        <attr name="reactionViewInnerPadding" format="integer|dimension" />
+        <attr name="reactionViewInnerPaddingHorizontal" format="integer|dimension" />
+        <attr name="reactionViewInnerPaddingVertical" format="integer|dimension" />
+        <attr name="reactionViewCountTextSize" format="integer|dimension" />
+        <attr name="reactionViewSmileTextSize" format="integer|dimension" />
+        <attr name="reactionViewCountTextColor" format="color|reference" />
+        <attr name="reactionViewCountTextMargin" format="integer|dimension" />
+        <attr name="reactionViewStrokeColor" format="color|reference" />
+        <attr name="reactionViewStrokeWidth" format="integer|dimension" />
+        <attr name="reactionViewStrokeCornerRadius" format="integer|dimension" />
+        <attr name="reactionViewCountText" format="string|reference" />
+        <attr name="reactionViewSmileText" format="string|reference" />
+    </declare-styleable>
 </resources>

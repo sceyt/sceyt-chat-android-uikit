@@ -58,11 +58,7 @@ abstract class BaseMsgViewHolder(view: View,
             return
         }
 
-        val reactions = ArrayList<ReactionItem>(reactionScores.sortedByDescending { it.score }.map {
-            ReactionItem.Reaction(it, item)
-        }).also {
-            it.add(ReactionItem.AddItem(item))
-        }
+        val reactions = initReactionsList(reactionScores, item.message)
 
         val spanCount = min(4, reactions.size)
 
@@ -143,13 +139,19 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
-        val reactions = ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
+    private fun initReactionsList(scores: Array<ReactionScore>, message: SceytUiMessage): ArrayList<ReactionItem> {
+        return ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
             ReactionItem.Reaction(it, MessageListItem.MessageItem(message))
         }).also {
             it.add(ReactionItem.AddItem(MessageListItem.MessageItem(message)))
         }
+    }
 
-        reactionsAdapter?.submitData(reactions)
+    fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
+        val reactions = initReactionsList(scores, message)
+        if (reactionsAdapter != null) {
+            reactionsAdapter?.submitData(reactions)
+        } else
+            bindingAdapter?.notifyItemChanged(bindingAdapterPosition)
     }
 }

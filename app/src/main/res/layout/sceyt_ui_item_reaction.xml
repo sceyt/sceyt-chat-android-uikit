@@ -10,5 +10,6 @@
     app:reactionViewInnerPaddingVertical="4dp"
     app:reactionViewStrokeCornerRadius="30dp"
     app:reactionViewStrokeWidth="1dp"
+    app:reactionViewCountTextColor="@color/black"
     tools:reactionViewCountText="2"
     tools:reactionViewSmileText="😍" />

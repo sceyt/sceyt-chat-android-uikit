@@ -94,8 +94,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
                 val scores = initAddReactionScore(message.reactionScores, emoji.unicode)
-                messagesRV.updateReaction(scores.first, message)
                 message.reactionScores = scores.first
+                messagesRV.updateReaction(scores.first, message)
                 reactionEventListener?.invoke(ReactionEvent.AddReaction(message, scores.second))
             }).show(it, null)
         }
