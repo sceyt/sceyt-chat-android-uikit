@@ -23,7 +23,7 @@ class MessageImageViewHolder(
         // todo temporary
         Glide.with(binding.root)
             .load(file.url)
-            .override(binding.root.width,binding.root.height)
+            .override(binding.root.width, binding.root.height)
             .into(binding.fileImage)
 
         /*  itemView.imageCont.apply {

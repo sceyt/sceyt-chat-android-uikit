@@ -4,11 +4,11 @@ import android.view.View
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.databinding.ItemReactionBinding
+import com.sceyt.chat.ui.databinding.SceytUiItemReactionBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
-class ReactionViewHolder(private val binding: ItemReactionBinding,
+class ReactionViewHolder(private val binding: SceytUiItemReactionBinding,
                          private val messageListeners: MessageClickListenersImpl) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(data: ReactionItem) {

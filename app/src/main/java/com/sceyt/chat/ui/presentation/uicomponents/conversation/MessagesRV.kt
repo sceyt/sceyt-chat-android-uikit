@@ -83,8 +83,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
-        val pos= mAdapter.getData().indexOf(MessageListItem.MessageItem(message))
-        if (pos!= NO_POSITION)
-        (findViewHolderForAdapterPosition(pos) as? BaseMsgViewHolder)?.updateReaction(scores, message)
+        val position = mAdapter.getData().indexOf(MessageListItem.MessageItem(message))
+        if (position != NO_POSITION)
+            (findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.updateReaction(scores, message)
     }
 }
