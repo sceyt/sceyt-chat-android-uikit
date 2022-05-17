@@ -14,3 +14,6 @@ fun User.getPresentableName(): String {
         id
     }
 }
+
+val Any.TAG: String
+    get() = javaClass.simpleName

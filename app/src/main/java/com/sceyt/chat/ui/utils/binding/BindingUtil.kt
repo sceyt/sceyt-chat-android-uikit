@@ -7,6 +7,8 @@ import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.isGone
+import androidx.core.view.isInvisible
 import androidx.databinding.BindingAdapter
 import androidx.databinding.Observable
 import com.sceyt.chat.ui.BR
@@ -50,6 +52,13 @@ object BindingUtil {
     @JvmStatic
     fun visibleIf(anyView: View, show: Boolean) {
         anyView.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    @BindingAdapter("bind:invisibleIfCheckGone")
+    @JvmStatic
+    fun invisibleIfCheckGone(anyView: View, invisible: Boolean) {
+        if (anyView.isGone) return
+        anyView.isInvisible = invisible
     }
 
     @BindingAdapter("bind:themedTextColor")

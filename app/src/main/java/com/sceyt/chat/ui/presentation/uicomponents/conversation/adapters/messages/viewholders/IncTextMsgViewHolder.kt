@@ -25,10 +25,10 @@ class IncTextMsgViewHolder(
                     val space = if (message.state == MessageState.Edited) INC_EDITED_SPACE else INC_DEFAULT_SPACE
                     messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
 
-                    setReplayCount(tvReplayCount, toReplayLine, item)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
                     setMessageDay(message.createdAt, message.showDate, messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
+                    setReplayCount(tvReplayCount, toReplayLine, item)
+                    setOrUpdateReactions(item, rvReactions, viewPool)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
                     setReplayedMessageContainer(message, binding.viewReplay)
                 }

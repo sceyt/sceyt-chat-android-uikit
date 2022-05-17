@@ -128,9 +128,9 @@ abstract class BaseMsgViewHolder(view: View,
     protected fun setMessageUserAvatarAndName(avatar: Avatar, tvName: TextView, message: SceytUiMessage) {
         if (!message.isGroup) return
 
-        if (message.canSowAvatarAndName) {
-            avatar.setNameAndImageUrl(message.from.fullName, message.from.avatarURL)
-            tvName.text = message.from.fullName.trim()
+        if (message.canShowAvatarAndName) {
+            avatar.setNameAndImageUrl(message.from?.fullName, message.from?.avatarURL)
+            tvName.text = message.from?.fullName?.trim()
             tvName.isVisible = true
             avatar.isVisible = true
         } else {

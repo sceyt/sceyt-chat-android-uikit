@@ -46,7 +46,7 @@ fun Channel.toSceytUiChannel(): SceytUiChannel {
     }
 }
 
-fun Message.toSceytUiMessage() = SceytUiMessage(
+fun Message.toSceytUiMessage(isGroup: Boolean = false) = SceytUiMessage(
     id = id,
     tid = tid,
     channelId = channelId,
@@ -73,4 +73,6 @@ fun Message.toSceytUiMessage() = SceytUiMessage(
     parent = parent,
     replyInThread = replyInThread,
     replyCount = replyCount
-)
+).apply {
+    this.isGroup = isGroup
+}

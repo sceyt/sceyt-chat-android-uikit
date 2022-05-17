@@ -38,6 +38,7 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
 
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
+        if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
             setImageResource(0)
             drawBackgroundColor(canvas)
@@ -99,7 +100,7 @@ class Avatar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         }
     }
 
-    fun setNameAndImageUrl(name: String, url: String?) {
+    fun setNameAndImageUrl(name: String?, url: String?) {
         fullName = name
         imageUrl = url
         invalidate()

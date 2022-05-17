@@ -11,7 +11,7 @@ import java.util.*
 open class SceytUiMessage(var id: Long,
                           var tid: Long,
                           var channelId: Long,
-                          var to: String,
+                          var to: String?,
                           var body: String,
                           var type: String,
                           var metadata: String,
@@ -23,7 +23,7 @@ open class SceytUiMessage(var id: Long,
                           var silent: Boolean = false,
                           var deliveryStatus: DeliveryStatus,
                           var state: MessageState,
-                          var from: User,
+                          var from: User?,
                           var attachments: Array<Attachment>? = null,
                           var lastReactions: Array<Reaction>? = null,
                           var selfReactions: Array<Reaction>? = null,
@@ -42,6 +42,21 @@ open class SceytUiMessage(var id: Long,
             notifyPropertyChanged(BR.showDate)
         }
 
+    @Bindable
+    var canShowAvatarAndName = false
+        set(value) {
+            field = value
+            notifyPropertyChanged(BR.canShowAvatarAndName)
+        }
+
+    @Bindable
+    var status: DeliveryStatus = deliveryStatus
+        get() = deliveryStatus
+        set(value) {
+            deliveryStatus = value
+            field = value
+            notifyPropertyChanged(BR.status)
+        }
+
     var isGroup = false
-    var canSowAvatarAndName = false
 }

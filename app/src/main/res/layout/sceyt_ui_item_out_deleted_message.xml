@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="message"
+            type="com.sceyt.chat.ui.data.models.messages.SceytUiMessage" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="4dp">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/messageDay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginVertical="8dp"
+            android:background="@drawable/bg_message_day"
+            android:includeFontPadding="false"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/colorFontGray"
+            android:textSize="@dimen/extraSmallTextSize"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            bind:visibleIf="@{message.showDate}"
+            tools:text="Feb 24" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/messageDay"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/bg_out_message">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/messageBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginVertical="8dp"
+                android:text="@string/message_was_deleted"
+                android:textColor="@color/colorFontGray"
+                android:textSize="@dimen/mediumTextSize"
+                android:textStyle="italic"
+                app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
+                app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+                app:layout_constraintStart_toStartOf="@+id/layoutDetails"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
+
+            <com.sceyt.chat.ui.presentation.customviews.DateStatusView
+                android:id="@+id/messageDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="6dp"
+                android:includeFontPadding="false"
+                app:dateTextColor="#7C7E8E"
+                app:dateTextSize="@dimen/tinyTextSize"
+                app:firstStatus="false"
+                app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
+                app:layout_constraintEnd_toEndOf="@id/layoutDetails"
+                app:statusIconMargin="5dp"
+                app:statusIconSize="16dp"
+                tools:dateText="00:37"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </RelativeLayout>
+</layout>
