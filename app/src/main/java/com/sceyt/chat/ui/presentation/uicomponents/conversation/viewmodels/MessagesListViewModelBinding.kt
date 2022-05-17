@@ -25,8 +25,27 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     lifecycleOwner.lifecycleScope.launch {
         loadMoreMessagesFlow.collect {
             if (it is SceytResponse.Success && it.data != null)
-                messagesListView.addNewMessages(it.data)
+                messagesListView.addNextPageMessages(it.data)
         }
+    }
+
+    onMessageLiveData.observe(lifecycleOwner) {
+        val initMessage = mapToMessageListItem(
+            data = arrayListOf(it),
+            hasNext = false,
+            lastMessage = messagesListView.getLastMessage()).map { item ->
+            item as MessageListItem.MessageItem
+        }
+        messagesListView.addNewMessages(*initMessage.toTypedArray())
+    }
+
+    onMessageStatusLiveData.observe(lifecycleOwner) {
+        messagesListView.updateMessagesStatus(it.status, it.messageIds)
+    }
+
+    updateMessageLiveData.observe(lifecycleOwner) {
+        val message = setMessageDateAndState(it, messagesListView.getLastMessage()?.message)
+        messagesListView.updateMessage(message)
     }
 
     addReactionLiveData.observe(lifecycleOwner) {

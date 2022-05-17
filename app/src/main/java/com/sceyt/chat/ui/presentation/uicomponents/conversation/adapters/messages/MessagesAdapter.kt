@@ -34,7 +34,12 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
     fun getSkip() = messages.filter { it !is MessageListItem.LoadingMoreItem }.size
 
     fun getFirstItem(): MessageListItem.MessageItem = messages.find {
-        it !is MessageListItem.LoadingMoreItem
+        it is MessageListItem.MessageItem
+    } as MessageListItem.MessageItem
+
+
+    fun getLastItem(): MessageListItem.MessageItem = messages.findLast {
+        it is MessageListItem.MessageItem
     } as MessageListItem.MessageItem
 
     private fun removeLoading() {
@@ -42,10 +47,11 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
             notifyItemRemoved(0)
     }
 
-    private fun updateDate(newItem: MessageListItem, firstItem: MessageListItem) {
+    private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem) {
         if (newItem is MessageListItem.MessageItem) {
-            (firstItem as MessageListItem.MessageItem).message.apply {
+            (prevItem as MessageListItem.MessageItem).message.apply {
                 showDate = !DateTimeUtil.isSameDay(createdAt, newItem.message.createdAt)
+                canShowAvatarAndName = id == newItem.message.id && isGroup
             }
         }
     }
@@ -59,7 +65,7 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun addList(items: List<MessageListItem>) {
+    fun addNextPageMessagesList(items: List<MessageListItem>) {
         removeLoading()
         val firstItem = getFirstItem()
         messages.addAll(0, items)
@@ -67,8 +73,20 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
             notifyDataSetChanged()
         else {
             notifyItemRangeInserted(0, items.size)
-            updateDate(items.last(), firstItem)
+            updateDateAndState(items.last(), firstItem)
         }
+    }
+
+    fun addNewMessages(items: List<MessageListItem>) {
+        // todo from typing item id needed
+
+        /*  if (messages.isNotEmpty() && messages.last().type == Typing) {
+              messages.addAll(messages.lastIndex, items.toList())
+              notifyItemRangeInserted(messages.lastIndex - 1, items.size)
+          } else {*/
+        messages.addAll(items)
+        notifyItemRangeInserted(messages.lastIndex, items.size)
+        //}
     }
 
     fun getData() = messages

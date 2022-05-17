@@ -193,6 +193,13 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         requestLayout()
     }
 
+    fun setDateAndStatusIcon(text: String, drawable: Drawable?) {
+        statusDrawable = drawable
+        dateText = text
+        init()
+        requestLayout()
+    }
+
     fun setTextColorRes(@ColorRes color: Int) {
         textPaint.color = context.getCompatColorByTheme(color)
         invalidate()

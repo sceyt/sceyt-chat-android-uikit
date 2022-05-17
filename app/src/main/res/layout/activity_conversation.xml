@@ -16,15 +16,17 @@
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingHorizontal="10dp"
-            app:layout_constraintBottom_toTopOf="@+id/include"
+            android:paddingBottom="10dp"
+            app:layout_constraintBottom_toTopOf="@+id/messageBox"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <include
-            android:id="@+id/include"
-            layout="@layout/view_message_box"
+        <com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.MessageBox
+            android:id="@+id/messageBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/whiteThemed"
+            android:elevation="8dp"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -118,7 +118,7 @@
                 app:statusIconMargin="5dp"
                 app:statusIconSize="16dp"
                 bind:incoming="@{message.incoming}"
-                bind:status="@{message.deliveryStatus}"
+                bind:status="@{message.status}"
                 tools:dateText="00:37"
                 tools:statusIcon="@drawable/ic_status_read" />
 

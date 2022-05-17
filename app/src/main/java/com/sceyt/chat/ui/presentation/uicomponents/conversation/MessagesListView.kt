@@ -5,6 +5,8 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.get
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.BottomSheetEmojisFragment
 import com.sceyt.chat.ui.R
@@ -95,7 +97,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetEmojisFragment(emojiListener = { emoji ->
                 val scores = initAddReactionScore(message.reactionScores, emoji.unicode)
                 message.reactionScores = scores.first
-                messagesRV.updateReaction(scores.first, message)
+                messagesRV.updateReaction(message)
                 reactionEventListener?.invoke(ReactionEvent.AddReaction(message, scores.second))
             }).show(it, null)
         }
@@ -117,7 +119,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-
     fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToStartListener(listener)
     }
@@ -126,8 +127,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setData(data)
     }
 
-    fun addNewMessages(data: List<MessageListItem>) {
-        messagesRV.addNewChannels(data)
+    fun addNextPageMessages(data: List<MessageListItem>) {
+        messagesRV.addNextPageMessages(data)
+    }
+
+    fun addNewMessages(vararg data: MessageListItem.MessageItem) {
+        messagesRV.addNewMessages(*data)
     }
 
     fun updateState(state: BaseViewModel.PageState) {
@@ -143,6 +148,26 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun updateReaction(data: SceytUiMessage) {
+        messagesRV.updateReaction(data)
+    }
 
+    fun getLastMessage() = messagesRV.getLastMsg()
+
+    fun updateMessage(message: SceytUiMessage) {
+        (messagesRV.getData().find {
+            it is MessageListItem.MessageItem && (it.message.id == message.id || it.message.tid == message.tid)
+        } as? MessageListItem.MessageItem)?.message?.status = message.status
+    }
+
+    fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
+        ids.forEach { id ->
+            val item = messagesRV.getData().find {
+                it is MessageListItem.MessageItem && it.message.id == id
+            } as? MessageListItem.MessageItem
+
+            item?.let {
+                it.message.status = status
+            }
+        }
     }
 }
