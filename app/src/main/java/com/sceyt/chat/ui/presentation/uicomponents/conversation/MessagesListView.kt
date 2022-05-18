@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -156,7 +157,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun updateMessage(message: SceytUiMessage) {
         (messagesRV.getData().find {
             it is MessageListItem.MessageItem && (it.message.id == message.id || it.message.tid == message.tid)
-        } as? MessageListItem.MessageItem)?.message?.status = message.status
+        } as? MessageListItem.MessageItem)?.message?.updateMessage(message)
     }
 
     fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
@@ -166,7 +167,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             } as? MessageListItem.MessageItem
 
             item?.let {
-                it.message.status = status
+                if (it.message.status < status)
+                    it.message.status = status
             }
         }
     }

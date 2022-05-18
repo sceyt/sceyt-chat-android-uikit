@@ -91,7 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="15dp"
-                android:layout_marginBottom="6dp"
+                android:layout_marginBottom="3dp"
                 android:includeFontPadding="false"
                 app:dateTextColor="#7C7E8E"
                 app:dateTextSize="@dimen/tinyTextSize"
@@ -103,7 +103,7 @@
                 bind:incoming="@{message.incoming}"
                 bind:status="@{message.status}"
                 tools:dateText="00:37"
-                tools:statusIcon="@drawable/ic_status_read" />
+                tools:statusIcon="@drawable/ic_status_delivered" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

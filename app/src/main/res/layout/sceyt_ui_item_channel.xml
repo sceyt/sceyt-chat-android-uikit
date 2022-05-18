@@ -92,7 +92,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/avatar"
             app:statusIconMargin="4dp"
-            app:statusIconSize="24dp"
+            app:statusIconSize="19dp"
             bind:incoming="@{channel.lastMessage.incoming}"
             bind:status="@{channel.lastMessage.deliveryStatus}"
             tools:dateText="12:28"

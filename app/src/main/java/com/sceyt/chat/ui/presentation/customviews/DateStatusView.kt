@@ -16,6 +16,7 @@ import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getCompatDrawable
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+import kotlin.math.min
 
 class DateStatusView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
@@ -27,6 +28,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     private var statusIconSize = 0
     private var statusIconMargin = 0
     private var heightIcon = 0
+    private var widthIcon = 0
     private var textColor = Color.BLACK
     private var statusDrawable: Drawable? = null
     private var firstStatusIcon = true
@@ -89,12 +91,17 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     private fun measureViewsFirstText() {
         textPaint.getTextBounds(dateText, 0, dateText.length, textBoundsRect)
 
-        statusDrawable?.let {
-            initStatsIconSize(it)
+        if (statusDrawable != null) {
+            initStatsIconSize(statusDrawable!!)
 
             val left = textBoundsRect.right + mMargin - textBoundsRect.left + paddingStart
             val top = getTopFormIcon() + paddingTop
-            iconBoundsRect.set(left, top, left + mIconSize, top + heightIcon)
+            val sizeDiff = getStatusIconWidthHeightDiff()
+            val widthDiff = sizeDiff.first
+            val heightDiff = sizeDiff.second
+
+            iconBoundsRect.set(left + widthDiff, top + heightDiff,
+                left + widthIcon + widthDiff, top + heightIcon + heightDiff)
         }
     }
 
@@ -105,9 +112,20 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
             initStatsIconSize(it)
 
             val left = paddingStart
+            val sizeDiff = getStatusIconWidthHeightDiff()
+            val widthDiff = sizeDiff.first
+            val heightDiff = sizeDiff.second
+
             val top = getTopFormIcon() + paddingTop
-            iconBoundsRect.set(left, top, left + mIconSize, top + heightIcon)
+            iconBoundsRect.set(left + widthDiff, top + heightDiff,
+                left + widthIcon + widthDiff, top + heightIcon + heightDiff)
         }
+    }
+
+    private fun getStatusIconWidthHeightDiff(): Pair<Int, Int> {
+        val widthDiff = if (widthIcon < heightIcon) (heightIcon - widthIcon) / 2 else 0
+        val heightDiff = if (heightIcon < widthIcon && Integer.max(heightIcon, mIconSize) >= textBoundsRect.height()) (widthIcon - heightIcon) / 2 else 0
+        return Pair(widthDiff, heightDiff)
     }
 
     private fun checkSizesAndMargins() {
@@ -119,11 +137,19 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     }
 
     private fun initStatsIconSize(icon: Drawable) {
-        mIconSize = if (mIconSize == 0 && textBoundsRect.height() != 0)
-            textBoundsRect.height() * icon.intrinsicWidth / icon.intrinsicHeight
-        else icon.intrinsicWidth
+        if (mIconSize == 0) {
+            mIconSize = if (textBoundsRect.height() != 0)
+                textBoundsRect.height()
+            else min(icon.intrinsicWidth, icon.intrinsicHeight)
+        }
 
-        heightIcon = mIconSize * icon.intrinsicHeight / icon.intrinsicWidth
+        if (icon.intrinsicWidth > icon.intrinsicHeight) {
+            widthIcon = min(mIconSize, Integer.max(mIconSize, icon.intrinsicWidth))
+            heightIcon = widthIcon * icon.intrinsicHeight / icon.intrinsicWidth
+        } else {
+            heightIcon = min(mIconSize, Integer.max(mIconSize, icon.intrinsicHeight))
+            widthIcon = heightIcon * icon.intrinsicWidth / icon.intrinsicHeight
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -136,7 +162,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
             }
             //Draw text
             canvas.drawText(dateText,
-                -textBoundsRect.left.toFloat() + iconBoundsRect.right + mMargin,
+                -textBoundsRect.left.toFloat() + Integer.max(iconBoundsRect.right, mIconSize) + mMargin,
                 (abs(textBoundsRect.top) + getTopFormText() + paddingTop).toFloat(),
                 textPaint)
         } else {
@@ -156,14 +182,15 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
 
     /** For center vertical text date when icon is bigger */
     private fun getTopFormText(): Int {
-        return if (textBoundsRect.height() < heightIcon)
-            (heightIcon - (textBoundsRect.top.absoluteValue)) / 2
+        val realHeight = Integer.max(heightIcon, mIconSize)
+        return if (textBoundsRect.height() < realHeight)
+            (realHeight - (textBoundsRect.top.absoluteValue)) / 2
         else 0
     }
 
     /** For center vertical status icon when text height is bigger*/
     private fun getTopFormIcon(): Int {
-        return if (heightIcon < textBoundsRect.height()) {
+        return if (Integer.max(heightIcon, mIconSize) < textBoundsRect.height()) {
             (textBoundsRect.height() - heightIcon) / 2
         } else 0
     }
@@ -185,19 +212,22 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         statusDrawable = drawable
         init()
         requestLayout()
+        invalidate()
     }
 
     fun setDateText(text: String) {
         dateText = text
         init()
         requestLayout()
+        invalidate()
     }
 
     fun setDateAndStatusIcon(text: String, drawable: Drawable?) {
-        statusDrawable = drawable
+        statusDrawable = drawable?.mutate()
         dateText = text
         init()
         requestLayout()
+        invalidate()
     }
 
     fun setTextColorRes(@ColorRes color: Int) {
@@ -218,8 +248,8 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val width = textBoundsRect.width() + mMargin + iconBoundsRect.width() + paddingStart + paddingEnd
-        val height = textBoundsRect.height().coerceAtLeast(heightIcon) + paddingTop + paddingBottom
+        val width = textBoundsRect.width() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd
+        val height = textBoundsRect.height().coerceAtLeast(Integer.max(iconBoundsRect.height(), mIconSize)) + paddingTop + paddingBottom
         setMeasuredDimension(width, height)
     }
 }
