@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -50,36 +51,21 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactions: RecyclerView,
-                                       viewPool: RecyclerView.RecycledViewPool) {
-        val reactionScores = item.message.reactionScores
-        if (reactionScores.isNullOrEmpty()) {
-            rvReactions.isVisible = false
-            return
-        }
-
-        val reactions = initReactionsList(reactionScores, item.message)
-
-        val spanCount = min(4, reactions.size)
-
-        if (reactionsAdapter == null) {
-            reactionsAdapter = ReactionsAdapter(reactions,
-                ReactionViewHolderFactory(itemView.context, messageListeners)
-            )
-
-            with(rvReactions) {
-                setRecycledViewPool(viewPool)
-                if (itemDecorationCount == 0)
-                    addItemDecoration(RecyclerItemOffsetDecoration(0, 4, 8, 4))
-
-                layoutManager = GridLayoutManager(itemView.context, spanCount)
-                adapter = reactionsAdapter
+    protected fun setMessageDay(createdAt: Long, showDate: Boolean, tvData: TextView) {
+        tvData.isVisible = if (showDate) {
+            val dateText = when {
+                DateUtils.isToday(createdAt) -> itemView.context.getString(R.string.today)
+                else -> getDateTimeString(createdAt, "MMMM dd")
             }
-        } else {
-            rvReactions.layoutManager = GridLayoutManager(itemView.context, spanCount)
-            reactionsAdapter?.submitData(reactions)
-        }
-        rvReactions.isVisible = true
+            tvData.text = dateText
+            true
+        } else false
+    }
+
+    protected fun setMessageDateText(createdAt: Long, messageDate: DateStatusView, isEdited: Boolean) {
+        val text = if (isEdited) "$editedString ${getDateTimeString(createdAt)}"
+        else getDateTimeString(createdAt)
+        messageDate.setDateText(text)
     }
 
     protected fun setReplayedMessageContainer(message: SceytUiMessage, viewBinding: SceytUiRecyclerReplayContainerBinding) {
@@ -108,23 +94,6 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    protected fun setMessageDay(createdAt: Long, showDate: Boolean, tvData: TextView) {
-        tvData.isVisible = if (showDate) {
-            val dateText = when {
-                DateUtils.isToday(createdAt) -> itemView.context.getString(R.string.today)
-                else -> getDateTimeString(createdAt, "MMMM dd")
-            }
-            tvData.text = dateText
-            true
-        } else false
-    }
-
-    protected fun setMessageDateText(createdAt: Long, messageDate: DateStatusView, isEdited: Boolean) {
-        val text = if (isEdited) "$editedString ${getDateTimeString(createdAt)}"
-        else getDateTimeString(createdAt)
-        messageDate.setDateText(text)
-    }
-
     protected fun setMessageUserAvatarAndName(avatar: Avatar, tvName: TextView, message: SceytUiMessage) {
         if (!message.isGroup) return
 
@@ -139,6 +108,42 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
+    protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactions: RecyclerView,
+                                       viewPool: RecyclerView.RecycledViewPool) {
+        val reactionScores = item.message.reactionScores
+        if (reactionScores.isNullOrEmpty()) {
+            rvReactions.isVisible = false
+            return
+        }
+
+        val reactions = initReactionsList(reactionScores, item.message)
+        val gridLayoutManager = GridLayoutManager(itemView.context, min(4, reactions.size))
+
+        if (reactionsAdapter == null) {
+            reactionsAdapter = ReactionsAdapter(reactions, rvReactions,
+                ReactionViewHolderFactory(itemView.context, messageListeners)
+            )
+
+            with(rvReactions) {
+                setRecycledViewPool(viewPool)
+                itemAnimator = DefaultItemAnimator().also {
+                    it.moveDuration = 100
+                    it.removeDuration = 100
+                    it.changeDuration = 150
+                }
+                if (itemDecorationCount == 0)
+                    addItemDecoration(RecyclerItemOffsetDecoration(0, 4, 8, 4))
+
+                layoutManager = gridLayoutManager
+                adapter = reactionsAdapter
+            }
+        } else {
+            rvReactions.layoutManager = gridLayoutManager
+            reactionsAdapter?.submitData(reactions)
+        }
+        rvReactions.isVisible = true
+    }
+
     private fun initReactionsList(scores: Array<ReactionScore>, message: SceytUiMessage): ArrayList<ReactionItem> {
         return ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
             ReactionItem.Reaction(it, MessageListItem.MessageItem(message))
@@ -149,7 +154,9 @@ abstract class BaseMsgViewHolder(view: View,
 
     fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
         val reactions = initReactionsList(scores, message)
+        message.reactionScores = scores
         if (reactionsAdapter != null) {
+            (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = min(4, reactions.size)
             reactionsAdapter?.submitData(reactions)
         } else
             bindingAdapter?.notifyItemChanged(bindingAdapterPosition)

@@ -2,11 +2,10 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.core.view.get
+import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.BottomSheetEmojisFragment
@@ -78,11 +77,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             override fun onAddReactionClick(item: MessageListItem.MessageItem, position: Int) {
                 (guestClickListeners as? MessageClickListeners.AddReactionClickListener)?.onAddReactionClick(item, position)
-                onAddEmoji(item.message)
+                showAddEmojiDialog(item.message)
             }
 
             override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
                 (guestClickListeners as? MessageClickListeners.ReactionLongClickListener)?.onReactionLongClick(view, item)
+                showReactionPopup(view, item)
             }
 
             override fun onAttachmentClick(item: MessageListItem.MessageItem) {
@@ -93,19 +93,53 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setMessageListener(defaultMessageClickListeners)
     }
 
-    private fun onAddEmoji(message: SceytUiMessage) {
+
+    private fun showReactionPopup(view: View, reaction: ReactionItem.Reaction) {
+        val popup = PopupMenu(view.context, view)
+        popup.menu.apply {
+            add(0, R.id.add, 0, view.context.getString(R.string.add))
+            add(0, R.id.remove, 0, view.context.getString(R.string.remove))
+            add(0, R.id.delete, 0, view.context.getString(R.string.delete))
+        }
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.add -> onAddReaction(reaction.messageItem.message, reaction.reactionScore.key)
+                R.id.remove -> onReduceReaction(reaction)
+                R.id.delete -> onDeleteReaction(reaction)
+            }
+            false
+        }
+        popup.show()
+    }
+
+    private fun showAddEmojiDialog(message: SceytUiMessage) {
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
-                val scores = initAddReactionScore(message.reactionScores, emoji.unicode)
-                message.reactionScores = scores.first
-                messagesRV.updateReaction(message)
-                reactionEventListener?.invoke(ReactionEvent.AddReaction(message, scores.second))
+                onAddReaction(message, emoji.unicode)
             }).show(it, null)
         }
     }
 
+    private fun onAddReaction(message: SceytUiMessage, score: String) {
+        val scores = initAddReactionScore(message.reactionScores, score)
+        reactionEventListener?.invoke(ReactionEvent.AddReaction(message, scores.second))
+    }
+
+    private fun onReduceReaction(reaction: ReactionItem.Reaction) {
+        val reactionScore = reaction.reactionScore
+        if (reactionScore.score > 1) {
+            val updateScore = ReactionScore(reactionScore.key, reactionScore.score - 1)
+            reactionEventListener?.invoke(ReactionEvent.AddReaction(reaction.messageItem.message, updateScore))
+        } else
+            onDeleteReaction(reaction)
+    }
+
+    private fun onDeleteReaction(reaction: ReactionItem.Reaction) {
+        reactionEventListener?.invoke(ReactionEvent.DeleteReaction(reaction.messageItem.message, reaction.reactionScore))
+    }
+
     private fun initAddReactionScore(reactionScores: Array<ReactionScore>?, emoji: String): Pair<Array<ReactionScore>, ReactionScore> {
-        val scores = reactionScores?.clone() ?: arrayOf()
+        val scores = reactionScores ?: arrayOf()
         val reaction = scores.find { it.key == emoji }
         var score = reaction?.score?.toInt() ?: 0
         val updateReactionScore: ReactionScore
@@ -120,9 +154,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToStartListener(listener)
-    }
+    fun getLastMessage() = messagesRV.getLastMsg()
 
     fun setMessagesList(data: List<MessageListItem>) {
         messagesRV.setData(data)
@@ -136,28 +168,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addNewMessages(*data)
     }
 
-    fun updateState(state: BaseViewModel.PageState) {
-        pageStateView?.updateState(state, messagesRV.isEmpty())
-    }
-
-    fun setMessageClickListener(listener: MessageClickListeners) {
-        guestClickListeners = listener
-    }
-
-    fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
-        reactionEventListener = listener
-    }
-
-    fun updateReaction(data: SceytUiMessage) {
-        messagesRV.updateReaction(data)
-    }
-
-    fun getLastMessage() = messagesRV.getLastMsg()
-
     fun updateMessage(message: SceytUiMessage) {
         (messagesRV.getData().find {
             it is MessageListItem.MessageItem && (it.message.id == message.id || it.message.tid == message.tid)
         } as? MessageListItem.MessageItem)?.message?.updateMessage(message)
+    }
+
+    fun updateReaction(data: SceytUiMessage) {
+        messagesRV.updateReaction(data.id, data.reactionScores ?: arrayOf())
+    }
+
+    fun updateViewState(state: BaseViewModel.PageState) {
+        if (state.isEmpty && !messagesRV.isEmpty())
+            return
+        pageStateView?.updateState(state, messagesRV.isEmpty())
     }
 
     fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
@@ -171,5 +195,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     it.message.status = status
             }
         }
+    }
+
+    fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setRichToStartListener(listener)
+    }
+
+    fun setMessageClickListener(listener: MessageClickListeners) {
+        guestClickListeners = listener
+    }
+
+    fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
+        reactionEventListener = listener
     }
 }

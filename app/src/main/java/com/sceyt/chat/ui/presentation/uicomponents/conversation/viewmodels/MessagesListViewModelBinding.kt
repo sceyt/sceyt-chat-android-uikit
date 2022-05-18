@@ -48,7 +48,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         messagesListView.updateMessage(message)
     }
 
-    addReactionLiveData.observe(lifecycleOwner) {
+    updateReactionLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             it.data?.let { data -> messagesListView.updateReaction(data) }
         } else if (it is SceytResponse.Error) {
@@ -57,7 +57,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
-        messagesListView.updateState(it)
+        messagesListView.updateViewState(it)
     }
 
     messagesListView.setMessageReactionsEventListener {
