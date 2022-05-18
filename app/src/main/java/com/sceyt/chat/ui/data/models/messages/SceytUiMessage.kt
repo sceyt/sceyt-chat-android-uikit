@@ -36,6 +36,15 @@ open class SceytUiMessage(var id: Long,
                           var replyCount: Long = 0) : BaseObservable() {
 
     @Bindable
+    var status: DeliveryStatus = deliveryStatus
+        get() = deliveryStatus
+        set(value) {
+            deliveryStatus = value
+            field = value
+            notifyPropertyChanged(BR.status)
+        }
+
+    @Bindable
     var showDate = false
         set(value) {
             field = value
@@ -49,14 +58,35 @@ open class SceytUiMessage(var id: Long,
             notifyPropertyChanged(BR.canShowAvatarAndName)
         }
 
-    @Bindable
-    var status: DeliveryStatus = deliveryStatus
-        get() = deliveryStatus
-        set(value) {
-            deliveryStatus = value
-            field = value
-            notifyPropertyChanged(BR.status)
-        }
-
     var isGroup = false
+
+    fun updateMessage(message: SceytUiMessage) {
+        id = message.id
+        tid = message.tid
+        channelId = message.channelId
+        to = message.to
+        body = message.body
+        type = message.type
+        metadata = message.metadata
+        createdAt = message.createdAt
+        updatedAt = message.updatedAt
+        incoming = message.incoming
+        receipt = message.receipt
+        isTransient = message.isTransient
+        silent = message.silent
+        deliveryStatus = message.deliveryStatus
+        state = message.state
+        from = message.from
+        attachments = message.attachments
+        lastReactions = message.lastReactions
+        selfReactions = message.selfReactions
+        reactionScores = message.reactionScores
+        markerCount = message.markerCount
+        selfMarkers = message.selfMarkers
+        mentionedUsers = message.mentionedUsers
+        parent = message.parent
+        replyInThread = message.replyInThread
+        replyCount = message.replyCount
+        status = message.status
+    }
 }
