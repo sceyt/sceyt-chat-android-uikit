@@ -5,8 +5,8 @@
     android:viewportHeight="11">
 
   <group
-      android:scaleX="0.8"
-      android:scaleY="0.8"
+      android:scaleX="0.75"
+      android:scaleY="0.75"
       android:pivotX="6"
       android:pivotY="6">
 

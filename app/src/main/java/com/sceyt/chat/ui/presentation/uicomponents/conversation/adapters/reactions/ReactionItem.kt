@@ -5,12 +5,27 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.message
 
 sealed class ReactionItem {
     data class Reaction(val reactionScore: ReactionScore,
-                        val messageItem: MessageListItem.MessageItem) : ReactionItem()
+                        val messageItem: MessageListItem.MessageItem) : ReactionItem() {
+        override fun equals(other: Any?): Boolean {
+            return super.equals(other)
+        }
 
-    data class AddItem(val messageItem: MessageListItem.MessageItem) : ReactionItem()
+        override fun hashCode(): Int {
+            var result = super.hashCode()
+            result = 31 * result + reactionScore.hashCode()
+            result = 31 * result + messageItem.hashCode()
+            return result
+        }
+    }
+
+    data class AddItem(val messageItem: MessageListItem.MessageItem) : ReactionItem(){
+        override fun equals(other: Any?): Boolean {
+            return super.equals(other)
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
-        return when {
+        val value= when {
             other == null -> false
             other !is ReactionItem -> false
             other is Reaction && this is Reaction -> {
@@ -20,6 +35,8 @@ sealed class ReactionItem {
             other is AddItem && this is AddItem -> true
             else -> false
         }
+
+        return value
     }
 
     override fun hashCode(): Int {

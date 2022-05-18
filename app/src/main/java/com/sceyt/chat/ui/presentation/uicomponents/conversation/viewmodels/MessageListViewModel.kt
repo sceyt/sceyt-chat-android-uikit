@@ -34,8 +34,8 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
     private val _loadMoreMessagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val loadMoreMessagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _loadMoreMessagesFlow
 
-    private val _addReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
-    val addReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _addReactionLiveData
+    private val _updateReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
+    val updateReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _updateReactionLiveData
 
     private val onMessageFlow get() = repo.onMessageFlow.shareIn(viewModelScope, SharingStarted.Lazily)
     val onMessageLiveData = MutableLiveData<SceytUiMessage>()
@@ -93,8 +93,15 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
 
     private fun addReaction(message: SceytUiMessage, score: ReactionScore) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.addReaction(message, score)
-            _addReactionLiveData.postValue(response)
+            val response = repo.addReaction(message.id, score)
+            _updateReactionLiveData.postValue(response)
+        }
+    }
+
+    private fun deleteReaction(message: SceytUiMessage, score: ReactionScore) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.deleteReaction(message.id, score)
+            _updateReactionLiveData.postValue(response)
         }
     }
 
@@ -134,6 +141,9 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         when (event) {
             is ReactionEvent.AddReaction -> {
                 addReaction(event.message, event.score)
+            }
+            is ReactionEvent.DeleteReaction -> {
+                deleteReaction(event.message, event.score)
             }
         }
     }

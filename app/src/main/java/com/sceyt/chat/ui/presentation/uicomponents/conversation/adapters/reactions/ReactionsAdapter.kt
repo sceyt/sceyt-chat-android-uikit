@@ -10,6 +10,7 @@ import com.sceyt.chat.ui.utils.MyDiffUtil
 
 class ReactionsAdapter(
         private val reactions: ArrayList<ReactionItem>,
+        private val rvReactions: RecyclerView,
         private val viewHolderFactory: ReactionViewHolderFactory
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -43,4 +44,6 @@ class ReactionsAdapter(
         reactions.addAll(list)
         productDiffResult.dispatchUpdatesTo(this)
     }
+
+    val recyclerView get() = rvReactions
 }

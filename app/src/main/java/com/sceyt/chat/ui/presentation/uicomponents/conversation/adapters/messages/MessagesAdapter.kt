@@ -67,6 +67,8 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
     @SuppressLint("NotifyDataSetChanged")
     fun addNextPageMessagesList(items: List<MessageListItem>) {
         removeLoading()
+        if (items.isEmpty()) return
+
         val firstItem = getFirstItem()
         messages.addAll(0, items)
         if (messages.size == items.size)
@@ -78,6 +80,7 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
+        if (items.isEmpty()) return
         // todo from typing item id needed
 
         /*  if (messages.isNotEmpty() && messages.last().type == Typing) {

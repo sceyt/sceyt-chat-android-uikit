@@ -57,18 +57,6 @@ class MessagesRepositoryImpl(private val channelId: Long,
         }
     }
 
-    suspend fun addReaction(message: SceytUiMessage, score: ReactionScore): SceytResponse<SceytUiMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ClientWrapper.addReaction(channelId, message.id, score.key, score.score.toInt(), "", false) { message, status ->
-                if (status == null || status.isOk) {
-                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
-                } else {
-                    continuation.resume(SceytResponse.Error(status.error?.message))
-                }
-            }
-        }
-    }
-
     suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytUiMessage> {
         return suspendCancellableCoroutine { continuation ->
             val tmpMessage = ClientWrapper.sendMessage(channelId, message) { message, status ->
@@ -79,6 +67,30 @@ class MessagesRepositoryImpl(private val channelId: Long,
                 }
             }
             tmpMessageCb.invoke(tmpMessage)
+        }
+    }
+
+    suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytUiMessage> {
+        return suspendCancellableCoroutine { continuation ->
+            ClientWrapper.addReaction(channelId, messageId, score.key, score.score.toInt(), "", false) { message, status ->
+                if (status == null || status.isOk) {
+                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
+                } else {
+                    continuation.resume(SceytResponse.Error(status.error?.message))
+                }
+            }
+        }
+    }
+
+    suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytUiMessage> {
+        return suspendCancellableCoroutine { continuation ->
+            ClientWrapper.deleteReaction(channelId, messageId, score.key) { message, status ->
+                if (status == null || status.isOk) {
+                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
+                } else {
+                    continuation.resume(SceytResponse.Error(status.error?.message))
+                }
+            }
         }
     }
 }

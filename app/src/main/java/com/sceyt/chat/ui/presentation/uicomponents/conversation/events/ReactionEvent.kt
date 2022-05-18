@@ -10,4 +10,8 @@ sealed class ReactionEvent {
             val score: ReactionScore
     ) : ReactionEvent()
 
+    data class DeleteReaction(
+            val message: SceytUiMessage,
+            val score: ReactionScore
+    ) : ReactionEvent()
 }
