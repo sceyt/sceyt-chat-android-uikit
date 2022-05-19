@@ -6,7 +6,6 @@ import androidx.databinding.library.baseAdapters.BR
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import java.util.*
 
 open class SceytUiMessage(var id: Long,
@@ -88,43 +87,8 @@ open class SceytUiMessage(var id: Long,
         parent = message.parent
         replyInThread = message.replyInThread
         replyCount = message.replyCount
+
+        //Local properties from dataBinding
         status = message.status
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return  (other is SceytUiMessage && other.id == id)
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + tid.hashCode()
-        result = 31 * result + channelId.hashCode()
-        result = 31 * result + (to?.hashCode() ?: 0)
-        result = 31 * result + body.hashCode()
-        result = 31 * result + type.hashCode()
-        result = 31 * result + metadata.hashCode()
-        result = 31 * result + createdAt.hashCode()
-        result = 31 * result + updatedAt.hashCode()
-        result = 31 * result + incoming.hashCode()
-        result = 31 * result + receipt.hashCode()
-        result = 31 * result + isTransient.hashCode()
-        result = 31 * result + silent.hashCode()
-        result = 31 * result + deliveryStatus.hashCode()
-        result = 31 * result + state.hashCode()
-        result = 31 * result + (from?.hashCode() ?: 0)
-        result = 31 * result + (attachments?.contentHashCode() ?: 0)
-        result = 31 * result + (lastReactions?.contentHashCode() ?: 0)
-        result = 31 * result + (selfReactions?.contentHashCode() ?: 0)
-        result = 31 * result + (reactionScores?.contentHashCode() ?: 0)
-        result = 31 * result + (markerCount?.contentHashCode() ?: 0)
-        result = 31 * result + (selfMarkers?.contentHashCode() ?: 0)
-        result = 31 * result + mentionedUsers.contentHashCode()
-        result = 31 * result + (parent?.hashCode() ?: 0)
-        result = 31 * result + replyInThread.hashCode()
-        result = 31 * result + replyCount.hashCode()
-        result = 31 * result + showDate.hashCode()
-        result = 31 * result + canShowAvatarAndName.hashCode()
-        result = 31 * result + isGroup.hashCode()
-        return result
     }
 }

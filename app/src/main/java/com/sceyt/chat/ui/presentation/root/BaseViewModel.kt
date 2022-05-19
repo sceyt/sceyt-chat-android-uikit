@@ -25,10 +25,10 @@ open class BaseViewModel : ViewModel() {
     }
 
     data class PageState(
-            val isLoading: Boolean,
-            val isLoadingMore: Boolean,
-            val isEmpty: Boolean,
-            val query: String?,
+            val isLoading: Boolean = false,
+            val isLoadingMore: Boolean = false,
+            val isEmpty: Boolean = false,
+            val query: String? = null,
     ) {
         val isSearch get() = !query.isNullOrBlank()
     }

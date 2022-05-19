@@ -67,14 +67,15 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/messageDay"
             android:layout_toEndOf="@+id/avatar"
-            android:background="@drawable/bg_inc_message">
+            android:background="@drawable/bg_inc_message"
+            android:paddingTop="2dp">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvUserName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="5dp"
                 android:singleLine="true"
                 android:textColor="@color/colorAccent"
                 android:textSize="@dimen/extraSmallTextSize"
@@ -92,7 +93,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="5dp"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

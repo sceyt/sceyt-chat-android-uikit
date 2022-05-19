@@ -35,6 +35,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     private var mMargin = 0
     private var mIconSize = 0
     private var isHighlighted = false
+    private var isEdited = false
     private lateinit var paddings: IntArray
 
     init {
@@ -89,7 +90,8 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     }
 
     private fun measureViewsFirstText() {
-        textPaint.getTextBounds(dateText, 0, dateText.length, textBoundsRect)
+        val dateTitle = initText(dateText)
+        textPaint.getTextBounds(dateTitle, 0, dateTitle.length, textBoundsRect)
 
         if (statusDrawable != null) {
             initStatsIconSize(statusDrawable!!)
@@ -106,7 +108,8 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     }
 
     private fun measureViewsFirstStatus() {
-        textPaint.getTextBounds(dateText, 0, dateText.length, textBoundsRect)
+        val dateTitle = initText(dateText)
+        textPaint.getTextBounds(dateTitle, 0, dateTitle.length, textBoundsRect)
 
         statusDrawable?.let {
             initStatsIconSize(it)
@@ -161,13 +164,13 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
                 it.draw(canvas)
             }
             //Draw text
-            canvas.drawText(dateText,
+            canvas.drawText(initText(dateText),
                 -textBoundsRect.left.toFloat() + Integer.max(iconBoundsRect.right, mIconSize) + mMargin,
                 (abs(textBoundsRect.top) + getTopFormText() + paddingTop).toFloat(),
                 textPaint)
         } else {
             //Draw text
-            canvas.drawText(dateText,
+            canvas.drawText(initText(dateText),
                 -textBoundsRect.left.toFloat() + paddingStart,
                 (abs(textBoundsRect.top) + getTopFormText() + paddingTop).toFloat(),
                 textPaint)
@@ -208,6 +211,10 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         }
     }
 
+    private fun initText(text: String): String {
+        return if (isEdited) "${context.getString(R.string.edited)} $text" else text
+    }
+
     fun setStatusIcon(drawable: Drawable?) {
         statusDrawable = drawable
         init()
@@ -215,16 +222,18 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         invalidate()
     }
 
-    fun setDateText(text: String) {
+    fun setDateText(text: String, edited: Boolean) {
         dateText = text
+        isEdited = edited
         init()
         requestLayout()
         invalidate()
     }
 
-    fun setDateAndStatusIcon(text: String, drawable: Drawable?) {
+    fun setDateAndStatusIcon(text: String, drawable: Drawable?, edited: Boolean) {
         statusDrawable = drawable?.mutate()
         dateText = text
+        isEdited = edited
         init()
         requestLayout()
         invalidate()
@@ -251,5 +260,10 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         val width = textBoundsRect.width() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd
         val height = textBoundsRect.height().coerceAtLeast(Integer.max(iconBoundsRect.height(), mIconSize)) + paddingTop + paddingBottom
         setMeasuredDimension(width, height)
+    }
+
+    fun setEdited(edited: Boolean) {
+        isEdited = edited
+        setDateText(dateText, isEdited)
     }
 }

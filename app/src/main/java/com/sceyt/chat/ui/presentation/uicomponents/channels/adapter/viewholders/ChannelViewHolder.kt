@@ -45,7 +45,7 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
                     avatar.setNameAndImageUrl(name, url)
                     channelTitle.text = name
                     lastMessage.text = getLastMessageTxt(channel.lastMessage)
-                    updateDate.setDateText(getDateTxt(channel))
+                    updateDate.setDateText(getDateTxt(channel), false)
                     messageCount.isVisible = false
 
                     root.setOnClickListener {

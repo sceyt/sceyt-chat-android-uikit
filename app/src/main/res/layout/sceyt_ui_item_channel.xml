@@ -19,15 +19,13 @@
 
         <com.sceyt.chat.ui.presentation.customviews.Avatar
             android:id="@+id/avatar"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="@dimen/_46sdp"
+            android:layout_height="@dimen/_46sdp"
             android:layout_marginVertical="8dp"
             app:cardBackgroundColor="@color/colorGreen"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_percent=".15" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <View
             android:id="@+id/onlineStatus"
