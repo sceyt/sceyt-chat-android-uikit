@@ -168,10 +168,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addNewMessages(*data)
     }
 
-    fun updateMessage(message: SceytUiMessage) {
-        (messagesRV.getData().find {
-            it is MessageListItem.MessageItem && (it.message.id == message.id || it.message.tid == message.tid)
-        } as? MessageListItem.MessageItem)?.message?.updateMessage(message)
+    fun updateMessage(message: SceytUiMessage, notifyItemChanged: Boolean) {
+        for ((index, item) in messagesRV.getData().withIndex()) {
+            if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
+                            (item.message.id == 0L && item.message.tid == message.tid))) {
+
+                item.message.updateMessage(message)
+                if (notifyItemChanged)
+                    messagesRV.adapter?.notifyItemChanged(index)
+                break
+            }
+        }
     }
 
     fun updateReaction(data: SceytUiMessage) {
@@ -207,5 +214,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
         reactionEventListener = listener
+    }
+
+    fun clearData() {
+        messagesRV.clearData()
+        updateViewState(BaseViewModel.PageState(isEmpty = true))
     }
 }

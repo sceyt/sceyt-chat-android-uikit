@@ -15,78 +15,49 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class ChannelEventsObserverService {
     val onMessageFlow: MutableStateFlow<Pair<Channel, Message>?> = MutableStateFlow(null)
     val onMessageStatusFlow: MutableStateFlow<MessageStatusChange?> = MutableStateFlow(null)
+    val onMessageEditedOrDeletedChannel = kotlinx.coroutines.channels.Channel<Message?>()
+    val onMessageReactionUpdatedChannel = kotlinx.coroutines.channels.Channel<Message?>()
+    val onChannelClearedHistoryChannel = kotlinx.coroutines.channels.Channel<Channel?>()
 
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
-
-                onMessageFlow.value = Pair(channel, message)
-                /* if (message.from.id == ChatClient.getClient().user.id || message.channelId != channelId
-                         || message.replyInThread)
-                     return*/
-
-                // channelScreenItemsCRUD.insertMessage(message)
-                // liveDataDownload.postValue(convertAttachmentsLinksToMap(message.attachments))
+                onMessageFlow.tryEmit(Pair(channel, message))
 
                 ClientWrapper.markMessagesAsDisplayed(channel.id, longArrayOf(message.id)) { _, _ ->
                 }
             }
 
             override fun onMessageDeleted(message: Message?) {
-                /* if (channelId == message?.channelId) {
-                      channelScreenItemsCRUD.markAsDeleted(message)
-                 }*/
+                onMessageEditedOrDeletedChannel.trySend(message)
             }
 
             override fun onMessageEdited(message: Message?) {
-                /*  if (channelId == message?.channelId) {
-                      channelScreenItemsCRUD.updateEditedMessageBodyAndType(message)
-                  }*/
+                onMessageEditedOrDeletedChannel.trySend(message)
             }
 
             override fun onReactionAdded(message: Message?, reaction: Reaction?) {
-                /* if (channelId == message?.channelId) {
-                      channelScreenItemsCRUD.updateMessageReactions(message)
-                 }*/
+                onMessageReactionUpdatedChannel.trySend(message)
             }
 
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
-                /*   if (channelId == message?.channelId) {
-                      channelScreenItemsCRUD.updateMessageReactions(message)
-                   }*/
+                onMessageReactionUpdatedChannel.trySend(message)
             }
         })
 
         ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
 
-            override fun onDeliveryReceiptReceived(
-                    channel: Channel?,
-                    from: User?,
-                    messageIds: MutableList<Long>
-            ) {
-                /* if (channelId == channel?.id) {
-                     channelScreenItemsCRUD.updateMessagesStatus(
-                         DeliveryStatus.Delivered,
-                         *messageIds.toLongArray()
-                     )
-                 }*/
-
-                onMessageStatusFlow.value = MessageStatusChange(channel, from, DeliveryStatus.Delivered, messageIds)
+            override fun onDeliveryReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
+                onMessageStatusFlow.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Delivered, messageIds))
             }
 
-            override fun onReadReceiptReceived(
-                    channel: Channel?,
-                    from: User?,
-                    messageIds: MutableList<Long>
-            ) {
-                /*    if (channelId == channel?.id) {
-                        channelScreenItemsCRUD.updateMessagesStatus(
-                            DeliveryStatus.Read,
-                            *messageIds.toLongArray(),
-                        )
-                    }*/
-                onMessageStatusFlow.value = MessageStatusChange(channel, from, DeliveryStatus.Read, messageIds)
+            override fun onReadReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
+                onMessageStatusFlow.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Read, messageIds))
+            }
+
+            override fun onClearedHistory(channel: Channel?) {
+                onChannelClearedHistoryChannel.trySend(channel)
             }
 
             override fun onChannelUpdated(channel: Channel?) {
@@ -94,24 +65,7 @@ class ChannelEventsObserverService {
                     channelLiveData.postValue(it)
                 }*/
             }
-
-            override fun onClearedHistory(channel: Channel?) {
-                //  notifyUpdate.postValue(true)
-            }
         })
-        /*     channelRepository.registerOnChannelChange(TAG, object : ChannelRepository.OnChangeListener {
-                 override fun onChange(changeType: ChannelRepository.ChangeType) {
-                     when (changeType) {
-                         ChannelRepository.ChangeType.CLEAR_MESSAGES -> {
-                             notifyUpdate.postValue(true)
-                         }
-                         else -> {
-                         }
-                     }
-                 }
-             })*/
-
-
     }
 
     data class MessageStatusChange(

@@ -9,24 +9,33 @@ import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class MessagesRepositoryImpl(private val channelId: Long,
                              isThread: Boolean) {
-    private val observer = ChannelEventsObserverService()
+    //todo need to add DI
+    private val channelEventsService = ChannelEventsObserverService()
 
-    val onMessageFlow = observer.onMessageFlow.filter {
-        it?.first?.id == channelId
-    }.mapNotNull {
-        it?.second?.toSceytUiMessage()
-    }
+    val onMessageFlow = channelEventsService.onMessageFlow
+        .filter { it?.first?.id == channelId }
+        .mapNotNull { it?.second?.toSceytUiMessage() }
 
-    val onMessageStatusFlow = observer.onMessageStatusFlow.filter {
-        it?.channel?.id == channelId
-    }
+    val onMessageStatusFlow = channelEventsService.onMessageStatusFlow
+        .filter { it?.channel?.id == channelId }
+
+    val onMessageReactionUpdatedFlow = channelEventsService.onMessageReactionUpdatedChannel.consumeAsFlow()
+        .filterNotNull()
+        .filter { it.channelId == channelId }
+
+    val onMessageEditedOrDeleteFlow = channelEventsService.onMessageEditedOrDeletedChannel.consumeAsFlow()
+        .filterNotNull()
+        .filter{ it.channelId == channelId }
+
+    val onChannelClearedHistoryFlow = channelEventsService.onChannelClearedHistoryChannel.consumeAsFlow()
+        .filterNotNull()
+        .filter { it.id == channelId }
 
     private val query = MessagesListQuery.Builder(channelId).apply {
         setIsThread(isThread)

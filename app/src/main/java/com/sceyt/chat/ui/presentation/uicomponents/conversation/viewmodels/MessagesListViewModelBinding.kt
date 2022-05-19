@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
+import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import kotlinx.coroutines.flow.collect
@@ -29,7 +30,15 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
-    onMessageLiveData.observe(lifecycleOwner) {
+    addDeleteReactionLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success) {
+            it.data?.let { data -> messagesListView.updateReaction(data) }
+        } else if (it is SceytResponse.Error) {
+            customToastSnackBar(messagesListView, it.message ?: "")
+        }
+    }
+
+    onNewMessageLiveData.observe(lifecycleOwner) {
         val initMessage = mapToMessageListItem(
             data = arrayListOf(it),
             hasNext = false,
@@ -37,23 +46,29 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             item as MessageListItem.MessageItem
         }
         messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.updateViewState(BaseViewModel.PageState(isEmpty = false))
     }
 
     onMessageStatusLiveData.observe(lifecycleOwner) {
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }
 
-    updateMessageLiveData.observe(lifecycleOwner) {
+    messageSentLiveData.observe(lifecycleOwner) {
         val message = setMessageDateAndState(it, messagesListView.getLastMessage()?.message)
-        messagesListView.updateMessage(message)
+        messagesListView.updateMessage(message, false)
     }
 
-    updateReactionLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            it.data?.let { data -> messagesListView.updateReaction(data) }
-        } else if (it is SceytResponse.Error) {
-            customToastSnackBar(messagesListView, it.message ?: "")
-        }
+    onMessageReactionUpdatedLiveData.observe(lifecycleOwner) {
+        messagesListView.updateReaction(it)
+    }
+
+    onMessageEditedOrDeletedLiveData.observe(lifecycleOwner) {
+        val message = setMessageDateAndState(it, messagesListView.getLastMessage()?.message)
+        messagesListView.updateMessage(message, true)
+    }
+
+    onChannelHistoryClearedLiveData.observe(lifecycleOwner) {
+        messagesListView.clearData()
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
@@ -71,10 +86,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             loadMessages(lastMessageId, true)
         }
     }
-
-
 }
-
 
 /*
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {

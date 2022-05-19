@@ -58,7 +58,8 @@
             android:layout_alignParentEnd="true"
             android:background="@drawable/bg_out_message"
             android:maxWidth="@dimen/bodyMaxWidth"
-            android:minWidth="@dimen/bodyMaxWidth">
+            android:minWidth="@dimen/bodyMaxWidth"
+            android:paddingTop="2dp">
 
             <include
                 android:id="@+id/viewReplay"
@@ -66,7 +67,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="5dp"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

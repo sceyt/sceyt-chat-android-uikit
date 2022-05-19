@@ -34,7 +34,6 @@ abstract class BaseMsgViewHolder(view: View,
                                  private val messageListeners: MessageClickListenersImpl) : BaseViewHolder<MessageListItem>(view) {
 
     private var reactionsAdapter: ReactionsAdapter? = null
-    private val editedString = view.context.getString(R.string.edited)
 
     @SuppressLint("SetTextI18n")
     protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: ToReplayLineView, item: MessageListItem.MessageItem) {
@@ -63,9 +62,7 @@ abstract class BaseMsgViewHolder(view: View,
     }
 
     protected fun setMessageDateText(createdAt: Long, messageDate: DateStatusView, isEdited: Boolean) {
-        val text = if (isEdited) "$editedString ${getDateTimeString(createdAt)}"
-        else getDateTimeString(createdAt)
-        messageDate.setDateText(text)
+        messageDate.setDateText(getDateTimeString(createdAt), isEdited)
     }
 
     protected fun setReplayedMessageContainer(message: SceytUiMessage, viewBinding: SceytUiRecyclerReplayContainerBinding) {
@@ -129,7 +126,6 @@ abstract class BaseMsgViewHolder(view: View,
                 itemAnimator = DefaultItemAnimator().also {
                     it.moveDuration = 100
                     it.removeDuration = 100
-                    it.changeDuration = 150
                 }
                 if (itemDecorationCount == 0)
                     addItemDecoration(RecyclerItemOffsetDecoration(0, 4, 8, 4))
@@ -148,7 +144,8 @@ abstract class BaseMsgViewHolder(view: View,
         return ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
             ReactionItem.Reaction(it, MessageListItem.MessageItem(message))
         }).also {
-            it.add(ReactionItem.AddItem(MessageListItem.MessageItem(message)))
+            if (it.isNotEmpty())
+                it.add(ReactionItem.AddItem(MessageListItem.MessageItem(message)))
         }
     }
 
@@ -156,7 +153,9 @@ abstract class BaseMsgViewHolder(view: View,
         val reactions = initReactionsList(scores, message)
         message.reactionScores = scores
         if (reactionsAdapter != null) {
-            (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = min(4, reactions.size)
+            reactionsAdapter?.recyclerView?.isVisible = scores.isNotEmpty()
+            if (scores.isNotEmpty())
+                (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = min(4, reactions.size)
             reactionsAdapter?.submitData(reactions)
         } else
             bindingAdapter?.notifyItemChanged(bindingAdapterPosition)

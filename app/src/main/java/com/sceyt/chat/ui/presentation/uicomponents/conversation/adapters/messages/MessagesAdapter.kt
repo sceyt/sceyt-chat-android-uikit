@@ -31,27 +31,33 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
         return messages.size
     }
 
+    override fun onViewAttachedToWindow(holder: BaseViewHolder<MessageListItem>) {
+        super.onViewAttachedToWindow(holder)
+        holder.onViewAttachedFromWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: BaseViewHolder<MessageListItem>) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
+    }
+
     fun getSkip() = messages.filter { it !is MessageListItem.LoadingMoreItem }.size
 
-    fun getFirstItem(): MessageListItem.MessageItem = messages.find {
-        it is MessageListItem.MessageItem
-    } as MessageListItem.MessageItem
+    fun getFirstItem() = messages.find { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
 
 
-    fun getLastItem(): MessageListItem.MessageItem = messages.findLast {
-        it is MessageListItem.MessageItem
-    } as MessageListItem.MessageItem
+    fun getLastItem() = messages.findLast { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
 
     private fun removeLoading() {
         if (messages.remove(mLoadingItem))
             notifyItemRemoved(0)
     }
 
-    private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem) {
+    private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?) {
         if (newItem is MessageListItem.MessageItem) {
-            (prevItem as MessageListItem.MessageItem).message.apply {
+            (prevItem as? MessageListItem.MessageItem)?.message?.apply {
                 showDate = !DateTimeUtil.isSameDay(createdAt, newItem.message.createdAt)
-                canShowAvatarAndName = id == newItem.message.id && isGroup
+                canShowAvatarAndName = from?.id != newItem.message.from?.id && isGroup
             }
         }
     }
@@ -102,16 +108,12 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
                 return prevItem.message.incoming != currentItem.message.incoming
         } catch (ex: Exception) {
         }
-        return true
+        return false
     }
 
-    override fun onViewAttachedToWindow(holder: BaseViewHolder<MessageListItem>) {
-        super.onViewAttachedToWindow(holder)
-        holder.onViewAttachedFromWindow()
-    }
-
-    override fun onViewDetachedFromWindow(holder: BaseViewHolder<MessageListItem>) {
-        super.onViewDetachedFromWindow(holder)
-        holder.onViewDetachedFromWindow()
+    @SuppressLint("NotifyDataSetChanged")
+    fun clearData() {
+        messages.clear()
+        notifyDataSetChanged()
     }
 }
