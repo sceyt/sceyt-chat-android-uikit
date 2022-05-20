@@ -74,6 +74,7 @@
         <entry key="app/src/main/res/layout/sceyt_ui_loading_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_message_file_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_message_image_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_out_single_image_message.xml" value="0.390625" />
         <entry key="app/src/main/res/layout/sceyt_ui_page_loading.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_recycler_replay_container.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/sceyt_ui_replay_message_container.xml" value="0.3776041666666667" />

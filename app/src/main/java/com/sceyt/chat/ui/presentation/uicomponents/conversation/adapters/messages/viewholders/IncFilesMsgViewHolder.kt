@@ -1,5 +1,7 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
+import android.view.ViewGroup
+import androidx.core.view.*
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
@@ -41,7 +43,24 @@ class IncFilesMsgViewHolder(
     }
 
     private fun setFilesAdapter(item: SceytUiMessage) {
-        binding.messageDate.setHighlighted(item.attachments?.lastOrNull()?.type.isEqualsVideoOrImage())
+        val attachments = ArrayList(item.attachments!!.map {
+            when (it.type) {
+                "image" -> FileListItem.Image(it)
+                "video" -> FileListItem.Video(it)
+                else -> FileListItem.File(it)
+            }
+        })
+        binding.messageDate.apply {
+            val needHighlight = attachments.lastOrNull() is FileListItem.Image
+                    || attachments.lastOrNull() is FileListItem.Video
+            setHighlighted(needHighlight)
+            val marginEndBottom = if (needHighlight) Pair(20, 20) else Pair(marginEnd, marginBottom)
+            (layoutParams as ViewGroup.MarginLayoutParams).apply {
+                setMargins(0, marginTop, 0, marginEndBottom.second)
+                marginEnd = marginEndBottom.first
+            }
+        }
+
         with(binding.rvFiles) {
             setHasFixedSize(true)
             if (itemDecorationCount == 0) {
@@ -49,13 +68,7 @@ class IncFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(ArrayList(item.attachments!!.map {
-                when (it.type) {
-                    "image" -> FileListItem.Image(it)
-                    "video" -> FileListItem.Video(it)
-                    else -> FileListItem.File(it)
-                }
-            }), FilesViewHolderFactory(context = itemView.context))
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = itemView.context))
         }
     }
 }

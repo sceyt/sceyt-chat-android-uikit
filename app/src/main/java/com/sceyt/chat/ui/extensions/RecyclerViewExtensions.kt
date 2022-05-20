@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.extensions
 import android.os.Handler
 import android.os.Looper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 
@@ -74,6 +75,15 @@ fun RecyclerView.lastCompletelyVisibleItemPosition(): Int {
     return RecyclerView.NO_POSITION
 }
 
+fun RecyclerView.lastVisibleItemPosition(): Int {
+    if (adapter?.itemCount != 0) {
+        val position = (layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+        if (position != RecyclerView.NO_POSITION)
+            return position
+    }
+    return RecyclerView.NO_POSITION
+}
+
 fun RecyclerView.checkIsNotCompletelyVisibleItem(position: Int): Boolean {
     return ((layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition() > position
             || (layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition() < position)
@@ -137,4 +147,13 @@ fun RecyclerView.ViewHolder.bindPosition(cb: (Int) -> Unit) {
         if (it != RecyclerView.NO_POSITION)
             cb.invoke(it)
     }
+}
+
+fun RecyclerView.smoothSnapToPosition(position: Int, snapMode: Int = LinearSmoothScroller.SNAP_TO_START) {
+    val smoothScroller = object : LinearSmoothScroller(this.context) {
+        override fun getVerticalSnapPreference(): Int = snapMode
+        override fun getHorizontalSnapPreference(): Int = snapMode
+    }
+    smoothScroller.targetPosition = position
+    layoutManager?.startSmoothScroll(smoothScroller)
 }

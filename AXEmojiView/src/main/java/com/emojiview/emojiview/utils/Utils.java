@@ -78,9 +78,9 @@ public class Utils {
     public static void setForegroundClickEffect(View View, boolean Borderless) {
         if (SDK_INT >= Build.VERSION_CODES.M) {
             int[] attrs;
-            if (Borderless){
+            if (Borderless) {
                 attrs = new int[]{android.R.attr.selectableItemBackgroundBorderless};
-            } else{
+            } else {
                 attrs = new int[]{android.R.attr.selectableItemBackground};
             }
             TypedArray typedArray = View.getContext().obtainStyledAttributes(attrs);
@@ -114,7 +114,7 @@ public class Utils {
 
     public static int dpToPx(@NonNull final Context context, final float dp) {
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-                context.getResources().getDisplayMetrics()) + 0.5f);
+                context.getResources().getDisplayMetrics()));
     }
 
     public static int getOrientation(final Context context) {

@@ -10,54 +10,65 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.chat.sceyt_listeners.MessageListener
 import com.sceyt.chat.ui.extensions.TAG
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class ChannelEventsObserverService {
-    val onMessageFlow: MutableStateFlow<Pair<Channel, Message>?> = MutableStateFlow(null)
-    val onMessageStatusFlow: MutableStateFlow<MessageStatusChange?> = MutableStateFlow(null)
-    val onMessageEditedOrDeletedChannel = kotlinx.coroutines.channels.Channel<Message?>()
-    val onMessageReactionUpdatedChannel = kotlinx.coroutines.channels.Channel<Message?>()
-    val onChannelClearedHistoryChannel = kotlinx.coroutines.channels.Channel<Channel?>()
+    private val _onMessageFlow: MutableStateFlow<Pair<Channel, Message>?> = MutableStateFlow(null)
+    val onMessageFlow: StateFlow<Pair<Channel, Message>?> = _onMessageFlow
+
+    private val _onMessageStatusFlow: MutableStateFlow<MessageStatusChange?> = MutableStateFlow(null)
+    val onMessageStatusFlow: StateFlow<MessageStatusChange?> = _onMessageStatusFlow
+
+    private val _onMessageEditedOrDeletedChannel = kotlinx.coroutines.channels.Channel<Message?>()
+    val onMessageEditedOrDeletedChannel: ReceiveChannel<Message?> = _onMessageEditedOrDeletedChannel
+
+    private val _onMessageReactionUpdatedChannel = kotlinx.coroutines.channels.Channel<Message?>()
+    val onMessageReactionUpdatedChannel: ReceiveChannel<Message?> = _onMessageReactionUpdatedChannel
+
+    private val _onChannelClearedHistoryChannel = kotlinx.coroutines.channels.Channel<Channel?>()
+    val onChannelClearedHistoryChannel: ReceiveChannel<Channel?> = _onChannelClearedHistoryChannel
 
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
-                onMessageFlow.tryEmit(Pair(channel, message))
+                _onMessageFlow.tryEmit(Pair(channel, message))
 
                 ClientWrapper.markMessagesAsDisplayed(channel.id, longArrayOf(message.id)) { _, _ ->
                 }
             }
 
             override fun onMessageDeleted(message: Message?) {
-                onMessageEditedOrDeletedChannel.trySend(message)
+                _onMessageEditedOrDeletedChannel.trySend(message)
             }
 
             override fun onMessageEdited(message: Message?) {
-                onMessageEditedOrDeletedChannel.trySend(message)
+                _onMessageEditedOrDeletedChannel.trySend(message)
             }
 
             override fun onReactionAdded(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedChannel.trySend(message)
+                _onMessageReactionUpdatedChannel.trySend(message)
             }
 
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedChannel.trySend(message)
+                _onMessageReactionUpdatedChannel.trySend(message)
             }
         })
 
         ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
 
             override fun onDeliveryReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Delivered, messageIds))
+                _onMessageStatusFlow.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Delivered, messageIds))
             }
 
             override fun onReadReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Read, messageIds))
+                _onMessageStatusFlow.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Read, messageIds))
             }
 
             override fun onClearedHistory(channel: Channel?) {
-                onChannelClearedHistoryChannel.trySend(channel)
+                _onChannelClearedHistoryChannel.trySend(channel)
             }
 
             override fun onChannelUpdated(channel: Channel?) {

@@ -1,5 +1,7 @@
 package com.sceyt.chat.ui.extensions
 
+import android.content.res.Resources
+import android.util.DisplayMetrics
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.math.floor
@@ -44,3 +46,18 @@ fun Long.toPrettySize(): String {
         else -> "${this}B"
     }
 }
+
+/**
+ * Transforms DP value integer to pixels, based on the screen density.
+ */
+internal fun Int.dpToPx(): Int = dpToPxPrecise().roundToInt()
+
+/**
+ * Uses the display metrics to transform the value of DP to pixels.
+ */
+internal fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
+
+/**
+ * Fetches the current system display metrics based on [Resources].
+ */
+internal fun displayMetrics(): DisplayMetrics = Resources.getSystem().displayMetrics
