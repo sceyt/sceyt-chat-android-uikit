@@ -18,6 +18,7 @@ class MessageImageViewHolder(
     }
 
     override fun bindTo(item: FileListItem) {
+        binding.data = item.uploadData
         val file = (item as? FileListItem.Image)?.file ?: return
 
         // todo temporary

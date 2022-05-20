@@ -11,7 +11,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -154,12 +153,12 @@ class ConversationActivity : AppCompatActivity() {
             attachment.apply {
                 setUploaderProgress(object : ProgressCallback {
                     override fun onResult(pct: Float) {
-                        map[item] = UploadData(pct, null)
+                       // map[item] = UploadData(pct, null)
                    //     viewModel.liveDataUpload.postValue(map)
                     }
 
                     override fun onError(e: SceytException?) {
-                        map[item] = UploadData(null, e)
+                      //  map[item] = UploadData(null, e)
                       //  viewModel.liveDataUpload.postValue(map)
                     }
                 })
