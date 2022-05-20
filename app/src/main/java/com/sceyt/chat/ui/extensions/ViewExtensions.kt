@@ -50,6 +50,10 @@ fun dpToPx(dp: Float): Int {
     return (dp * density).roundToInt()
 }
 
+fun View.screenWidthPx() = resources.configuration.screenWidthDp.dpToPx()
+
+fun View.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+
 fun startObjectAnimDuoChat(context: Context, duration: Long, view: View) {
     val yourProfileWidth = 100
     val yourProfileHeight = 100
@@ -123,28 +127,6 @@ fun EditText.setTextAndMoveSelectionEnd(text: String?) {
     text?.let {
         setText(text)
         setSelection(selectionEnd)
-    }
-}
-
-fun EditText.debounceWithLength1(cb: (CharSequence?) -> Unit, textChanged: ((CharSequence?) -> Unit)? = null) {
-    findViewTreeLifecycleOwner()?.lifecycleScope?.let {
-        callbackFlow {
-            val listener = doOnTextChanged { text, _, _, _ ->
-                textChanged?.invoke(text)
-                trySend(text)
-            }
-            awaitClose { removeTextChangedListener(listener) }
-        }.map { charSequence ->
-            if (charSequence?.trim()?.length == 1) {
-                cb(charSequence)
-            }
-            charSequence
-        }.debounce(300)
-            .onEach { text ->
-                text?.let { charSequence ->
-                    cb(charSequence)
-                }
-            }.launchIn(it)
     }
 }
 

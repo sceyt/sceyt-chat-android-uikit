@@ -1,5 +1,10 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
+import android.view.ViewGroup
+import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
+import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
@@ -40,7 +45,15 @@ class OutFilesMsgViewHolder(
     }
 
     private fun setFilesAdapter(item: SceytUiMessage) {
-        binding.messageDate.setHighlighted(item.attachments?.lastOrNull()?.type.isEqualsVideoOrImage())
+        binding.messageDate.apply {
+            val needHighlight = item.attachments?.lastOrNull()?.type.isEqualsVideoOrImage()
+            setHighlighted(needHighlight)
+            val marginEndBottom = if (needHighlight) Pair(20, 20) else Pair(marginEnd, marginBottom)
+            (layoutParams as ViewGroup.MarginLayoutParams).apply {
+                setMargins(0, marginTop, 0, marginEndBottom.second)
+                marginEnd = marginEndBottom.first
+            }
+        }
 
         with(binding.rvFiles) {
             setHasFixedSize(true)

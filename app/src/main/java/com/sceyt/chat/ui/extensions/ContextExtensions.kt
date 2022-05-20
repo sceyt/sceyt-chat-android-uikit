@@ -1,9 +1,11 @@
 package com.sceyt.chat.ui.extensions
 
+import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
@@ -113,6 +115,8 @@ internal fun Context?.getFragmentManager(): FragmentManager? {
         else -> null
     }
 }
+
+
 
 
 

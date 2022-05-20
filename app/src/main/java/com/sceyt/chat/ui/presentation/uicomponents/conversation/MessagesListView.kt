@@ -193,13 +193,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
         ids.forEach { id ->
-            val item = messagesRV.getData().find {
-                it is MessageListItem.MessageItem && it.message.id == id
-            } as? MessageListItem.MessageItem
-
-            item?.let {
-                if (it.message.status < status)
-                    it.message.status = status
+            for (item: MessageListItem in messagesRV.getData()) {
+                if (item is MessageListItem.MessageItem) {
+                    if (item.message.id == id) {
+                        if (item.message.status < status)
+                            item.message.status = status
+                        break
+                    } else {
+                        if (item.message.status < status && item.message.status != DeliveryStatus.Pending)
+                            item.message.status = status
+                    }
+                }
             }
         }
     }

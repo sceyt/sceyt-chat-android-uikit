@@ -34,6 +34,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
     private var firstStatusIcon = true
     private var mMargin = 0
     private var mIconSize = 0
+    private var mMinHeightSize = 0
     private var isHighlighted = false
     private var isEdited = false
     private lateinit var paddings: IntArray
@@ -59,18 +60,25 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         /** For highlighted state.
          *  After removing state, need to set initial paddings.*/
         paddings = IntArray(4)
-        // padding start
-        paddings[0] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingStart,
-            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
-        // padding top
-        paddings[1] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingTop,
-            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
-        // padding end
-        paddings[2] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingEnd,
-            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
-        // padding bottom
-        paddings[3] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingBottom,
-            typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
+        val padding = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_padding, 0)
+        if (padding != 0) {
+            paddings.forEachIndexed { i, _ ->
+                paddings[i] = padding
+            }
+        } else {
+            // padding start
+            paddings[0] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingStart,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
+            // padding top
+            paddings[1] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingTop,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
+            // padding end
+            paddings[2] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingEnd,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
+            // padding bottom
+            paddings[3] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingBottom,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
+        }
     }
 
     private fun init() {
@@ -78,6 +86,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
         textPaint.textSize = textSize.toFloat()
         mMargin = statusIconMargin
         mIconSize = statusIconSize
+        mMinHeightSize = statusIconSize
         textBoundsRect = Rect()
         iconBoundsRect = Rect()
 
@@ -185,7 +194,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
 
     /** For center vertical text date when icon is bigger */
     private fun getTopFormText(): Int {
-        val realHeight = Integer.max(heightIcon, mIconSize)
+        val realHeight = Integer.max(heightIcon, mMinHeightSize)
         return if (textBoundsRect.height() < realHeight)
             (realHeight - (textBoundsRect.top.absoluteValue)) / 2
         else 0
@@ -258,7 +267,7 @@ class DateStatusView @JvmOverloads constructor(context: Context, attrs: Attribut
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = textBoundsRect.width() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd
-        val height = textBoundsRect.height().coerceAtLeast(Integer.max(iconBoundsRect.height(), mIconSize)) + paddingTop + paddingBottom
+        val height = textBoundsRect.height().coerceAtLeast(Integer.max(iconBoundsRect.height(), mMinHeightSize)) + paddingTop + paddingBottom
         setMeasuredDimension(width, height)
     }
 
