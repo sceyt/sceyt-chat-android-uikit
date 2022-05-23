@@ -70,7 +70,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
         return suspendCancellableCoroutine { continuation ->
             val tmpMessage = ClientWrapper.sendMessage(channelId, message) { message, status ->
                 if (status == null || status.isOk) {
-                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
+                    continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 } else {
                     continuation.resume(SceytResponse.Error(status.error?.message))
                 }

@@ -6,8 +6,8 @@
     <data>
 
         <variable
-            name="data"
-            type="com.sceyt.chat.ui.data.models.messages.UploadData" />
+            name="loadData"
+            type="com.sceyt.chat.ui.data.models.messages.FileLoadData" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -18,7 +18,7 @@
             android:id="@+id/fileImage"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/colorFontGray"
+            android:background="@color/colorGray"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:.8"
@@ -39,11 +39,12 @@
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadProgress"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layerType="hardware"
-            android:progress="@{data.progress}"
+            android:progress="@{loadData.progressPercent, default = 1}"
             app:indicatorColor="@color/colorAccent"
+            app:indicatorSize="40dp"
             app:layout_constraintBottom_toBottomOf="@+id/viewBg"
             app:layout_constraintEnd_toEndOf="@+id/viewBg"
             app:layout_constraintStart_toStartOf="@+id/viewBg"
@@ -54,10 +55,10 @@
 
         <androidx.constraintlayout.widget.Group
             android:layout_width="wrap_content"
-            android:visibility="gone"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             app:constraint_referenced_ids="loadProgress,viewBg"
-            bind:visibleIf="@{data.uploadingg}" />
+            bind:visibleIf="@{loadData.loading}" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

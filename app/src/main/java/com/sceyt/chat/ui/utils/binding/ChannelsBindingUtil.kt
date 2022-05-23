@@ -56,6 +56,7 @@ object ChannelsBindingUtil {
             DeliveryStatus.Sent -> R.drawable.ic_status_on_server
             DeliveryStatus.Delivered -> R.drawable.ic_status_delivered
             DeliveryStatus.Read -> R.drawable.ic_status_read
+            DeliveryStatus.Failed -> R.drawable.ic_status_faild
             else -> null
         }
         iconResId?.let {

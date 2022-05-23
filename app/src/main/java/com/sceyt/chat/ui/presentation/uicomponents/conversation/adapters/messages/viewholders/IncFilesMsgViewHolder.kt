@@ -1,13 +1,14 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.view.ViewGroup
-import androidx.core.view.*
+import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
+import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.databinding.SceytUiItemIncFilesMessageBinding
 import com.sceyt.chat.ui.extensions.dpToPx
-import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
@@ -45,9 +46,9 @@ class IncFilesMsgViewHolder(
     private fun setFilesAdapter(item: SceytUiMessage) {
         val attachments = ArrayList(item.attachments!!.map {
             when (it.type) {
-                "image" -> FileListItem.Image(it)
-                "video" -> FileListItem.Video(it)
-                else -> FileListItem.File(it)
+                "image" -> FileListItem.Image(it, item)
+                "video" -> FileListItem.Video(it, item)
+                else -> FileListItem.File(it, item)
             }
         })
         binding.messageDate.apply {

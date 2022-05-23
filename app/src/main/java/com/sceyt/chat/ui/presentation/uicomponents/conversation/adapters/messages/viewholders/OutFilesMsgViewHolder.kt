@@ -3,7 +3,6 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 import android.view.ViewGroup
 import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
-import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
@@ -64,9 +63,9 @@ class OutFilesMsgViewHolder(
             setRecycledViewPool(viewPoolFiles)
             adapter = MessageFilesAdapter(ArrayList(item.attachments!!.map {
                 when (it.type) {
-                    "image" -> FileListItem.Image(it)
-                    "video" -> FileListItem.Video(it)
-                    else -> FileListItem.File(it)
+                    "image" -> FileListItem.Image(it, item)
+                    "video" -> FileListItem.Video(it, item)
+                    else -> FileListItem.File(it, item)
                 }
             }), FilesViewHolderFactory(context = itemView.context))
         }
