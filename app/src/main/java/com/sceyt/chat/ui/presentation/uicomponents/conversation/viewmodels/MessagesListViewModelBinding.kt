@@ -54,8 +54,10 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     messageSentLiveData.observe(lifecycleOwner) {
-        val message = setMessageDateAndState(it, messagesListView.getLastMessage()?.message)
-        messagesListView.updateMessage(message, false)
+        it?.let { sceytUiMessage ->
+            val message = setMessageDateAndState(sceytUiMessage, messagesListView.getLastMessage()?.message)
+            messagesListView.updateMessage(message, false)
+        }
     }
 
     onMessageReactionUpdatedLiveData.observe(lifecycleOwner) {

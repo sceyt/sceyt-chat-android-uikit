@@ -7,8 +7,8 @@
     <data>
 
         <variable
-            name="isLoading"
-            type="Boolean" />
+            name="loadData"
+            type="com.sceyt.chat.ui.data.models.messages.FileLoadData" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -18,32 +18,32 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icFile"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center"
             android:background="@drawable/bg_circle_blue"
             android:padding="8dp"
-            android:src="@{isLoading ? null : @drawable/ic_file}"
-            app:layout_constraintBottom_toBottomOf="@+id/tvFileSize"
-            app:layout_constraintDimensionRatio="1:1"
+            android:src="@{loadData.loading ? null : @drawable/ic_file, default = @drawable/ic_file}"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ProgressBar
-            android:id="@+id/circularProgressbar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:indeterminate="false"
-            android:max="100"
-            android:progress="1"
-            android:progressDrawable="@drawable/progress_circle_small_paddings"
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/loadProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layerType="hardware"
+            android:progress="@{loadData.progressPercent, default = 1}"
+            android:visibility="gone"
+            app:indicatorColor="@color/white_final"
+            app:indicatorSize="32dp"
             app:layout_constraintBottom_toBottomOf="@+id/icFile"
             app:layout_constraintEnd_toEndOf="@id/icFile"
             app:layout_constraintStart_toStartOf="@+id/icFile"
             app:layout_constraintTop_toTopOf="@+id/icFile"
-            bind:visibleIf="@{isLoading}"
-            tools:visibility="visible" />
+            app:trackCornerRadius="5dp"
+            app:trackThickness="2.5dp"
+            bind:visibleIf="@{loadData.loading}" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFileName"

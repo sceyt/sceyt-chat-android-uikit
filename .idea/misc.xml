@@ -30,6 +30,7 @@
         <entry key="app/src/main/res/drawable/ic_profile_check.xml" value="0.1675" />
         <entry key="app/src/main/res/drawable/ic_status_delivered.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_status_delivered_white.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_faild.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_status_not_sent.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_status_not_sent_white.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_status_on_server.xml" value="0.2575" />
@@ -72,8 +73,9 @@
         <entry key="app/src/main/res/layout/sceyt_ui_item_out_text_message2.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_loading_state.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_ui_message_file_item.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_ui_message_image_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_message_file_item.xml" value="0.6514522821576764" />
+        <entry key="app/src/main/res/layout/sceyt_ui_message_image_item.xml" value="0.4365152919369787" />
+        <entry key="app/src/main/res/layout/sceyt_ui_message_video_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_out_single_image_message.xml" value="0.390625" />
         <entry key="app/src/main/res/layout/sceyt_ui_page_loading.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_recycler_replay_container.xml" value="0.3765625" />
@@ -81,12 +83,14 @@
         <entry key="app/src/main/res/layout/sceyt_ui_search_channels_empty_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_search_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/search_view.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/layout/sss.xml" value="0.390625" />
         <entry key="app/src/main/res/layout/st.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/stete_container.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/te.xml" value="0.67" />
         <entry key="app/src/main/res/layout/test.xml" value="0.9" />
         <entry key="app/src/main/res/layout/view_message_box.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/menu/menu_bottom_navigation.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/xml/provider_paths.xml" value="0.1828125" />
       </map>
     </option>
   </component>

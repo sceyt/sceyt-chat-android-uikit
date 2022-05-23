@@ -14,13 +14,12 @@ import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.sceyt.chat.models.SceytException
+import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.sceyt_callbacks.ActionCallback
-import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.messages.UploadData
+import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
+import com.sceyt.chat.ui.data.models.messages.FileLoadData
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.MessageBox
@@ -55,30 +54,30 @@ class ConversationActivity : AppCompatActivity() {
 
         binding.messageBox.messageBoxActionCallback = object : MessageBox.MessageBoxActionCallback {
             override fun sendMessage(message: Message) {
-             //   cancelReplay {
-                    viewModel.sendMessage(message)
-                   /// messagesList.scrollToPosition(listAdapter.itemCount - 1)
-                }
+                //   cancelReplay {
+                viewModel.sendMessage(message)
+                /// messagesList.scrollToPosition(listAdapter.itemCount - 1)
+            }
 
             override fun editMessage(message: Message) {
-               // viewModel.editMessage(message)
+                // viewModel.editMessage(message)
                 //cancelReplay()
             }
 
             override fun addAttachments() {
-               /* UIUtils.openChooserForUploadImage(requireContext()) { chooseType ->
-                    when (chooseType) {
-                        UIUtils.ProfilePhotoChooseType.CAMERA -> {
-                            dispatchTakePictureIntent()
-                        }
-                        UIUtils.ProfilePhotoChooseType.GALLERY -> {
-                            pickFile(chooseType)
-                        }
-                        else -> {
-                            handleDocumentClicked()
-                        }
-                    }
-                }*/
+                /* UIUtils.openChooserForUploadImage(requireContext()) { chooseType ->
+                     when (chooseType) {
+                         UIUtils.ProfilePhotoChooseType.CAMERA -> {
+                             dispatchTakePictureIntent()
+                         }
+                         UIUtils.ProfilePhotoChooseType.GALLERY -> {
+                             pickFile(chooseType)
+                         }
+                         else -> {
+                             handleDocumentClicked()
+                         }
+                     }
+                 }*/
                 pickFile()
             }
         }
@@ -89,19 +88,54 @@ class ConversationActivity : AppCompatActivity() {
                     this,
                     Manifest.permission.READ_EXTERNAL_STORAGE
                 ) == PackageManager.PERMISSION_GRANTED
-        ){
+        ) {
             val intent = Intent(
                 Intent.ACTION_PICK,
                 MediaStore.Images.Media.INTERNAL_CONTENT_URI
             )
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-            intent.type = "image/*"
+            intent.type = "*/*"
             startActivityForResult(intent, 133)
         } else {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                 232
+            )
+        }
+    }
+
+    private fun handleDocumentClicked() {
+        if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val mimetypes = arrayOf(
+                "application/*",
+                "audio/*",
+                "font/*",
+                "message/*",
+                "model/*",
+                "multipart/*",
+                "text/*"
+            )
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            intent.type = "*/*"
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes)
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            startActivityForResult(
+                Intent.createChooser(intent, "Select File"),
+                133
+            )
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                12
             )
         }
     }
@@ -140,37 +174,13 @@ class ConversationActivity : AppCompatActivity() {
 
     private fun addAttachmentFile(vararg filePath: String) {
         val attachments = mutableListOf<Attachment>()
-        val map = LinkedHashMap<String, UploadData>()
-       // viewModel.liveDataUpload.postValue(map)
 
         filePath.forEach { item ->
             val attachment = Attachment.Builder(item, getAttachmentType(item))
                 .setName(File(item).name)
-                .setMetadata("{info:\"some info\"}")
+                .setMetadata(Gson().toJson(AttachmentMetadata(item)))
                 .setUpload(true)
                 .build()
-
-            attachment.apply {
-                setUploaderProgress(object : ProgressCallback {
-                    override fun onResult(pct: Float) {
-                       // map[item] = UploadData(pct, null)
-                   //     viewModel.liveDataUpload.postValue(map)
-                    }
-
-                    override fun onError(e: SceytException?) {
-                      //  map[item] = UploadData(null, e)
-                      //  viewModel.liveDataUpload.postValue(map)
-                    }
-                })
-
-                setUploaderCompletion(object : ActionCallback {
-                    override fun onSuccess() {
-                    }
-
-                    override fun onError(e: SceytException?) {
-                    }
-                })
-            }
 
             attachments.add(attachment)
         }

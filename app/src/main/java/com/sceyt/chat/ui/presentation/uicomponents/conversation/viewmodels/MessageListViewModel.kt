@@ -40,7 +40,7 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
     private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _addDeleteReactionLiveData
 
-    private val _messageSentLiveData = MutableLiveData<SceytUiMessage>()
+    private val _messageSentLiveData = MutableLiveData<SceytUiMessage?>()
     val messageSentLiveData = _messageSentLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytUiMessage>()
