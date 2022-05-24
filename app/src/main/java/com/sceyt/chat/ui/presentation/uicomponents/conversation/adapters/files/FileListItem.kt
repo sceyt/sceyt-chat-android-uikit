@@ -8,6 +8,7 @@ import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.ui.data.models.messages.FileLoadData
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import java.io.File
 import kotlin.math.max
 
 sealed class FileListItem(val file: Attachment?,
@@ -22,7 +23,7 @@ sealed class FileListItem(val file: Attachment?,
                      val message: SceytUiMessage) : FileListItem(attachment, message)
 
 
-    fun setUploadListener(file: Attachment?) {
+    fun setUploadListener() {
         fileLoadData.loading = true
         file?.setUploaderProgress(object : ProgressCallback {
             override fun onResult(progress: Float) {
@@ -34,7 +35,7 @@ sealed class FileListItem(val file: Attachment?,
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(null, false)
                 sceytUiMessage.status = DeliveryStatus.Failed
-                println(p0)
+                println("Upload error ->$p0")
             }
         })
 
@@ -46,7 +47,7 @@ sealed class FileListItem(val file: Attachment?,
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(null, false)
                 sceytUiMessage.status = DeliveryStatus.Failed
-                println(p0)
+                println("Upload error ->$p0")
             }
         })
     }
@@ -56,6 +57,7 @@ sealed class FileListItem(val file: Attachment?,
         fileLoadData.update(progressValue, loading)
     }
 
+    var downloadSuccess: ((java.io.File) -> Unit?)? = null
     val fileLoadData by lazy { FileLoadData() }
 }
 

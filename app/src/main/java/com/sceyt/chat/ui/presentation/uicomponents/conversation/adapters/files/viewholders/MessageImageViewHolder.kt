@@ -9,20 +9,23 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.F
 class MessageImageViewHolder(
         private val binding: SceytUiMessageImageItemBinding) : BaseFileViewHolder(binding.root) {
 
-
     override fun bindTo(item: FileListItem) {
         binding.loadData = item.fileLoadData
 
         binding.fileImage.setImageBitmap(null)
 
         setUploadListenerIfNeeded(item)
-        downloadIfNeeded(item) { result, _ ->
+
+        item.downloadSuccess = { result ->
             Glide.with(binding.root)
                 .load(result)
                 .transition(withCrossFade())
                 .override(binding.root.width, binding.root.height)
                 .into(binding.fileImage)
+            Unit
         }
+
+        downloadIfNeeded(item)
 
         binding.root.setOnClickListener {
             openFile(item, itemView.context)

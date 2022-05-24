@@ -44,13 +44,7 @@ class IncFilesMsgViewHolder(
     }
 
     private fun setFilesAdapter(item: SceytUiMessage) {
-        val attachments = ArrayList(item.attachments!!.map {
-            when (it.type) {
-                "image" -> FileListItem.Image(it, item)
-                "video" -> FileListItem.Video(it, item)
-                else -> FileListItem.File(it, item)
-            }
-        })
+        val attachments = ArrayList(item.files)
         binding.messageDate.apply {
             val needHighlight = attachments.lastOrNull() is FileListItem.Image
                     || attachments.lastOrNull() is FileListItem.Video

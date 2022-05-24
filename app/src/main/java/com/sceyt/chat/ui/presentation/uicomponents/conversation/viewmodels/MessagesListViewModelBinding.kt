@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
@@ -54,9 +55,19 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     messageSentLiveData.observe(lifecycleOwner) {
-        it?.let { sceytUiMessage ->
-            val message = setMessageDateAndState(sceytUiMessage, messagesListView.getLastMessage()?.message)
-            messagesListView.updateMessage(message, false)
+        when (it) {
+            is SceytResponse.Success -> {
+                it.data?.let { sceytUiMessage ->
+                    val message = setMessageDateAndState(sceytUiMessage, messagesListView.getLastMessage()?.message)
+                    messagesListView.updateMessage(message, false)
+                }
+            }
+            is SceytResponse.Error -> {
+                it.data?.let { msg ->
+                    messagesListView.messageSendFailed(msg.id)
+                }
+                customToastSnackBar(messagesListView, it.message ?: "")
+            }
         }
     }
 

@@ -6,7 +6,9 @@ import androidx.databinding.library.baseAdapters.BR
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import java.util.*
+import kotlin.collections.ArrayList
 
 open class SceytUiMessage(var id: Long,
                           var tid: Long,
@@ -59,6 +61,7 @@ open class SceytUiMessage(var id: Long,
         }
 
     var isGroup = false
+    var files: ArrayList<FileListItem> = arrayListOf()
 
     fun updateMessage(message: SceytUiMessage) {
         id = message.id

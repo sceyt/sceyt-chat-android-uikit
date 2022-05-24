@@ -9,6 +9,7 @@ import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytUiGroupChannel
 import com.sceyt.chat.ui.data.models.channels.getChannelType
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
 fun Channel.toSceytUiChannel(): SceytUiChannel {
@@ -75,4 +76,11 @@ fun Message.toSceytUiMessage(isGroup: Boolean = false) = SceytUiMessage(
     replyCount = replyCount
 ).apply {
     this.isGroup = isGroup
+    this.files = attachments?.map {
+        when (it.type) {
+            "image" -> FileListItem.Image(it, this)
+            "video" -> FileListItem.Video(it, this)
+            else -> FileListItem.File(it, this)
+        }
+    } as? ArrayList<FileListItem> ?: arrayListOf()
 }
