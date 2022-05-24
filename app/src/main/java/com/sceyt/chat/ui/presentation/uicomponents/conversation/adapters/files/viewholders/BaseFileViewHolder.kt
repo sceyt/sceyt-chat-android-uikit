@@ -28,8 +28,6 @@ abstract class BaseFileViewHolder(itemView: View) : RecyclerView.ViewHolder(item
     }
 
     protected fun downloadIfNeeded(item: FileListItem) {
-        if (item.fileLoadData.loading)
-            return
         val attachment = item.file ?: return
         val fileFromMetadata = getFileFromMetadata(item)
 
@@ -43,6 +41,8 @@ abstract class BaseFileViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         if (loadedFile.exists() && getFileSize(loadedFile.path) == attachment.uploadedFileSize) {
             item.downloadSuccess?.invoke(loadedFile)
         } else {
+            if (item.fileLoadData.loading)
+                return
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
             item.updateDownloadState(1, true)
