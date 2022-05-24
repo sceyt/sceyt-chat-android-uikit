@@ -1,7 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -19,14 +18,12 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
-import com.sceyt.chat.ui.data.models.messages.FileLoadData
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
+import com.sceyt.chat.ui.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.MessageBox
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.bindView
-import com.sceyt.chat.ui.utils.FileCompressorUtil
-import com.sceyt.chat.ui.utils.FileUtil
 import com.sceyt.chat.util.FileUtils
 import java.io.File
 
@@ -147,29 +144,31 @@ class ConversationActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 133) {
-            if (resultCode != Activity.RESULT_OK)
-                return
-
+        if (requestCode == 133 && resultCode == RESULT_OK) {
             if (data?.clipData != null) {
                 val files = mutableListOf<String>()
-                for (i in 0 until data.clipData!!.itemCount) {
-                    val uri: Uri = data.clipData!!.getItemAt(i).uri
-                    files.add(FileUtils(this).getPath(uri))
+                for (i in 0 until (data.clipData?.itemCount ?: 0)) {
+                    val uri = data.clipData?.getItemAt(i)?.uri
+                    getPathFromAttachment(uri)?.let { path ->
+                        files.add(path)
+                    }
                 }
-                addAttachmentFile(*files.toTypedArray())
-            } else {
-                val uri = data!!.data?.let {
-                    val realPath = FileUtil(this).getPath(it)
-                    /*  if (realPath.isNullOrBlank()) return
-                      if (File(realPath).exists())
-                          addAttachmentFile(realPath)
-                      else*/ FileCompressorUtil.compress(this, it)?.let { file ->
-                    addAttachmentFile(file.path)
+                if (files.isNotEmpty())
+                    addAttachmentFile(*files.toTypedArray())
+            } else
+                getPathFromAttachment(data?.data)?.let { path ->
+                    addAttachmentFile(path)
                 }
-                }
-            }
         }
+    }
+
+    private fun getPathFromAttachment(uri: Uri?): String? {
+        uri ?: return null
+        try {
+            return FileUtils(this).getPath(uri)
+        } catch (ex: Exception) {
+        }
+        return null
     }
 
     private fun addAttachmentFile(vararg filePath: String) {
@@ -188,7 +187,7 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun getAttachmentType(path: String?): String {
-        return when (val type = FileCompressorUtil.getMimeType(path)) {
+        return when (val type = getMimeTypeTakeFirstPart(path)) {
             "image", "video" -> type
             else -> "file"
         }

@@ -208,6 +208,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    fun messageSendFailed(id: Long) {
+        messagesRV.getData().find { it is MessageListItem.MessageItem && it.message.id == id }?.let {
+            (it as MessageListItem.MessageItem).message.status = DeliveryStatus.Failed
+        }
+    }
+
     fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToStartListener(listener)
     }

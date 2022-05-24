@@ -10,7 +10,6 @@ import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
 import com.sceyt.chat.ui.databinding.SceytUiItemOutFilesMessageBinding
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -61,13 +60,13 @@ class OutFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(ArrayList(item.attachments!!.map {
+            adapter = MessageFilesAdapter(/*ArrayList(item.attachments!!.map {
                 when (it.type) {
                     "image" -> FileListItem.Image(it, item)
                     "video" -> FileListItem.Video(it, item)
                     else -> FileListItem.File(it, item)
                 }
-            }), FilesViewHolderFactory(context = itemView.context))
+            }*/item.files, FilesViewHolderFactory(context = itemView.context))
         }
     }
 }

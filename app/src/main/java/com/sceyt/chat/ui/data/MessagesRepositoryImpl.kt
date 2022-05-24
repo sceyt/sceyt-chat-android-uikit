@@ -31,7 +31,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
 
     val onMessageEditedOrDeleteFlow = channelEventsService.onMessageEditedOrDeletedChannel.consumeAsFlow()
         .filterNotNull()
-        .filter{ it.channelId == channelId }
+        .filter { it.channelId == channelId }
 
     val onChannelClearedHistoryFlow = channelEventsService.onChannelClearedHistoryChannel.consumeAsFlow()
         .filterNotNull()
@@ -66,13 +66,13 @@ class MessagesRepositoryImpl(private val channelId: Long,
         }
     }
 
-    suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytUiMessage> {
+    suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytUiMessage?> {
         return suspendCancellableCoroutine { continuation ->
             val tmpMessage = ClientWrapper.sendMessage(channelId, message) { message, status ->
                 if (status == null || status.isOk) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 } else {
-                    continuation.resume(SceytResponse.Error(status.error?.message))
+                    continuation.resume(SceytResponse.Error(status.error?.message, data = message.toSceytUiMessage()))
                 }
             }
             tmpMessageCb.invoke(tmpMessage)

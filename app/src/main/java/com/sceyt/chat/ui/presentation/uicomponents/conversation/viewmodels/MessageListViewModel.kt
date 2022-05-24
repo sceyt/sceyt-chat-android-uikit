@@ -40,8 +40,8 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
     private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _addDeleteReactionLiveData
 
-    private val _messageSentLiveData = MutableLiveData<SceytUiMessage?>()
-    val messageSentLiveData = _messageSentLiveData
+    private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytUiMessage?>>()
+    val messageSentLiveData : LiveData<SceytResponse<SceytUiMessage?>> = _messageSentLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytUiMessage>()
     val onMessageStatusLiveData = MutableLiveData<ChannelEventsObserverService.MessageStatusChange>()
@@ -176,7 +176,7 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
             val response = repo.sendMessage(message) { tmpMessage ->
                 onNewMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup))
             }
-            messageSentLiveData.postValue(response.data)
+            _messageSentLiveData.postValue(response)
         }
     }
 }
