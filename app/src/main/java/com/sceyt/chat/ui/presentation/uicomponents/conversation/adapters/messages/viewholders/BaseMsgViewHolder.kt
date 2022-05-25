@@ -43,7 +43,7 @@ abstract class BaseMsgViewHolder(view: View,
             tvReplayCount.isVisible = true
             toReplayLine.isVisible = true
 
-            tvReplayCount.setOnClickListener { messageListeners.onReplayCountClick(item) }
+            tvReplayCount.setOnClickListener { messageListeners.onReplayCountClick(it, item) }
         } else {
             tvReplayCount.isVisible = false
             toReplayLine.isVisible = false

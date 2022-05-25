@@ -20,7 +20,7 @@ class IncFilesMsgViewHolder(
         private val binding: SceytUiItemIncFilesMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
-        messageListeners: MessageClickListenersImpl,
+        private val messageListeners: MessageClickListenersImpl,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     override fun bindViews(item: MessageListItem) {
@@ -37,6 +37,16 @@ class IncFilesMsgViewHolder(
                     setReplayedMessageContainer(message, binding.viewReplay)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
                     setFilesAdapter(message)
+
+                    layoutDetails.setOnLongClickListener {
+                        messageListeners.onMessageLongClick(it, item)
+                        return@setOnLongClickListener true
+                    }
+
+                    if (item.message.canShowAvatarAndName)
+                        avatar.setOnClickListener {
+                            messageListeners.onAvatarClick(it, item)
+                        }
                 }
             }
             MessageListItem.LoadingMoreItem -> return
@@ -44,7 +54,7 @@ class IncFilesMsgViewHolder(
     }
 
     private fun setFilesAdapter(item: SceytUiMessage) {
-        val attachments = ArrayList(item.files)
+        val attachments = ArrayList(item.files ?: return)
         binding.messageDate.apply {
             val needHighlight = attachments.lastOrNull() is FileListItem.Image
                     || attachments.lastOrNull() is FileListItem.Video
@@ -63,7 +73,7 @@ class IncFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = itemView.context))
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = itemView.context, messageListeners))
         }
     }
 }

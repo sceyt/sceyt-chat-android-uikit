@@ -2,9 +2,11 @@ package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.message.DeleteMessageRequest
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessagesListQuery
 import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
@@ -72,10 +74,26 @@ class MessagesRepositoryImpl(private val channelId: Long,
                 if (status == null || status.isOk) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 } else {
-                    continuation.resume(SceytResponse.Error(status.error?.message, data = message.toSceytUiMessage()))
+                    continuation.resume(SceytResponse.Error(status.error?.message, data = message?.toSceytUiMessage()))
                 }
             }
             tmpMessageCb.invoke(tmpMessage)
+        }
+    }
+
+
+    suspend fun deleteMessage(message: Message): SceytResponse<SceytUiMessage>{
+        return suspendCancellableCoroutine { continuation ->
+            val request = DeleteMessageRequest(message)
+            request.execute(object : MessageCallback {
+                override fun onResult(p0: Message?) {
+                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
+                }
+
+                override fun onError(ex: SceytException?) {
+                    continuation.resume(SceytResponse.Error(ex?.message))
+                }
+            })
         }
     }
 

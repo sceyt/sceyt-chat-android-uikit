@@ -2,7 +2,6 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
@@ -16,10 +15,13 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
 
     lifecycleOwner.lifecycleScope.launch {
         messagesFlow.collect {
-            if (it is SceytResponse.Success) {
-                it.data?.let { data -> messagesListView.setMessagesList(data) }
-            } else if (it is SceytResponse.Error) {
-                customToastSnackBar(messagesListView, it.message ?: "")
+            when (it) {
+                is SceytResponse.Success -> {
+                    it.data?.let { data -> messagesListView.setMessagesList(data) }
+                }
+                is SceytResponse.Error -> {
+                    customToastSnackBar(messagesListView, it.message ?: "")
+                }
             }
         }
     }
@@ -31,11 +33,25 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
+    messageDeletedLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                it.data?.let { data -> messagesListView.updateMessage(data, true) }
+            }
+            is SceytResponse.Error -> {
+                customToastSnackBar(messagesListView, it.message ?: "")
+            }
+        }
+    }
+
     addDeleteReactionLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            it.data?.let { data -> messagesListView.updateReaction(data) }
-        } else if (it is SceytResponse.Error) {
-            customToastSnackBar(messagesListView, it.message ?: "")
+        when (it) {
+            is SceytResponse.Success -> {
+                it.data?.let { data -> messagesListView.updateReaction(data) }
+            }
+            is SceytResponse.Error -> {
+                customToastSnackBar(messagesListView, it.message ?: "")
+            }
         }
     }
 
@@ -86,6 +102,10 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
 
     pageStateLiveData.observe(lifecycleOwner) {
         messagesListView.updateViewState(it)
+    }
+
+    messagesListView.setMessageEventListener {
+        onMessageEvent(it)
     }
 
     messagesListView.setMessageReactionsEventListener {

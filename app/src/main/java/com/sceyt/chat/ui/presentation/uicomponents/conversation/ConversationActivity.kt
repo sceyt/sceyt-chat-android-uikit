@@ -41,9 +41,6 @@ class ConversationActivity : AppCompatActivity() {
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.loadMessages(0, false)
 
-        /* binding.messagesListView.setMessageClickListener(MessageClickListeners.AddReactionClickListener {
-             //Toast.makeText(this, "AddReactionClick  " + it.message.body, Toast.LENGTH_SHORT).show()
-         })*/
 
         binding.messagesListView.setMessageClickListener(MessageClickListeners.ReactionLongClickListener { view, reactionItem ->
             Toast.makeText(this, "ReactionLongClick  " + reactionItem.messageItem.message.body, Toast.LENGTH_SHORT).show()

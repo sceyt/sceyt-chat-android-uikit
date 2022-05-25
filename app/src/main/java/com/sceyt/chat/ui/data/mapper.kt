@@ -1,15 +1,19 @@
 package com.sceyt.chat.ui.data
 
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
 import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytUiGroupChannel
 import com.sceyt.chat.ui.data.models.channels.getChannelType
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 
 
 fun Channel.toSceytUiChannel(): SceytUiChannel {
@@ -47,7 +51,7 @@ fun Channel.toSceytUiChannel(): SceytUiChannel {
     }
 }
 
-fun Message.toSceytUiMessage(isGroup: Boolean = false) = SceytUiMessage(
+fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytUiMessage(
     id = id,
     tid = tid,
     channelId = channelId,
@@ -75,12 +79,44 @@ fun Message.toSceytUiMessage(isGroup: Boolean = false) = SceytUiMessage(
     replyInThread = replyInThread,
     replyCount = replyCount
 ).apply {
-    this.isGroup = isGroup
-    this.files = attachments?.map {
-        when (it.type) {
-            "image" -> FileListItem.Image(it, this)
-            "video" -> FileListItem.Video(it, this)
-            else -> FileListItem.File(it, this)
-        }
-    } as? ArrayList<FileListItem> ?: arrayListOf()
+    isGroup?.let {
+        this.isGroup = it
+    }
+}
+
+fun SceytUiMessage.toMessage() = Message(
+    id,
+    tid,
+    channelId,
+    to,
+    body,
+    type,
+    metadata,
+    createdAt,
+    updatedAt.time,
+    incoming,
+    receipt,
+    isTransient,
+    silent,
+    deliveryStatus,
+    state,
+    from,
+    attachments,
+    lastReactions,
+    selfReactions,
+    reactionScores,
+    markerCount,
+    selfMarkers,
+    mentionedUsers,
+    parent,
+    replyInThread,
+    replyCount
+)
+
+fun Attachment.toFileListItem(message: SceytUiMessage): FileListItem {
+    return when (type) {
+        "image" -> FileListItem.Image(this, message)
+        "video" -> FileListItem.Video(this, message)
+        else -> FileListItem.File(this, message)
+    }
 }

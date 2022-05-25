@@ -35,7 +35,7 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
 
     override fun onViewAttachedToWindow(holder: BaseViewHolder<ChannelListItem>) {
         super.onViewAttachedToWindow(holder)
-        holder.onViewAttachedFromWindow()
+        holder.onViewAttachedToWindow()
     }
 
     private fun removeLoading() {

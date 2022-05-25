@@ -6,13 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.ReactionScore
-import com.sceyt.chat.ui.data.ChannelEventsObserverService
-import com.sceyt.chat.ui.data.MessagesRepositoryImpl
+import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
-import com.sceyt.chat.ui.data.toSceytUiMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.utils.DateTimeUtil
@@ -37,11 +36,14 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
     private val _loadMoreMessagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val loadMoreMessagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _loadMoreMessagesFlow
 
+    private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytUiMessage?>>()
+    val messageSentLiveData: LiveData<SceytResponse<SceytUiMessage?>> = _messageSentLiveData
+
+    private val _messageDeletedLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>()
+    val messageDeletedLiveData: LiveData<SceytResponse<SceytUiMessage>> = _messageDeletedLiveData
+
     private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _addDeleteReactionLiveData
-
-    private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytUiMessage?>>()
-    val messageSentLiveData : LiveData<SceytResponse<SceytUiMessage?>> = _messageSentLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytUiMessage>()
     val onMessageStatusLiveData = MutableLiveData<ChannelEventsObserverService.MessageStatusChange>()
@@ -100,18 +102,29 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         when (it) {
             is SceytResponse.Success -> {
                 hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
-                emitResponse(SceytResponse.Success(mapToMessageListItem(it.data, hasNext)), loadingNext)
+                emitMessagesListResponse(SceytResponse.Success(mapToMessageListItem(it.data, hasNext)), loadingNext)
             }
-            is SceytResponse.Error -> emitResponse(SceytResponse.Error(it.message), loadingNext)
+            is SceytResponse.Error -> emitMessagesListResponse(SceytResponse.Error(it.message), loadingNext)
         }
     }
 
-    private fun emitResponse(response: SceytResponse<List<MessageListItem>>, loadingNext: Boolean) {
+    private fun emitMessagesListResponse(response: SceytResponse<List<MessageListItem>>, loadingNext: Boolean) {
         if (loadingNext)
             _loadMoreMessagesFlow.value = response
         else _messagesFlow.value = response
 
         notifyPageStateWithResponse(loadingNext, response.data.isNullOrEmpty())
+    }
+
+    private fun deleteMessage(message: SceytUiMessage) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.deleteMessage(message.toMessage())
+            _messageDeletedLiveData.postValue(response)
+        }
+    }
+
+    private fun editMessage(message: SceytUiMessage) {
+
     }
 
     private fun addReaction(message: SceytUiMessage, score: ReactionScore) {
@@ -135,6 +148,8 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         val messageItems: List<MessageListItem> = data.mapIndexed { index, item ->
             MessageListItem.MessageItem(item.apply {
                 isGroup = this@MessageListViewModel.isGroup
+                files = item.attachments?.map { it.toFileListItem(item) }
+
                 if (index > 0) {
                     val prevMessage = data[index - 1]
                     setMessageDateAndState(item, prevMessage)
@@ -157,6 +172,23 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
                 showDate = true
             }
             return this
+        }
+    }
+
+    fun onMessageEvent(event: MessageEvent) {
+        when (event) {
+            is MessageEvent.DeleteMessage -> {
+                deleteMessage(event.message)
+            }
+            is MessageEvent.EditMessage -> {
+                editMessage(event.message)
+            }
+            is MessageEvent.Replay -> {
+
+            }
+            is MessageEvent.ReplayInThread -> {
+
+            }
         }
     }
 

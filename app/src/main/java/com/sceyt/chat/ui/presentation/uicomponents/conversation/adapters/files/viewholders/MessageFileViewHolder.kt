@@ -4,15 +4,17 @@ import com.sceyt.chat.ui.databinding.SceytUiMessageFileItemBinding
 import com.sceyt.chat.ui.extensions.getFileSize
 import com.sceyt.chat.ui.extensions.toPrettySize
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 class MessageFileViewHolder(
-        private val binding: SceytUiMessageFileItemBinding
+        private val binding: SceytUiMessageFileItemBinding,
+        private val messageListeners: MessageClickListenersImpl
 ) : BaseFileViewHolder(binding.root) {
 
-    override fun bindTo(item: FileListItem) {
+    override fun bindViews(item: FileListItem) {
         val fileItem = (item as? FileListItem.File)?.file ?: return
 
-        binding.apply {
+        with(binding) {
             loadData = item.fileLoadData
             tvFileName.text = fileItem.name
 
@@ -30,7 +32,13 @@ class MessageFileViewHolder(
             downloadIfNeeded(item)
 
             root.setOnClickListener {
+                messageListeners.onAttachmentClick(it, item)
                 openFile(item, itemView.context)
+            }
+
+            root.setOnLongClickListener {
+                messageListeners.onAttachmentLongClick(it, item)
+                return@setOnLongClickListener true
             }
         }
     }

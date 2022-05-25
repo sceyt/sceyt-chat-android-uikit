@@ -42,7 +42,7 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
 
     override fun onViewAttachedToWindow(holder: BaseViewHolder<MessageListItem>) {
         super.onViewAttachedToWindow(holder)
-        holder.onViewAttachedFromWindow()
+        holder.onViewAttachedToWindow()
     }
 
     override fun onViewDetachedFromWindow(holder: BaseViewHolder<MessageListItem>) {

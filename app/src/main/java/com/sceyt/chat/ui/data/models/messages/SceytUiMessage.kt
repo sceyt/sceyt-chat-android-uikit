@@ -7,8 +7,9 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import kotlinx.coroutines.NonDisposableHandle.parent
 import java.util.*
-import kotlin.collections.ArrayList
+import kotlin.properties.Delegates
 
 open class SceytUiMessage(var id: Long,
                           var tid: Long,
@@ -61,7 +62,7 @@ open class SceytUiMessage(var id: Long,
         }
 
     var isGroup = false
-    var files: ArrayList<FileListItem> = arrayListOf()
+    var files: List<FileListItem>? = null
 
     fun updateMessage(message: SceytUiMessage) {
         id = message.id
@@ -90,8 +91,5 @@ open class SceytUiMessage(var id: Long,
         parent = message.parent
         replyInThread = message.replyInThread
         replyCount = message.replyCount
-
-        //Local properties from dataBinding
-        status = message.status
     }
 }

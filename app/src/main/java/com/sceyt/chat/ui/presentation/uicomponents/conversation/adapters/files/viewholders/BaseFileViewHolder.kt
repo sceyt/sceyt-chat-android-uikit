@@ -6,20 +6,18 @@ import android.net.Uri
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.ui.BuildConfig
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.extensions.getFileSize
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import java.io.File
 
 
-abstract class BaseFileViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-    abstract fun bindTo(item: FileListItem)
+abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
 
     protected fun setUploadListenerIfNeeded(item: FileListItem) {
         val message = item.sceytUiMessage

@@ -4,31 +4,40 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.sceyt.chat.ui.databinding.SceytUiMessageImageItemBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 
 class MessageImageViewHolder(
-        private val binding: SceytUiMessageImageItemBinding) : BaseFileViewHolder(binding.root) {
+        private val binding: SceytUiMessageImageItemBinding,
+        private val messageListeners: MessageClickListenersImpl) : BaseFileViewHolder(binding.root) {
 
-    override fun bindTo(item: FileListItem) {
-        binding.loadData = item.fileLoadData
+    override fun bindViews(item: FileListItem) {
+        with(binding) {
+            loadData = item.fileLoadData
+            fileImage.setImageBitmap(null)
 
-        binding.fileImage.setImageBitmap(null)
+            setUploadListenerIfNeeded(item)
 
-        setUploadListenerIfNeeded(item)
+            item.downloadSuccess = { result ->
+                Glide.with(root)
+                    .load(result)
+                    .transition(withCrossFade())
+                    .override(root.width, root.height)
+                    .into(fileImage)
+                Unit
+            }
 
-        item.downloadSuccess = { result ->
-            Glide.with(binding.root)
-                .load(result)
-                .transition(withCrossFade())
-                .override(binding.root.width, binding.root.height)
-                .into(binding.fileImage)
-            Unit
-        }
+            downloadIfNeeded(item)
 
-        downloadIfNeeded(item)
+            root.setOnClickListener {
+                messageListeners.onAttachmentClick(it, item)
+                openFile(item, itemView.context)
+            }
 
-        binding.root.setOnClickListener {
-            openFile(item, itemView.context)
+            root.setOnLongClickListener {
+                messageListeners.onAttachmentLongClick(it, item)
+                return@setOnLongClickListener true
+            }
         }
     }
 }
