@@ -7,5 +7,5 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListI
 abstract class BaseViewHolder<T>(view: View) : RecyclerView.ViewHolder(view) {
     abstract fun bindViews(item: T)
     open fun onViewDetachedFromWindow() {}
-    open fun onViewAttachedFromWindow() {}
+    open fun onViewAttachedToWindow() {}
 }

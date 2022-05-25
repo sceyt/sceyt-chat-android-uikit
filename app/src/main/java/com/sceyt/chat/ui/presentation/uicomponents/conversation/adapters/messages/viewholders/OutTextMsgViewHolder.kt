@@ -13,7 +13,7 @@ import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
 class OutTextMsgViewHolder(
         private val binding: SceytUiItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        messageListeners: MessageClickListenersImpl,
+        private val messageListeners: MessageClickListenersImpl,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     override fun bindViews(item: MessageListItem) {
@@ -31,6 +31,11 @@ class OutTextMsgViewHolder(
                     setMessageDay(message.createdAt, message.showDate, binding.messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
                     setReplayedMessageContainer(message, binding.viewReplay)
+
+                    layoutDetails.setOnLongClickListener {
+                        messageListeners.onMessageLongClick(it, item)
+                        return@setOnLongClickListener true
+                    }
                 }
             }
             MessageListItem.LoadingMoreItem -> return

@@ -14,7 +14,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.message
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
-class MessageViewHolderFactory(context: Context) {
+open class MessageViewHolderFactory(context: Context) {
 
     private var listeners = MessageClickListenersImpl()
     private val layoutInflater = LayoutInflater.from(context)
@@ -22,7 +22,7 @@ class MessageViewHolderFactory(context: Context) {
     private val viewPoolFiles = RecyclerView.RecycledViewPool()
 
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MessageListItem> {
+    open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MessageListItem> {
         return when (viewType) {
             MessageTypeEnum.IncText.ordinal -> {
                 IncTextMsgViewHolder(
@@ -62,11 +62,7 @@ class MessageViewHolderFactory(context: Context) {
         }
     }
 
-    fun setMessageListener(listener: MessageClickListeners) {
-        listeners.setListener(listener)
-    }
-
-    fun getItemViewType(item: MessageListItem): Int {
+    open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
             is MessageListItem.MessageItem -> getMessageType(item.message).ordinal
             is MessageListItem.LoadingMoreItem -> return MessageTypeEnum.Loading.ordinal
@@ -85,7 +81,11 @@ class MessageViewHolderFactory(context: Context) {
         }
     }
 
-    internal enum class MessageTypeEnum {
+    fun setMessageListener(listener: MessageClickListeners) {
+        listeners.setListener(listener)
+    }
+
+    enum class MessageTypeEnum {
         Loading,
         IncText,
         OutText,

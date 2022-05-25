@@ -15,12 +15,13 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.v
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
+import java.util.ArrayList
 
 class OutFilesMsgViewHolder(
         private val binding: SceytUiItemOutFilesMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
-        messageListeners: MessageClickListenersImpl,
+        private val messageListeners: MessageClickListenersImpl,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     override fun bindViews(item: MessageListItem) {
@@ -36,6 +37,11 @@ class OutFilesMsgViewHolder(
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
                     setReplayedMessageContainer(message, binding.viewReplay)
                     setFilesAdapter(message)
+
+                    layoutDetails.setOnLongClickListener {
+                        messageListeners.onMessageLongClick(it, item)
+                        return@setOnLongClickListener true
+                    }
                 }
             }
             MessageListItem.LoadingMoreItem -> return
@@ -53,6 +59,7 @@ class OutFilesMsgViewHolder(
             }
         }
 
+        val attachments = ArrayList(item.files ?: return)
         with(binding.rvFiles) {
             setHasFixedSize(true)
             if (itemDecorationCount == 0) {
@@ -60,13 +67,13 @@ class OutFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(/*ArrayList(item.attachments!!.map {
-                when (it.type) {
-                    "image" -> FileListItem.Image(it, item)
-                    "video" -> FileListItem.Video(it, item)
-                    else -> FileListItem.File(it, item)
-                }
-            }*/item.files, FilesViewHolderFactory(context = itemView.context))
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = itemView.context, messageListeners = messageListeners))
         }
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        (binding.rvFiles.adapter as? MessageFilesAdapter)?.onItemDetached()
+
     }
 }

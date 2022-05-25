@@ -16,14 +16,19 @@
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_video_background">
 
-        <VideoView
+        <androidx.media3.ui.PlayerView
             android:id="@+id/videoView"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:visibility="visible"
+            app:controller_layout_id="@layout/custom_exoplayer_controller"
             app:layout_constraintDimensionRatio="1:.8"
             app:layout_constraintEnd_toEndOf="parent"
+            app:shutter_background_color="#00747477"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:resize_mode="zoom"
+            app:use_controller="true" />
 
         <View
             android:id="@+id/viewBg"

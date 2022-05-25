@@ -1,11 +1,10 @@
 package com.sceyt.chat.ui.extensions
 
-import android.app.Activity
+import android.content.ClipData
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
@@ -90,6 +89,11 @@ fun Context.showSoftInput(editText: EditText) {
     inputMethodManager.showSoftInput(editText, 0)
 }
 
+fun Context.setClipboard(text: String) {
+    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+    val clip = ClipData.newPlainText("Copied Text", text)
+    clipboard.setPrimaryClip(clip)
+}
 
 fun Context.gpsIsEnabled(): Boolean {
     val locMan = getSystemService(Context.LOCATION_SERVICE) as LocationManager
