@@ -4,7 +4,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import java.util.*
 
-class SceytUiGroupChannel(
+class SceytGroupChannel(
         id: Long = 0,
         createdAt: Long = 0,
         updatedAt: Long = 0,
@@ -19,5 +19,5 @@ class SceytUiGroupChannel(
         var avatarUrl: String? = "",
         var members: List<Member?>?,
         var memberCount: Long = 0L,
-) : SceytUiChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, channelType)
+) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, channelType)
 

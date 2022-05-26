@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.attachments
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.attachments
 
 import android.graphics.Color
 import androidx.core.content.ContextCompat

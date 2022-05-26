@@ -7,20 +7,19 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.ui.data.models.messages.FileLoadData
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
-import java.io.File
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlin.math.max
 
 sealed class FileListItem(val file: Attachment?,
-                          val sceytUiMessage: SceytUiMessage) : BaseObservable() {
+                          val sceytMessage: SceytMessage) : BaseObservable() {
     data class File(val attachment: Attachment?,
-                    val message: SceytUiMessage) : FileListItem(attachment, message)
+                    val message: SceytMessage) : FileListItem(attachment, message)
 
     data class Image(val attachment: Attachment?,
-                     val message: SceytUiMessage) : FileListItem(attachment, message)
+                     val message: SceytMessage) : FileListItem(attachment, message)
 
     data class Video(val attachment: Attachment?,
-                     val message: SceytUiMessage) : FileListItem(attachment, message)
+                     val message: SceytMessage) : FileListItem(attachment, message)
 
 
     fun setUploadListener(finishCb: ((success: Boolean) -> Unit)? = null) {
@@ -34,7 +33,7 @@ sealed class FileListItem(val file: Attachment?,
 
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(null, false)
-                sceytUiMessage.status = DeliveryStatus.Failed
+                sceytMessage.status = DeliveryStatus.Failed
                 println("Upload error ->$p0")
             }
         })
@@ -47,7 +46,7 @@ sealed class FileListItem(val file: Attachment?,
 
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(null, false)
-                sceytUiMessage.status = DeliveryStatus.Failed
+                sceytMessage.status = DeliveryStatus.Failed
                 finishCb?.invoke(false)
                 println("Upload error ->$p0")
             }

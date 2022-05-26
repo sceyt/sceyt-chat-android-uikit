@@ -1,27 +1,34 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
+import android.content.res.ColorStateList
 import android.view.ViewGroup
 import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
 import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
-import com.sceyt.chat.ui.databinding.SceytUiItemIncFilesMessageBinding
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.databinding.SceytItemIncFilesMessageBinding
 import com.sceyt.chat.ui.extensions.dpToPx
+import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 
 class IncFilesMsgViewHolder(
-        private val binding: SceytUiItemIncFilesMessageBinding,
+        private val binding: SceytItemIncFilesMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
+
+    init {
+        binding.setMessageItemStyle()
+    }
 
     override fun bindViews(item: MessageListItem) {
         when (item) {
@@ -53,7 +60,7 @@ class IncFilesMsgViewHolder(
         }
     }
 
-    private fun setFilesAdapter(item: SceytUiMessage) {
+    private fun setFilesAdapter(item: SceytMessage) {
         val attachments = ArrayList(item.files ?: return)
         binding.messageDate.apply {
             val needHighlight = attachments.lastOrNull() is FileListItem.Image
@@ -74,6 +81,12 @@ class IncFilesMsgViewHolder(
             }
             setRecycledViewPool(viewPoolFiles)
             adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = itemView.context, messageListeners))
+        }
+    }
+
+    private fun SceytItemIncFilesMessageBinding.setMessageItemStyle() {
+        with(root.context) {
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
         }
     }
 }

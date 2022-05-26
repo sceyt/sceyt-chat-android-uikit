@@ -1,22 +1,22 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.events
 
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 
 sealed class MessageEvent {
 
     data class DeleteMessage(
-            val message: SceytUiMessage,
+            val message: SceytMessage,
     ) : MessageEvent()
 
     data class EditMessage(
-            val message: SceytUiMessage,
+            val message: SceytMessage,
     ) : MessageEvent()
 
     data class Replay(
-            val message: SceytUiMessage,
+            val message: SceytMessage,
     ) : MessageEvent()
 
     data class ReplayInThread(
-            val message: SceytUiMessage,
+            val message: SceytMessage,
     ) : MessageEvent()
 }

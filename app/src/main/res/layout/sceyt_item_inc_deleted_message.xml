@@ -8,7 +8,7 @@
 
         <variable
             name="message"
-            type="com.sceyt.chat.ui.data.models.messages.SceytUiMessage" />
+            type="com.sceyt.chat.ui.data.models.messages.SceytMessage" />
     </data>
 
     <RelativeLayout

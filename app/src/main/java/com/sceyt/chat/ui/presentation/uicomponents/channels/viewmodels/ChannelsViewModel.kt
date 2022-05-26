@@ -3,7 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
@@ -49,7 +49,7 @@ class ChannelsViewModel : BaseViewModel() {
         initResponse(repo.searchChannels(offset, query), loadingMoreType)
     }
 
-    private fun initResponse(it: SceytResponse<List<SceytUiChannel>>, loadingNext: Boolean) {
+    private fun initResponse(it: SceytResponse<List<SceytChannel>>, loadingNext: Boolean) {
         isLoadingChannels = false
         when (it) {
             is SceytResponse.Success -> {
@@ -68,7 +68,7 @@ class ChannelsViewModel : BaseViewModel() {
         notifyPageStateWithResponse(loadingNext, response.data.isNullOrEmpty(), searchQuery)
     }
 
-    private fun mapToChannelItem(data: List<SceytUiChannel>?, hasNext: Boolean): List<ChannelListItem> {
+    private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
         val channelItems: List<ChannelListItem> = data.map { item -> ChannelListItem.ChannelItem(item) }

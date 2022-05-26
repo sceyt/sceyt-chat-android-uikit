@@ -2,7 +2,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.
 
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
-import com.sceyt.chat.ui.databinding.SceytUiMessageVideoItemBinding
+import com.sceyt.chat.ui.databinding.SceytMessageVideoItemBinding
 import com.sceyt.chat.ui.extensions.glideCustomTarget
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
@@ -10,7 +10,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.Messag
 
 
 class MessageVideoViewHolder(
-        private val binding: SceytUiMessageVideoItemBinding,
+        private val binding: SceytMessageVideoItemBinding,
         private val messageListeners: MessageClickListenersImpl,
 ) : BaseFileViewHolder(binding.root) {
 

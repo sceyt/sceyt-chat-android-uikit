@@ -4,25 +4,16 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.utils.DateTimeUtil
 import com.sceyt.chat.ui.utils.MyDiffUtil
 
 class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
-                      private val viewHolderFactory: MessageViewHolderFactory,
-                      private val recyclerView: RecyclerView) :
+                      private val viewHolderFactory: MessageViewHolderFactory) :
         RecyclerView.Adapter<BaseViewHolder<MessageListItem>>() {
 
     private val mLoadingItem by lazy { MessageListItem.LoadingMoreItem }
-    private var state = RecyclerView.SCROLL_STATE_IDLE
-
-    init {
-        recyclerView.addRVScrollListener(onScrollStateChanged = { _, newState ->
-            state = newState
-        })
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MessageListItem> {
         return viewHolderFactory.createViewHolder(parent, viewType)

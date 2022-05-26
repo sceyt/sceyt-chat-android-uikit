@@ -21,7 +21,7 @@ import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.MessageBox
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.MessageInputView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.bindView
 import com.sceyt.chat.util.FileUtils
@@ -39,6 +39,7 @@ class ConversationActivity : AppCompatActivity() {
 
 
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
+        //   viewModel.bindMessageInputView(binding.messageInputView, lifecycleOwner = this)
         viewModel.loadMessages(0, false)
 
 
@@ -46,7 +47,7 @@ class ConversationActivity : AppCompatActivity() {
             Toast.makeText(this, "ReactionLongClick  " + reactionItem.messageItem.message.body, Toast.LENGTH_SHORT).show()
         })
 
-        binding.messageBox.messageBoxActionCallback = object : MessageBox.MessageBoxActionCallback {
+        binding.messageInputView.messageBoxActionCallback = object : MessageInputView.MessageBoxActionCallback {
             override fun sendMessage(message: Message) {
                 //   cancelReplay {
                 viewModel.sendMessage(message)
@@ -180,7 +181,7 @@ class ConversationActivity : AppCompatActivity() {
 
             attachments.add(attachment)
         }
-        binding.messageBox.addAttachments(attachments)
+        binding.messageInputView.addAttachments(attachments)
     }
 
     private fun getAttachmentType(path: String?): String {

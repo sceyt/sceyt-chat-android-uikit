@@ -2,11 +2,13 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.MessageInputView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -120,6 +122,39 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 }
+
+fun MessageListViewModel.bindMessageInputView(messageInputView: MessageInputView, lifecycleOwner: LifecycleOwner) {
+
+    messageInputView.messageBoxActionCallback = object : MessageInputView.MessageBoxActionCallback {
+        override fun sendMessage(message: Message) {
+            this@bindMessageInputView.sendMessage(message)
+        }
+
+        override fun editMessage(message: Message) {
+            // viewModel.editMessage(message)
+            //cancelReplay()
+        }
+
+        override fun addAttachments() {
+            /* UIUtils.openChooserForUploadImage(requireContext()) { chooseType ->
+                 when (chooseType) {
+                     UIUtils.ProfilePhotoChooseType.CAMERA -> {
+                         dispatchTakePictureIntent()
+                     }
+                     UIUtils.ProfilePhotoChooseType.GALLERY -> {
+                         pickFile(chooseType)
+                     }
+                     else -> {
+                         handleDocumentClicked()
+                     }
+                 }
+             }*/
+            //pickFile()
+        }
+    }
+
+}
+
 
 /*
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {

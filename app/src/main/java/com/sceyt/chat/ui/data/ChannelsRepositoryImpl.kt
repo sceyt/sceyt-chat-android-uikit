@@ -5,7 +5,7 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -26,15 +26,15 @@ class ChannelsRepositoryImpl {
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeySubject)
                 .queryType(ChannelListQuery.ChannelListFilterQueryType.ListQueryFilterContains)
 
-    suspend fun getChannels(offset: Int): SceytResponse<List<SceytUiChannel>> {
+    suspend fun getChannels(offset: Int): SceytResponse<List<SceytChannel>> {
         return getChannelsCoroutine(offset)
     }
 
-    suspend fun searchChannels(offset: Int, query: String): SceytResponse<List<SceytUiChannel>> {
+    suspend fun searchChannels(offset: Int, query: String): SceytResponse<List<SceytChannel>> {
         return getSearchChannelsCoroutine(offset, query)
     }
 
-    private suspend fun getChannelsCoroutine(offset: Int): SceytResponse<List<SceytUiChannel>> {
+    private suspend fun getChannelsCoroutine(offset: Int): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
             query.offset = offset
             query.loadNext(object : ChannelsCallback {
@@ -53,7 +53,7 @@ class ChannelsRepositoryImpl {
         }
     }
 
-    private suspend fun getSearchChannelsCoroutine(offset: Int, searchQuery: String): SceytResponse<List<SceytUiChannel>> {
+    private suspend fun getSearchChannelsCoroutine(offset: Int, searchQuery: String): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
             val channelListQuery = querySearch
                 .query(searchQuery)

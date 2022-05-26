@@ -16,13 +16,13 @@ object ChannelStyle {
     var unreadCountColor: Int = R.color.colorAccent
 
     @LayoutRes
-    var emptyState: Int = R.layout.sceyt_ui_channel_list_empty_state
+    var emptyState: Int = R.layout.sceyt_channel_list_empty_state
 
     @LayoutRes
-    var emptySearchState: Int = R.layout.sceyt_ui_search_channels_empty_state
+    var emptySearchState: Int = R.layout.sceyt_search_channels_empty_state
 
     @LayoutRes
-    var loadingState: Int = R.layout.sceyt_ui_loading_state
+    var loadingState: Int = R.layout.sceyt_loading_state
 
     /*internal constructor(context: Context) : this(
         titleColor = context.getCompatColor(R.color.colorFontDark),

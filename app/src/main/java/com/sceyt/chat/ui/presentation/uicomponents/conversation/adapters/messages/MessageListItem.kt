@@ -1,9 +1,9 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages
 
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 
 sealed class MessageListItem {
-    data class MessageItem(val message: SceytUiMessage) : MessageListItem()
+    data class MessageItem(val message: SceytMessage) : MessageListItem()
     object LoadingMoreItem : MessageListItem()
 
     override fun equals(other: Any?): Boolean {
