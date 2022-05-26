@@ -53,7 +53,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         binding.setWithStyle()
 
         binding.input.doAfterTextChanged { query ->
-            binding.icClear.isVisible = query?.length ?: 0 > 0
+            binding.icClear.isVisible = (query?.length ?: 0) > 0
             onQueryChanged(query.toString())
         }
 

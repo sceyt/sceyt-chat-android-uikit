@@ -9,7 +9,6 @@ import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
-import com.sceyt.chat.ui.extensions.needLoadMore
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter

@@ -19,10 +19,11 @@ import java.io.File
 
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
 
-    protected fun setUploadListenerIfNeeded(item: FileListItem) {
+    protected fun setUploadListenerIfNeeded(item: FileListItem, finishCb: ((success: Boolean) -> Unit)? = null) {
         val message = item.sceytUiMessage
         if (!message.incoming && message.status == DeliveryStatus.Pending)
-            item.setUploadListener()
+            item.setUploadListener(finishCb)
+        else finishCb?.invoke(true)
     }
 
     protected fun downloadIfNeeded(item: FileListItem) {
