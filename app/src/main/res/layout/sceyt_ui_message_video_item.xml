@@ -20,15 +20,24 @@
             android:id="@+id/videoView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:visibility="visible"
-            app:controller_layout_id="@layout/custom_exoplayer_controller"
+            android:visibility="gone"
             app:layout_constraintDimensionRatio="1:.8"
             app:layout_constraintEnd_toEndOf="parent"
-            app:shutter_background_color="#00747477"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:resize_mode="zoom"
-            app:use_controller="true" />
+            app:surface_type="texture_view"
+            app:use_controller="false" />
+
+        <com.sceyt.chat.ui.presentation.customviews.VideoControllerView
+            android:id="@+id/videoViewController"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1:.8"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            bind:showPlayPauseButton="@{!loadData.loading}" />
 
         <View
             android:id="@+id/viewBg"

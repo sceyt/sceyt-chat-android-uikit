@@ -7,9 +7,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
-import kotlinx.coroutines.NonDisposableHandle.parent
 import java.util.*
-import kotlin.properties.Delegates
 
 open class SceytUiMessage(var id: Long,
                           var tid: Long,
@@ -17,7 +15,7 @@ open class SceytUiMessage(var id: Long,
                           var to: String?,
                           var body: String,
                           var type: String,
-                          var metadata: String,
+                          var metadata: String? = null,
                           var createdAt: Long,
                           var updatedAt: Date,
                           var incoming: Boolean = false,
@@ -33,10 +31,11 @@ open class SceytUiMessage(var id: Long,
                           var reactionScores: Array<ReactionScore>? = null,
                           var markerCount: Array<MarkerCount>? = null,
                           var selfMarkers: Array<String>? = null,
-                          var mentionedUsers: Array<User?>,
+                          var mentionedUsers: Array<User>?,
                           var parent: Message?,
                           var replyInThread: Boolean = false,
                           var replyCount: Long = 0) : BaseObservable() {
+
 
     @Bindable
     var status: DeliveryStatus = deliveryStatus

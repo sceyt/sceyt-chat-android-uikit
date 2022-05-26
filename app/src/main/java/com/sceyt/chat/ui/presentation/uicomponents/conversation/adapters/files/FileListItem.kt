@@ -23,7 +23,7 @@ sealed class FileListItem(val file: Attachment?,
                      val message: SceytUiMessage) : FileListItem(attachment, message)
 
 
-    fun setUploadListener() {
+    fun setUploadListener(finishCb: ((success: Boolean) -> Unit)? = null) {
         fileLoadData.loading = true
         file?.setUploaderProgress(object : ProgressCallback {
             override fun onResult(progress: Float) {
@@ -42,11 +42,13 @@ sealed class FileListItem(val file: Attachment?,
         file?.setUploaderCompletion(object : ActionCallback {
             override fun onSuccess() {
                 fileLoadData.update(100, false)
+                finishCb?.invoke(true)
             }
 
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(null, false)
                 sceytUiMessage.status = DeliveryStatus.Failed
+                finishCb?.invoke(false)
                 println("Upload error ->$p0")
             }
         })

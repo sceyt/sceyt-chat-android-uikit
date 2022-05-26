@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.data.models.messages
 
-import android.util.Log
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import androidx.databinding.library.baseAdapters.BR
@@ -21,7 +20,6 @@ class FileLoadData : BaseObservable() {
         }
 
     fun update(progress: Int?, isLoading: Boolean) {
-        Log.i("sdfsdf",progress.toString())
         this.progressPercent = progress ?: this.progressPercent
         this.loading = isLoading
     }

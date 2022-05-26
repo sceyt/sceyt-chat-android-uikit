@@ -56,4 +56,9 @@
         <attr name="reactionViewCountText" format="string|reference" />
         <attr name="reactionViewSmileText" format="string|reference" />
     </declare-styleable>
+
+    <declare-styleable name="VideoControllerView">
+        <attr name="videoControllerShowPlayPause" format="boolean" />
+
+    </declare-styleable>
 </resources>
