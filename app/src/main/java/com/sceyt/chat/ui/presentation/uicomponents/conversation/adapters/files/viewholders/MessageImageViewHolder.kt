@@ -17,8 +17,7 @@ class MessageImageViewHolder(
             fileImage.setImageBitmap(null)
 
             setUploadListenerIfNeeded(item)
-
-            item.downloadSuccess = { result ->
+            downloadIfNeeded(item) { result ->
                 Glide.with(root)
                     .load(result)
                     .transition(withCrossFade())
@@ -26,8 +25,6 @@ class MessageImageViewHolder(
                     .into(fileImage)
                 Unit
             }
-
-            downloadIfNeeded(item)
 
             root.setOnClickListener {
                 messageListeners.onAttachmentClick(it, item)

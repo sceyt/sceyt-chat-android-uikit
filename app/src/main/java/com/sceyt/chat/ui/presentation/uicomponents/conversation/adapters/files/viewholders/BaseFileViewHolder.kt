@@ -10,6 +10,7 @@ import com.google.gson.Gson
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.ui.BuildConfig
+import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.extensions.getFileSize
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
@@ -26,9 +27,10 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         else finishCb?.invoke(true)
     }
 
-    protected fun downloadIfNeeded(item: FileListItem) {
+    protected fun downloadIfNeeded(item: FileListItem, finishCb: ((File) -> Unit)? = null) {
         val attachment = item.file ?: return
         val fileFromMetadata = getFileFromMetadata(item)
+        item.downloadSuccess = finishCb
 
         if (fileFromMetadata != null && fileFromMetadata.exists()) {
             item.downloadSuccess?.invoke(fileFromMetadata)
@@ -88,7 +90,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
                     .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 context.startActivity(intent)
             } catch (e: Exception) {
-                Toast.makeText(context, "You may not have a proper app for viewing this content", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
             }
         }
     }

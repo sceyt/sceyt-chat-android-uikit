@@ -21,8 +21,7 @@ class MessageVideoViewHolder(
             videoView.isVisible = false
 
             setUploadListenerIfNeeded(item)
-
-            item.downloadSuccess = { result ->
+            downloadIfNeeded(item) { result ->
                 val mediaPath = result.path
                 initializePlayer(mediaPath)
 
@@ -36,8 +35,6 @@ class MessageVideoViewHolder(
                     })
                 Unit
             }
-
-            downloadIfNeeded(item)
 
             root.setOnClickListener {
                 messageListeners.onAttachmentClick(it, item)

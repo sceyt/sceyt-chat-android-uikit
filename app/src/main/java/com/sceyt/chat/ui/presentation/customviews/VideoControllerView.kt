@@ -150,7 +150,7 @@ class VideoControllerView @JvmOverloads constructor(context: Context, attrs: Att
         playPauseItem.isVisible = show
     }
 
-    fun setPlayPauseListener(listener: (Boolean) -> Unit) {
+    fun setPlayPauseClickListener(listener: (Boolean) -> Unit) {
         onPlayPauseClick = listener
     }
 
