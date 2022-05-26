@@ -8,7 +8,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
@@ -36,19 +36,19 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
     private val _loadMoreMessagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val loadMoreMessagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _loadMoreMessagesFlow
 
-    private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytUiMessage?>>()
-    val messageSentLiveData: LiveData<SceytResponse<SceytUiMessage?>> = _messageSentLiveData
+    private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytMessage?>>()
+    val messageSentLiveData: LiveData<SceytResponse<SceytMessage?>> = _messageSentLiveData
 
-    private val _messageDeletedLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>()
-    val messageDeletedLiveData: LiveData<SceytResponse<SceytUiMessage>> = _messageDeletedLiveData
+    private val _messageDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
+    val messageDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageDeletedLiveData
 
-    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytUiMessage>>(SceytResponse.Success(null))
-    val addDeleteReactionLiveData: LiveData<SceytResponse<SceytUiMessage>> = _addDeleteReactionLiveData
+    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytMessage>>(SceytResponse.Success(null))
+    val addDeleteReactionLiveData: LiveData<SceytResponse<SceytMessage>> = _addDeleteReactionLiveData
 
-    val onNewMessageLiveData = MutableLiveData<SceytUiMessage>()
+    val onNewMessageLiveData = MutableLiveData<SceytMessage>()
     val onMessageStatusLiveData = MutableLiveData<ChannelEventsObserverService.MessageStatusChange>()
-    val onMessageReactionUpdatedLiveData = MutableLiveData<SceytUiMessage>()
-    val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytUiMessage>()
+    val onMessageReactionUpdatedLiveData = MutableLiveData<SceytMessage>()
+    val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytMessage>()
     val onChannelHistoryClearedLiveData = MutableLiveData<Channel>()
 
     init {
@@ -97,7 +97,7 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         }
     }
 
-    private fun initResponse(it: SceytResponse<List<SceytUiMessage>>, loadingNext: Boolean) {
+    private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
         isLoadingMessages = false
         when (it) {
             is SceytResponse.Success -> {
@@ -116,32 +116,32 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         notifyPageStateWithResponse(loadingNext, response.data.isNullOrEmpty())
     }
 
-    private fun deleteMessage(message: SceytUiMessage) {
+    private fun deleteMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.deleteMessage(message.toMessage())
             _messageDeletedLiveData.postValue(response)
         }
     }
 
-    private fun editMessage(message: SceytUiMessage) {
+    private fun editMessage(message: SceytMessage) {
 
     }
 
-    private fun addReaction(message: SceytUiMessage, score: ReactionScore) {
+    private fun addReaction(message: SceytMessage, score: ReactionScore) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.addReaction(message.id, score)
             _addDeleteReactionLiveData.postValue(response)
         }
     }
 
-    private fun deleteReaction(message: SceytUiMessage, score: ReactionScore) {
+    private fun deleteReaction(message: SceytMessage, score: ReactionScore) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.deleteReaction(message.id, score)
             _addDeleteReactionLiveData.postValue(response)
         }
     }
 
-    internal fun mapToMessageListItem(data: List<SceytUiMessage>?, hasNext: Boolean,
+    internal fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean,
                                       lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -162,8 +162,8 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         return messageItems
     }
 
-    internal fun setMessageDateAndState(sceytUiMessage: SceytUiMessage, prevMessage: SceytUiMessage?): SceytUiMessage {
-        with(sceytUiMessage) {
+    internal fun setMessageDateAndState(sceytMessage: SceytMessage, prevMessage: SceytMessage?): SceytMessage {
+        with(sceytMessage) {
             if (prevMessage != null) {
                 canShowAvatarAndName = prevMessage.from?.id != from?.id && isGroup
                 showDate = !DateTimeUtil.isSameDay(createdAt, prevMessage.createdAt)

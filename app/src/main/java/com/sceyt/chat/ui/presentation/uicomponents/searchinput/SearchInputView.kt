@@ -8,7 +8,7 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.databinding.SceytUiSearchViewBinding
+import com.sceyt.chat.ui.databinding.SceytSearchViewBinding
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getCompatDrawable
 import com.sceyt.chat.ui.sceytconfigs.SearchInputViewStyle
@@ -22,7 +22,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         private const val TYPING_DEBOUNCE_MS = 300L
     }
 
-    private var binding: SceytUiSearchViewBinding
+    private var binding: SceytSearchViewBinding
 
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS) }
     private val debounceHelper by debounceInitDelegate
@@ -38,7 +38,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     init {
         isSaveFromParentEnabled = false
-        binding = SceytUiSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
         BindingUtil.themedBackgroundColor(this, R.color.whiteThemed)
 
         if (attrs != null) {
@@ -74,7 +74,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
     }
 
-    private fun SceytUiSearchViewBinding.setWithStyle() {
+    private fun SceytSearchViewBinding.setWithStyle() {
         icSearch.setImageResource(SearchInputViewStyle.searchIcon)
         icClear.setImageResource(SearchInputViewStyle.clearIcon)
         input.setTextColor(context.getCompatColor(SearchInputViewStyle.textColor))

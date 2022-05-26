@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput
 
 import android.content.Context
 import android.util.AttributeSet
@@ -14,9 +14,9 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ViewMessageBoxBinding
 import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.attachments.AttachmentFileViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.attachments.AttachmentFileViewHolder
 
-class MessageBox(context: Context, attributeSet: AttributeSet) :
+class MessageInputView(context: Context, attributeSet: AttributeSet) :
         LinearLayoutCompat(context, attributeSet) {
 
     var messageBoxActionCallback: MessageBoxActionCallback? = null

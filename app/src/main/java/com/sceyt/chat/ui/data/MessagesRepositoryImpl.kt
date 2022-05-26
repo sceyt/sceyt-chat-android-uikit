@@ -9,7 +9,7 @@ import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -44,11 +44,11 @@ class MessagesRepositoryImpl(private val channelId: Long,
     }.build()
 
 
-    suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytUiMessage>> {
+    suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
         return getMessagesCoroutine(lastMessageId)
     }
 
-    private suspend fun getMessagesCoroutine(lastMessageId: Long): SceytResponse<List<SceytUiMessage>> {
+    private suspend fun getMessagesCoroutine(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
             query.setLimit(MESSAGES_LOAD_SIZE)
             query.loadPrev(lastMessageId, object : MessagesCallback {
@@ -68,7 +68,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
         }
     }
 
-    suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytUiMessage?> {
+    suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
         return suspendCancellableCoroutine { continuation ->
             val tmpMessage = ClientWrapper.sendMessage(channelId, message) { message, status ->
                 if (status == null || status.isOk) {
@@ -82,7 +82,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
     }
 
 
-    suspend fun deleteMessage(message: Message): SceytResponse<SceytUiMessage>{
+    suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage>{
         return suspendCancellableCoroutine { continuation ->
             val request = DeleteMessageRequest(message)
             request.execute(object : MessageCallback {
@@ -97,7 +97,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
         }
     }
 
-    suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytUiMessage> {
+    suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             ClientWrapper.addReaction(channelId, messageId, score.key, score.score.toInt(), "", false) { message, status ->
                 if (status == null || status.isOk) {
@@ -109,7 +109,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
         }
     }
 
-    suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytUiMessage> {
+    suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             ClientWrapper.deleteReaction(channelId, messageId, score.key) { message, status ->
                 if (status == null || status.isOk) {

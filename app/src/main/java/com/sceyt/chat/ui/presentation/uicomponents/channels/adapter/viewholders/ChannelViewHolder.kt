@@ -6,10 +6,10 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
-import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
-import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
-import com.sceyt.chat.ui.data.models.channels.SceytUiGroupChannel
-import com.sceyt.chat.ui.databinding.SceytUiItemChannelBinding
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
+import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -17,7 +17,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsCl
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil
 
-class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
+class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                         private var listeners: ChannelsClickListenersImpl) : BaseViewHolder<ChannelListItem>(binding.root) {
 
     init {
@@ -29,16 +29,16 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
             is ChannelListItem.ChannelItem -> {
                 val channel = item.channel
                 with(binding) {
-                    this.channel = channel
+                    data = channel
                     val name: String
                     val url: String
 
                     if (channel.channelType == ChannelTypeEnum.Group) {
-                        channel as SceytUiGroupChannel
+                        channel as SceytGroupChannel
                         name = channel.subject ?: ""
                         url = channel.avatarUrl ?: ""
                     } else {
-                        channel as SceytUiDirectChannel
+                        channel as SceytDirectChannel
                         name = channel.peer?.getPresentableName() ?: ""
                         url = channel.peer?.avatarURL ?: ""
                     }
@@ -83,7 +83,7 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
         return itemView.resources.getString(R.string.your_last_message).format(args)
     }
 
-    private fun getDateTxt(channel: SceytUiChannel?): String {
+    private fun getDateTxt(channel: SceytChannel?): String {
         if (channel == null) return ""
         val lastMsgCreatedAt = channel.lastMessage?.createdAt
         return if (lastMsgCreatedAt != null && lastMsgCreatedAt.time != 0L)
@@ -92,7 +92,7 @@ class ChannelViewHolder(private val binding: SceytUiItemChannelBinding,
             DateTimeUtil.getDateTimeString(channel.updatedAt)
     }
 
-    private fun SceytUiItemChannelBinding.setChannelItemStyle() {
+    private fun SceytItemChannelBinding.setChannelItemStyle() {
         with(root.context) {
             channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
             lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))

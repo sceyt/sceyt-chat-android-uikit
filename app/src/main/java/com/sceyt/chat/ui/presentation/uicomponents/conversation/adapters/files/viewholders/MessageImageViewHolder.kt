@@ -2,13 +2,13 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
-import com.sceyt.chat.ui.databinding.SceytUiMessageImageItemBinding
+import com.sceyt.chat.ui.databinding.SceytMessageImageItemBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 
 class MessageImageViewHolder(
-        private val binding: SceytUiMessageImageItemBinding,
+        private val binding: SceytMessageImageItemBinding,
         private val messageListeners: MessageClickListenersImpl) : BaseFileViewHolder(binding.root) {
 
     override fun bindViews(item: FileListItem) {

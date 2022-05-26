@@ -3,7 +3,7 @@ package com.sceyt.chat.ui.data.models.channels
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 
-class SceytUiDirectChannel(
+class SceytDirectChannel(
         id: Long = 0,
         metadata: String? = null,
         label: String? = null,
@@ -14,5 +14,5 @@ class SceytUiDirectChannel(
         muted: Boolean = false,
         channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
         var peer: Member?,
-) : SceytUiChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, channelType)
+) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, channelType)
 

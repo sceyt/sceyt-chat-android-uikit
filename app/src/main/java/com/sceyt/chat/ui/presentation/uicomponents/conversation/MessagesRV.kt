@@ -60,7 +60,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setData(messages: List<MessageListItem>) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(messages as ArrayList<MessageListItem>, viewHolderFactory, this)
+            adapter = MessagesAdapter(messages as ArrayList<MessageListItem>, viewHolderFactory)
                 .also { mAdapter = it }
         } else
             mAdapter.notifyUpdate(messages)

@@ -12,13 +12,13 @@ import com.emojiview.emojiview.emoji.Emoji
 import com.emojiview.emojiview.listener.OnEmojiActions
 import com.emojiview.emojiview.view.AXSingleEmojiView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.sceyt.chat.ui.databinding.FragmentBottomSheetEmojisBinding
+import com.sceyt.chat.ui.databinding.SceytFragmentBottomSheetEmojisBinding
 
 class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : BottomSheetDialogFragment() {
-    private lateinit var mBinding: FragmentBottomSheetEmojisBinding
+    private lateinit var mBinding: SceytFragmentBottomSheetEmojisBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        mBinding = FragmentBottomSheetEmojisBinding.inflate(inflater, container, false)
+        mBinding = SceytFragmentBottomSheetEmojisBinding.inflate(inflater, container, false)
         return mBinding.root
     }
 

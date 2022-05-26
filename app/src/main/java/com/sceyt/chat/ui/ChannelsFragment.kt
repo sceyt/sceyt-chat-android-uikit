@@ -13,7 +13,7 @@ import com.sceyt.chat.ui.extensions.launchActivity
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindSearchView
-import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
+import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindChannelsView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 
 
@@ -30,7 +30,7 @@ class ChannelsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mViewModel.bindView(mBinding.channelListView, viewLifecycleOwner)
+        mViewModel.bindChannelsView(mBinding.channelListView, viewLifecycleOwner)
         mViewModel.bindSearchView(mBinding.searchView)
 
         mBinding.channelListView.setChannelListener(ChannelClickListeners.ChannelClickClickListener {

@@ -5,20 +5,17 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
-import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
-import com.sceyt.chat.ui.data.models.channels.SceytUiGroupChannel
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.channels.getChannelType
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
-import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 
 
-fun Channel.toSceytUiChannel(): SceytUiChannel {
+fun Channel.toSceytUiChannel(): SceytChannel {
     if (this is GroupChannel)
-        return SceytUiGroupChannel(
+        return SceytGroupChannel(
             id = id,
             createdAt = createdAt,
             updatedAt = updatedAt,
@@ -36,7 +33,7 @@ fun Channel.toSceytUiChannel(): SceytUiChannel {
         )
     else {
         this as DirectChannel
-        return SceytUiDirectChannel(
+        return SceytDirectChannel(
             id = id,
             createdAt = createdAt,
             updatedAt = updatedAt,
@@ -51,7 +48,7 @@ fun Channel.toSceytUiChannel(): SceytUiChannel {
     }
 }
 
-fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytUiMessage(
+fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytMessage(
     id = id,
     tid = tid,
     channelId = channelId,
@@ -84,7 +81,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytUiMessage(
     }
 }
 
-fun SceytUiMessage.toMessage() = Message(
+fun SceytMessage.toMessage() = Message(
     id,
     tid,
     channelId,
@@ -113,7 +110,7 @@ fun SceytUiMessage.toMessage() = Message(
     replyCount
 )
 
-fun Attachment.toFileListItem(message: SceytUiMessage): FileListItem {
+fun Attachment.toFileListItem(message: SceytMessage): FileListItem {
     return when (type) {
         "image" -> FileListItem.Image(this, message)
         "video" -> FileListItem.Video(this, message)

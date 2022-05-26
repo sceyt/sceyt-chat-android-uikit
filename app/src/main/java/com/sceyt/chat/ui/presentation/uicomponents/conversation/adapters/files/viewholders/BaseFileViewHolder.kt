@@ -21,7 +21,7 @@ import java.io.File
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
 
     protected fun setUploadListenerIfNeeded(item: FileListItem, finishCb: ((success: Boolean) -> Unit)? = null) {
-        val message = item.sceytUiMessage
+        val message = item.sceytMessage
         if (!message.incoming && message.status == DeliveryStatus.Pending)
             item.setUploadListener(finishCb)
         else finishCb?.invoke(true)

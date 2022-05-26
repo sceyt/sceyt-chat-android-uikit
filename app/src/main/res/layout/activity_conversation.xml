@@ -17,11 +17,11 @@
             android:orientation="vertical"
             android:paddingHorizontal="10dp"
             android:paddingBottom="10dp"
-            app:layout_constraintBottom_toTopOf="@+id/messageBox"
+            app:layout_constraintBottom_toTopOf="@+id/messageInputView"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.MessageBox
-            android:id="@+id/messageBox"
+        <com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.MessageInputView
+            android:id="@+id/messageInputView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/whiteThemed"

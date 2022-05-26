@@ -8,7 +8,7 @@
 
         <variable
             name="message"
-            type="com.sceyt.chat.ui.data.models.messages.SceytUiMessage" />
+            type="com.sceyt.chat.ui.data.models.messages.SceytMessage" />
     </data>
 
     <RelativeLayout
@@ -50,9 +50,9 @@
                 android:id="@+id/messageBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="10dp"
-                android:layout_marginVertical="8dp"
                 android:text="@string/message_was_deleted"
                 android:textColor="@color/colorFontGray"
                 android:textSize="@dimen/mediumTextSize"
@@ -77,7 +77,7 @@
                 app:layout_constraintEnd_toEndOf="@id/layoutDetails"
                 app:statusIconMargin="5dp"
                 app:statusIconSize="16dp"
-                tools:dateText="00:37"/>
+                tools:dateText="00:37" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

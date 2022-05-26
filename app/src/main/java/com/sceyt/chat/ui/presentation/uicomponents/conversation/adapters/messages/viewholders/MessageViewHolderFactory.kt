@@ -5,9 +5,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.*
-import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.LoadingViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -26,37 +25,37 @@ open class MessageViewHolderFactory(context: Context) {
         return when (viewType) {
             MessageTypeEnum.IncText.ordinal -> {
                 IncTextMsgViewHolder(
-                    SceytUiItemIncTextMessageBinding.inflate(layoutInflater, parent, false),
+                    SceytItemIncTextMessageBinding.inflate(layoutInflater, parent, false),
                     viewPoolReactions, listeners)
             }
             MessageTypeEnum.OutText.ordinal -> {
-                OutTextMsgViewHolder(SceytUiItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
+                OutTextMsgViewHolder(SceytItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
                     viewPoolReactions, listeners)
             }
             MessageTypeEnum.IncFiles.ordinal -> {
                 IncFilesMsgViewHolder(
-                    SceytUiItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
+                    SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
                     viewPoolReactions,
                     viewPoolFiles, listeners)
             }
             MessageTypeEnum.OutFiles.ordinal -> {
                 OutFilesMsgViewHolder(
-                    SceytUiItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
+                    SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
                     viewPoolReactions,
                     viewPoolFiles, listeners)
             }
             MessageTypeEnum.IncDeleted.ordinal -> {
                 IncDeletedMsgViewHolder(
-                    SceytUiItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
+                    SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
                     listeners)
             }
             MessageTypeEnum.OutDeleted.ordinal -> {
                 OutDeletedMsgViewHolder(
-                    SceytUiItemOutDeletedMessageBinding.inflate(layoutInflater, parent, false),
+                    SceytItemOutDeletedMessageBinding.inflate(layoutInflater, parent, false),
                     listeners)
             }
             MessageTypeEnum.Loading.ordinal -> LoadingViewHolder(
-                SceytUiItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
+                SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
             )
             else -> throw Exception("Not supported view type")
         }
@@ -69,14 +68,11 @@ open class MessageViewHolderFactory(context: Context) {
         }
     }
 
-    private fun getMessageType(message: SceytUiMessage): MessageTypeEnum {
+    private fun getMessageType(message: SceytMessage): MessageTypeEnum {
         val inc = message.incoming
         return when {
             message.state == MessageState.Deleted -> if (inc) MessageTypeEnum.IncDeleted else MessageTypeEnum.OutDeleted
             message.attachments.isNullOrEmpty() -> if (inc) MessageTypeEnum.IncText else MessageTypeEnum.OutText
-            //todo
-            message.attachments?.size == 1 && message.attachments?.getOrNull(0)?.type.isEqualsVideoOrImage() ->
-                if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
             else -> if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
         }
     }
@@ -92,7 +88,6 @@ open class MessageViewHolderFactory(context: Context) {
         IncDeleted,
         OutDeleted,
         IncFiles,
-        OutFiles,
-        IncSingleVideoOrImage;
+        OutFiles
     }
 }

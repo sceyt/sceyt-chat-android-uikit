@@ -63,7 +63,7 @@ object BindingUtil {
 
     @BindingAdapter("bind:themedTextColor")
     @JvmStatic
-    fun themedTextColor(view: View, @ColorRes colorId: Int) {
+    fun themedTextColor(view: View, colorId: Int) {
         val pair = Pair(view, colorId)
         themeTextColorsViews.add(pair)
 

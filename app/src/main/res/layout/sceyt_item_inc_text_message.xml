@@ -8,7 +8,7 @@
 
         <variable
             name="message"
-            type="com.sceyt.chat.ui.data.models.messages.SceytUiMessage" />
+            type="com.sceyt.chat.ui.data.models.messages.SceytMessage" />
     </data>
 
     <RelativeLayout
@@ -47,7 +47,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/layoutDetails"
             bind:invisibleIfCheckGone="@{!message.canShowAvatarAndName}"
-            tools:avatarFullName="Ar"
+            tools:avatarFullName="a"
             tools:visibility="visible" />
 
         <com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
@@ -68,8 +68,6 @@
             android:layout_below="@+id/messageDay"
             android:layout_toEndOf="@+id/avatar"
             android:background="@drawable/bg_inc_message"
-            android:maxWidth="@dimen/bodyMaxWidth"
-            android:minWidth="@dimen/bodyMaxWidth"
             android:paddingTop="2dp">
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -91,7 +89,7 @@
 
             <include
                 android:id="@+id/viewReplay"
-                layout="@layout/sceyt_ui_recycler_replay_container"
+                layout="@layout/sceyt_recycler_replay_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
@@ -103,34 +101,20 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/messageBody"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
+                android:layout_marginStart="12dp"
                 android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:text="@{message.body}"
                 android:textColor="@color/colorFontDark"
                 android:textSize="@dimen/mediumTextSize"
-                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
                 app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
                 app:layout_constraintStart_toStartOf="@+id/layoutDetails"
                 app:layout_constraintTop_toBottomOf="@+id/viewReplay"
-                bind:visibleIf="@{!message.body.empty}"
+                app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
                 tools:text="Lore ipsum  is the correct text which" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvFiles"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:orientation="vertical"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/messageBody"
-                tools:itemCount="3"
-                tools:listitem="@layout/sceyt_ui_message_file_item" />
 
             <com.sceyt.chat.ui.presentation.customviews.DateStatusView
                 android:id="@+id/messageDate"
@@ -143,7 +127,7 @@
                 app:dateTextSize="@dimen/tinyTextSize"
                 app:firstStatus="false"
                 app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
-                app:layout_constraintEnd_toEndOf="@id/rvFiles"
+                app:layout_constraintEnd_toEndOf="@id/layoutDetails"
                 app:statusIconSize="16dp"
                 tools:dateText="00:37" />
 
@@ -174,7 +158,7 @@
             android:paddingTop="4dp"
             android:visibility="gone"
             tools:itemCount="3"
-            tools:listitem="@layout/sceyt_ui_item_reaction" />
+            tools:listitem="@layout/sceyt_item_reaction" />
 
     </RelativeLayout>
 </layout>

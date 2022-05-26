@@ -8,7 +8,7 @@
 
         <variable
             name="message"
-            type="com.sceyt.chat.ui.data.models.messages.SceytUiMessage" />
+            type="com.sceyt.chat.ui.data.models.messages.SceytMessage" />
     </data>
 
     <RelativeLayout
@@ -30,66 +30,38 @@
             android:textColor="@color/colorFontGray"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
             bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
-
-        <com.sceyt.chat.ui.presentation.customviews.Avatar
-            android:id="@+id/avatar"
-            android:layout_width="@dimen/_28sdp"
-            android:layout_height="@dimen/_28sdp"
-            android:layout_below="@+id/messageDay"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone"
-            app:avatarTextSize="15sp"
-            app:layout_constraintEnd_toStartOf="@+id/layoutDetails"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/layoutDetails"
-            bind:invisibleIfCheckGone="@{!message.canShowAvatarAndName}"
-            tools:avatarFullName="a"
-            tools:visibility="visible" />
 
         <com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
             android:id="@+id/toReplayLine"
             android:layout_width="10dp"
             android:layout_height="wrap_content"
-            android:layout_alignStart="@+id/layoutDetails"
             android:layout_alignTop="@+id/layoutDetails"
             android:layout_alignBottom="@+id/tvReplayCount"
+            android:layout_alignParentEnd="true"
             android:layout_marginTop="20dp"
             android:layout_marginBottom="5sp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:toLeft="true" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutDetails"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/messageDay"
-            android:layout_toEndOf="@+id/avatar"
-            android:background="@drawable/bg_inc_message"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/bg_out_message"
             android:paddingTop="2dp">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvUserName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="5dp"
-                android:singleLine="true"
-                android:textColor="@color/colorAccent"
-                android:textSize="@dimen/extraSmallTextSize"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                bind:visibleIf="@{message.canShowAvatarAndName}"
-                tools:text="Henry Willian" />
 
             <include
                 android:id="@+id/viewReplay"
-                layout="@layout/sceyt_ui_recycler_replay_container"
+                layout="@layout/sceyt_recycler_replay_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
@@ -97,24 +69,23 @@
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tvUserName" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/messageBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginHorizontal="12dp"
                 android:layout_marginTop="4dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:textColor="@color/colorFontDark"
+                android:textColor="@color/colorFontDarkFinal"
                 android:textSize="@dimen/mediumTextSize"
                 app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
                 app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
                 app:layout_constraintStart_toStartOf="@+id/layoutDetails"
                 app:layout_constraintTop_toBottomOf="@+id/viewReplay"
                 app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
-                tools:text="Lore ipsum  is the correct text which" />
+                tools:text="Lore ipsum description is created from" />
 
             <com.sceyt.chat.ui.presentation.customviews.DateStatusView
                 android:id="@+id/messageDate"
@@ -123,15 +94,33 @@
                 android:layout_marginEnd="5dp"
                 android:paddingHorizontal="8dp"
                 android:layout_marginBottom="2dp"
+                android:includeFontPadding="false"
                 app:dateTextColor="#7C7E8E"
                 app:dateTextSize="@dimen/tinyTextSize"
                 app:firstStatus="false"
                 app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
                 app:layout_constraintEnd_toEndOf="@id/layoutDetails"
+                app:statusIconMargin="5dp"
                 app:statusIconSize="16dp"
-                tools:dateText="00:37" />
+                bind:incoming="@{message.incoming}"
+                bind:status="@{message.status}"
+                tools:dateText="00:37"
+                tools:statusIcon="@drawable/ic_status_delivered" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvReactions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/layoutDetails"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="3dp"
+            android:orientation="horizontal"
+            android:paddingTop="4dp"
+            android:visibility="gone"
+            tools:itemCount="3"
+            tools:listitem="@layout/sceyt_item_reaction" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvReplayCount"
@@ -139,26 +128,13 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/rvReactions"
             android:layout_marginVertical="4dp"
-            android:layout_marginStart="2dp"
-            android:layout_toEndOf="@+id/toReplayLine"
+            android:layout_marginEnd="2dp"
+            android:layout_toStartOf="@+id/toReplayLine"
             android:includeFontPadding="false"
             android:textColor="@color/colorAccent"
             android:textSize="@dimen/tinyTextSize"
             android:visibility="gone"
             tools:text="34 reply" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvReactions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/layoutDetails"
-            android:layout_marginStart="3dp"
-            android:layout_toEndOf="@+id/avatar"
-            android:orientation="horizontal"
-            android:paddingTop="4dp"
-            android:visibility="gone"
-            tools:itemCount="3"
-            tools:listitem="@layout/sceyt_ui_item_reaction" />
 
     </RelativeLayout>
 </layout>

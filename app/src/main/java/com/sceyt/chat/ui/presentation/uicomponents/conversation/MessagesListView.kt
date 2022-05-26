@@ -10,7 +10,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.BottomSheetEmojisFragment
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getFragmentManager
 import com.sceyt.chat.ui.extensions.setClipboard
@@ -23,6 +23,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEv
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
+import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 import com.sceyt.chat.ui.utils.binding.BindingUtil
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -39,15 +40,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         setBackgroundColor(context.getCompatColor(R.color.colorBackground))
         BindingUtil.themedBackgroundColor(this, R.color.colorBackground)
 
-        val attributes = intArrayOf(android.R.attr.paddingLeft, android.R.attr.paddingTop, android.R.attr.paddingBottom, android.R.attr.paddingRight)
-        val a = context.obtainStyledAttributes(attrs, attributes)
-        a.recycle()
 
-        /* if (attrs != null) {
-             val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
-             ChannelStyle.updateWithAttributes(a)
-             a.recycle()
-         }*/
+        if (attrs != null) {
+            val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
+            MessagesStyle.updateWithAttributes(a)
+            a.recycle()
+        }
+
         messagesRV = MessagesRV(context)
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
@@ -96,7 +95,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
                 (guestClickListeners as? MessageClickListeners.AttachmentLongClickListener)?.onAttachmentLongClick(view, item)
-                showMessageActionsPopup(view, item.sceytUiMessage)
+                showMessageActionsPopup(view, item.sceytMessage)
             }
         }
         messagesRV.setMessageListener(defaultMessageClickListeners)
@@ -121,7 +120,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.show()
     }
 
-    private fun showMessageActionsPopup(view: View, message: SceytUiMessage) {
+    private fun showMessageActionsPopup(view: View, message: SceytMessage) {
         val popup = PopupMenu(view.context, view)
         popup.menu.apply {
             add(0, R.id.copyMessage, 0, view.context.getString(R.string.copy))
@@ -148,23 +147,23 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.show()
     }
 
-    private fun onDeleteMessage(message: SceytUiMessage) {
+    private fun onDeleteMessage(message: SceytMessage) {
         messageEventListener?.invoke(MessageEvent.DeleteMessage(message))
     }
 
-    private fun onEditMessage(message: SceytUiMessage) {
+    private fun onEditMessage(message: SceytMessage) {
         messageEventListener?.invoke(MessageEvent.EditMessage(message))
     }
 
-    private fun onReplayMessage(message: SceytUiMessage) {
+    private fun onReplayMessage(message: SceytMessage) {
         messageEventListener?.invoke(MessageEvent.Replay(message))
     }
 
-    private fun onReplayInThreadMessage(message: SceytUiMessage) {
+    private fun onReplayInThreadMessage(message: SceytMessage) {
         messageEventListener?.invoke(MessageEvent.ReplayInThread(message))
     }
 
-    private fun onAddReaction(message: SceytUiMessage, score: String) {
+    private fun onAddReaction(message: SceytMessage, score: String) {
         val scores = initAddReactionScore(message.reactionScores, score)
         reactionEventListener?.invoke(ReactionEvent.AddReaction(message, scores.second))
     }
@@ -182,7 +181,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         reactionEventListener?.invoke(ReactionEvent.DeleteReaction(reaction.messageItem.message, reaction.reactionScore))
     }
 
-    private fun showAddEmojiDialog(message: SceytUiMessage) {
+    private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
                 onAddReaction(message, emoji.unicode)
@@ -220,7 +219,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addNewMessages(*data)
     }
 
-    fun updateMessage(message: SceytUiMessage, notifyItemChanged: Boolean) {
+    fun updateMessage(message: SceytMessage, notifyItemChanged: Boolean) {
         for ((index, item) in messagesRV.getData().withIndex()) {
             if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
@@ -236,7 +235,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun updateReaction(data: SceytUiMessage) {
+    fun updateReaction(data: SceytMessage) {
         messagesRV.updateReaction(data.id, data.reactionScores ?: arrayOf())
     }
 

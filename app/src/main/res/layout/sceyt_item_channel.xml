@@ -9,8 +9,8 @@
         <import type="com.sceyt.chat.ui.R" />
 
         <variable
-            name="channel"
-            type="com.sceyt.chat.ui.data.models.channels.SceytUiChannel" />
+            name="data"
+            type="com.sceyt.chat.ui.data.models.channels.SceytChannel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -37,7 +37,7 @@
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/avatar"
             app:layout_constraintEnd_toEndOf="@id/avatar"
-            bind:channel="@{channel}"
+            bind:channel="@{data}"
             tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -91,8 +91,8 @@
             app:layout_constraintTop_toTopOf="@id/avatar"
             app:statusIconMargin="4dp"
             app:statusIconSize="19dp"
-            bind:incoming="@{channel.lastMessage.incoming}"
-            bind:status="@{channel.lastMessage.deliveryStatus}"
+            bind:incoming="@{data.lastMessage.incoming}"
+            bind:status="@{data.lastMessage.deliveryStatus}"
             tools:dateText="12:28"
             tools:statusIcon="@drawable/ic_status_read" />
 
@@ -113,7 +113,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/updateDate"
-            bind:setUnreadCount="@{channel}"
+            bind:setUnreadCount="@{data}"
             tools:text="9"
             tools:visibility="visible" />
 

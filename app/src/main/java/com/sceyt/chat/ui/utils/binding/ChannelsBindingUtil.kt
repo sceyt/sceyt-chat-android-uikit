@@ -10,8 +10,8 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
-import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
-import com.sceyt.chat.ui.data.models.channels.SceytUiDirectChannel
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.extensions.getCompatDrawable
 import com.sceyt.chat.ui.presentation.customviews.DateStatusView
 
@@ -19,9 +19,9 @@ object ChannelsBindingUtil {
 
     @BindingAdapter("bind:channel")
     @JvmStatic
-    fun setOnlineStatus(view: View, channel: SceytUiChannel?) {
+    fun setOnlineStatus(view: View, channel: SceytChannel?) {
         view.isVisible = (channel?.channelType == ChannelTypeEnum.Direct)
-                && (channel as? SceytUiDirectChannel)?.peer?.presence?.state == PresenceState.Online
+                && (channel as? SceytDirectChannel)?.peer?.presence?.state == PresenceState.Online
     }
 
     @BindingAdapter("bind:status", "bind:incoming")
@@ -68,7 +68,11 @@ object ChannelsBindingUtil {
     @BindingAdapter("bind:setUnreadCount")
     @JvmStatic
     @SuppressLint("SetTextI18n")
-    fun setUnreadCount(textView: TextView, channel: SceytUiChannel) {
+    fun setUnreadCount(textView: TextView, channel: SceytChannel?) {
+        if (channel == null) {
+            textView.isVisible = false
+            return
+        }
         if (channel.unreadMessageCount == 0L) {
             textView.isVisible = false
         } else {

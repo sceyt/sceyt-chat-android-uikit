@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.messages.SceytUiMessage
-import com.sceyt.chat.ui.databinding.SceytUiRecyclerReplayContainerBinding
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.chat.ui.extensions.getAttachmentUrl
 import com.sceyt.chat.ui.extensions.getShowBody
 import com.sceyt.chat.ui.presentation.customviews.Avatar
@@ -65,7 +65,7 @@ abstract class BaseMsgViewHolder(view: View,
         messageDate.setDateText(getDateTimeString(createdAt), isEdited)
     }
 
-    protected fun setReplayedMessageContainer(message: SceytUiMessage, viewBinding: SceytUiRecyclerReplayContainerBinding) {
+    protected fun setReplayedMessageContainer(message: SceytMessage, viewBinding: SceytRecyclerReplayContainerBinding) {
         if (message.parent == null || message.replyInThread || message.parent?.id == 0L) {
             viewBinding.root.isVisible = false
             return
@@ -91,7 +91,7 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    protected fun setMessageUserAvatarAndName(avatar: Avatar, tvName: TextView, message: SceytUiMessage) {
+    protected fun setMessageUserAvatarAndName(avatar: Avatar, tvName: TextView, message: SceytMessage) {
         if (!message.isGroup) return
 
         if (message.canShowAvatarAndName) {
@@ -140,7 +140,7 @@ abstract class BaseMsgViewHolder(view: View,
         rvReactions.isVisible = true
     }
 
-    private fun initReactionsList(scores: Array<ReactionScore>, message: SceytUiMessage): ArrayList<ReactionItem> {
+    private fun initReactionsList(scores: Array<ReactionScore>, message: SceytMessage): ArrayList<ReactionItem> {
         return ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
             ReactionItem.Reaction(it, MessageListItem.MessageItem(message))
         }).also {
@@ -149,7 +149,7 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    fun updateReaction(scores: Array<ReactionScore>, message: SceytUiMessage) {
+    fun updateReaction(scores: Array<ReactionScore>, message: SceytMessage) {
         val reactions = initReactionsList(scores, message)
         message.reactionScores = scores
         if (reactionsAdapter != null) {

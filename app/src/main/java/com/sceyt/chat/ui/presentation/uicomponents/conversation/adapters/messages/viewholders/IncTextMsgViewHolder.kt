@@ -1,19 +1,26 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
+import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.ui.databinding.SceytUiItemIncTextMessageBinding
+import com.sceyt.chat.ui.databinding.SceytItemIncTextMessageBinding
+import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.INC_DEFAULT_SPACE
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.INC_EDITED_SPACE
 
 class IncTextMsgViewHolder(
-        private val binding: SceytUiItemIncTextMessageBinding,
+        private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
+
+    init {
+        binding.setMessageItemStyle()
+    }
 
     override fun bindViews(item: MessageListItem) {
         when (item) {
@@ -44,6 +51,12 @@ class IncTextMsgViewHolder(
                 }
             }
             MessageListItem.LoadingMoreItem -> return
+        }
+    }
+
+    private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
+        with(root.context) {
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
         }
     }
 }

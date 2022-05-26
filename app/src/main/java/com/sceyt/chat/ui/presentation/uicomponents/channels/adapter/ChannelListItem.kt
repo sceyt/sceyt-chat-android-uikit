@@ -1,9 +1,9 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter
 
-import com.sceyt.chat.ui.data.models.channels.SceytUiChannel
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 
 sealed class ChannelListItem {
-    data class ChannelItem(val channel: SceytUiChannel) : ChannelListItem()
+    data class ChannelItem(val channel: SceytChannel) : ChannelListItem()
     object LoadingMoreItem : ChannelListItem()
 
     override fun equals(other: Any?): Boolean {

@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox
+package com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.ui.databinding.RecyclerviewAttachmentFileItemBinding
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.attachments.AAttachmentViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.messagebox.attachments.AttachmentFileViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.attachments.AAttachmentViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.attachments.AttachmentFileViewHolder
 
 class AttachmentsAdapter(private val viewCallbacks: AttachmentFileViewHolder.Callbacks) :
         ListAdapter<Attachment, AAttachmentViewHolder>(DIFF_CALLBACK) {
