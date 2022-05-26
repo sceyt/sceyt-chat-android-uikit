@@ -59,7 +59,7 @@ sealed class FileListItem(val file: Attachment?,
         fileLoadData.update(progressValue, loading)
     }
 
-    var downloadSuccess: ((java.io.File) -> Unit?)? = null
+    var downloadSuccess: ((java.io.File) -> Unit)? = null
     val fileLoadData by lazy { FileLoadData() }
 }
 

@@ -97,4 +97,5 @@
     <string name="with">with</string>
 
     <string name="sceyt_ui_channel_list_empty">No results found</string>
+    <string name="no_proper_app_to_open_file">You may not have a proper app for viewing this content</string>
 </resources>
