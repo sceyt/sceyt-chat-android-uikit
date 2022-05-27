@@ -5,14 +5,13 @@ import android.content.Intent
 import android.net.Uri
 import android.view.View
 import android.widget.Toast
-import androidx.core.content.FileProvider
 import com.google.gson.Gson
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.ui.BuildConfig
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.extensions.getFileSize
+import com.sceyt.chat.ui.extensions.getFileUriWithProvider
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import java.io.File
@@ -22,7 +21,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     protected fun setUploadListenerIfNeeded(item: FileListItem, finishCb: ((success: Boolean) -> Unit)? = null) {
         val message = item.sceytMessage
-        if (!message.incoming && message.status == DeliveryStatus.Pending)
+        if (!message.incoming && message.status == DeliveryStatus.Pending && item.fileLoadData.progressPercent != 100)
             item.setUploadListener(finishCb)
         else finishCb?.invoke(true)
     }
@@ -73,12 +72,10 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         if (fileName != null) {
             val loadedFile = File(itemView.context.filesDir, fileName)
             if (loadedFile.exists()) {
-                uri = FileProvider.getUriForFile(itemView.context,
-                    BuildConfig.APPLICATION_ID + ".provider", loadedFile)
+                uri = itemView.context.getFileUriWithProvider(loadedFile)
             } else {
                 getFileFromMetadata(item)?.let {
-                    uri = FileProvider.getUriForFile(itemView.context,
-                        BuildConfig.APPLICATION_ID + ".provider", it)
+                    uri = itemView.context.getFileUriWithProvider(it)
                 }
             }
         }

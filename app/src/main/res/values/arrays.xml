@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer-array name="file_picker">
+        <item>@string/take_photo</item>
+        <item>@string/upload_from_gallery</item>
+        <item>@string/delete</item>
+    </integer-array>
+
+    <integer-array name="image_picker">
+        <item>@string/take_photo</item>
+        <item>@string/upload_from_gallery</item>
+        <item>@string/file</item>
+    </integer-array>
+</resources>

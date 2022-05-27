@@ -27,4 +27,9 @@
         <item name="cornerSize">18dp</item>
     </style>
 
+    <style name="ShapeAppearanceOverlay.CornerSize5" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">5dp</item>
+    </style>
+
 </resources>

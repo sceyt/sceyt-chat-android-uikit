@@ -20,13 +20,18 @@
             app:layout_constraintBottom_toTopOf="@+id/messageInputView"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <View
+            android:id="@+id/viewShadow"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:background="@drawable/shadow_top"
+            app:layout_constraintBottom_toTopOf="@+id/messageInputView" />
+
         <com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.MessageInputView
             android:id="@+id/messageInputView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/whiteThemed"
-            android:elevation="8dp"
-            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
