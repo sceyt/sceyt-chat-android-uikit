@@ -268,8 +268,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadMoreMessagesListener(listener)
+    }
+
     fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToStartListener(listener)
+    }
+
+    fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setRichToPrefetchDistanceListener(listener)
     }
 
     fun setMessageClickListener(listener: MessageClickListeners) {

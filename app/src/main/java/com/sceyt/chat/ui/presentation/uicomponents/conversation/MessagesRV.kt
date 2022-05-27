@@ -8,13 +8,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
-import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
+import com.sceyt.chat.ui.extensions.getFirstVisibleItemPosition
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.utils.SpeedyLinearLayoutManager
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -23,8 +24,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private lateinit var mAdapter: MessagesAdapter
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var richToPrefetchDistanceListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var needLoadMoreMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private val viewHolderFactory = MessageViewHolderFactory(context)
     private var richToStartInvoked = AtomicBoolean(false)
+    private var richToPrefetchDistanceInvoked = AtomicBoolean(false)
 
     init {
         init()
@@ -47,13 +51,26 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private fun addOnScrollListener() {
         post {
-            addRVScrollListener { _: RecyclerView, _: Int, _: Int ->
-                if (isFirstItemDisplaying()) {
-                    if (!richToStartInvoked.get()) {
-                        richToStartInvoked.set(true)
-                        richToStartListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstItem())
+            addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
+                val firstVisiblePosition = getFirstVisibleItemPosition()
+                if (firstVisiblePosition <= SceytUIKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
+                    val skip = mAdapter.getSkip()
+                    val firstItem = mAdapter.getFirstItem()
+                    if (firstVisiblePosition == 0) {
+                        if (!richToStartInvoked.get()) {
+                            richToStartInvoked.set(true)
+                            richToPrefetchDistanceInvoked.set(true)
+                            richToStartListener?.invoke(skip, firstItem)
+                            needLoadMoreMessagesListener?.invoke(skip, firstItem)
+                        }
+                    } else richToStartInvoked.set(false)
+
+                    if (!richToPrefetchDistanceInvoked.get()) {
+                        richToPrefetchDistanceInvoked.set(true)
+                        richToPrefetchDistanceListener?.invoke(skip, firstItem)
+                        needLoadMoreMessagesListener?.invoke(skip, firstItem)
                     }
-                } else richToStartInvoked.set(false)
+                } else richToPrefetchDistanceInvoked.set(false)
             }
         }
     }
@@ -92,8 +109,16 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
     }
 
+    fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        needLoadMoreMessagesListener = listener
+    }
+
     fun setRichToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         richToStartListener = listener
+    }
+
+    fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        richToPrefetchDistanceListener = listener
     }
 
     fun setMessageListener(listener: MessageClickListeners) {

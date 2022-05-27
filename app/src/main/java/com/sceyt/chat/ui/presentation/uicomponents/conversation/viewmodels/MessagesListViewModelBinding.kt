@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.toMessage
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
@@ -35,7 +36,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
-    messageDeletedLiveData.observe(lifecycleOwner) {
+    messageEditedDeletedLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> {
                 it.data?.let { data -> messagesListView.updateMessage(data, true) }
@@ -114,7 +115,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         onReactionEvent(it)
     }
 
-    messagesListView.setReachToStartListener { _, message ->
+    messagesListView.setNeedLoadMoreMessagesListener { _, message ->
         if (!isLoadingMessages && hasNext) {
             isLoadingMessages = true
             val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
@@ -123,36 +124,33 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 }
 
-fun MessageListViewModel.bindMessageInputView(messageInputView: MessageInputView, lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bindMessageInputView(messageInputView: MessageInputView,
+                                              lifecycleOwner: LifecycleOwner) {
+
+    onEditMessageCommandLiveData.observe(lifecycleOwner) {
+        messageInputView.message = it.toMessage()
+    }
+
+    onReplayMessageCommandLiveData.observe(lifecycleOwner) {
+        messageInputView.replayMessage(it.toMessage())
+    }
 
     messageInputView.messageBoxActionCallback = object : MessageInputView.MessageBoxActionCallback {
         override fun sendMessage(message: Message) {
-            this@bindMessageInputView.sendMessage(message)
+            messageInputView.cancelReplay {
+                this@bindMessageInputView.sendMessage(message)
+            }
         }
 
         override fun editMessage(message: Message) {
-            // viewModel.editMessage(message)
-            //cancelReplay()
+            this@bindMessageInputView.editMessage(message)
+            messageInputView.cancelReplay()
         }
 
         override fun addAttachments() {
-            /* UIUtils.openChooserForUploadImage(requireContext()) { chooseType ->
-                 when (chooseType) {
-                     UIUtils.ProfilePhotoChooseType.CAMERA -> {
-                         dispatchTakePictureIntent()
-                     }
-                     UIUtils.ProfilePhotoChooseType.GALLERY -> {
-                         pickFile(chooseType)
-                     }
-                     else -> {
-                         handleDocumentClicked()
-                     }
-                 }
-             }*/
-            //pickFile()
+
         }
     }
-
 }
 
 
