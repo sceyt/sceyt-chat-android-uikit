@@ -149,6 +149,18 @@ class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : Base
         }
     }
 
+
+    fun sendReplayMessage(message: Message, parent: Message?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.sendMessage(message) { tmpMessage ->
+                onNewMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
+                    this.parent = parent
+                })
+            }
+            _messageSentLiveData.postValue(response)
+        }
+    }
+
     fun editMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.editMessage(message)

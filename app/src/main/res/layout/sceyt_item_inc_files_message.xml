@@ -33,7 +33,7 @@
             bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
 
-        <com.sceyt.chat.ui.presentation.customviews.Avatar
+        <com.sceyt.chat.ui.presentation.customviews.AvatarView
             android:id="@+id/avatar"
             android:layout_width="@dimen/_28sdp"
             android:layout_height="@dimen/_28sdp"
@@ -69,8 +69,7 @@
             android:layout_toEndOf="@+id/avatar"
             android:background="@drawable/bg_inc_message"
             android:maxWidth="@dimen/bodyMaxWidth"
-            android:minWidth="@dimen/bodyMaxWidth"
-            android:paddingTop="2dp">
+            android:minWidth="@dimen/bodyMaxWidth">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvUserName"
@@ -95,7 +94,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="8dp"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -106,7 +105,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 android:layout_marginBottom="8dp"
                 android:text="@{message.body}"
                 android:textColor="@color/colorFontDark"

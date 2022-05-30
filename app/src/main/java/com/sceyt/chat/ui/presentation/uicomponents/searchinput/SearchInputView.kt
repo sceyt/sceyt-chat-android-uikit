@@ -50,7 +50,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun init() {
-        binding.setWithStyle()
+        binding.setUpStyle()
 
         binding.input.doAfterTextChanged { query ->
             binding.icClear.isVisible = (query?.length ?: 0) > 0
@@ -74,7 +74,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
     }
 
-    private fun SceytSearchViewBinding.setWithStyle() {
+    private fun SceytSearchViewBinding.setUpStyle() {
         icSearch.setImageResource(SearchInputViewStyle.searchIcon)
         icClear.setImageResource(SearchInputViewStyle.clearIcon)
         input.setTextColor(context.getCompatColor(SearchInputViewStyle.textColor))

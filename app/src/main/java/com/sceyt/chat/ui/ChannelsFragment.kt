@@ -37,6 +37,7 @@ class ChannelsFragment : Fragment() {
             requireActivity().launchActivity<ConversationActivity> {
                 putExtra("channelId", it.channel.id)
                 putExtra("isGroup", it.channel.channelType != ChannelTypeEnum.Direct)
+                putExtra("channel", it.channel)
             }
         })
 

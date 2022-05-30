@@ -5,10 +5,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
-import com.sceyt.chat.ui.data.models.channels.SceytChannel
-import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
-import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
+import com.sceyt.chat.ui.data.models.channels.*
 import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
@@ -33,7 +30,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     val name: String
                     val url: String
 
-                    if (channel.channelType == ChannelTypeEnum.Group) {
+                    if (channel.channelType?.isGroup() == true) {
                         channel as SceytGroupChannel
                         name = channel.subject ?: ""
                         url = channel.avatarUrl ?: ""

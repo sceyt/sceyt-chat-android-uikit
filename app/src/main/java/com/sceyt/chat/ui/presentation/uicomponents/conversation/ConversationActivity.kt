@@ -30,7 +30,7 @@ class ConversationActivity : AppCompatActivity() {
         viewModel.loadMessages(0, false)
 
 
-        binding.messagesListView.setMessageClickListener(MessageClickListeners.ReactionLongClickListener { view, reactionItem ->
+        binding.messagesListView.setMessageClickListener(MessageClickListeners.ReactionLongClickListener { _, reactionItem ->
             Toast.makeText(this, "ReactionLongClick  " + reactionItem.messageItem.message.body, Toast.LENGTH_SHORT).show()
         })
     }
@@ -39,10 +39,12 @@ class ConversationActivity : AppCompatActivity() {
     private fun getDataFromIntent() {
         channelId = intent.getLongExtra("channelId", 0)
         isGroup = intent.getBooleanExtra("isGroup", false)
+        val channel = intent.getSerializableExtra("channel")
+
+        println("$channel")
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
-        @SuppressWarnings("unchecked")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             getDataFromIntent()
             return MessageListViewModel(channelId, isGroup) as T

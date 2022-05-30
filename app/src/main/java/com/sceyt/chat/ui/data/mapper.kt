@@ -1,10 +1,9 @@
 package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.DirectChannel
-import com.sceyt.chat.models.channel.GroupChannel
+import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum.*
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
@@ -45,6 +44,26 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             peer = peer,
             channelType = getChannelType(this),
         )
+    }
+}
+
+fun SceytChannel.toChannel(): Channel? {
+    return when (channelType) {
+        Direct -> {
+            this as SceytDirectChannel
+            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer), lastMessage, unreadMessageCount, muted, 0)
+        }
+        Private -> {
+            this as SceytGroupChannel
+            PrivateChannel(id, subject, metadata, avatarUrl,
+                label, createdAt, updatedAt, members.toTypedArray(), lastMessage, unreadMessageCount, memberCount, muted, 0)
+        }
+        Public -> {
+            this as SceytGroupChannel
+            PublicChannel(id, "", subject, metadata, avatarUrl,
+                label, createdAt, updatedAt, members.toTypedArray(), lastMessage, unreadMessageCount, memberCount, muted, 0)
+        }
+        else -> null
     }
 }
 
