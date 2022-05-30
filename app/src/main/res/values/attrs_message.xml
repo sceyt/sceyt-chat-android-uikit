@@ -2,8 +2,8 @@
 <resources>
     <declare-styleable name="MessagesListView">
 
-        <attr name="sceytUiMessageIncBubbleTextColor" format="reference" />
-        <attr name="sceytUiMessageOutBubbleTextColor" format="reference" />
+        <attr name="sceytUiMessageIncBubbleColor" format="reference" />
+        <attr name="sceytUiMessageOutBubbleColor" format="reference" />
 
 
     </declare-styleable>

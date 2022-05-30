@@ -10,10 +10,10 @@ import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
-import com.sceyt.chat.ui.extensions.getFileSize
 import com.sceyt.chat.ui.extensions.getFileUriWithProvider
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
 import java.io.File
 
 
@@ -28,18 +28,13 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     protected fun downloadIfNeeded(item: FileListItem, finishCb: ((File) -> Unit)? = null) {
         val attachment = item.file ?: return
-        val fileFromMetadata = getFileFromMetadata(item)
+
         item.downloadSuccess = finishCb
-
-        if (fileFromMetadata != null && fileFromMetadata.exists()) {
-            item.downloadSuccess?.invoke(fileFromMetadata)
-            return
-        }
-
         val loadedFile = File(itemView.context.filesDir, attachment.name)
+        val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
 
-        if (loadedFile.exists() && getFileSize(loadedFile.path) == attachment.uploadedFileSize) {
-            item.downloadSuccess?.invoke(loadedFile)
+        if (file != null) {
+            item.downloadSuccess?.invoke(file)
         } else {
             if (item.fileLoadData.loading)
                 return

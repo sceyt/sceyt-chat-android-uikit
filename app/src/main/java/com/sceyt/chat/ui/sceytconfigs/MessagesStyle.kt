@@ -15,8 +15,8 @@ object MessagesStyle {
     var outBubbleColor: Int = R.color.colorBgOutMessage
 
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
-        incBubbleColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelTitleTextColor, incBubbleColor)
-        outBubbleColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiLastMessageTextColor, outBubbleColor)
+        incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
+        outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
         return this
     }
 }

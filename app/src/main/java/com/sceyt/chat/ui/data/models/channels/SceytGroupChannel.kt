@@ -17,7 +17,7 @@ class SceytGroupChannel(
         channelType: ChannelTypeEnum,
         var subject: String? = "",
         var avatarUrl: String? = "",
-        var members: List<Member?>?,
+        var members: List<Member>,
         var memberCount: Long = 0L,
 ) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, channelType)
 

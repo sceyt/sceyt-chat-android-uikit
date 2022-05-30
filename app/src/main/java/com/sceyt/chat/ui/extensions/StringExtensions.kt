@@ -1,10 +1,7 @@
 package com.sceyt.chat.ui.extensions
 
-import android.content.Context
 import android.text.Editable
 import androidx.core.text.isDigitsOnly
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.ui.R
 
 fun isAllStringsNotNullOrBlank(vararg strings: Editable?): Boolean {
     for (string in strings) {
@@ -33,23 +30,4 @@ fun String.onlyLetters() = filter {
 
 fun String?.isEqualsVideoOrImage(): Boolean {
     return this == "video" || this == "image"
-}
-
-fun Message.getShowBody(context: Context): String {
-    return when {
-        attachments.isNullOrEmpty() -> body.trim()
-        else -> context.getString(R.string.attachment)
-    }
-}
-
-fun Message.isTextMessage() = attachments.isNullOrEmpty()
-
-fun Message.getAttachmentUrl(): String? {
-    if (!attachments.isNullOrEmpty()) {
-        attachments[0].apply {
-            if (type.isEqualsVideoOrImage())
-                return url
-        }
-    }
-    return null
 }

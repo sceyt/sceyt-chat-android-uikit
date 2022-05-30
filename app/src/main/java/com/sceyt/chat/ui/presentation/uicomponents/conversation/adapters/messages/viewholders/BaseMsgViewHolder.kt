@@ -15,19 +15,20 @@ import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
-import com.sceyt.chat.ui.extensions.getAttachmentUrl
-import com.sceyt.chat.ui.extensions.getShowBody
-import com.sceyt.chat.ui.presentation.customviews.Avatar
+import com.sceyt.chat.ui.presentation.customviews.AvatarView
 import com.sceyt.chat.ui.presentation.customviews.DateStatusView
 import com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getAttachmentUrl
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getShowBody
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
+import java.io.File
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(view: View,
@@ -78,11 +79,11 @@ abstract class BaseMsgViewHolder(view: View,
             imageAttachment.isVisible = if (parent?.attachments.isNullOrEmpty()) {
                 false
             } else {
-                val url = parent?.getAttachmentUrl()
+                val url = parent?.getAttachmentUrl(itemView.context)
                 if (!url.isNullOrBlank()) {
                     Glide.with(itemView.context)
                         .load(url)
-                        .override(30)
+                        .override(imageAttachment.width, imageAttachment.height)
                         .into(imageAttachment)
                 } else imageAttachment.setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.ic_file_with_bg))
                 true
@@ -91,16 +92,16 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    protected fun setMessageUserAvatarAndName(avatar: Avatar, tvName: TextView, message: SceytMessage) {
+    protected fun setMessageUserAvatarAndName(avatarView: AvatarView, tvName: TextView, message: SceytMessage) {
         if (!message.isGroup) return
 
         if (message.canShowAvatarAndName) {
-            avatar.setNameAndImageUrl(message.from?.fullName, message.from?.avatarURL)
+            avatarView.setNameAndImageUrl(message.from?.fullName, message.from?.avatarURL)
             tvName.text = message.from?.fullName?.trim()
             tvName.isVisible = true
-            avatar.isVisible = true
+            avatarView.isVisible = true
         } else {
-            avatar.isInvisible = true
+            avatarView.isInvisible = true
             tvName.isVisible = false
         }
     }

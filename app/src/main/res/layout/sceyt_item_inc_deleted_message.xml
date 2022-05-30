@@ -33,7 +33,7 @@
             bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
 
-        <com.sceyt.chat.ui.presentation.customviews.Avatar
+        <com.sceyt.chat.ui.presentation.customviews.AvatarView
             android:id="@+id/avatar"
             android:layout_width="@dimen/_28sdp"
             android:layout_height="@dimen/_28sdp"

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="MessageInputView">
+        <attr name="sceytMessageInputAttachmentIcon" format="reference" />
+        <attr name="sceytMessageInputSendIcon" format="reference" />
+        <attr name="sceytMessageInputHintText" format="reference|string" />
+        <attr name="sceytMessageInputTextColor" format="reference" />
+        <attr name="sceytMessageInputHintTextColor" format="reference" />
+    </declare-styleable>
+</resources>

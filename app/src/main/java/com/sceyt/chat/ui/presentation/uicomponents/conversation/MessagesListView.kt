@@ -30,7 +30,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     : FrameLayout(context, attrs, defStyleAttr) {
 
     private var messagesRV: MessagesRV
-    private var pageStateView: PageStateView?
+    private var pageStateView: PageStateView? = null
     private lateinit var defaultMessageClickListeners: MessageClickListeners.ClickListeners
     private var guestClickListeners: MessageClickListeners? = null
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
@@ -38,8 +38,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.colorBackground))
-        BindingUtil.themedBackgroundColor(this, R.color.colorBackground)
-
+        if (!isInEditMode)
+            BindingUtil.themedBackgroundColor(this, R.color.colorBackground)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
@@ -54,12 +54,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
-        addView(PageStateView(context).also {
-            pageStateView = it
-            it.setLoadingStateView(ChannelStyle.loadingState)
-            it.setEmptyStateView(ChannelStyle.emptyState)
-            it.setEmptySearchStateView(ChannelStyle.emptySearchState)
-        })
+        if (!isInEditMode)
+            addView(PageStateView(context).also {
+                pageStateView = it
+                it.setLoadingStateView(ChannelStyle.loadingState)
+                it.setEmptyStateView(ChannelStyle.emptyState)
+                it.setEmptySearchStateView(ChannelStyle.emptySearchState)
+            })
 
         initListeners()
     }

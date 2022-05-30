@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.messageinput.MessageInputView
+import com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -139,6 +139,12 @@ fun MessageListViewModel.bindMessageInputView(messageInputView: MessageInputView
         override fun sendMessage(message: Message) {
             messageInputView.cancelReplay {
                 this@bindMessageInputView.sendMessage(message)
+            }
+        }
+
+        override fun sendReplayMessage(message: Message, parent: Message?) {
+            messageInputView.cancelReplay {
+                this@bindMessageInputView.sendReplayMessage(message, parent)
             }
         }
 
