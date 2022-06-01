@@ -30,10 +30,10 @@ class AttachmentFileViewHolder(private val binding: RecyclerviewAttachmentFileIt
             }
         }
 
-        itemView.setOnClickListener { callbacks.itemRemoved(item) }
+        itemView.setOnClickListener { callbacks.onRemoveItem(item) }
     }
 
-    interface Callbacks {
-        fun itemRemoved(item: AttachmentItem) {}
+    fun interface Callbacks {
+        fun onRemoveItem(item: AttachmentItem)
     }
 }

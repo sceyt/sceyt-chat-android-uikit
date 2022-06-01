@@ -6,14 +6,14 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 class ReactionViewHolder(private val binding: SceytItemReactionBinding,
-                         private val messageListeners: MessageClickListenersImpl) : RecyclerView.ViewHolder(binding.root) {
+                         private val messageListeners: MessageClickListenersImpl?) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(data: ReactionItem) {
         data as ReactionItem.Reaction
         binding.reactionView.setCountAndSmile(data.reactionScore.score, data.reactionScore.key)
 
         binding.root.setOnLongClickListener {
-            messageListeners.onReactionLongClick(it, data)
+            messageListeners?.onReactionLongClick(it, data)
             return@setOnLongClickListener false
         }
     }

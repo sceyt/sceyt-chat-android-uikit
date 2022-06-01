@@ -1,16 +1,8 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.view.View
-import android.widget.Toast
-import com.google.gson.Gson
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
-import com.sceyt.chat.ui.extensions.getFileUriWithProvider
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
@@ -59,41 +51,5 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
                     }
                 }
         }
-    }
-
-    protected fun openFile(item: FileListItem, context: Context) {
-        val fileName = item.file?.name
-        var uri: Uri? = null
-        if (fileName != null) {
-            val loadedFile = File(itemView.context.filesDir, fileName)
-            if (loadedFile.exists()) {
-                uri = itemView.context.getFileUriWithProvider(loadedFile)
-            } else {
-                getFileFromMetadata(item)?.let {
-                    uri = itemView.context.getFileUriWithProvider(it)
-                }
-            }
-        }
-
-        if (uri != null) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW)
-                    .setData(uri)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                Toast.makeText(context, context.getString(R.string.no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun getFileFromMetadata(item: FileListItem): File? {
-        val metadata = item.file?.metadata ?: return null
-        try {
-            val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
-            return File(data.localPath)
-        } catch (e: Exception) {
-        }
-        return null
     }
 }

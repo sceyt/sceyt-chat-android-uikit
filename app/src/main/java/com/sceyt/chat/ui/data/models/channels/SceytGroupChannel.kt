@@ -2,19 +2,21 @@ package com.sceyt.chat.ui.data.models.channels
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
+import kotlinx.parcelize.Parcelize
 import java.util.*
 
+@Parcelize
 class SceytGroupChannel(
-        id: Long = 0,
-        createdAt: Long = 0,
-        updatedAt: Long = 0,
-        unreadMessageCount: Long = 0,
-        lastMessage: Message? = null,
-        label: String? = null,
-        metadata: String? = null,
-        muted: Boolean = false,
-        muteExpireDate: Date? = null,
-        channelType: ChannelTypeEnum,
+        override var id: Long = 0,
+        override var createdAt: Long = 0,
+        override var updatedAt: Long = 0,
+        override var unreadMessageCount: Long = 0,
+        override var lastMessage: Message? = null,
+        override var label: String? = null,
+        override var metadata: String? = null,
+        override var muted: Boolean = false,
+        override var muteExpireDate: Date? = null,
+        override var channelType: ChannelTypeEnum,
         var subject: String? = "",
         var avatarUrl: String? = "",
         var members: List<Member>,

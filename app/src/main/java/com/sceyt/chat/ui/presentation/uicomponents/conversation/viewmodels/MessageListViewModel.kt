@@ -8,6 +8,8 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -21,14 +23,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class MessageListViewModel(channelId: Long, private val isGroup: Boolean) : BaseViewModel() {
+class MessageListViewModel(val channel: SceytChannel) : BaseViewModel() {
+    private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
     var isLoadingMessages = false
     var hasNext = false
 
     // todo di
-    private val repo = MessagesRepositoryImpl(channelId, false)
-
+    private val repo = MessagesRepositoryImpl(channel.toChannel(), false)
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow

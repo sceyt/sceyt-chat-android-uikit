@@ -3,10 +3,12 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 import android.annotation.SuppressLint
 import android.text.format.DateUtils
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.core.view.marginTop
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,10 +17,12 @@ import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
+import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.presentation.customviews.AvatarView
 import com.sceyt.chat.ui.presentation.customviews.DateStatusView
 import com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getAttachmentUrl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getShowBody
@@ -28,11 +32,11 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
-import java.io.File
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(view: View,
-                                 private val messageListeners: MessageClickListenersImpl) : BaseViewHolder<MessageListItem>(view) {
+                                 private val messageListeners: MessageClickListenersImpl? = null) :
+        BaseViewHolder<MessageListItem>(view) {
 
     private var reactionsAdapter: ReactionsAdapter? = null
 
@@ -44,7 +48,7 @@ abstract class BaseMsgViewHolder(view: View,
             tvReplayCount.isVisible = true
             toReplayLine.isVisible = true
 
-            tvReplayCount.setOnClickListener { messageListeners.onReplayCountClick(it, item) }
+            tvReplayCount.setOnClickListener { messageListeners?.onReplayCountClick(it, item) }
         } else {
             tvReplayCount.isVisible = false
             toReplayLine.isVisible = false
@@ -139,6 +143,22 @@ abstract class BaseMsgViewHolder(view: View,
             reactionsAdapter?.submitData(reactions)
         }
         rvReactions.isVisible = true
+    }
+
+    protected fun setMessageDateDependAttachments(messageDate: DateStatusView, attachments: List<FileListItem>?) {
+        messageDate.apply {
+            val lastAttachment = attachments?.lastOrNull()
+            val needHighlight = lastAttachment is FileListItem.Image || lastAttachment is FileListItem.Video
+            setHighlighted(needHighlight)
+            val marginEndBottom = if (needHighlight) Pair(20, 20) else {
+                //Set the value which is set in xml
+                Pair(dpToPx(5f), dpToPx(2f))
+            }
+            (layoutParams as ViewGroup.MarginLayoutParams).apply {
+                setMargins(0, marginTop, 0, marginEndBottom.second)
+                marginEnd = marginEndBottom.first
+            }
+        }
     }
 
     private fun initReactionsList(scores: Array<ReactionScore>, message: SceytMessage): ArrayList<ReactionItem> {

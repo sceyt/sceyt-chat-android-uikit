@@ -10,7 +10,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 class ReactionViewHolderFactory(context: Context,
-                                private val messageListeners: MessageClickListenersImpl) {
+                                private val messageListeners: MessageClickListenersImpl?) {
 
     private val layoutInflater = LayoutInflater.from(context)
 

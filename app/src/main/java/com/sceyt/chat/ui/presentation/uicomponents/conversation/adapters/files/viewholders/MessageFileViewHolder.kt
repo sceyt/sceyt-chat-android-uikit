@@ -8,7 +8,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.Messag
 
 class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
-        private val messageListeners: MessageClickListenersImpl
+        private val messageListeners: MessageClickListenersImpl?
 ) : BaseFileViewHolder(binding.root) {
 
     override fun bindViews(item: FileListItem) {
@@ -32,12 +32,11 @@ class MessageFileViewHolder(
             downloadIfNeeded(item)
 
             root.setOnClickListener {
-                messageListeners.onAttachmentClick(it, item)
-                openFile(item, itemView.context)
+                messageListeners?.onAttachmentClick(it, item)
             }
 
             root.setOnLongClickListener {
-                messageListeners.onAttachmentLongClick(it, item)
+                messageListeners?.onAttachmentLongClick(it, item)
                 return@setOnLongClickListener true
             }
         }

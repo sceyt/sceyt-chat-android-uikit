@@ -68,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="15dp"
-                android:layout_marginBottom="6dp"
+                android:layout_marginBottom="2dp"
                 android:includeFontPadding="false"
                 app:dateTextColor="#7C7E8E"
                 app:dateTextSize="@dimen/tinyTextSize"

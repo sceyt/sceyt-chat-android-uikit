@@ -4,13 +4,11 @@ import android.content.res.ColorStateList
 import com.sceyt.chat.ui.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 
 class OutDeletedMsgViewHolder(
-        private val binding: SceytItemOutDeletedMessageBinding,
-        messageListeners: MessageClickListenersImpl,
-) : BaseMsgViewHolder(binding.root, messageListeners) {
+        private val binding: SceytItemOutDeletedMessageBinding
+) : BaseMsgViewHolder(binding.root) {
 
     init {
         binding.setMessageItemStyle()

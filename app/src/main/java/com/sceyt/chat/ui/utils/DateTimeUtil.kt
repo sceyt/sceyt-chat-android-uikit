@@ -156,4 +156,20 @@ object DateTimeUtil {
         val fmt = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
         return (fmt.format(epochOne) == fmt.format(epochTwo))
     }
+
+    fun setLastActiveDateByTime(durationMs: Long): String {
+        val now = Calendar.getInstance()
+        val lastActiveAt = Calendar.getInstance()
+        lastActiveAt.timeInMillis -= (now.timeInMillis - durationMs * 1000)
+
+        val sdf = SimpleDateFormat("dd, MMM/yyyy HH:mm", Locale.ENGLISH)
+        sdf.timeZone = TimeZone.getTimeZone("UTC")
+
+        return try {
+            return sdf.format(lastActiveAt.time)
+        } catch (e: ParseException) {
+            e.printStackTrace()
+            ""
+        }
+    }
 }

@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.Messag
 
 class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
-        private val messageListeners: MessageClickListenersImpl) : BaseFileViewHolder(binding.root) {
+        private val messageListeners: MessageClickListenersImpl?) : BaseFileViewHolder(binding.root) {
 
     override fun bindViews(item: FileListItem) {
         with(binding) {
@@ -27,12 +27,11 @@ class MessageImageViewHolder(
             }
 
             root.setOnClickListener {
-                messageListeners.onAttachmentClick(it, item)
-                openFile(item, itemView.context)
+                messageListeners?.onAttachmentClick(it, item)
             }
 
             root.setOnLongClickListener {
-                messageListeners.onAttachmentLongClick(it, item)
+                messageListeners?.onAttachmentLongClick(it, item)
                 return@setOnLongClickListener true
             }
         }

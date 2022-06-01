@@ -47,7 +47,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
     }
 }
 
-fun SceytChannel.toChannel(): Channel? {
+fun SceytChannel.toChannel(): Channel {
     return when (channelType) {
         Direct -> {
             this as SceytDirectChannel
@@ -63,7 +63,6 @@ fun SceytChannel.toChannel(): Channel? {
             PublicChannel(id, "", subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.toTypedArray(), lastMessage, unreadMessageCount, memberCount, muted, 0)
         }
-        else -> null
     }
 }
 
