@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-fun ChannelsViewModel.bindChannelsView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
+fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
     lifecycleOwner.lifecycleScope.launch {
         channelsFlow.collect {
@@ -40,7 +40,7 @@ fun ChannelsViewModel.bindChannelsView(channelsListView: ChannelsListView, lifec
     }
 }
 
-fun ChannelsViewModel.bindSearchView(searchView: SearchInputView) {
+fun ChannelsViewModel.bindView(searchView: SearchInputView) {
     searchView.setDebouncedTextChangeListener {
         loadChannels(0, query = it)
     }
@@ -52,9 +52,9 @@ fun ChannelsViewModel.bindSearchView(searchView: SearchInputView) {
 
 
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bindChannelsView(channelsListView, lifecycleOwner)
+    viewModel.bindView(channelsListView, lifecycleOwner)
 }
 
 fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchInputView) {
-    viewModel.bindSearchView(searchView)
+    viewModel.bindView(searchView)
 }

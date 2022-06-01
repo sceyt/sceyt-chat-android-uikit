@@ -11,7 +11,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.Messag
 
 class MessageVideoViewHolder(
         private val binding: SceytMessageVideoItemBinding,
-        private val messageListeners: MessageClickListenersImpl,
+        private val messageListeners: MessageClickListenersImpl?,
 ) : BaseFileViewHolder(binding.root) {
 
     override fun bindViews(item: FileListItem) {
@@ -37,12 +37,11 @@ class MessageVideoViewHolder(
             }
 
             root.setOnClickListener {
-                messageListeners.onAttachmentClick(it, item)
-                openFile(item, itemView.context)
+                messageListeners?.onAttachmentClick(it, item)
             }
 
             root.setOnLongClickListener {
-                messageListeners.onAttachmentLongClick(it, item)
+                messageListeners?.onAttachmentLongClick(it, item)
                 return@setOnLongClickListener true
             }
         }

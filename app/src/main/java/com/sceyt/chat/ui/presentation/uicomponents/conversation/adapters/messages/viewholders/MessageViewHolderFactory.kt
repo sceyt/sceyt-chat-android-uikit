@@ -46,13 +46,11 @@ open class MessageViewHolderFactory(context: Context) {
             }
             MessageTypeEnum.IncDeleted.ordinal -> {
                 IncDeletedMsgViewHolder(
-                    SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
-                    listeners)
+                    SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false))
             }
             MessageTypeEnum.OutDeleted.ordinal -> {
                 OutDeletedMsgViewHolder(
-                    SceytItemOutDeletedMessageBinding.inflate(layoutInflater, parent, false),
-                    listeners)
+                    SceytItemOutDeletedMessageBinding.inflate(layoutInflater, parent, false))
             }
             MessageTypeEnum.Loading.ordinal -> LoadingViewHolder(
                 SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)

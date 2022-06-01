@@ -30,7 +30,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     val name: String
                     val url: String
 
-                    if (channel.channelType?.isGroup() == true) {
+                    if (channel.channelType.isGroup()) {
                         channel as SceytGroupChannel
                         name = channel.subject ?: ""
                         url = channel.avatarUrl ?: ""

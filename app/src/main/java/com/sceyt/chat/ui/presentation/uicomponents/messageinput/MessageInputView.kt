@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -22,20 +23,22 @@ import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.isTextMessage
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentItem
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
-import com.sceyt.chat.ui.presentation.uicomponents.messageinput.attachments.AttachmentFileViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
+import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessageInputViewStyle
 import com.sceyt.chat.ui.utils.UIUtils
 import com.sceyt.chat.ui.utils.ViewUtil
 import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners {
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var takePhotoPath: String? = null
+    private val clickListeners = MessageInputClickListenersImpl(this)
 
-    var messageBoxActionCallback: MessageBoxActionCallback? = null
+    var messageInputActionCallback: MessageInputActionCallback? = null
     var message: Message? = null
         set(value) {
             field = value
@@ -69,65 +72,72 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.messageInput.doOnTextChanged { _, _, _, _ -> determineState() }
 
         binding.icSendMessage.setOnClickListener {
-            val messageBody = binding.messageInput.text.toString().trim()
-            if (messageBody != "" || allAttachments.isNotEmpty()) {
-                if (message != null) {
-                    message?.body = messageBody
-                    message?.let {
-                        messageBoxActionCallback?.editMessage(it)
-                    }
-                } else {
-                    val messageToSend: Message? = Message.MessageBuilder()
-                        .setAttachments(allAttachments.toTypedArray())
-                        .setType(getMessageType(allAttachments))
-                        .setBody(binding.messageInput.text.toString())
-                        .apply {
-                            replayMessage?.let {
-                                setParentMessageId(it.id)
-                                setReplyInThread(replayThreadMessageId != null)
-                            } ?: replayThreadMessageId?.let {
-                                setParentMessageId(it)
-                                setReplyInThread(true)
-                            }
-                        }.build()
-
-                    if (replayMessage != null)
-                        messageToSend?.let { msg -> messageBoxActionCallback?.sendReplayMessage(msg, replayMessage) }
-                    else
-                        messageToSend?.let { msg -> messageBoxActionCallback?.sendMessage(msg) }
-                }
-                reset()
-            }
+            clickListeners.onSendMsgClick(it)
         }
 
         binding.icAddAttachments.setOnClickListener {
-            UIUtils.openFileChooser(context) { chooseType ->
-                when (chooseType) {
-                    UIUtils.ProfilePhotoChooseType.CAMERA -> {
-                        if (context.checkAndAskPermissions(requestCameraPermissionLauncher,
-                                    android.Manifest.permission.CAMERA)) {
-                            takePhotoLauncher?.launch(getPhotoFileUri())
-                        }
-                    }
-                    UIUtils.ProfilePhotoChooseType.GALLERY -> {
-                        if (context.checkAndAskPermissions(requestGalleryPermissionLauncher,
-                                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                            openGallery()
-                        }
-                    }
-                    else -> {
-                        if (context.checkAndAskPermissions(requestFilesPermissionLauncher,
-                                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                            pickFile()
-                        }
-                    }
-                }
-            }
-            messageBoxActionCallback?.addAttachments()
+            clickListeners.onSendAttachmentClick(it)
         }
 
         binding.layoutReplayMessage.icCancelReplay.setOnClickListener {
-            cancelReplay()
+            clickListeners.onCancelReplayMessageViewClick(it)
+        }
+    }
+
+    private fun sendMessage() {
+        val messageBody = binding.messageInput.text.toString().trim()
+        if (messageBody != "" || allAttachments.isNotEmpty()) {
+            if (message != null) {
+                message?.body = messageBody
+                message?.let {
+                    messageInputActionCallback?.editMessage(it)
+                }
+            } else {
+                val messageToSend: Message? = Message.MessageBuilder()
+                    .setAttachments(allAttachments.toTypedArray())
+                    .setType(getMessageType(allAttachments))
+                    .setBody(binding.messageInput.text.toString())
+                    .apply {
+                        replayMessage?.let {
+                            setParentMessageId(it.id)
+                            setReplyInThread(replayThreadMessageId != null)
+                        } ?: replayThreadMessageId?.let {
+                            setParentMessageId(it)
+                            setReplyInThread(true)
+                        }
+                    }.build()
+
+                if (replayMessage != null)
+                    messageToSend?.let { msg -> messageInputActionCallback?.sendReplayMessage(msg, replayMessage) }
+                else
+                    messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+            }
+            reset()
+        }
+    }
+
+    private fun handleAttachmentClick() {
+        UIUtils.openFileChooser(context) { chooseType ->
+            when (chooseType) {
+                UIUtils.ProfilePhotoChooseType.CAMERA -> {
+                    if (context.checkAndAskPermissions(requestCameraPermissionLauncher,
+                                android.Manifest.permission.CAMERA)) {
+                        takePhotoLauncher?.launch(getPhotoFileUri())
+                    }
+                }
+                UIUtils.ProfilePhotoChooseType.GALLERY -> {
+                    if (context.checkAndAskPermissions(requestGalleryPermissionLauncher,
+                                android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        openGallery()
+                    }
+                }
+                else -> {
+                    if (context.checkAndAskPermissions(requestFilesPermissionLauncher,
+                                android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        pickFile()
+                    }
+                }
+            }
         }
     }
 
@@ -199,13 +209,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun setupAttachmentsList() {
-        attachmentsAdapter = AttachmentsAdapter(allAttachments.map { AttachmentItem(it) } as ArrayList<AttachmentItem>,
-            object : AttachmentFileViewHolder.Callbacks {
-                override fun itemRemoved(item: AttachmentItem) {
-                    attachmentsAdapter.removeItem(item)
-                    determineState()
-                }
-            })
+        attachmentsAdapter = AttachmentsAdapter(allAttachments.map { AttachmentItem(it) } as ArrayList<AttachmentItem>) {
+           clickListeners.onRemoveAttachmentClick(it)
+        }
 
         binding.rvAttachments.adapter = attachmentsAdapter
     }
@@ -306,10 +312,26 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             context.shortToast("Please enable storage permission in settings")
     }
 
-    interface MessageBoxActionCallback {
+    interface MessageInputActionCallback {
         fun sendMessage(message: Message)
         fun sendReplayMessage(message: Message, parent: Message?)
         fun editMessage(message: Message)
-        fun addAttachments()
+    }
+
+    override fun onSendMsgClick(view: View) {
+        sendMessage()
+    }
+
+    override fun onSendAttachmentClick(view: View) {
+        handleAttachmentClick()
+    }
+
+    override fun onCancelReplayMessageViewClick(view: View) {
+        cancelReplay()
+    }
+
+    override fun onRemoveAttachmentClick(item: AttachmentItem) {
+        attachmentsAdapter.removeItem(item)
+        determineState()
     }
 }

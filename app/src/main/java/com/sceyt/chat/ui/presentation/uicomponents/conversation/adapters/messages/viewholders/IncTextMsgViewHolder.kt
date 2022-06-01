@@ -15,7 +15,7 @@ import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.INC_EDITED_SPACE
 class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl
+        private val messageListeners: MessageClickListenersImpl?
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     init {
@@ -34,19 +34,19 @@ class IncTextMsgViewHolder(
 
                     setMessageDay(message.createdAt, message.showDate, messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
+                    setMessageUserAvatarAndName(avatar, tvUserName, message)
                     setReplayCount(tvReplayCount, toReplayLine, item)
                     setOrUpdateReactions(item, rvReactions, viewPool)
-                    setMessageUserAvatarAndName(avatar, tvUserName, message)
                     setReplayedMessageContainer(message, binding.viewReplay)
 
                     layoutDetails.setOnLongClickListener {
-                        messageListeners.onMessageLongClick(it, item)
+                        messageListeners?.onMessageLongClick(it, item)
                         return@setOnLongClickListener true
                     }
 
                     if (item.message.canShowAvatarAndName)
                         avatar.setOnClickListener {
-                            messageListeners.onAvatarClick(it, item)
+                            messageListeners?.onAvatarClick(it, item)
                         }
                 }
             }

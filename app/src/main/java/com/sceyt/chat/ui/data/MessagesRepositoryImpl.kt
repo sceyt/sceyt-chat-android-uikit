@@ -1,8 +1,10 @@
 package com.sceyt.chat.ui.data
 
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.message.*
+import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessagesListQuery
+import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
@@ -15,31 +17,31 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class MessagesRepositoryImpl(private val channelId: Long,
+class MessagesRepositoryImpl(private val channel: Channel,
                              isThread: Boolean) {
     //todo need to add DI
     private val channelEventsService = ChannelEventsObserverService()
 
     val onMessageFlow = channelEventsService.onMessageFlow
-        .filter { it?.first?.id == channelId }
+        .filter { it?.first?.id == channel.id }
         .mapNotNull { it?.second?.toSceytUiMessage() }
 
     val onMessageStatusFlow = channelEventsService.onMessageStatusFlow
-        .filter { it?.channel?.id == channelId }
+        .filter { it?.channel?.id == channel.id }
 
     val onMessageReactionUpdatedFlow = channelEventsService.onMessageReactionUpdatedChannel.consumeAsFlow()
         .filterNotNull()
-        .filter { it.channelId == channelId }
+        .filter { it.channelId == channel.id }
 
     val onMessageEditedOrDeleteFlow = channelEventsService.onMessageEditedOrDeletedChannel.consumeAsFlow()
         .filterNotNull()
-        .filter { it.channelId == channelId }
+        .filter { it.channelId == channel.id }
 
     val onChannelClearedHistoryFlow = channelEventsService.onChannelClearedHistoryChannel.consumeAsFlow()
         .filterNotNull()
-        .filter { it.id == channelId }
+        .filter { it.id == channel.id }
 
-    private val query = MessagesListQuery.Builder(channelId).apply {
+    private val query = MessagesListQuery.Builder(channel.id).apply {
         setIsThread(isThread)
     }.build()
 
@@ -70,13 +72,15 @@ class MessagesRepositoryImpl(private val channelId: Long,
 
     suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
         return suspendCancellableCoroutine { continuation ->
-            val tmpMessage = ClientWrapper.sendMessage(channelId, message) { message, status ->
-                if (status == null || status.isOk) {
+            val tmpMessage = channel.sendMessage(message, object : MessageCallback {
+                override fun onResult(message: Message?) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
-                } else {
-                    continuation.resume(SceytResponse.Error(status.error?.message, data = message?.toSceytUiMessage()))
                 }
-            }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message, data = message.toSceytUiMessage()))
+                }
+            })
             tmpMessageCb.invoke(tmpMessage)
         }
     }
@@ -84,8 +88,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
 
     suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            val request = DeleteMessageRequest(message)
-            request.execute(object : MessageCallback {
+            channel.deleteMessage(message, object : MessageCallback {
                 override fun onResult(p0: Message?) {
                     continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
                 }
@@ -99,8 +102,7 @@ class MessagesRepositoryImpl(private val channelId: Long,
 
     suspend fun editMessage(message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            val request = EditMessageRequest(message)
-            request.execute(object : MessageCallback {
+            channel.editMessage(message, object : MessageCallback {
                 override fun onResult(p0: Message?) {
                     continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
                 }
@@ -114,25 +116,29 @@ class MessagesRepositoryImpl(private val channelId: Long,
 
     suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ClientWrapper.addReaction(channelId, messageId, score.key, score.score.toInt(), "", false) { message, status ->
-                if (status == null || status.isOk) {
-                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
-                } else {
-                    continuation.resume(SceytResponse.Error(status.error?.message))
+            channel.addReactionWithMessageId(messageId, score.key, score.score.toShort(), "", false, object : MessageCallback {
+                override fun onResult(message: Message?) {
+                    continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
-            }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message))
+                }
+            })
         }
     }
 
     suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ClientWrapper.deleteReaction(channelId, messageId, score.key) { message, status ->
-                if (status == null || status.isOk) {
-                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
-                } else {
-                    continuation.resume(SceytResponse.Error(status.error?.message))
+            channel.deleteReactionWithMessageId(messageId, score.key, object : MessageCallback {
+                override fun onResult(message: Message?) {
+                    continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
-            }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message))
+                }
+            })
         }
     }
 }

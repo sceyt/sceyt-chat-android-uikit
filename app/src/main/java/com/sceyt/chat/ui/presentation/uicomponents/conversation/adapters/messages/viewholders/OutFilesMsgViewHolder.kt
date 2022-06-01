@@ -1,17 +1,12 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.view.ViewGroup
-import androidx.core.view.marginBottom
-import androidx.core.view.marginEnd
-import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytItemOutFilesMessageBinding
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
-import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -23,7 +18,7 @@ class OutFilesMsgViewHolder(
         private val binding: SceytItemOutFilesMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl,
+        private val messageListeners: MessageClickListenersImpl?,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     init {
@@ -37,15 +32,16 @@ class OutFilesMsgViewHolder(
                     val message = item.message
                     this.message = message
 
-                    setReplayCount(tvReplayCount, toReplayLine, item)
-                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
                     setMessageDay(message.createdAt, message.showDate, messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
                     setReplayedMessageContainer(message, binding.viewReplay)
+                    setMessageDateDependAttachments(messageDate, message.files)
                     setFilesAdapter(message)
+                    setReplayCount(tvReplayCount, toReplayLine, item)
+                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                     layoutDetails.setOnLongClickListener {
-                        messageListeners.onMessageLongClick(it, item)
+                        messageListeners?.onMessageLongClick(it, item)
                         return@setOnLongClickListener true
                     }
                 }
@@ -55,16 +51,6 @@ class OutFilesMsgViewHolder(
     }
 
     private fun setFilesAdapter(item: SceytMessage) {
-        binding.messageDate.apply {
-            val needHighlight = item.attachments?.lastOrNull()?.type.isEqualsVideoOrImage()
-            setHighlighted(needHighlight)
-            val marginEndBottom = if (needHighlight) Pair(20, 20) else Pair(marginEnd, marginBottom)
-            (layoutParams as ViewGroup.MarginLayoutParams).apply {
-                setMargins(0, marginTop, 0, marginEndBottom.second)
-                marginEnd = marginEndBottom.first
-            }
-        }
-
         val attachments = ArrayList(item.files ?: return)
         with(binding.rvFiles) {
             setHasFixedSize(true)

@@ -9,6 +9,7 @@ import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -124,8 +125,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 }
 
-fun MessageListViewModel.bindMessageInputView(messageInputView: MessageInputView,
-                                              lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bindView(messageInputView: MessageInputView,
+                                  lifecycleOwner: LifecycleOwner) {
 
     onEditMessageCommandLiveData.observe(lifecycleOwner) {
         messageInputView.message = it.toMessage()
@@ -135,28 +136,31 @@ fun MessageListViewModel.bindMessageInputView(messageInputView: MessageInputView
         messageInputView.replayMessage(it.toMessage())
     }
 
-    messageInputView.messageBoxActionCallback = object : MessageInputView.MessageBoxActionCallback {
+    messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
             messageInputView.cancelReplay {
-                this@bindMessageInputView.sendMessage(message)
+                this@bindView.sendMessage(message)
             }
         }
 
         override fun sendReplayMessage(message: Message, parent: Message?) {
             messageInputView.cancelReplay {
-                this@bindMessageInputView.sendReplayMessage(message, parent)
+                this@bindView.sendReplayMessage(message, parent)
             }
         }
 
         override fun editMessage(message: Message) {
-            this@bindMessageInputView.editMessage(message)
+            this@bindView.editMessage(message)
             messageInputView.cancelReplay()
         }
-
-        override fun addAttachments() {
-
-        }
     }
+}
+
+fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
+                                  lifecycleOwner: LifecycleOwner) {
+
+    headerView.setChannel(channel)
+
 }
 
 

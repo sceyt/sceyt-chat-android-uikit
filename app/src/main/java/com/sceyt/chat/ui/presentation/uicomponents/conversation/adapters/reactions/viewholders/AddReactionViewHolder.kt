@@ -6,11 +6,11 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 class AddReactionViewHolder(private val binding: SceytItemAddReactionBinding,
-                            private val messageListeners: MessageClickListenersImpl) : RecyclerView.ViewHolder(binding.root) {
+                            private val messageListeners: MessageClickListenersImpl?) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(item: ReactionItem) {
         binding.root.setOnClickListener {
-            messageListeners.onAddReactionClick(it, (item as ReactionItem.AddItem).messageItem)
+            messageListeners?.onAddReactionClick(it, (item as ReactionItem.AddItem).messageItem)
         }
     }
 }

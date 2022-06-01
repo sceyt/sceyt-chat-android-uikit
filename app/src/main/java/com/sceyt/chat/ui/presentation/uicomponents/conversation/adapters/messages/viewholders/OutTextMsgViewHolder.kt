@@ -16,7 +16,7 @@ import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
 class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl,
+        private val messageListeners: MessageClickListenersImpl?,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
     init {
@@ -33,14 +33,14 @@ class OutTextMsgViewHolder(
                     val space = if (message.state == MessageState.Edited) OUT_EDITED_SPACE else OUT_DEFAULT_SPACE
                     messageBody.text = fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
 
-                    setReplayCount(tvReplayCount, toReplayLine, item)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
                     setMessageDay(message.createdAt, message.showDate, binding.messageDay)
                     setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
+                    setReplayCount(tvReplayCount, toReplayLine, item)
+                    setOrUpdateReactions(item, rvReactions, viewPool)
                     setReplayedMessageContainer(message, binding.viewReplay)
 
                     layoutDetails.setOnLongClickListener {
-                        messageListeners.onMessageLongClick(it, item)
+                        messageListeners?.onMessageLongClick(it, item)
                         return@setOnLongClickListener true
                     }
                 }
