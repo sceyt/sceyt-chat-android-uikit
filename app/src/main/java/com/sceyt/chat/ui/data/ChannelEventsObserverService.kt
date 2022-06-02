@@ -36,7 +36,7 @@ class ChannelEventsObserverService {
             override fun onMessage(channel: Channel, message: Message) {
                 _onMessageFlow.tryEmit(Pair(channel, message))
 
-                ClientWrapper.markMessagesAsDisplayed(channel.id, longArrayOf(message.id)) { _, _ ->
+                ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
                 }
             }
 

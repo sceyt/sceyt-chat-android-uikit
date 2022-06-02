@@ -68,6 +68,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(BaseViewModel.PageState(isEmpty = false))
+
+        markMessageAsDisplayed(it.id)
     }
 
     onMessageStatusLiveData.observe(lifecycleOwner) {

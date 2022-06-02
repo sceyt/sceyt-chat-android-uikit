@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.ReactionScore
-import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
+import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getFirstVisibleItemPosition
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -41,7 +41,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             removeDuration = 100
             moveDuration = 100
         }
-        addItemDecoration(ChatItemOffsetDecoration(context, R.dimen.margin_top))
+        addItemDecoration(ChatItemOffsetDecoration(dpToPx(8f)))
         scheduleLayoutAnimation()
         layoutManager = SpeedyLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
             stackFromEnd = true

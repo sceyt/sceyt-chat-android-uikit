@@ -7,7 +7,7 @@
     <string name="connect">connect</string>
     <string name="connection_failed">Connection failed</string>
     <string name="channels">Channels</string>
-    <string name="search">search</string>
+    <string name="search">Search for channels</string>
     <string name="your_last_message">You: %1$s</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>

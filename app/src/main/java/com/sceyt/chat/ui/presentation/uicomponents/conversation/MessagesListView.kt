@@ -45,9 +45,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messageEventListener: ((MessageEvent) -> Unit)? = null
 
     init {
-        setBackgroundColor(context.getCompatColor(R.color.colorBackground))
+        setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
         if (!isInEditMode)
-            BindingUtil.themedBackgroundColor(this, R.color.colorBackground)
+            BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
@@ -112,15 +112,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
         val popup = PopupMenu(view.context, view)
         popup.menu.apply {
-            add(0, R.id.add, 0, view.context.getString(R.string.add))
-            add(0, R.id.remove, 0, view.context.getString(R.string.remove))
-            add(0, R.id.delete, 0, view.context.getString(R.string.delete))
+            add(0, R.id.sceyt_add, 0, view.context.getString(R.string.add))
+            add(0, R.id.sceyt_remove, 0, view.context.getString(R.string.remove))
+            add(0, R.id.sceyt_delete, 0, view.context.getString(R.string.delete))
         }
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.add -> reactionPopupClickListeners.onAddReaction(reaction.messageItem.message, reaction.reactionScore.key)
-                R.id.remove -> reactionPopupClickListeners.onRemoveReaction(reaction)
-                R.id.delete -> reactionPopupClickListeners.onDeleteReaction(reaction)
+                R.id.sceyt_add -> reactionPopupClickListeners.onAddReaction(reaction.messageItem.message, reaction.reactionScore.key)
+                R.id.sceyt_remove -> reactionPopupClickListeners.onRemoveReaction(reaction)
+                R.id.sceyt_delete -> reactionPopupClickListeners.onDeleteReaction(reaction)
             }
             false
         }
@@ -130,24 +130,24 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
         val popup = PopupMenu(view.context, view)
         popup.menu.apply {
-            add(0, R.id.copyMessage, 0, view.context.getString(R.string.copy))
+            add(0, R.id.sceyt_copy_message, 0, view.context.getString(R.string.copy))
 
             if (!message.incoming) {
-                add(0, R.id.delete, 0, view.context.getString(R.string.delete))
-                add(0, R.id.editMessage, 0, view.context.getString(R.string.edit))
+                add(0, R.id.sceyt_delete, 0, view.context.getString(R.string.delete))
+                add(0, R.id.sceyt_edit_message, 0, view.context.getString(R.string.edit))
             }
-            add(0, R.id.react, 0, view.context.getString(R.string.react))
-            add(0, R.id.replay, 0, view.context.getString(R.string.replay))
-            add(0, R.id.replayInThread, 0, view.context.getString(R.string.replay_in_thread))
+            add(0, R.id.sceyt_react, 0, view.context.getString(R.string.react))
+            add(0, R.id.sceyt_replay, 0, view.context.getString(R.string.replay))
+            add(0, R.id.sceyt_replay_in_thread, 0, view.context.getString(R.string.replay_in_thread))
         }
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.copyMessage -> messagePopupClickListeners.onCopyMessageClick(message)
-                R.id.delete -> messagePopupClickListeners.onDeleteMessageClick(message)
-                R.id.editMessage -> messagePopupClickListeners.onEditMessageClick(message)
-                R.id.react -> messagePopupClickListeners.onReactMessageClick(view, message)
-                R.id.replay -> messagePopupClickListeners.onReplayMessageClick(message)
-                R.id.replayInThread -> messagePopupClickListeners.onReplayInThreadMessageClick(message)
+                R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
+                R.id.sceyt_delete -> messagePopupClickListeners.onDeleteMessageClick(message)
+                R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
+                R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
+                R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
+                R.id.sceyt_replay_in_thread -> messagePopupClickListeners.onReplayInThreadMessageClick(message)
             }
             false
         }
@@ -218,21 +218,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun getLastMessage() = messagesRV.getLastMsg()
+    internal fun getLastMessage() = messagesRV.getLastMsg()
 
-    fun setMessagesList(data: List<MessageListItem>) {
+    internal fun setMessagesList(data: List<MessageListItem>) {
         messagesRV.setData(data)
     }
 
-    fun addNextPageMessages(data: List<MessageListItem>) {
+    internal fun addNextPageMessages(data: List<MessageListItem>) {
         messagesRV.addNextPageMessages(data)
     }
 
-    fun addNewMessages(vararg data: MessageListItem.MessageItem) {
+    internal fun addNewMessages(vararg data: MessageListItem.MessageItem) {
         messagesRV.addNewMessages(*data)
     }
 
-    fun updateMessage(message: SceytMessage, notifyItemChanged: Boolean) {
+    internal fun updateMessage(message: SceytMessage, notifyItemChanged: Boolean) {
         for ((index, item) in messagesRV.getData().withIndex()) {
             if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
@@ -248,17 +248,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun updateReaction(data: SceytMessage) {
+    internal fun updateReaction(data: SceytMessage) {
         messagesRV.updateReaction(data.id, data.reactionScores ?: arrayOf())
     }
 
-    fun updateViewState(state: BaseViewModel.PageState) {
+    internal fun updateViewState(state: BaseViewModel.PageState) {
         if (state.isEmpty && !messagesRV.isEmpty())
             return
         pageStateView?.updateState(state, messagesRV.isEmpty())
     }
 
-    fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
+    internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
         ids.forEach { id ->
             for (item: MessageListItem in messagesRV.getData()) {
                 if (item is MessageListItem.MessageItem) {
@@ -275,21 +275,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun messageSendFailed(id: Long) {
+    internal fun messageSendFailed(id: Long) {
         messagesRV.getData().find { it is MessageListItem.MessageItem && it.message.id == id }?.let {
             (it as MessageListItem.MessageItem).message.status = DeliveryStatus.Failed
         }
     }
 
-    fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+    internal fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadMoreMessagesListener(listener)
     }
 
-    fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+    internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToStartListener(listener)
     }
 
-    fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+    internal fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToPrefetchDistanceListener(listener)
     }
 
@@ -299,6 +299,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setMessageEventListener(listener: (MessageEvent) -> Unit) {
         messageEventListener = listener
+    }
+
+    internal fun clearData() {
+        messagesRV.clearData()
+        updateViewState(BaseViewModel.PageState(isEmpty = true))
     }
 
     // Click listeners
@@ -316,11 +321,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
         messagePopupClickListeners = listener
-    }
-
-    fun clearData() {
-        messagesRV.clearData()
-        updateViewState(BaseViewModel.PageState(isEmpty = true))
     }
 
     // Click events

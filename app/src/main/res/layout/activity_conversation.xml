@@ -6,14 +6,13 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white_final"
+        android:background="@color/sceyt_color_bg"
         tools:context=".presentation.uicomponents.conversation.ConversationActivity">
 
         <com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
             android:id="@+id/headerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:elevation="5dp"
             app:layout_constraintTop_toTopOf="parent"/>
 
         <com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
@@ -23,22 +22,15 @@
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingHorizontal="10dp"
-            android:paddingBottom="10dp"
+            android:paddingVertical="10dp"
             app:layout_constraintBottom_toTopOf="@+id/messageInputView"
             app:layout_constraintTop_toBottomOf="@+id/headerView" />
-
-        <View
-            android:id="@+id/viewShadow"
-            android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:background="@drawable/shadow_top"
-            app:layout_constraintBottom_toTopOf="@+id/messageInputView" />
 
         <com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
             android:id="@+id/messageInputView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/whiteThemed"
+            android:background="@color/sceyt_color_bg"
             app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

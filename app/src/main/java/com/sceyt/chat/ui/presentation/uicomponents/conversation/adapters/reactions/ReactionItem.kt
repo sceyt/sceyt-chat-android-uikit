@@ -18,14 +18,20 @@ sealed class ReactionItem {
         }
     }
 
-    data class AddItem(val messageItem: MessageListItem.MessageItem) : ReactionItem(){
+    data class AddItem(val messageItem: MessageListItem.MessageItem) : ReactionItem() {
         override fun equals(other: Any?): Boolean {
             return super.equals(other)
+        }
+
+        override fun hashCode(): Int {
+            var result = super.hashCode()
+            result = 31 * result + messageItem.hashCode()
+            return result
         }
     }
 
     override fun equals(other: Any?): Boolean {
-        val value= when {
+        val value = when {
             other == null -> false
             other !is ReactionItem -> false
             other is Reaction && this is Reaction -> {

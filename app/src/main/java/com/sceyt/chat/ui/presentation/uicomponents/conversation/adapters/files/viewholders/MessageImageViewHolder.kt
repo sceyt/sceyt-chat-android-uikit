@@ -23,7 +23,6 @@ class MessageImageViewHolder(
                     .transition(withCrossFade())
                     .override(root.width, root.height)
                     .into(fileImage)
-                Unit
             }
 
             root.setOnClickListener {

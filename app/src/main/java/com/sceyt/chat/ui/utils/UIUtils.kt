@@ -87,9 +87,9 @@ object UIUtils {
     fun createLoadingDrawable(context: Context): CircularProgressDrawable {
         val drawable = CircularProgressDrawable(context)
         drawable.setColorSchemeColors(
-            R.color.colorPrimary,
-            R.color.colorPrimaryDark,
-            R.color.colorAccent
+            R.color.sceyt_color_primary,
+            R.color.sceyt_color_primary_dark,
+            R.color.sceyt_color_accent
         )
         drawable.centerRadius = 30f
         drawable.strokeWidth = 5f

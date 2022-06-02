@@ -14,7 +14,7 @@
         android:id="@+id/parentLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_video_background">
+        android:background="@drawable/sceyt_rounded_video_background">
 
         <androidx.media3.ui.PlayerView
             android:id="@+id/videoView"
@@ -29,7 +29,7 @@
             app:surface_type="texture_view"
             app:use_controller="false" />
 
-        <com.sceyt.chat.ui.presentation.customviews.VideoControllerView
+        <com.sceyt.chat.ui.presentation.customviews.SceytVideoControllerView
             android:id="@+id/videoViewController"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -43,7 +43,8 @@
             android:id="@+id/viewBg"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@drawable/progress_circle_back_phone"
+            android:background="@drawable/sceyt_bg_corners_30"
+            android:backgroundTint="#66000000"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -55,13 +56,13 @@
             android:layout_height="wrap_content"
             android:layerType="hardware"
             android:progress="@{loadData.progressPercent, default = 1}"
-            app:indicatorColor="@color/colorAccent"
+            app:indicatorColor="@color/sceyt_color_accent"
             app:indicatorSize="40dp"
             app:layout_constraintBottom_toBottomOf="@+id/viewBg"
             app:layout_constraintEnd_toEndOf="@+id/viewBg"
             app:layout_constraintStart_toStartOf="@+id/viewBg"
             app:layout_constraintTop_toTopOf="@+id/viewBg"
-            app:trackColor="@color/white_final"
+            app:trackColor="@color/sceyt_color_white"
             app:trackCornerRadius="5dp"
             app:trackThickness="2.5dp" />
 

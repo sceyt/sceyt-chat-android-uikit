@@ -18,9 +18,9 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.chat.ui.extensions.dpToPx
-import com.sceyt.chat.ui.presentation.customviews.AvatarView
-import com.sceyt.chat.ui.presentation.customviews.DateStatusView
-import com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
+import com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
+import com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
+import com.sceyt.chat.ui.presentation.customviews.SceytToReplayLineView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -41,7 +41,7 @@ abstract class BaseMsgViewHolder(view: View,
     private var reactionsAdapter: ReactionsAdapter? = null
 
     @SuppressLint("SetTextI18n")
-    protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: ToReplayLineView, item: MessageListItem.MessageItem) {
+    protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: SceytToReplayLineView, item: MessageListItem.MessageItem) {
         val replayCount = item.message.replyCount
         if (replayCount > 0) {
             tvReplayCount.text = "$replayCount ${itemView.context.getString(R.string.replays)}"
@@ -66,7 +66,7 @@ abstract class BaseMsgViewHolder(view: View,
         } else false
     }
 
-    protected fun setMessageDateText(createdAt: Long, messageDate: DateStatusView, isEdited: Boolean) {
+    protected fun setMessageDateText(createdAt: Long, messageDate: SceytDateStatusView, isEdited: Boolean) {
         messageDate.setDateText(getDateTimeString(createdAt), isEdited)
     }
 
@@ -89,14 +89,14 @@ abstract class BaseMsgViewHolder(view: View,
                         .load(url)
                         .override(imageAttachment.width, imageAttachment.height)
                         .into(imageAttachment)
-                } else imageAttachment.setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.ic_file_with_bg))
+                } else imageAttachment.setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.sceyt_ic_file_with_bg))
                 true
             }
             root.isVisible = true
         }
     }
 
-    protected fun setMessageUserAvatarAndName(avatarView: AvatarView, tvName: TextView, message: SceytMessage) {
+    protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
         if (!message.isGroup) return
 
         if (message.canShowAvatarAndName) {
@@ -119,7 +119,7 @@ abstract class BaseMsgViewHolder(view: View,
         }
 
         val reactions = initReactionsList(reactionScores, item.message)
-        val gridLayoutManager = GridLayoutManager(itemView.context, min(4, reactions.size))
+        val gridLayoutManager = GridLayoutManager(itemView.context, getReactionSpanCount(reactions.size))
 
         if (reactionsAdapter == null) {
             reactionsAdapter = ReactionsAdapter(reactions, rvReactions,
@@ -145,12 +145,12 @@ abstract class BaseMsgViewHolder(view: View,
         rvReactions.isVisible = true
     }
 
-    protected fun setMessageDateDependAttachments(messageDate: DateStatusView, attachments: List<FileListItem>?) {
+    protected fun setMessageDateDependAttachments(messageDate: SceytDateStatusView, attachments: List<FileListItem>?) {
         messageDate.apply {
             val lastAttachment = attachments?.lastOrNull()
             val needHighlight = lastAttachment is FileListItem.Image || lastAttachment is FileListItem.Video
             setHighlighted(needHighlight)
-            val marginEndBottom = if (needHighlight) Pair(20, 20) else {
+            val marginEndBottom = if (needHighlight) Pair(25, 25) else {
                 //Set the value which is set in xml
                 Pair(dpToPx(5f), dpToPx(2f))
             }
@@ -170,13 +170,15 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
+    private fun getReactionSpanCount(reactionsSize: Int) = min(5, reactionsSize)
+
     fun updateReaction(scores: Array<ReactionScore>, message: SceytMessage) {
         val reactions = initReactionsList(scores, message)
         message.reactionScores = scores
         if (reactionsAdapter != null) {
             reactionsAdapter?.recyclerView?.isVisible = scores.isNotEmpty()
             if (scores.isNotEmpty())
-                (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = min(4, reactions.size)
+                (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = getReactionSpanCount(reactions.size)
             reactionsAdapter?.submitData(reactions)
         } else
             bindingAdapter?.notifyItemChanged(bindingAdapterPosition)

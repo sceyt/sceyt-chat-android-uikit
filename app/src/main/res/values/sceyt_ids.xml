@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="sceyt_delete_channel" type="id" />
+    <item name="sceyt_leave_channel" type="id" />
+    <item name="sceyt_edit_message" type="id" />
+    <item name="sceyt_delete_message" type="id" />
+    <item name="sceyt_copy_message" type="id" />
+    <item name="sceyt_react" type="id" />
+    <item name="sceyt_remove" type="id" />
+    <item name="sceyt_delete" type="id" />
+    <item name="sceyt_replay" type="id" />
+    <item name="sceyt_replay_in_thread" type="id" />
+    <item name="sceyt_add" type="id" />
+</resources>

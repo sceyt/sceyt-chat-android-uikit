@@ -17,26 +17,42 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.sceyt.chat.ui.presentation.customviews.AvatarView
+        <com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
             android:id="@+id/avatar"
             android:layout_width="@dimen/_42sdp"
             android:layout_height="@dimen/_42sdp"
             android:layout_marginVertical="8dp"
-            app:cardBackgroundColor="@color/colorGreen"
+            app:cardBackgroundColor="@color/sceyt_color_green"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <View
-            android:id="@+id/onlineStatus"
+            android:id="@+id/onlineStatusBg"
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:layout_margin="1dp"
-            android:background="@drawable/bg_online"
-            android:elevation="1dp"
-            android:visibility="gone"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="@color/sceyt_color_bg"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@id/avatar"
             app:layout_constraintEnd_toEndOf="@id/avatar"
+            bind:channel="@{data}"
+            bind:themedBackgroundTintColor="@{R.color.sceyt_color_bg}"
+            tools:visibility="visible" />
+
+        <View
+            android:id="@+id/onlineStatus"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="1.5dp"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="@color/sceyt_color_green"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/onlineStatusBg"
+            app:layout_constraintEnd_toEndOf="@id/onlineStatusBg"
+            app:layout_constraintStart_toStartOf="@+id/onlineStatusBg"
+            app:layout_constraintTop_toTopOf="@+id/onlineStatusBg"
             bind:channel="@{data}"
             tools:visibility="visible" />
 
@@ -48,13 +64,13 @@
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:lines="1"
-            android:textColor="@color/colorFontDark"
+            android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/updateDate"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintTop_toTopOf="@id/avatar"
-            bind:themedTextColor="@{R.color.colorFontDark}"
+            bind:themedTextColor="@{R.color.sceyt_color_text_themed}"
             tools:text="Title" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -64,7 +80,7 @@
             android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:lines="1"
-            android:textColor="@color/colorFontGray"
+            android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/smallTextSize"
             app:layout_constraintEnd_toEndOf="@+id/channelTitle"
             app:layout_constraintStart_toStartOf="@id/channelTitle"
@@ -74,27 +90,28 @@
         <View
             android:layout_width="0dp"
             android:layout_height="0.5dp"
-            android:background="@color/colorDivider"
+            android:background="@color/sceyt_color_divider"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/channelTitle" />
+            app:layout_constraintStart_toStartOf="@id/channelTitle"
+            bind:themedBackgroundColor="@{R.color.sceyt_color_divider}" />
 
-        <com.sceyt.chat.ui.presentation.customviews.DateStatusView
+        <com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
             android:id="@+id/updateDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            app:dateTextColor="@color/colorFontGray"
-            app:dateTextSize="13sp"
-            app:firstStatus="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/avatar"
-            app:statusIconMargin="4dp"
-            app:statusIconSize="19dp"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextSize="13sp"
+            app:sceytDateStatusViewFirstStatus="true"
+            app:sceytDateStatusViewStatusIconMargin="4dp"
+            app:sceytDateStatusViewStatusIconSize="19dp"
             bind:incoming="@{data.lastMessage.incoming}"
             bind:status="@{data.lastMessage.deliveryStatus}"
-            tools:dateText="12:28"
-            tools:statusIcon="@drawable/ic_status_read" />
+            tools:sceytDateStatusViewDateText="12:28"
+            tools:sceytDateStatusViewStatusIcon="@drawable/ic_status_read" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/messageCount"
@@ -102,13 +119,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="5dp"
-            android:background="@drawable/bg_unread_count"
+            android:background="@drawable/sceyt_bg_corners_30"
             android:includeFontPadding="false"
             android:maxLength="3"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
             android:singleLine="true"
-            android:textColor="@color/colorTextWhite"
+            android:textColor="@color/sceyt_color_white"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"

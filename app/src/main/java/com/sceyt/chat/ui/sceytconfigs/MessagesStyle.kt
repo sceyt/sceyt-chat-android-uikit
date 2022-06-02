@@ -11,8 +11,8 @@ object MessagesStyle {
     const val OUT_EDITED_SPACE = "&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;"
 
     @ColorRes
-    var incBubbleColor: Int = R.color.colorGrayThemed
-    var outBubbleColor: Int = R.color.colorBgOutMessage
+    var incBubbleColor: Int = R.color.sceyt_color_bg_inc_message
+    var outBubbleColor: Int = R.color.sceyt_color_bg_out_message
 
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)

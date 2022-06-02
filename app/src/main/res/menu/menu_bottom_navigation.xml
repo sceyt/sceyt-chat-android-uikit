@@ -4,12 +4,12 @@
 
     <item android:id="@+id/channelsFragment"
         android:title="@string/channels"
-        android:icon="@drawable/ic_channels"
+        android:icon="@drawable/sceyt_ic_bottom_nav_channels"
         app:showAsAction="ifRoom" />
 
     <item android:id="@+id/profileFragment"
         android:title="@string/profile"
-        android:icon="@drawable/ic_profile"
+        android:icon="@drawable/sceyt_ic_bottom_nav_profile"
         app:showAsAction="ifRoom" />
 
 </menu>

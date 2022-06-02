@@ -12,7 +12,7 @@
         android:id="@+id/rootLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_search_view">
+        android:background="@drawable/sceyt_bg_search_view">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icSearch"
@@ -24,7 +24,7 @@
             app:layout_constraintHeight_percent=".4"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_search" />
+            app:srcCompat="@drawable/sceyt_ic_search" />
 
         <androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/input"
@@ -38,11 +38,12 @@
             android:maxLines="1"
             android:paddingHorizontal="10dp"
             android:paddingVertical="12dp"
-            android:textColor="@color/black"
+            android:textColor="@color/sceyt_color_black_themed"
+            android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/icClear"
             app:layout_constraintStart_toEndOf="@+id/icSearch"
             app:layout_constraintTop_toTopOf="parent"
-            bind:themedTextColor="@{R.color.black}" />
+            bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icClear"
@@ -57,7 +58,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_percent=".6"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_cancel" />
+            app:srcCompat="@drawable/sceyt_ic_cancel" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -23,31 +23,31 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginVertical="8dp"
-            android:background="@drawable/bg_message_day"
+            android:background="@drawable/sceyt_bg_message_day"
             android:includeFontPadding="false"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
-            android:textColor="@color/colorFontGray"
+            android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
             bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
 
-        <com.sceyt.chat.ui.presentation.customviews.AvatarView
+        <com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
             android:id="@+id/avatar"
             android:layout_width="@dimen/_28sdp"
             android:layout_height="@dimen/_28sdp"
             android:layout_below="@+id/messageDay"
             android:layout_marginEnd="8dp"
             android:visibility="gone"
-            app:avatarTextSize="15sp"
             app:layout_constraintEnd_toStartOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/layoutDetails"
+            app:sceytAvatarViewTextSize="15sp"
             bind:invisibleIfCheckGone="@{!message.canShowAvatarAndName}"
-            tools:avatarFullName="a"
+            tools:sceytAvatarViewFullName="a"
             tools:visibility="visible" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -56,7 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/messageDay"
             android:layout_toEndOf="@+id/avatar"
-            android:background="@drawable/bg_inc_message"
+            android:background="@drawable/sceyt_bg_inc_message"
             android:paddingTop="4dp">
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -66,7 +66,7 @@
                 android:layout_marginHorizontal="12dp"
                 android:layout_marginTop="4dp"
                 android:singleLine="true"
-                android:textColor="@color/colorAccent"
+                android:textColor="@color/sceyt_color_accent"
                 android:textSize="@dimen/extraSmallTextSize"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -81,11 +81,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/message_was_deleted"
-                android:textColor="@color/colorFontGray"
+                android:textColor="@color/sceyt_color_gray_400"
                 android:textSize="@dimen/mediumTextSize"
                 android:textStyle="italic"
                 app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
@@ -94,19 +94,19 @@
                 app:layout_constraintTop_toBottomOf="@+id/tvUserName"
                 app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
 
-            <com.sceyt.chat.ui.presentation.customviews.DateStatusView
+            <com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
                 android:id="@+id/messageDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="15dp"
                 android:layout_marginBottom="2dp"
-                app:dateTextColor="#7C7E8E"
-                app:dateTextSize="@dimen/tinyTextSize"
-                app:statusIconSize="16dp"
-                app:firstStatus="false"
                 app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
                 app:layout_constraintEnd_toEndOf="@id/layoutDetails"
-                tools:dateText="00:37" />
+                app:sceytDateStatusViewDateTextColor="#7C7E8E"
+                app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
+                app:sceytDateStatusViewFirstStatus="false"
+                app:sceytDateStatusViewStatusIconSize="16dp"
+                tools:sceytDateStatusViewDateText="00:37" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

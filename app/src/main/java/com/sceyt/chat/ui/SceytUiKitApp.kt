@@ -67,14 +67,14 @@ class SceytUiKitApp : Application() {
 
     private fun setSceytListeners() {
 
-        chatClient.addMessageListener("main", object : MessageListener {
+      /*  chatClient.addMessageListener("main", object : MessageListener {
             override fun onMessage(channel: Channel, message: Message) {
                 totalUnreadCount.postValue(totalUnreadCount.value?.plus(1))
                 ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
 
                 }
             }
-        })
+        })*/
 
 
         var noNetworkObserver = NetworkMonitor.NetworkObserver { connectionType ->

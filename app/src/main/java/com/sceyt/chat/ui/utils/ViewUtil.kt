@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 object ViewUtil {
@@ -68,12 +69,12 @@ object ViewUtil {
         widthAnimator.start()
     }
 
-    fun collapseHeight(v: View, duration: Long, endListener: (() -> Unit)? = null) {
+    fun collapseHeight(v: View, duration: Long, to: Int = 0, endListener: (() -> Unit)? = null) {
         val initialHeight = v.measuredHeight
-        val heightAnimator = ValueAnimator.ofInt(0, initialHeight)
+        val heightAnimator = ValueAnimator.ofInt(to, initialHeight)
         heightAnimator.addUpdateListener { animation ->
             val animatedValue = animation.animatedValue as Int
-            v.layoutParams.height = initialHeight - animatedValue
+            v.layoutParams.height = max(to, initialHeight - animatedValue)
             v.requestLayout()
         }
         heightAnimator.doOnEnd {

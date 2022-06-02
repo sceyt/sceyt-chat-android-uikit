@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#FFFFFF</color>
-    <color name="colorPrimaryDark">#1E1D1D</color>
-    <color name="colorAccent">#4962EE</color>
+    <color name="sceyt_color_primary_dark">#010212</color>
+    <color name="sceyt_color_primary">#FFFFFF</color>
 
-    <color name="black">#FFFFFF</color>
-    <color name="whiteThemed">#1E1D1D</color>
-    <color name="colorFontDark">#FFFFFF</color>
-    <color name="colorFontGray">#696C80</color>
-    <color name="colorBackground">#131313</color>
-    <color name="colorGrayThemed">#1E1D1D</color>
-    <color name="colorBgOutMessage">#B2BAEC</color>
+    <color name="sceyt_color_black_themed">#FFFFFF</color>
+    <color name="sceyt_color_bg">#010212</color>
+    <color name="sceyt_color_bg_out_message">#182159</color>
+    <color name="sceyt_color_bg_inc_message">#383B51</color>
+    <color name="sceyt_color_divider">#383B51</color>
+    <color name="sceyt_color_input">#1A1B2A</color>
+    <color name="sceyt_color_status_bar">#010212</color>
+    <color name="sceyt_color_bottom_nav">#1A1B2A</color>
+    <color name="sceyt_color_text_themed">#ffffff</color>
 </resources>
