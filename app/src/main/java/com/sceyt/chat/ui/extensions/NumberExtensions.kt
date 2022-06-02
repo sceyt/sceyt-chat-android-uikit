@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.util.DisplayMetrics
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -45,6 +46,14 @@ fun Long.toPrettySize(): String {
         sizeInKb >= 1 -> format.format(sizeInKb) + "KB"
         else -> "${this}B"
     }
+}
+
+fun Long.convertMSIntoHourMinSeconds(): String {
+    return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(this),
+        TimeUnit.MILLISECONDS.toMinutes(this) -
+                TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(this)),
+        TimeUnit.MILLISECONDS.toSeconds(this) -
+                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(this)))
 }
 
 /**

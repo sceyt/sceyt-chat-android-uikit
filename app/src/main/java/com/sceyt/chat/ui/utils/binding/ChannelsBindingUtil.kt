@@ -13,7 +13,7 @@ import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.extensions.getCompatDrawable
-import com.sceyt.chat.ui.presentation.customviews.DateStatusView
+import com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
 
 object ChannelsBindingUtil {
 
@@ -32,10 +32,10 @@ object ChannelsBindingUtil {
             return
         }
         val iconResId = when (status) {
-            DeliveryStatus.Pending -> R.drawable.ic_status_not_sent
-            DeliveryStatus.Sent -> R.drawable.ic_status_on_server
-            DeliveryStatus.Delivered -> R.drawable.ic_status_delivered
-            DeliveryStatus.Read -> R.drawable.ic_status_read
+            DeliveryStatus.Pending -> R.drawable.sceyt_ic_status_not_sent
+            DeliveryStatus.Sent -> R.drawable.sceyt_ic_status_on_server
+            DeliveryStatus.Delivered -> R.drawable.sceyt_ic_status_delivered
+            DeliveryStatus.Read -> R.drawable.sceyt_ic_status_read
             else -> null
         }
         iconResId?.let {
@@ -46,17 +46,17 @@ object ChannelsBindingUtil {
 
     @BindingAdapter("bind:status", "bind:incoming")
     @JvmStatic
-    fun setMessageStatusIcon(dateStatusView: DateStatusView, status: DeliveryStatus?, incoming: Boolean?) {
+    fun setMessageStatusIcon(dateStatusView: SceytDateStatusView, status: DeliveryStatus?, incoming: Boolean?) {
         if (status == null || incoming == true) {
             dateStatusView.setStatusIcon(null)
             return
         }
         val iconResId = when (status) {
-            DeliveryStatus.Pending -> R.drawable.ic_status_not_sent
-            DeliveryStatus.Sent -> R.drawable.ic_status_on_server
-            DeliveryStatus.Delivered -> R.drawable.ic_status_delivered
-            DeliveryStatus.Read -> R.drawable.ic_status_read
-            DeliveryStatus.Failed -> R.drawable.ic_status_faild
+            DeliveryStatus.Pending -> R.drawable.sceyt_ic_status_not_sent
+            DeliveryStatus.Sent -> R.drawable.sceyt_ic_status_on_server
+            DeliveryStatus.Delivered -> R.drawable.sceyt_ic_status_delivered
+            DeliveryStatus.Read -> R.drawable.sceyt_ic_status_read
+            DeliveryStatus.Failed -> R.drawable.sceyt_ic_status_faild
             else -> null
         }
         iconResId?.let {

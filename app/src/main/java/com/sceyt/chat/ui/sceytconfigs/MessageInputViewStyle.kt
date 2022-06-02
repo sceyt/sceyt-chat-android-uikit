@@ -8,16 +8,16 @@ import com.sceyt.chat.ui.R
 
 object MessageInputViewStyle {
     @DrawableRes
-    var attachmentIcon: Int = R.drawable.ic_attach
+    var attachmentIcon: Int = R.drawable.sceyt_ic_upload_file
 
     @DrawableRes
-    var sendMessageIcon: Int = R.drawable.ic_send_message
+    var sendMessageIcon: Int = R.drawable.sceyt_ic_send_message
 
     @ColorRes
-    var inputTextColor: Int = R.color.black
+    var inputTextColor: Int = R.color.sceyt_color_black_themed
 
     @ColorRes
-    var inputHintTextColor: Int = R.color.hintColor
+    var inputHintTextColor: Int = R.color.sceyt_color_hint
 
     lateinit var inputHintText: String
 

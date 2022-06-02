@@ -7,13 +7,13 @@ import com.sceyt.chat.ui.R
 
 object ChannelStyle {
     @ColorRes
-    var titleColor: Int = R.color.colorFontDark
+    var titleColor: Int = R.color.sceyt_color_text_themed
 
     @ColorRes
-    var lastMessageTextColor: Int = R.color.colorFontGray
+    var lastMessageTextColor: Int = R.color.sceyt_color_gray_400
 
     @ColorRes
-    var unreadCountColor: Int = R.color.colorAccent
+    var unreadCountColor: Int = R.color.sceyt_color_accent
 
     @LayoutRes
     var emptyState: Int = R.layout.sceyt_channel_list_empty_state

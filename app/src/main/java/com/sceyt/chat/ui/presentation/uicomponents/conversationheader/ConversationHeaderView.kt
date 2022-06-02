@@ -32,7 +32,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
 
         if (!isInEditMode)
-            BindingUtil.themedBackgroundColor(this, R.color.whiteThemed)
+            BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView)
@@ -78,7 +78,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    fun setChannel(channel: SceytChannel) {
+    internal fun setChannel(channel: SceytChannel) {
         val subjAndSUrl = channel.getSubjectAndAvatarUrl()
         binding.avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second)
         binding.title.text = subjAndSUrl.first
@@ -86,7 +86,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         setSubTitle(channel)
     }
 
-    fun setClickListenerImpl(headerClickListenersImpl: HeaderClickListenersImpl) {
+    fun setCustomClickListener(headerClickListenersImpl: HeaderClickListenersImpl) {
         clickListeners = headerClickListenersImpl
     }
 

@@ -7,13 +7,13 @@ import com.sceyt.chat.ui.R
 
 object ConversationHeaderViewStyle {
     @DrawableRes
-    var backIcon: Int = R.drawable.ic_arrow_back
+    var backIcon: Int = R.drawable.sceyt_ic_arrow_back
 
     @ColorRes
-    var titleColor: Int = R.color.colorFontDark
+    var titleColor: Int = R.color.sceyt_color_text_themed
 
     @ColorRes
-    var subTitleColor: Int = R.color.colorFontGray
+    var subTitleColor: Int = R.color.sceyt_color_gray_400
 
 
     internal fun updateWithAttributes(typedArray: TypedArray): ConversationHeaderViewStyle {

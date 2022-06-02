@@ -170,6 +170,12 @@ class MessageListViewModel(val channel: SceytChannel) : BaseViewModel() {
         }
     }
 
+    fun markMessageAsDisplayed(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.markAsRead(id)
+        }
+    }
+
     internal fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean,
                                       lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()

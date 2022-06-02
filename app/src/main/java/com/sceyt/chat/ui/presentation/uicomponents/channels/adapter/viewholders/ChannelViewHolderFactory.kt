@@ -12,7 +12,7 @@ import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelsClickListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,7 +21,7 @@ import java.util.*
 
 class ChannelViewHolderFactory(context: Context) {
 
-    private var listeners = ChannelsClickListenersImpl()
+    private var listeners = ChannelClickListenersImpl()
     private val layoutInflater = LayoutInflater.from(context)
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ChannelListItem> {

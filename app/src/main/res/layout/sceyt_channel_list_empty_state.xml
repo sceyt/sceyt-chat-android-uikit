@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/sceyt_ui_channel_list_empty"
-        android:textColor="@color/black"
+        android:textColor="@color/sceyt_color_black_themed"
         android:textDirection="locale"
-        bind:themedTextColor="@{R.color.black}" />
+        bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
 </layout>

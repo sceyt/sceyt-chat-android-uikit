@@ -7,7 +7,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/whiteThemed"
+        android:background="@color/sceyt_color_bg"
         app:elevation="0dp">
 
         <com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
@@ -18,10 +18,9 @@
             android:paddingVertical="8dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_scrollFlags="scroll|enterAlways|snap"
-            app:sceytUiHintText="search..."
-            app:sceytUiHintTextColor="@color/hintColor"
-            app:sceytUiSearchIcon="@drawable/ic_search"
-            app:sceytUiTextColor="@color/black" />
+            app:sceytUiHintTextColor="@color/sceyt_color_hint"
+            app:sceytUiSearchIcon="@drawable/sceyt_ic_search"
+            app:sceytUiTextColor="@color/sceyt_color_black_themed" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -33,6 +32,6 @@
         android:paddingHorizontal="10dp"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
         app:sceytUiChannelTitleTextSize="@dimen/_50sdp"
-        app:sceytUiUnreadMessageCounterTextColor="@color/colorGreen" />
+        app:sceytUiUnreadMessageCounterTextColor="@color/sceyt_color_green" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

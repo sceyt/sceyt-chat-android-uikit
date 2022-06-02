@@ -33,7 +33,6 @@ class MessageVideoViewHolder(
                             videoViewController.setImageThumb(it)
                         }
                     })
-                Unit
             }
 
             root.setOnClickListener {

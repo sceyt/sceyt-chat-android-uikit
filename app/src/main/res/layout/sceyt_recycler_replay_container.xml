@@ -9,12 +9,12 @@
         android:id="@+id/view"
         android:layout_width="2.1dp"
         android:layout_height="0dp"
-        android:background="@drawable/bg_line"
+        android:background="@drawable/sceyt_bg_corners_10"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chat.ui.presentation.customviews.RoundishImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageAttachment"
         android:layout_width="0dp"
         android:layout_height="28dp"
@@ -22,13 +22,12 @@
         android:layout_marginStart="6dp"
         android:scaleType="centerCrop"
         android:visibility="gone"
-        app:cornerRadius="5dp"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toEndOf="@+id/view"
         app:layout_constraintTop_toTopOf="@+id/view"
-        app:roundedCorners="all" />
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.CornerSize5" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvName"
@@ -37,7 +36,7 @@
         android:layout_marginStart="8dp"
         android:includeFontPadding="false"
         android:singleLine="true"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/extraSmallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toTopOf="@+id/tvMessageBody"
@@ -54,7 +53,7 @@
         android:layout_marginTop="2dp"
         android:includeFontPadding="false"
         android:singleLine="true"
-        android:textColor="@color/black"
+        android:textColor="@color/sceyt_color_black_themed"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"

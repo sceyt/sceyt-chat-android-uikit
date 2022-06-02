@@ -12,13 +12,15 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
+import com.sceyt.chat.ui.extensions.isNightTheme
 import com.sceyt.chat.ui.extensions.launchActivity
-import com.sceyt.chat.ui.extensions.shortToast
+import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessagePopupClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.bindView
+import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 
 class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -30,6 +32,8 @@ class ConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversation)
 
+        val isNightMode = isNightTheme()
+        statusBarIconsColorWithBackground(isNightMode)
 
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.bindView(binding.messageInputView, lifecycleOwner = this)
@@ -40,14 +44,21 @@ class ConversationActivity : AppCompatActivity() {
         binding.messagesListView.setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
             override fun onReactMessageClick(view: View, message: SceytMessage) {
                 super.onReactMessageClick(view, message)
-                shortToast("React")
+                println("React")
             }
         })
 
         binding.messagesListView.setCustomMessageClickListener(object : MessageClickListenersImpl(binding.messagesListView) {
             override fun onAttachmentClick(view: View, item: FileListItem) {
                 super.onAttachmentClick(view, item)
-                shortToast("AttachmentClick")
+                println("AttachmentClick")
+            }
+        })
+
+        binding.messageInputView.setCustomClickListener(object : MessageInputClickListenersImpl(binding.messageInputView) {
+            override fun onSendMsgClick(view: View) {
+                super.onSendMsgClick(view)
+                println("send")
             }
         })
     }

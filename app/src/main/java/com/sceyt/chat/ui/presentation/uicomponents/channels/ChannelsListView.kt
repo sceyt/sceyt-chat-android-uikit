@@ -10,18 +10,21 @@ import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.utils.binding.BindingUtil
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+    : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners {
 
     private var channelsRV: ChannelsRV
     private var pageStateView: PageStateView? = null
+    private var clickListeners = ChannelClickListenersImpl(this)
 
     init {
-        setBackgroundColor(context.getCompatColor(R.color.colorBackground))
-        BindingUtil.themedBackgroundColor(this, R.color.colorBackground)
+        setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
+        BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.ChannelsListView)
@@ -42,25 +45,52 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             it.setEmptyStateView(ChannelStyle.emptyState)
             it.setEmptySearchStateView(ChannelStyle.emptySearchState)
         })
+
+        channelsRV.setChannelListener(object : ChannelClickListeners.ClickListeners {
+            override fun onChannelClick(item: ChannelListItem.ChannelItem) {
+                clickListeners.onChannelClick(item)
+            }
+
+            override fun onChannelLongClick(item: ChannelListItem.ChannelItem) {
+                clickListeners.onChannelLongClick(item)
+            }
+
+            override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
+                clickListeners.onAvatarClick(item)
+            }
+        })
     }
 
-    fun setReachToEndListener(listener: (offset: Int) -> Unit) {
-        channelsRV.setRichToEndListeners(listener)
-    }
-
-    fun setChannelsList(channels: List<ChannelListItem>) {
+    internal fun setChannelsList(channels: List<ChannelListItem>) {
         channelsRV.setData(channels)
     }
 
-    fun addNewChannels(channels: List<ChannelListItem>) {
+    internal fun addNewChannels(channels: List<ChannelListItem>) {
         channelsRV.addNewChannels(channels)
     }
 
-    fun updateState(state: BaseViewModel.PageState) {
+    internal fun updateState(state: BaseViewModel.PageState) {
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
 
+    internal fun setReachToEndListener(listener: (offset: Int) -> Unit) {
+        channelsRV.setRichToEndListeners(listener)
+    }
+
     fun setChannelListener(listener: ChannelClickListeners) {
-        channelsRV.setChannelListener(listener)
+        clickListeners.setListener(listener)
+    }
+
+    //Click listeners
+    override fun onChannelClick(item: ChannelListItem.ChannelItem) {
+        ConversationActivity.newInstance(context, item.channel)
+    }
+
+    override fun onChannelLongClick(item: ChannelListItem.ChannelItem) {
+
+    }
+
+    override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
+
     }
 }

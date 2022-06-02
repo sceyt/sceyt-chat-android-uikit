@@ -3,9 +3,11 @@ package com.sceyt.chat.ui.data
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessagesListQuery
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
+import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -133,6 +135,20 @@ class MessagesRepositoryImpl(private val channel: Channel,
             channel.deleteReactionWithMessageId(messageId, score.key, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message))
+                }
+            })
+        }
+    }
+
+    suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.markMessagesAsRead(longArrayOf(id), object : MessageMarkCallback {
+                override fun onResult(result: MessageListMarker) {
+                    continuation.resume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {

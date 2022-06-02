@@ -36,7 +36,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var takePhotoPath: String? = null
-    private val clickListeners = MessageInputClickListenersImpl(this)
+    private var clickListeners = MessageInputClickListenersImpl(this)
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     var message: Message? = null
@@ -65,22 +65,30 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
 
     private fun init() {
+        with(binding) {
+            setUpStyle()
 
-        binding.setUpStyle()
-        determineState()
+            determineState()
 
-        binding.messageInput.doOnTextChanged { _, _, _, _ -> determineState() }
+            messageInput.doOnTextChanged { _, _, _, _ -> determineState() }
 
-        binding.icSendMessage.setOnClickListener {
-            clickListeners.onSendMsgClick(it)
-        }
+            icSendMessage.setOnClickListener {
+                clickListeners.onSendMsgClick(it)
+            }
 
-        binding.icAddAttachments.setOnClickListener {
-            clickListeners.onSendAttachmentClick(it)
-        }
+            icAddAttachments.setOnClickListener {
+                clickListeners.onSendAttachmentClick(it)
+            }
 
-        binding.layoutReplayMessage.icCancelReplay.setOnClickListener {
-            clickListeners.onCancelReplayMessageViewClick(it)
+            layoutReplayMessage.icCancelReplay.setOnClickListener {
+                clickListeners.onCancelReplayMessageViewClick(it)
+            }
+
+            post {
+                rvAttachments.apply {
+                    setPadding(messageInput.x.toInt(), paddingTop, paddingRight, paddingBottom)
+                }
+            }
         }
     }
 
@@ -149,9 +157,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
     }
 
-    fun replayMessage(message: Message) {
+    internal fun replayMessage(message: Message) {
         replayMessage = message
         with(binding.layoutReplayMessage) {
+            isVisible = true
             ViewUtil.expandHeight(root, 1, 200)
             tvName.text = message.from.fullName.trim()
             tvMessageBody.text = if (message.isTextMessage())
@@ -159,12 +168,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun cancelReplay(readyCb: (() -> Unit?)? = null) {
+    internal fun cancelReplay(readyCb: (() -> Unit?)? = null) {
         if (replayMessage == null)
             readyCb?.invoke()
         else {
             replayMessage = null
-            ViewUtil.collapseHeight(binding.layoutReplayMessage.root, 200) {
+            ViewUtil.collapseHeight(binding.layoutReplayMessage.root, to = 1, duration = 200) {
                 binding.layoutReplayMessage.root.isVisible = false
                 context.asAppCompatActivity()?.lifecycleScope?.launchWhenResumed { readyCb?.invoke() }
             }
@@ -210,7 +219,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun setupAttachmentsList() {
         attachmentsAdapter = AttachmentsAdapter(allAttachments.map { AttachmentItem(it) } as ArrayList<AttachmentItem>) {
-           clickListeners.onRemoveAttachmentClick(it)
+            clickListeners.onRemoveAttachmentClick(it)
         }
 
         binding.rvAttachments.adapter = attachmentsAdapter
@@ -316,6 +325,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessage(message: Message)
         fun sendReplayMessage(message: Message, parent: Message?)
         fun editMessage(message: Message)
+    }
+
+    fun setClickListener(listener: MessageInputClickListeners) {
+        clickListeners.setListener(listener)
+    }
+
+    fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
+        clickListeners = listener
     }
 
     override fun onSendMsgClick(view: View) {

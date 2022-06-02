@@ -8,16 +8,19 @@ import com.sceyt.chat.ui.R
 
 object SearchInputViewStyle {
     @DrawableRes
-    var searchIcon: Int = R.drawable.ic_search
+    var searchIcon: Int = R.drawable.sceyt_ic_search
 
     @DrawableRes
-    var clearIcon: Int = R.drawable.ic_cancel
+    var clearIcon: Int = R.drawable.sceyt_ic_cancel
 
     @ColorRes
-    var textColor: Int = R.color.black
+    var textColor: Int = R.color.sceyt_color_black_themed
 
     @ColorRes
-    var hintTextColor: Int = R.color.hintColor
+    var hintTextColor: Int = R.color.sceyt_color_hint
+
+    @ColorRes
+    var backgroundColor: Int = R.color.sceyt_color_input
 
     lateinit var hintText: String
 
@@ -29,6 +32,7 @@ object SearchInputViewStyle {
         clearIcon = typedArray.getResourceId(R.styleable.SearchInputView_sceytUiClearIcon, clearIcon)
         textColor = typedArray.getResourceId(R.styleable.SearchInputView_sceytUiTextColor, textColor)
         hintTextColor = typedArray.getResourceId(R.styleable.SearchInputView_sceytUiHintTextColor, hintTextColor)
+        backgroundColor = typedArray.getResourceId(R.styleable.SearchInputView_sceytUiBackgroundColor, backgroundColor)
         hintText = typedArray.getString(R.styleable.SearchInputView_sceytUiHintText)
                 ?: context.getString(R.string.search)
         disableDebouncedSearch = typedArray.getBoolean(R.styleable.SearchInputView_sceytUiDisableDebouncedSearch, disableDebouncedSearch)

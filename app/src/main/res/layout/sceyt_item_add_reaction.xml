@@ -6,4 +6,4 @@
     android:layout_gravity="center"
     android:adjustViewBounds="true"
     android:padding="2dp"
-    app:srcCompat="@drawable/ic_add_reaction" />
+    app:srcCompat="@drawable/sceyt_ic_add_reaction" />

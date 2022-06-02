@@ -4,16 +4,15 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.databinding.RecyclerviewAttachmentFileItemBinding
+import com.sceyt.chat.ui.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.messageinput.attachments.AttachmentFileViewHolder
 
 class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
                          private val viewCallbacks: AttachmentFileViewHolder.Callbacks) :
         RecyclerView.Adapter<BaseViewHolder<AttachmentItem>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<AttachmentItem> {
-        val itemView = RecyclerviewAttachmentFileItemBinding.inflate(LayoutInflater.from(parent.context),
+        val itemView = SceytItemInputAttachmentBinding.inflate(LayoutInflater.from(parent.context),
             parent, false)
         return AttachmentFileViewHolder(itemView, viewCallbacks)
     }

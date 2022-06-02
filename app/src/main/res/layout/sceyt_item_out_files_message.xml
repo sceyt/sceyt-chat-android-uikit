@@ -23,11 +23,11 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginVertical="8dp"
-            android:background="@drawable/bg_message_day"
+            android:background="@drawable/sceyt_bg_message_day"
             android:includeFontPadding="false"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
-            android:textColor="@color/colorFontGray"
+            android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
@@ -38,7 +38,7 @@
             bind:visibleIf="@{message.showDate}"
             tools:text="Feb 24" />
 
-        <com.sceyt.chat.ui.presentation.customviews.ToReplayLineView
+        <com.sceyt.chat.ui.presentation.customviews.SceytToReplayLineView
             android:id="@+id/toReplayLine"
             android:layout_width="10dp"
             android:layout_height="wrap_content"
@@ -48,7 +48,7 @@
             android:layout_marginTop="20dp"
             android:layout_marginBottom="5sp"
             android:visibility="gone"
-            app:toLeft="true" />
+            app:sceytToReplayLineViewToLeft="true" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutDetails"
@@ -56,7 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/messageDay"
             android:layout_alignParentEnd="true"
-            android:background="@drawable/bg_out_message"
+            android:background="@drawable/sceyt_bg_out_message"
             android:maxWidth="@dimen/bodyMaxWidth"
             android:minWidth="@dimen/bodyMaxWidth">
 
@@ -80,7 +80,7 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="8dp"
                 android:text="@{message.body}"
-                android:textColor="@color/colorFontDark"
+                android:textColor="@color/sceyt_color_text_themed"
                 android:textSize="@dimen/mediumTextSize"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
@@ -103,24 +103,24 @@
                 tools:itemCount="3"
                 tools:listitem="@layout/sceyt_message_file_item" />
 
-            <com.sceyt.chat.ui.presentation.customviews.DateStatusView
+            <com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
                 android:id="@+id/messageDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="5dp"
                 android:layout_marginBottom="2dp"
                 android:paddingHorizontal="8dp"
-                app:dateTextColor="#7C7E8E"
-                app:dateTextSize="@dimen/tinyTextSize"
-                app:firstStatus="false"
                 app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
                 app:layout_constraintEnd_toEndOf="@id/rvFiles"
-                app:statusIconMargin="5dp"
-                app:statusIconSize="16dp"
+                app:sceytDateStatusViewDateTextColor="#7C7E8E"
+                app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
+                app:sceytDateStatusViewFirstStatus="false"
+                app:sceytDateStatusViewStatusIconMargin="5dp"
+                app:sceytDateStatusViewStatusIconSize="16dp"
                 bind:incoming="@{message.incoming}"
                 bind:status="@{message.status}"
-                tools:dateText="00:37"
-                tools:statusIcon="@drawable/ic_status_read" />
+                tools:sceytDateStatusViewDateText="00:37"
+                tools:sceytDateStatusViewStatusIcon="@drawable/ic_status_read" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -146,7 +146,7 @@
             android:layout_marginEnd="2dp"
             android:layout_toStartOf="@+id/toReplayLine"
             android:includeFontPadding="false"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/tinyTextSize"
             android:visibility="gone"
             tools:text="34 reply" />

@@ -13,13 +13,13 @@
         android:layout_marginStart="12dp"
         android:background="?selectableItemBackgroundBorderless"
         android:padding="4dp"
-        android:tint="@color/colorAccent"
+        android:tint="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_arrow_back" />
+        app:srcCompat="@drawable/sceyt_ic_arrow_back" />
 
-    <com.sceyt.chat.ui.presentation.customviews.AvatarView
+    <com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -35,7 +35,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="10dp"
-        android:textColor="@color/colorFontDark"
+        android:textColor="@color/sceyt_color_text_themed"
         android:textSize="17sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/subTitle"
@@ -50,7 +50,7 @@
         android:id="@+id/subTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textColor="@color/colorFontGray"
+        android:textColor="@color/sceyt_color_gray_400"
         android:textSize="13sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -61,5 +61,11 @@
         app:layout_constraintTop_toBottomOf="@+id/title"
         tools:text="SubTitle"
         tools:visibility="visible" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height=".5dp"
+        android:background="@color/sceyt_color_divider"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,7 +4,7 @@ import android.view.View
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentItem
 
-class MessageInputClickListenersImpl(view: MessageInputView) : MessageInputClickListeners.ClickListeners {
+open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInputClickListeners.ClickListeners {
     private var defaultListeners: MessageInputClickListeners.ClickListeners = view
     private var sendMsgClickListener: MessageInputClickListeners.SendMsgClickListener? = null
     private var sendAttachmentClickListener: MessageInputClickListeners.SendAttachmentClickListener? = null
