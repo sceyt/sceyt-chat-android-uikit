@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ReactionScore
@@ -27,7 +28,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.*
-import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 import com.sceyt.chat.ui.utils.binding.BindingUtil
 import java.io.File
@@ -43,6 +44,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private lateinit var reactionPopupClickListeners: ReactionPopupClickListenersImpl
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageEventListener: ((MessageEvent) -> Unit)? = null
+    private var enabledClickActions = true
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
@@ -65,9 +67,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (!isInEditMode)
             addView(PageStateView(context).also {
                 pageStateView = it
-                it.setLoadingStateView(ChannelStyle.loadingState)
-                it.setEmptyStateView(ChannelStyle.emptyState)
-                it.setEmptySearchStateView(ChannelStyle.emptySearchState)
+                it.setLoadingStateView(MessagesStyle.loadingState)
+                it.setEmptyStateView(MessagesStyle.emptyState)
             })
 
         initClickListeners()
@@ -80,42 +81,45 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         messagesRV.setMessageListener(object : MessageClickListeners.ClickListeners {
             override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
-                clickListeners.onMessageLongClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onMessageLongClick(view, item)
             }
 
             override fun onAvatarClick(view: View, item: MessageListItem.MessageItem) {
-                clickListeners.onAvatarClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onAvatarClick(view, item)
             }
 
             override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-                clickListeners.onReplayCountClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onReplayCountClick(view, item)
             }
 
             override fun onAddReactionClick(view: View, item: MessageListItem.MessageItem) {
-                clickListeners.onAddReactionClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onAddReactionClick(view, item)
             }
 
             override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-                clickListeners.onReactionLongClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onReactionLongClick(view, item)
             }
 
             override fun onAttachmentClick(view: View, item: FileListItem) {
-                clickListeners.onAttachmentClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onAttachmentClick(view, item)
             }
 
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
-                clickListeners.onAttachmentLongClick(view, item)
+                if (enabledClickActions)
+                    clickListeners.onAttachmentLongClick(view, item)
             }
         })
     }
 
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
-        val popup = PopupMenu(view.context, view)
-        popup.menu.apply {
-            add(0, R.id.sceyt_add, 0, view.context.getString(R.string.add))
-            add(0, R.id.sceyt_remove, 0, view.context.getString(R.string.remove))
-            add(0, R.id.sceyt_delete, 0, view.context.getString(R.string.delete))
-        }
+        val popup = PopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view)
+        popup.inflate(R.menu.menu_popup_reacton)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_add -> reactionPopupClickListeners.onAddReaction(reaction.messageItem.message, reaction.reactionScore.key)
@@ -128,22 +132,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = PopupMenu(view.context, view)
-        popup.menu.apply {
-            add(0, R.id.sceyt_copy_message, 0, view.context.getString(R.string.copy))
-
-            if (!message.incoming) {
-                add(0, R.id.sceyt_delete, 0, view.context.getString(R.string.delete))
-                add(0, R.id.sceyt_edit_message, 0, view.context.getString(R.string.edit))
-            }
-            add(0, R.id.sceyt_react, 0, view.context.getString(R.string.react))
-            add(0, R.id.sceyt_replay, 0, view.context.getString(R.string.replay))
-            add(0, R.id.sceyt_replay_in_thread, 0, view.context.getString(R.string.replay_in_thread))
-        }
+        val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message.incoming)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete -> messagePopupClickListeners.onDeleteMessageClick(message)
+                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message)
                 R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
                 R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
                 R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
@@ -323,6 +316,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = listener
     }
 
+    fun enableDisableClickActions(enabled: Boolean) {
+        enabledClickActions = enabled
+    }
+
     // Click events
     override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
         showMessageActionsPopup(view, item.message)
@@ -333,7 +330,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-
+        onReplayInThreadMessageClick(item.message)
     }
 
     override fun onAddReactionClick(view: View, item: MessageListItem.MessageItem) {
@@ -375,7 +372,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReplayInThreadMessageClick(message: SceytMessage) {
-        messageEventListener?.invoke(MessageEvent.ReplayInThread(message))
+        messageEventListener?.invoke(MessageEvent.ReplayInThread(message, context))
     }
 
 

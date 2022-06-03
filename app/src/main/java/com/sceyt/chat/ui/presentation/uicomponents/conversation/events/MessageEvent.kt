@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.events
 
+import android.content.Context
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 
 sealed class MessageEvent {
@@ -18,5 +19,6 @@ sealed class MessageEvent {
 
     data class ReplayInThread(
             val message: SceytMessage,
+            val context: Context
     ) : MessageEvent()
 }

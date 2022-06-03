@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.data.models.messages
 
+import android.os.Parcelable
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import androidx.databinding.library.baseAdapters.BR
@@ -7,8 +8,11 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 import java.util.*
 
+@Parcelize
 open class SceytMessage(var id: Long,
                         var tid: Long,
                         var channelId: Long,
@@ -34,10 +38,11 @@ open class SceytMessage(var id: Long,
                         var mentionedUsers: Array<User>?,
                         var parent: Message?,
                         var replyInThread: Boolean = false,
-                        var replyCount: Long = 0) : BaseObservable() {
+                        var replyCount: Long = 0) : BaseObservable(), Parcelable {
 
 
     @Bindable
+    @IgnoredOnParcel
     var status: DeliveryStatus = deliveryStatus
         get() = deliveryStatus
         set(value) {
@@ -47,6 +52,7 @@ open class SceytMessage(var id: Long,
         }
 
     @Bindable
+    @IgnoredOnParcel
     var showDate = false
         set(value) {
             field = value
@@ -54,13 +60,17 @@ open class SceytMessage(var id: Long,
         }
 
     @Bindable
+    @IgnoredOnParcel
     var canShowAvatarAndName = false
         set(value) {
             field = value
             notifyPropertyChanged(BR.canShowAvatarAndName)
         }
 
+    @IgnoredOnParcel
     var isGroup = false
+
+    @IgnoredOnParcel
     var files: List<FileListItem>? = null
 
     fun updateMessage(message: SceytMessage) {

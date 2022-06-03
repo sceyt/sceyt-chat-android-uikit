@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toMessage
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
@@ -16,6 +17,8 @@ import kotlinx.coroutines.launch
 
 
 fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
+
+    messagesListView.enableDisableClickActions(!replayInThread)
 
     lifecycleOwner.lifecycleScope.launch {
         messagesFlow.collect {
@@ -128,7 +131,10 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
 }
 
 fun MessageListViewModel.bindView(messageInputView: MessageInputView,
+                                  replayInThreadMessage: SceytMessage?,
                                   lifecycleOwner: LifecycleOwner) {
+
+    messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
 
     onEditMessageCommandLiveData.observe(lifecycleOwner) {
         messageInputView.message = it.toMessage()
@@ -159,15 +165,16 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
 }
 
 fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
-                                  lifecycleOwner: LifecycleOwner) {
+                                  replayInThreadMessage: SceytMessage?) {
 
-    headerView.setChannel(channel)
+    if (replayInThread)
+        headerView.setReplayMessage(replayInThreadMessage)
+    else
+        headerView.setChannel(channel)
 
 }
 
 
-/*
-fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bindView(channelsListView, lifecycleOwner)
+fun bindViewFromJava(viewModel: MessageListViewModel, messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
+    viewModel.bindView(messagesListView, lifecycleOwner)
 }
-*/

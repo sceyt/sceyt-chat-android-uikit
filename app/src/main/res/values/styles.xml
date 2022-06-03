@@ -8,29 +8,39 @@
         <item name="colorAccent">@color/sceyt_color_accent</item>
         <item name="colorSecondary">@color/sceyt_color_primary</item>
         <item name="colorControlNormal">@color/sceyt_color_primary</item>
-        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
+        <item name="bottomSheetDialogTheme">@style/SceytAppBottomSheetDialogTheme</item>
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
         <item name="android:statusBarColor">@color/sceyt_color_status_bar</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/AppModalStyle</item>
+    <style name="SceytAppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/SceytAppModalStyle</item>
     </style>
 
-    <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
+    <style name="SceytAppModalStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@drawable/sceyt_rounded_dialog</item>
     </style>
 
-    <style name="ShapeAppearanceOverlay.CornerSize18" parent="">
+    <style name="SceytShapeAppearanceOverlay.CornerSize18" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">18dp</item>
     </style>
 
-    <style name="ShapeAppearanceOverlay.CornerSize5" parent="">
+    <style name="SceytShapeAppearanceOverlay.CornerSize5" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">5dp</item>
+    </style>
+
+    <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">
+        <item name="popupMenuBackground">@drawable/sceyt_bg_popup</item>
+        <item name="android:textColor">@color/sceyt_color_text_themed</item>
+        <item name="android:overScrollMode">never</item>
+        <item name="android:scrollbars">none</item>
+        <item name="android:scrollbarSize">0dp</item>
+        <item name="android:layoutAnimation">@anim/sceyt_layout_animation_fall_down</item>
+        <item name="android:dividerHeight">0.5dp</item>
     </style>
 
 </resources>

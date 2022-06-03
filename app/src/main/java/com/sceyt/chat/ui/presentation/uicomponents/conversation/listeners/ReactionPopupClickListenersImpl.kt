@@ -25,7 +25,7 @@ class ReactionPopupClickListenersImpl(view: MessagesListView) : ReactionPopupCli
         deleteReactionListener?.onDeleteReaction(reactionItem)
     }
 
-    fun setListener(listener: MessagePopupClickListeners) {
+    fun setListener(listener: ReactionPopupClickListeners) {
         when (listener) {
             is ReactionPopupClickListeners.PopupClickListeners -> {
                 addReaction = listener

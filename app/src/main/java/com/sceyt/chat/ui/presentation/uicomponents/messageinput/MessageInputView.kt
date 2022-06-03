@@ -157,29 +157,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
     }
 
-    internal fun replayMessage(message: Message) {
-        replayMessage = message
-        with(binding.layoutReplayMessage) {
-            isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
-            tvName.text = message.from.fullName.trim()
-            tvMessageBody.text = if (message.isTextMessage())
-                message.body.trim() else context.getString(R.string.attachment)
-        }
-    }
-
-    internal fun cancelReplay(readyCb: (() -> Unit?)? = null) {
-        if (replayMessage == null)
-            readyCb?.invoke()
-        else {
-            replayMessage = null
-            ViewUtil.collapseHeight(binding.layoutReplayMessage.root, to = 1, duration = 200) {
-                binding.layoutReplayMessage.root.isVisible = false
-                context.asAppCompatActivity()?.lifecycleScope?.launchWhenResumed { readyCb?.invoke() }
-            }
-        }
-    }
-
     private fun getPhotoFileUri(): Uri {
         val directory = File(context.filesDir, "Photos")
         if (!directory.exists()) directory.mkdir()
@@ -319,6 +296,33 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             pickFile()
         } else if (context.checkDeniedOneOfPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE))
             context.shortToast("Please enable storage permission in settings")
+    }
+
+    internal fun replayMessage(message: Message) {
+        replayMessage = message
+        with(binding.layoutReplayMessage) {
+            isVisible = true
+            ViewUtil.expandHeight(root, 1, 200)
+            tvName.text = message.from.fullName.trim()
+            tvMessageBody.text = if (message.isTextMessage())
+                message.body.trim() else context.getString(R.string.attachment)
+        }
+    }
+
+    internal fun cancelReplay(readyCb: (() -> Unit?)? = null) {
+        if (replayMessage == null)
+            readyCb?.invoke()
+        else {
+            replayMessage = null
+            ViewUtil.collapseHeight(binding.layoutReplayMessage.root, to = 1, duration = 200) {
+                binding.layoutReplayMessage.root.isVisible = false
+                context.asAppCompatActivity()?.lifecycleScope?.launchWhenResumed { readyCb?.invoke() }
+            }
+        }
+    }
+
+    internal fun setReplayInThreadMessageId(messageId: Long?) {
+        replayThreadMessageId = messageId
     }
 
     interface MessageInputActionCallback {

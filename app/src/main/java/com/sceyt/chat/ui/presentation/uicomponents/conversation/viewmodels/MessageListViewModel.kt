@@ -12,6 +12,7 @@ import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
@@ -23,14 +24,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class MessageListViewModel(val channel: SceytChannel) : BaseViewModel() {
+class MessageListViewModel(conversationId: Long,
+                           internal val replayInThread: Boolean = false,
+                           internal val channel: SceytChannel) : BaseViewModel() {
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
     var isLoadingMessages = false
     var hasNext = false
 
     // todo di
-    private val repo = MessagesRepositoryImpl(channel.toChannel(), false)
+    private val repo = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
@@ -222,7 +225,7 @@ class MessageListViewModel(val channel: SceytChannel) : BaseViewModel() {
                 onReplayMessageCommandLiveData.postValue(event.message)
             }
             is MessageEvent.ReplayInThread -> {
-
+                ConversationActivity.newInstance(event.context, channel, event.message)
             }
         }
     }

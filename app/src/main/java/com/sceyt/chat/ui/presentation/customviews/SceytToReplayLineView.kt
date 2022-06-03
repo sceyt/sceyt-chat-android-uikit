@@ -52,7 +52,7 @@ class SceytToReplayLineView @JvmOverloads constructor(context: Context, attrs: A
         if (connectedViewBottomId != 0 && connectedViewBottomHalfHeight == 0f) {
             val viewBottom = rootView.findViewById<TextView>(connectedViewBottomId)
             viewBottom.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED)
-            connectedViewBottomHalfHeight = (viewBottom.measuredHeight / 2).toFloat()
+            connectedViewBottomHalfHeight = (viewBottom.measuredHeight / 2 + paddingTop + paddingBottom).toFloat()
         }
     }
 

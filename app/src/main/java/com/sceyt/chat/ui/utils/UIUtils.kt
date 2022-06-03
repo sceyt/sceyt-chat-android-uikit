@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.drawable.GradientDrawable
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.sceyt.chat.ui.R
 
@@ -14,7 +15,7 @@ object UIUtils {
         context: Context,
         chooseListener: (type: ProfilePhotoChooseType) -> Unit
     ) {
-        val builder = AlertDialog.Builder(context)
+        val builder = AlertDialog.Builder(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle))
 
         builder.setItems(R.array.image_picker) { _, which ->
             when (which) {
