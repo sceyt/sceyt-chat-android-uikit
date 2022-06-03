@@ -6,13 +6,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
+import androidx.core.view.*
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytConversationHeaderViewBinding
+import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getString
 import com.sceyt.chat.ui.extensions.shortToast
@@ -60,7 +62,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
     }
 
-    private fun setSubTitle(channel: SceytChannel) {
+    private fun setChannelSubTitle(channel: SceytChannel) {
         post {
             val title = if (channel is SceytDirectChannel) {
                 val member = channel.peer ?: return@post
@@ -83,7 +85,20 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second)
         binding.title.text = subjAndSUrl.first
 
-        setSubTitle(channel)
+        setChannelSubTitle(channel)
+    }
+
+    internal fun setReplayMessage(message: SceytMessage?) {
+        binding.avatar.isVisible = false
+        with(binding.title) {
+            text = getString(R.string.thread_replay)
+            (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
+        }
+
+        val fullName = message?.from?.fullName
+        val subTitleText = String.format(getString(R.string.with), fullName)
+        binding.subTitle.text = subTitleText
+        binding.subTitle.isVisible = !fullName.isNullOrBlank()
     }
 
     fun setCustomClickListener(headerClickListenersImpl: HeaderClickListenersImpl) {

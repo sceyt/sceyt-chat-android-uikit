@@ -85,7 +85,9 @@
         <entry key="app/src/main/res/drawable/sceyt_bg_message_day.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_bg_search_view.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_date_transparent_background.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_dialog.xml" value="0.2" />
         <entry key="app/src/main/res/drawable/sceyt_ic_cancel.xml" value="0.181" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_copy.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_ic_file.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_ic_search.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_ic_send_message.xml" value="0.2945" />
@@ -113,12 +115,12 @@
         <entry key="app/src/main/res/layout/recyclerview_message_image_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/recyclerview_message_video_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/replay_message_container.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_conversation_header_view.xml" value="0.75" />
+        <entry key="app/src/main/res/layout/sceyt_conversation_header_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_fragment_bottom_sheet_emojis.xml" value="0.5" />
         <entry key="app/src/main/res/layout/sceyt_item_channel.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_deleted_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_files_message.xml" value="0.6909765142150803" />
-        <entry key="app/src/main/res/layout/sceyt_item_inc_text_message.xml" value="0.67" />
+        <entry key="app/src/main/res/layout/sceyt_item_inc_text_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_input_attachment.xml" value="0.22" />
         <entry key="app/src/main/res/layout/sceyt_item_out_deleted_message.xml" value="0.25" />
         <entry key="app/src/main/res/layout/sceyt_item_out_files_message.xml" value="0.3776041666666667" />
@@ -128,6 +130,7 @@
         <entry key="app/src/main/res/layout/sceyt_message_image_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_message_input_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_message_video_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_messages_empty_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_recycler_replay_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_replay_message_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_search_view.xml" value="0.3776041666666667" />
@@ -168,6 +171,8 @@
         <entry key="app/src/main/res/layout/test.xml" value="0.9" />
         <entry key="app/src/main/res/layout/view_message_box.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/menu/menu_bottom_navigation.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/menu/menu_popup_message.xml" value="0.3765625" />
+        <entry key="app/src/main/res/menu/menu_popup_reacton.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/xml/provider_paths.xml" value="0.1828125" />
       </map>
     </option>

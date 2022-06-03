@@ -19,13 +19,14 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class MessagesRepositoryImpl(private val channel: Channel,
-                             isThread: Boolean) {
+class MessagesRepositoryImpl(conversationId: Long,
+                             private val channel: Channel,
+                             private val replayInThread: Boolean) {
     //todo need to add DI
     private val channelEventsService = ChannelEventsObserverService()
 
     val onMessageFlow = channelEventsService.onMessageFlow
-        .filter { it?.first?.id == channel.id }
+        .filter { it?.first?.id == channel.id || it?.second?.replyInThread != replayInThread }
         .mapNotNull { it?.second?.toSceytUiMessage() }
 
     val onMessageStatusFlow = channelEventsService.onMessageStatusFlow
@@ -33,18 +34,18 @@ class MessagesRepositoryImpl(private val channel: Channel,
 
     val onMessageReactionUpdatedFlow = channelEventsService.onMessageReactionUpdatedChannel.consumeAsFlow()
         .filterNotNull()
-        .filter { it.channelId == channel.id }
+        .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
     val onMessageEditedOrDeleteFlow = channelEventsService.onMessageEditedOrDeletedChannel.consumeAsFlow()
         .filterNotNull()
-        .filter { it.channelId == channel.id }
+        .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
     val onChannelClearedHistoryFlow = channelEventsService.onChannelClearedHistoryChannel.consumeAsFlow()
         .filterNotNull()
         .filter { it.id == channel.id }
 
-    private val query = MessagesListQuery.Builder(channel.id).apply {
-        setIsThread(isThread)
+    private val query = MessagesListQuery.Builder(conversationId).apply {
+        setIsThread(replayInThread)
     }.build()
 
 
@@ -57,16 +58,15 @@ class MessagesRepositoryImpl(private val channel: Channel,
             query.setLimit(MESSAGES_LOAD_SIZE)
             query.loadPrev(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    val result: MutableList<Message> =
-                            messages?.toMutableList() ?: mutableListOf()
-                    /*if (lastMessage != null) {
-                        result.add(lastMessage)
-                    }*/
+                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
                     continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    if (replayInThread && lastMessageId == 0L)
+                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                    else
+                        continuation.resume(SceytResponse.Error(e?.message))
                 }
             })
         }

@@ -119,7 +119,7 @@ abstract class BaseMsgViewHolder(view: View,
         }
 
         val reactions = initReactionsList(reactionScores, item.message)
-        val gridLayoutManager = GridLayoutManager(itemView.context, getReactionSpanCount(reactions.size))
+        val gridLayoutManager = GridLayoutManager(itemView.context, getReactionSpanCount(reactions.size, item.message.incoming))
 
         if (reactionsAdapter == null) {
             reactionsAdapter = ReactionsAdapter(reactions, rvReactions,
@@ -170,7 +170,10 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    private fun getReactionSpanCount(reactionsSize: Int) = min(5, reactionsSize)
+    private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
+        if (incoming) return 5
+        return min(5, reactionsSize)
+    }
 
     fun updateReaction(scores: Array<ReactionScore>, message: SceytMessage) {
         val reactions = initReactionsList(scores, message)
@@ -178,7 +181,7 @@ abstract class BaseMsgViewHolder(view: View,
         if (reactionsAdapter != null) {
             reactionsAdapter?.recyclerView?.isVisible = scores.isNotEmpty()
             if (scores.isNotEmpty())
-                (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = getReactionSpanCount(reactions.size)
+                (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = getReactionSpanCount(reactions.size, message.incoming)
             reactionsAdapter?.submitData(reactions)
         } else
             bindingAdapter?.notifyItemChanged(bindingAdapterPosition)

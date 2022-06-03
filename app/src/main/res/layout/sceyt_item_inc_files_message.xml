@@ -58,7 +58,7 @@
             android:layout_alignTop="@+id/layoutDetails"
             android:layout_alignBottom="@+id/tvReplayCount"
             android:layout_marginTop="20dp"
-            android:layout_marginBottom="5sp"
+            android:layout_marginBottom="9dp"
             android:visibility="gone" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -153,10 +153,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/rvReactions"
-            android:layout_marginVertical="4dp"
             android:layout_marginStart="2dp"
             android:layout_toEndOf="@+id/toReplayLine"
             android:includeFontPadding="false"
+            android:paddingVertical="4dp"
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/tinyTextSize"
             android:visibility="gone"
