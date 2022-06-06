@@ -51,7 +51,6 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/mainFrameLayout"
             android:name="com.sceyt.chat.ui.ChannelsFragment"
@@ -62,19 +61,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height=".5dp"
-            android:background="@color/sceyt_color_divider"
-            app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-            bind:themedBackgroundTintColor="@{R.color.sceyt_color_divider}" />
-
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/sceyt_color_bottom_nav"
-            app:elevation="0dp"
+            app:elevation="10dp"
             app:itemIconTint="@color/bottom_nav_item_color"
             app:itemTextColor="@color/bottom_nav_item_color"
             app:layout_constraintBottom_toBottomOf="parent"
