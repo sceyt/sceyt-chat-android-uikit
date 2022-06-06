@@ -1,6 +1,8 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders
 
 import android.content.res.ColorStateList
+import android.graphics.Typeface
+import android.widget.TextView
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
@@ -41,7 +43,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     }
                     avatar.setNameAndImageUrl(name, url)
                     channelTitle.text = name
-                    lastMessage.text = getLastMessageTxt(channel.lastMessage)
+                    setLastMessageTxt(lastMessage, channel.lastMessage)
                     updateDate.setDateText(getDateTxt(channel), false)
                     messageCount.isVisible = false
 
@@ -63,16 +65,20 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
-    private fun getLastMessageTxt(message: Message?): String {
-        if (message == null) return ""
-        return if (message.state == MessageState.Deleted) {
-            itemView.context.getString(R.string.message_was_deleted)
+    private fun setLastMessageTxt(lastMessage: TextView, message: Message?) {
+        if (message == null) return
+        if (message.state == MessageState.Deleted) {
+            lastMessage.text = itemView.context.getString(R.string.message_was_deleted)
+            lastMessage.setTypeface(lastMessage.typeface, Typeface.ITALIC)
         } else {
             val body = if (message.body.isNullOrBlank() && !message.attachments.isNullOrEmpty())
                 itemView.context.getString(R.string.attachment) else message.body
-            if (!message.incoming) {
+
+            val showText = if (!message.incoming) {
                 getFormattedYouMessage(body)
             } else body
+            lastMessage.text = showText
+            lastMessage.setTypeface(lastMessage.typeface, Typeface.NORMAL)
         }
     }
 

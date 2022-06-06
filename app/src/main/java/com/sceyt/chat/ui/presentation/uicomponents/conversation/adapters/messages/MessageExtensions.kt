@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.extensions.getFileSize
@@ -12,6 +13,7 @@ import java.io.File
 
 fun Message.getShowBody(context: Context): String {
     return when {
+        state == MessageState.Deleted -> context.getString(R.string.message_was_deleted)
         attachments.isNullOrEmpty() -> body.trim()
         else -> context.getString(R.string.attachment)
     }
