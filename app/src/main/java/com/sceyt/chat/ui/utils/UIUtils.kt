@@ -15,7 +15,7 @@ object UIUtils {
         context: Context,
         chooseListener: (type: ProfilePhotoChooseType) -> Unit
     ) {
-        val builder = AlertDialog.Builder(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle))
+        val builder = AlertDialog.Builder(ContextThemeWrapper(context, R.style.SceytDialogNoTitle))
 
         builder.setItems(R.array.image_picker) { _, which ->
             when (which) {
@@ -30,6 +30,7 @@ object UIUtils {
         }
 
         val dialog = builder.create()
+
         dialog.show()
     }
 

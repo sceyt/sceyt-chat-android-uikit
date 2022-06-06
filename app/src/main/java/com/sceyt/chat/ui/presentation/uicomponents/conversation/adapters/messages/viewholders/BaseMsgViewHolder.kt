@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.annotation.SuppressLint
+import android.graphics.Typeface
 import android.text.format.DateUtils
 import android.view.View
 import android.view.ViewGroup
@@ -13,11 +14,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.chat.ui.extensions.dpToPx
+import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
 import com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
 import com.sceyt.chat.ui.presentation.customviews.SceytToReplayLineView
@@ -79,6 +82,14 @@ abstract class BaseMsgViewHolder(view: View,
         with(viewBinding) {
             val parent = message.parent
             tvName.text = parent?.from?.fullName?.trim()
+            if (parent?.state == MessageState.Deleted) {
+                tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
+                tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_gray_400))
+            } else {
+                tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.NORMAL)
+                tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_black_themed))
+            }
+
             tvMessageBody.text = parent?.getShowBody(itemView.context)
             imageAttachment.isVisible = if (parent?.attachments.isNullOrEmpty()) {
                 false

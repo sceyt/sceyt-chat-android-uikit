@@ -13,6 +13,7 @@ import com.emojiview.emojiview.listener.OnEmojiActions
 import com.emojiview.emojiview.view.AXSingleEmojiView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chat.ui.databinding.SceytFragmentBottomSheetEmojisBinding
+import com.sceyt.chat.ui.extensions.getCompatColor
 
 class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : BottomSheetDialogFragment() {
     private lateinit var mBinding: SceytFragmentBottomSheetEmojisBinding
@@ -30,8 +31,12 @@ class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : Bo
 
     private fun initEmojis() {
         AXEmojiManager.setEmojiViewTheme(AXEmojiTheme().apply {
-            backgroundColor = Color.WHITE
-            categoryColor = Color.WHITE
+            backgroundColor = requireContext().getCompatColor(R.color.sceyt_color_dialog_bg_themed)
+            variantPopupBackgroundColor = requireContext().getCompatColor(R.color.sceyt_color_dialog_bg_themed)
+            categoryColor = requireContext().getCompatColor(R.color.sceyt_color_dialog_bg_themed)
+            titleColor = requireContext().getCompatColor(R.color.sceyt_color_text_themed)
+            dividerColor = requireContext().getCompatColor(R.color.sceyt_color_divider)
+            variantDividerColor = requireContext().getCompatColor(R.color.sceyt_color_divider)
         })
         mBinding.emojiPopupLayout.initPopupView(AXSingleEmojiView(requireContext()).apply {
             onEmojiActionsListener = object : OnEmojiActions {

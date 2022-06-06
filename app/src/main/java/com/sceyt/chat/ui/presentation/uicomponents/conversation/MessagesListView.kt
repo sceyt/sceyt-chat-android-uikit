@@ -20,6 +20,7 @@ import com.sceyt.chat.ui.extensions.getFileUriWithProvider
 import com.sceyt.chat.ui.extensions.getFragmentManager
 import com.sceyt.chat.ui.extensions.setClipboard
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.getFileFromMetadata
@@ -135,12 +136,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message.incoming)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message)
                 R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
                 R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
                 R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
                 R.id.sceyt_replay_in_thread -> messagePopupClickListeners.onReplayInThreadMessageClick(message)
+                R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
+                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message)
             }
             false
         }
@@ -356,7 +357,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onDeleteMessageClick(message: SceytMessage) {
-        messageEventListener?.invoke(MessageEvent.DeleteMessage(message))
+        DeleteMessageDialog(context, positiveClickListener = {
+            messageEventListener?.invoke(MessageEvent.DeleteMessage(message))
+        }).show()
     }
 
     override fun onEditMessageClick(message: SceytMessage) {

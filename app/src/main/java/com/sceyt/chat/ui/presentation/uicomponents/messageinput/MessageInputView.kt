@@ -21,12 +21,12 @@ import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.databinding.SceytMessageInputViewBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.isTextMessage
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentItem
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessageInputViewStyle
-import com.sceyt.chat.ui.utils.UIUtils
 import com.sceyt.chat.ui.utils.ViewUtil
 import java.io.File
 
@@ -125,15 +125,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun handleAttachmentClick() {
-        UIUtils.openFileChooser(context) { chooseType ->
+        ChooseFileTypeDialog(context) { chooseType ->
             when (chooseType) {
-                UIUtils.ProfilePhotoChooseType.CAMERA -> {
+                ChooseFileTypeDialog.AttachmentChooseType.CAMERA -> {
                     if (context.checkAndAskPermissions(requestCameraPermissionLauncher,
                                 android.Manifest.permission.CAMERA)) {
                         takePhotoLauncher?.launch(getPhotoFileUri())
                     }
                 }
-                UIUtils.ProfilePhotoChooseType.GALLERY -> {
+                ChooseFileTypeDialog.AttachmentChooseType.GALLERY -> {
                     if (context.checkAndAskPermissions(requestGalleryPermissionLauncher,
                                 android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
                         openGallery()
@@ -146,7 +146,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     }
                 }
             }
-        }
+        }.show()
     }
 
     private fun SceytMessageInputViewBinding.setUpStyle() {
