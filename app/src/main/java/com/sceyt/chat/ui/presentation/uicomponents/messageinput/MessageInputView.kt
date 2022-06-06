@@ -83,12 +83,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             layoutReplayMessage.icCancelReplay.setOnClickListener {
                 clickListeners.onCancelReplayMessageViewClick(it)
             }
-
-            post {
-                rvAttachments.apply {
-                    setPadding(messageInput.x.toInt(), paddingTop, paddingRight, paddingBottom)
-                }
-            }
         }
     }
 
