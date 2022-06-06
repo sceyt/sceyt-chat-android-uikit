@@ -123,7 +123,7 @@
         <entry key="app/src/main/res/layout/sceyt_conversation_header_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_custom_dialog_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_dialog_choose_file_type.xml" value="0.390625" />
-        <entry key="app/src/main/res/layout/sceyt_dialog_view.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/sceyt_dialog_view.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/sceyt_fragment_bottom_sheet_emojis.xml" value="0.5" />
         <entry key="app/src/main/res/layout/sceyt_item_channel.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_deleted_message.xml" value="0.3776041666666667" />
