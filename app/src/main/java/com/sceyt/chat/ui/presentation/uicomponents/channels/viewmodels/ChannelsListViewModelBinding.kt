@@ -2,10 +2,12 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum.*
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.toSceytUiMessage
 import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
+import com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -25,6 +27,36 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
         loadMoreChannelsFlow.collect {
             if (it is SceytResponse.Success && it.data != null)
                 channelsListView.addNewChannels(it.data)
+        }
+    }
+
+    onNewMessageLiveData.observe(lifecycleOwner) {
+        if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), it.first.unreadMessageCount)) {
+            loadChannels(0, channelsListView.getChannelsSizeFromUpdate)
+        }
+    }
+
+    onMessageEditedOrDeletedLiveData.observe(lifecycleOwner) {
+        if (!channelsListView.updateLastMessage(it)) {
+            loadChannels(0, channelsListView.getChannelsSizeFromUpdate)
+        }
+    }
+
+    onMessageStatusLiveData.observe(lifecycleOwner) {
+        channelsListView.updateLastMessageStatus(it)
+    }
+
+    onChannelEventLiveData.observe(lifecycleOwner) {
+        when (it.eventType) {
+            Created -> loadChannels(0, channelsListView.getChannelsSizeFromUpdate + 1)
+            Deleted -> channelsListView.deleteChannel(it.channelId)
+            ClearedHistory -> channelsListView.channelCleared(it.channelId ?: return@observe)
+            Updated -> {/*TODO)*/
+            }
+            Muted -> {/*TODO)*/
+            }
+            UnMuted -> {/*TODO)*/
+            }
         }
     }
 

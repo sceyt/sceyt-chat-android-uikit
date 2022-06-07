@@ -3,10 +3,11 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.data.*
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
@@ -51,13 +52,16 @@ class MessageListViewModel(conversationId: Long,
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytMessage>> = _addDeleteReactionLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytMessage>()
-    val onMessageStatusLiveData = MutableLiveData<ChannelEventsObserverService.MessageStatusChange>()
+    val onMessageStatusLiveData = MutableLiveData<MessageStatusChange>()
     val onMessageReactionUpdatedLiveData = MutableLiveData<SceytMessage>()
     val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytMessage>()
-    val onChannelHistoryClearedLiveData = MutableLiveData<Channel>()
 
     val onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
     val onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
+
+    // Chanel events
+    val onChannelEventLiveData: MutableLiveData<ChannelEventData> = MutableLiveData<ChannelEventData>()
+
 
     init {
         addChannelListeners()
@@ -88,8 +92,8 @@ class MessageListViewModel(conversationId: Long,
         }
 
         viewModelScope.launch {
-            repo.onChannelClearedHistoryFlow.collect {
-                onChannelHistoryClearedLiveData.value = it
+            repo.onChannelEventFlow.collect {
+                onChannelEventLiveData.value = it
             }
         }
     }

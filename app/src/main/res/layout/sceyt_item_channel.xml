@@ -85,6 +85,7 @@
             app:layout_constraintEnd_toEndOf="@+id/channelTitle"
             app:layout_constraintStart_toStartOf="@id/channelTitle"
             app:layout_constraintTop_toBottomOf="@+id/channelTitle"
+            bind:setChannelLastMessageText="@{data.message}"
             tools:text="Description" />
 
         <View
@@ -107,9 +108,8 @@
             app:sceytDateStatusViewDateTextSize="13sp"
             app:sceytDateStatusViewFirstStatus="true"
             app:sceytDateStatusViewStatusIconMargin="4dp"
-            app:sceytDateStatusViewStatusIconSize="19dp"
-            bind:incoming="@{data.lastMessage.incoming}"
-            bind:status="@{data.lastMessage.deliveryStatus}"
+            app:sceytDateStatusViewStatusIconSize="16dp"
+            bind:setLastMessageStatusIcon="@{data.message}"
             tools:sceytDateStatusViewDateText="12:28"
             tools:sceytDateStatusViewStatusIcon="@drawable/ic_status_read" />
 
@@ -130,7 +130,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/updateDate"
-            bind:setUnreadCount="@{data}"
+            bind:setUnreadCount="@{data.unreadCount}"
             tools:text="9"
             tools:visibility="visible" />
 

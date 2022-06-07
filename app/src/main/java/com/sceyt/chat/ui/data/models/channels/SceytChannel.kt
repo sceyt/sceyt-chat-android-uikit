@@ -1,8 +1,13 @@
 package com.sceyt.chat.ui.data.models.channels
 
+
 import android.os.Parcelable
-import com.sceyt.chat.models.message.Message
+import androidx.databinding.BaseObservable
+import androidx.databinding.Bindable
+import com.sceyt.chat.ui.BR
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getPresentableName
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.util.*
 
@@ -11,12 +16,32 @@ open class SceytChannel(open var id: Long,
                         open var createdAt: Long,
                         open var updatedAt: Long,
                         open var unreadMessageCount: Long,
-                        open var lastMessage: Message? = null,
+                        open var lastMessage: SceytMessage? = null,
                         open var label: String?,
                         open var metadata: String?,
                         open var muted: Boolean,
                         open var muteExpireDate: Date?,
-                        open var channelType: ChannelTypeEnum) : Parcelable {
+                        open var channelType: ChannelTypeEnum) : BaseObservable(), Parcelable {
+
+    @IgnoredOnParcel
+    @Bindable
+    var message: SceytMessage? = null
+        get() = lastMessage
+        set(value) {
+            field = value
+            lastMessage = value
+            notifyPropertyChanged(BR.message)
+        }
+
+    @IgnoredOnParcel
+    @Bindable
+    var unreadCount = 0L
+        get() = unreadMessageCount
+        set(value) {
+            field = value
+            unreadMessageCount = value
+            notifyPropertyChanged(BR.unreadCount)
+        }
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {

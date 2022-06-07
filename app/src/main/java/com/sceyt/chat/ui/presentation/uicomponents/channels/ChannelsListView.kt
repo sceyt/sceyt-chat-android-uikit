@@ -4,7 +4,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
@@ -13,7 +17,10 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelCli
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.utils.binding.BindingUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners {
@@ -69,6 +76,39 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.addNewChannels(channels)
     }
 
+    internal fun updateLastMessage(message: SceytMessage, unreadCount: Long? = null): Boolean {
+        channelsRV.getChannels()?.find { message.channelId == it.channel.id }?.let {
+            it.channel.message = message
+            unreadCount?.let { count ->
+                it.channel.unreadCount = count
+            }
+            sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
+            return true
+        }
+        return false
+    }
+
+    internal fun channelCleared(channelId: Long) {
+        channelsRV.getChannels()?.find { channelId == it.channel.id }?.let {
+            it.channel.message = null
+            it.channel.unreadCount = 0
+            sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
+        }
+    }
+
+    internal fun updateLastMessageStatus(status: MessageStatusChange) {
+        context.asAppCompatActivity()?.lifecycleScope?.launch(Dispatchers.Default) {
+            channelsRV.getChannels()?.find { status.channel?.id == it.channel.id }?.let { channelItem ->
+                channelItem.channel.message?.let {
+                    if (it.status < status.status) {
+                        it.status = status.status
+                        channelItem.channel.message = it
+                    }
+                }
+            }
+        }
+    }
+
     internal fun updateState(state: BaseViewModel.PageState) {
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
@@ -76,6 +116,19 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun setReachToEndListener(listener: (offset: Int) -> Unit) {
         channelsRV.setRichToEndListeners(listener)
     }
+
+    internal fun deleteChannel(channelId: Long?) {
+        channelsRV.deleteChannel(channelId ?: return)
+    }
+
+    private fun sortChannelsBy(sortBy: SceytUIKitConfig.ChannelSortType) {
+        channelsRV.sortBy(sortBy)
+    }
+
+    val getChannels get() = channelsRV.getChannels()
+
+    val getChannelsSizeFromUpdate
+        get() = getChannels?.size ?: SceytUIKitConfig.CHANNELS_LOAD_SIZE
 
     fun setChannelListener(listener: ChannelClickListeners) {
         clickListeners.setListener(listener)
