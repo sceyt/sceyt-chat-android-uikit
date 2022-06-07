@@ -3,9 +3,11 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toMessage
+import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
@@ -105,8 +107,14 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         messagesListView.updateMessage(message, true)
     }
 
-    onChannelHistoryClearedLiveData.observe(lifecycleOwner) {
-        messagesListView.clearData()
+    onChannelEventLiveData.observe(lifecycleOwner) {
+        when (it.eventType) {
+            ChannelEventEnum.ClearedHistory -> messagesListView.clearData()
+            ChannelEventEnum.Deleted -> {
+                messagesListView.context.asAppCompatActivity()?.finish()
+            }
+            else -> return@observe
+        }
     }
 
     pageStateLiveData.observe(lifecycleOwner) {

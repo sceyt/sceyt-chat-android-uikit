@@ -68,4 +68,21 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
     }
 
     fun getSkip() = channels.filter { it !is ChannelListItem.LoadingMoreItem }.size
+
+    fun getData() = channels
+
+    fun getChannels() = channels
+        .filter { it !is ChannelListItem.LoadingMoreItem }
+        .map { it as ChannelListItem.ChannelItem }
+
+
+    fun deleteChannel(id: Long) {
+        getChannels().forEachIndexed { index, channelItem ->
+            if (channelItem.channel.id == id) {
+                channels.removeAt(index)
+                notifyItemRemoved(index)
+                return@forEachIndexed
+            }
+        }
+    }
 }

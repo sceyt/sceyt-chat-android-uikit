@@ -227,7 +227,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessage(message: SceytMessage, notifyItemChanged: Boolean) {
-        for ((index, item) in messagesRV.getData().withIndex()) {
+        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
             if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
 
@@ -254,7 +254,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
         ids.forEach { id ->
-            for (item: MessageListItem in messagesRV.getData()) {
+            for (item: MessageListItem in messagesRV.getData() ?: return) {
                 if (item is MessageListItem.MessageItem) {
                     if (item.message.id == id) {
                         if (item.message.status < status)
@@ -270,7 +270,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageSendFailed(id: Long) {
-        messagesRV.getData().find { it is MessageListItem.MessageItem && it.message.id == id }?.let {
+        messagesRV.getData()?.find { it is MessageListItem.MessageItem && it.message.id == id }?.let {
             (it as MessageListItem.MessageItem).message.status = DeliveryStatus.Failed
         }
     }

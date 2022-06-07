@@ -9,6 +9,7 @@ import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
@@ -23,26 +24,25 @@ class MessagesRepositoryImpl(conversationId: Long,
                              private val channel: Channel,
                              private val replayInThread: Boolean) {
     //todo need to add DI
-    private val channelEventsService = ChannelEventsObserverService()
+    // private val channelEventsService = ChannelEventsObserverService()
 
-    val onMessageFlow = channelEventsService.onMessageFlow
+    val onMessageFlow = ChannelEventsObserverService.onMessageCleanFlow
         .filter { it?.first?.id == channel.id || it?.second?.replyInThread != replayInThread }
         .mapNotNull { it?.second?.toSceytUiMessage() }
 
-    val onMessageStatusFlow = channelEventsService.onMessageStatusFlow
+    val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
         .filter { it?.channel?.id == channel.id }
 
-    val onMessageReactionUpdatedFlow = channelEventsService.onMessageReactionUpdatedChannel.consumeAsFlow()
+    val onMessageReactionUpdatedFlow = ChannelEventsObserverService.onMessageReactionUpdatedChannel.consumeAsFlow()
         .filterNotNull()
         .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
-    val onMessageEditedOrDeleteFlow = channelEventsService.onMessageEditedOrDeletedChannel.consumeAsFlow()
+    val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedChannel.consumeAsFlow()
         .filterNotNull()
         .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
-    val onChannelClearedHistoryFlow = channelEventsService.onChannelClearedHistoryChannel.consumeAsFlow()
-        .filterNotNull()
-        .filter { it.id == channel.id }
+    val onChannelEventFlow = ChannelEventsObserverService.onChannelEventChannel.consumeAsFlow()
+        .filter { it.channelId == channel.id }
 
     private val query = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)

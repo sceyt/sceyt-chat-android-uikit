@@ -1,7 +1,7 @@
 package com.sceyt.chat.ui.data.models.channels
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlinx.parcelize.Parcelize
 import java.util.*
 
@@ -11,7 +11,7 @@ class SceytGroupChannel(
         override var createdAt: Long = 0,
         override var updatedAt: Long = 0,
         override var unreadMessageCount: Long = 0,
-        override var lastMessage: Message? = null,
+        override var lastMessage: SceytMessage? = null,
         override var label: String? = null,
         override var metadata: String? = null,
         override var muted: Boolean = false,

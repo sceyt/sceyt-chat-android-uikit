@@ -19,7 +19,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             createdAt = createdAt,
             updatedAt = updatedAt,
             unreadMessageCount = unreadMessageCount,
-            lastMessage = lastMessage,
+            lastMessage = lastMessage?.toSceytUiMessage(true),
             label = label,
             metadata = metadata,
             muted = muted(),
@@ -37,7 +37,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             createdAt = createdAt,
             updatedAt = updatedAt,
             unreadMessageCount = unreadMessageCount,
-            lastMessage = lastMessage,
+            lastMessage = lastMessage?.toSceytUiMessage(false),
             label = label,
             metadata = metadata,
             muted = muted(),
@@ -51,17 +51,17 @@ fun SceytChannel.toChannel(): Channel {
     return when (channelType) {
         Direct -> {
             this as SceytDirectChannel
-            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer), lastMessage, unreadMessageCount, muted, 0)
+            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer), lastMessage?.toMessage(), unreadMessageCount, muted, 0)
         }
         Private -> {
             this as SceytGroupChannel
             PrivateChannel(id, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.toTypedArray(), lastMessage, unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
         Public -> {
             this as SceytGroupChannel
             PublicChannel(id, "", subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.toTypedArray(), lastMessage, unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
     }
 }

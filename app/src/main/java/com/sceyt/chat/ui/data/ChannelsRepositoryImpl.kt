@@ -4,39 +4,61 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class ChannelsRepositoryImpl {
+    //todo need to add DI
+    //private val channelEventsService = ChannelEventsObserverService()
+
+    val onMessageFlow = ChannelEventsObserverService.onMessageFlow
+    val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
+
+    val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedChannel
+        .consumeAsFlow()
+        .filterNotNull()
+
+    val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventChannel.consumeAsFlow()
 
     private val query =
             ChannelListQuery.Builder()
                 .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
-                .order(ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage)
+                .order(getOrder())
                 .limit(SceytUIKitConfig.CHANNELS_LOAD_SIZE)
                 .build()
 
     private val querySearch =
             ChannelListQuery.Builder()
                 .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
-                .order(ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage)
+                .order(getOrder())
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeySubject)
                 .queryType(ChannelListQuery.ChannelListFilterQueryType.ListQueryFilterContains)
 
-    suspend fun getChannels(offset: Int): SceytResponse<List<SceytChannel>> {
-        return getChannelsCoroutine(offset)
+    private fun getOrder(): ChannelListQuery.ChannelListOrder {
+        return if (SceytUIKitConfig.sortChannelsBy == SceytUIKitConfig.ChannelSortType.ByLastMsg)
+            ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage
+        else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
+    }
+
+    suspend fun getChannels(offset: Int, limit: Int): SceytResponse<List<SceytChannel>> {
+        return getChannelsCoroutine(offset, limit)
     }
 
     suspend fun searchChannels(offset: Int, query: String): SceytResponse<List<SceytChannel>> {
         return getSearchChannelsCoroutine(offset, query)
     }
 
-    private suspend fun getChannelsCoroutine(offset: Int): SceytResponse<List<SceytChannel>> {
+    private suspend fun getChannelsCoroutine(offset: Int,
+                                             limit: Int): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
             query.offset = offset
+            query.limit = limit
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())

@@ -77,7 +77,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setData(messages: List<MessageListItem>) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(messages as ArrayList<MessageListItem>, viewHolderFactory)
+            adapter = MessagesAdapter(ArrayList(messages), viewHolderFactory)
                 .also { mAdapter = it }
         } else
             mAdapter.notifyUpdate(messages)
@@ -91,7 +91,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         } else null
     }
 
-    fun getData() = mAdapter.getData()
+    fun getData(): ArrayList<MessageListItem>? {
+        return if (::mAdapter.isInitialized)
+            mAdapter.getData()
+        else null
+    }
 
     fun addNextPageMessages(messages: List<MessageListItem>) {
         if (::mAdapter.isInitialized.not())

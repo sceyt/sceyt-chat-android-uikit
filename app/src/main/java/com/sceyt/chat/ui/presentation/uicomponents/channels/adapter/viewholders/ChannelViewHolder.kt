@@ -1,13 +1,12 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders
 
 import android.content.res.ColorStateList
-import android.graphics.Typeface
-import android.widget.TextView
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.models.channels.*
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
+import com.sceyt.chat.ui.data.models.channels.isGroup
 import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getPresentableName
@@ -43,7 +42,6 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     }
                     avatar.setNameAndImageUrl(name, url)
                     channelTitle.text = name
-                    setLastMessageTxt(lastMessage, channel.lastMessage)
                     updateDate.setDateText(getDateTxt(channel), false)
                     messageCount.isVisible = false
 
@@ -65,23 +63,6 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
-    private fun setLastMessageTxt(lastMessage: TextView, message: Message?) {
-        if (message == null) return
-        if (message.state == MessageState.Deleted) {
-            lastMessage.text = itemView.context.getString(R.string.message_was_deleted)
-            lastMessage.setTypeface(lastMessage.typeface, Typeface.ITALIC)
-        } else {
-            val body = if (message.body.isNullOrBlank() && !message.attachments.isNullOrEmpty())
-                itemView.context.getString(R.string.attachment) else message.body
-
-            val showText = if (!message.incoming) {
-                getFormattedYouMessage(body)
-            } else body
-            lastMessage.text = showText
-            lastMessage.setTypeface(lastMessage.typeface, Typeface.NORMAL)
-        }
-    }
-
     private fun getFormattedYouMessage(args: String): String {
         return itemView.resources.getString(R.string.your_last_message).format(args)
     }
@@ -89,8 +70,8 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     private fun getDateTxt(channel: SceytChannel?): String {
         if (channel == null) return ""
         val lastMsgCreatedAt = channel.lastMessage?.createdAt
-        return if (lastMsgCreatedAt != null && lastMsgCreatedAt.time != 0L)
-            DateTimeUtil.getDateTimeString(lastMsgCreatedAt.time)
+        return if (lastMsgCreatedAt != null && lastMsgCreatedAt != 0L)
+            DateTimeUtil.getDateTimeString(lastMsgCreatedAt)
         else
             DateTimeUtil.getDateTimeString(channel.updatedAt)
     }

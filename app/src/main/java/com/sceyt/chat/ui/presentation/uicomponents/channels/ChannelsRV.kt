@@ -5,11 +5,14 @@ import android.util.AttributeSet
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.extensions.addRVScrollListener
+import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
@@ -44,8 +47,11 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (::mAdapter.isInitialized.not()) {
             adapter = ChannelsAdapter(channels as ArrayList<ChannelListItem>, viewHolderFactory)
                 .also { mAdapter = it }
-        } else
+        } else {
             mAdapter.notifyUpdate(channels)
+            if (isFirstItemDisplaying())
+                scrollToPosition(0)
+        }
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
@@ -57,12 +63,31 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             mAdapter.addList(channels as MutableList<ChannelListItem>)
     }
 
+    fun deleteChannel(id: Long) {
+        mAdapter.deleteChannel(id)
+    }
+
+    fun getChannels(): List<ChannelListItem.ChannelItem>? {
+        return if (::mAdapter.isInitialized) mAdapter.getChannels() else null
+    }
+
     fun setRichToEndListeners(listener: (offset: Int) -> Unit) {
         richToEndListener = listener
     }
 
     fun setChannelListener(listener: ChannelClickListeners) {
         viewHolderFactory.setChannelListener(listener)
+    }
+
+    fun sortBy(sortChannelsBy: SceytUIKitConfig.ChannelSortType) {
+        val hasLoading = mAdapter.getData().findLast { it is ChannelListItem.LoadingMoreItem } != null
+        val sortedList = ArrayList(mAdapter.getChannels().map { it.channel })
+            .sortedWith(ChannelsComparatorBy(sortChannelsBy))
+
+        val newList: ArrayList<ChannelListItem> = ArrayList(sortedList.map { ChannelListItem.ChannelItem(it) })
+        if (hasLoading)
+            newList.add(ChannelListItem.LoadingMoreItem)
+        setData(newList)
     }
 
     override fun onDetachedFromWindow() {
