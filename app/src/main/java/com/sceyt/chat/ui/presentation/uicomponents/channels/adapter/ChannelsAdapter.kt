@@ -19,13 +19,13 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<ChannelListItem>, position: Int) {
-        holder.bindViews(item = channels[position])
+        holder.bind(item = channels[position])
     }
 
     override fun getItemCount(): Int = channels.size
 
     override fun getItemViewType(position: Int): Int {
-        return viewHolderFactory.getItemViewType(channels[position])
+        return viewHolderFactory.getItemViewType(channels[position], position)
     }
 
     override fun onViewDetachedFromWindow(holder: BaseViewHolder<ChannelListItem>) {

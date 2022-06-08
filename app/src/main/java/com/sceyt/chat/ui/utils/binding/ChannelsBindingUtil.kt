@@ -84,8 +84,8 @@ object ChannelsBindingUtil {
                 textView.context.getString(R.string.attachment) else message.body
 
             val showText = if (!message.incoming) {
-                textView.getString(R.string.your_last_message).format(body)
-            } else body
+                textView.getString(R.string.your_last_message).format(body.trim())
+            } else body.trim()
             textView.text = showText
             textView.setTypeface(null, Typeface.NORMAL)
         }

@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.sceytconfigs
 
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.LayoutRes
 import com.sceyt.chat.ui.R
 
@@ -14,6 +15,9 @@ object ChannelStyle {
 
     @ColorRes
     var unreadCountColor: Int = R.color.sceyt_color_accent
+
+    @DrawableRes
+    var mutedIcon: Int = R.drawable.sceyt_ic_muted
 
     @LayoutRes
     var emptyState: Int = R.layout.sceyt_channel_list_empty_state
@@ -50,6 +54,7 @@ object ChannelStyle {
         titleColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelTitleTextColor, titleColor)
         lastMessageTextColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiLastMessageTextColor, lastMessageTextColor)
         unreadCountColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor)
+        mutedIcon = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiMutedChannelIcon, mutedIcon)
         emptyState = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiEmptyStateView, emptyState)
         emptySearchState = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiEmptySearchStateView, emptySearchState)
         loadingState = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiLoadingView, loadingState)

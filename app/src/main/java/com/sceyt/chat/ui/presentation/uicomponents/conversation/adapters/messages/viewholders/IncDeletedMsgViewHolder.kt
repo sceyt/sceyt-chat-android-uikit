@@ -16,7 +16,7 @@ class IncDeletedMsgViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bindViews(item: MessageListItem) {
+    override fun bind(item: MessageListItem) {
         when (item) {
             is MessageListItem.MessageItem -> {
                 with(binding) {

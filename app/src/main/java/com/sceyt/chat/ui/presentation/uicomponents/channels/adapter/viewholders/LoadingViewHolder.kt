@@ -4,5 +4,5 @@ import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
 
 class LoadingViewHolder<T>(binding: SceytItemLoadingMoreBinding) : BaseViewHolder<T>(binding.root) {
 
-    override fun bindViews(item: T) {}
+    override fun bind(item: T) {}
 }

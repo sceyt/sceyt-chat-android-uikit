@@ -7,12 +7,14 @@ import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
@@ -28,6 +30,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var channelsRV: ChannelsRV
     private var pageStateView: PageStateView? = null
     private var clickListeners = ChannelClickListenersImpl(this)
+    private var channelClickListeners: ChannelClickListeners.ClickListeners
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
@@ -65,6 +68,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
                 clickListeners.onAvatarClick(item)
             }
+        }.also {
+            channelClickListeners = it
         })
     }
 
@@ -121,18 +126,40 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.deleteChannel(channelId ?: return)
     }
 
+    internal fun updateMuteState(muted: Boolean, channelId: Long?) {
+        channelsRV.updateMuteState(muted, channelId ?: return)
+    }
+
+
+    internal fun channelUpdated(channel: SceytChannel?) {
+        channelsRV.updateChannel(channel ?: return)
+    }
+
     private fun sortChannelsBy(sortBy: SceytUIKitConfig.ChannelSortType) {
         channelsRV.sortBy(sortBy)
     }
 
+    fun setChannelClickListener(listener: ChannelClickListeners) {
+        clickListeners.setListener(listener)
+    }
+
+    fun setCustomChannelClickListeners(listeners: ChannelClickListenersImpl) {
+        clickListeners = listeners
+    }
+
+    fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
+        channelsRV.setViewHolderFactory(factory.also {
+            it.setChannelListener(channelClickListeners)
+        })
+    }
+
     val getChannels get() = channelsRV.getChannels()
+
+    val getChannelsRv get() = channelsRV
 
     val getChannelsSizeFromUpdate
         get() = getChannels?.size ?: SceytUIKitConfig.CHANNELS_LOAD_SIZE
 
-    fun setChannelListener(listener: ChannelClickListeners) {
-        clickListeners.setListener(listener)
-    }
 
     //Click listeners
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
@@ -144,6 +171,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-
+        ConversationActivity.newInstance(context, item.channel)
     }
 }

@@ -14,7 +14,7 @@ class MessageVideoViewHolder(
         private val messageListeners: MessageClickListenersImpl?,
 ) : BaseFileViewHolder(binding.root) {
 
-    override fun bindViews(item: FileListItem) {
+    override fun bind(item: FileListItem) {
         with(binding) {
             loadData = item.fileLoadData
             parentLayout.clipToOutline = true

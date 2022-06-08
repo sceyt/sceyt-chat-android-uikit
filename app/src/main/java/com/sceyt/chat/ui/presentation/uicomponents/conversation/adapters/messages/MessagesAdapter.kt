@@ -20,7 +20,7 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<MessageListItem>, position: Int) {
-        holder.bindViews(item = messages[position])
+        holder.bind(item = messages[position])
     }
 
     override fun getItemViewType(position: Int): Int {

@@ -8,7 +8,6 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverS
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -20,11 +19,10 @@ class ChannelsRepositoryImpl {
     val onMessageFlow = ChannelEventsObserverService.onMessageFlow
     val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
 
-    val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedChannel
-        .consumeAsFlow()
+    val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
         .filterNotNull()
 
-    val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventChannel.consumeAsFlow()
+    val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventFlow
 
     private val query =
             ChannelListQuery.Builder()

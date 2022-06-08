@@ -19,7 +19,7 @@ class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
 
     override fun onBindViewHolder(holder: BaseViewHolder<AttachmentItem>, position: Int) {
         val attachment = attachments[position]
-        holder.bindViews(attachment)
+        holder.bind(attachment)
     }
 
     override fun getItemCount(): Int {

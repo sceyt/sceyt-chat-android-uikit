@@ -10,61 +10,62 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.chat.sceyt_listeners.MessageListener
 import com.sceyt.chat.ui.extensions.TAG
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.asSharedFlow
 
 object ChannelEventsObserverService {
-    private val onMessageFlow_: MutableStateFlow<Pair<Channel, Message>?> = MutableStateFlow(null)
-    val onMessageFlow: Flow<Pair<Channel, Message>?> = onMessageFlow_.filterNotNull()
+    private val onMessageFlow_: MutableSharedFlow<Pair<Channel, Message>> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onMessageFlow = onMessageFlow_.asSharedFlow()
 
-    private val onMessageCleanFlow_: MutableStateFlow<Pair<Channel, Message>?> = MutableStateFlow(null)
-    val onMessageCleanFlow: SharedFlow<Pair<Channel, Message>?> = onMessageCleanFlow_
-        get() {
-            onMessageCleanFlow_.value = null
-            return field
-        }
+    private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChange> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
 
-    private val onMessageStatusFlow_: MutableStateFlow<MessageStatusChange?> = MutableStateFlow(null)
-    val onMessageStatusFlow: Flow<MessageStatusChange?> = onMessageStatusFlow_.filterNotNull()
+    private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
 
-    private val onMessageEditedOrDeletedChannel_ = kotlinx.coroutines.channels.Channel<Message?>()
-    val onMessageEditedOrDeletedChannel: ReceiveChannel<Message?> = onMessageEditedOrDeletedChannel_
+    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
 
-    private val onMessageReactionUpdatedChannel_ = kotlinx.coroutines.channels.Channel<Message?>()
-    val onMessageReactionUpdatedChannel: ReceiveChannel<Message?> = onMessageReactionUpdatedChannel_
-
-    private val onChannelEventChannel_ = kotlinx.coroutines.channels.Channel<ChannelEventData>()
-    val onChannelEventChannel: ReceiveChannel<ChannelEventData> = onChannelEventChannel_
+    private val onChannelEventFlow_ = MutableSharedFlow<ChannelEventData>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onChannelEventFlow: SharedFlow<ChannelEventData> = onChannelEventFlow_.asSharedFlow()
 
     init {
-
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
                 onMessageFlow_.tryEmit(Pair(channel, message))
-                onMessageCleanFlow_.tryEmit(Pair(channel, message))
 
                 ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
                 }
             }
 
             override fun onMessageDeleted(message: Message?) {
-                onMessageEditedOrDeletedChannel_.trySend(message)
+                onMessageEditedOrDeletedFlow_.tryEmit(message)
             }
 
             override fun onMessageEdited(message: Message?) {
-                onMessageEditedOrDeletedChannel_.trySend(message)
+                onMessageEditedOrDeletedFlow_.tryEmit(message)
             }
 
             override fun onReactionAdded(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedChannel_.trySend(message)
+                onMessageReactionUpdatedFlow_.tryEmit(message)
             }
 
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedChannel_.trySend(message)
+                onMessageReactionUpdatedFlow_.tryEmit(message)
             }
         })
 
@@ -79,27 +80,28 @@ object ChannelEventsObserverService {
             }
 
             override fun onClearedHistory(channel: Channel?) {
-                onChannelEventChannel_.trySend(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
             }
 
             override fun onChannelUpdated(channel: Channel?) {
-                onChannelEventChannel_.trySend(ChannelEventData(channel, ChannelEventEnum.Updated))
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Updated))
             }
 
             override fun onChannelCreated(channel: Channel?) {
-                onChannelEventChannel_.trySend(ChannelEventData(channel, ChannelEventEnum.Created))
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Created))
             }
 
             override fun onChannelDeleted(channelId: Long) {
-                onChannelEventChannel_.trySend(ChannelEventData(null, ChannelEventEnum.Deleted, channelId))
+                val data = ChannelEventData(null, ChannelEventEnum.Deleted, channelId)
+                onChannelEventFlow_.tryEmit(data)
             }
 
             override fun onChannelMuted(channel: Channel?) {
-                onChannelEventChannel_.trySend(ChannelEventData(channel, ChannelEventEnum.Muted))
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Muted))
             }
 
             override fun onChannelUnMuted(channel: Channel?) {
-                onChannelEventChannel_.trySend(ChannelEventData(channel, ChannelEventEnum.UnMuted))
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.UnMuted))
             }
         })
     }
