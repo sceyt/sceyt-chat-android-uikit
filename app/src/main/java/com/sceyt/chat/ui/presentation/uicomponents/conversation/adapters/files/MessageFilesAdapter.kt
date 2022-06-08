@@ -17,7 +17,7 @@ class MessageFilesAdapter(private val files: ArrayList<FileListItem>,
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<FileListItem>, position: Int) {
-        holder.bindViews(files[position])
+        holder.bind(files[position])
     }
 
     override fun getItemViewType(position: Int): Int {

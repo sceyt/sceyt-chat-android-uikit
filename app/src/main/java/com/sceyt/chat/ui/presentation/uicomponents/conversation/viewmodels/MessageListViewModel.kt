@@ -34,7 +34,7 @@ class MessageListViewModel(conversationId: Long,
     var hasNext = false
 
     // todo di
-    private val repo = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
+    private val messagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
@@ -69,30 +69,30 @@ class MessageListViewModel(conversationId: Long,
 
     private fun addChannelListeners() {
         viewModelScope.launch {
-            repo.onMessageFlow.collect {
+            messagesRepository.onMessageFlow.collect {
                 onNewMessageLiveData.value = it
             }
         }
 
         viewModelScope.launch {
-            repo.onMessageStatusFlow.collect {
+            messagesRepository.onMessageStatusFlow.collect {
                 onMessageStatusLiveData.value = it
             }
         }
 
         viewModelScope.launch {
-            repo.onMessageReactionUpdatedFlow.collect {
+            messagesRepository.onMessageReactionUpdatedFlow.collect {
                 onMessageReactionUpdatedLiveData.value = it.toSceytUiMessage(isGroup)
             }
         }
         viewModelScope.launch {
-            repo.onMessageEditedOrDeleteFlow.collect {
+            messagesRepository.onMessageEditedOrDeleteFlow.collect {
                 onMessageEditedOrDeletedLiveData.value = it.toSceytUiMessage(isGroup)
             }
         }
 
         viewModelScope.launch {
-            repo.onChannelEventFlow.collect {
+            messagesRepository.onChannelEventFlow.collect {
                 onChannelEventLiveData.value = it
             }
         }
@@ -104,7 +104,7 @@ class MessageListViewModel(conversationId: Long,
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.getMessages(lastMessageId)
+            val response = messagesRepository.getMessages(lastMessageId)
             initResponse(response, isLoadingMore)
         }
     }
@@ -130,28 +130,28 @@ class MessageListViewModel(conversationId: Long,
 
     private fun deleteMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.deleteMessage(message.toMessage())
+            val response = messagesRepository.deleteMessage(message.toMessage())
             _messageEditedDeletedLiveData.postValue(response)
         }
     }
 
     private fun addReaction(message: SceytMessage, score: ReactionScore) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.addReaction(message.id, score)
+            val response = messagesRepository.addReaction(message.id, score)
             _addDeleteReactionLiveData.postValue(response)
         }
     }
 
     private fun deleteReaction(message: SceytMessage, score: ReactionScore) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.deleteReaction(message.id, score)
+            val response = messagesRepository.deleteReaction(message.id, score)
             _addDeleteReactionLiveData.postValue(response)
         }
     }
 
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.sendMessage(message) { tmpMessage ->
+            val response = messagesRepository.sendMessage(message) { tmpMessage ->
                 onNewMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup))
             }
             _messageSentLiveData.postValue(response)
@@ -161,7 +161,7 @@ class MessageListViewModel(conversationId: Long,
 
     fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.sendMessage(message) { tmpMessage ->
+            val response = messagesRepository.sendMessage(message) { tmpMessage ->
                 onNewMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
                     this.parent = parent
                 })
@@ -172,14 +172,14 @@ class MessageListViewModel(conversationId: Long,
 
     fun editMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.editMessage(message)
+            val response = messagesRepository.editMessage(message)
             _messageEditedDeletedLiveData.postValue(response)
         }
     }
 
     fun markMessageAsDisplayed(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            repo.markAsRead(id)
+            messagesRepository.markAsRead(id)
         }
     }
 

@@ -3,7 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.listeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 
-class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
+open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
     private var defaultListeners: ChannelClickListeners.ClickListeners? = null
     private var channelClickListener: ChannelClickListeners.ChannelClickClickListener? = null
     private var channelLongClickListener: ChannelClickListeners.ChannelClickLongClickListener? = null
@@ -26,13 +26,8 @@ class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        avatarClickListener?.let {
-            it.onAvatarClick(item)
-            defaultListeners?.onAvatarClick(item)
-        } ?: run {
-            channelClickListener?.onChannelClick(item)
-            defaultListeners?.onChannelClick(item)
-        }
+        defaultListeners?.onAvatarClick(item)
+        avatarClickListener?.onAvatarClick(item)
     }
 
     fun setListener(listener: ChannelClickListeners) {

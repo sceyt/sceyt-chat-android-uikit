@@ -24,7 +24,7 @@ class ReactionViewHolderFactory(context: Context,
                 AddReactionViewHolder(SceytItemAddReactionBinding.inflate(layoutInflater, parent, false),
                     messageListeners)
             }
-            else -> throw Exception("Not supported view type")
+            else -> throw RuntimeException("Not supported view type")
         }
     }
 

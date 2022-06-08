@@ -11,7 +11,7 @@ class MessageFileViewHolder(
         private val messageListeners: MessageClickListenersImpl?
 ) : BaseFileViewHolder(binding.root) {
 
-    override fun bindViews(item: FileListItem) {
+    override fun bind(item: FileListItem) {
         val fileItem = (item as? FileListItem.File)?.file ?: return
 
         with(binding) {

@@ -22,7 +22,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         binding.setChannelItemStyle()
     }
 
-    override fun bindViews(item: ChannelListItem) {
+    override fun bind(item: ChannelListItem) {
         when (item) {
             is ChannelListItem.ChannelItem -> {
                 val channel = item.channel
@@ -39,6 +39,12 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                         channel as SceytDirectChannel
                         name = channel.peer?.getPresentableName() ?: ""
                         url = channel.peer?.avatarURL ?: ""
+                    }
+
+                    if (channel.muted) {
+                        channelTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, ChannelStyle.mutedIcon, 0)
+                    } else {
+                        channelTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
                     }
                     avatar.setNameAndImageUrl(name, url)
                     channelTitle.text = name

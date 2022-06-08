@@ -95,7 +95,7 @@
         <!-- Background color of the unread message counter -->
         <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="color|reference" />
 
-        <!-- Drawable of the muted channel icon TODO -->
+        <!-- Drawable of the muted channel icon  -->
         <attr name="sceytUiMutedChannelIcon" format="reference" />
 
         <!-- Reference to layout resource of the channel list "loading" view -->

@@ -55,7 +55,7 @@ open class MessageViewHolderFactory(context: Context) {
             MessageTypeEnum.Loading.ordinal -> LoadingViewHolder(
                 SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
             )
-            else -> throw Exception("Not supported view type")
+            else -> throw RuntimeException("Not supported view type")
         }
     }
 

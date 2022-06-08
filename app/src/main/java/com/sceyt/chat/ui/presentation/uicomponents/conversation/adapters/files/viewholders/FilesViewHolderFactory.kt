@@ -27,7 +27,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
                 MessageVideoViewHolder(SceytMessageVideoItemBinding.inflate(layoutInflater, parent, false),
                     messageListeners)
             }
-            else -> throw Exception("Not supported view type")
+            else -> throw RuntimeException("Not supported view type")
         }
     }
 

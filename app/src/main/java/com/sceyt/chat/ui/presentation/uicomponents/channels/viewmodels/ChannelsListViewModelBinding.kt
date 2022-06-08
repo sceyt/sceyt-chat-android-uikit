@@ -1,10 +1,17 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.sceyt.chat.Types
+import com.sceyt.chat.ui.SceytUiKitApp
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum.*
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.toSceytUiChannel
 import com.sceyt.chat.ui.data.toSceytUiMessage
+import com.sceyt.chat.ui.extensions.asAppCompatActivity
+import com.sceyt.chat.ui.extensions.awaitAnimationEnd
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
@@ -12,6 +19,22 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
+    val connectionStatusLiveData = (channelsListView.context.asAppCompatActivity()?.application as? SceytUiKitApp)?.sceytConnectionStatus
+
+    lifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            if (connectionStatusLiveData?.value == Types.ConnectState.StateConnected)
+                channelsListView.getChannelsRv.awaitAnimationEnd {
+                    loadChannels(0, channelsListView.getChannelsSizeFromUpdate)
+                }
+            else
+                (channelsListView.context.asAppCompatActivity()?.application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
+                    if (it == Types.ConnectState.StateConnected) {
+                        loadChannels(0, channelsListView.getChannelsSizeFromUpdate)
+                    }
+                }
+        }
+    }
 
     lifecycleOwner.lifecycleScope.launch {
         channelsFlow.collect {
@@ -51,12 +74,9 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
             Created -> loadChannels(0, channelsListView.getChannelsSizeFromUpdate + 1)
             Deleted -> channelsListView.deleteChannel(it.channelId)
             ClearedHistory -> channelsListView.channelCleared(it.channelId ?: return@observe)
-            Updated -> {/*TODO)*/
-            }
-            Muted -> {/*TODO)*/
-            }
-            UnMuted -> {/*TODO)*/
-            }
+            Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
+            Muted -> channelsListView.updateMuteState(true, it.channelId)
+            UnMuted -> channelsListView.updateMuteState(false, it.channelId)
         }
     }
 

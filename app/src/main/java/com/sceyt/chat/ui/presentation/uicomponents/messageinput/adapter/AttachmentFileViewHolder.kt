@@ -13,7 +13,7 @@ import java.io.File
 class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBinding,
                                private val callbacks: Callbacks) : BaseViewHolder<AttachmentItem>(binding.root) {
 
-    override fun bindViews(item: AttachmentItem) {
+    override fun bind(item: AttachmentItem) {
         with(binding.fileImage) {
             if (item.attachment.type.isEqualsVideoOrImage()) {
                 Glide.with(this)

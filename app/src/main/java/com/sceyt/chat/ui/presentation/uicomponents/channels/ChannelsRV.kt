@@ -2,8 +2,10 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
@@ -19,7 +21,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private lateinit var mAdapter: ChannelsAdapter
     private var richToEndListener: ((offset: Int) -> Unit)? = null
-    private val viewHolderFactory = ChannelViewHolderFactory(context)
+    private var viewHolderFactory = ChannelViewHolderFactory(context)
 
     init {
         init()
@@ -29,6 +31,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun init() {
         setHasFixedSize(true)
         setItemViewCacheSize(10)
+        itemAnimator = DefaultItemAnimator()
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         // edgeEffectFactory = BounceEdgeEffectFactory()
         addOnScrollListener()
@@ -71,6 +74,13 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return if (::mAdapter.isInitialized) mAdapter.getChannels() else null
     }
 
+    /** Call this function to customise ChannelViewHolderFactory and set your own.
+     * Note: Call this function before initialising channels adapter.*/
+    fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
+        check(::mAdapter.isInitialized.not()) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
+        viewHolderFactory = factory
+    }
+
     fun setRichToEndListeners(listener: (offset: Int) -> Unit) {
         richToEndListener = listener
     }
@@ -88,6 +98,26 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (hasLoading)
             newList.add(ChannelListItem.LoadingMoreItem)
         setData(newList)
+    }
+
+    fun updateMuteState(muted: Boolean, channelId: Long) {
+        mAdapter.getData().forEachIndexed { index, item ->
+            if (item is ChannelListItem.ChannelItem && item.channel.id == channelId) {
+                item.channel.muted = muted
+                mAdapter.notifyItemChanged(index)
+                return
+            }
+        }
+    }
+
+    fun updateChannel(channel: SceytChannel) {
+        mAdapter.getData().forEachIndexed { index, item ->
+            if (item is ChannelListItem.ChannelItem && item.channel.id == channel.id) {
+                item.channel = channel
+                mAdapter.notifyItemChanged(index)
+                return
+            }
+        }
     }
 
     override fun onDetachedFromWindow() {
