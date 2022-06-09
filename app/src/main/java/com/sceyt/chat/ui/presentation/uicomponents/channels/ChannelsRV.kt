@@ -59,6 +59,12 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
 
+    override fun getAdapter(): ChannelsAdapter? {
+        return if (::mAdapter.isInitialized) {
+            mAdapter
+        } else null
+    }
+
     fun addNewChannels(channels: List<ChannelListItem>) {
         if (::mAdapter.isInitialized.not())
             setData(channels)

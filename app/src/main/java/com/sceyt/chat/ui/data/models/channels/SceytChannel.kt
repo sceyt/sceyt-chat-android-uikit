@@ -21,7 +21,7 @@ open class SceytChannel(open var id: Long,
                         open var metadata: String?,
                         open var muted: Boolean,
                         open var muteExpireDate: Date?,
-                        open var channelType: ChannelTypeEnum) : BaseObservable(), Parcelable {
+                        open var channelType: ChannelTypeEnum) : BaseObservable(), Parcelable, Cloneable {
 
     @IgnoredOnParcel
     @Bindable
@@ -42,6 +42,12 @@ open class SceytChannel(open var id: Long,
             unreadMessageCount = value
             notifyPropertyChanged(BR.unreadCount)
         }
+
+    @IgnoredOnParcel
+    open val channelSubject = ""
+
+    @IgnoredOnParcel
+    open val iconUrl: String? = ""
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {
@@ -69,5 +75,9 @@ open class SceytChannel(open var id: Long,
         result = 31 * result + (muteExpireDate?.hashCode() ?: 0)
         result = 31 * result + channelType.hashCode()
         return result
+    }
+
+    public override fun clone(): SceytChannel {
+        return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label, metadata, muted, muteExpireDate, channelType)
     }
 }

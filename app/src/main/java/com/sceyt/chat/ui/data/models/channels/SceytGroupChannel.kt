@@ -21,5 +21,12 @@ class SceytGroupChannel(
         var avatarUrl: String? = "",
         var members: List<Member>,
         var memberCount: Long = 0L,
-) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, channelType)
+) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, channelType) {
+
+    override val channelSubject: String
+        get() = subject ?: ""
+
+    override val iconUrl: String?
+        get() = avatarUrl
+}
 

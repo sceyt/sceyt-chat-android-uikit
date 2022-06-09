@@ -38,7 +38,7 @@ open class SceytMessage(var id: Long,
                         var mentionedUsers: Array<User>?,
                         var parent: Message?,
                         var replyInThread: Boolean = false,
-                        var replyCount: Long = 0) : BaseObservable(), Parcelable {
+                        var replyCount: Long = 0) : BaseObservable(), Parcelable, Cloneable {
 
 
     @Bindable
@@ -100,5 +100,12 @@ open class SceytMessage(var id: Long,
         parent = message.parent
         replyInThread = message.replyInThread
         replyCount = message.replyCount
+    }
+
+    public override fun clone(): SceytMessage {
+        return SceytMessage(id, tid, channelId, to, body, type,
+            metadata, createdAt, updatedAt, incoming, receipt, isTransient, silent, deliveryStatus,
+            state, from, attachments, lastReactions, selfReactions, reactionScores, markerCount,
+            selfMarkers, mentionedUsers, parent)
     }
 }

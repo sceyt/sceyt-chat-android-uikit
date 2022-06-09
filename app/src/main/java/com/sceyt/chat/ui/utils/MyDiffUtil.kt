@@ -2,7 +2,7 @@ package com.sceyt.chat.ui.utils
 
 import androidx.recyclerview.widget.DiffUtil
 
-class MyDiffUtil<T>(var oldList: List<T>, var newList: List<T>) : DiffUtil.Callback() {
+class MyDiffUtil<T>(private var oldList: List<T>, private var newList: List<T>) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int {
         return oldList.size

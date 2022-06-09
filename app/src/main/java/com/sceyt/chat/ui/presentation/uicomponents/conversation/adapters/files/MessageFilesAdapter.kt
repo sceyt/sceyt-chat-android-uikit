@@ -3,7 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.presentation.customviews.SceytVideoControllerView
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 
 class MessageFilesAdapter(private val files: ArrayList<FileListItem>,

@@ -7,7 +7,7 @@ import com.bumptech.glide.Glide
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import java.io.File
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBinding,

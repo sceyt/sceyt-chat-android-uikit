@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.utils.DateTimeUtil
 import com.sceyt.chat.ui.utils.MyDiffUtil
