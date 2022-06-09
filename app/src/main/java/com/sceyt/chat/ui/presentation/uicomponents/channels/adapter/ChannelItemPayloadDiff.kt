@@ -12,8 +12,8 @@ data class ChannelItemPayloadDiff(
         return subjectChanged || avatarViewChanged || lastMessageChanged || unreadCountChanged || muteStateChanged
     }
 
-    companion object{
-        val DEFAULT= ChannelItemPayloadDiff(
+    companion object {
+        val DEFAULT = ChannelItemPayloadDiff(
             subjectChanged = true,
             avatarViewChanged = true,
             lastMessageChanged = true,

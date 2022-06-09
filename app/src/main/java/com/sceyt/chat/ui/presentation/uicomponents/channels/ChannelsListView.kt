@@ -129,7 +129,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateState(state: BaseViewModel.PageState) {
+    internal fun updateStateView(state: BaseViewModel.PageState) {
+        if (state.isEmpty && !channelsRV.isEmpty())
+            return
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
 

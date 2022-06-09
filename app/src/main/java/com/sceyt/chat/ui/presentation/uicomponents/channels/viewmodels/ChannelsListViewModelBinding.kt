@@ -81,7 +81,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
-        channelsListView.updateState(it)
+        channelsListView.updateStateView(it)
     }
 
     channelsListView.setReachToEndListener { offset ->
