@@ -7,10 +7,6 @@
     <data>
 
         <import type="com.sceyt.chat.ui.R" />
-
-        <variable
-            name="data"
-            type="com.sceyt.chat.ui.data.models.channels.SceytChannel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -34,12 +30,9 @@
             android:layout_margin="1dp"
             android:background="@drawable/sceyt_bg_circle"
             android:backgroundTint="@color/sceyt_color_bg"
-            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/avatar"
             app:layout_constraintEnd_toEndOf="@id/avatar"
-            bind:channel="@{data}"
-            bind:themedBackgroundTintColor="@{R.color.sceyt_color_bg}"
-            tools:visibility="visible" />
+            bind:themedBackgroundTintColor="@{R.color.sceyt_color_bg}" />
 
         <View
             android:id="@+id/onlineStatus"
@@ -48,12 +41,17 @@
             android:layout_margin="1.5dp"
             android:background="@drawable/sceyt_bg_circle"
             android:backgroundTint="@color/sceyt_color_green"
-            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/onlineStatusBg"
             app:layout_constraintEnd_toEndOf="@id/onlineStatusBg"
             app:layout_constraintStart_toStartOf="@+id/onlineStatusBg"
-            app:layout_constraintTop_toTopOf="@+id/onlineStatusBg"
-            bind:channel="@{data}"
+            app:layout_constraintTop_toTopOf="@+id/onlineStatusBg" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/groupOnline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:constraint_referenced_ids="onlineStatus,onlineStatusBg"
             tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -90,7 +88,6 @@
             app:layout_constraintEnd_toStartOf="@+id/updateDate"
             app:layout_constraintStart_toStartOf="@id/channelTitle"
             app:layout_constraintTop_toBottomOf="@+id/channelTitle"
-            bind:setChannelLastMessageText="@{data.message}"
             tools:text="Description" />
 
         <View
@@ -114,12 +111,11 @@
             app:sceytDateStatusViewFirstStatus="true"
             app:sceytDateStatusViewStatusIconMargin="4dp"
             app:sceytDateStatusViewStatusIconSize="16dp"
-            bind:setLastMessageStatusIcon="@{data.message}"
             tools:sceytDateStatusViewDateText="12:28"
             tools:sceytDateStatusViewStatusIcon="@drawable/ic_status_read" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/messageCount"
+            android:id="@+id/unreadMessagesCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -135,7 +131,6 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/updateDate"
-            bind:setUnreadCount="@{data.unreadCount}"
             tools:text="9"
             tools:visibility="visible" />
 

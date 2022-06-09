@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
-import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
@@ -25,7 +24,7 @@ open class ChannelViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
     private val channelClickListenersImpl = ChannelClickListenersImpl()
 
-    open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ChannelListItem> {
+    open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
             ChannelType.Default.ordinal -> createChannelViewHolder(parent)
             ChannelType.Loading.ordinal -> createLoadingMoreViewHolder(parent)
@@ -33,7 +32,7 @@ open class ChannelViewHolderFactory(context: Context) {
         }
     }
 
-    open fun createChannelViewHolder(parent: ViewGroup): BaseViewHolder<ChannelListItem> {
+    open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding: SceytItemChannelBinding = if (cachedViews.isNullOrEmpty()) {
             cashViews(parent.context)
             SceytItemChannelBinding.inflate(layoutInflater, parent, false)
@@ -48,9 +47,9 @@ open class ChannelViewHolderFactory(context: Context) {
         return ChannelViewHolder(binding, channelClickListenersImpl)
     }
 
-    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseViewHolder<ChannelListItem> {
+    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
-        return LoadingViewHolder(binding)
+        return ChannelLoadingMoreViewHolder(binding)
     }
 
     fun setChannelListener(listener: ChannelClickListeners) {

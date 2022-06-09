@@ -5,23 +5,24 @@ import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 class ChannelsComparatorBy(private val compareBy: SceytUIKitConfig.ChannelSortType) : Comparator<SceytChannel> {
 
-    override fun compare(next: SceytChannel, prev: SceytChannel): Int {
+    override fun compare(first: SceytChannel, second: SceytChannel): Int {
         return if (compareBy == SceytUIKitConfig.ChannelSortType.ByLastMsg)
-            compareByLastMessageCreatedAt(next, prev)
-        else compareByChannelCreatedAt(next, prev)
+            compareByLastMessageCreatedAt(first, second)
+        else compareByChannelCreatedAt(first, second)
     }
 
-    private fun compareByLastMessageCreatedAt(next: SceytChannel?, prev: SceytChannel?): Int {
-        val nextMsgCreatedAt = next?.lastMessage?.createdAt
-        val prevMsgCreatedAt = prev?.lastMessage?.createdAt
+    private fun compareByLastMessageCreatedAt(first: SceytChannel?, second: SceytChannel?): Int {
+        val firstMsgCreatedAt = first?.lastMessage?.createdAt
+        val secondMsgCreatedAt = second?.lastMessage?.createdAt
         return when {
-            nextMsgCreatedAt != null && prevMsgCreatedAt != null -> return prevMsgCreatedAt.compareTo(nextMsgCreatedAt)
-            nextMsgCreatedAt != null -> -1
+            firstMsgCreatedAt != null && secondMsgCreatedAt != null -> return secondMsgCreatedAt.compareTo(firstMsgCreatedAt)
+            firstMsgCreatedAt != null -> -1
+            secondMsgCreatedAt != null -> 1
             else -> 0
         }
     }
 
-    private fun compareByChannelCreatedAt(next: SceytChannel, prev: SceytChannel): Int {
-        return prev.createdAt.compareTo(next.createdAt)
+    private fun compareByChannelCreatedAt(first: SceytChannel, second: SceytChannel): Int {
+        return second.createdAt.compareTo(first.createdAt)
     }
 }

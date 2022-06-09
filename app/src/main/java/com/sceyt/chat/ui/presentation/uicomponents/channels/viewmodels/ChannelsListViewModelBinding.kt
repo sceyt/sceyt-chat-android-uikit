@@ -24,7 +24,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (connectionStatusLiveData?.value == Types.ConnectState.StateConnected)
-                channelsListView.getChannelsRv.awaitAnimationEnd {
+                channelsListView.getChannelsRv().awaitAnimationEnd {
                     loadChannels(0, channelsListView.getChannelsSizeFromUpdate)
                 }
             else

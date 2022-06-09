@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.databinding.SceytItemInputAttachmentBinding
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 
 class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
                          private val viewCallbacks: AttachmentFileViewHolder.Callbacks) :

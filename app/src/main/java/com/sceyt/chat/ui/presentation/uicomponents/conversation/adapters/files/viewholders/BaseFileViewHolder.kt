@@ -5,7 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
 import kotlinx.coroutines.Dispatchers

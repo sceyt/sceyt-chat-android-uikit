@@ -24,7 +24,7 @@ import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
 import com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
 import com.sceyt.chat.ui.presentation.customviews.SceytToReplayLineView
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseViewHolder
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getAttachmentUrl

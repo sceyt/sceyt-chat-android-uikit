@@ -10,7 +10,9 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
+import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.presentation.common.diff
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -20,6 +22,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelCli
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.sortChannelsBy
 import com.sceyt.chat.ui.utils.binding.BindingUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,35 +85,47 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateLastMessage(message: SceytMessage, unreadCount: Long? = null): Boolean {
-        channelsRV.getChannels()?.find { message.channelId == it.channel.id }?.let {
-            it.channel.message = message
-            unreadCount?.let { count ->
-                it.channel.unreadCount = count
+        channelsRV.getChannels()?.findIndexed { message.channelId == it.channel.id }?.let { pair ->
+            val channel = pair.second.channel
+            if (message.channelId == channel.id) {
+                val oldChannel = channel.clone()
+                channel.message = message
+                unreadCount?.let { count ->
+                    channel.unreadCount = count
+                }
+                channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+                sortChannelsBy(sortChannelsBy)
+                return true
             }
-            sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
-            return true
         }
         return false
     }
 
-    internal fun channelCleared(channelId: Long) {
-        channelsRV.getChannels()?.find { channelId == it.channel.id }?.let {
-            it.channel.message = null
-            it.channel.unreadCount = 0
-            sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
-        }
-    }
-
     internal fun updateLastMessageStatus(status: MessageStatusChange) {
         context.asAppCompatActivity()?.lifecycleScope?.launch(Dispatchers.Default) {
-            channelsRV.getChannels()?.find { status.channel?.id == it.channel.id }?.let { channelItem ->
-                channelItem.channel.message?.let {
+            channelsRV.getChannels()?.findIndexed { status.channel?.id == it.channel.id }?.let { pair ->
+                val channel = pair.second.channel
+                val oldChannel = channel.clone()
+                channel.message?.let {
                     if (it.status < status.status) {
                         it.status = status.status
-                        channelItem.channel.message = it
+                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
+                            message = it
+                        }))
                     }
                 }
             }
+        }
+    }
+
+    internal fun channelCleared(channelId: Long) {
+        channelsRV.getChannels()?.findIndexed { channelId == it.channel.id }?.let { pair ->
+            val channel = pair.second.channel
+            val oldChannel = channel.clone()
+            channel.message = null
+            channel.unreadCount = 0
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+            sortChannelsBy(sortChannelsBy)
         }
     }
 
@@ -153,13 +168,12 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    val getChannels get() = channelsRV.getChannels()
+    fun getChannels() = channelsRV.getChannels()
 
-    val getChannelsRv get() = channelsRV
+    fun getChannelsRv() = channelsRV
 
     val getChannelsSizeFromUpdate
-        get() = getChannels?.size ?: SceytUIKitConfig.CHANNELS_LOAD_SIZE
-
+        get() = getChannels()?.size ?: SceytUIKitConfig.CHANNELS_LOAD_SIZE
 
     //Click listeners
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
