@@ -4,6 +4,7 @@ import com.sceyt.chat.ui.data.models.messages.SceytMessage
 
 sealed class MessageListItem {
     data class MessageItem(val message: SceytMessage) : MessageListItem()
+    data class DateSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
     object LoadingMoreItem : MessageListItem()
 
     override fun equals(other: Any?): Boolean {
@@ -12,6 +13,9 @@ sealed class MessageListItem {
             other !is MessageListItem -> false
             other is MessageItem && this is MessageItem -> {
                 other.message == message
+            }
+            other is DateSeparatorItem && this is DateSeparatorItem -> {
+                other.createdAt == createdAt && other.msgId == msgId
             }
             other is LoadingMoreItem && this is LoadingMoreItem -> true
             else -> false

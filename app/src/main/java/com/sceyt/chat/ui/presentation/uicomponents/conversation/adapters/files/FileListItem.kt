@@ -3,7 +3,6 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files
 import androidx.databinding.BaseObservable
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.ui.data.models.messages.FileLoadData
@@ -22,43 +21,41 @@ sealed class FileListItem(val file: Attachment?,
                      val message: SceytMessage) : FileListItem(attachment, message)
 
 
-    fun setUploadListener(finishCb: ((success: Boolean) -> Unit)? = null) {
-        fileLoadData.loading = true
+    internal fun setUploadListener(loadCb: ((FileLoadData) -> Unit)? = null) {
+        loadCb?.invoke(FileLoadData().apply { loading = true })
         file?.setUploaderProgress(object : ProgressCallback {
             override fun onResult(progress: Float) {
                 val intValuePercent = (progress * 100).toInt()
-                if (intValuePercent < 100)
-                    fileLoadData.update(max(1, intValuePercent), true)
+                if (intValuePercent < 100) {
+                    fileLoadData.update(progress = max(1, intValuePercent), loading = true, success = false)
+                    loadCb?.invoke(fileLoadData)
+                }
             }
 
             override fun onError(p0: SceytException?) {
-                fileLoadData.update(null, false)
-                sceytMessage.status = DeliveryStatus.Failed
-                println("Upload error ->$p0")
+                fileLoadData.update(progress = null, loading = false, success = false)
+                loadCb?.invoke(fileLoadData)
             }
         })
 
         file?.setUploaderCompletion(object : ActionCallback {
             override fun onSuccess() {
-                fileLoadData.update(100, false)
-                finishCb?.invoke(true)
+                fileLoadData.update(progress = 100, loading = false, success = true)
+                loadCb?.invoke(fileLoadData)
             }
 
             override fun onError(p0: SceytException?) {
-                fileLoadData.update(null, false)
-                sceytMessage.status = DeliveryStatus.Failed
-                finishCb?.invoke(false)
-                println("Upload error ->$p0")
+                fileLoadData.update(progress = null, loading = false, success = false)
+                loadCb?.invoke(fileLoadData)
             }
         })
     }
 
-    val updateDownloadState = { progress: Int?, loading: Boolean ->
+    internal fun updateDownloadState(progress: Int?, loading: Boolean, success: Boolean) {
         val progressValue = if (progress != null) max(1, progress) else null
-        fileLoadData.update(progressValue, loading)
+        fileLoadData.update(progressValue, loading = loading, success = success)
     }
 
-    var downloadSuccess: ((java.io.File) -> Unit)? = null
     val fileLoadData by lazy { FileLoadData() }
 }
 

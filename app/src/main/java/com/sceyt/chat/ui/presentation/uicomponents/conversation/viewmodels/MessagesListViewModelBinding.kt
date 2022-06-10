@@ -45,7 +45,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     messageEditedDeletedLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> {
-                it.data?.let { data -> messagesListView.updateMessage(data, true) }
+                it.data?.let { data -> messagesListView.messageEditedOrDeleted(data) }
             }
             is SceytResponse.Error -> {
                 customToastSnackBar(messagesListView, it.message ?: "")
@@ -68,13 +68,16 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         val initMessage = mapToMessageListItem(
             data = arrayListOf(it),
             hasNext = false,
-            lastMessage = messagesListView.getLastMessage()).map { item ->
-            item as MessageListItem.MessageItem
-        }
+            lastMessage = messagesListView.getLastMessage())
+
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(BaseViewModel.PageState(isEmpty = false))
 
         markMessageAsDisplayed(it.id)
+    }
+
+    onNewThreadMessageLiveData.observe(lifecycleOwner) {
+        messagesListView.updateReplayCount(it)
     }
 
     onMessageStatusLiveData.observe(lifecycleOwner) {
@@ -85,8 +88,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         when (it) {
             is SceytResponse.Success -> {
                 it.data?.let { sceytUiMessage ->
-                    val message = setMessageDateAndState(sceytUiMessage, messagesListView.getLastMessage()?.message)
-                    messagesListView.updateMessage(message, false)
+                    sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
+                    messagesListView.updateMessage(sceytUiMessage)
                 }
             }
             is SceytResponse.Error -> {
@@ -103,8 +106,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     onMessageEditedOrDeletedLiveData.observe(lifecycleOwner) {
-        val message = setMessageDateAndState(it, messagesListView.getLastMessage()?.message)
-        messagesListView.updateMessage(message, true)
+        messagesListView.messageEditedOrDeleted(it)
     }
 
     onChannelEventLiveData.observe(lifecycleOwner) {

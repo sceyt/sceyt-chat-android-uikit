@@ -7,12 +7,12 @@ import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getCompatDrawable
 import com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
 
-fun SceytMessage?.setLastMessageStatusIcon(dateStatusView: SceytDateStatusView) {
-    if (this?.status == null || incoming) {
-        dateStatusView.setStatusIcon(null)
+fun SceytMessage?.setMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean) {
+    if (this?.deliveryStatus == null || incoming) {
+        dateStatusView.setDateAndStatusIcon(dateText, null, edited)
         return
     }
-    val iconResId = when (status) {
+    val iconResId = when (deliveryStatus) {
         DeliveryStatus.Pending -> R.drawable.sceyt_ic_status_not_sent
         DeliveryStatus.Sent -> R.drawable.sceyt_ic_status_on_server
         DeliveryStatus.Delivered -> R.drawable.sceyt_ic_status_delivered
@@ -21,7 +21,7 @@ fun SceytMessage?.setLastMessageStatusIcon(dateStatusView: SceytDateStatusView) 
         else -> null
     }
     iconResId?.let {
-        dateStatusView.setStatusIcon(dateStatusView.context.getCompatDrawable(it))
+        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited)
         dateStatusView.isVisible = true
     }
 }

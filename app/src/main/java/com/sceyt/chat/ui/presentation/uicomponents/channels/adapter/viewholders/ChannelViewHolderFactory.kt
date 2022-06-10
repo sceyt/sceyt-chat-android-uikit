@@ -89,7 +89,7 @@ open class ChannelViewHolderFactory(context: Context) {
         }
     }
 
-    enum class ChannelType {
+   enum class ChannelType {
         Loading, Default
     }
 }

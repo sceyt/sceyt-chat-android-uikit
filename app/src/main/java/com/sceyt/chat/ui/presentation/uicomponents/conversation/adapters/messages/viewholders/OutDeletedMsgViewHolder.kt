@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 import android.content.res.ColorStateList
 import com.sceyt.chat.ui.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 
@@ -14,18 +15,14 @@ class OutDeletedMsgViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem) {
-        when (item) {
-            is MessageListItem.MessageItem -> {
-                with(binding) {
-                    val message = item.message
-                    this.message = message
+    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        if (item is MessageListItem.MessageItem) {
+            with(binding) {
+                val message = item.message
 
-                    setMessageDay(message.createdAt, message.showDate, binding.messageDay)
-                    setMessageDateText(message.createdAt, messageDate, false)
-                }
+                if (diff.statusChanged || diff.edited)
+                    setMessageStatusAndDateText(message, messageDate)
             }
-            MessageListItem.LoadingMoreItem -> return
         }
     }
 

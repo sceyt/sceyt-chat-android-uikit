@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="10dp">
+    android:paddingVertical="5dp">
 
     <ProgressBar
         android:id="@+id/adapter_list_loading_progress_bar"

@@ -105,6 +105,7 @@
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="app/src/main/res/layout/artw.xml" value="0.3788265306122449" />
         <entry key="app/src/main/res/layout/container_reaction.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/custom_date.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/custom_exoplayer_controller.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/d.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/exo_player_control_view.xml" value="0.3765625" />
@@ -127,13 +128,16 @@
         <entry key="app/src/main/res/layout/sceyt_fragment_bottom_sheet_emojis.xml" value="0.5" />
         <entry key="app/src/main/res/layout/sceyt_item_channel.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_deleted_message.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_item_inc_files_message.xml" value="0.6909765142150803" />
+        <entry key="app/src/main/res/layout/sceyt_item_inc_files_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_text_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_input_attachment.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/sceyt_item_loading_more.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_message_date_seperatot.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_out_deleted_message.xml" value="0.5" />
         <entry key="app/src/main/res/layout/sceyt_item_out_files_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_out_text_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_reaction.xml" value="0.75" />
+        <entry key="app/src/main/res/layout/sceyt_loading_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_message_file_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_message_image_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_message_input_view.xml" value="0.33" />

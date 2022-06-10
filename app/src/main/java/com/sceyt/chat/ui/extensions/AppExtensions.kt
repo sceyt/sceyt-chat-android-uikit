@@ -117,6 +117,9 @@ fun checkIfImagePathIsLocale(path: String?): Boolean {
     return false
 }
 
+fun runOnMainThread(run: () -> Unit) {
+    Handler(Looper.getMainLooper()).post(run)
+}
 
 fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 
