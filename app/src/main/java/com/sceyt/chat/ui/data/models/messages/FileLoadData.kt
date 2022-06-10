@@ -1,26 +1,20 @@
 package com.sceyt.chat.ui.data.models.messages
 
-import androidx.databinding.BaseObservable
-import androidx.databinding.Bindable
-import androidx.databinding.library.baseAdapters.BR
-
-class FileLoadData : BaseObservable() {
-    @Bindable
+class FileLoadData {
     var progressPercent: Int = 1
-        set(value) {
-            field = value
-            notifyPropertyChanged(BR.progressPercent)
-        }
-
-    @Bindable
     var loading: Boolean = false
-        set(value) {
-            field = value
-            notifyPropertyChanged(BR.loading)
-        }
+    var success: Boolean = false
 
-    fun update(progress: Int?, isLoading: Boolean) {
+    fun update(progress: Int? = null, loading: Boolean, success: Boolean = false) {
         this.progressPercent = progress ?: this.progressPercent
-        this.loading = isLoading
+        this.loading = loading
+        this.success = success
+    }
+
+    fun loadedState(): FileLoadData {
+        progressPercent = 1
+        loading = false
+        success = true
+        return this
     }
 }

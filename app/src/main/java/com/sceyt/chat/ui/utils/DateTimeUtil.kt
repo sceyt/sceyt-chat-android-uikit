@@ -2,7 +2,6 @@ package com.sceyt.chat.ui.utils
 
 import android.annotation.SuppressLint
 import android.text.format.DateFormat
-import androidx.annotation.IntRange
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*

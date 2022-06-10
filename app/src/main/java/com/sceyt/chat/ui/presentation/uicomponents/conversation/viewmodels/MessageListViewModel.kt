@@ -52,6 +52,7 @@ class MessageListViewModel(conversationId: Long,
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytMessage>> = _addDeleteReactionLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytMessage>()
+    val onNewThreadMessageLiveData = MutableLiveData<SceytMessage>()
     val onMessageStatusLiveData = MutableLiveData<MessageStatusChange>()
     val onMessageReactionUpdatedLiveData = MutableLiveData<SceytMessage>()
     val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytMessage>()
@@ -71,6 +72,12 @@ class MessageListViewModel(conversationId: Long,
         viewModelScope.launch {
             messagesRepository.onMessageFlow.collect {
                 onNewMessageLiveData.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            messagesRepository.onThreadMessageFlow.collect {
+                onNewThreadMessageLiveData.value = it
             }
         }
 
@@ -158,7 +165,6 @@ class MessageListViewModel(conversationId: Long,
         }
     }
 
-
     fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.sendMessage(message) { tmpMessage ->
@@ -187,34 +193,37 @@ class MessageListViewModel(conversationId: Long,
                                       lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
-        val messageItems: List<MessageListItem> = data.mapIndexed { index, item ->
-            MessageListItem.MessageItem(item.apply {
-                isGroup = this@MessageListViewModel.isGroup
-                files = item.attachments?.map { it.toFileListItem(item) }
+        val messageItems = arrayListOf<MessageListItem>()
+        data.forEachIndexed { index, sceytMessage ->
+            var prevMessage = lastMessage?.message
+            if (index > 0)
+                prevMessage = data.getOrNull(index - 1)
 
-                if (index > 0) {
-                    val prevMessage = data[index - 1]
-                    setMessageDateAndState(item, prevMessage)
-                } else
-                    setMessageDateAndState(item, lastMessage?.message)
+            if (shouldShowDate(sceytMessage, prevMessage))
+                messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
+
+            val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
+                isGroup = this@MessageListViewModel.isGroup
+                files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
+                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
             })
+            messageItems.add(messageItem)
         }
         if (hasNext)
-            (messageItems as ArrayList).add(0, MessageListItem.LoadingMoreItem)
+            messageItems.add(0, MessageListItem.LoadingMoreItem)
         return messageItems
     }
 
-    internal fun setMessageDateAndState(sceytMessage: SceytMessage, prevMessage: SceytMessage?): SceytMessage {
-        with(sceytMessage) {
-            if (prevMessage != null) {
-                canShowAvatarAndName = prevMessage.from?.id != from?.id && isGroup
-                showDate = !DateTimeUtil.isSameDay(createdAt, prevMessage.createdAt)
-            } else {
-                canShowAvatarAndName = isGroup
-                showDate = true
-            }
-            return this
-        }
+    private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
+        return if (prevMessage == null)
+            true
+        else !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
+    }
+
+    internal fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
+        return if (prevMessage == null)
+            isGroup
+        else isGroup && (prevMessage.from?.id != sceytMessage.from?.id || shouldShowDate(sceytMessage, prevMessage))
     }
 
     fun onMessageEvent(event: MessageEvent) {

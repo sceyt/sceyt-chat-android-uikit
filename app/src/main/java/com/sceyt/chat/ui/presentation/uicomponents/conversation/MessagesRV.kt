@@ -26,7 +26,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToPrefetchDistanceListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var needLoadMoreMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private val viewHolderFactory = MessageViewHolderFactory(context)
+    private var viewHolderFactory = MessageViewHolderFactory(context)
     private var richToStartInvoked = AtomicBoolean(false)
     private var richToPrefetchDistanceInvoked = AtomicBoolean(false)
 
@@ -55,7 +55,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 val firstVisiblePosition = getFirstVisibleItemPosition()
                 if (firstVisiblePosition <= SceytUIKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
                     val skip = mAdapter.getSkip()
-                    val firstItem = mAdapter.getFirstItem()
+                    val firstItem = mAdapter.getFirstMessageItem()
                     if (firstVisiblePosition == 0) {
                         if (!richToStartInvoked.get()) {
                             richToStartInvoked.set(true)
@@ -87,7 +87,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun getLastMsg(): MessageListItem.MessageItem? {
         return if (::mAdapter.isInitialized) {
-            mAdapter.getLastItem()
+            mAdapter.getLastMessageItem()
         } else null
     }
 
@@ -104,7 +104,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             mAdapter.addNextPageMessagesList(messages as MutableList<MessageListItem>)
     }
 
-    fun addNewMessages(vararg items: MessageListItem.MessageItem) {
+    fun addNewMessages(vararg items: MessageListItem) {
         if (::mAdapter.isInitialized.not())
             setData(items.toList())
         else {
@@ -132,10 +132,20 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun updateReaction(messageId: Long, scores: Array<ReactionScore>) {
         for ((index: Int, item: MessageListItem) in mAdapter.getData().withIndex()) {
             if (item is MessageListItem.MessageItem && item.message.id == messageId) {
-                (findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.updateReaction(scores, item.message)
+                val viewHolder = (findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)
+                if (viewHolder != null)
+                    viewHolder.updateReaction(scores, item.message)
+                else item.message.reactionScores = scores
                 break
             }
         }
+    }
+
+    /** Call this function to customise MessageViewHolderFactory and set your own.
+     * Note: Call this function before initialising messages adapter.*/
+    fun setViewHolderFactory(factory: MessageViewHolderFactory) {
+        check(::mAdapter.isInitialized.not()) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
+        viewHolderFactory = factory
     }
 
     fun clearData() {

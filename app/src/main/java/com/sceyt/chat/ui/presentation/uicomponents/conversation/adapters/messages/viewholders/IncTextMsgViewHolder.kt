@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
@@ -18,39 +19,49 @@ class IncTextMsgViewHolder(
         private val messageListeners: MessageClickListenersImpl?
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
+    private lateinit var messageItem: MessageListItem.MessageItem
+
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
+
+            layoutDetails.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageItem)
+                return@setOnLongClickListener true
+            }
+        }
     }
 
-    override fun bind(item: MessageListItem) {
-        when (item) {
-            is MessageListItem.MessageItem -> {
-                with(binding) {
-                    val message = item.message
-                    this.message = message
+    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        if (item is MessageListItem.MessageItem) {
+            with(binding) {
+                messageItem = item
+                val message = item.message
 
+                if (diff.edited) {
                     val space = if (message.state == MessageState.Edited) INC_EDITED_SPACE else INC_DEFAULT_SPACE
                     messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
-
-                    setMessageDay(message.createdAt, message.showDate, messageDay)
-                    setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
-                    setMessageUserAvatarAndName(avatar, tvUserName, message)
-                    setReplayCount(tvReplayCount, toReplayLine, item)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
-                    setReplayedMessageContainer(message, binding.viewReplay)
-
-                    layoutDetails.setOnLongClickListener {
-                        messageListeners?.onMessageLongClick(it, item)
-                        return@setOnLongClickListener true
-                    }
-
-                    if (item.message.canShowAvatarAndName)
-                        avatar.setOnClickListener {
-                            messageListeners?.onAvatarClick(it, item)
-                        }
                 }
+
+                if (diff.edited || diff.statusChanged)
+                    setMessageStatusAndDateText(message, messageDate)
+
+                if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                    setMessageUserAvatarAndName(avatar, tvUserName, message)
+
+                if (diff.replayCountChanged)
+                    setReplayCount(tvReplayCount, toReplayLine, item)
+
+                if (diff.reactionsChanged)
+                    setOrUpdateReactions(item, rvReactions, viewPool)
+
+                setReplayedMessageContainer(message, binding.viewReplay)
+
+                if (messageItem.message.canShowAvatarAndName)
+                    avatar.setOnClickListener {
+                        messageListeners?.onAvatarClick(it, messageItem)
+                    }
             }
-            MessageListItem.LoadingMoreItem -> return
         }
     }
 

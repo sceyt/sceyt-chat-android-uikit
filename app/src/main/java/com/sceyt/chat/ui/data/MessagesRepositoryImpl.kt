@@ -22,11 +22,13 @@ import kotlin.coroutines.resume
 class MessagesRepositoryImpl(conversationId: Long,
                              private val channel: Channel,
                              private val replayInThread: Boolean) {
-    // todo need to add DI
-    // private val channelEventsService = ChannelEventsObserverService()
 
     val onMessageFlow = ChannelEventsObserverService.onMessageFlow
-        .filter { it.first.id == channel.id || it.second.replyInThread != replayInThread }
+        .filter { it.first.id == channel.id && it.second.replyInThread == replayInThread }
+        .mapNotNull { it.second.toSceytUiMessage() }
+
+    val onThreadMessageFlow = ChannelEventsObserverService.onMessageFlow
+        .filter { it.first.id == channel.id && it.second.replyInThread }
         .mapNotNull { it.second.toSceytUiMessage() }
 
     val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow

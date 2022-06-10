@@ -8,7 +8,7 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         subjectChanged = channelSubject != other.channelSubject,
         avatarViewChanged = iconUrl != other.iconUrl,
         lastMessageChanged = lastMessage != other.lastMessage,
-        lastMessageStatusChanged = lastMessage?.status != other.lastMessage?.status,
+        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = unreadCount != other.unreadCount,
         muteStateChanged = muted != other.muted
     )

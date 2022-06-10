@@ -12,7 +12,7 @@ import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getString
-import com.sceyt.chat.ui.presentation.common.setLastMessageStatusIcon
+import com.sceyt.chat.ui.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
@@ -66,7 +66,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             avatar.setNameAndImageUrl(name, url)
 
                         if (lastMessageStatusChanged)
-                            channel.lastMessage.setLastMessageStatusIcon(updateDate)
+                            channel.lastMessage.setMessageDateAndStatusIcon(updateDate, getDateTxt(channel), false)
 
                         if (lastMessageChanged) {
                             setLastMessageText(channel)
@@ -96,7 +96,6 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     private fun SceytItemChannelBinding.setLastMessageText(channel: SceytChannel) {
-        updateDate.setDateText(getDateTxt(channel), false)
         val message = channel.lastMessage
         if (message == null) {
             lastMessage.text = ""

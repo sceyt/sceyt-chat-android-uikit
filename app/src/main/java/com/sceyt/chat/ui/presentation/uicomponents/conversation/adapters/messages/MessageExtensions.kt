@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getFileSize
 import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
 import java.io.File
@@ -54,4 +55,17 @@ fun Attachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
             return loadedFile
     }
     return null
+}
+
+internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
+    return MessageItemPayloadDiff(
+        edited = state != other.state,
+        statusChanged = deliveryStatus != other.deliveryStatus,
+        avatarChanged = from?.avatarURL != other.from?.avatarURL,
+        nameChanged = from?.fullName != other.from?.fullName,
+        replayCountChanged = replyCount != other.replyCount,
+        reactionsChanged = !reactionScores.contentEquals(other.reactionScores),
+        showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
+        filesChanged = !attachments.contentEquals(other.attachments)
+    )
 }

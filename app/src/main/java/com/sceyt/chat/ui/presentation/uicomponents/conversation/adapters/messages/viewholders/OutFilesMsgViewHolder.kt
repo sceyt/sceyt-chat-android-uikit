@@ -1,14 +1,15 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytItemOutFilesMessageBinding
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
@@ -25,28 +26,38 @@ class OutFilesMsgViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem) {
-        when (item) {
-            is MessageListItem.MessageItem -> {
-                with(binding) {
-                    val message = item.message
-                    this.message = message
+    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        if (item is MessageListItem.MessageItem) {
+            with(binding) {
+                val message = item.message
 
-                    setMessageDay(message.createdAt, message.showDate, messageDay)
-                    setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
-                    setReplayedMessageContainer(message, binding.viewReplay)
+                val body = message.body.trim()
+                if (body.isNotBlank()) {
+                    messageBody.isVisible = true
+                    messageBody.text = body
+                } else messageBody.isVisible = false
+
+                if (diff.edited || diff.statusChanged) {
+                    setMessageStatusAndDateText(message, messageDate)
                     setMessageDateDependAttachments(messageDate, message.files)
+                }
+
+                if (diff.filesChanged)
                     setFilesAdapter(message)
+
+                if (diff.replayCountChanged)
                     setReplayCount(tvReplayCount, toReplayLine, item)
+
+                if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-                    layoutDetails.setOnLongClickListener {
-                        messageListeners?.onMessageLongClick(it, item)
-                        return@setOnLongClickListener true
-                    }
+                setReplayedMessageContainer(message, binding.viewReplay)
+
+                layoutDetails.setOnLongClickListener {
+                    messageListeners?.onMessageLongClick(it, item)
+                    return@setOnLongClickListener true
                 }
             }
-            MessageListItem.LoadingMoreItem -> return
         }
     }
 

@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
@@ -23,29 +24,32 @@ class OutTextMsgViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem) {
-        when (item) {
-            is MessageListItem.MessageItem -> {
-                with(binding) {
-                    val message = item.message
-                    this.message = message
+    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        if (item is MessageListItem.MessageItem) {
+            with(binding) {
+                val message = item.message
 
+                if (diff.edited) {
                     val space = if (message.state == MessageState.Edited) OUT_EDITED_SPACE else OUT_DEFAULT_SPACE
                     messageBody.text = fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
+                }
 
-                    setMessageDay(message.createdAt, message.showDate, binding.messageDay)
-                    setMessageDateText(message.createdAt, messageDate, message.state == MessageState.Edited)
+                if (diff.edited || diff.statusChanged)
+                    setMessageStatusAndDateText(message, messageDate)
+
+                if (diff.replayCountChanged)
                     setReplayCount(tvReplayCount, toReplayLine, item)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
-                    setReplayedMessageContainer(message, binding.viewReplay)
 
-                    layoutDetails.setOnLongClickListener {
-                        messageListeners?.onMessageLongClick(it, item)
-                        return@setOnLongClickListener true
-                    }
+                if (diff.reactionsChanged)
+                    setOrUpdateReactions(item, rvReactions, viewPool)
+
+                setReplayedMessageContainer(message, binding.viewReplay)
+
+                layoutDetails.setOnLongClickListener {
+                    messageListeners?.onMessageLongClick(it, item)
+                    return@setOnLongClickListener true
                 }
             }
-            MessageListItem.LoadingMoreItem -> return
         }
     }
 

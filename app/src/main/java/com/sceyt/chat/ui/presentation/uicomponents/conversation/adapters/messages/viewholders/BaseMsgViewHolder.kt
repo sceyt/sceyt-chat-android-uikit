@@ -2,7 +2,6 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 
 import android.annotation.SuppressLint
 import android.graphics.Typeface
-import android.text.format.DateUtils
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -21,11 +20,12 @@ import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
 import com.sceyt.chat.ui.presentation.customviews.SceytDateStatusView
 import com.sceyt.chat.ui.presentation.customviews.SceytToReplayLineView
-import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getAttachmentUrl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.getShowBody
@@ -38,8 +38,13 @@ import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(view: View,
-                                 private val messageListeners: MessageClickListenersImpl? = null) :
-        BaseViewHolder<MessageListItem>(view) {
+                                 private val messageListeners: MessageClickListenersImpl? = null)
+    : RecyclerView.ViewHolder(view) {
+
+
+    abstract fun bind(item: MessageListItem, diff: MessageItemPayloadDiff)
+    open fun onViewDetachedFromWindow() {}
+    open fun onViewAttachedToWindow() {}
 
     private var reactionsAdapter: ReactionsAdapter? = null
 
@@ -58,19 +63,10 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    protected fun setMessageDay(createdAt: Long, showDate: Boolean, tvData: TextView) {
-        tvData.isVisible = if (showDate) {
-            val dateText = when {
-                DateUtils.isToday(createdAt) -> itemView.context.getString(R.string.today)
-                else -> getDateTimeString(createdAt, "MMMM dd")
-            }
-            tvData.text = dateText
-            true
-        } else false
-    }
-
-    protected fun setMessageDateText(createdAt: Long, messageDate: SceytDateStatusView, isEdited: Boolean) {
-        messageDate.setDateText(getDateTimeString(createdAt), isEdited)
+    protected fun setMessageStatusAndDateText(message: SceytMessage, messageDate: SceytDateStatusView) {
+        val isEdited = message.state == MessageState.Edited
+        val dateText = getDateTimeString(message.createdAt)
+        message.setMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
     protected fun setReplayedMessageContainer(message: SceytMessage, viewBinding: SceytRecyclerReplayContainerBinding) {

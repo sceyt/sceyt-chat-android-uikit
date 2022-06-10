@@ -1,11 +1,10 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import com.sceyt.chat.ClientWrapper.messageListeners
 import com.sceyt.chat.ui.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 
 class IncDeletedMsgViewHolder(
@@ -16,19 +15,17 @@ class IncDeletedMsgViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem) {
-        when (item) {
-            is MessageListItem.MessageItem -> {
-                with(binding) {
-                    val message = item.message
-                    this.message = message
+    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        if (item is MessageListItem.MessageItem) {
+            with(binding) {
+                val message = item.message
 
-                    setMessageDay(message.createdAt, message.showDate, messageDay)
-                    setMessageDateText(message.createdAt, messageDate, false)
+                if (diff.edited || diff.statusChanged)
+                    setMessageStatusAndDateText(message, messageDate)
+
+                if (diff.showAvatarAndNameChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
-                }
             }
-            MessageListItem.LoadingMoreItem -> return
         }
     }
 

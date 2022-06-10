@@ -11,21 +11,21 @@ import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.BottomSheetEmojisFragment
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
-import com.sceyt.chat.ui.extensions.getCompatColor
-import com.sceyt.chat.ui.extensions.getFileUriWithProvider
-import com.sceyt.chat.ui.extensions.getFragmentManager
-import com.sceyt.chat.ui.extensions.setClipboard
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.getFileFromMetadata
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.diff
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.*
@@ -222,22 +222,35 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addNextPageMessages(data)
     }
 
-    internal fun addNewMessages(vararg data: MessageListItem.MessageItem) {
+    internal fun addNewMessages(vararg data: MessageListItem) {
         messagesRV.addNewMessages(*data)
     }
 
-    internal fun updateMessage(message: SceytMessage, notifyItemChanged: Boolean) {
+    internal fun updateMessage(message: SceytMessage) {
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
             if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
+                val oldMessage = item.message.clone()
 
                 item.message.apply {
                     updateMessage(message)
-                    status = message.status
+                    deliveryStatus = message.deliveryStatus
                 }
-                if (notifyItemChanged)
-                    messagesRV.adapter?.notifyItemChanged(index)
+                messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                 break
+            }
+        }
+    }
+
+    internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
+        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == updateMessage.id }?.let {
+            val message = (it.second as MessageListItem.MessageItem).message
+            val oldMessage = message.clone()
+            message.updateMessage(updateMessage)
+            if (message.state == MessageState.Deleted)
+                messagesRV.adapter?.notifyItemChanged(it.first)
+            else {
+                messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
             }
         }
     }
@@ -254,15 +267,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
         ids.forEach { id ->
-            for (item: MessageListItem in messagesRV.getData() ?: return) {
+            for ((index: Int, item: MessageListItem) in (messagesRV.getData()
+                    ?: return).withIndex()) {
                 if (item is MessageListItem.MessageItem) {
+                    val oldMessage = item.message.clone()
                     if (item.message.id == id) {
-                        if (item.message.status < status)
-                            item.message.status = status
+                        if (item.message.deliveryStatus < status)
+                            item.message.deliveryStatus = status
+                        messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                         break
                     } else {
-                        if (item.message.status < status && item.message.status != DeliveryStatus.Pending)
-                            item.message.status = status
+                        if (item.message.deliveryStatus < status && item.message.deliveryStatus != DeliveryStatus.Pending) {
+                            item.message.deliveryStatus = status
+                            messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                        }
                     }
                 }
             }
@@ -270,8 +288,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageSendFailed(id: Long) {
-        messagesRV.getData()?.find { it is MessageListItem.MessageItem && it.message.id == id }?.let {
-            (it as MessageListItem.MessageItem).message.status = DeliveryStatus.Failed
+        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == id }?.let {
+            val message = (it.second as MessageListItem.MessageItem).message
+            val oldMessage = message.clone()
+            message.deliveryStatus = DeliveryStatus.Failed
+            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+        }
+    }
+
+    internal fun updateReplayCount(replayedMessage: SceytMessage?) {
+        messagesRV.getData()?.findIndexed {
+            it is MessageListItem.MessageItem && it.message.id == replayedMessage?.parent?.id
+        }?.let {
+            val message = (it.second as MessageListItem.MessageItem).message
+            val oldMessage = message.clone()
+            message.replyCount++
+            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
         }
     }
 
@@ -298,6 +330,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun clearData() {
         messagesRV.clearData()
         updateViewState(BaseViewModel.PageState(isEmpty = true))
+    }
+
+    fun setViewHolderFactory(factory: MessageViewHolderFactory) {
+        messagesRV.setViewHolderFactory(factory.also {
+            it.setMessageListener(clickListeners)
+        })
     }
 
     // Click listeners

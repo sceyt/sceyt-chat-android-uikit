@@ -107,8 +107,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val channel = pair.second.channel
                 val oldChannel = channel.clone()
                 channel.message?.let {
-                    if (it.status < status.status) {
-                        it.status = status.status
+                    if (it.deliveryStatus < status.status) {
+                        it.deliveryStatus = status.status
                         channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
                             message = it
                         }))
