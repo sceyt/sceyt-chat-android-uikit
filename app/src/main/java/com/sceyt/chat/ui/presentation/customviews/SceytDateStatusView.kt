@@ -262,7 +262,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     fun setHighlighted(highlighted: Boolean) {
         if (isHighlighted == highlighted) return
         isHighlighted = highlighted
-        setHighlightedState(highlighted)
+        init()
         invalidate()
     }
 

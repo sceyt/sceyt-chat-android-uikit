@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.listeners
 
+import android.view.View
 import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 
@@ -20,9 +21,9 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
         channelClickListener?.onChannelClick(item)
     }
 
-    override fun onChannelLongClick(item: ChannelListItem.ChannelItem) {
-        defaultListeners?.onChannelLongClick(item)
-        channelLongClickListener?.onChannelLongClick(item)
+    override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
+        defaultListeners?.onChannelLongClick(view, item)
+        channelLongClickListener?.onChannelLongClick(view, item)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {

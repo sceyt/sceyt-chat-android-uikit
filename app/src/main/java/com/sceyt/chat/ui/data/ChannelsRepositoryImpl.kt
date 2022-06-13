@@ -3,6 +3,8 @@ package com.sceyt.chat.ui.data
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
+import com.sceyt.chat.models.channel.GroupChannel
+import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.models.SceytResponse
@@ -88,6 +90,48 @@ class ChannelsRepositoryImpl {
                     else {
                         continuation.resume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
                     }
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    suspend fun leaveChannel(channel: GroupChannel): SceytResponse<Long> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.leave(object : ActionCallback {
+                override fun onSuccess() {
+                    continuation.resume(SceytResponse.Success(channel.id))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    suspend fun clearHistory(channel: Channel): SceytResponse<Long> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.clearHistory(object : ActionCallback {
+                override fun onSuccess() {
+                    continuation.resume(SceytResponse.Success(channel.id))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    suspend fun blockChannel(channel: GroupChannel): SceytResponse<Long> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.block(object : ChannelsCallback {
+                override fun onResult(channels: MutableList<Channel>?) {
+                    continuation.resume(SceytResponse.Success(channel.id))
                 }
 
                 override fun onError(e: SceytException?) {

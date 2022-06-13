@@ -6,6 +6,7 @@ import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
+import com.sceyt.chat.ui.utils.DateTimeUtil
 
 class OutDeletedMsgViewHolder(
         private val binding: SceytItemOutDeletedMessageBinding
@@ -20,8 +21,10 @@ class OutDeletedMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.statusChanged || diff.edited)
-                    setMessageStatusAndDateText(message, messageDate)
+                if (diff.statusChanged || diff.edited) {
+                    val dateText = DateTimeUtil.getDateTimeString(message.createdAt)
+                    messageDate.setDateText(dateText, false)
+                }
             }
         }
     }

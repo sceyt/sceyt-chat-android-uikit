@@ -53,6 +53,33 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
         }
     }
 
+    blockChannelLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                channelsListView.deleteChannel(it.data)
+            }
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
+        }
+    }
+
+    clearHistoryLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                channelsListView.channelCleared(it.data)
+            }
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
+        }
+    }
+
+    leaveChannelLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                channelsListView.deleteChannel(it.data)
+            }
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
+        }
+    }
+
     onNewMessageLiveData.observe(lifecycleOwner) {
         if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), it.first.unreadMessageCount)) {
             loadChannels(0, channelsListView.getChannelsSizeFromUpdate)
@@ -72,7 +99,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     onChannelEventLiveData.observe(lifecycleOwner) {
         when (it.eventType) {
             Created -> loadChannels(0, channelsListView.getChannelsSizeFromUpdate + 1)
-            Deleted -> channelsListView.deleteChannel(it.channelId)
+            Deleted, Left -> channelsListView.deleteChannel(it.channelId)
             ClearedHistory -> channelsListView.channelCleared(it.channelId ?: return@observe)
             Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
             Muted -> channelsListView.updateMuteState(true, it.channelId)
@@ -82,6 +109,10 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     pageStateLiveData.observe(lifecycleOwner) {
         channelsListView.updateStateView(it)
+    }
+
+    channelsListView.setChannelEvenListener {
+        onChannelEvent(it)
     }
 
     channelsListView.setReachToEndListener { offset ->

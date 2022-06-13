@@ -10,6 +10,7 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/parentLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -112,7 +113,7 @@
             app:sceytDateStatusViewStatusIconMargin="4dp"
             app:sceytDateStatusViewStatusIconSize="16dp"
             tools:sceytDateStatusViewDateText="12:28"
-            tools:sceytDateStatusViewStatusIcon="@drawable/ic_status_read" />
+            tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/unreadMessagesCount"

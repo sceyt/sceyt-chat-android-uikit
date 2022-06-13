@@ -28,5 +28,8 @@ class SceytGroupChannel(
 
     override val iconUrl: String?
         get() = avatarUrl
+
+    override val isGroup: Boolean
+        get() = true
 }
 

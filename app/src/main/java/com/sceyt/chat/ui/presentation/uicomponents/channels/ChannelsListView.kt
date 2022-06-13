@@ -2,8 +2,10 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
@@ -17,8 +19,12 @@ import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelPopupClickListeners
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
@@ -28,12 +34,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners {
+    : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
+        ChannelPopupClickListeners.PopupClickListeners {
 
     private var channelsRV: ChannelsRV
     private var pageStateView: PageStateView? = null
     private var clickListeners = ChannelClickListenersImpl(this)
+    private var popupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelClickListeners: ChannelClickListeners.ClickListeners
+    private var channelEventListener: ((ChannelEvent) -> Unit)? = null
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
@@ -64,8 +73,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onChannelClick(item)
             }
 
-            override fun onChannelLongClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onChannelLongClick(item)
+            override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
+                clickListeners.onChannelLongClick(view, item)
             }
 
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
@@ -118,7 +127,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun channelCleared(channelId: Long) {
+    internal fun channelCleared(channelId: Long?) {
         channelsRV.getChannels()?.findIndexed { channelId == it.channel.id }?.let { pair ->
             val channel = pair.second.channel
             val oldChannel = channel.clone()
@@ -147,13 +156,32 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.updateMuteState(muted, channelId ?: return)
     }
 
-
     internal fun channelUpdated(channel: SceytChannel?) {
         channelsRV.updateChannel(channel ?: return)
     }
 
+    internal fun setChannelEvenListener(listener: (ChannelEvent) -> Unit) {
+        channelEventListener = listener
+    }
+
     private fun sortChannelsBy(sortBy: SceytUIKitConfig.ChannelSortType) {
         channelsRV.sortBy(sortBy)
+    }
+
+    private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
+        val popup = PopupMenuChannel(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, isGroup = item.channel.isGroup)
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.sceyt_mark_as_read -> {}
+                R.id.sceyt_mark_as_unread -> {}
+                R.id.sceyt_clear_history -> popupClickListeners.onClearHistoryClick(item.channel)
+                R.id.sceyt_leave_channel -> popupClickListeners.onLeaveChannelClick(item.channel)
+                R.id.sceyt_block_channel -> popupClickListeners.onBlockChannelClick(item.channel)
+                R.id.sceyt_block_user -> {}
+            }
+            false
+        }
+        popup.show()
     }
 
     fun setChannelClickListener(listener: ChannelClickListeners) {
@@ -162,6 +190,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomChannelClickListeners(listeners: ChannelClickListenersImpl) {
         clickListeners = listeners
+    }
+
+    fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListenersImpl) {
+        popupClickListeners = listener
     }
 
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
@@ -177,16 +209,31 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     val getChannelsSizeFromUpdate
         get() = getChannels()?.size ?: SceytUIKitConfig.CHANNELS_LOAD_SIZE
 
-    //Click listeners
+
+    //Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
         ConversationActivity.newInstance(context, item.channel)
     }
 
-    override fun onChannelLongClick(item: ChannelListItem.ChannelItem) {
-
+    override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
+        showChannelActionsPopup(view, item)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
         ConversationActivity.newInstance(context, item.channel)
+    }
+
+
+    //Channel Popup callbacks
+    override fun onLeaveChannelClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
+    }
+
+    override fun onClearHistoryClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.ClearHistory(channel))
+    }
+
+    override fun onBlockChannelClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.BlockChannel(channel))
     }
 }

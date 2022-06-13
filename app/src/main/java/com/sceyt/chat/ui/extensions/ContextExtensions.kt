@@ -39,11 +39,12 @@ fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
     return createConfigurationContext(configuration).getCompatColor(colorId)
 }
 
-fun Context.getCompatColorByTheme(@ColorRes colorId: Int, isDark: Boolean = SceytUIKitConfig.isDarkMode): Int {
+fun Context.getCompatColorByTheme(@ColorRes colorId: Int?, isDark: Boolean = SceytUIKitConfig.isDarkMode): Int {
+    colorId ?: return 0
     val res = resources
     val configuration = Configuration(res.configuration)
     configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
-    return createConfigurationContext(configuration).getCompatColor(colorId)
+    return createConfigurationContext(configuration)?.getCompatColor(colorId) ?: 0
 }
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)

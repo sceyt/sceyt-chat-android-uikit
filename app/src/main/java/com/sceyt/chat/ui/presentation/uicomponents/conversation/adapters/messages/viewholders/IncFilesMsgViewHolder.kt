@@ -22,12 +22,20 @@ class IncFilesMsgViewHolder(
         private val messageListeners: MessageClickListenersImpl?,
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
 
+    private lateinit var messageItem: MessageListItem.MessageItem
+
     init {
         binding.setMessageItemStyle()
+
+        binding.layoutDetails.setOnLongClickListener {
+            messageListeners?.onMessageLongClick(it, messageItem)
+            return@setOnLongClickListener true
+        }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         if (item is MessageListItem.MessageItem) {
+            messageItem = item
             with(binding) {
                 val message = item.message
 
@@ -55,11 +63,6 @@ class IncFilesMsgViewHolder(
                     setFilesAdapter(message)
 
                 setReplayedMessageContainer(message, binding.viewReplay)
-
-                layoutDetails.setOnLongClickListener {
-                    messageListeners?.onMessageLongClick(it, item)
-                    return@setOnLongClickListener true
-                }
 
                 if (item.message.canShowAvatarAndName)
                     avatar.setOnClickListener {

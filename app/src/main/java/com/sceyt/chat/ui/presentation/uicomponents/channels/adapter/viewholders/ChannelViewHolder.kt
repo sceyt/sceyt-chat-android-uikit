@@ -32,8 +32,8 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 listeners.onChannelClick(channelItem)
             }
 
-            root.setOnLongClickListener {
-                listeners.onChannelLongClick(channelItem)
+            parentLayout.setOnLongClickListener {
+                listeners.onChannelLongClick(it, channelItem)
                 return@setOnLongClickListener true
             }
 

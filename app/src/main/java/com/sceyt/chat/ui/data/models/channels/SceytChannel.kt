@@ -4,6 +4,7 @@ package com.sceyt.chat.ui.data.models.channels
 import android.os.Parcelable
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
+import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.ui.BR
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getPresentableName
@@ -48,6 +49,9 @@ open class SceytChannel(open var id: Long,
 
     @IgnoredOnParcel
     open val iconUrl: String? = ""
+
+    @IgnoredOnParcel
+    open val isGroup = false
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {

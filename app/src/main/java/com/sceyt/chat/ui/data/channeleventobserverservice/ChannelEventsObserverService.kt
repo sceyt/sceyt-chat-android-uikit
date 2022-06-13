@@ -103,6 +103,10 @@ object ChannelEventsObserverService {
             override fun onChannelUnMuted(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.UnMuted))
             }
+
+            override fun onChannelLeft(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Left))
+            }
         })
     }
 }
