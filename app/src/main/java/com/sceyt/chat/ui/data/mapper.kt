@@ -66,6 +66,22 @@ fun SceytChannel.toChannel(): Channel {
     }
 }
 
+fun SceytChannel.toGroupChannel(): GroupChannel {
+    return when (channelType) {
+        Private -> {
+            this as SceytGroupChannel
+            PrivateChannel(id, subject, metadata, avatarUrl,
+                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+        }
+        Public -> {
+            this as SceytGroupChannel
+            PublicChannel(id, "", subject, metadata, avatarUrl,
+                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+        }
+        else -> throw RuntimeException("Channel is direct channel")
+    }
+}
+
 fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytMessage(
     id = id,
     tid = tid,

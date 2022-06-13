@@ -25,5 +25,8 @@ class SceytDirectChannel(
 
     override val iconUrl: String?
         get() = peer?.avatarURL
+
+    override val isGroup: Boolean
+        get() = false
 }
 

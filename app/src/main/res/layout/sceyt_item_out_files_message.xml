@@ -82,9 +82,9 @@
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconMargin="5dp"
-            app:sceytDateStatusViewStatusIconSize="16dp"
+            app:sceytDateStatusViewStatusIconSize="15dp"
             tools:sceytDateStatusViewDateText="00:37"
-            tools:sceytDateStatusViewStatusIcon="@drawable/ic_status_read" />
+            tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

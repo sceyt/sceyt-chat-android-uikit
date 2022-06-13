@@ -30,6 +30,7 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingHorizontal="10dp"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
         app:sceytUiChannelTitleTextSize="@dimen/_50sdp"
         app:sceytUiUnreadMessageCounterTextColor="@color/sceyt_color_green" />
 

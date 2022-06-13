@@ -15,7 +15,7 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var i
 
     @SuppressLint("RestrictedApi")
     override fun show() {
-        inflate(R.menu.menu_popup_message)
+        inflate(R.menu.sceyt_menu_popup_message)
         (menu as MenuBuilder).setOptionalIconsVisible(true)
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
         if (incoming) {
@@ -26,10 +26,6 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var i
                 title = setColoredTitle(title.toString())
             }
         super.show()
-    }
-
-    override fun getGravity(): Int {
-        return Gravity.END
     }
 
     private fun setColoredTitle(text: String): SpannableString {

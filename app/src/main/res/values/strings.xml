@@ -100,4 +100,7 @@
     <string name="sceyt_ui_channel_list_empty">No results found</string>
     <string name="sceyt_messages_list_empty">No messages yet</string>
     <string name="no_proper_app_to_open_file">You may not have a proper app for viewing this content</string>
+    <string name="sceyt_mark_as_read">Mark as read</string>
+    <string name="sceyt_mark_as_unread">Mark as unread</string>
+    <string name="sceyt_block">Block</string>
 </resources>

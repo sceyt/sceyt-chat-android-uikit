@@ -70,7 +70,7 @@
             app:itemIconTint="@color/bottom_nav_item_color"
             app:itemTextColor="@color/bottom_nav_item_color"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:menu="@menu/menu_bottom_navigation"
+            app:menu="@menu/sceyt_menu_bottom_navigation"
             bind:themedBackgroundColor="@{R.color.sceyt_color_bottom_nav}" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

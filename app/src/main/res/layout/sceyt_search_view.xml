@@ -42,8 +42,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/icClear"
             app:layout_constraintStart_toEndOf="@+id/icSearch"
-            app:layout_constraintTop_toTopOf="parent"
-            bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icClear"

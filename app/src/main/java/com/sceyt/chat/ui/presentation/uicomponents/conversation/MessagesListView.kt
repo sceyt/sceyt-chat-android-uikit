@@ -120,7 +120,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
         val popup = PopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view)
-        popup.inflate(R.menu.menu_popup_reacton)
+        popup.inflate(R.menu.sceyt_menu_popup_reacton)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_add -> reactionPopupClickListeners.onAddReaction(reaction.messageItem.message, reaction.reactionScore.key)

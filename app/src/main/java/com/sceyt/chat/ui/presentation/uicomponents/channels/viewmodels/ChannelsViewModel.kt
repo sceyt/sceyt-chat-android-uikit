@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.channel.Channel
@@ -10,9 +11,12 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.toChannel
+import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toSceytUiMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chat.ui.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +37,13 @@ class ChannelsViewModel : BaseViewModel() {
 
     private val _loadMoreChannelsFlow = MutableStateFlow<SceytResponse<List<ChannelListItem>>>(SceytResponse.Success(null))
     val loadMoreChannelsFlow: StateFlow<SceytResponse<List<ChannelListItem>>> = _loadMoreChannelsFlow
+
+    private val _blockChannelLiveData = MutableLiveData<SceytResponse<Long>>()
+    val blockChannelLiveData: LiveData<SceytResponse<Long>> = _blockChannelLiveData
+    private val _clearHistoryLiveData = MutableLiveData<SceytResponse<Long>>()
+    val clearHistoryLiveData: LiveData<SceytResponse<Long>> = _clearHistoryLiveData
+    private val _leaveChannelLiveData = MutableLiveData<SceytResponse<Long>>()
+    val leaveChannelLiveData: LiveData<SceytResponse<Long>> = _leaveChannelLiveData
 
     val onNewMessageLiveData = MutableLiveData<Pair<Channel, Message>>()
     val onMessageStatusLiveData = MutableLiveData<MessageStatusChange>()
@@ -117,5 +128,37 @@ class ChannelsViewModel : BaseViewModel() {
         if (hasNext)
             (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
         return channelItems
+    }
+
+    private fun blockChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.blockChannel(channel.toGroupChannel())
+            _blockChannelLiveData.postValue(response)
+        }
+    }
+
+    private fun clearHistory(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.clearHistory(channel.toChannel())
+            _clearHistoryLiveData.postValue(response)
+        }
+    }
+
+    private fun leaveChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.leaveChannel(channel.toGroupChannel())
+            _leaveChannelLiveData.postValue(response)
+        }
+    }
+
+    fun onChannelEvent(event: ChannelEvent) {
+        when (event) {
+            is ChannelEvent.BlockChannel -> blockChannel(event.channel)
+            is ChannelEvent.ClearHistory -> clearHistory(event.channel)
+            is ChannelEvent.LeaveChannel -> leaveChannel(event.channel)
+            is ChannelEvent.BlockUser -> {
+
+            }
+        }
     }
 }

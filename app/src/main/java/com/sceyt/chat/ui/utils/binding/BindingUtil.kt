@@ -48,7 +48,7 @@ object BindingUtil {
         }
     }
 
-    private fun setThemedBackground(view: View, color: Int, isDark: Boolean) {
+    private fun setThemedBackground(view: View, color: Int?, isDark: Boolean) {
         view.background = ColorDrawable(view.context.getCompatColorByTheme(color, isDark))
     }
 
@@ -71,7 +71,8 @@ object BindingUtil {
 
     @BindingAdapter("bind:themedTextColor")
     @JvmStatic
-    fun themedTextColor(view: View, colorId: Int) {
+    fun themedTextColor(view: View, colorId: Int?) {
+        if (colorId == null) return
         val pair = Pair(view, colorId)
         themeTextColorsViews.add(pair)
 
@@ -89,7 +90,8 @@ object BindingUtil {
 
     @BindingAdapter("bind:themedBackgroundColor")
     @JvmStatic
-    fun themedBackgroundColor(view: View, @ColorRes colorId: Int) {
+    fun themedBackgroundColor(view: View, @ColorRes colorId: Int?) {
+        colorId ?: return
         setThemedBackground(view, colorId, SceytUIKitConfig.isDarkMode)
         val pair = Pair(view, colorId)
         backgroundColorsViews.add(pair)

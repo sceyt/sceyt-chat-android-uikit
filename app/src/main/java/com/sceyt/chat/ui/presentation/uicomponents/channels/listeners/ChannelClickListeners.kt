@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.listeners
 
+import android.view.View
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 
 
@@ -10,7 +11,7 @@ sealed interface ChannelClickListeners {
     }
 
     fun interface ChannelClickLongClickListener : ChannelClickListeners {
-        fun onChannelLongClick(item: ChannelListItem.ChannelItem)
+        fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem)
     }
 
     fun interface AvatarClickListener : ChannelClickListeners {
