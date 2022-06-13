@@ -10,11 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.view.ViewCompat
-import androidx.core.view.doOnAttach
-import androidx.core.view.doOnDetach
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
@@ -23,7 +21,10 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlin.math.roundToInt
 
 
@@ -49,6 +50,10 @@ fun dpToPx(dp: Float): Int {
     val density = Resources.getSystem().displayMetrics.density
     return (dp * density).roundToInt()
 }
+
+fun View.screenWidthPx() = resources.configuration.screenWidthDp.dpToPx()
+
+fun View.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
 
 fun startObjectAnimDuoChat(context: Context, duration: Long, view: View) {
     val yourProfileWidth = 100
@@ -126,28 +131,6 @@ fun EditText.setTextAndMoveSelectionEnd(text: String?) {
     }
 }
 
-fun EditText.debounceWithLength1(cb: (CharSequence?) -> Unit, textChanged: ((CharSequence?) -> Unit)? = null) {
-    findViewTreeLifecycleOwner()?.lifecycleScope?.let {
-        callbackFlow {
-            val listener = doOnTextChanged { text, _, _, _ ->
-                textChanged?.invoke(text)
-                trySend(text)
-            }
-            awaitClose { removeTextChangedListener(listener) }
-        }.map { charSequence ->
-            if (charSequence?.trim()?.length == 1) {
-                cb(charSequence)
-            }
-            charSequence
-        }.debounce(300)
-            .onEach { text ->
-                text?.let { charSequence ->
-                    cb(charSequence)
-                }
-            }.launchIn(it)
-    }
-}
-
 fun SearchView.debounce(cb: (CharSequence?) -> Unit, textChanged: ((CharSequence?) -> Unit)? = null, duration: Long = 300) {
     findViewTreeLifecycleOwner()?.lifecycleScope?.let {
         callbackFlow {
@@ -218,32 +201,6 @@ fun ViewGroup.setTransitionListener(startListener: ((transition: LayoutTransitio
     return listener
 }
 
-public inline fun View.doOnAttachWithout(crossinline action: (view: View) -> Unit) {
-    if (ViewCompat.isAttachedToWindow(this)) {
-        action(this)
-    } else {
-        addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View) {
-                action(view)
-            }
+fun View.getString(@StringRes resId: Int) = context.getString(resId)
 
-            override fun onViewDetachedFromWindow(view: View) {
-               // removeOnAttachStateChangeListener(this)
-            }
-        })
-    }
-}
-
-public inline fun View.doOnDetachWithout(crossinline action: (view: View) -> Unit) {
-    if (!ViewCompat.isAttachedToWindow(this)) {
-        action(this)
-    } else {
-        addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View) {}
-
-            override fun onViewDetachedFromWindow(view: View) {
-                action(view)
-            }
-        })
-    }
-}
+fun View.getString(@StringRes resId: Int, vararg formatArgs: Any?) = context.getString(resId, *formatArgs)

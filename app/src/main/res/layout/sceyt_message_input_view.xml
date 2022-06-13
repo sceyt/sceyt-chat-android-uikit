@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height=".5dp"
+            android:background="@color/sceyt_color_divider"
+            app:layout_constraintBottom_toTopOf="@+id/rvAttachments"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAttachments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:visibility="visible"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/sceyt_item_input_attachment" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height=".5dp"
+            android:background="@color/sceyt_color_divider"
+            app:layout_constraintBottom_toTopOf="@+id/layoutReplayMessage" />
+
+        <include
+            android:id="@+id/layoutReplayMessage"
+            layout="@layout/sceyt_replay_message_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rvAttachments" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop=".5dp"
+            android:background="@color/sceyt_color_dialog_bg_themed"
+            android:paddingVertical="15dp"
+            android:animateLayoutChanges="true"
+            app:layout_constraintTop_toBottomOf="@+id/layoutReplayMessage">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/messageInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:background="@null"
+                android:hint="@string/message"
+                android:includeFontPadding="false"
+                android:inputType="textMultiLine"
+                android:maxLines="3"
+                android:minHeight="24dp"
+                android:textColor="@color/sceyt_color_black_themed"
+                android:textColorHint="@color/sceyt_color_hint"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/icSendMessage"
+                app:layout_constraintStart_toEndOf="@+id/icAddAttachments" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icAddAttachments"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="16dp"
+                android:tint="@color/sceyt_color_accent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:srcCompat="@drawable/sceyt_ic_upload_file" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icSendMessage"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:srcCompat="@drawable/sceyt_ic_send_message" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

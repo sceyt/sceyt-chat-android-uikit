@@ -38,20 +38,20 @@ fun Context.downloadOnlyWithGlide(url: String?, endListener: (() -> Unit)? = nul
         .submit()
 }
 
-inline fun <T> glideCustomTarget(
+inline fun <reified T : Any> glideCustomTarget(
         crossinline onLoadCleared: (placeholder: Drawable?) -> Unit = { _ -> },
         crossinline onResourceReady: (resource: T, transition: Transition<in T>?) -> Unit = { _, _ -> },
-        crossinline onFinish: (placeholder: Bitmap?) -> Unit = { _ -> },
+        crossinline onFinish: (placeholder: T?) -> Unit = { _ -> },
 ): CustomTarget<T> {
     return object : CustomTarget<T>() {
         override fun onLoadCleared(placeholder: Drawable?) {
             onLoadCleared.invoke(placeholder)
-            onFinish.invoke(placeholder?.toBitmap())
+            onFinish.invoke(placeholder as? T)
         }
 
         override fun onResourceReady(resource: T, transition: Transition<in T>?) {
             onResourceReady.invoke(resource, transition)
-            onFinish.invoke(if (resource is Bitmap) resource else null)
+            onFinish.invoke(resource)
         }
     }
 }

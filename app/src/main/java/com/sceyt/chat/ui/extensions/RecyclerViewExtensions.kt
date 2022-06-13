@@ -2,7 +2,9 @@ package com.sceyt.chat.ui.extensions
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 
@@ -46,6 +48,16 @@ fun RecyclerView.isFirstItemDisplaying(): Boolean {
     return false
 }
 
+
+fun RecyclerView.needLoadMore(limit: Int, dy: Int): Boolean {
+    if (adapter?.itemCount == 0 || dy > 0) return false
+    val firstVisibleItemPosition = ((layoutManager) as LinearLayoutManager).findFirstVisibleItemPosition()
+    if (firstVisibleItemPosition != RecyclerView.NO_POSITION && firstVisibleItemPosition < limit) {
+        return true
+    }
+    return false
+}
+
 fun RecyclerView.isFirstCompletelyItemDisplaying(): Boolean {
     if (adapter?.itemCount != 0) {
         val firstItemPosition = (layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
@@ -68,6 +80,15 @@ fun RecyclerView.getFirstVisibleItemPosition(): Int {
 fun RecyclerView.lastCompletelyVisibleItemPosition(): Int {
     if (adapter?.itemCount != 0) {
         val position = (layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
+        if (position != RecyclerView.NO_POSITION)
+            return position
+    }
+    return RecyclerView.NO_POSITION
+}
+
+fun RecyclerView.lastVisibleItemPosition(): Int {
+    if (adapter?.itemCount != 0) {
+        val position = (layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
         if (position != RecyclerView.NO_POSITION)
             return position
     }
@@ -137,4 +158,13 @@ fun RecyclerView.ViewHolder.bindPosition(cb: (Int) -> Unit) {
         if (it != RecyclerView.NO_POSITION)
             cb.invoke(it)
     }
+}
+
+fun RecyclerView.smoothSnapToPosition(position: Int, snapMode: Int = LinearSmoothScroller.SNAP_TO_START) {
+    val smoothScroller = object : LinearSmoothScroller(this.context) {
+        override fun getVerticalSnapPreference(): Int = snapMode
+        override fun getHorizontalSnapPreference(): Int = snapMode
+    }
+    smoothScroller.targetPosition = position
+    layoutManager?.startSmoothScroll(smoothScroller)
 }

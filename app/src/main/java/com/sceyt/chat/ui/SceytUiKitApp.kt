@@ -9,6 +9,8 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.emojiview.emojiview.AXEmojiManager
+import com.emojiview.emojiview.provider.AXGoogleEmojiProvider
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
@@ -49,6 +51,8 @@ class SceytUiKitApp : Application() {
         initSceyt()
         setSceytListeners()
         connect()
+
+        AXEmojiManager.install(applicationContext, AXGoogleEmojiProvider(applicationContext))
     }
 
     private fun initSceyt() {
@@ -63,14 +67,14 @@ class SceytUiKitApp : Application() {
 
     private fun setSceytListeners() {
 
-        chatClient.addMessageListener("main", object : MessageListener {
+      /*  chatClient.addMessageListener("main", object : MessageListener {
             override fun onMessage(channel: Channel, message: Message) {
                 totalUnreadCount.postValue(totalUnreadCount.value?.plus(1))
                 ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
 
                 }
             }
-        })
+        })*/
 
 
         var noNetworkObserver = NetworkMonitor.NetworkObserver { connectionType ->

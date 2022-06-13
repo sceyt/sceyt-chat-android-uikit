@@ -28,4 +28,6 @@ fun String.onlyLetters() = filter {
     it.isLetter()
 }
 
-
+fun String?.isEqualsVideoOrImage(): Boolean {
+    return this == "video" || this == "image"
+}

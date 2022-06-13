@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:layout_marginVertical="8dp"
+        android:background="@drawable/sceyt_bg_corners_10"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/extraSmallTextSize"
+        app:layout_constraintEnd_toStartOf="@+id/icCancelReplay"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toTopOf="@+id/view"
+        tools:text="Henry Willian" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvMessageBody"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constraintBottom_toBottomOf="@+id/view"
+        app:layout_constraintEnd_toStartOf="@+id/icCancelReplay"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toBottomOf="@+id/tvName"
+        tools:text="Waiting for your answer." />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icCancelReplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:tint="#898B99"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/view"
+        app:srcCompat="@drawable/sceyt_ic_cancel" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
