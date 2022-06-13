@@ -26,7 +26,7 @@ object ChannelStyle {
     var emptySearchState: Int = R.layout.sceyt_search_channels_empty_state
 
     @LayoutRes
-    var loadingState: Int = R.layout.sceyt_loading_state
+    var loadingState: Int = R.layout.sceyt_channels_page_loading_state
 
     /*internal constructor(context: Context) : this(
         titleColor = context.getCompatColor(R.color.colorFontDark),
