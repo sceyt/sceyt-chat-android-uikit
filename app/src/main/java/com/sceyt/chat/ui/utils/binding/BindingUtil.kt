@@ -3,8 +3,10 @@ package com.sceyt.chat.ui.utils.binding
 import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isGone
@@ -13,12 +15,14 @@ import androidx.databinding.BindingAdapter
 import androidx.databinding.Observable
 import com.sceyt.chat.ui.BR
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
+import com.sceyt.chat.ui.extensions.getCompatDrawableByTheme
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 object BindingUtil {
     private val themeTextColorsViews: HashSet<Pair<View, Int>> = HashSet()
     private val backgroundColorsViews: HashSet<Pair<View, Int>> = HashSet()
     private val backgroundTintColorsViews: HashSet<Pair<View, Int>> = HashSet()
+    private val themeDrawablesViews: HashSet<Pair<ImageView, Int>> = HashSet()
 
     init {
         SceytUIKitConfig.SceytUITheme.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
@@ -33,6 +37,9 @@ object BindingUtil {
                     }
                     backgroundTintColorsViews.forEach {
                         setThemedBackgroundTint(it.first, it.second, isDark)
+                    }
+                    themeDrawablesViews.forEach {
+                        setThemedDrawable(it.first, it.second, isDark)
                     }
                 }
             }
@@ -54,6 +61,10 @@ object BindingUtil {
 
     private fun setThemedBackgroundTint(view: View, color: Int, isDark: Boolean) {
         view.backgroundTintList = ColorStateList.valueOf(view.context.getCompatColorByTheme(color, isDark))
+    }
+
+    private fun setThemedDrawable(view: ImageView, drawableId: Int, isDark: Boolean) {
+        view.setImageDrawable(view.context.getCompatDrawableByTheme(drawableId, isDark))
     }
 
     @BindingAdapter("bind:visibleIf")
@@ -123,6 +134,26 @@ object BindingUtil {
 
             override fun onViewDetachedFromWindow(p0: View) {
                 backgroundTintColorsViews.remove(pair)
+            }
+        })
+    }
+
+    @BindingAdapter("bind:themedDrawable")
+    @JvmStatic
+    fun themedDrawable(view: ImageView, @DrawableRes drawableId: Int?) {
+        drawableId ?: return
+        setThemedDrawable(view, drawableId, SceytUIKitConfig.isDarkMode)
+        val pair = Pair(view, drawableId)
+        themeDrawablesViews.add(pair)
+
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(p0: View) {
+                setThemedDrawable(view, drawableId, SceytUIKitConfig.isDarkMode)
+                themeDrawablesViews.add(pair)
+            }
+
+            override fun onViewDetachedFromWindow(p0: View) {
+                themeDrawablesViews.remove(pair)
             }
         })
     }

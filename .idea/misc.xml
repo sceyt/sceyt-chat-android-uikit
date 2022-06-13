@@ -6,6 +6,8 @@
         <entry key="../../../../layout/custom_preview.xml" value="0.33" />
         <entry key="AXEmojiView/src/main/res/layout/emoji_item.xml" value="0.3776041666666667" />
         <entry key="AXEmojiView/src/main/res/layout/emoji_skin_popup.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/drawable-night/sceyt_ic_channels_empty_state.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable-notnight/sceyt_ic_channels_empty_state.xml" value="0.222" />
         <entry key="app/src/main/res/drawable-v24/bg_circle_blue.xml" value="0.23" />
         <entry key="app/src/main/res/drawable-v24/bg_corners_20.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable-v24/bg_online.xml" value="0.23" />
@@ -90,6 +92,7 @@
         <entry key="app/src/main/res/drawable/sceyt_dialog.xml" value="0.2" />
         <entry key="app/src/main/res/drawable/sceyt_ic_block.xml" value="0.222" />
         <entry key="app/src/main/res/drawable/sceyt_ic_cancel.xml" value="0.181" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_channels_empty_state.xml" value="0.222" />
         <entry key="app/src/main/res/drawable/sceyt_ic_copy.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_ic_file.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_ic_file_with_bg.xml" value="0.265" />
@@ -120,6 +123,7 @@
         <entry key="app/src/main/res/layout/exo_player_control_view.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/fragment_bottom_sheet_emojis.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/fragment_channels.xml" value="0.31971153846153844" />
+        <entry key="app/src/main/res/layout/fragment_profile.xml" value="0.390625" />
         <entry key="app/src/main/res/layout/item_add_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/item_channel.xml" value="0.22" />
         <entry key="app/src/main/res/layout/item_loading.xml" value="0.3776041666666667" />
@@ -131,6 +135,7 @@
         <entry key="app/src/main/res/layout/recyclerview_message_video_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/replay_message_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_channel_list_empty_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_channels_page_loading_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_conversation_header_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_custom_dialog_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_dialog_choose_file_type.xml" value="0.390625" />
@@ -198,6 +203,7 @@
         <entry key="app/src/main/res/menu/menu_popup_message.xml" value="0.3765625" />
         <entry key="app/src/main/res/menu/menu_popup_reacton.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/menu/scety_menu_popup_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/menu/sceyt_menu_bottom_navigation.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/menu/sceyt_menu_popup_channel.xml" value="0.37037037037037035" />
         <entry key="app/src/main/res/xml/provider_paths.xml" value="0.1828125" />
       </map>

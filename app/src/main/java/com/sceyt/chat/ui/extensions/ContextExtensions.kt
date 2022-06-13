@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -45,6 +46,14 @@ fun Context.getCompatColorByTheme(@ColorRes colorId: Int?, isDark: Boolean = Sce
     val configuration = Configuration(res.configuration)
     configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
     return createConfigurationContext(configuration)?.getCompatColor(colorId) ?: 0
+}
+
+fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Boolean): Drawable? {
+    drawableId ?: return null
+    val res = resources
+    val configuration = Configuration(res.configuration)
+    configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+    return createConfigurationContext(configuration)?.getCompatDrawable(drawableId)
 }
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)

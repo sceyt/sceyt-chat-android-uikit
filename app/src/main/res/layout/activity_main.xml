@@ -16,7 +16,7 @@
         android:background="@color/sceyt_color_bg"
         android:fitsSystemWindows="true"
         bind:themedBackgroundColor="@{R.color.sceyt_color_bg}"
-        tools:context=".MainActivity">
+        tools:context=".presentation.mainactivity.MainActivity">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutToolbar"
@@ -51,14 +51,11 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/mainFrameLayout"
-            android:name="com.sceyt.chat.ui.ChannelsFragment"
-            android:layout_width="0dp"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
