@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/fileImage"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/sceyt_color_gray"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:.8"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize18" />
+
+    <View
+        android:id="@+id/viewBg"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/sceyt_bg_corners_30"
+        android:backgroundTint="#66000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/loadProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layerType="hardware"
+        app:indicatorColor="@color/sceyt_color_accent"
+        app:indicatorSize="40dp"
+        app:layout_constraintBottom_toBottomOf="@+id/viewBg"
+        app:layout_constraintEnd_toEndOf="@+id/viewBg"
+        app:layout_constraintStart_toStartOf="@+id/viewBg"
+        app:layout_constraintTop_toTopOf="@+id/viewBg"
+        app:trackColor="@color/sceyt_color_white"
+        app:trackCornerRadius="5dp"
+        app:trackThickness="2.5dp" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="loadProgress,viewBg" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

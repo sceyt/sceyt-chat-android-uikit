@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="24dp"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/bigTextSize"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Title" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="20dp"
+        android:fontFamily="@font/roboto_medium"
+        android:textColor="@color/sceyt_color_gray_400"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constraintEnd_toEndOf="@+id/text_title"
+        app:layout_constraintStart_toStartOf="@+id/text_title"
+        app:layout_constraintTop_toBottomOf="@+id/text_title"
+        tools:text="Description" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/button_cancel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:padding="8dp"
+        android:fontFamily="@font/roboto_medium"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/mediumTextSize"
+        app:layout_constraintBottom_toBottomOf="@+id/button_accept"
+        app:layout_constraintEnd_toStartOf="@+id/button_accept"
+        app:layout_constraintTop_toTopOf="@+id/button_accept"
+        tools:text="No" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/button_accept"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:padding="8dp"
+        android:fontFamily="@font/roboto_medium"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/mediumTextSize"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_description"
+        tools:text="Yes" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

@@ -8,8 +8,10 @@ object SceytUIKitConfig {
     val SceytUITheme = ThemeConfig()
 
     const val CHANNELS_LOAD_SIZE = 20
+    const val MESSAGES_LOAD_SIZE = 20
 
-    val isDarkMode get() =  SceytUITheme.isDarkMode
+    val isDarkMode get() = SceytUITheme.isDarkMode
+    var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
 
     class ThemeConfig : BaseObservable() {
         @Bindable
@@ -18,5 +20,10 @@ object SceytUIKitConfig {
                 field = value
                 notifyPropertyChanged(BR.isDarkMode)
             }
+    }
+
+    enum class ChannelSortType {
+        ByLastMsg,
+        ByChannelCreatedAt
     }
 }

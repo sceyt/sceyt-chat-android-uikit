@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.fragment.app.Fragment
 
 @TargetApi(Build.VERSION_CODES.M)
@@ -68,13 +70,13 @@ fun Activity.checkHasOneOfAndPermissionsOrAsk(activityResultLauncher: ActivityRe
     }
 }
 
-fun Activity.checkAndAskPermissions(activityResultLauncher: ActivityResultLauncher<String>, vararg permissions: String): Boolean {
+fun Context.checkAndAskPermissions(activityResultLauncher: ActivityResultLauncher<String>?, vararg permissions: String): Boolean {
     return if (hasPermissions(*permissions)) {
         true
     } else {
         for (perm in permissions) {
             if (!hasPermissions(perm)) {
-                activityResultLauncher.launch(perm)
+                activityResultLauncher?.launch(perm)
                 break
             }
         }
@@ -83,7 +85,8 @@ fun Activity.checkAndAskPermissions(activityResultLauncher: ActivityResultLaunch
 }
 
 @TargetApi(Build.VERSION_CODES.M)
-fun Activity.checkDeniedOneOfPermissions(vararg permissions: String): Boolean {
+fun Context.checkDeniedOneOfPermissions(vararg permissions: String): Boolean {
+    if (this !is AppCompatActivity) return false
     for (permission in permissions) {
         if (!hasPermissions(permission) && !shouldShowRequestPermissionRationale(permission))
             return true

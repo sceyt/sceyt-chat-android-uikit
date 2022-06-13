@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icFile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:background="@drawable/sceyt_bg_circle"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_file" />
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/loadProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layerType="hardware"
+        android:visibility="gone"
+        app:indicatorColor="@color/sceyt_color_white"
+        app:indicatorSize="32dp"
+        app:layout_constraintBottom_toBottomOf="@+id/icFile"
+        app:layout_constraintEnd_toEndOf="@id/icFile"
+        app:layout_constraintStart_toStartOf="@+id/icFile"
+        app:layout_constraintTop_toTopOf="@+id/icFile"
+        app:trackCornerRadius="5dp"
+        app:trackThickness="2.5dp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvFileName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/icFile"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Montagabold.pdf" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvFileSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:includeFontPadding="false"
+        android:textColor="@color/sceyt_color_gray_400"
+        android:textSize="@dimen/tinyTextSize"
+        app:layout_constraintStart_toStartOf="@+id/tvFileName"
+        app:layout_constraintTop_toBottomOf="@+id/tvFileName"
+        tools:text="67 KB" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

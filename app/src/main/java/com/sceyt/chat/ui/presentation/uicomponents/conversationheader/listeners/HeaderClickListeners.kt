@@ -1,0 +1,17 @@
+package com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners
+
+import android.view.View
+
+sealed interface HeaderClickListeners {
+
+    fun interface AvatarClickListener : HeaderClickListeners {
+        fun onAvatarClick(view: View)
+    }
+
+    fun interface BackClickListener : HeaderClickListeners {
+        fun onBackClick(view: View)
+    }
+
+    /** User this if you want to implement all callbacks */
+    interface ClickListeners : AvatarClickListener, BackClickListener
+}

@@ -7,7 +7,7 @@
     <string name="connect">connect</string>
     <string name="connection_failed">Connection failed</string>
     <string name="channels">Channels</string>
-    <string name="search">search</string>
+    <string name="search">Search for channels</string>
     <string name="your_last_message">You: %1$s</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
@@ -76,7 +76,8 @@
     <string name="editing_message">Editing message</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="deleting_message">Deleting message</string>
-    <string name="q_delete_message_title">Delete this message?</string>
+    <string name="delete_message">Delete message</string>
+    <string name="q_delete_message_title">Delete message?</string>
     <string name="q_delete_message_body">Are you sure you want to delete this message?</string>
     <string name="display_name">Display name</string>
     <string name="enter_display_name">Enter display name</string>
@@ -94,7 +95,12 @@
     <string name="replay_in_thread">Replay in thread</string>
     <string name="replays">Replays</string>
     <string name="thread_replay">Thread replay</string>
-    <string name="with">with</string>
+    <string name="with">with %s</string>
 
-    <string name="sceyt_ui_channel_list_empty">No channels found</string>
+    <string name="sceyt_ui_channel_list_empty">No results found</string>
+    <string name="sceyt_messages_list_empty">No messages yet</string>
+    <string name="no_proper_app_to_open_file">You may not have a proper app for viewing this content</string>
+    <string name="sceyt_mark_as_read">Mark as read</string>
+    <string name="sceyt_mark_as_unread">Mark as unread</string>
+    <string name="sceyt_block">Block</string>
 </resources>

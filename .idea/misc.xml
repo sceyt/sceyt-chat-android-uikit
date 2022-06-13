@@ -3,36 +3,203 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="../../../../layout/custom_preview.xml" value="0.4117948717948718" />
+        <entry key="../../../../layout/custom_preview.xml" value="0.33" />
+        <entry key="AXEmojiView/src/main/res/layout/emoji_item.xml" value="0.3776041666666667" />
+        <entry key="AXEmojiView/src/main/res/layout/emoji_skin_popup.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/drawable-v24/bg_circle_blue.xml" value="0.23" />
+        <entry key="app/src/main/res/drawable-v24/bg_corners_20.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable-v24/bg_online.xml" value="0.23" />
+        <entry key="app/src/main/res/drawable/attachment_rounded_background.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/bg_circle_blue.xml" value="0.23" />
         <entry key="app/src/main/res/drawable/bg_circle_gray.xml" value="0.23" />
         <entry key="app/src/main/res/drawable/bg_corners_20.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/bg_corners_30.xml" value="0.1665" />
+        <entry key="app/src/main/res/drawable/bg_inc_message.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/bg_line.xml" value="0.1675" />
+        <entry key="app/src/main/res/drawable/bg_message_day.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/bg_online.xml" value="0.1675" />
+        <entry key="app/src/main/res/drawable/bg_out_message.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/bg_play_pause_button.xml" value="0.186" />
         <entry key="app/src/main/res/drawable/bg_search_view.xml" value="0.2" />
+        <entry key="app/src/main/res/drawable/bg_stroke.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/bg_top_bottom_lines.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/bg_unread_count.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/channel_create.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/checked.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/circle_progress_bar.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/circle_shape.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/circule_progress_bar.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/close_btn.xml" value="0.3015" />
+        <entry key="app/src/main/res/drawable/context_menu_dots.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/custom_checkbox.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/date_transparent_background.xml" value="0.23" />
+        <entry key="app/src/main/res/drawable/ellipse_370.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/exo_styled_controls_pause.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_add.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_add_reaction.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_arrow_back.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_arrow_forward.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_attach.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_avatar_add_members.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_avatar_camera.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/ic_baseline_clear_24.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_cancel.xml" value="0.244" />
+        <entry key="app/src/main/res/drawable/ic_channels.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_check.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_check_24.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_check_input.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_edit.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_empty_channels.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_file.xml" value="0.2235" />
+        <entry key="app/src/main/res/drawable/ic_file_with_bg.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.2135" />
+        <entry key="app/src/main/res/drawable/ic_no_channels.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_no_search_result.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_notifications.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_play.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_profile.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/ic_profile_check.xml" value="0.1675" />
+        <entry key="app/src/main/res/drawable/ic_search.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_send_message.xml" value="0.3015" />
+        <entry key="app/src/main/res/drawable/ic_status_delivered.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_delivered_white.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_faild.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_not_sent.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_not_sent_white.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_on_server.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_status_on_server_white.xml" value="0.2575" />
         <entry key="app/src/main/res/drawable/ic_status_read.xml" value="0.246" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.18" />
+        <entry key="app/src/main/res/drawable/ic_status_read_white.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/ic_upload_file.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_user_input.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/ic_voice_message.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/pick_photo.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/progress_circle.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/progress_circle_back_phone.xml" value="0.1615" />
+        <entry key="app/src/main/res/drawable/progress_circle_small_paddings.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/rounded_dialog.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/rounded_video_background.xml" value="0.2575" />
+        <entry key="app/src/main/res/drawable/sceut_bg_online.xml" value="0.1675" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_circle.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_corners_30.xml" value="0.1675" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_dialog.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_message_day.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_popup.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_search_view.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_date_transparent_background.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_dialog.xml" value="0.2" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_block.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_cancel.xml" value="0.181" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_copy.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_file.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_file_with_bg.xml" value="0.265" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_leave.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_mark_as_read.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_mark_as_unread.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_search.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_send_message.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_status_delivered.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_status_faild.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_status_not_sent.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_status_on_server.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_status_read.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_trash.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/sceyt_ic_upload_file.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_rounded_dialog.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/shadow_top.xml" value="0.3015" />
+        <entry key="app/src/main/res/drawable/unchecked.xml" value="0.2945" />
+        <entry key="app/src/main/res/font/roboto_medium.xml" value="0.4078125" />
+        <entry key="app/src/main/res/font/roboto_regular.xml" value="0.4078125" />
+        <entry key="app/src/main/res/layout/activity_conversation.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/artw.xml" value="0.3788265306122449" />
+        <entry key="app/src/main/res/layout/container_reaction.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/custom_date.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/custom_exoplayer_controller.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/d.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/exo_player_control_view.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/fragment_bottom_sheet_emojis.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/fragment_channels.xml" value="0.31971153846153844" />
+        <entry key="app/src/main/res/layout/item_add_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/item_channel.xml" value="0.22" />
         <entry key="app/src/main/res/layout/item_loading.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/item_reaction.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/recyclerview_attachment_file_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/recyclerview_channel.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/recyclerview_message_file_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/recyclerview_message_image_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/recyclerview_message_video_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/replay_message_container.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_channel_list_empty_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_conversation_header_view.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_custom_dialog_view.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_dialog_choose_file_type.xml" value="0.390625" />
+        <entry key="app/src/main/res/layout/sceyt_dialog_view.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/layout/sceyt_fragment_bottom_sheet_emojis.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/sceyt_item_channel.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_inc_deleted_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_inc_files_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_inc_text_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_input_attachment.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/sceyt_item_loading_more.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_message_date_seperatot.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_out_deleted_message.xml" value="0.37037037037037035" />
+        <entry key="app/src/main/res/layout/sceyt_item_out_files_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_out_text_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_reaction.xml" value="0.75" />
+        <entry key="app/src/main/res/layout/sceyt_loading_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_message_file_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_message_image_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_message_input_view.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/sceyt_message_video_item.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_messages_empty_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_recycler_replay_container.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_replay_message_container.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_search_channels_empty_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_search_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_channel_list_empty_state.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_channel_list_empty_state_view.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_file_item.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_add_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_channel.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_channel_test.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_attachment_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_deleted_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_files_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_single_files_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_text_message.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_inc_text_message_2.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_item_loading_more.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_message_inc.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_out_deleted_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_out_files_message.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_out_text_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_out_text_message2.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_item_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_loading_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_message_file_item.xml" value="0.6514522821576764" />
+        <entry key="app/src/main/res/layout/sceyt_ui_message_image_item.xml" value="0.4365152919369787" />
+        <entry key="app/src/main/res/layout/sceyt_ui_message_video_item.xml" value="0.3037037037037037" />
+        <entry key="app/src/main/res/layout/sceyt_ui_out_single_image_message.xml" value="0.390625" />
         <entry key="app/src/main/res/layout/sceyt_ui_page_loading.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_recycler_replay_container.xml" value="0.3765625" />
+        <entry key="app/src/main/res/layout/sceyt_ui_replay_message_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_ui_search_channels_empty_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_ui_search_view.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/search_view.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/layout/sss.xml" value="0.390625" />
+        <entry key="app/src/main/res/layout/st.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/stete_container.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/layout/te.xml" value="0.67" />
+        <entry key="app/src/main/res/layout/test.xml" value="0.9" />
+        <entry key="app/src/main/res/layout/view_message_box.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/menu/menu_bottom_navigation.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/menu/menu_popup_channel.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/menu/menu_popup_message.xml" value="0.3765625" />
+        <entry key="app/src/main/res/menu/menu_popup_reacton.xml" value="0.39166666666666666" />
+        <entry key="app/src/main/res/menu/scety_menu_popup_message.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/menu/sceyt_menu_popup_channel.xml" value="0.37037037037037035" />
+        <entry key="app/src/main/res/xml/provider_paths.xml" value="0.1828125" />
       </map>
     </option>
   </component>
