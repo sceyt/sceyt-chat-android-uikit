@@ -107,6 +107,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         loadAvatarImage()
     }
 
+    fun setImageUrl(url: String?) {
+        imageUrl = url
+        invalidate()
+        loadAvatarImage()
+    }
+
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {
         avatarLoadCb = cb
     }

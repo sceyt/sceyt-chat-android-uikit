@@ -57,4 +57,9 @@
         <item name="android:windowEnterAnimation">@anim/sceyt_anim_dialog_enter</item>
         <item name="android:windowExitAnimation">@anim/sceyt_anim_dialog_exit</item>
     </style>
+
+    <style name="SceytBottomNavigationTextStyle" parent="@style/TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">10sp</item>
+    </style>
+
 </resources>

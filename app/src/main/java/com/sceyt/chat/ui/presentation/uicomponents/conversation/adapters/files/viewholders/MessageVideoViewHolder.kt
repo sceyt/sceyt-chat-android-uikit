@@ -72,7 +72,7 @@ class MessageVideoViewHolder(
     private fun SceytMessageVideoItemBinding.updateLoadState(data: FileLoadData, finish: Boolean) {
         if (finish) {
             groupLoading.isVisible = false
-            binding.videoViewController.showPlayPauseButtons(false)
+            binding.videoViewController.showPlayPauseButtons(true)
         } else {
             groupLoading.isVisible = data.loading
             binding.videoViewController.showPlayPauseButtons(!data.loading)

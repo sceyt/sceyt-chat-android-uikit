@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
@@ -71,7 +71,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             lastMessage = messagesListView.getLastMessage())
 
         messagesListView.addNewMessages(*initMessage.toTypedArray())
-        messagesListView.updateViewState(BaseViewModel.PageState(isEmpty = false))
+        messagesListView.updateViewState(PageState.Nothing)
 
         markMessageAsDisplayed(it.id)
     }

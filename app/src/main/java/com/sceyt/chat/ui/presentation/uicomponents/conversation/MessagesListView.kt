@@ -13,11 +13,10 @@ import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionScore
-import com.sceyt.chat.ui.BottomSheetEmojisFragment
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.getFileFromMetadata
@@ -259,9 +258,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.updateReaction(data.id, data.reactionScores ?: arrayOf())
     }
 
-    internal fun updateViewState(state: BaseViewModel.PageState) {
-        if (state.isEmpty && !messagesRV.isEmpty())
-            return
+    internal fun updateViewState(state: PageState) {
         pageStateView?.updateState(state, messagesRV.isEmpty())
     }
 
@@ -329,7 +326,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun clearData() {
         messagesRV.clearData()
-        updateViewState(BaseViewModel.PageState(isEmpty = true))
+        updateViewState(PageState.StateEmpty())
     }
 
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {

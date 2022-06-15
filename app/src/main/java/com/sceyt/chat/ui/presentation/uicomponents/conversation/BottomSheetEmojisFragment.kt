@@ -1,6 +1,5 @@
-package com.sceyt.chat.ui
+package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +11,7 @@ import com.emojiview.emojiview.emoji.Emoji
 import com.emojiview.emojiview.listener.OnEmojiActions
 import com.emojiview.emojiview.view.AXSingleEmojiView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytFragmentBottomSheetEmojisBinding
 import com.sceyt.chat.ui.extensions.getCompatColor
 
