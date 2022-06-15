@@ -9,7 +9,6 @@
     <string name="channels">Channels</string>
     <string name="search">Search for channels</string>
     <string name="your_last_message">You: %1$s</string>
-    <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="copy">Copy</string>
     <string name="leave_channel">Leave Channel</string>
@@ -104,4 +103,8 @@
     <string name="sceyt_mark_as_unread">Mark as unread</string>
     <string name="sceyt_block">Block</string>
     <string name="sceyt_empty_channels_description">You have no created channels yet, create one for sending messages.</string>
+    <string name="sceyt_save">Save</string>
+    <string name="sceyt_edit">Edit</string>
+    <string name="sceyt_dark_theme">Dark Theme</string>
+
 </resources>

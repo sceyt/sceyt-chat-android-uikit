@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytDialogChooseFileTypeBinding
+import com.sceyt.chat.ui.presentation.common.chooseAttachment.AttachmentChooseType
 
 class ChooseFileTypeDialog(
         context: Context,
@@ -23,20 +24,16 @@ class ChooseFileTypeDialog(
 
     private fun initView() {
         mBinding.tvTakePhoto.setOnClickListener {
-            chooseListener?.invoke(AttachmentChooseType.CAMERA)
+            chooseListener?.invoke(AttachmentChooseType.Camera)
             dismiss()
         }
         mBinding.tvUploadFromGallery.setOnClickListener {
-            chooseListener?.invoke(AttachmentChooseType.GALLERY)
+            chooseListener?.invoke(AttachmentChooseType.Gallery)
             dismiss()
         }
         mBinding.tvFile.setOnClickListener {
-            chooseListener?.invoke(AttachmentChooseType.FILE)
+            chooseListener?.invoke(AttachmentChooseType.File)
             dismiss()
         }
-    }
-
-    enum class AttachmentChooseType {
-        GALLERY, CAMERA, FILE
     }
 }

@@ -9,6 +9,7 @@ import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import com.sceyt.chat.ui.extensions.customToastSnackBar
 
 class PageStateView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
@@ -44,20 +45,21 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
         })
     }
 
-    fun updateState(state: BaseViewModel.PageState, showLoadingIfNeed: Boolean = true) {
-        when {
-            state.isEmpty -> {
-                emptyStateView?.isVisible = !state.isSearch
-                emptySearchStateView?.isVisible = state.isSearch
+    fun updateState(state: PageState, showLoadingIfNeed: Boolean = true) {
+        when (state) {
+            is PageState.StateEmpty -> {
+                emptyStateView?.isVisible = !state.isSearch && !state.wasLoadingMore
+                emptySearchStateView?.isVisible = state.isSearch && !state.wasLoadingMore
                 loadingStateView?.isVisible = false
             }
-            state.isLoading -> {
+            is PageState.StateLoading -> {
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false
-                if (showLoadingIfNeed)
-                    loadingStateView?.isVisible = true
+                loadingStateView?.isVisible = state.isLoading && showLoadingIfNeed
             }
-            else -> {
+            is PageState.StateError -> customToastSnackBar(this, state.error.toString())
+            is PageState.StateLoadingMore -> return
+            is PageState.Nothing -> {
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = false

@@ -5,15 +5,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
+import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
-import com.sceyt.chat.ui.data.toChannel
-import com.sceyt.chat.ui.data.toGroupChannel
-import com.sceyt.chat.ui.data.toSceytUiMessage
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.events.ChannelEvent
@@ -30,7 +27,7 @@ class ChannelsViewModel : BaseViewModel() {
     var hasNext = false
 
     // todo di
-    private val repo = ChannelsRepositoryImpl()
+    private val repo: ChannelsRepository = ChannelsRepositoryImpl()
 
     private val _channelsFlow = MutableStateFlow<SceytResponse<List<ChannelListItem>>>(SceytResponse.Success(null))
     val channelsFlow: StateFlow<SceytResponse<List<ChannelListItem>>> = _channelsFlow
@@ -80,22 +77,22 @@ class ChannelsViewModel : BaseViewModel() {
         }
     }
 
-    fun loadChannels(offset: Int, limit: Int = SceytUIKitConfig.CHANNELS_LOAD_SIZE, query: String = searchQuery) {
+    fun loadChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
         isLoadingChannels = true
         val isLoadingMore = offset > 0
 
-        notifyPageLoadingState(isLoadingMore, searchQuery)
+        notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
             if (searchQuery.isBlank()) {
-                getChannelsList(offset, limit, isLoadingMore)
+                getChannelsList(offset, isLoadingMore)
             } else searchChannels(offset, query, isLoadingMore)
         }
     }
 
-    private suspend fun getChannelsList(offset: Int, limit: Int, loadingMoreType: Boolean) {
-        initResponse(repo.getChannels(offset, limit), loadingMoreType)
+    private suspend fun getChannelsList(offset: Int, loadingMoreType: Boolean) {
+        initResponse(repo.getChannels(offset), loadingMoreType)
     }
 
     private suspend fun searchChannels(offset: Int, query: String, loadingMoreType: Boolean) {
@@ -118,7 +115,7 @@ class ChannelsViewModel : BaseViewModel() {
             _loadMoreChannelsFlow.value = response
         else _channelsFlow.value = response
 
-        notifyPageStateWithResponse(loadingNext, response.data.isNullOrEmpty(), searchQuery)
+        notifyPageStateWithResponse(response, loadingNext, response.data.isNullOrEmpty(), searchQuery)
     }
 
     private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {

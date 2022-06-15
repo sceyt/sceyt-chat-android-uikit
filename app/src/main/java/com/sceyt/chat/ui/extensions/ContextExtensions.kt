@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.extensions
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.Context
 import android.content.ContextWrapper
@@ -12,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.Toast
@@ -58,7 +60,7 @@ fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Bool
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)
 
-fun Context.asAppCompatActivity() = (this as? AppCompatActivity)
+fun Context.asAppCompatActivity() = (this as AppCompatActivity)
 
 fun Context.getFileUriWithProvider(file: File): Uri {
     return FileProvider.getUriForFile(this,
@@ -116,6 +118,13 @@ fun Context.showSoftInput(editText: EditText) {
     run.run()
     if (!showed)
         Handler(Looper.getMainLooper()).postDelayed(run, 200)
+}
+
+fun Context.hideKeyboard(view: EditText?) {
+    view?.clearFocus()
+    val inputMethodManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    inputMethodManager.hideSoftInputFromWindow(view?.windowToken, 0)
+
 }
 
 fun Context.setClipboard(text: String) {
