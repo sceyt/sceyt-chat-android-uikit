@@ -162,7 +162,7 @@ abstract class BaseMsgViewHolder(view: View,
                 Pair(dpToPx(5f), dpToPx(2f))
             }
             (layoutParams as ViewGroup.MarginLayoutParams).apply {
-                setMargins(0, marginTop, 0, marginEndBottom.second)
+                setMargins(0, marginTop, marginEndBottom.first, marginEndBottom.second)
                 marginEnd = marginEndBottom.first
             }
         }

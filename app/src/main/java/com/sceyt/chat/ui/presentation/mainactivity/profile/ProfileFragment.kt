@@ -26,6 +26,7 @@ class ProfileFragment : Fragment() {
     private var currentUser: User? = null
     private var avatarUrl: String? = null
     private var isEditMode = false
+    private var isSaveLoading = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentProfileBinding.inflate(inflater, container, false).also {
@@ -39,7 +40,13 @@ class ProfileFragment : Fragment() {
         setUpThemeSwitch()
         binding.initViews()
         initViewModel()
-        viewModel.getCurrentUser()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isEditMode && !isSaveLoading)
+            viewModel.getCurrentUser()
     }
 
     private fun initViewModel() {
@@ -50,11 +57,13 @@ class ProfileFragment : Fragment() {
         viewModel.editProfileLiveData.observe(viewLifecycleOwner) {
             setUserDetails(user = it)
             binding.isSaveLoading = false
+            isSaveLoading = false
         }
 
         viewModel.editProfileErrorLiveData.observe(viewLifecycleOwner) {
             binding.setEditMode(false)
             binding.isSaveLoading = false
+            isSaveLoading = false
             customToastSnackBar(requireView(), it.toString())
         }
     }
@@ -74,6 +83,7 @@ class ProfileFragment : Fragment() {
             if (isEditMode) {
                 if (isEditedAvatar || isEditedDisplayName) {
                     binding.isSaveLoading = true
+                    this@ProfileFragment.isSaveLoading = true
                     viewModel.saveProfile(newDisplayName, avatarUrl, isEditedAvatar)
                 }
             }
@@ -85,7 +95,7 @@ class ProfileFragment : Fragment() {
             EditAvatarTypeDialog(requireContext()) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
-                        chooseAttachmentHelper.chooseFromGallery(allowMultiple = false) { uris ->
+                        chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
                             if (uris.isNotEmpty())
                                 setProfileImage(uris[0])
                         }
