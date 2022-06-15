@@ -34,7 +34,7 @@ class MessageListViewModel(conversationId: Long,
     var hasNext = false
 
     // todo di
-    private val messagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
+    private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
@@ -132,7 +132,7 @@ class MessageListViewModel(conversationId: Long,
             _loadMoreMessagesFlow.value = response
         else _messagesFlow.value = response
 
-        notifyPageStateWithResponse(loadingNext, response.data.isNullOrEmpty())
+        notifyPageStateWithResponse(response, loadingNext, response.data.isNullOrEmpty())
     }
 
     private fun deleteMessage(message: SceytMessage) {

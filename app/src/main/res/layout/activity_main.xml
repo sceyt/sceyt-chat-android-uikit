@@ -16,50 +16,14 @@
         android:background="@color/sceyt_color_bg"
         android:fitsSystemWindows="true"
         bind:themedBackgroundColor="@{R.color.sceyt_color_bg}"
-        tools:context=".MainActivity">
+        tools:context=".presentation.mainactivity.MainActivity">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layoutToolbar"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="10dp"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/channels"
-                android:textColor="@color/sceyt_color_text_themed"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchCompat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="Dark Theme"
-                android:textColor="@color/sceyt_color_black_themed"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/mainFrameLayout"
-            android:name="com.sceyt.chat.ui.ChannelsFragment"
-            android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationView"
@@ -67,7 +31,10 @@
             android:layout_height="wrap_content"
             android:background="@color/sceyt_color_bottom_nav"
             app:elevation="10dp"
+            app:itemIconSize="28dp"
             app:itemIconTint="@color/bottom_nav_item_color"
+            app:itemTextAppearanceActive="@style/SceytBottomNavigationTextStyle"
+            app:itemTextAppearanceInactive="@style/SceytBottomNavigationTextStyle"
             app:itemTextColor="@color/bottom_nav_item_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:menu="@menu/sceyt_menu_bottom_navigation"

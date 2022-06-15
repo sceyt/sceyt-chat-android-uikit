@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui
+package com.sceyt.chat.ui.presentation.mainactivity
 
 import android.content.Context
 import android.os.Bundle
