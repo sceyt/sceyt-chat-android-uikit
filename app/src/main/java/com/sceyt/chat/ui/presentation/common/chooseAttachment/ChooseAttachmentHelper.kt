@@ -20,6 +20,7 @@ class ChooseAttachmentHelper {
     private var takePhotoLauncher: ActivityResultLauncher<Uri>
     private var addAttachmentLauncher: ActivityResultLauncher<Intent>
     private var allowMultiple: Boolean = true
+    private var onlyImages: Boolean = true
 
     private var takePhotoPath: String? = null
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
@@ -83,8 +84,9 @@ class ChooseAttachmentHelper {
         }
     }
 
-    fun chooseFromGallery(allowMultiple: Boolean, result: (uris: List<String>) -> Unit) {
+    fun chooseFromGallery(allowMultiple: Boolean, onlyImages: Boolean, result: (uris: List<String>) -> Unit) {
         chooseFilesCb = result
+        this.onlyImages = onlyImages
         this.allowMultiple = allowMultiple
         if (context.checkAndAskPermissions(requestGalleryPermissionLauncher,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -153,6 +155,8 @@ class ChooseAttachmentHelper {
     private fun openGallery() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
+        if (onlyImages)
+            intent.type = "image/*"
         addAttachmentLauncher.launch(intent)
     }
 

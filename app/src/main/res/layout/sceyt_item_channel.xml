@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="8dp"
-            android:drawablePadding="2dp"
+            android:drawablePadding="5dp"
             android:ellipsize="end"
             android:includeFontPadding="false"
             android:lines="1"

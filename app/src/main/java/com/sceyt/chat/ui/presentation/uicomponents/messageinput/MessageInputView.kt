@@ -119,7 +119,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         ChooseFileTypeDialog(context) { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> {
-                    chooseAttachmentHelper.chooseFromGallery(allowMultiple = true) {
+                    chooseAttachmentHelper.chooseFromGallery(allowMultiple = true, onlyImages = false) {
                         addAttachmentFile(*it.toTypedArray())
                     }
                 }
