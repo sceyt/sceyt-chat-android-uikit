@@ -21,42 +21,42 @@ import kotlin.coroutines.resume
 
 class MessagesRepositoryImpl(conversationId: Long,
                              private val channel: Channel,
-                             private val replayInThread: Boolean) {
+                             private val replayInThread: Boolean) : MessagesRepository {
 
-    val onMessageFlow = ChannelEventsObserverService.onMessageFlow
+    override val onMessageFlow = ChannelEventsObserverService.onMessageFlow
         .filter { it.first.id == channel.id && it.second.replyInThread == replayInThread }
         .mapNotNull { it.second.toSceytUiMessage() }
 
-    val onThreadMessageFlow = ChannelEventsObserverService.onMessageFlow
+    override val onThreadMessageFlow = ChannelEventsObserverService.onMessageFlow
         .filter { it.first.id == channel.id && it.second.replyInThread }
         .mapNotNull { it.second.toSceytUiMessage() }
 
-    val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
+    override val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
         .filter { it.channel?.id == channel.id }
 
-    val onMessageReactionUpdatedFlow = ChannelEventsObserverService.onMessageReactionUpdatedFlow
+    override val onMessageReactionUpdatedFlow = ChannelEventsObserverService.onMessageReactionUpdatedFlow
         .filterNotNull()
         .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
-    val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
+    override val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
         .filterNotNull()
         .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
-    val onChannelEventFlow = ChannelEventsObserverService.onChannelEventFlow
+    override val onChannelEventFlow = ChannelEventsObserverService.onChannelEventFlow
         .filter { it.channelId == channel.id }
 
     private val query = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
+        setLimit(MESSAGES_LOAD_SIZE)
     }.build()
 
 
-    suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
+    override suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
         return getMessagesCoroutine(lastMessageId)
     }
 
     private suspend fun getMessagesCoroutine(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            query.setLimit(MESSAGES_LOAD_SIZE)
             query.loadPrev(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
@@ -73,7 +73,7 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
+    override suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
         return suspendCancellableCoroutine { continuation ->
             val tmpMessage = channel.sendMessage(message, object : MessageCallback {
                 override fun onResult(message: Message?) {
@@ -89,7 +89,7 @@ class MessagesRepositoryImpl(conversationId: Long,
     }
 
 
-    suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             channel.deleteMessage(message, object : MessageCallback {
                 override fun onResult(p0: Message?) {
@@ -103,7 +103,7 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    suspend fun editMessage(message: Message): SceytResponse<SceytMessage> {
+    override suspend fun editMessage(message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             channel.editMessage(message, object : MessageCallback {
                 override fun onResult(p0: Message?) {
@@ -117,7 +117,7 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             channel.addReactionWithMessageId(messageId, score.key, score.score.toShort(), "", false, object : MessageCallback {
                 override fun onResult(message: Message?) {
@@ -131,7 +131,7 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
+    override suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             channel.deleteReactionWithMessageId(messageId, score.key, object : MessageCallback {
                 override fun onResult(message: Message?) {
@@ -145,7 +145,7 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
             channel.markMessagesAsRead(longArrayOf(id), object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {

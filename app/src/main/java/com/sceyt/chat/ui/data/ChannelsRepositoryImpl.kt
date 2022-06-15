@@ -14,17 +14,17 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class ChannelsRepositoryImpl {
+class ChannelsRepositoryImpl : ChannelsRepository {
     //todo need to add DI
     //private val channelEventsService = ChannelEventsObserverService()
 
-    val onMessageFlow = ChannelEventsObserverService.onMessageFlow
-    val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
+    override val onMessageFlow = ChannelEventsObserverService.onMessageFlow
+    override val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
 
-    val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
+    override val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
         .filterNotNull()
 
-    val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventFlow
+    override val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventFlow
 
     private val query =
             ChannelListQuery.Builder()
@@ -46,19 +46,17 @@ class ChannelsRepositoryImpl {
         else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
     }
 
-    suspend fun getChannels(offset: Int, limit: Int): SceytResponse<List<SceytChannel>> {
-        return getChannelsCoroutine(offset, limit)
+    override suspend fun getChannels(offset: Int): SceytResponse<List<SceytChannel>> {
+        return getChannelsCoroutine(offset)
     }
 
-    suspend fun searchChannels(offset: Int, query: String): SceytResponse<List<SceytChannel>> {
+    override suspend fun searchChannels(offset: Int, query: String): SceytResponse<List<SceytChannel>> {
         return getSearchChannelsCoroutine(offset, query)
     }
 
-    private suspend fun getChannelsCoroutine(offset: Int,
-                                             limit: Int): SceytResponse<List<SceytChannel>> {
+    private suspend fun getChannelsCoroutine(offset: Int): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
             query.offset = offset
-            query.limit = limit
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
@@ -99,7 +97,7 @@ class ChannelsRepositoryImpl {
         }
     }
 
-    suspend fun leaveChannel(channel: GroupChannel): SceytResponse<Long> {
+    override suspend fun leaveChannel(channel: GroupChannel): SceytResponse<Long> {
         return suspendCancellableCoroutine { continuation ->
             channel.leave(object : ActionCallback {
                 override fun onSuccess() {
@@ -113,7 +111,7 @@ class ChannelsRepositoryImpl {
         }
     }
 
-    suspend fun clearHistory(channel: Channel): SceytResponse<Long> {
+    override suspend fun clearHistory(channel: Channel): SceytResponse<Long> {
         return suspendCancellableCoroutine { continuation ->
             channel.clearHistory(object : ActionCallback {
                 override fun onSuccess() {
@@ -127,7 +125,7 @@ class ChannelsRepositoryImpl {
         }
     }
 
-    suspend fun blockChannel(channel: GroupChannel): SceytResponse<Long> {
+    override suspend fun blockChannel(channel: GroupChannel): SceytResponse<Long> {
         return suspendCancellableCoroutine { continuation ->
             channel.block(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {

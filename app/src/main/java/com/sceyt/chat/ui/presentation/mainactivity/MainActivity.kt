@@ -2,13 +2,12 @@ package com.sceyt.chat.ui.presentation.mainactivity
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import com.sceyt.chat.ui.ChannelsFragment
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityMainBinding
 import com.sceyt.chat.ui.extensions.isNightTheme
 import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chat.ui.presentation.mainactivity.adapters.MainViewPagerAdapter
+import com.sceyt.chat.ui.presentation.mainactivity.profile.ProfileFragment
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 
@@ -21,19 +20,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(mBinding.root)
 
         val isNightMode = isNightTheme()
-        mBinding.switchCompat.isChecked = isNightMode
         SceytUIKitConfig.SceytUITheme.isDarkMode = isNightMode
         statusBarIconsColorWithBackground(isNightMode)
-
-        mBinding.switchCompat.setOnClickListener {
-            val oldIsDark = SceytUIKitConfig.SceytUITheme.isDarkMode
-            SceytUIKitConfig.SceytUITheme.isDarkMode = !oldIsDark
-            statusBarIconsColorWithBackground(!oldIsDark)
-            if (oldIsDark) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            } else
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        }
 
         setPagerAdapter()
         setBottomNavClickListeners()
@@ -65,5 +53,6 @@ class MainActivity : AppCompatActivity() {
         val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelsFragment(), ProfileFragment()),
             arrayListOf(::ChannelsFragment.name, ::ProfileFragment.name))
         mBinding.viewPager.adapter = adapter
+        mBinding.viewPager.isUserInputEnabled = false
     }
 }

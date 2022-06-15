@@ -15,7 +15,7 @@ import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.common.diff
-import com.sceyt.chat.ui.presentation.root.BaseViewModel
+import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
@@ -138,9 +138,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateStateView(state: BaseViewModel.PageState) {
-        if (state.isEmpty && !channelsRV.isEmpty())
-            return
+    internal fun updateStateView(state: PageState) {
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
 
