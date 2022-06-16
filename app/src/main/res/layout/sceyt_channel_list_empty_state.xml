@@ -16,6 +16,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/appCompatImageView2"
+            themedDrawable="@{R.drawable.sceyt_ic_channels_empty_state}"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toTopOf="@+id/textView2"
@@ -25,11 +26,11 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintWidth_percent=".5"
-            app:srcCompat="@drawable/sceyt_ic_channels_empty_state"
-            bind:themedDrawable="@{R.drawable.sceyt_ic_channels_empty_state}" />
+            app:srcCompat="@drawable/sceyt_ic_channels_empty_state" />
 
         <TextView
             android:id="@+id/textView2"
+            themedTextColor="@{R.color.sceyt_color_black_themed}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -42,8 +43,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/appCompatImageView2"
-            bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
+            app:layout_constraintTop_toBottomOf="@+id/appCompatImageView2" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/appCompatTextView"

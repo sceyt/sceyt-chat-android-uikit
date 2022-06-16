@@ -27,6 +27,7 @@
 
         <TextView
             android:id="@+id/textView"
+            themedTextColor="@{R.color.sceyt_color_black_themed}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -38,8 +39,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/appCompatImageView"
-            bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
+            app:layout_constraintTop_toBottomOf="@+id/appCompatImageView" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

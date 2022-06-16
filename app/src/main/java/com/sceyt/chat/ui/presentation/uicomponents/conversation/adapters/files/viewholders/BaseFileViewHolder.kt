@@ -55,7 +55,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             item.updateDownloadState(1, loading = true, success = false)
             updateDownloadingState(item.fileLoadData)
 
-            itemView.context.asAppCompatActivity()?.lifecycleScope?.launch(Dispatchers.IO) {
+            itemView.context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.IO) {
                 Ion.with(itemView.context)
                     .load(attachment.url)
                     .progress { downloaded, total ->

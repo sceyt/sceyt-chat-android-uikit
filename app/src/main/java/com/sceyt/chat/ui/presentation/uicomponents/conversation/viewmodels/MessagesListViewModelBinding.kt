@@ -113,7 +113,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         when (it.eventType) {
             ChannelEventEnum.ClearedHistory -> messagesListView.clearData()
             ChannelEventEnum.Deleted, ChannelEventEnum.Left -> {
-                messagesListView.context.asAppCompatActivity()?.finish()
+                messagesListView.context.asAppCompatActivity().finish()
             }
             else -> return@observe
         }
