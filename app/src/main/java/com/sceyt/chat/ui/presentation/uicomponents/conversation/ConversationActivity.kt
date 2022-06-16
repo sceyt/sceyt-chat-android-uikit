@@ -89,7 +89,7 @@ class ConversationActivity : AppCompatActivity() {
                 putExtra(REPLAY_IN_THREAD, true)
                 putExtra(REPLAY_IN_THREAD_MESSAGE, message)
             }
-            context.asAppCompatActivity()?.overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
     }
 

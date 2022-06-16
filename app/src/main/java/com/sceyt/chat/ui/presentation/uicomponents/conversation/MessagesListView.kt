@@ -30,7 +30,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionE
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
-import com.sceyt.chat.ui.utils.binding.BindingUtil
+import com.sceyt.chat.ui.utils.BindingUtil
 import java.io.File
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)

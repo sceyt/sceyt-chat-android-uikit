@@ -97,7 +97,7 @@ object ViewUtil {
             v.layoutParams.width = animation.animatedValue as Int
             v.requestLayout()
         }
-        widthAnimator.duration = 200
+        widthAnimator.duration = duration
         widthAnimator.start()
     }
 
@@ -134,12 +134,6 @@ object ViewUtil {
         }
         widthAnimator.duration = duration
         widthAnimator.start()
-    }
-
-    fun getDisplayHeight(activity: Activity): Int {
-        val displayMetrics = DisplayMetrics()
-        activity.windowManager.defaultDisplay.getMetrics(displayMetrics)
-        return displayMetrics.heightPixels
     }
 
     fun getStatusBarHeight(context: Context): Int {

@@ -29,7 +29,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActi
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.sortChannelsBy
-import com.sceyt.chat.ui.utils.binding.BindingUtil
+import com.sceyt.chat.ui.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -111,7 +111,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateLastMessageStatus(status: MessageStatusChange) {
-        context.asAppCompatActivity()?.lifecycleScope?.launch(Dispatchers.Default) {
+        context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
             channelsRV.getChannels()?.findIndexed { status.channel?.id == it.channel.id }?.let { pair ->
                 val channel = pair.second.channel
                 val oldChannel = channel.clone()
@@ -200,12 +200,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    fun getChannels() = channelsRV.getChannels()
-
     fun getChannelsRv() = channelsRV
-
-    val getChannelsSizeFromUpdate
-        get() = getChannels()?.size ?: SceytUIKitConfig.CHANNELS_LOAD_SIZE
 
 
     //Channel Click callbacks

@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.utils.binding
+package com.sceyt.chat.ui.utils
 
 import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
@@ -9,8 +9,6 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.isGone
-import androidx.core.view.isInvisible
 import androidx.databinding.BindingAdapter
 import androidx.databinding.Observable
 import com.sceyt.chat.ui.BR
@@ -67,20 +65,13 @@ object BindingUtil {
         view.setImageDrawable(view.context.getCompatDrawableByTheme(drawableId, isDark))
     }
 
-    @BindingAdapter("bind:visibleIf")
+    @BindingAdapter("visibleIf")
     @JvmStatic
     fun visibleIf(anyView: View, show: Boolean) {
         anyView.visibility = if (show) View.VISIBLE else View.GONE
     }
 
-    @BindingAdapter("bind:invisibleIfCheckGone")
-    @JvmStatic
-    fun invisibleIfCheckGone(anyView: View, invisible: Boolean) {
-        if (anyView.isGone) return
-        anyView.isInvisible = invisible
-    }
-
-    @BindingAdapter("bind:themedTextColor")
+    @BindingAdapter("themedTextColor")
     @JvmStatic
     fun themedTextColor(view: View, colorId: Int?) {
         if (colorId == null) return
@@ -99,7 +90,7 @@ object BindingUtil {
         })
     }
 
-    @BindingAdapter("bind:themedBackgroundColor")
+    @BindingAdapter("themedBackgroundColor")
     @JvmStatic
     fun themedBackgroundColor(view: View, @ColorRes colorId: Int?) {
         colorId ?: return
@@ -119,7 +110,7 @@ object BindingUtil {
         })
     }
 
-    @BindingAdapter("bind:themedBackgroundTintColor")
+    @BindingAdapter("themedBackgroundTintColor")
     @JvmStatic
     fun themedBackgroundTintColor(view: View, @ColorRes colorId: Int) {
         setThemedBackgroundTint(view, colorId, SceytUIKitConfig.isDarkMode)
@@ -138,7 +129,7 @@ object BindingUtil {
         })
     }
 
-    @BindingAdapter("bind:themedDrawable")
+    @BindingAdapter("themedDrawable")
     @JvmStatic
     fun themedDrawable(view: ImageView, @DrawableRes drawableId: Int?) {
         drawableId ?: return
