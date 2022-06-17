@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.mainactivity.profile
+package com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

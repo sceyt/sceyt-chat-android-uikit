@@ -57,7 +57,12 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = state.isLoading && showLoadingIfNeed
             }
-            is PageState.StateError -> customToastSnackBar(this, state.error.toString())
+            is PageState.StateError -> {
+                customToastSnackBar(this, state.error.toString())
+                emptyStateView?.isVisible = false
+                emptySearchStateView?.isVisible = false
+                loadingStateView?.isVisible = false
+            }
             is PageState.StateLoadingMore -> return
             is PageState.Nothing -> {
                 emptyStateView?.isVisible = false

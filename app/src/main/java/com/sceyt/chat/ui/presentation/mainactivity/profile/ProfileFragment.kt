@@ -16,6 +16,7 @@ import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
+import com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel.ProfileViewModel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 class ProfileFragment : Fragment() {
@@ -135,10 +136,12 @@ class ProfileFragment : Fragment() {
         if (isEditMode) {
             displayName.background = displayNameDefaultBg
             displayName.setSelection(displayName.text?.length ?: 0)
+            displayName.setHint(R.string.display_name)
             tvEditOrSave.text = getString(R.string.sceyt_save)
             requireContext().showSoftInput(displayName)
         } else {
             displayName.background = null
+            displayName.hint = ""
             tvEditOrSave.text = getString(R.string.sceyt_edit)
             requireContext().hideKeyboard(displayName)
         }

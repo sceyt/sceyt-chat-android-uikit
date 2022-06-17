@@ -14,6 +14,9 @@ android {
         targetSdk target_sdk_version
         versionCode app_version_code
         versionName app_version_name
+
+        multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {

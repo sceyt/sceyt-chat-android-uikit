@@ -6,10 +6,16 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
 
@@ -32,7 +38,17 @@ class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
 
     override fun onNewToken(s: String) {
         super.onNewToken(s)
-        Log.d("TAG", "onNewToken: $s")
+        ChatClient.getClient().registerPushToken(s, object : ActionCallback {
+            override fun onSuccess() {
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "success", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onError(p0: SceytException?) {
+                Toast.makeText(applicationContext, "error-> ${p0?.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     // Method to display the notifications

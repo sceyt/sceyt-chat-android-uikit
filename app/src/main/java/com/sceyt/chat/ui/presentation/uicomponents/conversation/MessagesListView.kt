@@ -170,7 +170,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun openFile(item: FileListItem) {
-        val fileName = item.file?.name
+        val fileName = item.file.name
         var uri: Uri? = null
         if (fileName != null) {
             val loadedFile = File(context.filesDir, fileName)
@@ -284,8 +284,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun messageSendFailed(id: Long) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == id }?.let {
+    internal fun messageSendFailed(tid: Long) {
+        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.tid == tid }?.let {
             val message = (it.second as MessageListItem.MessageItem).message
             val oldMessage = message.clone()
             message.deliveryStatus = DeliveryStatus.Failed

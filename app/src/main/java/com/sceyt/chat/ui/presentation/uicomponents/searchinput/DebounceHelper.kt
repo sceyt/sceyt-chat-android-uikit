@@ -12,7 +12,7 @@ class DebounceHelper {
 
     constructor(debounceMs: Long) {
         this.debounceMs = debounceMs
-        this.scope = CoroutineScope(Dispatchers.Main)
+        this.scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     }
 
     constructor(debounceMs: Long, scope: CoroutineScope) {

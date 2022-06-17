@@ -15,8 +15,6 @@ class MessageFileViewHolder(
         private val messageListeners: MessageClickListenersImpl?
 ) : BaseFileViewHolder(binding.root) {
 
-    private lateinit var fileItem: FileListItem
-
     init {
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -30,9 +28,7 @@ class MessageFileViewHolder(
 
     override fun bind(item: FileListItem) {
         super.bind(item)
-
         val file = (item as? FileListItem.File)?.file ?: return
-        fileItem = item
 
         with(binding) {
             tvFileName.text = file.name
@@ -49,29 +45,17 @@ class MessageFileViewHolder(
         }
     }
 
-    override fun updateUploadingState(load: FileLoadData, finish: Boolean) {
-        binding.updateLoadState(load, finish)
+    private fun SceytMessageFileItemBinding.updateLoadState(data: FileLoadData) {
+        loadProgress.isVisible = data.loading
+        icFile.setImageResource(if (data.loading) 0 else R.drawable.sceyt_ic_file)
+        loadProgress.progress = data.progressPercent.toInt()
     }
 
-    override fun updateDownloadingState(load: FileLoadData) {
-        binding.updateLoadState(load, false)
+    override fun updateUploadingState(data: FileLoadData) {
+        binding.updateLoadState(data)
     }
 
-    override fun downloadFinish(load: FileLoadData, file: File?) {
-        binding.updateLoadState(load, true)
-    }
-
-    private fun SceytMessageFileItemBinding.updateLoadState(data: FileLoadData, finish: Boolean) {
-        if (finish) {
-            loadProgress.isVisible = false
-            icFile.setImageResource(R.drawable.sceyt_ic_file)
-        } else {
-            loadProgress.isVisible = data.loading
-            if (data.loading) {
-                icFile.setImageResource(0)
-                loadProgress.progress = data.progressPercent
-            } else
-                icFile.setImageResource(R.drawable.sceyt_ic_file)
-        }
+    override fun updateDownloadingState(data: FileLoadData, file: File?) {
+        binding.updateLoadState(data)
     }
 }

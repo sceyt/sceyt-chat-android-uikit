@@ -107,8 +107,12 @@ abstract class BaseMsgViewHolder(view: View,
         if (!message.isGroup) return
 
         if (message.canShowAvatarAndName) {
-            avatarView.setNameAndImageUrl(message.from?.fullName, message.from?.avatarURL)
-            tvName.text = message.from?.fullName?.trim()
+            val user = message.from
+            var displayName = user?.fullName?.trim()
+            if (displayName.isNullOrBlank())
+                displayName = user?.id.toString()
+            avatarView.setNameAndImageUrl(displayName, user?.avatarURL)
+            tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true
         } else {
