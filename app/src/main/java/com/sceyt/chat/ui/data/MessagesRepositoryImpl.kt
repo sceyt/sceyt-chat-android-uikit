@@ -2,10 +2,7 @@ package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chat.models.message.MessagesListQuery
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.message.*
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
@@ -75,13 +72,14 @@ class MessagesRepositoryImpl(conversationId: Long,
 
     override suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
         return suspendCancellableCoroutine { continuation ->
-            val tmpMessage = channel.sendMessage(message, object : MessageCallback {
+            var tmpMessage: Message? = null
+            tmpMessage = channel.sendMessage(message, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message, data = message.toSceytUiMessage()))
+                    continuation.resume(SceytResponse.Error(error?.message, data = tmpMessage?.toSceytUiMessage()))
                 }
             })
             tmpMessageCb.invoke(tmpMessage)
@@ -91,13 +89,13 @@ class MessagesRepositoryImpl(conversationId: Long,
 
     override suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            channel.deleteMessage(message, object : MessageCallback {
-                override fun onResult(p0: Message?) {
-                    continuation.resume(SceytResponse.Success(message.toSceytUiMessage()))
+            channel.deleteMessage(message, true, object : MessageCallback {
+                override fun onResult(msg: Message) {
+                    continuation.resume(SceytResponse.Success(msg.toSceytUiMessage()))
                 }
 
                 override fun onError(ex: SceytException?) {
-                    continuation.resume(SceytResponse.Error(ex?.message))
+                    continuation.resume(SceytResponse.Error(ex?.message, message.toSceytUiMessage()))
                 }
             })
         }

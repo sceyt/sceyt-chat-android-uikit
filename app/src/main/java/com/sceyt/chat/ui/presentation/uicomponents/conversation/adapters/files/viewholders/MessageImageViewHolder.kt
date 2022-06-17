@@ -14,8 +14,6 @@ class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
         private val messageListeners: MessageClickListenersImpl?) : BaseFileViewHolder(binding.root) {
 
-    private lateinit var fileItem: FileListItem
-
     init {
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -30,21 +28,12 @@ class MessageImageViewHolder(
     override fun bind(item: FileListItem) {
         binding.fileImage.setImageBitmap(null)
         super.bind(item)
-
-        fileItem = item
     }
 
-    override fun updateUploadingState(load: FileLoadData, finish: Boolean) {
-        binding.updateLoadState(load, finish)
-    }
-
-    override fun updateDownloadingState(load: FileLoadData) {
-        binding.updateLoadState(load, false)
-    }
-
-    override fun downloadFinish(load: FileLoadData, file: File?) {
-        with(binding) {
-            updateLoadState(load, true)
+    private fun SceytMessageImageItemBinding.updateDownloadState(data: FileLoadData, file: File?) {
+        groupLoading.isVisible = data.loading
+        loadProgress.progress = data.progressPercent.toInt()
+        if (file != null) {
             Glide.with(itemView.context)
                 .load(file)
                 .transition(DrawableTransitionOptions.withCrossFade())
@@ -53,13 +42,17 @@ class MessageImageViewHolder(
         }
     }
 
-    private fun SceytMessageImageItemBinding.updateLoadState(data: FileLoadData, finish: Boolean) {
-        if (finish) {
-            groupLoading.isVisible = false
-        } else {
-            groupLoading.isVisible = data.loading
-            if (data.loading)
-                loadProgress.progress = data.progressPercent
-        }
+    private fun SceytMessageImageItemBinding.updateUploadState(data: FileLoadData) {
+        groupLoading.isVisible = data.loading
+        if (data.loading)
+            loadProgress.progress = data.progressPercent.toInt()
+    }
+
+    override fun updateUploadingState(data: FileLoadData) {
+        binding.updateUploadState(data)
+    }
+
+    override fun updateDownloadingState(data: FileLoadData, file: File?) {
+        binding.updateDownloadState(data, file)
     }
 }

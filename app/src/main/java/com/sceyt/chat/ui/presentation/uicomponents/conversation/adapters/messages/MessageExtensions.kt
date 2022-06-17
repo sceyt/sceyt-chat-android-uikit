@@ -47,13 +47,14 @@ fun Attachment?.getFileFromMetadata(): File? {
 
 fun Attachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
     if (this == null) return null
+
+    if (loadedFile.exists() && getFileSize(loadedFile.path) == uploadedFileSize)
+        return loadedFile
+
     val fileFromMetadata = getFileFromMetadata()
     if (fileFromMetadata != null && fileFromMetadata.exists())
         return fileFromMetadata
-    else {
-        if (loadedFile.exists() && getFileSize(loadedFile.path) == uploadedFileSize)
-            return loadedFile
-    }
+
     return null
 }
 

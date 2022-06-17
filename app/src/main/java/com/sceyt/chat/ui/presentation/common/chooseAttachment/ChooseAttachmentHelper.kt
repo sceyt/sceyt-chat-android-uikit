@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.extensions.*
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 class ChooseAttachmentHelper {
@@ -118,8 +119,10 @@ class ChooseAttachmentHelper {
                 val paths = mutableListOf<String>()
                 for (i in 0 until (data.clipData?.itemCount ?: 0)) {
                     val uri = data.clipData?.getItemAt(i)?.uri
-                    context.getPathFromFile(uri)?.let { path ->
-                        paths.add(path)
+                    runBlocking {
+                        context.getPathFromFile(uri)?.let { path ->
+                            paths.add(path)
+                        }
                     }
                 }
                 if (paths.isNotEmpty())

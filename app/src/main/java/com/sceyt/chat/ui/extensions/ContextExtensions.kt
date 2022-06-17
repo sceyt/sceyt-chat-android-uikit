@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.Toast
@@ -60,7 +59,11 @@ fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Bool
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)
 
-fun Context.asAppCompatActivity() = (this as AppCompatActivity)
+fun Context.asAppCompatActivity(): AppCompatActivity {
+    if (this is AppCompatActivity)
+        return this
+    else throw RuntimeException("Context should be AppCompatActivity")
+}
 
 fun Context.getFileUriWithProvider(file: File): Uri {
     return FileProvider.getUriForFile(this,

@@ -3,7 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="../../../../layout/custom_preview.xml" value="0.33" />
+        <entry key="../../../../layout/custom_preview.xml" value="0.2390625" />
         <entry key="AXEmojiView/src/main/res/layout/emoji_item.xml" value="0.3776041666666667" />
         <entry key="AXEmojiView/src/main/res/layout/emoji_skin_popup.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/drawable-night/sceyt_ic_channels_empty_state.xml" value="0.222" />
@@ -90,6 +90,7 @@
         <entry key="app/src/main/res/drawable/sceyt_bg_corners_30.xml" value="0.1675" />
         <entry key="app/src/main/res/drawable/sceyt_bg_dialog.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_bg_message_day.xml" value="0.2945" />
+        <entry key="app/src/main/res/drawable/sceyt_bg_play_pause_button.xml" value="0.157" />
         <entry key="app/src/main/res/drawable/sceyt_bg_popup.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_bg_search_view.xml" value="0.2945" />
         <entry key="app/src/main/res/drawable/sceyt_date_transparent_background.xml" value="0.2945" />

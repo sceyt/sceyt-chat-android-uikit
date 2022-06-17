@@ -33,7 +33,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var clickListeners = MessageInputClickListenersImpl(this)
-    private val chooseAttachmentHelper = ChooseAttachmentHelper(context.asAppCompatActivity())
+    private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
+
+    init {
+        if (!isInEditMode)
+            chooseAttachmentHelper = ChooseAttachmentHelper(context.asAppCompatActivity())
+    }
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     var message: Message? = null
@@ -119,17 +124,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         ChooseFileTypeDialog(context) { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> {
-                    chooseAttachmentHelper.chooseFromGallery(allowMultiple = true, onlyImages = false) {
+                    chooseAttachmentHelper?.chooseFromGallery(allowMultiple = true, onlyImages = false) {
                         addAttachmentFile(*it.toTypedArray())
                     }
                 }
                 AttachmentChooseType.Camera -> {
-                    chooseAttachmentHelper.takePicture {
+                    chooseAttachmentHelper?.takePicture {
                         addAttachmentFile(it)
                     }
                 }
                 AttachmentChooseType.File -> {
-                    chooseAttachmentHelper.chooseMultipleFiles(allowMultiple = true) {
+                    chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
                         addAttachmentFile(*it.toTypedArray())
                     }
                 }

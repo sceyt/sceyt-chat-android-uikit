@@ -105,12 +105,6 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
             }
     }
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        if (debounceInitDelegate.isInitialized())
-            debounceHelper.shutdown()
-    }
-
     internal fun setDebouncedTextChangeListener(inputChangedListener: InputChangedListener) {
         debouncedInputChangedListener = inputChangedListener
     }
