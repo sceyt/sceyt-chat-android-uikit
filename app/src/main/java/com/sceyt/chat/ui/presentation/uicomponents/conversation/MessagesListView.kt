@@ -12,7 +12,6 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.*
@@ -41,7 +40,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var pageStateView: PageStateView? = null
     private lateinit var clickListeners: MessageClickListenersImpl
     private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
-    private lateinit var reactionPopupClickListeners: ReactionPopupClickListenersImpl
+    private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageEventListener: ((MessageEvent) -> Unit)? = null
     private var enabledClickActions = true
@@ -77,7 +76,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun initClickListeners() {
         clickListeners = MessageClickListenersImpl(this)
         messagePopupClickListeners = MessagePopupClickListenersImpl(this)
-        reactionPopupClickListeners = ReactionPopupClickListenersImpl(this)
+        reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
         messagesRV.setMessageListener(object : MessageClickListeners.ClickListeners {
             override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
@@ -95,9 +94,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     clickListeners.onReplayCountClick(view, item)
             }
 
-            override fun onAddReactionClick(view: View, item: MessageListItem.MessageItem) {
+            override fun onAddReactionClick(view: View, message: SceytMessage) {
                 if (enabledClickActions)
-                    clickListeners.onAddReactionClick(view, item)
+                    clickListeners.onAddReactionClick(view, message)
+            }
+
+            override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
+                if (enabledClickActions)
+                    clickListeners.onReactionClick(view, item)
             }
 
             override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
@@ -120,11 +124,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
         val popup = PopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view)
         popup.inflate(R.menu.sceyt_menu_popup_reacton)
+        val containsSelf = reaction.reaction.containsSelf
+        popup.menu.findItem(R.id.sceyt_add).isVisible = !containsSelf
+        popup.menu.findItem(R.id.sceyt_remove).isVisible = containsSelf
+
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.sceyt_add -> reactionPopupClickListeners.onAddReaction(reaction.messageItem.message, reaction.reactionScore.key)
-                R.id.sceyt_remove -> reactionPopupClickListeners.onRemoveReaction(reaction)
-                R.id.sceyt_delete -> reactionPopupClickListeners.onDeleteReaction(reaction)
+                R.id.sceyt_add -> reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
+                R.id.sceyt_remove -> reactionClickListeners.onDeleteReaction(reaction)
             }
             false
         }
@@ -147,18 +154,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.show()
     }
 
-    private fun addReaction(message: SceytMessage, score: String) {
-        val scores = initAddReactionScore(message.reactionScores, score)
-        reactionEventListener?.invoke(ReactionEvent.AddReaction(message, scores.second))
+    private fun addReaction(message: SceytMessage, key: String) {
+        reactionEventListener?.invoke(ReactionEvent.AddReaction(message, key))
     }
 
     private fun onReduceReaction(reaction: ReactionItem.Reaction) {
-        val reactionScore = reaction.reactionScore
-        if (reactionScore.score > 1) {
-            val updateScore = ReactionScore(reactionScore.key, reactionScore.score - 1)
-            reactionEventListener?.invoke(ReactionEvent.AddReaction(reaction.messageItem.message, updateScore))
-        } else
-            onDeleteReaction(reaction)
+
+    }
+
+    private fun onReactionClick(reaction: ReactionItem.Reaction) {
+        val containsSelf = reaction.reaction.containsSelf
+        if (containsSelf)
+            reactionClickListeners.onDeleteReaction(reaction)
+        else
+            reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
+
     }
 
     private fun showAddEmojiDialog(message: SceytMessage) {
@@ -192,22 +202,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             } catch (e: Exception) {
                 Toast.makeText(context, context.getString(R.string.no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
             }
-        }
-    }
-
-    private fun initAddReactionScore(reactionScores: Array<ReactionScore>?, emoji: String): Pair<Array<ReactionScore>, ReactionScore> {
-        val scores = reactionScores ?: arrayOf()
-        val reaction = scores.find { it.key == emoji }
-        var score = reaction?.score?.toInt() ?: 0
-        val updateReactionScore: ReactionScore
-        return if (score == 0) {
-            updateReactionScore = ReactionScore(emoji, 1)
-            Pair(scores.plus(updateReactionScore), updateReactionScore)
-        } else {
-            updateReactionScore = ReactionScore(reaction?.key, (++score).toLong())
-            val index = scores.indexOf(reaction)
-            scores[index] = updateReactionScore
-            Pair(scores, updateReactionScore)
         }
     }
 
@@ -255,7 +249,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReaction(data: SceytMessage) {
-        messagesRV.updateReaction(data.id, data.reactionScores ?: arrayOf())
+        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == data.id }?.let {
+            val message = (it.second as MessageListItem.MessageItem).message
+            val oldMessage = message.clone()
+            message.updateMessage(data)
+            message.messageReactions = data.messageReactions
+            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+        }
     }
 
     internal fun updateViewState(state: PageState) {
@@ -369,8 +369,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         onReplayInThreadMessageClick(item.message)
     }
 
-    override fun onAddReactionClick(view: View, item: MessageListItem.MessageItem) {
-        showAddEmojiDialog(item.message)
+    override fun onAddReactionClick(view: View, message: SceytMessage) {
+        showAddEmojiDialog(message)
+    }
+
+    override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
+        onReactionClick(item)
     }
 
     override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
@@ -402,7 +406,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReactMessageClick(view: View, message: SceytMessage) {
-        onAddReactionClick(view, MessageListItem.MessageItem(message))
+        onAddReactionClick(view, message)
     }
 
     override fun onReplayMessageClick(message: SceytMessage) {
@@ -415,8 +419,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
 
     //Reaction popup events
-    override fun onAddReaction(message: SceytMessage, score: String) {
-        addReaction(message, score)
+    override fun onAddReaction(message: SceytMessage, key: String) {
+        addReaction(message, key)
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
@@ -424,6 +428,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onDeleteReaction(reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.DeleteReaction(reactionItem.messageItem.message, reactionItem.reactionScore))
+        reactionEventListener?.invoke(ReactionEvent.DeleteReaction(reactionItem.message, reactionItem.reaction.key))
     }
 }

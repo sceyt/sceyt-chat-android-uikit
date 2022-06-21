@@ -60,7 +60,9 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     addDeleteReactionLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> {
-                it.data?.let { data -> messagesListView.updateReaction(data) }
+                it.data?.let { data ->
+                    messagesListView.updateReaction(data)
+                }
             }
             is SceytResponse.Error -> {
                 customToastSnackBar(messagesListView, it.message ?: "")

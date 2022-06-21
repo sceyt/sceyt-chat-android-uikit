@@ -115,9 +115,9 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    override suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            channel.addReactionWithMessageId(messageId, score.key, score.score.toShort(), "", false, object : MessageCallback {
+            channel.addReactionWithMessageId(messageId, scoreKey, 1, "", false, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
@@ -129,9 +129,9 @@ class MessagesRepositoryImpl(conversationId: Long,
         }
     }
 
-    override suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage> {
+    override suspend fun deleteReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            channel.deleteReactionWithMessageId(messageId, score.key, object : MessageCallback {
+            channel.deleteReactionWithMessageId(messageId, scoreKey, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }

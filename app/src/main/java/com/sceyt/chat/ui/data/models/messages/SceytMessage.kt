@@ -5,6 +5,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.util.*
@@ -47,6 +48,9 @@ open class SceytMessage(var id: Long,
     @IgnoredOnParcel
     var files: List<FileListItem>? = null
 
+    @IgnoredOnParcel
+    var messageReactions: List<ReactionItem>? = null
+
     fun updateMessage(message: SceytMessage) {
         id = message.id
         tid = message.tid
@@ -74,6 +78,9 @@ open class SceytMessage(var id: Long,
         parent = message.parent
         replyInThread = message.replyInThread
         replyCount = message.replyCount
+        reactionScores?.toMutableSet()?.retainAll {
+            it.key == ""
+        }
     }
 
     public override fun clone(): SceytMessage {

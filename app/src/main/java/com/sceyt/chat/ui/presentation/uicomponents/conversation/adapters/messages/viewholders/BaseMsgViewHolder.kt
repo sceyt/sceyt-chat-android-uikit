@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytRecyclerReplayContainerBinding
@@ -37,13 +36,17 @@ import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
 import kotlin.math.min
 
+
 abstract class BaseMsgViewHolder(view: View,
                                  private val messageListeners: MessageClickListenersImpl? = null)
     : RecyclerView.ViewHolder(view) {
 
 
     abstract fun bind(item: MessageListItem, diff: MessageItemPayloadDiff)
-    open fun onViewDetachedFromWindow() {}
+    open fun onViewDetachedFromWindow() {
+        reactionsAdapter = null
+    }
+
     open fun onViewAttachedToWindow() {}
 
     private var reactionsAdapter: ReactionsAdapter? = null
@@ -123,19 +126,21 @@ abstract class BaseMsgViewHolder(view: View,
 
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactions: RecyclerView,
                                        viewPool: RecyclerView.RecycledViewPool) {
-        val reactionScores = item.message.reactionScores
-        if (reactionScores.isNullOrEmpty()) {
+        val reactions: List<ReactionItem>? = item.message.messageReactions
+
+        if (reactions.isNullOrEmpty()) {
             rvReactions.isVisible = false
             return
         }
 
-        val reactions = initReactionsList(reactionScores, item.message)
-        val gridLayoutManager = GridLayoutManager(itemView.context, getReactionSpanCount(reactions.size, item.message.incoming))
+        val gridLayoutManager = GridLayoutManager(itemView.context,
+            getReactionSpanCount(reactions.size + 1, item.message.incoming))
 
         if (reactionsAdapter == null) {
-            reactionsAdapter = ReactionsAdapter(reactions, rvReactions,
-                ReactionViewHolderFactory(itemView.context, messageListeners)
-            )
+            reactionsAdapter = ReactionsAdapter(
+                ReactionViewHolderFactory(itemView.context, messageListeners)).also {
+                it.submitList(reactions)
+            }
 
             with(rvReactions) {
                 setRecycledViewPool(viewPool)
@@ -151,7 +156,7 @@ abstract class BaseMsgViewHolder(view: View,
             }
         } else {
             rvReactions.layoutManager = gridLayoutManager
-            reactionsAdapter?.submitData(reactions)
+            reactionsAdapter?.submitList(reactions)
         }
         rvReactions.isVisible = true
     }
@@ -172,29 +177,8 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    private fun initReactionsList(scores: Array<ReactionScore>, message: SceytMessage): ArrayList<ReactionItem> {
-        return ArrayList<ReactionItem>(scores.sortedByDescending { it.score }.map {
-            ReactionItem.Reaction(it, MessageListItem.MessageItem(message))
-        }).also {
-            if (it.isNotEmpty())
-                it.add(ReactionItem.AddItem(MessageListItem.MessageItem(message)))
-        }
-    }
-
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
         if (incoming) return 5
         return min(5, reactionsSize)
-    }
-
-    fun updateReaction(scores: Array<ReactionScore>, message: SceytMessage) {
-        val reactions = initReactionsList(scores, message)
-        message.reactionScores = scores
-        if (reactionsAdapter != null) {
-            reactionsAdapter?.recyclerView?.isVisible = scores.isNotEmpty()
-            if (scores.isNotEmpty())
-                (reactionsAdapter?.recyclerView?.layoutManager as? GridLayoutManager)?.spanCount = getReactionSpanCount(reactions.size, message.incoming)
-            reactionsAdapter?.submitData(reactions)
-        } else
-            bindingAdapter?.notifyItemChanged(bindingAdapterPosition)
     }
 }
