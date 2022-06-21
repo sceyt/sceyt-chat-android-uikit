@@ -65,7 +65,7 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         avatarChanged = from?.avatarURL != other.from?.avatarURL,
         nameChanged = from?.fullName != other.from?.fullName,
         replayCountChanged = replyCount != other.replyCount,
-        reactionsChanged = !reactionScores.contentEquals(other.reactionScores),
+        reactionsChanged = messageReactions?.equals(other.messageReactions)?.not() ?: true,
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
         filesChanged = !attachments.contentEquals(other.attachments)
     )

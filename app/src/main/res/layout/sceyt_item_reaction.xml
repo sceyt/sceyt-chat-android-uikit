@@ -7,6 +7,7 @@
     android:layout_height="wrap_content"
     app:sceytReactionViewCountTextColor="@color/sceyt_color_black_themed"
     app:sceytReactionViewCountTextMargin="5dp"
+    app:sceytReactionViewCountTextMinWidth="7dp"
     app:sceytReactionViewInnerPaddingHorizontal="5dp"
     app:sceytReactionViewInnerPaddingVertical="4dp"
     app:sceytReactionViewStrokeColor="@color/sceyt_color_divider"

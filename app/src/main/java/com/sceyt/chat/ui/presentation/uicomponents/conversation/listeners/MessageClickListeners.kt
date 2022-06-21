@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners
 
 import android.view.View
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -20,7 +21,11 @@ sealed interface MessageClickListeners {
     }
 
     fun interface AddReactionClickListener : MessageClickListeners {
-        fun onAddReactionClick(view: View, item: MessageListItem.MessageItem)
+        fun onAddReactionClick(view: View, message: SceytMessage)
+    }
+
+    fun interface ReactionClickListener : MessageClickListeners {
+        fun onReactionClick(view: View, item: ReactionItem.Reaction)
     }
 
     fun interface ReactionLongClickListener : MessageClickListeners {
@@ -41,6 +46,7 @@ sealed interface MessageClickListeners {
             AvatarClickListener,
             ReplayCountClickListener,
             AddReactionClickListener,
+            ReactionClickListener,
             ReactionLongClickListener,
             AttachmentClickListener,
             AttachmentLongClickListener

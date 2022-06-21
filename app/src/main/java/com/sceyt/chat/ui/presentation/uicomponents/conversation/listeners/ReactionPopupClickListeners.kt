@@ -6,7 +6,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 sealed interface ReactionPopupClickListeners {
 
     fun interface AddReaction : ReactionPopupClickListeners {
-        fun onAddReaction(message: SceytMessage, score: String)
+        fun onAddReaction(message: SceytMessage, key: String)
     }
 
     fun interface RemoveReaction : ReactionPopupClickListeners {

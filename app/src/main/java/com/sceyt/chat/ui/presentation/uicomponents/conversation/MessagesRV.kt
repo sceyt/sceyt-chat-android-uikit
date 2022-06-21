@@ -5,14 +5,12 @@ import android.util.AttributeSet
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getFirstVisibleItemPosition
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
@@ -129,17 +127,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         viewHolderFactory.setMessageListener(listener)
     }
 
-    fun updateReaction(messageId: Long, scores: Array<ReactionScore>) {
-        for ((index: Int, item: MessageListItem) in mAdapter.getData().withIndex()) {
-            if (item is MessageListItem.MessageItem && item.message.id == messageId) {
-                val viewHolder = (findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)
-                if (viewHolder != null)
-                    viewHolder.updateReaction(scores, item.message)
-                else item.message.reactionScores = scores
-                break
-            }
-        }
-    }
 
     /** Call this function to customise MessageViewHolderFactory and set your own.
      * Note: Call this function before initialising messages adapter.*/

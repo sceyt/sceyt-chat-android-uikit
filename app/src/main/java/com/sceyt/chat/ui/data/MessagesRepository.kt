@@ -7,6 +7,7 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.models.messages.SceytReaction
 import kotlinx.coroutines.flow.Flow
 
 interface MessagesRepository {
@@ -14,8 +15,8 @@ interface MessagesRepository {
     suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
     suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage>
     suspend fun editMessage(message: Message): SceytResponse<SceytMessage>
-    suspend fun addReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage>
-    suspend fun deleteReaction(messageId: Long, score: ReactionScore): SceytResponse<SceytMessage>
+    suspend fun addReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
+    suspend fun deleteReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker>
     val onMessageFlow: Flow<SceytMessage>
     val onThreadMessageFlow: Flow<SceytMessage>

@@ -10,7 +10,7 @@ class AddReactionViewHolder(private val binding: SceytItemAddReactionBinding,
 
     fun bind(item: ReactionItem) {
         binding.root.setOnClickListener {
-            messageListeners?.onAddReactionClick(it, (item as ReactionItem.AddItem).messageItem)
+            messageListeners?.onAddReactionClick(it, (item as ReactionItem.AddItem).message)
         }
     }
 }

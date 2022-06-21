@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners
 
 import android.view.View
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -13,6 +14,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var replayCountClickListener: MessageClickListeners.ReplayCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
     private var reactionLongClickListener: MessageClickListeners.ReactionLongClickListener? = null
+    private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
 
@@ -37,9 +39,14 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         replayCountClickListener?.onReplayCountClick(view, item)
     }
 
-    override fun onAddReactionClick(view: View, item: MessageListItem.MessageItem) {
-        defaultListeners?.onAddReactionClick(view, item)
-        addReactionClickListener?.onAddReactionClick(view, item)
+    override fun onAddReactionClick(view: View, message: SceytMessage) {
+        defaultListeners?.onAddReactionClick(view, message)
+        addReactionClickListener?.onAddReactionClick(view, message)
+    }
+
+    override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
+        defaultListeners?.onReactionClick(view, item)
+        reactionClickListener?.onReactionClick(view, item)
     }
 
     override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
@@ -64,6 +71,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 avatarClickListener = listener
                 replayCountClickListener = listener
                 addReactionClickListener = listener
+                reactionClickListener = listener
                 reactionLongClickListener = listener
                 attachmentClickListener = listener
                 attachmentLongClickListener = listener
@@ -79,6 +87,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             }
             is MessageClickListeners.AddReactionClickListener -> {
                 addReactionClickListener = listener
+            }
+            is MessageClickListeners.ReactionClickListener -> {
+                reactionClickListener = listener
             }
             is MessageClickListeners.ReactionLongClickListener -> {
                 reactionLongClickListener = listener
