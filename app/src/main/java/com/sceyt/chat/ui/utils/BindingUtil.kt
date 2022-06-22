@@ -14,6 +14,7 @@ import androidx.databinding.Observable
 import com.sceyt.chat.ui.BR
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.extensions.getCompatDrawableByTheme
+import com.sceyt.chat.ui.presentation.customviews.SceytOnlineView
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 object BindingUtil {
@@ -21,6 +22,7 @@ object BindingUtil {
     private val backgroundColorsViews: HashSet<Pair<View, Int>> = HashSet()
     private val backgroundTintColorsViews: HashSet<Pair<View, Int>> = HashSet()
     private val themeDrawablesViews: HashSet<Pair<ImageView, Int>> = HashSet()
+    private val themeStrokeColorOnlineViews: HashSet<Pair<SceytOnlineView, Int>> = HashSet()
 
     init {
         SceytUIKitConfig.SceytUITheme.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
@@ -38,6 +40,10 @@ object BindingUtil {
                     }
                     themeDrawablesViews.forEach {
                         setThemedDrawable(it.first, it.second, isDark)
+                    }
+                    themeStrokeColorOnlineViews.forEach {
+                        val view = it.first
+                        view.setStrokeColor(view.context.getCompatColorByTheme(it.second, isDark))
                     }
                 }
             }
@@ -145,6 +151,25 @@ object BindingUtil {
 
             override fun onViewDetachedFromWindow(p0: View) {
                 themeDrawablesViews.remove(pair)
+            }
+        })
+    }
+
+    @BindingAdapter("themeStrokeColorOnlineView")
+    @JvmStatic
+    fun themeStrokeColorOnlineView(view: SceytOnlineView, @ColorRes colorId: Int) {
+        view.setStrokeColor(view.context.getCompatColorByTheme(colorId, SceytUIKitConfig.isDarkMode))
+        val pair = Pair(view, colorId)
+        themeStrokeColorOnlineViews.add(pair)
+
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(p0: View) {
+                view.setStrokeColor(view.context.getCompatColorByTheme(colorId, SceytUIKitConfig.isDarkMode))
+                themeStrokeColorOnlineViews.add(pair)
+            }
+
+            override fun onViewDetachedFromWindow(p0: View) {
+                themeStrokeColorOnlineViews.remove(pair)
             }
         })
     }

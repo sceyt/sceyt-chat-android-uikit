@@ -3,7 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="../../../../layout/custom_preview.xml" value="0.2390625" />
+        <entry key="../../../../layout/custom_preview.xml" value="0.33" />
         <entry key="AXEmojiView/src/main/res/layout/emoji_item.xml" value="0.3776041666666667" />
         <entry key="AXEmojiView/src/main/res/layout/emoji_skin_popup.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/drawable-night/sceyt_ic_channels_empty_state.xml" value="0.222" />
@@ -122,6 +122,7 @@
         <entry key="app/src/main/res/font/roboto_medium.xml" value="0.4078125" />
         <entry key="app/src/main/res/font/roboto_regular.xml" value="0.4078125" />
         <entry key="app/src/main/res/layout/activity_conversation.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/activity_conversation_info.xml" value="0.33611111111111114" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="app/src/main/res/layout/artw.xml" value="0.3788265306122449" />
         <entry key="app/src/main/res/layout/container_reaction.xml" value="0.3765625" />
@@ -130,10 +131,13 @@
         <entry key="app/src/main/res/layout/d.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/exo_player_control_view.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/fragment_bottom_sheet_emojis.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/fragment_channel_members.xml" value="0.33611111111111114" />
+        <entry key="app/src/main/res/layout/fragment_channel_members_list.xml" value="0.3765625" />
         <entry key="app/src/main/res/layout/fragment_channels.xml" value="0.31971153846153844" />
         <entry key="app/src/main/res/layout/fragment_profile.xml" value="0.390625" />
         <entry key="app/src/main/res/layout/item_add_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/item_channel.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/item_channel_member.xml" value="0.30910645575032064" />
         <entry key="app/src/main/res/layout/item_loading.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/item_reaction.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/recyclerview_attachment_file_item.xml" value="0.3776041666666667" />
@@ -151,7 +155,7 @@
         <entry key="app/src/main/res/layout/sceyt_dialog_view.xml" value="0.39166666666666666" />
         <entry key="app/src/main/res/layout/sceyt_fragment_bottom_sheet_emojis.xml" value="0.5" />
         <entry key="app/src/main/res/layout/sceyt_item_add_reaction.xml" value="0.3776041666666667" />
-        <entry key="app/src/main/res/layout/sceyt_item_channel.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_item_channel.xml" value="0.26908821349147516" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_deleted_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_files_message.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_item_inc_text_message.xml" value="0.3776041666666667" />
@@ -168,6 +172,7 @@
         <entry key="app/src/main/res/layout/sceyt_message_input_view.xml" value="0.33" />
         <entry key="app/src/main/res/layout/sceyt_message_video_item.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_messages_empty_state.xml" value="0.3776041666666667" />
+        <entry key="app/src/main/res/layout/sceyt_online_container.xml" value="0.75" />
         <entry key="app/src/main/res/layout/sceyt_recycler_replay_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_replay_message_container.xml" value="0.3776041666666667" />
         <entry key="app/src/main/res/layout/sceyt_search_channels_empty_state.xml" value="0.3776041666666667" />

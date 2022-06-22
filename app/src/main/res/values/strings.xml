@@ -25,7 +25,7 @@
     <string name="_private">Private</string>
     <string name="direct">direct</string>
     <string name="hint_uri">URI</string>
-    <string name="hint_channel_subject">Channel Subject</string>
+    <string name="hint_channel_subject">Subject</string>
     <string name="label_create_public_channel">Public Channel</string>
     <string name="hint_avatar_url">Avatar URL</string>
     <string name="hint_label">Label</string>

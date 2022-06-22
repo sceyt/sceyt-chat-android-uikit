@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="SceytOnlineView">
+        <attr name="sceytOnlineViewStrokeColor" format="reference|color" />
+        <attr name="sceytOnlineViewIndicatorColor" format="reference|color" />
+        <attr name="sceytOnlineViewStrokeWidth" format="dimension|integer" />
+    </declare-styleable>
+</resources>

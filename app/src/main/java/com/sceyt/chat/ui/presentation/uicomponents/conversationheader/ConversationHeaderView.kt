@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.*
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.ui.R
@@ -14,14 +13,15 @@ import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytConversationHeaderViewBinding
+import com.sceyt.chat.ui.extensions.asActivity
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getString
 import com.sceyt.chat.ui.extensions.shortToast
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ConversationHeaderViewStyle
-import com.sceyt.chat.ui.utils.DateTimeUtil.setLastActiveDateByTime
 import com.sceyt.chat.ui.utils.BindingUtil
+import com.sceyt.chat.ui.utils.DateTimeUtil.setLastActiveDateByTime
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners {
@@ -113,6 +113,6 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onBackClick(view: View) {
-        (context as? AppCompatActivity)?.onBackPressed()
+        context.asActivity().onBackPressed()
     }
 }

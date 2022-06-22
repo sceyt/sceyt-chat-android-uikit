@@ -40,7 +40,6 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     private lateinit var paddings: IntArray
 
     init {
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytDateStatusView)
             statusDrawable = a.getDrawable(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIcon)

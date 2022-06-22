@@ -24,7 +24,6 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private val backgroundColor by lazy { getAvatarColor() }
 
     init {
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytAvatarView)
             isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarViewIsGroup, false)

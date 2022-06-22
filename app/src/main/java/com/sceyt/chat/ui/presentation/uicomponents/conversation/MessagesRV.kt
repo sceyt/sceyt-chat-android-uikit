@@ -43,7 +43,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             moveDuration = 100
         }
 
-        layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
+        layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_animation_fall_down).apply {
+            animation.duration = 300
+        }
 
         addItemDecoration(ChatItemOffsetDecoration(dpToPx(8f)))
         layoutManager = SpeedyLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
