@@ -2,9 +2,11 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getFirstVisibleItemPosition
@@ -16,6 +18,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.Messag
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.utils.SpeedyLinearLayoutManager
 import java.util.concurrent.atomic.AtomicBoolean
+
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
@@ -39,8 +42,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             removeDuration = 100
             moveDuration = 100
         }
+
+        layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
+
         addItemDecoration(ChatItemOffsetDecoration(dpToPx(8f)))
-        scheduleLayoutAnimation()
         layoutManager = SpeedyLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
             stackFromEnd = true
         }
@@ -79,6 +84,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 .also { mAdapter = it }
         } else
             mAdapter.notifyUpdate(messages)
+        scheduleLayoutAnimation()
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
