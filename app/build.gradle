@@ -67,5 +67,4 @@ dependencies {
     implementation supportDependencies.datastorePreferences
     implementation supportDependencies.sdp
     implementation supportDependencies.ssp
-    implementation 'com.google.android.flexbox:flexbox:3.0.0'
 }
