@@ -27,7 +27,6 @@ import com.emojiview.emojiview.emoji.Emoji;
 import com.emojiview.emojiview.emoji.EmojiData;
 
 
-@SuppressWarnings("serial")
 public class AXPresetEmoji extends Emoji {
 
     public AXPresetEmoji(final String code,final EmojiData emojiData) {

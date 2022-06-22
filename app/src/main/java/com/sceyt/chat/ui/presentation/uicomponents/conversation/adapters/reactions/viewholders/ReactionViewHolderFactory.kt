@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.databinding.SceytItemAddReactionBinding
 import com.sceyt.chat.ui.databinding.SceytItemReactionBinding
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 class ReactionViewHolderFactory(context: Context,
@@ -16,7 +15,7 @@ class ReactionViewHolderFactory(context: Context,
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            ReactionViewType.Default.ordinal -> {
+            ReactionViewType.Reaction.ordinal -> {
                 ReactionViewHolder(SceytItemReactionBinding.inflate(layoutInflater, parent, false),
                     messageListeners)
             }
@@ -28,14 +27,14 @@ class ReactionViewHolderFactory(context: Context,
         }
     }
 
-    fun getItemViewType(item: ReactionItem): Int {
-        return when (item) {
-            is ReactionItem.Reaction -> ReactionViewType.Default.ordinal
-            is ReactionItem.AddItem -> ReactionViewType.Add.ordinal
+    fun getItemViewType(position: Int, size: Int): Int {
+        return when {
+            position < size -> ReactionViewType.Reaction.ordinal
+            else -> ReactionViewType.Add.ordinal
         }
     }
 
     enum class ReactionViewType {
-        Add, Default
+        Add, Reaction
     }
 }

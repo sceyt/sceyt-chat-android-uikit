@@ -45,6 +45,8 @@
         <attr name="sceytReactionViewStrokeCornerRadius" format="integer|dimension" />
         <attr name="sceytReactionViewCountText" format="string|reference" />
         <attr name="sceytReactionViewSmileText" format="string|reference" />
+        <attr name="sceytReactionViewBackgroundColor" format="color|reference|string" />
+        <attr name="sceytReactionViewCountTextMinWidth" format="integer|dimension" />
     </declare-styleable>
 
     <declare-styleable name="SceytVideoControllerView">

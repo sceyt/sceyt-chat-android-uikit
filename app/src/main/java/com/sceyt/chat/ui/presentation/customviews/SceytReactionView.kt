@@ -7,6 +7,7 @@ import android.view.View
 import androidx.core.graphics.toColorInt
 import com.sceyt.chat.ui.R
 import kotlin.math.abs
+import kotlin.math.max
 
 
 class SceytReactionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -29,15 +30,18 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private var smileTitle = ""
     private var countTitle = ""
     private var mCountMargin = 0
+    private var reactionBackgroundColor: Int = 0
+    private var counterTextMinWidth = 0
 
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytReactionView)
-            innerPadding = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewInnerPadding, innerPadding)
+            innerPadding = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewInnerPadding, 0)
             if (innerPadding == 0) {
                 innerPaddingVertical = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewInnerPaddingVertical, 0)
                 innerPaddingHorizontal = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewInnerPaddingHorizontal, 0)
             }
+            reactionBackgroundColor = a.getColor(R.styleable.SceytReactionView_sceytReactionViewBackgroundColor, reactionBackgroundColor)
             countMargin = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewCountTextMargin, countMargin)
             smileTextSize = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewSmileTextSize, smileTextSize)
             countTextSize = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewCountTextSize, countTextSize)
@@ -45,8 +49,11 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             strokeColor = a.getColor(R.styleable.SceytReactionView_sceytReactionViewStrokeColor, strokeColor)
             strikeWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeWidth, strikeWidth)
             cornerRadius = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeCornerRadius, cornerRadius)
-            smileTitle = a.getString(R.styleable.SceytReactionView_sceytReactionViewSmileText) ?: smileTitle
-            countTitle = a.getString(R.styleable.SceytReactionView_sceytReactionViewCountText) ?: countTitle
+            smileTitle = a.getString(R.styleable.SceytReactionView_sceytReactionViewSmileText)
+                    ?: smileTitle
+            countTitle = a.getString(R.styleable.SceytReactionView_sceytReactionViewCountText)
+                    ?: countTitle
+            counterTextMinWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewCountTextMinWidth, 0)
             a.recycle()
         }
         init()
@@ -83,6 +90,12 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
 
         if (countTitle.isBlank() && smileTitle.isBlank()) return
 
+        val rectF = RectF(strikeWidth.toFloat(), strikeWidth.toFloat(), (width - strikeWidth).toFloat(), (height - strikeWidth).toFloat())
+        canvas.drawRoundRect(rectF, cornerRadius.toFloat(), cornerRadius.toFloat(), Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = reactionBackgroundColor
+            style = Paint.Style.FILL
+        })
+
         if (smileTitle.isNotBlank()) {
             canvas.drawText(smileTitle,
                 -smileTextBoundsRect.left.toFloat() + strikeWidth + getInnerPaddingHorizontal(),
@@ -91,14 +104,17 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         }
 
         if (countTitle.isNotBlank()) {
+            val diff = counterTextMinWidth - countTextBoundsRect.width()
+            val countDiffX = if (counterTextMinWidth > 0 && diff > 0) {
+                diff / 2
+            } else 0
             canvas.drawText(countTitle,
-                (-countTextBoundsRect.left + smileTextBoundsRect.right + mCountMargin + getInnerPaddingHorizontal()).toFloat(),
+                (countDiffX - countTextBoundsRect.left + smileTextBoundsRect.right + mCountMargin + getInnerPaddingHorizontal()).toFloat(),
                 abs(countTextBoundsRect.top) + getTopFormCountText() + getInnerPaddingVertical() + strikeWidth,
                 countTextPaint)
         }
 
-        canvas.drawRoundRect(RectF(strikeWidth.toFloat(), strikeWidth.toFloat(), (width - strikeWidth).toFloat(), (height - strikeWidth).toFloat()),
-            cornerRadius.toFloat(), cornerRadius.toFloat(), strokePaint)
+        canvas.drawRoundRect(rectF, cornerRadius.toFloat(), cornerRadius.toFloat(), strokePaint)
     }
 
     private fun getInnerPaddingVertical(): Int {
@@ -121,6 +137,11 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         return if (countTextBoundsRect.height() > smileTextBoundsRect.height()) {
             (countTextBoundsRect.height() - smileTextBoundsRect.height()) / 2f
         } else 0f
+    }
+
+    fun setReactionBackgroundColor(color: Int) {
+        reactionBackgroundColor = color
+        invalidate()
     }
 
     fun setCount(count: Number) {
@@ -147,7 +168,9 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             setMeasuredDimension(0, 0)
             return
         }
-        val width = 2 * getInnerPaddingHorizontal() + smileTextBoundsRect.width() + countTextBoundsRect.width() + mCountMargin + 2 * strikeWidth
+
+        val countTextWidth = max(countTextBoundsRect.width(), counterTextMinWidth)
+        val width = 2 * getInnerPaddingHorizontal() + smileTextBoundsRect.width() + countTextWidth + mCountMargin + 2 * strikeWidth
         val height = 2 * getInnerPaddingVertical() + smileTextBoundsRect.height().coerceAtLeast(countTextBoundsRect.height()) + 2 * strikeWidth
         setMeasuredDimension(width, height)
     }

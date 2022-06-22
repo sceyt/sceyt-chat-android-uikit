@@ -9,53 +9,68 @@ import com.sceyt.chat.ui.data.models.messages.FileLoadData
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlin.math.max
 
-sealed class FileListItem(val file: Attachment?,
+sealed class FileListItem(val file: Attachment,
                           val sceytMessage: SceytMessage) : BaseObservable() {
-    data class File(val attachment: Attachment?,
+    data class File(val attachment: Attachment,
                     val message: SceytMessage) : FileListItem(attachment, message)
 
-    data class Image(val attachment: Attachment?,
+    data class Image(val attachment: Attachment,
                      val message: SceytMessage) : FileListItem(attachment, message)
 
-    data class Video(val attachment: Attachment?,
+    data class Video(val attachment: Attachment,
                      val message: SceytMessage) : FileListItem(attachment, message)
 
+    val fileLoadData by lazy { FileLoadData(file.url) }
 
-    internal fun setUploadListener(loadCb: ((FileLoadData) -> Unit)? = null) {
-        loadCb?.invoke(FileLoadData().apply { loading = true })
-        file?.setUploaderProgress(object : ProgressCallback {
+    private var uploadProgressListener: ((FileLoadData) -> Unit)? = null
+    private var downloadProgressListener: ((FileLoadData, java.io.File?) -> Unit)? = null
+
+    internal fun setUploadListener(listener: ((FileLoadData) -> Unit)? = null) {
+        uploadProgressListener = listener
+        uploadProgressListener?.invoke(fileLoadData.apply { loading = true })
+        file.setUploaderProgress(object : ProgressCallback {
             override fun onResult(progress: Float) {
-                val intValuePercent = (progress * 100).toInt()
+                val intValuePercent = progress * 100
                 if (intValuePercent < 100) {
-                    fileLoadData.update(progress = max(1, intValuePercent), loading = true, success = false)
-                    loadCb?.invoke(fileLoadData)
+                    fileLoadData.update(progress = max(1f, intValuePercent), loading = true, success = false)
+                    uploadProgressListener?.invoke(fileLoadData)
                 }
             }
 
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(progress = null, loading = false, success = false)
-                loadCb?.invoke(fileLoadData)
+                uploadProgressListener?.invoke(fileLoadData)
             }
         })
 
-        file?.setUploaderCompletion(object : ActionCallback {
+        file.setUploaderCompletion(object : ActionCallback {
             override fun onSuccess() {
-                fileLoadData.update(progress = 100, loading = false, success = true)
-                loadCb?.invoke(fileLoadData)
+                fileLoadData.update(progress = 100f, loading = false, success = true)
+                uploadProgressListener?.invoke(fileLoadData)
             }
 
             override fun onError(p0: SceytException?) {
                 fileLoadData.update(progress = null, loading = false, success = false)
-                loadCb?.invoke(fileLoadData)
+                uploadProgressListener?.invoke(fileLoadData)
             }
         })
     }
 
-    internal fun updateDownloadState(progress: Int?, loading: Boolean, success: Boolean) {
-        val progressValue = if (progress != null) max(1, progress) else null
-        fileLoadData.update(progressValue, loading = loading, success = success)
+    internal fun setDownloadProgressListener(listener: ((FileLoadData, java.io.File?) -> Unit)? = null) {
+        downloadProgressListener = null
+        downloadProgressListener = listener
     }
 
-    val fileLoadData by lazy { FileLoadData() }
+    internal fun updateDownloadState(progress: Float?, loading: Boolean) {
+        val progressValue = if (progress != null) max(1f, progress) else null
+        fileLoadData.update(progressValue, loading = loading)
+        downloadProgressListener?.invoke(fileLoadData, null)
+    }
+
+    internal fun downloadFinish(result: java.io.File?, success: Boolean) {
+        val progress = if (success) 100f else 0f
+        fileLoadData.update(progress, loading = false, success = success)
+        downloadProgressListener?.invoke(fileLoadData, result)
+    }
 }
 

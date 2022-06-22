@@ -199,14 +199,6 @@ public class AXEmojiPopupLayout extends FrameLayout implements AXPopupInterface 
         return popupView!=null ? popupView.animationDuration : 250;
     }
 
-    public AXEmojiSearchView getSearchView() {
-        return popupView.getSearchView();
-    }
-
-    public void setSearchView(AXEmojiSearchView searchView) {
-        popupView.setSearchView(searchView);
-    }
-
     public void hideSearchView(){
         popupView.hideSearchView(true);
     }

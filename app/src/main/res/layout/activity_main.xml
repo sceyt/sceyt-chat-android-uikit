@@ -11,11 +11,11 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/con"
+        themedBackgroundColor="@{R.color.sceyt_color_bg}"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/sceyt_color_bg"
         android:fitsSystemWindows="true"
-        bind:themedBackgroundColor="@{R.color.sceyt_color_bg}"
         tools:context=".presentation.mainactivity.MainActivity">
 
         <androidx.viewpager2.widget.ViewPager2
@@ -27,6 +27,7 @@
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationView"
+            themedBackgroundColor="@{R.color.sceyt_color_bottom_nav}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/sceyt_color_bottom_nav"
@@ -37,8 +38,7 @@
             app:itemTextAppearanceInactive="@style/SceytBottomNavigationTextStyle"
             app:itemTextColor="@color/bottom_nav_item_color"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:menu="@menu/sceyt_menu_bottom_navigation"
-            bind:themedBackgroundColor="@{R.color.sceyt_color_bottom_nav}" />
+            app:menu="@menu/sceyt_menu_bottom_navigation" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
