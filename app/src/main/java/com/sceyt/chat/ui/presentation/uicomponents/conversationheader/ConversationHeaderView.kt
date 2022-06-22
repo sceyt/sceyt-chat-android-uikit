@@ -14,7 +14,6 @@ import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.SceytConversationHeaderViewBinding
-import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getString
 import com.sceyt.chat.ui.extensions.shortToast
@@ -22,7 +21,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ConversationHeaderViewStyle
 import com.sceyt.chat.ui.utils.DateTimeUtil.setLastActiveDateByTime
-import com.sceyt.chat.ui.utils.binding.BindingUtil
+import com.sceyt.chat.ui.utils.BindingUtil
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners {

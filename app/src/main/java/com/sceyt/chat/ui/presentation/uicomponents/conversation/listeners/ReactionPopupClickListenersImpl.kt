@@ -10,9 +10,9 @@ class ReactionPopupClickListenersImpl(view: MessagesListView) : ReactionPopupCli
     private var removeReactionListener: ReactionPopupClickListeners.RemoveReaction? = null
     private var deleteReactionListener: ReactionPopupClickListeners.DeleteReaction? = null
 
-    override fun onAddReaction(message: SceytMessage, score: String) {
-        defaultListeners.onAddReaction(message, score)
-        addReaction?.onAddReaction(message, score)
+    override fun onAddReaction(message: SceytMessage, key: String) {
+        defaultListeners.onAddReaction(message, key)
+        addReaction?.onAddReaction(message, key)
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {

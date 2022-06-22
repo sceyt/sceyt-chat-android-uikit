@@ -3,8 +3,8 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
@@ -12,9 +12,11 @@ import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.models.messages.SceytReaction
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
@@ -89,7 +91,9 @@ class MessageListViewModel(conversationId: Long,
 
         viewModelScope.launch {
             messagesRepository.onMessageReactionUpdatedFlow.collect {
-                onMessageReactionUpdatedLiveData.value = it.toSceytUiMessage(isGroup)
+                onMessageReactionUpdatedLiveData.value = it.toSceytUiMessage(isGroup).apply {
+                    messageReactions = initReactionsItems(this)
+                }
             }
         }
         viewModelScope.launch {
@@ -142,17 +146,29 @@ class MessageListViewModel(conversationId: Long,
         }
     }
 
-    private fun addReaction(message: SceytMessage, score: ReactionScore) {
+    private fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.addReaction(message.id, score)
-            _addDeleteReactionLiveData.postValue(response)
+            val response = messagesRepository.addReaction(message.id, scoreKey)
+            _addDeleteReactionLiveData.postValue(response.apply {
+                if (this is SceytResponse.Success) {
+                    data?.let {
+                        it.messageReactions = initReactionsItems(it)
+                    }
+                }
+            })
         }
     }
 
-    private fun deleteReaction(message: SceytMessage, score: ReactionScore) {
+    private fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.deleteReaction(message.id, score)
-            _addDeleteReactionLiveData.postValue(response)
+            val response = messagesRepository.deleteReaction(message.id, scoreKey)
+            _addDeleteReactionLiveData.postValue(response.apply {
+                if (this is SceytResponse.Success) {
+                    data?.let {
+                        it.messageReactions = initReactionsItems(it)
+                    }
+                }
+            })
         }
     }
 
@@ -206,12 +222,23 @@ class MessageListViewModel(conversationId: Long,
                 isGroup = this@MessageListViewModel.isGroup
                 files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
                 canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+                messageReactions = initReactionsItems(this)
             })
             messageItems.add(messageItem)
         }
         if (hasNext)
             messageItems.add(0, MessageListItem.LoadingMoreItem)
         return messageItems
+    }
+
+    private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
+        val currentUserId = ClientWrapper.currentUser.id
+        return message.reactionScores?.map {
+            ReactionItem.Reaction(SceytReaction(it.key, it.score,
+                message.lastReactions?.find { reaction ->
+                    reaction.key == it.key && reaction.user.id == currentUserId
+                } != null), message)
+        }?.sortedByDescending { it.reaction.score }
     }
 
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
@@ -246,10 +273,10 @@ class MessageListViewModel(conversationId: Long,
     fun onReactionEvent(event: ReactionEvent) {
         when (event) {
             is ReactionEvent.AddReaction -> {
-                addReaction(event.message, event.score)
+                addReaction(event.message, event.scoreKey)
             }
             is ReactionEvent.DeleteReaction -> {
-                deleteReaction(event.message, event.score)
+                deleteReaction(event.message, event.scoreKey)
             }
         }
     }

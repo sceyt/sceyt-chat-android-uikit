@@ -129,7 +129,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         playPauseItem.setImageDrawable(playDrawable)
     }
 
-    fun setImageThumb(drawable: Drawable) {
+    fun setImageThumb(drawable: Drawable?) {
         if (imageThumb == null) {
             imageThumb = AppCompatImageView(context).also {
                 it.setImageDrawable(drawable)

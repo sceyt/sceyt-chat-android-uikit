@@ -16,7 +16,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.searchinput.listeners.SearchI
 import com.sceyt.chat.ui.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.chat.ui.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.SearchInputViewStyle
-import com.sceyt.chat.ui.utils.binding.BindingUtil
+import com.sceyt.chat.ui.utils.BindingUtil
 
 
 class SearchInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -103,12 +103,6 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
             debounceHelper.submit {
                 eventListeners.onSearchSubmittedByDebounce(newQuery)
             }
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        if (debounceInitDelegate.isInitialized())
-            debounceHelper.shutdown()
     }
 
     internal fun setDebouncedTextChangeListener(inputChangedListener: InputChangedListener) {

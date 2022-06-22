@@ -16,8 +16,6 @@ class MessageVideoViewHolder(
         private val messageListeners: MessageClickListenersImpl?,
 ) : BaseFileViewHolder(binding.root) {
 
-    private lateinit var fileItem: FileListItem
-
     init {
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -30,38 +28,44 @@ class MessageVideoViewHolder(
     }
 
     override fun bind(item: FileListItem) {
-        super.bind(item)
-        fileItem = item
-
         with(binding) {
+            videoViewController.setImageThumb(null)
             parentLayout.clipToOutline = true
             videoView.isVisible = false
+            binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
+        }
+        super.bind(item)
+    }
+
+    private fun SceytMessageVideoItemBinding.updateDownloadState(data: FileLoadData, file: File?) {
+        groupLoading.isVisible = data.loading
+        binding.videoViewController.showPlayPauseButtons(!data.loading)
+        if (data.loading) {
+            loadProgress.progress = data.progressPercent.toInt()
+            videoViewController.setImageThumb(null)
+        }
+        if (file != null) {
+            val mediaPath = file.path
+            initializePlayer(mediaPath)
+
+            with(binding) {
+                Glide.with(itemView.context)
+                    .load(file)
+                    .override(videoView.width, videoView.height)
+                    .into(glideCustomTarget {
+                        if (it != null) {
+                            videoViewController.setImageThumb(it)
+                        }
+                    })
+            }
         }
     }
 
-    override fun updateUploadingState(load: FileLoadData, finish: Boolean) {
-        binding.updateLoadState(load, finish)
-    }
-
-    override fun updateDownloadingState(load: FileLoadData) {
-        binding.updateLoadState(load, false)
-    }
-
-    override fun downloadFinish(load: FileLoadData, file: File?) {
-        binding.updateLoadState(load, true)
-        val mediaPath = (file ?: return).path
-        initializePlayer(mediaPath)
-
-        with(binding) {
-            Glide.with(itemView.context)
-                .load(mediaPath)
-                .override(videoView.width, videoView.height)
-                .into(glideCustomTarget {
-                    if (it != null) {
-                        videoViewController.setImageThumb(it)
-                    }
-                })
-        }
+    private fun SceytMessageVideoItemBinding.updateUploadState(data: FileLoadData) {
+        groupLoading.isVisible = data.loading
+        binding.videoViewController.showPlayPauseButtons(!data.loading)
+        if (data.loading)
+            loadProgress.progress = data.progressPercent.toInt()
     }
 
     private fun initializePlayer(mediaPath: String) {
@@ -69,15 +73,11 @@ class MessageVideoViewHolder(
         (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
     }
 
-    private fun SceytMessageVideoItemBinding.updateLoadState(data: FileLoadData, finish: Boolean) {
-        if (finish) {
-            groupLoading.isVisible = false
-            binding.videoViewController.showPlayPauseButtons(true)
-        } else {
-            groupLoading.isVisible = data.loading
-            binding.videoViewController.showPlayPauseButtons(!data.loading)
-            if (data.loading)
-                loadProgress.progress = data.progressPercent
-        }
+    override fun updateUploadingState(data: FileLoadData) {
+        binding.updateUploadState(data)
+    }
+
+    override fun updateDownloadingState(data: FileLoadData, file: File?) {
+        binding.updateDownloadState(data, file)
     }
 }

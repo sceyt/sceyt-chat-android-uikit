@@ -61,14 +61,14 @@ object DateTimeUtil {
         }
     }
 
-    fun checkDateDiffMinuteWithCurrentUTC(date: String?): Int {
+    fun checkDateDiffMinuteWithCurrentUTC(date: String): Int {
         val now = Calendar.getInstance()
         val sdf = SimpleDateFormat(SERVER_DATE_PATTERN, Locale.ENGLISH)
         sdf.timeZone = TimeZone.getTimeZone("UTC")
 
         return try {
             val date2: Calendar = Calendar.getInstance().apply {
-                time = sdf.parse(date)!!
+                time = sdf.parse(date) ?: return -1
             }
             now.get(Calendar.MINUTE) - date2.get(Calendar.MINUTE)
         } catch (e: ParseException) {

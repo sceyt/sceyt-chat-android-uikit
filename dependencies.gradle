@@ -1,0 +1,87 @@
+ext {
+    compile_sdk_version = 32
+    target_sdk_version = 32
+    min_sdk_version = 21
+
+    /** App version */
+    app_version_code = 1
+    app_version_name = "1.0.0"
+
+    /** Dependency implementation versions*/
+    app_compat_version = '1.4.2'
+    activity_ktx_version = '1.4.0'
+    async_layout_inflater_version = '1.0.0'
+    ax_emoji_version = '1.5.0'
+
+    card_view_version = '1.0.0'
+    core_ktx_version = '1.8.0'
+    constraint_layout_version = '2.1.4'
+    coroutines_version = '1.6.0-native-mt'
+
+    datastore_version = '1.0.0'
+
+    exo_player_media_version = "1.0.0-alpha03"
+
+    material_version = '1.7.0-alpha02'
+
+    fragment_ktx_version = '1.4.1'
+    firebase_core_version = '20.0.2'
+    firebase_messaging_version = '23.0.5'
+    firebase_bom_version = '30.1.0'
+    firebase_crashlitics_version = '18.2.6'
+
+    glide_version = '4.13.2'
+    glide_transformations_version = '4.3.0'
+    glide_compiler_version = '4.12.0'
+    gson_version = '2.8.9'
+
+    ion_version = "3.1.0"
+
+    kotlin_version = '1.6.10'
+    koin_version = '3.1.5'
+
+    legacy_version = '1.0.0'
+    lifecycle_version = '2.4.1'
+
+    voley_version = '1.2.1'
+
+    ok_http_version = '5.0.0-alpha.8'
+
+    recycler_view_version = '1.2.1'
+    retrofit_version = '2.9.0'
+
+    sdp_version = '1.1.0'
+    ssp_version = '1.0.6'
+    swipe_refresh_layout_version = '1.1.0'
+
+    supportDependencies = [
+            appCompat           : "androidx.appcompat:appcompat:$app_compat_version",
+            asyncLayoutInflater : "androidx.asynclayoutinflater:asynclayoutinflater:$async_layout_inflater_version",
+            activityKtx         : "androidx.activity:activity-ktx:$activity_ktx_version",
+            axEmoji             : "io.github.aghajari:AXEmojiView-GoogleProvider:$ax_emoji_version",
+            coreKtx             : "androidx.core:core-ktx:$core_ktx_version",
+            constraintlayout    : "androidx.constraintlayout:constraintlayout:$constraint_layout_version",
+            cardView            : "androidx.cardview:cardview:$card_view_version",
+            datastore           : "androidx.datastore:datastore:$datastore_version",
+            datastorePreferences: "androidx.datastore:datastore-preferences:$datastore_version",
+            exoPlayerMedia      : "androidx.media3:media3-exoplayer:$exo_player_media_version",
+            exoPlayerUi         : "androidx.media3:media3-ui:$exo_player_media_version",
+            ion                 : "com.koushikdutta.ion:ion:$ion_version",
+            firebaseMessaging   : "com.google.firebase:firebase-messaging:$firebase_messaging_version",
+            firebaseBom         : "com.google.firebase:firebase-bom:$firebase_bom_version",
+            firebaseCrashlytics : "com.google.firebase:firebase-crashlytics-ktx:$firebase_crashlitics_version",
+            fragmentKtx         : "androidx.fragment:fragment-ktx:$fragment_ktx_version",
+            glide               : "com.github.bumptech.glide:glide:$glide_version",
+            koinAndroid         : "io.insert-koin:koin-android:$koin_version",
+            lifecycleRuntime    : "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version",
+            lifecycleViewModel  : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",
+            voley               : "com.android.volley:volley:$voley_version",
+            material            : "com.google.android.material:material:$material_version",
+            okHttp              : "com.squareup.okhttp3:okhttp:$ok_http_version",
+            recyclerView        : "androidx.recyclerview:recyclerview:$recycler_view_version",
+            retrofit            : "com.squareup.retrofit2:retrofit:$retrofit_version",
+            sdp                 : "com.intuit.sdp:sdp-android:$sdp_version",
+            ssp                 : "com.intuit.ssp:ssp-android:$ssp_version",
+            swipeRefreshLayout  : "androidx.swiperefreshlayout:swiperefreshlayout:$swipe_refresh_layout_version",
+    ]
+}

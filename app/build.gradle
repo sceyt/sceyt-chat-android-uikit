@@ -6,16 +6,17 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk compile_sdk_version
 
     defaultConfig {
         applicationId "com.sceyt.chat.ui"
-        minSdk 21
-        targetSdk 32
-        versionCode 1
-        versionName "1.0"
+        minSdk min_sdk_version
+        targetSdk target_sdk_version
+        versionCode app_version_code
+        versionName app_version_name
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -24,10 +25,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = '1.8'
     }
@@ -41,36 +44,27 @@ android {
 dependencies {
     implementation project(':SceytSDK-debug')
     implementation project(':AXEmojiView')
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.7.0-alpha02'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
-    implementation 'com.intuit.sdp:sdp-android:1.0.6'
-    implementation 'com.intuit.ssp:ssp-android:1.0.6'
-
-    implementation "androidx.fragment:fragment-ktx:1.4.1"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.1'
-
-    //Glide
-    implementation 'com.github.bumptech.glide:glide:4.13.2'
-
-    //OkHttp
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.7'
-    implementation 'com.android.volley:volley:1.2.1'
-
-    implementation "androidx.datastore:datastore:1.0.0"
-    implementation "androidx.datastore:datastore-preferences:1.0.0"
-    implementation "androidx.asynclayoutinflater:asynclayoutinflater:1.0.0"
-
-    //Exo player
-    def mediaVersion = "1.0.0-alpha03"
-
-    implementation "androidx.media3:media3-exoplayer:$mediaVersion"
-    implementation "androidx.media3:media3-ui:$mediaVersion"
-
-    implementation "io.github.aghajari:AXEmojiView-GoogleProvider:1.5.0"
-    implementation 'com.koushikdutta.ion:ion:3.1.0'
+    implementation supportDependencies.coreKtx
+    implementation supportDependencies.appCompat
+    implementation supportDependencies.material
+    implementation supportDependencies.constraintlayout
+    implementation supportDependencies.recyclerView
+    implementation supportDependencies.swipeRefreshLayout
+    implementation supportDependencies.fragmentKtx
+    implementation supportDependencies.lifecycleRuntime
+    implementation supportDependencies.asyncLayoutInflater
+    implementation supportDependencies.glide
+    implementation supportDependencies.axEmoji
+    implementation supportDependencies.ion
+    implementation supportDependencies.firebaseBom
+    implementation supportDependencies.firebaseMessaging
+    implementation supportDependencies.okHttp
+    implementation supportDependencies.voley
+    implementation supportDependencies.exoPlayerMedia
+    implementation supportDependencies.exoPlayerUi
+    implementation supportDependencies.datastore
+    implementation supportDependencies.datastorePreferences
+    implementation supportDependencies.sdp
+    implementation supportDependencies.ssp
 }

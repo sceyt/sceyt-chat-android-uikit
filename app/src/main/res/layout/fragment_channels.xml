@@ -21,6 +21,7 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/title"
+                themedTextColor="@{R.color.sceyt_color_black_themed}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/channels"
@@ -29,18 +30,17 @@
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                bind:themedTextColor="@{R.color.sceyt_color_black_themed}" />
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <View
             android:id="@+id/underline"
+            themedBackgroundColor="@{R.color.sceyt_color_divider}"
             android:layout_width="match_parent"
             android:layout_height=".5dp"
             android:background="@color/sceyt_color_divider"
-            app:layout_constraintTop_toBottomOf="@+id/layoutToolbar"
-            bind:themedBackgroundColor="@{R.color.sceyt_color_divider}" />
+            app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:layout_width="match_parent"
