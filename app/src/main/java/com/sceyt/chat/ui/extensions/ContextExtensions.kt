@@ -65,6 +65,12 @@ fun Context.asAppCompatActivity(): AppCompatActivity {
     else throw RuntimeException("Context should be AppCompatActivity")
 }
 
+fun Context.asActivity(): Activity {
+    if (this is Activity)
+        return this
+    else throw RuntimeException("Context should be Activity")
+}
+
 fun Context.getFileUriWithProvider(file: File): Uri {
     return FileProvider.getUriForFile(this,
         BuildConfig.APPLICATION_ID + ".provider", file)
