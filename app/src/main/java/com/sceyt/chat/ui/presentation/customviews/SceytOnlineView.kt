@@ -6,7 +6,10 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.view.isVisible
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.extensions.scaleViewOut
+import com.sceyt.chat.ui.extensions.scaleViewWithAnim
 
 class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
@@ -14,6 +17,7 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
     private val indicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var strokeColor = Color.BLACK
     private var indicatorColor = Color.GREEN
+    private var changeVisibilityWithAnim = true
     private var strokeWidth = 0
 
     init {
@@ -22,6 +26,7 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
             strokeColor = a.getColor(R.styleable.SceytOnlineView_sceytOnlineViewStrokeColor, strokeColor)
             indicatorColor = a.getColor(R.styleable.SceytOnlineView_sceytOnlineViewIndicatorColor, indicatorColor)
             strokeWidth = a.getDimensionPixelSize(R.styleable.SceytOnlineView_sceytOnlineViewStrokeWidth, strokeWidth)
+            changeVisibilityWithAnim = a.getBoolean(R.styleable.SceytOnlineView_sceytOnlineViewChangeVisibilityWithAnim, changeVisibilityWithAnim)
             a.recycle()
         }
         init()
@@ -29,11 +34,13 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun init() {
         with(strokePaint) {
+            flags = Paint.ANTI_ALIAS_FLAG
             color = strokeColor
             strokeWidth = this@SceytOnlineView.strokeWidth.toFloat()
             style = Paint.Style.STROKE
         }
         with(indicatorPaint) {
+            flags = Paint.ANTI_ALIAS_FLAG
             color = indicatorColor
             style = Paint.Style.FILL
         }
@@ -42,8 +49,28 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
 
-        canvas.drawCircle(width / 2f, height / 2f, width / 2f - strokeWidth / 2, strokePaint)
-        canvas.drawCircle(width / 2f, height / 2f, width / 2f - strokeWidth, indicatorPaint)
+        val halfStrokeW = strokeWidth / 2
+        val smallDiff = 1
+        if (strokeWidth > 0)
+            canvas.drawCircle(width / 2f, height / 2f, width / 2f - halfStrokeW - smallDiff, strokePaint)
+        canvas.drawCircle(width / 2f, height / 2f, width / 2f - strokeWidth - smallDiff, indicatorPaint)
+    }
+
+    fun setVisibilityWithAnim(visible: Boolean) {
+        if (animation == null || !animation.hasStarted() || animation.hasEnded()) {
+            if (visible) {
+                if (!isVisible) {
+                    visibility = VISIBLE
+                    scaleViewOut(0f, 1f)
+                }
+            } else {
+                if (isVisible) {
+                    scaleViewWithAnim(1f, 0f) {
+                        visibility = GONE
+                    }
+                }
+            }
+        }
     }
 
     fun setStrokeColor(color: Int) {
@@ -56,5 +83,9 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
         indicatorColor = color
         init()
         invalidate()
+    }
+
+    fun changeVisibilityWithAnimation(withAnim: Boolean) {
+        changeVisibilityWithAnim = withAnim
     }
 }

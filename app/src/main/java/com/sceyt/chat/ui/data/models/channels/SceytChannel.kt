@@ -4,7 +4,6 @@ package com.sceyt.chat.ui.data.models.channels
 import android.os.Parcelable
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
-import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.ui.BR
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getPresentableName
@@ -63,8 +62,7 @@ open class SceytChannel(open var id: Long,
 
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is SceytChannel) return false
-        return (other.id == id && other.unreadMessageCount == unreadMessageCount
-                && other.lastMessage?.id == lastMessage?.id && other.channelType == channelType)
+        return other.id == id
     }
 
     override fun hashCode(): Int {

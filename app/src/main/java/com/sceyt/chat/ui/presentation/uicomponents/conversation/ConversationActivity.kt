@@ -34,8 +34,7 @@ class ConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversation)
 
-        val isNightMode = isNightTheme()
-        statusBarIconsColorWithBackground(isNightMode)
+        statusBarIconsColorWithBackground(isNightTheme())
 
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)

@@ -16,6 +16,8 @@ interface ChannelsRepository {
     suspend fun leaveChannel(channel: GroupChannel): SceytResponse<Long>
     suspend fun clearHistory(channel: Channel): SceytResponse<Long>
     suspend fun blockChannel(channel: GroupChannel): SceytResponse<Long>
+    suspend fun uploadAvatar(avatarUri: String): SceytResponse<String>
+    suspend fun editChannel(channel: Channel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel>
     val onMessageFlow: SharedFlow<Pair<Channel, Message>>
     val onMessageStatusFlow: SharedFlow<MessageStatusChange>
     val onMessageEditedOrDeleteFlow: Flow<Message>

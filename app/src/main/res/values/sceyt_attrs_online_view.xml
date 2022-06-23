@@ -4,6 +4,7 @@
     <declare-styleable name="SceytOnlineView">
         <attr name="sceytOnlineViewStrokeColor" format="reference|color" />
         <attr name="sceytOnlineViewIndicatorColor" format="reference|color" />
-        <attr name="sceytOnlineViewStrokeWidth" format="dimension|integer" />
+        <attr name="sceytOnlineViewStrokeWidth" format="dimension" />
+        <attr name="sceytOnlineViewChangeVisibilityWithAnim" format="boolean" />
     </declare-styleable>
 </resources>

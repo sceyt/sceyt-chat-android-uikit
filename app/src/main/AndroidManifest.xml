@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".presentation.uicomponents.conversation.conversationinfo.ConversationInfoActivity"
+            android:name="com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
