@@ -88,18 +88,6 @@ inline fun <reified T : DialogFragment> DialogFragment.setBundleArgumentsTyped(i
 
 inline fun <reified T : Any> newIntent(context: Context): Intent = Intent(context, T::class.java)
 
-fun Activity.hideKeyboard() {
-    hideKeyboard(currentFocus)
-}
-
-fun Activity.hideKeyboard(view: View?) {
-    val baseView = this.findViewById<View>(android.R.id.content)
-    view?.clearFocus()
-    val inputMethodManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    inputMethodManager.hideSoftInputFromWindow(view?.windowToken ?: baseView.windowToken, 0)
-
-}
-
 fun Activity.postDelayed(delayInMillis: Long, functionToExecute: () -> Unit) {
     Handler(Looper.getMainLooper()).postDelayed({
         if (isFinishing.not()) {

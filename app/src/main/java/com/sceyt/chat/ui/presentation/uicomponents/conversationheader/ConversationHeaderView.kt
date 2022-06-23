@@ -16,7 +16,7 @@ import com.sceyt.chat.ui.databinding.SceytConversationHeaderViewBinding
 import com.sceyt.chat.ui.extensions.asActivity
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.extensions.getString
-import com.sceyt.chat.ui.extensions.shortToast
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ConversationHeaderViewStyle
@@ -28,6 +28,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private val binding: SceytConversationHeaderViewBinding
     private var clickListeners = HeaderClickListenersImpl(this)
+    private lateinit var channel: SceytChannel
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -52,6 +53,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
         binding.avatar.setOnClickListener {
             clickListeners.onAvatarClick(it)
+        }
+
+        binding.layoutToolbar.setOnClickListener {
+            clickListeners.onToolbarClick(it)
         }
     }
 
@@ -80,6 +85,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     internal fun setChannel(channel: SceytChannel) {
+        this.channel = channel
         val subjAndSUrl = channel.getSubjectAndAvatarUrl()
         binding.avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second)
         binding.title.text = subjAndSUrl.first
@@ -109,7 +115,13 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onAvatarClick(view: View) {
-        context.shortToast("todo")
+        if (::channel.isInitialized)
+            ConversationInfoActivity.newInstance(context, channel)
+    }
+
+    override fun onToolbarClick(view: View) {
+        if (::channel.isInitialized)
+            ConversationInfoActivity.newInstance(context, channel)
     }
 
     override fun onBackClick(view: View) {

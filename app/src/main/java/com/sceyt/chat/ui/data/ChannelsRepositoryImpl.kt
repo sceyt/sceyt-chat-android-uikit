@@ -1,11 +1,9 @@
 package com.sceyt.chat.ui.data
 
+import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.ChannelListQuery
-import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.chat.sceyt_callbacks.ActionCallback
-import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
+import com.sceyt.chat.models.channel.*
+import com.sceyt.chat.sceyt_callbacks.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
@@ -13,6 +11,7 @@ import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class ChannelsRepositoryImpl : ChannelsRepository {
     //todo need to add DI
@@ -136,6 +135,62 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     continuation.resume(SceytResponse.Error(e?.message))
                 }
             })
+        }
+    }
+
+    override suspend fun uploadAvatar(avatarUri: String): SceytResponse<String> {
+        return suspendCoroutine { continuation ->
+            ChatClient.getClient().upload(avatarUri, object : ProgressCallback {
+                override fun onResult(pct: Float) {
+                }
+
+                override fun onError(e: SceytException?) {}
+            }, object : UrlCallback {
+
+                override fun onResult(url: String) {
+                    continuation.resume(SceytResponse.Success(url))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    override suspend fun editChannel(channel: Channel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            val channelCallback = object : ChannelCallback {
+                override fun onResult(channel: Channel) {
+                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            }
+            when (channel) {
+                is PrivateChannel -> {
+                    channel.updateChannel(
+                        channel.subject,
+                        channel.metadata,
+                        channel.label,
+                        avatarUrl ?: "",
+                        channelCallback
+                    )
+                }
+                is PublicChannel -> {
+                    channel.update(
+                        channel.uri,
+                        channel.subject,
+                        channel.metadata,
+                        channel.label,
+                        avatarUrl ?: "",
+                        channelCallback
+                    )
+                }
+                else -> continuation.resume(SceytResponse.Error("This is Direct channel"))
+            }
         }
     }
 }

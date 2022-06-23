@@ -37,6 +37,11 @@
         <item name="cornerSize">5dp</item>
     </style>
 
+    <style name="SceytShapeAppearanceOverlay.CornerSize6" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">6dp</item>
+    </style>
+
     <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">
         <item name="popupMenuBackground">@drawable/sceyt_bg_popup</item>
         <item name="android:textColor">@color/sceyt_color_text_themed</item>

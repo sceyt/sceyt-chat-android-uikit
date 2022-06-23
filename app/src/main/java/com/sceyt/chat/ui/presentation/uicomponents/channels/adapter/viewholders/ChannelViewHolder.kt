@@ -72,9 +72,10 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             setLastMessageText(channel)
                             setUnreadCount(channel.unreadCount)
                         }
-                    }
 
-                    setOnlineStatus(channel)
+                        if (onlineStateChanged)
+                            setOnlineStatus(channel)
+                    }
                 }
             }
             ChannelListItem.LoadingMoreItem -> Unit

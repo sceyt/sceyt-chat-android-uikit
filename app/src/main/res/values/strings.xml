@@ -41,7 +41,7 @@
     <string name="channel">Channel</string>
     <string name="notifications">Notifications</string>
     <string name="clear_history">Clear history</string>
-    <string name="members">Members</string>
+    <string name="sceyt_members">Members</string>
     <string name="make_admin">Make admin</string>
     <string name="remove_member">Kick member</string>
     <string name="block_and_remove_member">Block and kick member</string>
@@ -106,5 +106,8 @@
     <string name="sceyt_save">Save</string>
     <string name="sceyt_edit">Edit</string>
     <string name="sceyt_dark_theme">Dark Theme</string>
+    <string name="sceyt_media">Media</string>
+    <string name="sceyt_files">Files</string>
+    <string name="sceyt_links">Links</string>
 
 </resources>
