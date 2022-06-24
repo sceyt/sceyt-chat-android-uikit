@@ -36,6 +36,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
             is FileListItem.File -> FileViewType.File.ordinal
             is FileListItem.Image -> FileViewType.Image.ordinal
             is FileListItem.Video -> FileViewType.Video.ordinal
+            else -> throw RuntimeException("Not supported view type")
         }
     }
 

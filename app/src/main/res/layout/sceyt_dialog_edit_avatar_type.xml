@@ -34,7 +34,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/delete"
+        android:text="@string/sceyt_delete"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 

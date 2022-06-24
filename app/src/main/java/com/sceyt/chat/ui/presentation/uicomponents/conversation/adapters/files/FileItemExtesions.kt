@@ -6,7 +6,7 @@ import java.io.File
 
 
 fun FileListItem.getFileFromMetadata(): File? {
-    val metadata = file?.metadata ?: return null
+    val metadata = file.metadata ?: return null
     try {
         val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
         return File(data.localPath)

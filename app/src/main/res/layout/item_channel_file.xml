@@ -46,7 +46,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/icFile"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="Montagabold.pdf" />
+        tools:text="Montagabold.pdf" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileSize"
@@ -58,7 +58,7 @@
         android:textSize="@dimen/tinyTextSize"
         app:layout_constraintStart_toStartOf="@+id/tvFileName"
         app:layout_constraintTop_toBottomOf="@+id/tvFileName"
-        android:text="67 KB" />
+        tools:text="67 KB" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDate"
@@ -70,6 +70,6 @@
         android:textSize="@dimen/tinyTextSize"
         app:layout_constraintStart_toEndOf="@+id/tvFileSize"
         app:layout_constraintTop_toTopOf="@+id/tvFileSize"
-        android:text="25/12/2001" />
+        tools:text="25/12/2001" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

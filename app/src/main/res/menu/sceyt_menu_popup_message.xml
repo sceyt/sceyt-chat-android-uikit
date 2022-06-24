@@ -35,6 +35,6 @@
     <item
         android:id="@+id/sceyt_delete_message"
         android:icon="@drawable/sceyt_ic_trash"
-        android:title="@string/delete"
+        android:title="@string/sceyt_delete"
         app:showAsAction="ifRoom" />
 </menu>

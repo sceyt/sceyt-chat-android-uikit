@@ -28,4 +28,15 @@ open class BaseViewModel : ViewModel() {
         }
         _pageStateLiveData.postValue(state)
     }
+
+    fun <T> notifyResponseAndPageState(liveData: MutableLiveData<T>?,
+                                       response: SceytResponse<T>,
+                                       wasLoadingMore: Boolean = false,
+                                       isEmpty: Boolean = false,
+                                       searchQuery: String? = null) {
+        if (response is SceytResponse.Success) {
+            liveData?.postValue(response.data)
+        }
+        notifyPageStateWithResponse(response, wasLoadingMore, isEmpty, searchQuery)
+    }
 }

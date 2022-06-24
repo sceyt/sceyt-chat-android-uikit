@@ -27,6 +27,7 @@
             android:name=".presentation.mainactivity.MainActivity"
             android:configChanges="uiMode"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

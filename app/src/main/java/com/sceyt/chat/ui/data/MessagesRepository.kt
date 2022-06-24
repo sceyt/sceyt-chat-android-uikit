@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface MessagesRepository {
     suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytMessage>>
+    suspend fun getMessagesByType(lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
     suspend fun sendMessage(message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
     suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage>
     suspend fun editMessage(message: Message): SceytResponse<SceytMessage>

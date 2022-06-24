@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
@@ -13,7 +14,9 @@ import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.databinding.ActivityConversationInfoBinding
 import com.sceyt.chat.ui.extensions.*
+import com.sceyt.chat.ui.presentation.common.SceytDialog
 import com.sceyt.chat.ui.presentation.common.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
 import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
@@ -21,9 +24,11 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.Channe
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 
+
 class ConversationInfoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationInfoBinding
     private lateinit var channel: SceytChannel
+    private lateinit var pagerAdapter: ViewPagerAdapter
     private lateinit var displayNameDefaultBg: Drawable
     private val viewModel: ConversationInfoViewModel by viewModels()
     private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
@@ -54,6 +59,18 @@ class ConversationInfoActivity : AppCompatActivity() {
             setChannelDetails(it)
             binding.isLoadingEditChannel(false)
             isSaveLoading = false
+        }
+
+        viewModel.leaveChannelLiveData.observe(this) {
+            clearTaskAndOpenMainActivity()
+        }
+
+        viewModel.deleteChannelLiveData.observe(this) {
+            clearTaskAndOpenMainActivity()
+        }
+
+        viewModel.clearHistoryLiveData.observe(this) {
+            customToastSnackBar("History was successfully cleared!")
         }
 
         viewModel.pageStateLiveData.observe(this) {
@@ -117,6 +134,46 @@ class ConversationInfoActivity : AppCompatActivity() {
             false
         }
 
+        binding.clearHistory.setOnClickListener {
+            SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
+                viewModel.clearHistory(channel)
+            }).setTitle(getString(R.string.sceyt_clear_history_title))
+                .setDescription(getString(R.string.sceyt_clear_history_desc))
+                .setPositiveButtonTextColor(getCompatColor(R.color.sceyt_color_red))
+                .setPositiveButtonTitle(getString(R.string.sceyt_clear))
+                .show()
+        }
+
+        binding.leaveChannel.setOnClickListener {
+            SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
+                viewModel.leaveChannel(channel)
+            }).setTitle(getString(R.string.sceyt_leave_channel_title))
+                .setDescription(getString(R.string.sceyt_leave_channel_desc))
+                .setPositiveButtonTextColor(getCompatColor(R.color.sceyt_color_red))
+                .setPositiveButtonTitle(getString(R.string.sceyt_leave))
+                .show()
+        }
+
+        binding.blockAndLeaveChannel.setOnClickListener {
+            SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
+                viewModel.blockAndLeaveChannel(channel)
+            }).setTitle(getString(R.string.sceyt_block_and_leave_channel_title))
+                .setDescription(getString(R.string.sceyt_block_and_leave_channel_desc))
+                .setPositiveButtonTextColor(getCompatColor(R.color.sceyt_color_red))
+                .setPositiveButtonTitle(getString(R.string.sceyt_leave))
+                .show()
+        }
+
+        binding.deleteChannel.setOnClickListener {
+            SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
+                viewModel.deleteChannel(channel)
+            }).setTitle(getString(R.string.sceyt_delete_channel_title))
+                .setDescription(getString(R.string.sceyt_delete_channel_desc))
+                .setPositiveButtonTextColor(getCompatColor(R.color.sceyt_color_red))
+                .setPositiveButtonTitle(getString(R.string.sceyt_delete))
+                .show()
+        }
+
         binding.icBack.setOnClickListener {
             onBackPressed()
         }
@@ -127,23 +184,28 @@ class ConversationInfoActivity : AppCompatActivity() {
         avatarUrl = channel.iconUrl
         binding.avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
         binding.subject.setText(channel.channelSubject)
-        binding.tvEditOrSave.isVisible = channel.channelType != ChannelTypeEnum.Direct
+
+        val isDirec = channel.channelType == ChannelTypeEnum.Direct
+        binding.tvEditOrSave.isVisible = !isDirec
+        binding.blockUser.isVisible = isDirec
+        binding.deleteChannel.isVisible = isDirec
+        binding.leaveChannel.isVisible = !isDirec
+        binding.blockAndLeaveChannel.isVisible = !isDirec
     }
 
     private fun setupPagerAdapter() {
-        val fragments = arrayListOf(ChannelMediaFragment(), ChannelFilesFragment())
+        val fragments = arrayListOf(
+            ChannelMediaFragment.newInstance(channel),
+            ChannelFilesFragment.newInstance(channel)
+        )
         if (channel.channelType != ChannelTypeEnum.Direct)
             fragments.add(0, ChannelMembersFragment())
 
-        val adapter = ViewPagerAdapter(this, fragments)
-        binding.viewPager.adapter = adapter
+        pagerAdapter = ViewPagerAdapter(this, fragments)
+        binding.viewPager.adapter = pagerAdapter
 
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            when (position) {
-                0 -> tab.text = getString(R.string.sceyt_members)
-                1 -> tab.text = getString(R.string.sceyt_media)
-                2 -> tab.text = getString(R.string.sceyt_files)
-            }
+            tab.text = pagerAdapter.getTagByPosition(position)
         }.attach()
     }
 
@@ -173,6 +235,12 @@ class ConversationInfoActivity : AppCompatActivity() {
     private fun ActivityConversationInfoBinding.isLoadingEditChannel(loading: Boolean) {
         tvEditOrSave.isVisible = !loading
         progressSave.isVisible = loading
+    }
+
+    private fun clearTaskAndOpenMainActivity() {
+        val newIntent = Intent(this, MainActivity::class.java)
+        newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(newIntent)
     }
 
     override fun onBackPressed() {

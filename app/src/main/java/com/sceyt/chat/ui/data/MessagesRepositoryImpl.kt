@@ -2,7 +2,10 @@ package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.message.*
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.message.MessagesListQuery
+import com.sceyt.chat.models.message.MessagesListQueryByType
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
@@ -16,7 +19,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class MessagesRepositoryImpl(conversationId: Long,
+class MessagesRepositoryImpl(private val conversationId: Long,
                              private val channel: Channel,
                              private val replayInThread: Boolean) : MessagesRepository {
 
@@ -47,12 +50,11 @@ class MessagesRepositoryImpl(conversationId: Long,
         setLimit(MESSAGES_LOAD_SIZE)
     }.build()
 
+    private fun getQueryByType(type: String) = MessagesListQueryByType.Builder(conversationId, type).apply {
+        limit(MESSAGES_LOAD_SIZE)
+    }.build()
 
     override suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
-        return getMessagesCoroutine(lastMessageId)
-    }
-
-    private suspend fun getMessagesCoroutine(lastMessageId: Long): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
             query.loadPrev(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
@@ -65,6 +67,22 @@ class MessagesRepositoryImpl(conversationId: Long,
                         continuation.resume(SceytResponse.Success(arrayListOf()))
                     else
                         continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    override suspend fun getMessagesByType(lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>> {
+        val lastMsgId = if (lastMessageId == 0L) Long.MAX_VALUE else lastMessageId
+        return suspendCancellableCoroutine { continuation ->
+            getQueryByType(type).loadNext(lastMsgId, object : MessagesCallback {
+                override fun onResult(messages: MutableList<Message>?) {
+                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
                 }
             })
         }
@@ -85,7 +103,6 @@ class MessagesRepositoryImpl(conversationId: Long,
             tmpMessageCb.invoke(tmpMessage)
         }
     }
-
 
     override suspend fun deleteMessage(message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->

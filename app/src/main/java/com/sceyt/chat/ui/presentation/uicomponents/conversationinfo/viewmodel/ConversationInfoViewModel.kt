@@ -8,6 +8,7 @@ import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.toChannel
+import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,6 +19,15 @@ class ConversationInfoViewModel : BaseViewModel() {
 
     private val _editChannelLiveData = MutableLiveData<SceytChannel>()
     val editChannelLiveData: LiveData<SceytChannel> = _editChannelLiveData
+
+    private val _leaveChannelLiveData = MutableLiveData<Long>()
+    val leaveChannelLiveData: LiveData<Long> = _leaveChannelLiveData
+
+    private val _deleteChannelLiveData = MutableLiveData<Long>()
+    val deleteChannelLiveData: LiveData<Long> = _deleteChannelLiveData
+
+    private val _clearHistoryLiveData = MutableLiveData<Long>()
+    val clearHistoryLiveData: LiveData<Long> = _clearHistoryLiveData
 
     fun saveChanges(channel: SceytChannel, newSubject: String, avatarUrl: String?, editedAvatar: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -31,14 +41,36 @@ class ConversationInfoViewModel : BaseViewModel() {
                     return@launch
                 }
             }
-            when (val response = repo.editChannel(channel.toChannel(), newSubject, newUrl)) {
-                is SceytResponse.Success -> {
-                    _editChannelLiveData.postValue(response.data)
-                }
-                is SceytResponse.Error -> {
-                    notifyPageStateWithResponse(response)
-                }
-            }
+            val response = repo.editChannel(channel.toChannel(), newSubject, newUrl)
+            notifyResponseAndPageState(_editChannelLiveData, response)
+        }
+    }
+
+    fun clearHistory(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.clearHistory(channel.toChannel())
+            notifyResponseAndPageState(_clearHistoryLiveData, response)
+        }
+    }
+
+    fun leaveChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.leaveChannel(channel.toGroupChannel())
+            notifyResponseAndPageState(_leaveChannelLiveData, response)
+        }
+    }
+
+    fun blockAndLeaveChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.blockChannel(channel.toGroupChannel())
+            notifyResponseAndPageState(_leaveChannelLiveData, response)
+        }
+    }
+
+    fun deleteChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.deleteChannel(channel.toChannel())
+            notifyResponseAndPageState(_deleteChannelLiveData, response)
         }
     }
 }
