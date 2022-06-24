@@ -151,9 +151,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun getMessageType(attachments: List<Attachment>): String {
-        if (attachments.isNotEmpty() && attachments.size == 1) {
-            if (attachments[0].type.isEqualsVideoOrImage())
-                return "media"
+         if (attachments.isNotEmpty() && attachments.size == 1) {
+             return if (attachments[0].type.isEqualsVideoOrImage())
+                 "media"
+             else "file"
         }
         return "text"
     }

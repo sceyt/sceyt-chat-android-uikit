@@ -45,6 +45,20 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
     }
 
+    override suspend fun getChannel(id: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChatClient.getClient().getChannel(id, object : ChannelCallback {
+                override fun onResult(channel: Channel) {
+                   continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
     override suspend fun getChannels(offset: Int): SceytResponse<List<SceytChannel>> {
         return getChannelsCoroutine(offset)
     }
@@ -138,6 +152,20 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun deleteChannel(channel: Channel): SceytResponse<Long> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.delete(object : ActionCallback {
+                override fun onSuccess() {
+                    continuation.resume(SceytResponse.Success(channel.id))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
     override suspend fun uploadAvatar(avatarUri: String): SceytResponse<String> {
         return suspendCoroutine { continuation ->
             ChatClient.getClient().upload(avatarUri, object : ProgressCallback {
@@ -169,25 +197,15 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     continuation.resume(SceytResponse.Error(e?.message))
                 }
             }
+
             when (channel) {
                 is PrivateChannel -> {
-                    channel.updateChannel(
-                        channel.subject,
-                        channel.metadata,
-                        channel.label,
-                        avatarUrl ?: "",
-                        channelCallback
-                    )
+                    channel.updateChannel(newSubject, channel.metadata, channel.label,
+                        avatarUrl ?: "", channelCallback)
                 }
                 is PublicChannel -> {
-                    channel.update(
-                        channel.uri,
-                        channel.subject,
-                        channel.metadata,
-                        channel.label,
-                        avatarUrl ?: "",
-                        channelCallback
-                    )
+                    channel.update(channel.uri, newSubject, channel.metadata, channel.label,
+                        avatarUrl ?: "", channelCallback)
                 }
                 else -> continuation.resume(SceytResponse.Error("This is Direct channel"))
             }

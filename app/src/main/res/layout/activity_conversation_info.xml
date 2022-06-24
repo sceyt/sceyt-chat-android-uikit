@@ -176,7 +176,7 @@
                         android:layout_height="wrap_content"
                         android:background="?selectableItemBackground"
                         android:paddingVertical="10dp"
-                        android:text="@string/leave_channel"
+                        android:text="@string/sceyt_leave_channel"
                         android:textColor="@color/sceyt_color_red"
                         android:textSize="@dimen/mediumTextSize"
                         app:layout_constraintTop_toBottomOf="@id/clearHistory" />
@@ -187,10 +187,32 @@
                         android:layout_height="wrap_content"
                         android:background="?selectableItemBackground"
                         android:paddingVertical="10dp"
-                        android:text="@string/block_and_leave_channel"
+                        android:text="@string/sceyt_block_and_leave_channel"
                         android:textColor="@color/sceyt_color_red"
                         android:textSize="@dimen/mediumTextSize"
                         app:layout_constraintTop_toBottomOf="@id/leaveChannel" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/deleteChannel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?selectableItemBackground"
+                        android:paddingVertical="10dp"
+                        android:text="@string/sceyt_delete"
+                        android:textColor="@color/sceyt_color_red"
+                        android:textSize="@dimen/mediumTextSize"
+                        app:layout_constraintTop_toBottomOf="@id/blockAndLeaveChannel" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/blockUser"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?selectableItemBackground"
+                        android:paddingVertical="10dp"
+                        android:text="@string/sceyt_block"
+                        android:textColor="@color/sceyt_color_red"
+                        android:textSize="@dimen/mediumTextSize"
+                        app:layout_constraintTop_toBottomOf="@id/deleteChannel" />
 
                     <View
                         android:id="@+id/divider"
@@ -198,7 +220,7 @@
                         android:layout_height=".5dp"
                         android:layout_marginTop="8dp"
                         android:background="@color/sceyt_color_divider"
-                        app:layout_constraintTop_toBottomOf="@+id/blockAndLeaveChannel" />
+                        app:layout_constraintTop_toBottomOf="@+id/blockUser" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -208,6 +230,7 @@
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
                 android:background="@color/sceyt_color_bg"
                 app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
                 app:tabGravity="fill"
@@ -225,6 +248,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
+            android:overScrollMode="never"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutDetails" />

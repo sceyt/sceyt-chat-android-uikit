@@ -1,33 +1,45 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter
 
-import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
-import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.ui.databinding.ItemChannelMediaBinding
+import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 
-class ChannelMediaAdapter : ListAdapter<Attachment, MediaViewHolder>(DIFF_CALLBACK) {
+class ChannelMediaAdapter(private val attachments: ArrayList<FileListItem>,
+                          private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory)
+    : RecyclerView.Adapter<BaseFileViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaViewHolder {
-        return MediaViewHolder(ItemChannelMediaBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
+        return attachmentViewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: MediaViewHolder, position: Int) {
-       // holder.bind(currentList[position])
+    override fun onBindViewHolder(holder: BaseFileViewHolder, position: Int) {
+        holder.bind(attachments[position])
     }
 
     override fun getItemCount(): Int {
-        return 20
+        return attachments.size
     }
 
-    companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Attachment>() {
-            override fun areItemsTheSame(oldItem: Attachment, newItem: Attachment) =
-                    oldItem.url == newItem.url
-
-            override fun areContentsTheSame(oldItem: Attachment, newItem: Attachment) =
-                    oldItem.url == newItem.url
-        }
+    override fun getItemViewType(position: Int): Int {
+        return attachmentViewHolderFactory.getItemViewType(attachments[position])
     }
+
+    private fun removeLoading() {
+        if (attachments.removeIf { it is FileListItem.LoadingMoreItem })
+            notifyItemRemoved(attachments.lastIndex + 1)
+    }
+
+    fun addNewItems(items: List<FileListItem>) {
+        removeLoading()
+        if (items.isEmpty()) return
+
+        attachments.addAll(items)
+        if (attachments.size == items.size)
+            notifyDataSetChanged()
+        else
+            notifyItemRangeInserted(attachments.size - items.size, items.size)
+    }
+
+    fun getLastMediaItem() = attachments.findLast { it != FileListItem.LoadingMoreItem }
 }

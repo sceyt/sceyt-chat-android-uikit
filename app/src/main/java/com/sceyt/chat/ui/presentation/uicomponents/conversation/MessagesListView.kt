@@ -200,7 +200,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 context.startActivity(intent)
             } catch (e: Exception) {
-                Toast.makeText(context, context.getString(R.string.no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.sceyt_no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
             }
         }
     }

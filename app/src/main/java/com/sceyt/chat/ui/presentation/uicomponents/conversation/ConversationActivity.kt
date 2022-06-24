@@ -40,7 +40,7 @@ class ConversationActivity : AppCompatActivity() {
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
         viewModel.bindView(binding.headerView, replayMessage)
 
-        viewModel.loadMessages(0, false)
+        viewModel.loadMessages(channel.lastMessage?.id ?: 0, false)
 
 
         binding.messagesListView.setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
@@ -102,6 +102,8 @@ class ConversationActivity : AppCompatActivity() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             getDataFromIntent()
             val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
+
+            @Suppress("UNCHECKED_CAST")
             return MessageListViewModel(conversationId, isReplayInThread, channel) as T
         }
     }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 interface ChannelsRepository {
+    suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
     suspend fun getChannels(offset: Int): SceytResponse<List<SceytChannel>>
     suspend fun searchChannels(offset: Int, query: String): SceytResponse<List<SceytChannel>>
     suspend fun leaveChannel(channel: GroupChannel): SceytResponse<Long>
@@ -18,6 +19,7 @@ interface ChannelsRepository {
     suspend fun blockChannel(channel: GroupChannel): SceytResponse<Long>
     suspend fun uploadAvatar(avatarUri: String): SceytResponse<String>
     suspend fun editChannel(channel: Channel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel>
+    suspend fun deleteChannel(channel: Channel): SceytResponse<Long>
     val onMessageFlow: SharedFlow<Pair<Channel, Message>>
     val onMessageStatusFlow: SharedFlow<MessageStatusChange>
     val onMessageEditedOrDeleteFlow: Flow<Message>
