@@ -37,39 +37,33 @@
         android:layout_marginEnd="10dp"
         android:ellipsize="end"
         android:lines="1"
-        android:text="Anna"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/roleName"
         app:layout_constraintStart_toEndOf="@+id/avatar"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Anna" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/roleName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:drawablePadding="3dp"
         android:ellipsize="end"
-        android:gravity="end"
+        android:gravity="center"
+        android:includeFontPadding="false"
         android:lines="1"
-        android:text="Owner"
+        android:paddingVertical="4dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="15dp"
         android:textColor="@color/sceyt_color_gray_400"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintBottom_toBottomOf="@id/memberName"
-        app:layout_constraintEnd_toStartOf="@+id/icDots"
-        app:layout_constraintTop_toTopOf="@id/memberName" />
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icDots"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="2dp"
-        android:paddingHorizontal="13dp"
-        android:paddingVertical="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_more_dots" />
+        app:layout_constraintTop_toTopOf="@id/memberName"
+        tools:drawableEnd="@drawable/sceyt_ic_more_dots"
+        tools:text="Owner" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

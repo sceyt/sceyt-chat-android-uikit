@@ -41,14 +41,12 @@ class ChannelAttachmentsViewModel(conversationId: Long,
     }
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
-        isLoadingAttachments = false
-        when (it) {
-            is SceytResponse.Success -> {
-                hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
-                emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
-            }
-            is SceytResponse.Error -> notifyPageStateWithResponse(it, loadingNext)
+        if (it is SceytResponse.Success) {
+            hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
+            emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
         }
+        notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())
+        isLoadingAttachments = false
     }
 
     private fun emitMessagesListResponse(response: List<FileListItem>, loadingNext: Boolean) {

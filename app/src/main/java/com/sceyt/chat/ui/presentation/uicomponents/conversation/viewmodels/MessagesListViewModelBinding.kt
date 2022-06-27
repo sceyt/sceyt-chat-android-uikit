@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -49,7 +50,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
                 it.data?.let { data -> messagesListView.messageEditedOrDeleted(data) }
             }
             is SceytResponse.Error -> {
-                if (it.data?.deliveryStatus == DeliveryStatus.Pending) {
+                if (it.data?.deliveryStatus == DeliveryStatus.Pending ||
+                        it.data?.deliveryStatus == DeliveryStatus.Failed) {
                     messagesListView.messageEditedOrDeleted(it.data)
                 } else
                     customToastSnackBar(messagesListView, it.message ?: "")

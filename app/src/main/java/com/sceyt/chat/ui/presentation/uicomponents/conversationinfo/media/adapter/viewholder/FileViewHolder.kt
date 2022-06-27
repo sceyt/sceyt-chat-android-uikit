@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.files.adapter
+package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
 import com.sceyt.chat.ui.databinding.ItemChannelFileBinding
 import com.sceyt.chat.ui.extensions.getFileSize
@@ -25,7 +25,7 @@ class FileViewHolder(private val binding: ItemChannelFileBinding) : BaseFileView
                 } else file.uploadedFileSize
 
                 tvFileSize.text = size.toPrettySize()
-                tvDate.text = DateTimeUtil.convertDateToString(Date(item.message.createdAt), "dd/mm/yyyy")
+                tvDate.text = DateTimeUtil.convertDateToString(Date(item.message.createdAt), "dd/MM/yyyy")
             }
         }
     }

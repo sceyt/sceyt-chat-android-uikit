@@ -199,7 +199,7 @@ class ConversationInfoActivity : AppCompatActivity() {
             ChannelFilesFragment.newInstance(channel)
         )
         if (channel.channelType != ChannelTypeEnum.Direct)
-            fragments.add(0, ChannelMembersFragment())
+            fragments.add(0, ChannelMembersFragment.newInstance(channel))
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
         binding.viewPager.adapter = pagerAdapter
