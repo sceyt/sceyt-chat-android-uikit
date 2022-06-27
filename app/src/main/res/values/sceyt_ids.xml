@@ -21,4 +21,10 @@
     <item name="sceyt_remove" type="id" />
     <item name="sceyt_delete" type="id" />
     <item name="sceyt_add" type="id" />
+
+    <!-- Member popup ids-->
+    <item name="sceyt_set_owner" type="id" />
+    <item name="sceyt_change_role" type="id" />
+    <item name="sceyt_kick_member" type="id" />
+    <item name="sceyt_block_and_kick_member" type="id" />
 </resources>

@@ -151,10 +151,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun getMessageType(attachments: List<Attachment>): String {
-         if (attachments.isNotEmpty() && attachments.size == 1) {
-             return if (attachments[0].type.isEqualsVideoOrImage())
-                 "media"
-             else "file"
+        if (attachments.isNotEmpty() && attachments.size == 1) {
+            return if (attachments[0].type.isEqualsVideoOrImage())
+                "media"
+            else "file"
         }
         return "text"
     }
@@ -266,6 +266,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
+        allAttachments.remove(item.attachment)
         determineState()
     }
 }

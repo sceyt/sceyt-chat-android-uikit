@@ -8,7 +8,7 @@ import com.sceyt.chat.ui.databinding.ItemChannelImageBinding
 import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.files.adapter.FileViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.viewholder.FileViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.viewholder.ImageViewHolder
 
 open class ChannelAttachmentViewHolderFactory(context: Context) {

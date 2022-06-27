@@ -45,6 +45,8 @@ fun View.screenWidthPx() = resources.configuration.screenWidthDp.dpToPx()
 
 fun View.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
 
+fun Fragment.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+
 
 fun EditText.setMultiLineCapSentencesAndSendAction() {
     imeOptions = EditorInfo.IME_ACTION_SEND

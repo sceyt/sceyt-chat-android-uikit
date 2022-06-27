@@ -1,38 +1,66 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter
 
-import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
-import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.ui.databinding.ItemChannelMemberBinding
+import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberDiffUtil
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.BaseMemberViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewHolderFactory
 
-class ChannelMembersAdapter : ListAdapter<Member, MemberViewHolder>(DIFF_CALLBACK) {
+class ChannelMembersAdapter(
+        private var members: ArrayList<MemberItem>,
+        var showMoreIcon: Boolean,
+        private val viewHolderFactory: ChannelMembersViewHolderFactory) : RecyclerView.Adapter<BaseMemberViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemberViewHolder {
-        return MemberViewHolder(ItemChannelMemberBinding.inflate(LayoutInflater.from(parent.context), parent, false).apply {
-            onlineStatus.isVisible = false
-        })
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMemberViewHolder {
+        return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: MemberViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BaseMemberViewHolder, position: Int) {
+        holder.bind(members[position], diff = MemberItemPayloadDiff.DEFAULT)
+    }
 
-        holder.binding.onlineStatus.isVisible = position % 2 > 0
-        // holder.bind(currentList[position])
+    override fun onBindViewHolder(holder: BaseMemberViewHolder, position: Int, payloads: MutableList<Any>) {
+        val diff = payloads.find { it is MemberItemPayloadDiff } as? MemberItemPayloadDiff
+                ?: MemberItemPayloadDiff.DEFAULT
+        holder.bind(item = members[position], diff)
     }
 
     override fun getItemCount(): Int {
-        return 4
+        return members.size
     }
 
-    companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Member>() {
-            override fun areItemsTheSame(oldItem: Member, newItem: Member) =
-                    oldItem.id == newItem.id
+    override fun getItemViewType(position: Int): Int {
+        return viewHolderFactory.getItemViewType(members[position])
+    }
 
-            override fun areContentsTheSame(oldItem: Member, newItem: Member) =
-                    oldItem.role.name == newItem.role.name
+    private fun removeLoading() {
+        if (members.removeIf { it is MemberItem.LoadingMore }) {
+            notifyItemRemoved(members.lastIndex + 1)
         }
+    }
+
+    fun addNewItems(items: List<MemberItem>) {
+        removeLoading()
+        if (items.isEmpty()) return
+
+        members.addAll(items)
+        if (members.size == items.size)
+            notifyDataSetChanged()
+        else
+            notifyItemRangeInserted(members.size - items.size, items.size)
+    }
+
+    fun getMembers(): List<MemberItem.Member> = members.filterIsInstance<MemberItem.Member>()
+
+    fun getData() = members
+
+    fun notifyUpdate(list: List<MemberItem>, showMore: Boolean = showMoreIcon) {
+        val myDiffUtil = MemberDiffUtil(this.members, list, showMoreIcon != showMore)
+        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        this.members = list as ArrayList
+        showMoreIcon = showMore
+        productDiffResult.dispatchUpdatesTo(this)
     }
 }

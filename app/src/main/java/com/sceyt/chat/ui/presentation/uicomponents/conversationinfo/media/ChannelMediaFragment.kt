@@ -9,10 +9,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.databinding.FragmentChannelMediaBinding
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.extensions.setBundleArguments
+import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
@@ -26,6 +28,7 @@ class ChannelMediaFragment : Fragment() {
     private lateinit var channel: SceytChannel
     private lateinit var mediaAdapter: ChannelMediaAdapter
     private val mediaType = "media"
+    private lateinit var pageStateView: PageStateView
     private val viewModel: ChannelAttachmentsViewModel by viewModels {
         getBundleArguments()
         ChannelAttachmentViewModelFactory(channel)
@@ -42,6 +45,7 @@ class ChannelMediaFragment : Fragment() {
 
         initViewModel()
         viewModel.loadMessages(0, false, mediaType)
+        addPageStateView()
     }
 
     private fun getBundleArguments() {
@@ -59,6 +63,11 @@ class ChannelMediaFragment : Fragment() {
             viewModel.loadMoreFilesFlow.collect {
                 mediaAdapter.addNewItems(it)
             }
+        }
+
+        viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
+            if (::pageStateView.isInitialized)
+                pageStateView.updateState(it, mediaAdapter.itemCount == 0)
         }
     }
 
@@ -87,6 +96,14 @@ class ChannelMediaFragment : Fragment() {
                 }
             })
         }
+    }
+
+    private fun addPageStateView() {
+        binding.root.addView(PageStateView(requireContext()).apply {
+            setEmptyStateView(R.layout.sceyt_media_list_empty_state)
+            setLoadingStateView(R.layout.sceyt_loading_state)
+            pageStateView = this
+        })
     }
 
     companion object {
