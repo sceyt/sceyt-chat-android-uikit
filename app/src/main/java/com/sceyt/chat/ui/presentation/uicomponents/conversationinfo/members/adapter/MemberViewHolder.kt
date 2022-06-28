@@ -28,7 +28,7 @@ class MemberViewHolder(private val binding: ItemChannelMemberBinding,
             val presentableName = member.getPresentableName()
 
             if (diff.nameChanged || diff.avatarChanged) {
-                avatar.setNameAndImageUrl(presentableName, member.avatarURL)
+                avatar.setNameAndImageUrl(presentableName, member.user.avatarURL)
 
                 memberName.text = if (member.id == ChatClient.getClient().user.id) {
                     val text = SpannableStringBuilder()
@@ -39,7 +39,7 @@ class MemberViewHolder(private val binding: ItemChannelMemberBinding,
             }
 
             if (diff.onlineStateChanged)
-                onlineStatus.isVisible = member.presence?.state == PresenceState.Online
+                onlineStatus.isVisible = member.user.presence?.state == PresenceState.Online
 
             if (diff.roleChanged)
                 roleName.text = member.role.name

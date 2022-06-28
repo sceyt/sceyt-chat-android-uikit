@@ -29,4 +29,6 @@ class ViewPagerAdapter(private val activity: AppCompatActivity,
             }
         } ?: ""
     }
+
+    fun getFragment() = mFragments
 }

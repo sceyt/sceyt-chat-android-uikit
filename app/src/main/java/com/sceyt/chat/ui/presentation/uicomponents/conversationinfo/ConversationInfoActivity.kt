@@ -46,6 +46,7 @@ class ConversationInfoActivity : AppCompatActivity() {
         getBundleArguments()
         initViewModel()
         binding.initViews()
+        viewModel.getChannel(channel.id)
         setChannelDetails(channel)
         setupPagerAdapter()
     }
@@ -55,6 +56,13 @@ class ConversationInfoActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() {
+        viewModel.channelLiveData.observe(this) {
+            channel = it
+            pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
+                (membersFragment as ChannelMembersFragment).updateChannel(it)
+            }
+        }
+
         viewModel.editChannelLiveData.observe(this) {
             setChannelDetails(it)
             binding.isLoadingEditChannel(false)

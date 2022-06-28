@@ -59,7 +59,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/title"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/title"
-                app:srcCompat="@drawable/checked" />
+                app:srcCompat="@drawable/sceyt_radio_button_checked_state" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

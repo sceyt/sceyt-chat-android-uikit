@@ -1,24 +1,24 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
-import com.sceyt.chat.ui.extensions.*
+import com.sceyt.chat.ui.extensions.findIndexed
+import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.extensions.getFragmentManager
+import com.sceyt.chat.ui.extensions.setClipboard
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.getFileFromMetadata
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.diff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
@@ -30,7 +30,6 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
 import com.sceyt.chat.ui.utils.BindingUtil
-import java.io.File
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -176,32 +175,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetEmojisFragment(emojiListener = { emoji ->
                 onAddReaction(message, emoji.unicode)
             }).show(it, null)
-        }
-    }
-
-    private fun openFile(item: FileListItem) {
-        val fileName = item.file.name
-        var uri: Uri? = null
-        if (fileName != null) {
-            val loadedFile = File(context.filesDir, fileName)
-            if (loadedFile.exists()) {
-                uri = context.getFileUriWithProvider(loadedFile)
-            } else {
-                item.getFileFromMetadata()?.let {
-                    uri = context.getFileUriWithProvider(it)
-                }
-            }
-        }
-
-        if (uri != null) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW)
-                    .setData(uri)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                Toast.makeText(context, context.getString(R.string.sceyt_no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
@@ -382,7 +355,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {
-        openFile(item)
+        item.openFile(context)
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {

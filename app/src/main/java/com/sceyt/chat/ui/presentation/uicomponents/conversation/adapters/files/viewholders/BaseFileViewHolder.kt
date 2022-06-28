@@ -20,6 +20,8 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     override fun bind(item: FileListItem) {
         fileItem = item
+        fileItem.fileLoadData.position = bindingAdapterPosition
+
         setUploadListenerIfNeeded(item)
         downloadIfNeeded(item)
     }
@@ -45,7 +47,9 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
 
         if (file != null) {
-            updateDownloadingState(item.fileLoadData, file)
+            val loadData = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
+                item.fileLoadData else item.fileLoadData.loadedState()
+            updateDownloadingState(loadData, file)
             item.setDownloadProgressListener(null)
         } else {
 
@@ -84,6 +88,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     }
 
     private fun checkLoadDataIsForCurrent(data: FileLoadData): Boolean {
-        return (::fileItem.isInitialized && fileItem.fileLoadData.loadId == data.loadId)
+        return (::fileItem.isInitialized && fileItem.fileLoadData.loadId == data.loadId
+                && fileItem.fileLoadData.position == data.position)
     }
 }

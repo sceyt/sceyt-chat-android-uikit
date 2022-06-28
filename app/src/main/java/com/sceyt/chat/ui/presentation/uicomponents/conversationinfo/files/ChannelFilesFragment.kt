@@ -8,13 +8,17 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.databinding.FragmentChannelFilesBinding
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.extensions.setBundleArguments
+import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentViewModelFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import kotlinx.coroutines.flow.collect
@@ -24,6 +28,7 @@ class ChannelFilesFragment : Fragment() {
     private lateinit var binding: FragmentChannelFilesBinding
     private lateinit var channel: SceytChannel
     private lateinit var mediaAdapter: ChannelMediaAdapter
+    private lateinit var pageStateView: PageStateView
     private val mediaType = "file"
     private val viewModel: ChannelAttachmentsViewModel by viewModels {
         getBundleArguments()
@@ -39,6 +44,7 @@ class ChannelFilesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        addPageStateView()
         initViewModel()
         viewModel.loadMessages(0, false, mediaType)
     }
@@ -59,10 +65,19 @@ class ChannelFilesFragment : Fragment() {
                 mediaAdapter.addNewItems(it)
             }
         }
+
+        viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
+            if (::pageStateView.isInitialized)
+                pageStateView.updateState(it, mediaAdapter.itemCount == 0)
+        }
     }
 
     private fun setupList(list: List<FileListItem>) {
-        mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()))
+        mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()).also {
+            it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                item.openFile(requireContext())
+            })
+        })
         with(binding.rvFiles) {
             adapter = mediaAdapter
 
@@ -76,6 +91,14 @@ class ChannelFilesFragment : Fragment() {
                 }
             })
         }
+    }
+
+    private fun addPageStateView() {
+        binding.root.addView(PageStateView(requireContext()).apply {
+            setEmptyStateView(R.layout.sceyt_files_list_empty_state)
+            setLoadingStateView(R.layout.sceyt_loading_state)
+            pageStateView = this
+        })
     }
 
     companion object {

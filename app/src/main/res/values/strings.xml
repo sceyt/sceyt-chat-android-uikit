@@ -120,5 +120,6 @@
     <string name="sceyt_delete">Delete</string>
     <string name="sceyt_kick_member">Kick member</string>
     <string name="sceyt_no_media_items_yet">No media items yet</string>
+    <string name="sceyt_no_file_items_yet">No file items yet</string>
 
 </resources>

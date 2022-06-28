@@ -274,4 +274,32 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             })
         }
     }
+
+    override suspend fun deleteMember(channel: GroupChannel, userId: String): SceytResponse<String> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.kickMember(userId, object : ChannelCallback {
+                override fun onResult(channel: Channel) {
+                    continuation.resume(SceytResponse.Success(userId))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    override suspend fun blockAndDeleteMember(channel: GroupChannel, userId: String): SceytResponse<String> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.blockMember(userId, object : ChannelCallback {
+                override fun onResult(channel: Channel?) {
+                    continuation.resume(SceytResponse.Success(userId))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
 }
