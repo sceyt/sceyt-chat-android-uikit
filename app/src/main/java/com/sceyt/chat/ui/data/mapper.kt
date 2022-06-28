@@ -147,19 +147,12 @@ fun SceytMessage.toMessage() = Message(
 )
 
 fun Member.toSceytMember() = SceytMember(
-    id = id,
     role = role,
-    firstName = firstName,
-    lastName = lastName,
-    avatarURL = avatarURL,
-    metadata = metadata,
-    presence = presence,
-    activityStatus = activityState,
-    blocked = blocked
+    user = this
 )
 
 fun SceytMember.toMember(): Member {
-    return Member.Builder(id).build()
+    return Member(role, user)
 }
 
 fun Attachment.toFileListItem(message: SceytMessage): FileListItem {

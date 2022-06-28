@@ -26,6 +26,8 @@ interface ChannelsRepository {
     suspend fun addMembersToChannel(channel: GroupChannel, members: List<Member>): SceytResponse<SceytChannel>
     suspend fun changeChannelOwner(channel: GroupChannel, userId: String): SceytResponse<String>
     suspend fun changeChannelMemberRole(channel: GroupChannel, member: Member): SceytResponse<SceytChannel>
+    suspend fun deleteMember(channel: GroupChannel, userId: String): SceytResponse<String>
+    suspend fun blockAndDeleteMember(channel: GroupChannel, userId: String): SceytResponse<String>
     val onMessageFlow: SharedFlow<Pair<Channel, Message>>
     val onMessageStatusFlow: SharedFlow<MessageStatusChange>
     val onMessageEditedOrDeleteFlow: Flow<Message>

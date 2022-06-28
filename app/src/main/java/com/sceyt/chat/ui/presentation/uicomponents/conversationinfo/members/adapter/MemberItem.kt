@@ -3,7 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.ada
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 
 sealed class MemberItem {
-    data class Member(val member: SceytMember) : MemberItem()
+    data class Member(var member: SceytMember) : MemberItem()
     object LoadingMore : MemberItem()
 
     override fun equals(other: Any?): Boolean {

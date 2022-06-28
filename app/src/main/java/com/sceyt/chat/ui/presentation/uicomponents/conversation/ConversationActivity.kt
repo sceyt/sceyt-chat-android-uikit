@@ -40,7 +40,7 @@ class ConversationActivity : AppCompatActivity() {
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
         viewModel.bindView(binding.headerView, replayMessage)
 
-        viewModel.loadMessages(channel.lastMessage?.id ?: 0, false)
+        viewModel.loadMessages(0, false)
 
 
         binding.messagesListView.setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
@@ -63,6 +63,11 @@ class ConversationActivity : AppCompatActivity() {
                 println("send")
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.channel
     }
 
     private fun getDataFromIntent() {

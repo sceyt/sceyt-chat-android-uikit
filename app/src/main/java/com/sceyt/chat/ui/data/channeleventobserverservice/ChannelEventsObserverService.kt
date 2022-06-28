@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.data.channeleventobserverservice
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
@@ -21,26 +22,54 @@ object ChannelEventsObserverService {
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 
+
     private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChange> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
+
 
     private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
 
+
     private val onMessageReactionUpdatedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
+
 
     private val onChannelEventFlow_ = MutableSharedFlow<ChannelEventData>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val onChannelEventFlow: SharedFlow<ChannelEventData> = onChannelEventFlow_.asSharedFlow()
+
+
+    private val onChannelMembersEventFlow_ = MutableSharedFlow<ChannelMembersEventData>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onChannelMembersEventFlow: SharedFlow<ChannelMembersEventData> = onChannelMembersEventFlow_.asSharedFlow()
+
+
+    private val onChannelOwnerChangedEventFlow_ = MutableSharedFlow<ChannelOwnerChangedEventData>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onChannelOwnerChangedEventFlow: SharedFlow<ChannelOwnerChangedEventData> =
+            onChannelOwnerChangedEventFlow_.asSharedFlow()
+
+
+    private val onChannelTypingEventFlow_ = MutableSharedFlow<ChannelTypingEventData>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onChannelTypingEventFlow: SharedFlow<ChannelTypingEventData> =
+            onChannelTypingEventFlow_.asSharedFlow()
+
 
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
@@ -106,6 +135,69 @@ object ChannelEventsObserverService {
 
             override fun onChannelLeft(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Left))
+            }
+
+            override fun onChannelJoined(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Joined))
+            }
+
+            override fun onChannelHidden(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Hidden))
+            }
+
+            override fun onChannelUnHidden(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.UnHidden))
+            }
+
+            override fun onMarkedUsUnread(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.MarkedUsUnread))
+            }
+
+            override fun onChannelInvited(channelId: Long?) {
+                val data = ChannelEventData(null, ChannelEventEnum.Invited, channelId)
+                onChannelEventFlow_.tryEmit(data)
+            }
+
+            override fun onChannelBlocked(channelId: Long) {
+                val data = ChannelEventData(null, ChannelEventEnum.Blocked, channelId)
+                onChannelEventFlow_.tryEmit(data)
+            }
+
+            override fun onChannelUnBlocked(channelId: Long) {
+                val data = ChannelEventData(null, ChannelEventEnum.UnBlocked, channelId)
+                onChannelEventFlow_.tryEmit(data)
+            }
+
+            override fun onOwnerChanged(channel: Channel?, newOwner: Member?, oldOwner: Member?) {
+                onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(channel, newOwner, oldOwner))
+            }
+
+            override fun onMemberStartedTyping(channel: Channel?, member: Member?) {
+                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel, member, true))
+            }
+
+            override fun onMemberStoppedTyping(channel: Channel?, member: Member?) {
+                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel, member, false))
+            }
+
+            override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {
+                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Role))
+            }
+
+            override fun onMembersKicked(channel: Channel?, members: MutableList<Member>?) {
+                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Kicked))
+            }
+
+            override fun onMembersBlocked(channel: Channel?, members: MutableList<Member>?) {
+                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Blocked))
+            }
+
+            override fun onMembersUnblocked(channel: Channel?, members: MutableList<Member>?) {
+                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.UnBlocked))
+            }
+
+            override fun onMembersAdded(channel: Channel?, members: MutableList<Member>?) {
+                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Added))
             }
         })
     }

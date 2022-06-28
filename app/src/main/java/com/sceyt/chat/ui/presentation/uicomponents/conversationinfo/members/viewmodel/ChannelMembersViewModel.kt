@@ -5,14 +5,20 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ui.data.ChannelsRepository
 import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelOwnerChangedEventData
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.toGroupChannel
+import com.sceyt.chat.ui.data.toMember
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class ChannelMembersViewModel : BaseViewModel() {
@@ -30,6 +36,25 @@ class ChannelMembersViewModel : BaseViewModel() {
     private val _changeOwnerLiveData = MutableLiveData<String>()
     val changeOwnerLiveData: LiveData<String> = _changeOwnerLiveData
 
+    private val _channelMemberEventLiveData = MutableLiveData<ChannelMembersEventData>()
+    val channelMemberEventLiveData: LiveData<ChannelMembersEventData> = _channelMemberEventLiveData
+
+    private val _channelOwnerChangedEventLiveData = MutableLiveData<ChannelOwnerChangedEventData>()
+    val channelOwnerChangedEventLiveData: LiveData<ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
+
+    init {
+        viewModelScope.launch {
+            ChannelEventsObserverService.onChannelMembersEventFlow.collect {
+                _channelMemberEventLiveData.postValue(it)
+            }
+        }
+
+        viewModelScope.launch {
+            ChannelEventsObserverService.onChannelOwnerChangedEventFlow.collect {
+                _channelOwnerChangedEventLiveData.postValue(it)
+            }
+        }
+    }
 
     fun getChannelMembers(channelId: Long, loadingMore: Boolean) {
         loadingMembers = true
@@ -60,6 +85,38 @@ class ChannelMembersViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.changeChannelOwner(channel.toGroupChannel(), id)
             notifyResponseAndPageState(_changeOwnerLiveData, response)
+        }
+    }
+
+    fun kickMember(channel: SceytChannel, member: SceytMember, block: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = if (block) repo.blockAndDeleteMember(channel.toGroupChannel(), member.id)
+            else repo.deleteMember(channel.toGroupChannel(), member.id)
+
+            if (response is SceytResponse.Success) {
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
+                    channel = channel.toGroupChannel(),
+                    members = arrayListOf(member.toMember()),
+                    eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
+                ))
+            }
+
+            notifyPageStateWithResponse(response)
+        }
+    }
+
+    fun changeRole(channel: SceytChannel, member: SceytMember) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.changeChannelMemberRole(channel.toGroupChannel(), member.toMember())
+            if (response is SceytResponse.Success) {
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
+                    channel = channel.toGroupChannel(),
+                    members = arrayListOf(member.toMember()),
+                    eventType = ChannelMembersEventEnum.Role
+                ))
+            }
+
+            notifyPageStateWithResponse(response)
         }
     }
 }

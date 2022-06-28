@@ -18,7 +18,7 @@ fun User.getPresentableName(): String {
 
 fun SceytMember.getPresentableName(): String {
     return fullName.ifBlank {
-        id
+        user.id ?: ""
     }
 }
 

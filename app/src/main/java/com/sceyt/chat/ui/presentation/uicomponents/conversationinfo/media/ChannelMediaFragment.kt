@@ -16,8 +16,10 @@ import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.extensions.setBundleArguments
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentViewModelFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import kotlinx.coroutines.flow.collect
@@ -43,9 +45,9 @@ class ChannelMediaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        addPageStateView()
         initViewModel()
         viewModel.loadMessages(0, false, mediaType)
-        addPageStateView()
     }
 
     private fun getBundleArguments() {
@@ -72,7 +74,11 @@ class ChannelMediaFragment : Fragment() {
     }
 
     private fun setupList(list: List<FileListItem>) {
-        mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()))
+        mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()).also {
+            it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                item.openFile(requireContext())
+            })
+        })
         with(binding.rvFiles) {
             adapter = mediaAdapter
             layoutManager = GridLayoutManager(requireContext(), 3).also {

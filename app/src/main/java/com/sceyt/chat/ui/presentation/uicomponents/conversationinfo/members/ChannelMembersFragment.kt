@@ -1,24 +1,33 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members
 
+import android.app.Activity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelOwnerChangedEventData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
-import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
+import com.sceyt.chat.ui.data.models.channels.SceytMember
+import com.sceyt.chat.ui.data.toGroupChannel
+import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.databinding.FragmentChannelMembersBinding
+import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.extensions.setBundleArguments
 import com.sceyt.chat.ui.presentation.root.PageState
+import com.sceyt.chat.ui.presentation.uicomponents.changerole.ChangeRoleActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -65,6 +74,10 @@ class ChannelMembersFragment : Fragment() {
             setNewOwner(it)
         }
 
+        viewModel.channelMemberEventLiveData.observe(viewLifecycleOwner, ::onChannelMembersEvent)
+
+        viewModel.channelOwnerChangedEventLiveData.observe(viewLifecycleOwner, ::onChannelOwnerChanged)
+
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
             if (it is PageState.StateError)
                 customToastSnackBar(requireView(), it.errorMessage ?: "")
@@ -72,11 +85,11 @@ class ChannelMembersFragment : Fragment() {
     }
 
     private fun setNewOwner(newOwnerId: String) {
-        val oldOwnerPair = membersAdapter.getData().findIndexed { it is MemberItem.Member && it.member.role.name == "owner" }
-        val newOwnerPair = membersAdapter.getData().findIndexed { it is MemberItem.Member && it.member.id == newOwnerId }
+        val oldOwnerPair = membersAdapter.getMemberItemByRole("owner")
+        val newOwnerPair = membersAdapter.getMemberItemById(newOwnerId)
         oldOwnerPair?.let { updateMemberRole("participant", it) }
         newOwnerPair?.let { updateMemberRole("owner", it) }
-        membersAdapter.notifyUpdate(membersAdapter.getData(), false)
+        membersAdapter.showHideMoreItem(newOwnerId == ChatClient.getClient().user.id)
     }
 
     private fun updateMemberRole(newRole: String, pair: Pair<Int, MemberItem>) {
@@ -88,8 +101,7 @@ class ChannelMembersFragment : Fragment() {
     }
 
     private fun setupList(list: List<MemberItem>) {
-        val channelOwnerId = (channel as SceytGroupChannel).members.find { it.role.name == "owner" }?.id
-        val currentUserIsOwner = ChatClient.getClient().user.id == channelOwnerId
+        val currentUserIsOwner = channel.toGroupChannel().myRole() == Member.MemberType.MemberTypeOwner
         membersAdapter = ChannelMembersAdapter(list as ArrayList, currentUserIsOwner,
             ChannelMembersViewHolderFactory(requireContext()).also {
                 it.setOnClickListener(MemberClickListeners.MoreClickClickListener(::showMemberMoreOptionPopup))
@@ -111,10 +123,79 @@ class ChannelMembersFragment : Fragment() {
                     R.id.sceyt_set_owner -> {
                         viewModel.changeOwner(channel, item.member.id)
                     }
+                    R.id.sceyt_change_role -> {
+                        changeRoleActivityLauncher.launch(ChangeRoleActivity.newInstance(requireContext(), item.member))
+                        requireContext().asAppCompatActivity()
+                            .overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+                    }
+                    R.id.sceyt_kick_member -> {
+                        viewModel.kickMember(channel, item.member, false)
+                    }
+                    R.id.sceyt_block_and_kick_member -> {
+                        viewModel.kickMember(channel, item.member, true)
+                    }
                 }
                 return@setOnMenuItemClickListener false
             }
         }.show()
+    }
+
+    private val changeRoleActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.getStringExtra(ChangeRoleActivity.CHOSEN_ROLE)?.let { role ->
+                val member = result.data?.getParcelableExtra<SceytMember>(ChangeRoleActivity.MEMBER)
+                        ?: return@let
+                if (role == "owner")
+                    viewModel.changeOwner(channel, member.id)
+                else
+                    viewModel.changeRole(channel, member.copy(role = Role(role)))
+            }
+        }
+    }
+
+    private fun onChannelMembersEvent(eventData: ChannelMembersEventData) {
+        when (eventData.eventType) {
+            ChannelMembersEventEnum.Role -> {
+                eventData.members?.forEach { member ->
+                    membersAdapter.getMemberItemById(member.id)?.let {
+                        val memberItem = it.second as MemberItem.Member
+                        memberItem.member = member.toSceytMember()
+                        membersAdapter.notifyItemChanged(it.first, MemberItemPayloadDiff.DEFAULT)
+                    }
+                }
+            }
+            ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
+                eventData.members?.forEach { member ->
+                    removeMember(member.id)
+                }
+            }
+            ChannelMembersEventEnum.Added -> {
+                membersAdapter.addNewItemsFromStart(eventData.members?.map {
+                    MemberItem.Member(it.toSceytMember())
+                })
+            }
+            else -> return
+        }
+    }
+
+    private fun onChannelOwnerChanged(eventData: ChannelOwnerChangedEventData) {
+        eventData.newOwner?.id?.let {
+            setNewOwner(it)
+        }
+    }
+
+    private fun removeMember(memberId: String) {
+        membersAdapter.getMemberItemById(memberId)?.let {
+            membersAdapter.getData().removeAt(it.first)
+            membersAdapter.notifyItemRemoved(it.first)
+        }
+    }
+
+    fun updateChannel(channel: SceytChannel) {
+        this.channel = channel
+        if (::membersAdapter.isInitialized.not()) return
+        val isOwner = channel.toGroupChannel().myRole() == Member.MemberType.MemberTypeOwner
+        membersAdapter.showHideMoreItem(isOwner)
     }
 
     companion object {

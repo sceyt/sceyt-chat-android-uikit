@@ -10,6 +10,5 @@ sealed interface MemberClickListeners {
     }
 
     /** User this if you want to implement all callbacks */
-    interface ClickListeners :
-            MemberClickListeners.MoreClickClickListener
+    interface ClickListeners : MoreClickClickListener
 }

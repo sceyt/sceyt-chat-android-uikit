@@ -52,6 +52,7 @@ class MessagesRepositoryImpl(private val conversationId: Long,
 
     private fun getQueryByType(type: String) = MessagesListQueryByType.Builder(conversationId, type).apply {
         limit(MESSAGES_LOAD_SIZE)
+        reversed(true)
     }.build()
 
     override suspend fun getMessages(lastMessageId: Long): SceytResponse<List<SceytMessage>> {

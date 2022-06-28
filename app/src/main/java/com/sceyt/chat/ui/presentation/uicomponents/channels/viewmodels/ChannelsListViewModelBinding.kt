@@ -103,6 +103,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
             Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
             Muted -> channelsListView.updateMuteState(true, it.channelId)
             UnMuted -> channelsListView.updateMuteState(false, it.channelId)
+            else -> return@observe
         }
     }
 

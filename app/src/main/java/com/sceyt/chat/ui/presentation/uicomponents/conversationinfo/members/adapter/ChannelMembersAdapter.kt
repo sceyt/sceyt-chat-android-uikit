@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.ada
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberDiffUtil
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.BaseMemberViewHolder
@@ -52,15 +53,26 @@ class ChannelMembersAdapter(
             notifyItemRangeInserted(members.size - items.size, items.size)
     }
 
+    fun addNewItemsFromStart(items: List<MemberItem>?) {
+        if (items.isNullOrEmpty()) return
+
+        members.addAll(0, items)
+        notifyItemRangeInserted(0, items.size)
+    }
+
     fun getMembers(): List<MemberItem.Member> = members.filterIsInstance<MemberItem.Member>()
 
     fun getData() = members
 
-    fun notifyUpdate(list: List<MemberItem>, showMore: Boolean = showMoreIcon) {
-        val myDiffUtil = MemberDiffUtil(this.members, list, showMoreIcon != showMore)
+    fun getMemberItemById(memberId: String) = members.findIndexed { it is MemberItem.Member && it.member.id == memberId }
+
+    fun getMemberItemByRole(role: String) = members.findIndexed { it is MemberItem.Member && it.member.role.name == role }
+
+    fun showHideMoreItem(show: Boolean) {
+        if (show == showMoreIcon) return
+        val myDiffUtil = MemberDiffUtil(members, members, true)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        this.members = list as ArrayList
-        showMoreIcon = showMore
+        showMoreIcon = show
         productDiffResult.dispatchUpdatesTo(this)
     }
 }

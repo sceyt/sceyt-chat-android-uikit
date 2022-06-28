@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.data.models.channels
 
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlinx.parcelize.Parcelize
 import java.util.*

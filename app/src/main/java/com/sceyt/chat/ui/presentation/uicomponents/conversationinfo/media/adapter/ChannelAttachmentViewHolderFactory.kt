@@ -5,15 +5,20 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chat.ui.databinding.ItemChannelFileBinding
 import com.sceyt.chat.ui.databinding.ItemChannelImageBinding
+import com.sceyt.chat.ui.databinding.ItemChannelVideoBinding
 import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.viewholder.FileViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.viewholder.ImageViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VideoViewHolder
 
 open class ChannelAttachmentViewHolderFactory(context: Context) {
 
     private val layoutInflater = LayoutInflater.from(context)
+    private var clickListeners = AttachmentClickListenersImpl()
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
         return when (viewType) {
@@ -26,23 +31,24 @@ open class ChannelAttachmentViewHolderFactory(context: Context) {
     }
 
     open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder {
-        return ImageViewHolder(ItemChannelImageBinding.inflate(layoutInflater, parent, false))
+        return ImageViewHolder(
+            ItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners)
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder {
-        return ImageViewHolder(ItemChannelImageBinding.inflate(layoutInflater, parent, false))
+        return VideoViewHolder(
+            ItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners)
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder {
-        return FileViewHolder(ItemChannelFileBinding.inflate(layoutInflater, parent, false))
+        return FileViewHolder(
+            ItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseFileViewHolder {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
         return object : BaseFileViewHolder(binding.root) {
-            override fun bind(item: FileListItem) {
-
-            }
+            override fun bind(item: FileListItem) {}
         }
     }
 
@@ -53,6 +59,10 @@ open class ChannelAttachmentViewHolderFactory(context: Context) {
             is FileListItem.File -> ItemType.File.ordinal
             is FileListItem.LoadingMoreItem -> ItemType.Loading.ordinal
         }
+    }
+
+    fun setClickListener(listeners: AttachmentClickListeners) {
+        clickListeners.setListener(listeners)
     }
 
     enum class ItemType {

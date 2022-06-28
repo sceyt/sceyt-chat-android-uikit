@@ -51,7 +51,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/tvEditOrSave"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tvEditOrSave"
-            app:srcCompat="@drawable/checked" />
+            app:srcCompat="@drawable/sceyt_radio_button_checked_state" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

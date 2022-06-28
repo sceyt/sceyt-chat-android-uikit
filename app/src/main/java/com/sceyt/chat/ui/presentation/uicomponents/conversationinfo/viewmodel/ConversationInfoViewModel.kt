@@ -17,6 +17,9 @@ class ConversationInfoViewModel : BaseViewModel() {
     // Todo di
     private val repo: ChannelsRepository = ChannelsRepositoryImpl()
 
+    private val _channelLiveData = MutableLiveData<SceytChannel>()
+    val channelLiveData: LiveData<SceytChannel> = _channelLiveData
+
     private val _editChannelLiveData = MutableLiveData<SceytChannel>()
     val editChannelLiveData: LiveData<SceytChannel> = _editChannelLiveData
 
@@ -28,6 +31,17 @@ class ConversationInfoViewModel : BaseViewModel() {
 
     private val _clearHistoryLiveData = MutableLiveData<Long>()
     val clearHistoryLiveData: LiveData<Long> = _clearHistoryLiveData
+
+    init {
+        repo.onChannelEvenFlow
+    }
+
+    fun getChannel(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.getChannel(id)
+            notifyResponseAndPageState(_channelLiveData, response)
+        }
+    }
 
     fun saveChanges(channel: SceytChannel, newSubject: String, avatarUrl: String?, editedAvatar: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
