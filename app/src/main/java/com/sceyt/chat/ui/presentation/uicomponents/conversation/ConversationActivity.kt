@@ -71,7 +71,7 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun getDataFromIntent() {
-        channel = intent.getParcelableExtra(CHANNEL)!!
+        channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
         isReplayInThread = intent.getBooleanExtra(REPLAY_IN_THREAD, false)
         replayMessage = intent.getParcelableExtra(REPLAY_IN_THREAD_MESSAGE)
     }

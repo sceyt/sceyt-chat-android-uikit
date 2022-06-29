@@ -22,11 +22,13 @@
         <activity
             android:name="com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
-            android:theme="@style/DefaultFontTheme" />
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".presentation.uicomponents.conversation.ConversationActivity"
             android:exported="false"
-            android:theme="@style/DefaultFontTheme" />
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.mainactivity.MainActivity"
             android:configChanges="uiMode"

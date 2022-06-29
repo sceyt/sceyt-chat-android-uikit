@@ -52,7 +52,7 @@ class ConversationInfoActivity : AppCompatActivity() {
     }
 
     private fun getBundleArguments() {
-        channel = intent.getParcelableExtra(CHANNEL)!!
+        channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
     }
 
     private fun initViewModel() {
@@ -93,7 +93,7 @@ class ConversationInfoActivity : AppCompatActivity() {
     }
 
     private fun ActivityConversationInfoBinding.initViews() {
-        displayNameDefaultBg = binding.subject.background
+        displayNameDefaultBg = subject.background
         setEditMode(isEditMode)
 
         avatar.setAvatarImageLoadListener {
@@ -101,12 +101,12 @@ class ConversationInfoActivity : AppCompatActivity() {
         }
 
         tvEditOrSave.setOnClickListener {
-            val newSubject = binding.subject.text?.trim().toString()
+            val newSubject = subject.text?.trim().toString()
             val isEditedAvatar = avatarUrl != channel.iconUrl
             val isEditedDisplayName = newSubject != channel.channelSubject.trim()
             if (isEditMode) {
                 if (isEditedAvatar || isEditedDisplayName) {
-                    binding.isLoadingEditChannel(true)
+                    isLoadingEditChannel(true)
                     this@ConversationInfoActivity.isSaveLoading = true
                     viewModel.saveChanges(channel, newSubject, avatarUrl, isEditedAvatar)
                 }
@@ -142,7 +142,7 @@ class ConversationInfoActivity : AppCompatActivity() {
             false
         }
 
-        binding.clearHistory.setOnClickListener {
+        clearHistory.setOnClickListener {
             SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
                 viewModel.clearHistory(channel)
             }).setTitle(getString(R.string.sceyt_clear_history_title))
@@ -152,7 +152,7 @@ class ConversationInfoActivity : AppCompatActivity() {
                 .show()
         }
 
-        binding.leaveChannel.setOnClickListener {
+        leaveChannel.setOnClickListener {
             SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
                 viewModel.leaveChannel(channel)
             }).setTitle(getString(R.string.sceyt_leave_channel_title))
@@ -162,7 +162,7 @@ class ConversationInfoActivity : AppCompatActivity() {
                 .show()
         }
 
-        binding.blockAndLeaveChannel.setOnClickListener {
+        blockAndLeaveChannel.setOnClickListener {
             SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
                 viewModel.blockAndLeaveChannel(channel)
             }).setTitle(getString(R.string.sceyt_block_and_leave_channel_title))
@@ -172,7 +172,7 @@ class ConversationInfoActivity : AppCompatActivity() {
                 .show()
         }
 
-        binding.deleteChannel.setOnClickListener {
+        deleteChannel.setOnClickListener {
             SceytDialog(this@ConversationInfoActivity, positiveClickListener = {
                 viewModel.deleteChannel(channel)
             }).setTitle(getString(R.string.sceyt_delete_channel_title))
@@ -182,7 +182,7 @@ class ConversationInfoActivity : AppCompatActivity() {
                 .show()
         }
 
-        binding.icBack.setOnClickListener {
+        icBack.setOnClickListener {
             onBackPressed()
         }
     }

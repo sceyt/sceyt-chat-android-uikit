@@ -11,6 +11,7 @@
         <item name="bottomSheetDialogTheme">@style/SceytAppBottomSheetDialogTheme</item>
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
+        <item name="android:windowBackground">@color/sceyt_color_bg</item>
         <item name="android:statusBarColor">@color/sceyt_color_status_bar</item>
         <item name="windowNoTitle">true</item>
     </style>
