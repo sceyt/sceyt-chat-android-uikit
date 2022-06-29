@@ -22,11 +22,9 @@ import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.databinding.FragmentChannelMembersBinding
-import com.sceyt.chat.ui.extensions.asAppCompatActivity
-import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.extensions.isLastItemDisplaying
-import com.sceyt.chat.ui.extensions.setBundleArguments
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.root.PageState
+import com.sceyt.chat.ui.presentation.uicomponents.addmembers.AddMembersActivity
 import com.sceyt.chat.ui.presentation.uicomponents.changerole.ChangeRoleActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
@@ -54,6 +52,7 @@ class ChannelMembersFragment : Fragment() {
 
         getBundleArguments()
         initViewModel()
+        initViews()
         viewModel.getChannelMembers(channel.id, false)
     }
 
@@ -84,6 +83,21 @@ class ChannelMembersFragment : Fragment() {
         }
     }
 
+    private fun initViews() {
+        binding.addMembers.setOnClickListener {
+            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
+            requireContext().asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+        }
+    }
+
+    private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.getStringArrayListExtra(AddMembersActivity.SELECTED_USERS)?.let { users ->
+                viewModel.addMembersToChannel(channel, users)
+            }
+        }
+    }
+
     private fun setNewOwner(newOwnerId: String) {
         val oldOwnerPair = membersAdapter.getMemberItemByRole("owner")
         val newOwnerPair = membersAdapter.getMemberItemById(newOwnerId)
@@ -110,7 +124,7 @@ class ChannelMembersFragment : Fragment() {
         binding.rvMembers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (recyclerView.isLastItemDisplaying() && viewModel.loadingMembers.not() && viewModel.hasNext)
+                if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext)
                     viewModel.getChannelMembers(channel.id, true)
             }
         })
@@ -173,6 +187,7 @@ class ChannelMembersFragment : Fragment() {
                 membersAdapter.addNewItemsFromStart(eventData.members?.map {
                     MemberItem.Member(it.toSceytMember())
                 })
+                binding.rvMembers.scrollToPosition(0)
             }
             else -> return
         }

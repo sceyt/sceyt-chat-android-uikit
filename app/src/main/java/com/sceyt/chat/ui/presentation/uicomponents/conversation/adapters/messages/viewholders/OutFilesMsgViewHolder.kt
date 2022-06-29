@@ -13,7 +13,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.message
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
-import com.sceyt.chat.ui.utils.RecyclerItemOffsetDecoration
+import com.sceyt.chat.ui.presentation.common.RecyclerItemOffsetDecoration
 
 class OutFilesMsgViewHolder(
         private val binding: SceytItemOutFilesMessageBinding,

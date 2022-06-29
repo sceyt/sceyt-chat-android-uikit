@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.utils
+package com.sceyt.chat.ui.presentation.common
 
 import android.graphics.Canvas
 import android.widget.EdgeEffect

@@ -116,8 +116,8 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     }
 
     channelsListView.setReachToEndListener { offset ->
-        if (!isLoadingChannels && hasNext) {
-            isLoadingChannels = true
+        if (!loadingItems && hasNext) {
+            loadingItems = true
             loadChannels(offset)
         }
     }

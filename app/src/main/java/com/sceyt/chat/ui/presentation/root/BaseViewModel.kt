@@ -8,6 +8,8 @@ import com.sceyt.chat.ui.data.models.SceytResponse
 open class BaseViewModel : ViewModel() {
     private val _pageStateLiveData = MutableLiveData<PageState>()
     val pageStateLiveData: LiveData<PageState> = _pageStateLiveData
+    var hasNext: Boolean = false
+    var loadingItems: Boolean = false
 
     fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {

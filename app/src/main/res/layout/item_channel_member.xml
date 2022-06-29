@@ -13,8 +13,8 @@
         android:layout_marginStart="15dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytAvatarViewFullName="Art d"
-        app:sceytAvatarViewTextSize="16dp" />
+        app:sceytAvatarViewTextSize="16dp"
+        tools:sceytAvatarViewFullName="Art d" />
 
     <com.sceyt.chat.ui.presentation.customviews.SceytOnlineView
         android:id="@+id/onlineStatus"

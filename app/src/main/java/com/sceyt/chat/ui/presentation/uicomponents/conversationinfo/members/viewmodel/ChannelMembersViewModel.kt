@@ -16,6 +16,7 @@ import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toMember
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -24,8 +25,6 @@ import kotlinx.coroutines.launch
 class ChannelMembersViewModel : BaseViewModel() {
     // Todo di
     private val repo: ChannelsRepository = ChannelsRepositoryImpl()
-    var hasNext: Boolean = false
-    var loadingMembers: Boolean = false
 
     private val _membersLiveData = MutableLiveData<List<MemberItem>>()
     val membersLiveData: LiveData<List<MemberItem>> = _membersLiveData
@@ -57,7 +56,7 @@ class ChannelMembersViewModel : BaseViewModel() {
     }
 
     fun getChannelMembers(channelId: Long, loadingMore: Boolean) {
-        loadingMembers = true
+        loadingItems = true
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.loadChannelMembers(channelId)
             if (response is SceytResponse.Success) {
@@ -68,7 +67,7 @@ class ChannelMembersViewModel : BaseViewModel() {
                 else
                     _membersLiveData.postValue(mapToMemberItem(response.data, hasNext))
             }
-            loadingMembers = false
+            loadingItems = false
             notifyPageStateWithResponse(response, loadingMore)
         }
     }
@@ -113,6 +112,22 @@ class ChannelMembersViewModel : BaseViewModel() {
                     channel = channel.toGroupChannel(),
                     members = arrayListOf(member.toMember()),
                     eventType = ChannelMembersEventEnum.Role
+                ))
+            }
+
+            notifyPageStateWithResponse(response)
+        }
+    }
+
+    fun addMembersToChannel(channel: SceytChannel, users: ArrayList<String>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val members = users.map { genMemberBy(it) }
+            val response = repo.addMembersToChannel(channel.toGroupChannel(), members)
+            if (response is SceytResponse.Success) {
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
+                    channel = channel.toGroupChannel(),
+                    members = members,
+                    eventType = ChannelMembersEventEnum.Added
                 ))
             }
 

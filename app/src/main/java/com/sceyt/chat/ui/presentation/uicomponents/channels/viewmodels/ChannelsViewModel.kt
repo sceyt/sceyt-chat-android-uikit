@@ -23,8 +23,6 @@ import kotlinx.coroutines.launch
 
 class ChannelsViewModel : BaseViewModel() {
     private var searchQuery = ""
-    var isLoadingChannels = false
-    var hasNext = false
 
     // todo di
     private val repo: ChannelsRepository = ChannelsRepositoryImpl()
@@ -79,7 +77,7 @@ class ChannelsViewModel : BaseViewModel() {
 
     fun loadChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
-        isLoadingChannels = true
+        loadingItems = true
         val isLoadingMore = offset > 0
 
         notifyPageLoadingState(isLoadingMore)
@@ -100,7 +98,7 @@ class ChannelsViewModel : BaseViewModel() {
     }
 
     private fun initResponse(it: SceytResponse<List<SceytChannel>>, loadingNext: Boolean) {
-        isLoadingChannels = false
+        loadingItems = false
         when (it) {
             is SceytResponse.Success -> {
                 hasNext = it.data?.size == SceytUIKitConfig.CHANNELS_LOAD_SIZE
