@@ -84,7 +84,7 @@ class ChannelFilesFragment : Fragment() {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.isLoadingAttachments.not() && viewModel.hasNext) {
+                    if (isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext) {
                         viewModel.loadMessages(mediaAdapter.getLastMediaItem()?.sceytMessage?.id
                                 ?: 0, true, mediaType)
                     }

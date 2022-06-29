@@ -32,9 +32,6 @@ class MessageListViewModel(conversationId: Long,
                            internal val channel: SceytChannel) : BaseViewModel() {
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
-    var isLoadingMessages = false
-    var hasNext = false
-
     // todo di
     private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
 
@@ -110,7 +107,7 @@ class MessageListViewModel(conversationId: Long,
     }
 
     fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean) {
-        isLoadingMessages = true
+        loadingItems = true
 
         notifyPageLoadingState(isLoadingMore)
 
@@ -121,7 +118,7 @@ class MessageListViewModel(conversationId: Long,
     }
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
-        isLoadingMessages = false
+        loadingItems = false
         when (it) {
             is SceytResponse.Success -> {
                 hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE

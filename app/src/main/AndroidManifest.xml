@@ -30,6 +30,10 @@
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".presentation.uicomponents.addmembers.AddMembersActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
+        <activity
             android:name=".presentation.mainactivity.MainActivity"
             android:configChanges="uiMode"
             android:exported="true"

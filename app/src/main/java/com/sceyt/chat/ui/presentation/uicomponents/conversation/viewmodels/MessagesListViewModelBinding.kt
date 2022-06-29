@@ -4,7 +4,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -140,8 +139,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     messagesListView.setNeedLoadMoreMessagesListener { _, message ->
-        if (!isLoadingMessages && hasNext) {
-            isLoadingMessages = true
+        if (!loadingItems && hasNext) {
+            loadingItems = true
             val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
             loadMessages(lastMessageId, true)
         }

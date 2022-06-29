@@ -20,8 +20,6 @@ class ChannelAttachmentsViewModel(conversationId: Long,
                                   channel: SceytChannel) : BaseViewModel() {
 
     private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), false)
-    var isLoadingAttachments = false
-    var hasNext = false
 
     private val _filesFlow = MutableStateFlow<List<FileListItem>>(arrayListOf())
     val filesFlow: StateFlow<List<FileListItem>> = _filesFlow
@@ -30,7 +28,7 @@ class ChannelAttachmentsViewModel(conversationId: Long,
     val loadMoreFilesFlow: StateFlow<List<FileListItem>> = _loadMoreFilesFlow
 
     fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean, type: String) {
-        isLoadingAttachments = true
+        loadingItems = true
 
         notifyPageLoadingState(isLoadingMore)
 
@@ -46,7 +44,7 @@ class ChannelAttachmentsViewModel(conversationId: Long,
             emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
         }
         notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())
-        isLoadingAttachments = false
+        loadingItems = false
     }
 
     private fun emitMessagesListResponse(response: List<FileListItem>, loadingNext: Boolean) {
