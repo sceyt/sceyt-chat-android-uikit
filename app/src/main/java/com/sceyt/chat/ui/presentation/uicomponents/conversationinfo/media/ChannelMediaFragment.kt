@@ -51,7 +51,7 @@ class ChannelMediaFragment : Fragment() {
     }
 
     private fun getBundleArguments() {
-        channel = arguments?.getParcelable(CHANNEL)!!
+        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
     }
 
     private fun initViewModel() {

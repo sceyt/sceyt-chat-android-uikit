@@ -13,9 +13,9 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.fragment.app.Fragment
 
 @TargetApi(Build.VERSION_CODES.M)
-fun Activity.requestPermissionsSafely(permissions: Array<String>, requestCode: Int?) {
+fun Activity.requestPermissionsSafely(permissions: Array<String>, requestCode: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        ActivityCompat.requestPermissions(this, permissions, requestCode!!)
+        ActivityCompat.requestPermissions(this, permissions, requestCode)
     }
 }
 
