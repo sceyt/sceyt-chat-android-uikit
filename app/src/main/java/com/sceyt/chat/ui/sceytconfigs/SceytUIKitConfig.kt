@@ -9,6 +9,7 @@ object SceytUIKitConfig {
 
     const val CHANNELS_LOAD_SIZE = 20
     const val CHANNELS_MEMBERS_LOAD_SIZE = 20
+    const val USERS_LOAD_SIZE = 20
     const val MESSAGES_LOAD_SIZE = 20
 
     val isDarkMode get() = SceytUITheme.isDarkMode

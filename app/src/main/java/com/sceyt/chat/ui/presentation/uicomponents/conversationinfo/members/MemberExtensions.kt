@@ -14,6 +14,10 @@ fun SceytMember.diff(other: SceytMember, showMoreChanged: Boolean) = MemberItemP
     showMorItemChanged = showMoreChanged
 )
 
+fun genMemberBy(user: User): Member {
+    return Member(Role(""), user)
+}
+
 fun genMemberBy(identity: String): Member {
     return genMemberBy(identity = identity, "participant")
 }

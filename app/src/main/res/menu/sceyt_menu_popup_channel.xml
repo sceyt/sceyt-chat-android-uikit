@@ -39,4 +39,11 @@
         android:title="@string/sceyt_block"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/sceyt_unblock_user"
+        android:icon="@drawable/sceyt_ic_block"
+        android:title="@string/sceyt_unblock"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
 </menu>

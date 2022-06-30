@@ -19,6 +19,7 @@ interface MessagesRepository {
     suspend fun addReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker>
+    suspend fun markAllAsRead(): SceytResponse<MessageListMarker>
     val onMessageFlow: Flow<SceytMessage>
     val onThreadMessageFlow: Flow<SceytMessage>
     val onMessageStatusFlow: Flow<MessageStatusChange>

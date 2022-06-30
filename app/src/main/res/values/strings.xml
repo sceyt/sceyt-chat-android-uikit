@@ -113,6 +113,10 @@
     <string name="sceyt_leave_channel_desc">Are you sure you want to leave channel?</string>
     <string name="sceyt_block_and_leave_channel_title">Block and leave channel?</string>
     <string name="sceyt_block_and_leave_channel_desc">Are you sure you want to block and leave channel?</string>
+    <string name="sceyt_block_user_title">Block?</string>
+    <string name="sceyt_block_user_desc">Are you sure you want to block this user?</string>
+    <string name="sceyt_unblock_user_title">Unblock?</string>
+    <string name="sceyt_unblock_user_desc">Are you sure you want to unblock this user?</string>
     <string name="sceyt_delete_channel_title">Delete channel?</string>
     <string name="sceyt_delete_channel_desc">Are you sure you want to delete channel?</string>
     <string name="sceyt_leave_channel">Leave Channel</string>
@@ -120,7 +124,15 @@
     <string name="sceyt_accept">Accept</string>
     <string name="sceyt_delete">Delete</string>
     <string name="sceyt_kick_member">Kick member</string>
+    <string name="sceyt_unblock">Unblock</string>
     <string name="sceyt_no_media_items_yet">No media items yet</string>
     <string name="sceyt_no_file_items_yet">No file items yet</string>
+    <string name="history_was_successfully_cleared">History was successfully cleared!</string>
+    <string name="disable_notifications">Disable notifications</string>
+    <string name="mute_for_1_hour">Mute for 1 hour</string>
+    <string name="mute_for_2_hours">Mute for 2 hours</string>
+    <string name="mute_for_1_day">Mute for 1 day</string>
+    <string name="mute_forever">Mute forever</string>
+    <string name="mute_notifications">Mute notifications</string>
 
 </resources>

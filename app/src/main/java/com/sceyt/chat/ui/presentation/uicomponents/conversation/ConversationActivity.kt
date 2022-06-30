@@ -85,6 +85,7 @@ class ConversationActivity : AppCompatActivity() {
             context.launchActivity<ConversationActivity> {
                 putExtra(CHANNEL, channel)
             }
+            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
 
         fun newInstance(context: Context, channel: SceytChannel, message: SceytMessage) {
@@ -99,8 +100,7 @@ class ConversationActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        if (isReplayInThread)
-            overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {

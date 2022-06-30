@@ -174,4 +174,18 @@ class MessagesRepositoryImpl(private val conversationId: Long,
             })
         }
     }
+
+    override suspend fun markAllAsRead(): SceytResponse<MessageListMarker> {
+        return suspendCancellableCoroutine { continuation ->
+            channel.markAllMessagesAsRead(object : MessageMarkCallback {
+                override fun onResult(result: MessageListMarker) {
+                    continuation.resume(SceytResponse.Success(result))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message))
+                }
+            })
+        }
+    }
 }

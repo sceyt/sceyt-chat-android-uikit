@@ -34,7 +34,7 @@ class AddMembersActivity : AppCompatActivity() {
         initViewModel()
         initViews()
         setupUsersList(arrayListOf())
-        viewModel.loadMessages(0)
+        viewModel.loadUsers(isLoadMore = false)
     }
 
     private fun initViewModel() {
@@ -51,7 +51,7 @@ class AddMembersActivity : AppCompatActivity() {
         binding.root.layoutTransition = LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
 
         binding.toolbar.setQueryChangeListener { query ->
-            viewModel.loadMessages(0, query)
+            viewModel.loadUsers(query, false)
         }
 
         binding.toolbar.setBackClickListener {
@@ -90,7 +90,7 @@ class AddMembersActivity : AppCompatActivity() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext)
-                        viewModel.loadMessages(usersAdapter.getSkip(), binding.toolbar.getQuery())
+                        viewModel.loadUsers(binding.toolbar.getQuery(), true)
                 }
             })
         } else usersAdapter.notifyUpdate(list)
@@ -134,7 +134,7 @@ class AddMembersActivity : AppCompatActivity() {
     override fun onBackPressed() {
         if (binding.toolbar.isSearchMode()) {
             binding.toolbar.cancelSearchMode()
-            viewModel.loadMessages(0)
+            viewModel.loadUsers(isLoadMore = false)
         } else super.onBackPressed()
     }
 

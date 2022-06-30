@@ -7,6 +7,7 @@
     <item name="sceyt_mark_as_unread" type="id" />
     <item name="sceyt_block_channel" type="id" />
     <item name="sceyt_block_user" type="id" />
+    <item name="sceyt_un_block_user" type="id" />
     <item name="sceyt_clear_history" type="id" />
 
     <!-- Message popup ids-->

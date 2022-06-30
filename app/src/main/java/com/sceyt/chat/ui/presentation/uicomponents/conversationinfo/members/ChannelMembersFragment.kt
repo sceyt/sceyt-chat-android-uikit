@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.member.Member
@@ -33,6 +34,9 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adap
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.popups.PopupMenuMember
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ChannelMembersFragment : Fragment() {
     private lateinit var binding: FragmentChannelMembersBinding
@@ -66,7 +70,13 @@ class ChannelMembersFragment : Fragment() {
         }
 
         viewModel.loadMoreMembersLiveData.observe(viewLifecycleOwner) {
-            membersAdapter.addNewItems(it)
+            lifecycleScope.launch(Dispatchers.Default) {
+                val existingMembers = membersAdapter.getData()
+                (it as ArrayList).removeAll(existingMembers.toSet())
+                withContext(Dispatchers.Main){
+                    membersAdapter.addNewItems(it)
+                }
+            }
         }
 
         viewModel.changeOwnerLiveData.observe(viewLifecycleOwner) {
@@ -143,10 +153,10 @@ class ChannelMembersFragment : Fragment() {
                             .overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
                     }
                     R.id.sceyt_kick_member -> {
-                        viewModel.kickMember(channel, item.member, false)
+                        viewModel.kickMember(channel, item.member.id, false)
                     }
                     R.id.sceyt_block_and_kick_member -> {
-                        viewModel.kickMember(channel, item.member, true)
+                        viewModel.kickMember(channel, item.member.id, true)
                     }
                 }
                 return@setOnMenuItemClickListener false
@@ -184,7 +194,7 @@ class ChannelMembersFragment : Fragment() {
                 }
             }
             ChannelMembersEventEnum.Added -> {
-                membersAdapter.addNewItemsFromStart(eventData.members?.map {
+                membersAdapter.addNewItemsToStart(eventData.members?.map {
                     MemberItem.Member(it.toSceytMember())
                 })
                 binding.rvMembers.scrollToPosition(0)

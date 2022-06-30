@@ -53,7 +53,7 @@ class ChannelMembersAdapter(
             notifyItemRangeInserted(members.size - items.size, items.size)
     }
 
-    fun addNewItemsFromStart(items: List<MemberItem>?) {
+    fun addNewItemsToStart(items: List<MemberItem>?) {
         if (items.isNullOrEmpty()) return
 
         members.addAll(0, items)
