@@ -3,8 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.vie
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ui.data.ChannelsRepository
-import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
+import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
@@ -12,8 +11,6 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelOwnerChangedEve
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
-import com.sceyt.chat.ui.data.toGroupChannel
-import com.sceyt.chat.ui.data.toMember
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
@@ -82,19 +79,25 @@ class ChannelMembersViewModel : BaseViewModel() {
     fun changeOwner(channel: SceytChannel, id: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.changeChannelOwner(channel.toGroupChannel(), id)
-            notifyResponseAndPageState(_changeOwnerLiveData, response)
+            if (response is SceytResponse.Success) {
+                val groupChannel = (response.data ?: return@launch).toGroupChannel()
+                _changeOwnerLiveData.postValue((groupChannel.members.firstOrNull()
+                        ?: return@launch).id)
+            }
+            notifyPageStateWithResponse(response)
         }
     }
 
-    fun kickMember(channel: SceytChannel, member: SceytMember, block: Boolean) {
+    fun kickMember(channel: SceytChannel, memberId: String, block: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = if (block) repo.blockAndDeleteMember(channel.toGroupChannel(), member.id)
-            else repo.deleteMember(channel.toGroupChannel(), member.id)
+            val response = if (block) repo.blockAndDeleteMember(channel.toGroupChannel(), memberId)
+            else repo.deleteMember(channel.toGroupChannel(), memberId)
 
             if (response is SceytResponse.Success) {
+                val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = channel.toGroupChannel(),
-                    members = arrayListOf(member.toMember()),
+                    channel = groupChannel,
+                    members = groupChannel.members,
                     eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
                 ))
             }
@@ -107,9 +110,10 @@ class ChannelMembersViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.changeChannelMemberRole(channel.toGroupChannel(), member.toMember())
             if (response is SceytResponse.Success) {
+                val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = channel.toGroupChannel(),
-                    members = arrayListOf(member.toMember()),
+                    channel = groupChannel,
+                    members = groupChannel.members,
                     eventType = ChannelMembersEventEnum.Role
                 ))
             }
@@ -123,9 +127,12 @@ class ChannelMembersViewModel : BaseViewModel() {
             val members = users.map { it.toMember() }
             val response = repo.addMembersToChannel(channel.toGroupChannel(), members)
             if (response is SceytResponse.Success) {
+                val groupChannel = (response.data ?: return@launch).toGroupChannel()
+                if (groupChannel.members.isNullOrEmpty()) return@launch
+
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = channel.toGroupChannel(),
-                    members = members,
+                    channel = groupChannel,
+                    members = groupChannel.members,
                     eventType = ChannelMembersEventEnum.Added
                 ))
             }

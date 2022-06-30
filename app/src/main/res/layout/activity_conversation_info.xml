@@ -149,11 +149,14 @@
                         android:layout_marginTop="24dp"
                         android:background="@drawable/sceyt_bg_top_bottom_lines"
                         android:backgroundTint="@color/sceyt_color_divider"
-                        android:checked="true"
-                        android:drawablePadding="18dp"
-                        android:text="@string/notifications"
+                        android:checked="false"
+                        android:drawableStart="@drawable/ic_notification_on"
+                        android:drawablePadding="12dp"
+                        android:includeFontPadding="false"
+                        android:text="@string/mute_notifications"
                         android:textColor="@color/sceyt_color_text_themed"
                         android:textSize="@dimen/mediumTextSize"
+                        android:theme="@style/SwitchStyle"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/avatar" />
@@ -204,7 +207,7 @@
                         app:layout_constraintTop_toBottomOf="@id/blockAndLeaveChannel" />
 
                     <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/blockUser"
+                        android:id="@+id/blockUnblockUser"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="?selectableItemBackground"
@@ -220,7 +223,7 @@
                         android:layout_height=".5dp"
                         android:layout_marginTop="8dp"
                         android:background="@color/sceyt_color_divider"
-                        app:layout_constraintTop_toBottomOf="@+id/blockUser" />
+                        app:layout_constraintTop_toBottomOf="@+id/blockUnblockUser" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

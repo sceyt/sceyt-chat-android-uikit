@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.ChannelsRepository
 import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
@@ -31,6 +32,12 @@ class ConversationInfoViewModel : BaseViewModel() {
 
     private val _clearHistoryLiveData = MutableLiveData<Long>()
     val clearHistoryLiveData: LiveData<Long> = _clearHistoryLiveData
+
+    private val _blockUnblockUserLiveData = MutableLiveData<List<User>>()
+    val blockUnblockUserLiveData: LiveData<List<User>> = _blockUnblockUserLiveData
+
+    private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
+    val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
 
     init {
         repo.onChannelEvenFlow
@@ -85,6 +92,34 @@ class ConversationInfoViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repo.deleteChannel(channel.toChannel())
             notifyResponseAndPageState(_deleteChannelLiveData, response)
+        }
+    }
+
+    fun blockUser(userId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.blockUser(userId)
+            notifyResponseAndPageState(_blockUnblockUserLiveData, response)
+        }
+    }
+
+    fun unblockUser(userId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.unblockUser(userId)
+            notifyResponseAndPageState(_blockUnblockUserLiveData, response)
+        }
+    }
+
+    fun muteChannel(channel: SceytChannel, muteUntil: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.muteChannel(channel.toChannel(), muteUntil)
+            notifyResponseAndPageState(_muteUnMuteLiveData, response)
+        }
+    }
+
+    fun unMuteChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repo.unMuteChannel(channel.toChannel())
+            notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 }

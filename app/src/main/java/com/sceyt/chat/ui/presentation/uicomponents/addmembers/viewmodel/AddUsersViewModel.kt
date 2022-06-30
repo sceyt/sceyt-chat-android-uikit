@@ -9,6 +9,7 @@ import com.sceyt.chat.ui.data.UsersRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UserItem
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -21,19 +22,22 @@ class AddUsersViewModel : BaseViewModel() {
     private val _loadMoreChannelsLiveData = MutableLiveData<List<UserItem>>()
     val loadMoreChannelsLiveData: LiveData<List<UserItem>> = _loadMoreChannelsLiveData
 
-    fun loadMessages(offset: Int, query: String = "") {
+    fun loadUsers(query: String = "", isLoadMore: Boolean) {
         loadingItems = true
         viewModelScope.launch(Dispatchers.IO) {
-            val response = usersRepository.loadUsers(offset, query)
+            val response = if (isLoadMore)
+                usersRepository.loadMoreUsers()
+            else usersRepository.loadUsers(query)
+
             var empty = false
             if (response is SceytResponse.Success) {
                 empty = response.data.isNullOrEmpty()
-                hasNext = response.data?.size == 20
-                if (offset == 0)
-                    _channelsLiveData.postValue(mapToUserItems(response.data, hasNext))
-                else _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
+                hasNext = response.data?.size == USERS_LOAD_SIZE
+                if (isLoadMore)
+                    _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
+                else _channelsLiveData.postValue(mapToUserItems(response.data, hasNext))
             }
-            notifyPageStateWithResponse(response, offset > 0, empty, searchQuery = query)
+            notifyPageStateWithResponse(response, isLoadMore, empty, searchQuery = query)
             loadingItems = false
         }
     }

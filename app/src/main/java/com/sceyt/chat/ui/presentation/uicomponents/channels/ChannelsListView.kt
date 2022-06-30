@@ -7,12 +7,14 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
-import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.extensions.getCompatColor
 import com.sceyt.chat.ui.presentation.common.diff
 import com.sceyt.chat.ui.presentation.root.PageState
@@ -26,6 +28,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelPop
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.sortChannelsBy
@@ -94,7 +97,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateLastMessage(message: SceytMessage, unreadCount: Long? = null): Boolean {
-        channelsRV.getChannels()?.findIndexed { message.channelId == it.channel.id }?.let { pair ->
+        channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
             val channel = pair.second.channel
             if (message.channelId == channel.id) {
                 val oldChannel = channel.clone()
@@ -112,7 +115,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateLastMessageStatus(status: MessageStatusChange) {
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
-            channelsRV.getChannels()?.findIndexed { status.channel?.id == it.channel.id }?.let { pair ->
+            val channelId = (status.channel ?: return@launch).id
+            channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
                 val oldChannel = channel.clone()
                 channel.message?.let {
@@ -128,7 +132,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun channelCleared(channelId: Long?) {
-        channelsRV.getChannels()?.findIndexed { channelId == it.channel.id }?.let { pair ->
+        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
             val channel = pair.second.channel
             val oldChannel = channel.clone()
             channel.message = null
@@ -138,28 +142,51 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateStateView(state: PageState) {
-        pageStateView?.updateState(state, channelsRV.isEmpty())
+
+    internal fun updateMuteState(muted: Boolean, channelId: Long?) {
+        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
+            val channel = pair.second.channel
+            val oldChannel = channel.clone()
+            channel.muted = muted
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        }
     }
 
-    internal fun setReachToEndListener(listener: (offset: Int) -> Unit) {
-        channelsRV.setRichToEndListeners(listener)
+    internal fun channelUpdated(channel: SceytChannel?) {
+        channelsRV.getChannelIndexed(channel?.id ?: return)?.let { pair ->
+            val channelItem = pair.second
+            val oldChannel = channelItem.channel.clone()
+            channelItem.channel = channel
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        }
     }
 
     internal fun deleteChannel(channelId: Long?) {
         channelsRV.deleteChannel(channelId ?: return)
     }
 
-    internal fun updateMuteState(muted: Boolean, channelId: Long?) {
-        channelsRV.updateMuteState(muted, channelId ?: return)
+    internal fun markedUsRead(data: MessageListMarker?) {
+        val channelId = data?.channelId ?: return
+        channelsRV.getChannelIndexed(channelId)?.let { pair ->
+            val channel = pair.second.channel
+            val oldChannel = channel.clone()
+            channel.unreadCount = 0
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        }
     }
 
-    internal fun channelUpdated(channel: SceytChannel?) {
-        channelsRV.updateChannel(channel ?: return)
+    internal fun userBlocked(data: List<User>?) {
+        data?.forEach { user ->
+            channelsRV.getChannels()?.find {
+                it.channel is SceytDirectChannel && (it.channel as SceytDirectChannel).peer?.id == user.id
+            }?.let {
+                (it.channel as SceytDirectChannel).peer = genMemberBy(user.id)
+            }
+        }
     }
 
-    internal fun setChannelEvenListener(listener: (ChannelEvent) -> Unit) {
-        channelEventListener = listener
+    internal fun updateStateView(state: PageState) {
+        pageStateView?.updateState(state, channelsRV.isEmpty())
     }
 
     private fun sortChannelsBy(sortBy: SceytUIKitConfig.ChannelSortType) {
@@ -170,16 +197,26 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         val popup = PopupMenuChannel(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, isGroup = item.channel.isGroup)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.sceyt_mark_as_read -> {}
-                R.id.sceyt_mark_as_unread -> {}
+                R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
                 R.id.sceyt_clear_history -> popupClickListeners.onClearHistoryClick(item.channel)
                 R.id.sceyt_leave_channel -> popupClickListeners.onLeaveChannelClick(item.channel)
                 R.id.sceyt_block_channel -> popupClickListeners.onBlockChannelClick(item.channel)
-                R.id.sceyt_block_user -> {}
+                R.id.sceyt_block_user -> popupClickListeners.onBlockUserClick(item.channel)
+                R.id.sceyt_un_block_user -> {
+                    //Todo
+                }
             }
             false
         }
         popup.show()
+    }
+
+    internal fun setReachToEndListener(listener: (offset: Int) -> Unit) {
+        channelsRV.setRichToEndListeners(listener)
+    }
+
+    internal fun setChannelEvenListener(listener: (ChannelEvent) -> Unit) {
+        channelEventListener = listener
     }
 
     fun setChannelClickListener(listener: ChannelClickListeners) {
@@ -205,19 +242,27 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     //Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
+        item.channel.unreadCount = 0
         ConversationActivity.newInstance(context, item.channel)
+        channelUpdated(item.channel)
+    }
+
+    override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
+        item.channel.unreadCount = 0
+        ConversationActivity.newInstance(context, item.channel)
+        channelUpdated(item.channel)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
         showChannelActionsPopup(view, item)
     }
 
-    override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        ConversationActivity.newInstance(context, item.channel)
-    }
-
 
     //Channel Popup callbacks
+    override fun onMarkAsReadClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
+    }
+
     override fun onLeaveChannelClick(channel: SceytChannel) {
         channelEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
     }
@@ -228,5 +273,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onBlockChannelClick(channel: SceytChannel) {
         channelEventListener?.invoke(ChannelEvent.BlockChannel(channel))
+    }
+
+    override fun onBlockUserClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.BlockUser(channel))
     }
 }

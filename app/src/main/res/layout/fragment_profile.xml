@@ -144,6 +144,7 @@
                 android:text="@string/notifications"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textSize="@dimen/mediumTextSize"
+                android:theme="@style/SwitchStyle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/avatar" />
@@ -156,6 +157,7 @@
                 android:layout_gravity="end"
                 android:text="@string/sceyt_dark_theme"
                 android:textColor="@color/sceyt_color_black_themed"
+                android:theme="@style/SwitchStyle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/switchNotifications" />

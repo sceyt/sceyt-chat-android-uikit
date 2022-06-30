@@ -5,8 +5,8 @@ import android.util.AttributeSet
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.extensions.addRVScrollListener
+import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -80,6 +80,14 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return if (::mAdapter.isInitialized) mAdapter.getChannels() else null
     }
 
+    fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
+        return if (::mAdapter.isInitialized)
+            mAdapter.getData().findIndexed { it is ChannelListItem.ChannelItem && it.channel.id == channelId }?.let {
+                return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
+            }
+        else null
+    }
+
     /** Call this function to customise ChannelViewHolderFactory and set your own.
      * Note: Call this function before initialising channels adapter.*/
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
@@ -104,26 +112,6 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (hasLoading)
             newList.add(ChannelListItem.LoadingMoreItem)
         setData(newList)
-    }
-
-    fun updateMuteState(muted: Boolean, channelId: Long) {
-        mAdapter.getData().forEachIndexed { index, item ->
-            if (item is ChannelListItem.ChannelItem && item.channel.id == channelId) {
-                item.channel.muted = muted
-                mAdapter.notifyItemChanged(index)
-                return
-            }
-        }
-    }
-
-    fun updateChannel(channel: SceytChannel) {
-        mAdapter.getData().forEachIndexed { index, item ->
-            if (item is ChannelListItem.ChannelItem && item.channel.id == channel.id) {
-                item.channel = channel
-                mAdapter.notifyItemChanged(index)
-                return
-            }
-        }
     }
 
     override fun onDetachedFromWindow() {

@@ -68,4 +68,7 @@
         <item name="android:textSize">10sp</item>
     </style>
 
+    <style name="SwitchStyle">
+        <item name="android:colorForeground">@color/sceyt_color_gray_400</item>
+    </style>
 </resources>

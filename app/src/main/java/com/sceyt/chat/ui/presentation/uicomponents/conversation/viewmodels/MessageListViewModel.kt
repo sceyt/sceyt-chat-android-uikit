@@ -114,6 +114,8 @@ class MessageListViewModel(conversationId: Long,
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.getMessages(lastMessageId)
             initResponse(response, isLoadingMore)
+            if (!isLoadingMore)
+                messagesRepository.markAllAsRead()
         }
     }
 

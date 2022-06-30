@@ -4,5 +4,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.models.SceytResponse
 
 interface UsersRepository {
-    suspend fun loadUsers(offset: Int, query: String): SceytResponse<List<User>>
+    suspend fun loadUsers(query: String): SceytResponse<List<User>>
+    suspend fun loadMoreUsers(): SceytResponse<List<User>>
 }

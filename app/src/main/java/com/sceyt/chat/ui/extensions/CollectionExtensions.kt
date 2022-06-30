@@ -8,3 +8,4 @@ inline fun <reified T> Collection<T>.findIndexed(predicate: (T) -> Boolean): Pai
     }
     return null
 }
+
