@@ -92,7 +92,7 @@ class ChannelMembersFragment : Fragment() {
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.getStringArrayListExtra(AddMembersActivity.SELECTED_USERS)?.let { users ->
+            result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
                 viewModel.addMembersToChannel(channel, users)
             }
         }

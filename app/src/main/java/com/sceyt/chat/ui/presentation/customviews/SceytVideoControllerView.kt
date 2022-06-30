@@ -112,6 +112,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                                 isEnded = true
                                 isPlaying = false
                                 playPauseItem.setImageDrawable(playDrawable)
+                                imageThumb?.isVisible = true
                             }
                         }
                     }

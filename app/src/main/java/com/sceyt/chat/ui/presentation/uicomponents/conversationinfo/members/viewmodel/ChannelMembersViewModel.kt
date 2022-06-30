@@ -16,7 +16,6 @@ import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toMember
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -119,9 +118,9 @@ class ChannelMembersViewModel : BaseViewModel() {
         }
     }
 
-    fun addMembersToChannel(channel: SceytChannel, users: ArrayList<String>) {
+    fun addMembersToChannel(channel: SceytChannel, users: ArrayList<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
-            val members = users.map { genMemberBy(it) }
+            val members = users.map { it.toMember() }
             val response = repo.addMembersToChannel(channel.toGroupChannel(), members)
             if (response is SceytResponse.Success) {
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
