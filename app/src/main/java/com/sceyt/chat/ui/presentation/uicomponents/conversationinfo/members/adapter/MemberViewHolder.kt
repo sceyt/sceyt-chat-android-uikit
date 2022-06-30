@@ -32,7 +32,7 @@ class MemberViewHolder(private val binding: ItemChannelMemberBinding,
 
                 memberName.text = if (member.id == ChatClient.getClient().user.id) {
                     val text = SpannableStringBuilder()
-                        .append(member.fullName)
+                        .append(presentableName)
                         .color(youColor) { append(" " + itemView.context.getString(R.string.member_name_you)) }
                     text
                 } else presentableName

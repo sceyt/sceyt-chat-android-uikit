@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.databinding.ActivityAddMembersBinding
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.SelectedUsersAdapter
@@ -22,7 +23,7 @@ class AddMembersActivity : AppCompatActivity() {
     private val viewModel: AddUsersViewModel by viewModels()
     private lateinit var usersAdapter: UsersAdapter
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
-    private var selectedUsers = arrayListOf<String>()
+    private var selectedUsers = arrayListOf<SceytMember>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +64,7 @@ class AddMembersActivity : AppCompatActivity() {
                 finish()
             } else {
                 val intent = Intent()
-                intent.putStringArrayListExtra(SELECTED_USERS, selectedUsers)
+                intent.putParcelableArrayListExtra(SELECTED_USERS, selectedUsers)
                 setResult(RESULT_OK, intent)
                 finish()
             }
@@ -115,15 +116,15 @@ class AddMembersActivity : AppCompatActivity() {
 
     private fun addOrRemoveFromSelectedUsers(userItem: UserItem.User, isAdd: Boolean) {
         if (isAdd)
-            selectedUsers.add(userItem.user.id)
-        else selectedUsers.removeIf { id -> id == userItem.user.id }
+            selectedUsers.add(SceytMember(userItem.user))
+        else selectedUsers.removeIf { member -> member.user.id == userItem.user.id }
     }
 
     private fun initSelectedItems(data: List<UserItem>) {
         if (selectedUsers.isEmpty()) return
         val common = data.toMutableSet()
         common.retainAll {
-            it is UserItem.User && selectedUsers.contains(it.user.id)
+            it is UserItem.User && selectedUsers.find { member -> member.id == it.user.id } != null
         }
         common.forEach {
             (it as? UserItem.User)?.chosen = true
