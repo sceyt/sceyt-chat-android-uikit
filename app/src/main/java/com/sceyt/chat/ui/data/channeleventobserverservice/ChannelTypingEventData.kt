@@ -1,10 +1,10 @@
 package com.sceyt.chat.ui.data.channeleventobserverservice
 
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.member.Member
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytMember
 
 data class ChannelTypingEventData(
-        val channel: Channel?,
-        val member: Member?,
+        val channel: SceytChannel,
+        val member: SceytMember,
         val typing: Boolean
 )

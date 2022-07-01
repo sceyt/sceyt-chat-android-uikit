@@ -10,6 +10,8 @@ import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.chat.sceyt_listeners.MessageListener
+import com.sceyt.chat.ui.data.toSceytMember
+import com.sceyt.chat.ui.data.toSceytUiChannel
 import com.sceyt.chat.ui.extensions.TAG
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -172,12 +174,14 @@ object ChannelEventsObserverService {
                 onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(channel, newOwner, oldOwner))
             }
 
-            override fun onMemberStartedTyping(channel: Channel?, member: Member?) {
-                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel, member, true))
+            override fun onMemberStartedTyping(channel: Channel, member: Member) {
+                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel.toSceytUiChannel(),
+                    member.toSceytMember(), true))
             }
 
-            override fun onMemberStoppedTyping(channel: Channel?, member: Member?) {
-                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel, member, false))
+            override fun onMemberStoppedTyping(channel: Channel, member: Member) {
+                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel.toSceytUiChannel(),
+                    member.toSceytMember(), false))
             }
 
             override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {

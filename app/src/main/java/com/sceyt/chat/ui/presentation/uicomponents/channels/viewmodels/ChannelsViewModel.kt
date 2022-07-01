@@ -9,6 +9,7 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
@@ -56,6 +57,7 @@ class ChannelsViewModel : BaseViewModel() {
     val onMessageStatusLiveData = MutableLiveData<MessageStatusChange>()
     val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytMessage>()
     val onChannelEventLiveData = MutableLiveData<ChannelEventData>()
+    val onChannelTypingEventLiveData = MutableLiveData<ChannelTypingEventData>()
 
     init {
         addChannelListeners()
@@ -83,6 +85,12 @@ class ChannelsViewModel : BaseViewModel() {
         viewModelScope.launch {
             channelsRepository.onChannelEvenFlow.collect {
                 onChannelEventLiveData.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            channelsRepository.onChannelTypingEvenFlow.collect {
+                onChannelTypingEventLiveData.value = it
             }
         }
     }

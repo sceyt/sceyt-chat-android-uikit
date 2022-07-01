@@ -22,5 +22,11 @@ fun SceytMember.getPresentableName(): String {
     }
 }
 
+fun SceytMember.getPresentableFirstName(): String {
+    return user.firstName.ifBlank {
+        user.id ?: ""
+    }
+}
+
 val Any.TAG: String
     get() = javaClass.simpleName

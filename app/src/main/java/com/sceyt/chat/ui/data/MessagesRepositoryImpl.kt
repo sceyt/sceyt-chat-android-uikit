@@ -45,6 +45,9 @@ class MessagesRepositoryImpl(private val conversationId: Long,
     override val onChannelEventFlow = ChannelEventsObserverService.onChannelEventFlow
         .filter { it.channelId == channel.id }
 
+    override val onChannelTypingEventFlow = ChannelEventsObserverService.onChannelTypingEventFlow
+        .filter { it.channel?.id == channel.id }
+
     private val query = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
         setLimit(MESSAGES_LOAD_SIZE)
@@ -187,5 +190,11 @@ class MessagesRepositoryImpl(private val conversationId: Long,
                 }
             })
         }
+    }
+
+    override suspend fun sendTypingState(typing: Boolean) {
+        if (typing)
+            channel.startTyping()
+        else channel.stopTyping()
     }
 }

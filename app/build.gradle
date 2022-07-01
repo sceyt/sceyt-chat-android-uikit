@@ -65,6 +65,7 @@ dependencies {
     implementation supportDependencies.exoPlayerUi
     implementation supportDependencies.datastore
     implementation supportDependencies.datastorePreferences
+    implementation supportDependencies.lottie
     implementation supportDependencies.sdp
     implementation supportDependencies.ssp
 }

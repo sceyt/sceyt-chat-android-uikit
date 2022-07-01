@@ -48,7 +48,7 @@
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="17sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/subTitle"
+            app:layout_constraintBottom_toTopOf="@+id/layoutSubTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/avatar"
@@ -56,22 +56,68 @@
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="Title" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/subTitle"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutSubTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:textColor="@color/sceyt_color_gray_400"
-            android:textSize="13sp"
-            android:visibility="gone"
+            android:animateLayoutChanges="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/title"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintStart_toStartOf="@+id/title"
-            app:layout_constraintTop_toBottomOf="@+id/title"
-            tools:text="SubTitle"
-            tools:visibility="visible" />
+            app:layout_constraintTop_toBottomOf="@+id/title">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/subTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textColor="@color/sceyt_color_gray_400"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="SubTitle" />
+
+            <TextView
+                android:id="@+id/tvTyping"
+                android:layout_width="wrap_content"
+                app:layout_constrainedWidth="true"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:singleLine="true"
+                android:text="@string/sceyt_typing"
+                android:textColor="@color/sceyt_color_gray_400"
+                android:textSize="13sp"
+                app:layout_constraintEnd_toStartOf="@+id/lottieTyping"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieTyping"
+                android:layout_width="20dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="6dp"
+                android:paddingTop="3dp"
+                app:layout_constraintBottom_toBottomOf="@+id/tvTyping"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tvTyping"
+                app:layout_constraintTop_toTopOf="@+id/tvTyping"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/sceyt_typing" />
+
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/groupTyping"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:constraint_referenced_ids="lottieTyping,tvTyping" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

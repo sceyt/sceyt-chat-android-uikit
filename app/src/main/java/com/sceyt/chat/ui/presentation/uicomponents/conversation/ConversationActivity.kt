@@ -38,7 +38,7 @@ class ConversationActivity : AppCompatActivity() {
 
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
-        viewModel.bindView(binding.headerView, replayMessage)
+        viewModel.bindView(binding.headerView, replayMessage,lifecycleOwner = this)
 
         viewModel.loadMessages(0, false)
 
