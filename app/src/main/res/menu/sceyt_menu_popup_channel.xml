@@ -40,10 +40,9 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/sceyt_unblock_user"
+        android:id="@+id/sceyt_un_block_user"
         android:icon="@drawable/sceyt_ic_block"
         android:title="@string/sceyt_unblock"
-        android:visible="false"
         app:showAsAction="ifRoom" />
 
 </menu>

@@ -180,7 +180,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             channelsRV.getChannels()?.find {
                 it.channel is SceytDirectChannel && (it.channel as SceytDirectChannel).peer?.id == user.id
             }?.let {
-                (it.channel as SceytDirectChannel).peer = genMemberBy(user.id)
+                (it.channel as SceytDirectChannel).peer = genMemberBy(user)
             }
         }
     }
@@ -194,7 +194,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
-        val popup = PopupMenuChannel(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, isGroup = item.channel.isGroup)
+        val popup = PopupMenuChannel(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, channel = item.channel)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
@@ -202,9 +202,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_leave_channel -> popupClickListeners.onLeaveChannelClick(item.channel)
                 R.id.sceyt_block_channel -> popupClickListeners.onBlockChannelClick(item.channel)
                 R.id.sceyt_block_user -> popupClickListeners.onBlockUserClick(item.channel)
-                R.id.sceyt_un_block_user -> {
-                    //Todo
-                }
+                R.id.sceyt_un_block_user -> popupClickListeners.onUnBlockUserClick(item.channel)
             }
             false
         }
@@ -277,5 +275,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onBlockUserClick(channel: SceytChannel) {
         channelEventListener?.invoke(ChannelEvent.BlockUser(channel))
+    }
+
+    override fun onUnBlockUserClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.UnBlockUser(channel))
     }
 }

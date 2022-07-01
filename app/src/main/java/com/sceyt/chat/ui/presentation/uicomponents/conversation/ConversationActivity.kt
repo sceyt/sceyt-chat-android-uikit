@@ -67,7 +67,7 @@ class ConversationActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.channel
+
     }
 
     private fun getDataFromIntent() {

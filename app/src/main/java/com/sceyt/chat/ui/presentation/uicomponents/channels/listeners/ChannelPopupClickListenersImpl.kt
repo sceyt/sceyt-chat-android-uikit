@@ -10,6 +10,7 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
     private var clearHistoryListener: ChannelPopupClickListeners.ClearHistory? = null
     private var blockChannelListener: ChannelPopupClickListeners.BlockChannel? = null
     private var blockUserListener: ChannelPopupClickListeners.BlockUser? = null
+    private var unBlockUserListener: ChannelPopupClickListeners.UnBlockUser? = null
 
     override fun onMarkAsReadClick(channel: SceytChannel) {
         defaultListeners.onMarkAsReadClick(channel)
@@ -36,6 +37,11 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
         blockUserListener?.onBlockUserClick(channel)
     }
 
+    override fun onUnBlockUserClick(channel: SceytChannel) {
+        defaultListeners.onUnBlockUserClick(channel)
+        unBlockUserListener?.onUnBlockUserClick(channel)
+    }
+
     fun setListener(listener: ChannelPopupClickListeners) {
         when (listener) {
             is ChannelPopupClickListeners.PopupClickListeners -> {
@@ -44,6 +50,7 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
                 blockChannelListener = listener
                 markAsReadListener = listener
                 blockUserListener = listener
+                unBlockUserListener = listener
             }
             is ChannelPopupClickListeners.MarkAsRead -> {
                 markAsReadListener = listener
@@ -59,6 +66,9 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
             }
             is ChannelPopupClickListeners.BlockUser -> {
                 blockUserListener = listener
+            }
+            is ChannelPopupClickListeners.UnBlockUser -> {
+                unBlockUserListener = listener
             }
         }
     }

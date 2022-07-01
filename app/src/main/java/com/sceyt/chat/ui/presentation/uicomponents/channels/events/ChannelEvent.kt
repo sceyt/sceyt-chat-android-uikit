@@ -22,4 +22,8 @@ sealed class ChannelEvent {
     data class BlockUser(
             val channel: SceytChannel
     ) : ChannelEvent()
+
+    data class UnBlockUser(
+            val channel: SceytChannel
+    ) : ChannelEvent()
 }

@@ -156,6 +156,14 @@ class ChannelsViewModel : BaseViewModel() {
         }
     }
 
+
+    private fun unBlockUser(userId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsRepository.unblockUser(userId)
+            _blockUserLiveData.postValue(response)
+        }
+    }
+
     private fun clearHistory(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsRepository.clearHistory(channel.toChannel())
@@ -179,6 +187,11 @@ class ChannelsViewModel : BaseViewModel() {
             is ChannelEvent.BlockUser -> {
                 if (event.channel.channelType == ChannelTypeEnum.Direct)
                     blockUser(((event.channel as SceytDirectChannel).peer ?: return).id)
+                else throw RuntimeException("Channel must be direct")
+            }
+            is ChannelEvent.UnBlockUser -> {
+                if (event.channel.channelType == ChannelTypeEnum.Direct)
+                    unBlockUser(((event.channel as SceytDirectChannel).peer ?: return).id)
                 else throw RuntimeException("Channel must be direct")
             }
         }

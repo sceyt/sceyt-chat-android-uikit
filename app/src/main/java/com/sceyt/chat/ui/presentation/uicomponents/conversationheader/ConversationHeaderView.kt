@@ -70,10 +70,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         post {
             val title = if (channel is SceytDirectChannel) {
                 val member = channel.peer ?: return@post
-                if (member.presence.state == PresenceState.Online) {
+                if (member.presence?.state == PresenceState.Online) {
                     getString(R.string.online)
                 } else {
-                    if (member.presence.lastActiveAt != 0L)
+                    if (member.presence?.lastActiveAt != 0L)
                         setLastActiveDateByTime(member.presence.lastActiveAt)
                     else null
                 }

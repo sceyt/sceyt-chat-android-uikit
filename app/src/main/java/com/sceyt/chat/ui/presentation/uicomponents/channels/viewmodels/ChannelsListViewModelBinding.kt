@@ -30,7 +30,9 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
             else
                 (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
                     if (it == Types.ConnectState.StateConnected)
-                        getChannels(query = searchQuery)
+                        channelsListView.getChannelsRv().awaitAnimationEnd {
+                            getChannels(query = searchQuery)
+                        }
                 }
         }
     }
@@ -121,6 +123,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
             Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
             Muted -> channelsListView.updateMuteState(true, it.channelId)
             UnMuted -> channelsListView.updateMuteState(false, it.channelId)
+            MarkedUsUnread -> channelsListView.updateMuteState(false, it.channelId)
             else -> return@observe
         }
     }
