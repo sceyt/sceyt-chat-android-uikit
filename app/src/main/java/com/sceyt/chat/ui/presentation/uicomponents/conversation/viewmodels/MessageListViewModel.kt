@@ -7,6 +7,7 @@ import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
@@ -24,7 +25,6 @@ import com.sceyt.chat.ui.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MessageListViewModel(conversationId: Long,
@@ -61,6 +61,7 @@ class MessageListViewModel(conversationId: Long,
 
     // Chanel events
     val onChannelEventLiveData: MutableLiveData<ChannelEventData> = MutableLiveData<ChannelEventData>()
+    val onChannelTypingEventLiveData = MutableLiveData<ChannelTypingEventData>()
 
 
     init {
@@ -102,6 +103,12 @@ class MessageListViewModel(conversationId: Long,
         viewModelScope.launch {
             messagesRepository.onChannelEventFlow.collect {
                 onChannelEventLiveData.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            messagesRepository.onChannelTypingEventFlow.collect {
+                onChannelTypingEventLiveData.value = it
             }
         }
     }
@@ -201,6 +208,12 @@ class MessageListViewModel(conversationId: Long,
     fun markMessageAsDisplayed(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.markAsRead(id)
+        }
+    }
+
+    fun sendTypingEvent(typing: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            messagesRepository.sendTypingState(typing)
         }
     }
 

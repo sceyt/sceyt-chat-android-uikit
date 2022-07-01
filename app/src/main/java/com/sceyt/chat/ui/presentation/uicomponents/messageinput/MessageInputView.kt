@@ -25,6 +25,9 @@ import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.Messag
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessageInputViewStyle
 import com.sceyt.chat.ui.utils.ViewUtil
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -34,6 +37,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private val binding: SceytMessageInputViewBinding
     private var clickListeners = MessageInputClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
+    private var typingJob: Job? = null
 
     init {
         if (!isInEditMode)
@@ -69,10 +73,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun init() {
         with(binding) {
             setUpStyle()
-
             determineState()
 
-            messageInput.doOnTextChanged { _, _, _, _ -> determineState() }
+            messageInput.doOnTextChanged { text, _, _, _ ->
+                determineState()
+                typingJob?.cancel()
+                typingJob = getLifecycleScope()?.launch {
+                    messageInputActionCallback?.typing(text.isNullOrBlank().not())
+                    delay(2000)
+                    messageInputActionCallback?.typing(false)
+                }
+            }
 
             icSendMessage.setOnClickListener {
                 clickListeners.onSendMsgClick(it)
@@ -242,6 +253,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessage(message: Message)
         fun sendReplayMessage(message: Message, parent: Message?)
         fun editMessage(message: Message)
+        fun typing(typing: Boolean)
     }
 
     fun setClickListener(listener: MessageInputClickListeners) {

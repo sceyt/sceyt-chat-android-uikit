@@ -15,7 +15,6 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 
@@ -178,17 +177,25 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
             this@bindView.editMessage(message)
             messageInputView.cancelReplay()
         }
+
+        override fun typing(typing: Boolean) {
+            sendTypingEvent(typing)
+        }
     }
 }
 
 fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
-                                  replayInThreadMessage: SceytMessage?) {
+                                  replayInThreadMessage: SceytMessage?,
+                                  lifecycleOwner: LifecycleOwner) {
 
     if (replayInThread)
         headerView.setReplayMessage(replayInThreadMessage)
     else
         headerView.setChannel(channel)
 
+    onChannelTypingEventLiveData.observe(lifecycleOwner) {
+        headerView.onTyping(it)
+    }
 }
 
 

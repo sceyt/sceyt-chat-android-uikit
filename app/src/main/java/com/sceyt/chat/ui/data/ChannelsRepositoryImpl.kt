@@ -32,6 +32,8 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventFlow
 
+    override val onChannelTypingEvenFlow = ChannelEventsObserverService.onChannelTypingEventFlow
+
     private lateinit var channelsQuery: ChannelListQuery
     private lateinit var memberListQuery: MemberListQuery
 

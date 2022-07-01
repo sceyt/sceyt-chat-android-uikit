@@ -134,5 +134,6 @@
     <string name="mute_for_1_day">Mute for 1 day</string>
     <string name="mute_forever">Mute forever</string>
     <string name="mute_notifications">Mute notifications</string>
+    <string name="sceyt_typing">typing</string>
 
 </resources>
