@@ -6,10 +6,10 @@ import com.sceyt.chat.ui.databinding.ItemSelectUserBinding
 import com.sceyt.chat.ui.extensions.getPresentableName
 import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UserItem
-import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UsersAdapter
+import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.SelectableUsersAdapter
 
-class UserViewHolder(private val binding: ItemSelectUserBinding,
-                     private val itemClickListener: UsersAdapter.ClickListener) : BaseViewHolder<UserItem>(binding.root) {
+class SelectableUserViewHolder(private val binding: ItemSelectUserBinding,
+                               private val itemClickListener: SelectableUsersAdapter.ClickListener) : BaseViewHolder<UserItem>(binding.root) {
     private lateinit var bindItem: UserItem.User
 
     override fun bind(item: UserItem) {

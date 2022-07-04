@@ -5,12 +5,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.presentation.common.BaseViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.viewholders.UsersViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
 import com.sceyt.chat.ui.utils.MyDiffUtil
 
-class UsersAdapter(
+class SelectableUsersAdapter(
         private var usersList: ArrayList<UserItem>,
-        private val factory: UsersViewHolderFactory,
+        private val factory: SelectableUserViewHolderFactory,
 ) : RecyclerView.Adapter<BaseViewHolder<UserItem>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<UserItem> {
@@ -51,8 +51,6 @@ class UsersAdapter(
             notifyItemChanged(it.first, Unit)
         }
     }
-
-    fun getSkip() = usersList.filterIsInstance<UserItem.User>().size
 
     fun notifyUpdate(list: List<UserItem>) {
         val myDiffUtil = MyDiffUtil(usersList, list)
