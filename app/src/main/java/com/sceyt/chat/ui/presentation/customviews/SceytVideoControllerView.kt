@@ -32,19 +32,22 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private var playerView: PlayerView? = null
     private var onPlayPauseClick: ((play: Boolean) -> Unit)? = null
     private var showPlayPauseButton = true
+    private var playPauseButtonSize = 130
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
-        playDrawable = context.getCompatDrawable(R.drawable.sceyt_ic_play)
-        pauseDrawable = context.getCompatDrawable(R.drawable.sceyt_ic_pause)
-
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytVideoControllerView)
-        showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerViewShowPlayPause, false)
+        showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerShowPlayPause, showPlayPauseButton)
+        playPauseButtonSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytVideoControllerPlayPauseSize, playPauseButtonSize)
+        playDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerPauseIcon)
+                ?: context.getCompatDrawable(R.drawable.sceyt_ic_play)
+        pauseDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerPauseIcon)
+                ?: context.getCompatDrawable(R.drawable.sceyt_ic_pause)
         a.recycle()
 
         playPauseItem = ImageView(context).apply {
             background = context.getCompatDrawable(R.drawable.sceyt_bg_play_pause_button)
-            layoutParams = LayoutParams(130, 130).also {
+            layoutParams = LayoutParams(playPauseButtonSize, playPauseButtonSize).also {
                 it.gravity = Gravity.CENTER
                 setPadding(10, 10, 10, 10)
             }
@@ -109,6 +112,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                                 isEnded = true
                                 isPlaying = false
                                 playPauseItem.setImageDrawable(playDrawable)
+                                imageThumb?.isVisible = true
                             }
                         }
                     }

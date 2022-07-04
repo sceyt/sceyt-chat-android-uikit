@@ -8,8 +8,8 @@
         android:toAlpha="1" />
 
     <scale
-        android:fromXScale="80%"
-        android:fromYScale="80%"
+        android:fromXScale="90%"
+        android:fromYScale="90%"
         android:interpolator="@android:anim/decelerate_interpolator"
         android:pivotX="50%"
         android:pivotY="50%"

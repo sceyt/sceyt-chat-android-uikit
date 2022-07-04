@@ -8,6 +8,8 @@ import com.sceyt.chat.ui.data.models.SceytResponse
 open class BaseViewModel : ViewModel() {
     private val _pageStateLiveData = MutableLiveData<PageState>()
     val pageStateLiveData: LiveData<PageState> = _pageStateLiveData
+    var hasNext: Boolean = false
+    var loadingItems: Boolean = false
 
     fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {
@@ -16,7 +18,10 @@ open class BaseViewModel : ViewModel() {
             _pageStateLiveData.postValue(PageState.StateLoading())
     }
 
-    fun notifyPageStateWithResponse(response: SceytResponse<*>, wasLoadingMore: Boolean = false, isEmpty: Boolean, searchQuery: String? = null) {
+    fun notifyPageStateWithResponse(response: SceytResponse<*>,
+                                    wasLoadingMore: Boolean = false,
+                                    isEmpty: Boolean = false,
+                                    searchQuery: String? = null) {
         val state = when {
             response is SceytResponse.Error -> PageState.StateError(response.message, searchQuery, wasLoadingMore)
             isEmpty -> PageState.StateEmpty(searchQuery, wasLoadingMore)
@@ -24,5 +29,16 @@ open class BaseViewModel : ViewModel() {
             else -> PageState.StateLoading(false)
         }
         _pageStateLiveData.postValue(state)
+    }
+
+    fun <T> notifyResponseAndPageState(liveData: MutableLiveData<T>?,
+                                       response: SceytResponse<T>,
+                                       wasLoadingMore: Boolean = false,
+                                       isEmpty: Boolean = false,
+                                       searchQuery: String? = null) {
+        if (response is SceytResponse.Success) {
+            liveData?.postValue(response.data)
+        }
+        notifyPageStateWithResponse(response, wasLoadingMore, isEmpty, searchQuery)
     }
 }

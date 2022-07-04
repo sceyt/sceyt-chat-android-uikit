@@ -10,6 +10,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
     private var sendAttachmentClickListener: MessageInputClickListeners.SendAttachmentClickListener? = null
     private var closeReplayMessageViewClickListener: MessageInputClickListeners.CloseReplayMessageViewClickListener? = null
     private var removeAttachmentClickListener: MessageInputClickListeners.RemoveAttachmentClickListener? = null
+    private var joinClickListener: MessageInputClickListeners.JoinClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners.onSendMsgClick(view)
@@ -31,6 +32,11 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
         removeAttachmentClickListener?.onRemoveAttachmentClick(item)
     }
 
+    override fun onJoinClick() {
+        defaultListeners.onJoinClick()
+        joinClickListener?.onJoinClick()
+    }
+
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
             is MessageInputClickListeners.ClickListeners -> {
@@ -38,6 +44,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
                 sendAttachmentClickListener = listener
                 closeReplayMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
+                joinClickListener = listener
             }
             is MessageInputClickListeners.SendMsgClickListener -> {
                 sendMsgClickListener = listener
@@ -50,6 +57,9 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
             }
             is MessageInputClickListeners.RemoveAttachmentClickListener -> {
                 removeAttachmentClickListener = listener
+            }
+            is MessageInputClickListeners.JoinClickListener -> {
+                joinClickListener = listener
             }
         }
     }

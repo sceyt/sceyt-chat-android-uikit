@@ -16,7 +16,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.message
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import com.sceyt.chat.ui.utils.SpeedyLinearLayoutManager
+import com.sceyt.chat.ui.presentation.common.SpeedyLinearLayoutManager
 import java.util.concurrent.atomic.AtomicBoolean
 
 

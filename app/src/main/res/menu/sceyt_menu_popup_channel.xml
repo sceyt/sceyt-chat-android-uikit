@@ -24,19 +24,25 @@
     <item
         android:id="@+id/sceyt_leave_channel"
         android:icon="@drawable/sceyt_ic_leave"
-        android:title="@string/leave_channel"
+        android:title="@string/sceyt_leave_channel"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_block_channel"
         android:icon="@drawable/sceyt_ic_block"
-        android:title="@string/block_and_leave_channel"
+        android:title="@string/sceyt_block_and_leave_channel"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_block_user"
         android:icon="@drawable/sceyt_ic_block"
         android:title="@string/sceyt_block"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/sceyt_un_block_user"
+        android:icon="@drawable/sceyt_ic_block"
+        android:title="@string/sceyt_unblock"
         app:showAsAction="ifRoom" />
 
 </menu>

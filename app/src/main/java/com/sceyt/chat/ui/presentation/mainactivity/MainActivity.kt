@@ -12,12 +12,12 @@ import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var mBinding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(mBinding.root)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val isNightMode = isNightTheme()
         SceytUIKitConfig.SceytUITheme.isDarkMode = isNightMode
@@ -28,21 +28,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (mBinding.viewPager.currentItem == 1) {
-            mBinding.viewPager.setCurrentItem(0, false)
-            mBinding.bottomNavigationView.menu.findItem(R.id.channelsFragment).isChecked = true
+        if (binding.viewPager.currentItem == 1) {
+            binding.viewPager.setCurrentItem(0, false)
+            binding.bottomNavigationView.menu.findItem(R.id.channelsFragment).isChecked = true
         } else
             super.onBackPressed()
     }
 
     private fun setBottomNavClickListeners() {
-        mBinding.bottomNavigationView.setOnItemSelectedListener { item ->
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.channelsFragment -> {
-                    mBinding.viewPager.setCurrentItem(0, false)
+                    binding.viewPager.setCurrentItem(0, false)
                 }
                 R.id.profileFragment -> {
-                    mBinding.viewPager.setCurrentItem(1, false)
+                    binding.viewPager.setCurrentItem(1, false)
                 }
             }
             return@setOnItemSelectedListener true
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
     private fun setPagerAdapter() {
         val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelsFragment(), ProfileFragment()),
             arrayListOf(::ChannelsFragment.name, ::ProfileFragment.name))
-        mBinding.viewPager.adapter = adapter
-        mBinding.viewPager.isUserInputEnabled = false
+        binding.viewPager.adapter = adapter
+        binding.viewPager.isUserInputEnabled = false
     }
 }

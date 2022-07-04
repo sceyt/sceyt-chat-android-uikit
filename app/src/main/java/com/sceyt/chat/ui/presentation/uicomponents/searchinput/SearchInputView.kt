@@ -87,8 +87,10 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         input.hint = SearchInputViewStyle.hintText
         input.setHintTextColor(context.getCompatColor(SearchInputViewStyle.hintTextColor))
         disableDebouncedSearchDuringTyping = SearchInputViewStyle.disableDebouncedSearch
-        if (!isInEditMode)
+        if (!isInEditMode) {
             BindingUtil.themedBackgroundTintColor(rootLayout, SearchInputViewStyle.backgroundColor)
+            BindingUtil.themedTextColor(input, SearchInputViewStyle.textColor)
+        }
     }
 
     private fun handleClearClick() {

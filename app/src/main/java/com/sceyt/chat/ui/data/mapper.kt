@@ -2,12 +2,10 @@ package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.*
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.ui.data.models.channels.*
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum.*
-import com.sceyt.chat.ui.data.models.channels.SceytChannel
-import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
-import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
-import com.sceyt.chat.ui.data.models.channels.getChannelType
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
@@ -27,7 +25,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             channelType = getChannelType(this),
             subject = subject,
             avatarUrl = avatarUrl,
-            members = members,
+            members = members.map { it.toSceytMember() },
             memberCount = memberCount
         )
     else {
@@ -51,17 +49,20 @@ fun SceytChannel.toChannel(): Channel {
     return when (channelType) {
         Direct -> {
             this as SceytDirectChannel
-            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer), lastMessage?.toMessage(), unreadMessageCount, muted, 0)
+            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer),
+                lastMessage?.toMessage(), unreadMessageCount, muted, 0)
         }
         Private -> {
             this as SceytGroupChannel
             PrivateChannel(id, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
+                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
         Public -> {
             this as SceytGroupChannel
             PublicChannel(id, "", subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
+                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
     }
 }
@@ -71,15 +72,25 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
         Private -> {
             this as SceytGroupChannel
             PrivateChannel(id, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
+                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
         Public -> {
             this as SceytGroupChannel
             PublicChannel(id, "", subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
         else -> throw RuntimeException("Channel is direct channel")
     }
+}
+
+fun SceytChannel.toPublicChannel(): GroupChannel {
+    return if (channelType == Public) {
+        this as SceytGroupChannel
+        PublicChannel(id, "", subject, metadata, avatarUrl,
+            label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+    }
+    else throw RuntimeException("Channel is not public")
 }
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytMessage(
@@ -143,6 +154,15 @@ fun SceytMessage.toMessage() = Message(
     replyInThread,
     replyCount
 )
+
+fun Member.toSceytMember() = SceytMember(
+    role = role,
+    user = this
+)
+
+fun SceytMember.toMember(): Member {
+    return Member(role, user)
+}
 
 fun Attachment.toFileListItem(message: SceytMessage): FileListItem {
     return when (type) {

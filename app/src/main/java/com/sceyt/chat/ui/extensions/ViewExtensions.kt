@@ -1,14 +1,17 @@
 package com.sceyt.chat.ui.extensions
 
 import android.animation.LayoutTransition
+import android.annotation.SuppressLint
 import android.content.res.Resources
 import android.text.InputType
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -44,6 +47,8 @@ fun dpToPx(dp: Float): Int {
 fun View.screenWidthPx() = resources.configuration.screenWidthDp.dpToPx()
 
 fun View.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+
+fun Fragment.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
 
 
 fun EditText.setMultiLineCapSentencesAndSendAction() {
@@ -136,3 +141,12 @@ fun ViewGroup.setTransitionListener(startListener: ((transition: LayoutTransitio
 fun View.getString(@StringRes resId: Int) = context.getString(resId)
 
 fun View.getString(@StringRes resId: Int, vararg formatArgs: Any?) = context.getString(resId, *formatArgs)
+
+@SuppressLint("ClickableViewAccessibility")
+fun SwitchCompat.setOnlyClickable() {
+    setOnTouchListener { _, event ->
+        if (event.action == MotionEvent.ACTION_UP)
+            callOnClick()
+        return@setOnTouchListener true
+    }
+}

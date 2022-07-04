@@ -58,18 +58,6 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
             notifyItemRemoved(0)
     }
 
-    /*   private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
-           if (newItem is MessageListItem.MessageItem && prevItem is MessageListItem.MessageItem) {
-               (prevItem as? MessageListItem.MessageItem)?.message?.apply {
-                   val prevIndex = messages.indexOf(prevItem)
-                   if (DateTimeUtil.isSameDay(createdAt, newItem.message.createdAt))
-                       canShowAvatarAndName = from?.id != newItem.message.from?.id && isGroup
-                   notifyItemChanged(prevIndex, Unit)
-               }
-           }
-       }
-   */
-
     private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
         if (newItem is MessageListItem.MessageItem && prevItem is MessageListItem.MessageItem) {
             val prevMessage = prevItem.message

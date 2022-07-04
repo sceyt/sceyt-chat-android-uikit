@@ -72,9 +72,10 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             setLastMessageText(channel)
                             setUnreadCount(channel.unreadCount)
                         }
-                    }
 
-                    setOnlineStatus(channel)
+                        if (onlineStateChanged)
+                            setOnlineStatus(channel)
+                    }
                 }
             }
             ChannelListItem.LoadingMoreItem -> Unit
@@ -92,7 +93,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     private fun SceytItemChannelBinding.setOnlineStatus(channel: SceytChannel?) {
         val isOnline = (channel?.channelType == ChannelTypeEnum.Direct)
                 && (channel as? SceytDirectChannel)?.peer?.presence?.state == PresenceState.Online
-        groupOnline.isVisible = isOnline
+        onlineStatus.isVisible = isOnline
     }
 
     private fun SceytItemChannelBinding.setLastMessageText(channel: SceytChannel) {
