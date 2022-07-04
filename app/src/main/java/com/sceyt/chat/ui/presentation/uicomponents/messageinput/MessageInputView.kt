@@ -10,9 +10,13 @@ import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
+import com.sceyt.chat.ui.data.toPublicChannel
 import com.sceyt.chat.ui.databinding.SceytMessageInputViewBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.chooseAttachment.AttachmentChooseType
@@ -25,9 +29,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.Messag
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessageInputViewStyle
 import com.sceyt.chat.ui.utils.ViewUtil
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -77,8 +79,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             messageInput.doOnTextChanged { text, _, _, _ ->
                 determineState()
+                messageInputActionCallback?.typing(text.isNullOrBlank().not())
                 typingJob?.cancel()
-                typingJob = getLifecycleScope()?.launch {
+                typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
                     messageInputActionCallback?.typing(text.isNullOrBlank().not())
                     delay(2000)
                     messageInputActionCallback?.typing(false)
@@ -96,6 +99,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             layoutReplayMessage.icCancelReplay.setOnClickListener {
                 clickListeners.onCancelReplayMessageViewClick(it)
             }
+
+            btnJoin.setOnClickListener {
+                clickListeners.onJoinClick()
+            }
         }
     }
 
@@ -105,7 +112,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (message != null) {
                 message?.body = messageBody
                 message?.let {
-                    messageInputActionCallback?.editMessage(it)
+                    messageInputActionCallback?.sendEditMessage(it)
                 }
             } else {
                 val messageToSend: Message? = Message.MessageBuilder()
@@ -249,11 +256,31 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         replayThreadMessageId = messageId
     }
 
+    internal fun checkIsParticipant(channel: SceytChannel) {
+        if (channel.channelType == ChannelTypeEnum.Public) {
+            if (channel.toPublicChannel().myRole() == Member.MemberType.MemberTypeNone) {
+                binding.btnJoin.isVisible = true
+                binding.layoutInput.isVisible = false
+            }
+        }
+    }
+
+    internal fun joinSuccess() {
+        binding.btnJoin.isVisible = false
+        binding.layoutInput.isVisible = true
+    }
+
+    internal fun onChannelLeft(){
+        binding.btnJoin.isVisible = true
+        binding.layoutInput.isVisible = false
+    }
+
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)
         fun sendReplayMessage(message: Message, parent: Message?)
-        fun editMessage(message: Message)
+        fun sendEditMessage(message: Message)
         fun typing(typing: Boolean)
+        fun join()
     }
 
     fun setClickListener(listener: MessageInputClickListeners) {
@@ -280,5 +307,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
         determineState()
+    }
+
+    override fun onJoinClick() {
+        messageInputActionCallback?.join()
     }
 }

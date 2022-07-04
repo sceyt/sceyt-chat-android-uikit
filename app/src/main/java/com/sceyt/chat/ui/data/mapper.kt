@@ -84,6 +84,15 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
     }
 }
 
+fun SceytChannel.toPublicChannel(): GroupChannel {
+    return if (channelType == Public) {
+        this as SceytGroupChannel
+        PublicChannel(id, "", subject, metadata, avatarUrl,
+            label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+    }
+    else throw RuntimeException("Channel is not public")
+}
+
 fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytMessage(
     id = id,
     tid = tid,

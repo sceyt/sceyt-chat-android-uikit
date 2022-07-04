@@ -65,11 +65,6 @@ class ConversationActivity : AppCompatActivity() {
         })
     }
 
-    override fun onResume() {
-        super.onResume()
-
-    }
-
     private fun getDataFromIntent() {
         channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
         isReplayInThread = intent.getBooleanExtra(REPLAY_IN_THREAD, false)

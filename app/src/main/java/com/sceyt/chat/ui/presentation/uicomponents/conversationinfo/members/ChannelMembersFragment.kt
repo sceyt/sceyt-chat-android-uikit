@@ -12,9 +12,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelOwnerChangedEventData
@@ -23,7 +26,10 @@ import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.databinding.FragmentChannelMembersBinding
-import com.sceyt.chat.ui.extensions.*
+import com.sceyt.chat.ui.extensions.asAppCompatActivity
+import com.sceyt.chat.ui.extensions.customToastSnackBar
+import com.sceyt.chat.ui.extensions.isLastItemDisplaying
+import com.sceyt.chat.ui.extensions.setBundleArguments
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.AddMembersActivity
 import com.sceyt.chat.ui.presentation.uicomponents.changerole.ChangeRoleActivity
@@ -73,7 +79,7 @@ class ChannelMembersFragment : Fragment() {
             lifecycleScope.launch(Dispatchers.Default) {
                 val existingMembers = membersAdapter.getData()
                 (it as ArrayList).removeAll(existingMembers.toSet())
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.Main) {
                     membersAdapter.addNewItems(it)
                 }
             }
@@ -87,9 +93,24 @@ class ChannelMembersFragment : Fragment() {
 
         viewModel.channelOwnerChangedEventLiveData.observe(viewLifecycleOwner, ::onChannelOwnerChanged)
 
+        viewModel.channelEventEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
+
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
             if (it is PageState.StateError)
                 customToastSnackBar(requireView(), it.errorMessage ?: "")
+        }
+    }
+
+    private fun onChannelEvent(eventData: ChannelEventData) {
+        val groupChannel = (eventData.channel as? GroupChannel) ?: return
+        when (eventData.eventType) {
+            Left -> {
+                groupChannel.members?.forEach {
+                    removeMember(it.id)
+                }
+            }
+            Joined, Invited -> addMembers(groupChannel.members)
+            else -> return
         }
     }
 
@@ -177,6 +198,14 @@ class ChannelMembersFragment : Fragment() {
         }
     }
 
+    private fun addMembers(members: List<Member>?) {
+        if (members.isNullOrEmpty()) return
+        membersAdapter.addNewItemsToStart(members.map {
+            MemberItem.Member(it.toSceytMember())
+        })
+        binding.rvMembers.scrollToPosition(0)
+    }
+
     private fun onChannelMembersEvent(eventData: ChannelMembersEventData) {
         when (eventData.eventType) {
             ChannelMembersEventEnum.Role -> {
@@ -194,10 +223,7 @@ class ChannelMembersFragment : Fragment() {
                 }
             }
             ChannelMembersEventEnum.Added -> {
-                membersAdapter.addNewItemsToStart(eventData.members?.map {
-                    MemberItem.Member(it.toSceytMember())
-                })
-                binding.rvMembers.scrollToPosition(0)
+                addMembers(eventData.members)
             }
             else -> return
         }
