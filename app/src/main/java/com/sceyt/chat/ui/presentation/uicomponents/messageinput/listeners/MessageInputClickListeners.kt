@@ -21,10 +21,15 @@ sealed interface MessageInputClickListeners {
         fun onRemoveAttachmentClick(item: AttachmentItem)
     }
 
+    fun interface JoinClickListener : MessageInputClickListeners {
+        fun onJoinClick()
+    }
+
     /** User this if you want to implement all callbacks */
     interface ClickListeners :
             SendMsgClickListener,
             SendAttachmentClickListener,
             CloseReplayMessageViewClickListener,
-            RemoveAttachmentClickListener
+            RemoveAttachmentClickListener,
+            JoinClickListener
 }

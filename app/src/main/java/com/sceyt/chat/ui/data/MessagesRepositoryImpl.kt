@@ -2,15 +2,18 @@ package com.sceyt.chat.ui.data
 
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.channel.PublicChannel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessagesListQuery
 import com.sceyt.chat.models.message.MessagesListQueryByType
+import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.flow.filter
@@ -46,7 +49,7 @@ class MessagesRepositoryImpl(private val conversationId: Long,
         .filter { it.channelId == channel.id }
 
     override val onChannelTypingEventFlow = ChannelEventsObserverService.onChannelTypingEventFlow
-        .filter { it.channel?.id == channel.id }
+        .filter { it.channel.id == channel.id }
 
     private val query = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
@@ -183,6 +186,20 @@ class MessagesRepositoryImpl(private val conversationId: Long,
             channel.markAllMessagesAsRead(object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     continuation.resume(SceytResponse.Success(result))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message))
+                }
+            })
+        }
+    }
+
+    override suspend fun join(): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            (channel as PublicChannel).join(object : ChannelCallback {
+                override fun onResult(result: Channel) {
+                    continuation.resume(SceytResponse.Success(result.toSceytUiChannel()))
                 }
 
                 override fun onError(error: SceytException?) {

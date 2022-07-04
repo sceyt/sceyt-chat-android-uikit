@@ -39,9 +39,6 @@ class ConversationInfoViewModel : BaseViewModel() {
     private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
 
-    init {
-        repo.onChannelEvenFlow
-    }
 
     fun getChannel(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {

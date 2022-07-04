@@ -6,6 +6,7 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,7 @@ interface MessagesRepository {
     suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker>
     suspend fun sendTypingState(typing: Boolean)
     suspend fun markAllAsRead(): SceytResponse<MessageListMarker>
+    suspend fun join(): SceytResponse<SceytChannel>
     val onMessageFlow: Flow<SceytMessage>
     val onThreadMessageFlow: Flow<SceytMessage>
     val onMessageStatusFlow: Flow<MessageStatusChange>

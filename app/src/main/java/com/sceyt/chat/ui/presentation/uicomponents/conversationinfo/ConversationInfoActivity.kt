@@ -9,10 +9,12 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.tabs.TabLayoutMediator
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
+import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.databinding.ActivityConversationInfoBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.SceytDialog

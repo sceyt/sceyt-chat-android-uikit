@@ -47,8 +47,11 @@ class MessageListViewModel(conversationId: Long,
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
 
-    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytMessage>>(SceytResponse.Success(null))
+    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytMessage>> = _addDeleteReactionLiveData
+
+    private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
+    val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytMessage>()
     val onNewThreadMessageLiveData = MutableLiveData<SceytMessage>()
@@ -214,6 +217,13 @@ class MessageListViewModel(conversationId: Long,
     fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(typing)
+        }
+    }
+
+    fun join() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = messagesRepository.join()
+            _joinLiveData.postValue(response)
         }
     }
 

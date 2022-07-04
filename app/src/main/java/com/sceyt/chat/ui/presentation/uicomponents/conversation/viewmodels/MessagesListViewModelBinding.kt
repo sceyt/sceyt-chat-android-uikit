@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
@@ -118,9 +119,11 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     onChannelEventLiveData.observe(lifecycleOwner) {
         when (it.eventType) {
             ChannelEventEnum.ClearedHistory -> messagesListView.clearData()
-            ChannelEventEnum.Deleted, ChannelEventEnum.Left -> {
-                messagesListView.context.asAppCompatActivity().finish()
+            ChannelEventEnum.Left -> {
+                if (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private)
+                    messagesListView.context.asAppCompatActivity().finish()
             }
+            ChannelEventEnum.Deleted -> messagesListView.context.asAppCompatActivity().finish()
             else -> return@observe
         }
     }
@@ -151,6 +154,19 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
                                   lifecycleOwner: LifecycleOwner) {
 
     messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
+    messageInputView.checkIsParticipant(channel)
+
+    pageStateLiveData.observe(lifecycleOwner) {
+        if (it is PageState.StateError)
+            customToastSnackBar(messageInputView, it.errorMessage.toString())
+    }
+
+    joinLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success)
+            messageInputView.joinSuccess()
+
+        notifyPageStateWithResponse(it)
+    }
 
     onEditMessageCommandLiveData.observe(lifecycleOwner) {
         messageInputView.message = it.toMessage()
@@ -158,6 +174,20 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
 
     onReplayMessageCommandLiveData.observe(lifecycleOwner) {
         messageInputView.replayMessage(it.toMessage())
+    }
+
+    onChannelEventLiveData.observe(lifecycleOwner) {
+        when (it.eventType) {
+            ChannelEventEnum.Left -> {
+                if (channel.channelType == ChannelTypeEnum.Public)
+                    messageInputView.onChannelLeft()
+            }
+            ChannelEventEnum.Joined -> {
+                if (channel.channelType == ChannelTypeEnum.Public)
+                    messageInputView.joinSuccess()
+            }
+            else -> return@observe
+        }
     }
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
@@ -173,7 +203,7 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
             }
         }
 
-        override fun editMessage(message: Message) {
+        override fun sendEditMessage(message: Message) {
             this@bindView.editMessage(message)
             messageInputView.cancelReplay()
         }
@@ -181,12 +211,17 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
         override fun typing(typing: Boolean) {
             sendTypingEvent(typing)
         }
+
+        override fun join() {
+            this@bindView.join()
+        }
     }
 }
 
 fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
                                   replayInThreadMessage: SceytMessage?,
                                   lifecycleOwner: LifecycleOwner) {
+
 
     if (replayInThread)
         headerView.setReplayMessage(replayInThreadMessage)
