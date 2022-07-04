@@ -75,7 +75,6 @@
             android:layout_marginBottom="8dp"
             android:autoLink="phone|web|email"
             android:textColor="@color/sceyt_color_text_themed"
-            android:textIsSelectable="true"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"

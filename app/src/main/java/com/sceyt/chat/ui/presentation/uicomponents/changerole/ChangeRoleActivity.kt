@@ -10,6 +10,8 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.databinding.ActivityChooseRoleBinding
 import com.sceyt.chat.ui.extensions.findIndexed
+import com.sceyt.chat.ui.extensions.isNightTheme
+import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chat.ui.presentation.uicomponents.changerole.adapter.ChooseRoleAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.changerole.adapter.RoleItem
 import com.sceyt.chat.ui.presentation.uicomponents.changerole.viewmodel.RoleViewModel
@@ -22,6 +24,8 @@ class ChangeRoleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        statusBarIconsColorWithBackground(isNightTheme())
+
         setContentView(ActivityChooseRoleBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)

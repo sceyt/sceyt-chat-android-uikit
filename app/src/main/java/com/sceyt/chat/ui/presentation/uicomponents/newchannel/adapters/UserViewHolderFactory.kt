@@ -1,22 +1,21 @@
-package com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.viewholders
+package com.sceyt.chat.ui.presentation.uicomponents.newchannel.adapters
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.ui.databinding.ItemSelectUserBinding
+import com.sceyt.chat.ui.databinding.ItemUserBinding
 import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UserItem
-import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UsersAdapter
 
-class UsersViewHolderFactory(context: Context, private val listeners: UsersAdapter.ClickListener) {
+class UserViewHolderFactory (context: Context, private val listeners: UsersAdapter.ClickListener) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<UserItem> {
         return when (viewType) {
             ItemViewType.User.ordinal -> {
-                UserViewHolder(ItemSelectUserBinding.inflate(layoutInflater, parent, false),
+                UserViewHolder(ItemUserBinding.inflate(layoutInflater, parent, false),
                     listeners)
             }
             ItemViewType.Loading.ordinal -> {

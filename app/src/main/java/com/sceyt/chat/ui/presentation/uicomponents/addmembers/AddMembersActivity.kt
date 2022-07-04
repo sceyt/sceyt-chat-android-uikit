@@ -12,21 +12,25 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.databinding.ActivityAddMembersBinding
 import com.sceyt.chat.ui.extensions.isLastItemDisplaying
+import com.sceyt.chat.ui.extensions.isNightTheme
+import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.SelectableUsersAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.SelectedUsersAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UserItem
-import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UsersAdapter
-import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.viewholders.UsersViewHolderFactory
-import com.sceyt.chat.ui.presentation.uicomponents.addmembers.viewmodel.AddUsersViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.addmembers.viewmodel.UsersViewModel
 
 class AddMembersActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddMembersBinding
-    private val viewModel: AddUsersViewModel by viewModels()
-    private lateinit var usersAdapter: UsersAdapter
+    private val viewModel: UsersViewModel by viewModels()
+    private lateinit var usersAdapter: SelectableUsersAdapter
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
     private var selectedUsers = arrayListOf<SceytMember>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        statusBarIconsColorWithBackground(isNightTheme())
+
         setContentView(ActivityAddMembersBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
@@ -74,7 +78,7 @@ class AddMembersActivity : AppCompatActivity() {
     private fun setupUsersList(list: List<UserItem>) {
         initSelectedItems(list)
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = UsersAdapter(list as ArrayList, UsersViewHolderFactory(this) {
+            binding.rvUsers.adapter = SelectableUsersAdapter(list as ArrayList, SelectableUserViewHolderFactory(this) {
                 if (it.chosen) {
                     addOrRemoveFromSelectedUsers(it, true)
                     setSelectedUsersAdapter(it)

@@ -7,11 +7,12 @@
     android:orientation="vertical"
     tools:context=".presentation.uicomponents.addmembers.AddMembersActivity">
 
-    <com.sceyt.chat.ui.presentation.customviews.SearchableToolbar
+    <com.sceyt.chat.ui.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytSearchableToolbarTitle="@string/add_members" />
 
     <View
         android:id="@+id/dividerToolbar"
@@ -30,7 +31,7 @@
         android:paddingHorizontal="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dividerToolbar"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
         tools:itemCount="20"
         tools:listitem="@layout/item_selected_user" />
 

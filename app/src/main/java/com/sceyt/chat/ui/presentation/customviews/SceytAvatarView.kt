@@ -11,6 +11,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.glideRequestListener
+import com.sceyt.chat.ui.sceytconfigs.SearchInputViewStyle.backgroundColor
 
 
 class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -21,7 +22,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var textSize = 50
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
-    private val backgroundColor by lazy { getAvatarColor() }
+    private var avatarBackgroundColor: Int = 0
 
     init {
         attrs?.let {
@@ -30,6 +31,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
             imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
+            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, getAvatarRandomColor())
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
@@ -59,7 +61,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private fun drawBackgroundColor(canvas: Canvas) {
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
-            color = backgroundColor.toColorInt()
+            color = avatarBackgroundColor
         })
     }
 
@@ -71,14 +73,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         } else strings[0].first().uppercase()
     }
 
-    private fun getAvatarColor(): String {
+    private fun getAvatarRandomColor(): Int {
         val colors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
         var colorIndex: Int = (0..6).random()
 
         if (colorIndex >= colors.size)
             colorIndex -= colors.size
 
-        return colors[colorIndex]
+        return colors[colorIndex].toColorInt()
     }
 
     private fun loadAvatarImage() {
@@ -114,6 +116,11 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {
         avatarLoadCb = cb
+    }
+
+    fun setAvatarBackgroundColor(color: Int) {
+        avatarBackgroundColor = color
+        invalidate()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

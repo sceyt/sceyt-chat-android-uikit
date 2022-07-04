@@ -15,6 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".presentation.uicomponents.changerole.ChangeRoleActivity"
             android:exported="false"
@@ -27,10 +28,19 @@
         <activity
             android:name=".presentation.uicomponents.conversation.ConversationActivity"
             android:exported="false"
+            android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.uicomponents.addmembers.AddMembersActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
+        <activity
+            android:name=".presentation.uicomponents.newchannel.NewChannelActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
+        <activity
+            android:name=".presentation.uicomponents.creategroup.CreateGroupActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
