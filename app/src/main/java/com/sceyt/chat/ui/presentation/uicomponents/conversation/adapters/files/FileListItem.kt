@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files
 
-import androidx.databinding.BaseObservable
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
@@ -9,8 +8,15 @@ import com.sceyt.chat.ui.data.models.messages.FileLoadData
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlin.math.max
 
-sealed class FileListItem(val file: Attachment,
-                          val sceytMessage: SceytMessage) : BaseObservable() {
+sealed class FileListItem() {
+    lateinit var file: Attachment
+    lateinit var sceytMessage: SceytMessage
+
+    constructor(file: Attachment, sceytMessage: SceytMessage) : this() {
+        this.file = file
+        this.sceytMessage = sceytMessage
+    }
+
     data class File(val attachment: Attachment,
                     val message: SceytMessage) : FileListItem(attachment, message)
 
@@ -19,6 +25,8 @@ sealed class FileListItem(val file: Attachment,
 
     data class Video(val attachment: Attachment,
                      val message: SceytMessage) : FileListItem(attachment, message)
+
+    object LoadingMoreItem : FileListItem()
 
     val fileLoadData by lazy { FileLoadData(file.url) }
 

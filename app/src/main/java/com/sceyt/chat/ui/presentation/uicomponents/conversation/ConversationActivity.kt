@@ -34,12 +34,11 @@ class ConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversation)
 
-        val isNightMode = isNightTheme()
-        statusBarIconsColorWithBackground(isNightMode)
+        statusBarIconsColorWithBackground(isNightTheme())
 
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
-        viewModel.bindView(binding.headerView, replayMessage)
+        viewModel.bindView(binding.headerView, replayMessage,lifecycleOwner = this)
 
         viewModel.loadMessages(0, false)
 
@@ -67,7 +66,7 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun getDataFromIntent() {
-        channel = intent.getParcelableExtra(CHANNEL)!!
+        channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
         isReplayInThread = intent.getBooleanExtra(REPLAY_IN_THREAD, false)
         replayMessage = intent.getParcelableExtra(REPLAY_IN_THREAD_MESSAGE)
     }
@@ -81,6 +80,7 @@ class ConversationActivity : AppCompatActivity() {
             context.launchActivity<ConversationActivity> {
                 putExtra(CHANNEL, channel)
             }
+            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
 
         fun newInstance(context: Context, channel: SceytChannel, message: SceytMessage) {
@@ -95,14 +95,15 @@ class ConversationActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        if (isReplayInThread)
-            overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             getDataFromIntent()
             val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
+
+            @Suppress("UNCHECKED_CAST")
             return MessageListViewModel(conversationId, isReplayInThread, channel) as T
         }
     }

@@ -50,7 +50,10 @@
     </declare-styleable>
 
     <declare-styleable name="SceytVideoControllerView">
-        <attr name="sceytVideoControllerViewShowPlayPause" format="boolean" />
+        <attr name="sceytVideoControllerShowPlayPause" format="boolean" />
+        <attr name="sceytVideoControllerPlayPauseSize" format="integer|dimension" />
+        <attr name="sceytVideoControllerPlayIcon" format="reference" />
+        <attr name="sceytVideoControllerPauseIcon" format="reference" />
 
     </declare-styleable>
 </resources>

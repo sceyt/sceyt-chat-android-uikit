@@ -6,7 +6,7 @@
     android:layout_height="wrap_content">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/text_title"
+        android:id="@+id/textTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
@@ -20,7 +20,7 @@
         tools:text="Title" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/text_description"
+        android:id="@+id/textDescription"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -28,42 +28,42 @@
         android:fontFamily="@font/roboto_medium"
         android:textColor="@color/sceyt_color_gray_400"
         android:textSize="@dimen/smallTextSize"
-        app:layout_constraintEnd_toEndOf="@+id/text_title"
-        app:layout_constraintStart_toStartOf="@+id/text_title"
-        app:layout_constraintTop_toBottomOf="@+id/text_title"
+        app:layout_constraintEnd_toEndOf="@+id/textTitle"
+        app:layout_constraintStart_toStartOf="@+id/textTitle"
+        app:layout_constraintTop_toBottomOf="@+id/textTitle"
         tools:text="Description" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/button_cancel"
+        android:id="@+id/buttonCancel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:background="?attr/selectableItemBackground"
-        android:padding="8dp"
         android:fontFamily="@font/roboto_medium"
+        android:padding="8dp"
+        android:text="@string/cancel"
         android:textAllCaps="false"
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/mediumTextSize"
-        app:layout_constraintBottom_toBottomOf="@+id/button_accept"
-        app:layout_constraintEnd_toStartOf="@+id/button_accept"
-        app:layout_constraintTop_toTopOf="@+id/button_accept"
-        tools:text="No" />
+        app:layout_constraintBottom_toBottomOf="@+id/buttonAccept"
+        app:layout_constraintEnd_toStartOf="@+id/buttonAccept"
+        app:layout_constraintTop_toTopOf="@+id/buttonAccept" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/button_accept"
+        android:id="@+id/buttonAccept"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:background="?attr/selectableItemBackground"
-        android:padding="8dp"
         android:fontFamily="@font/roboto_medium"
+        android:padding="8dp"
+        android:text="@string/sceyt_accept"
         android:textAllCaps="false"
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_description"
-        tools:text="Yes" />
+        app:layout_constraintTop_toBottomOf="@+id/textDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

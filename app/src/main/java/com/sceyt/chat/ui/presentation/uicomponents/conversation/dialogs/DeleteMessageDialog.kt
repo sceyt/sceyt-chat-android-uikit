@@ -24,11 +24,11 @@ class DeleteMessageDialog(
     }
 
     private fun initView() {
-        mBinding.textTitle.text = context.getString(R.string.q_delete_message_title)
-        mBinding.textDescription.text = context.getString(R.string.q_delete_message_body)
+        mBinding.textTitle.text = context.getString(R.string.sceyt_delete_message_title)
+        mBinding.textDescription.text = context.getString(R.string.sceyt_delete_message_body)
 
         mBinding.buttonAccept.apply {
-            text = context.getString(R.string.delete)
+            text = context.getString(R.string.sceyt_delete)
             setTextColor(context.getCompatColor(R.color.sceyt_color_red))
         }
 

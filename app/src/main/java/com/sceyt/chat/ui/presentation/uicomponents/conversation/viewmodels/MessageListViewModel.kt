@@ -7,6 +7,7 @@ import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
@@ -24,16 +25,12 @@ import com.sceyt.chat.ui.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MessageListViewModel(conversationId: Long,
                            internal val replayInThread: Boolean = false,
                            internal val channel: SceytChannel) : BaseViewModel() {
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
-
-    var isLoadingMessages = false
-    var hasNext = false
 
     // todo di
     private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
@@ -50,8 +47,11 @@ class MessageListViewModel(conversationId: Long,
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
 
-    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytMessage>>(SceytResponse.Success(null))
+    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val addDeleteReactionLiveData: LiveData<SceytResponse<SceytMessage>> = _addDeleteReactionLiveData
+
+    private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
+    val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
 
     val onNewMessageLiveData = MutableLiveData<SceytMessage>()
     val onNewThreadMessageLiveData = MutableLiveData<SceytMessage>()
@@ -64,6 +64,7 @@ class MessageListViewModel(conversationId: Long,
 
     // Chanel events
     val onChannelEventLiveData: MutableLiveData<ChannelEventData> = MutableLiveData<ChannelEventData>()
+    val onChannelTypingEventLiveData = MutableLiveData<ChannelTypingEventData>()
 
 
     init {
@@ -107,21 +108,29 @@ class MessageListViewModel(conversationId: Long,
                 onChannelEventLiveData.value = it
             }
         }
+
+        viewModelScope.launch {
+            messagesRepository.onChannelTypingEventFlow.collect {
+                onChannelTypingEventLiveData.value = it
+            }
+        }
     }
 
     fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean) {
-        isLoadingMessages = true
+        loadingItems = true
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.getMessages(lastMessageId)
             initResponse(response, isLoadingMore)
+            if (!isLoadingMore)
+                messagesRepository.markAllAsRead()
         }
     }
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
-        isLoadingMessages = false
+        loadingItems = false
         when (it) {
             is SceytResponse.Success -> {
                 hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
@@ -202,6 +211,19 @@ class MessageListViewModel(conversationId: Long,
     fun markMessageAsDisplayed(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.markAsRead(id)
+        }
+    }
+
+    fun sendTypingEvent(typing: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            messagesRepository.sendTypingState(typing)
+        }
+    }
+
+    fun join() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = messagesRepository.join()
+            _joinLiveData.postValue(response)
         }
     }
 

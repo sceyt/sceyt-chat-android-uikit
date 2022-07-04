@@ -4,6 +4,10 @@ import com.sceyt.chat.ui.data.models.channels.SceytChannel
 
 sealed interface ChannelPopupClickListeners {
 
+    fun interface MarkAsRead : ChannelPopupClickListeners {
+        fun onMarkAsReadClick(channel: SceytChannel)
+    }
+
     fun interface LeaveChannel : ChannelPopupClickListeners {
         fun onLeaveChannelClick(channel: SceytChannel)
     }
@@ -16,6 +20,15 @@ sealed interface ChannelPopupClickListeners {
         fun onBlockChannelClick(channel: SceytChannel)
     }
 
+    fun interface BlockUser : ChannelPopupClickListeners {
+        fun onBlockUserClick(channel: SceytChannel)
+    }
+
+    fun interface UnBlockUser : ChannelPopupClickListeners {
+        fun onUnBlockUserClick(channel: SceytChannel)
+    }
+
     /** User this if you want to implement all callbacks */
-    interface PopupClickListeners : LeaveChannel, ClearHistory, BlockChannel
+    interface PopupClickListeners : LeaveChannel, ClearHistory,
+            BlockChannel, MarkAsRead, BlockUser, UnBlockUser
 }

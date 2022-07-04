@@ -23,7 +23,9 @@ class ChannelsDiffUtil(private var oldList: List<ChannelListItem>,
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
-        return oldItem == newItem
+        return if (oldItem is ChannelListItem.ChannelItem && newItem is ChannelListItem.ChannelItem)
+            oldItem.channel.diff(newItem.channel).hasDifference().not()
+        else false
     }
 
     override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {

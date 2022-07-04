@@ -25,6 +25,5 @@ class ReactionViewHolder(private val binding: SceytItemReactionBinding,
         if (data.reaction.containsSelf)
             binding.reactionView.setReactionBackgroundColor("#4BBEFD".toColorInt())
         else binding.reactionView.setReactionBackgroundColor(0)
-
     }
 }

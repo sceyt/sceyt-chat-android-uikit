@@ -7,12 +7,10 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.Toast
@@ -28,7 +26,6 @@ import androidx.fragment.app.FragmentManager
 import com.sceyt.chat.ui.BuildConfig
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import java.io.File
-
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -65,6 +62,12 @@ fun Context.asAppCompatActivity(): AppCompatActivity {
     else throw RuntimeException("Context should be AppCompatActivity")
 }
 
+fun Context.asActivity(): Activity {
+    if (this is Activity)
+        return this
+    else throw RuntimeException("Context should be Activity")
+}
+
 fun Context.getFileUriWithProvider(file: File): Uri {
     return FileProvider.getUriForFile(this,
         BuildConfig.APPLICATION_ID + ".provider", file)
@@ -93,11 +96,6 @@ fun Context.toast(message: String?, length: Int) {
 fun Context.toast(messageResourceId: Int, length: Int) {
     Toast.makeText(this, messageResourceId, length).show()
 }
-
-private fun Context.isAirplaneModeOn(): Boolean {
-    return Settings.System.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
-}
-
 
 inline fun <reified T : Any> Context.launchActivity(
         options: Bundle? = null,
@@ -136,18 +134,6 @@ fun Context.setClipboard(text: String) {
     clipboard.setPrimaryClip(clip)
 }
 
-fun Context.gpsIsEnabled(): Boolean {
-    val locMan = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    return if (isAirplaneModeOn()) {
-        //airplane is OFF, check Providers
-        //NETWORK_PROVIDER disabled, try GPS
-        locMan.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && locMan.isProviderEnabled(LocationManager.GPS_PROVIDER)
-    } else {
-        //airplane mode is ON
-        //here you need to check GPS only, as network is OFF for sure
-        locMan.isProviderEnabled(LocationManager.GPS_PROVIDER)
-    }
-}
 
 fun Context.isNightTheme(): Boolean {
     return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
