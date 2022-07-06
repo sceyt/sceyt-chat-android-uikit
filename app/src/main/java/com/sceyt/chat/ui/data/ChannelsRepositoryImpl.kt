@@ -12,6 +12,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.channels.CreateChannelData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
@@ -107,6 +108,52 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel> {
+        if (channelData.avatarUrl.isNullOrBlank().not() && channelData.avatarUploaded.not()) {
+            val uploadResult = uploadAvatar(channelData.avatarUrl!!)
+            if (uploadResult is SceytResponse.Success) {
+                channelData.avatarUrl = uploadResult.data
+                channelData.avatarUploaded = true
+            } else return SceytResponse.Error(uploadResult.message)
+        }
+
+        return suspendCancellableCoroutine { continuation ->
+            val createChannelRequest = initCreateChannelRequest(channelData)
+
+            createChannelRequest?.execute(object : ChannelCallback {
+                override fun onResult(channel: Channel) {
+                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException) {
+                    continuation.resume(SceytResponse.Error(e.message))
+                }
+            }) ?: run {
+                continuation.resume(SceytResponse.Error("Invalid channel type"))
+            }
+        }
+    }
+
+    private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
+        val createChannelRequest: CreateChannelRequest? = when (channelData.channelType) {
+            Channel.Type.Private -> PrivateChannel.createChannelRequest()
+                .withMembers(channelData.members)
+                .withAvatarUrl(channelData.avatarUrl ?: "")
+                .withLabel(channelData.label ?: "")
+                .withSubject(channelData.subject ?: "")
+                .withMetadata(channelData.metadata ?: "")
+            Channel.Type.Public -> PublicChannel.createChannelRequest()
+                .withMembers(channelData.members)
+                .withUri(channelData.uri ?: "")
+                .withAvatarUrl(channelData.avatarUrl ?: "")
+                .withLabel(channelData.label ?: "")
+                .withSubject(channelData.subject ?: "")
+                .withMetadata(channelData.metadata ?: "")
+            else -> null
+        }
+        return createChannelRequest
+    }
+
     override suspend fun markAsRead(channel: Channel): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
             channel.markAllMessagesAsRead(object : MessageMarkCallback {
@@ -174,7 +221,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 override fun onError(e: SceytException?) {
                     continuation.resume(SceytResponse.Error(e?.message))
                 }
-
             })
         }
     }

@@ -6,6 +6,7 @@
         <attr name="sceytAvatarViewFullName" format="string" />
         <attr name="sceytAvatarViewIsGroup" format="boolean" />
         <attr name="sceytAvatarViewTextSize" format="dimension|integer" />
+        <attr name="sceytAvatarBackgroundColor" format="color|reference" />
     </declare-styleable>
 
     <declare-styleable name="SceytToReplayLineView">

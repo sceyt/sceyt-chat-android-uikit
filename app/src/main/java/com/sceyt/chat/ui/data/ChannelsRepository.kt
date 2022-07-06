@@ -10,6 +10,7 @@ import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
+import com.sceyt.chat.ui.data.models.channels.CreateChannelData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,7 @@ interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
     suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>>
     suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>
+    suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channel: GroupChannel): SceytResponse<Long>
     suspend fun clearHistory(channel: Channel): SceytResponse<Long>
     suspend fun markAsRead(channel: Channel): SceytResponse<MessageListMarker>

@@ -6,23 +6,31 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
-import com.sceyt.chat.ui.databinding.LayoutSearchableToolbarBinding
+import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.databinding.SceytLayoutSearchableToolbarBinding
 import com.sceyt.chat.ui.extensions.hideKeyboard
 import com.sceyt.chat.ui.extensions.showSoftInput
 import com.sceyt.chat.ui.presentation.uicomponents.searchinput.DebounceHelper
 
-class SearchableToolbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
-    private val binding: LayoutSearchableToolbarBinding
+    private val binding: SceytLayoutSearchableToolbarBinding
     private var isSearchMode: Boolean = false
     private val debounceHelper by lazy { DebounceHelper(300) }
+    private var toolbarTitle: String? = null
 
     init {
-        binding = LayoutSearchableToolbarBinding.inflate(LayoutInflater.from(context), this, true)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.SceytSearchableToolbar)
+        toolbarTitle = a.getString(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitle)
+        a.recycle()
+
+        binding = SceytLayoutSearchableToolbarBinding.inflate(LayoutInflater.from(context), this, true)
         binding.initViews()
     }
 
-    private fun LayoutSearchableToolbarBinding.initViews() {
+    private fun SceytLayoutSearchableToolbarBinding.initViews() {
+        tvTitle.text = toolbarTitle
+
         icSearch.setOnClickListener {
             serSearchMode(true)
         }
@@ -36,7 +44,7 @@ class SearchableToolbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    private fun LayoutSearchableToolbarBinding.serSearchMode(searchMode: Boolean) {
+    private fun SceytLayoutSearchableToolbarBinding.serSearchMode(searchMode: Boolean) {
         isSearchMode = searchMode
         icSearch.isVisible = !searchMode
         icClear.isVisible = searchMode

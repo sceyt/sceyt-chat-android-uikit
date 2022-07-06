@@ -18,15 +18,16 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelCli
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
+import com.sceyt.chat.ui.presentation.uicomponents.newchannel.NewChannelActivity
 
 
 class ChannelsFragment : Fragment() {
-    private lateinit var mBinding: FragmentChannelsBinding
+    private lateinit var binding: FragmentChannelsBinding
     private val mViewModel: ChannelsViewModel by viewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelsBinding.inflate(inflater, container, false)
-            .also { mBinding = it }
+            .also { binding = it }
             .root
     }
 
@@ -35,8 +36,12 @@ class ChannelsFragment : Fragment() {
 
         //mBinding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
 
-        mViewModel.bindView(mBinding.channelListView, viewLifecycleOwner)
-        mViewModel.bindView(mBinding.searchView)
+        mViewModel.bindView(binding.channelListView, viewLifecycleOwner)
+        mViewModel.bindView(binding.searchView)
+
+        binding.fabNewChannel.setOnClickListener {
+            NewChannelActivity.launch(requireContext())
+        }
 
         /* (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
              if (it == Types.ConnectState.StateConnected) {
@@ -44,14 +49,14 @@ class ChannelsFragment : Fragment() {
              }
          }*/
 
-        mBinding.channelListView.setCustomChannelClickListeners(object : ChannelClickListenersImpl(mBinding.channelListView) {
+        binding.channelListView.setCustomChannelClickListeners(object : ChannelClickListenersImpl(binding.channelListView) {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
                 super.onChannelClick(item)
                 println("onChannelClick")
             }
         })
 
-        mBinding.channelListView.setChannelClickListener(ChannelClickListeners.AvatarClickListener {
+        binding.channelListView.setChannelClickListener(ChannelClickListeners.AvatarClickListener {
             Toast.makeText(context, "avatar", Toast.LENGTH_LONG).show()
         })
     }

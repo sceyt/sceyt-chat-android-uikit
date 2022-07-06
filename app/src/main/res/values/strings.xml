@@ -135,5 +135,6 @@
     <string name="mute_forever">Mute forever</string>
     <string name="mute_notifications">Mute notifications</string>
     <string name="sceyt_typing">typing</string>
+    <string name="new_group">New group</string>
 
 </resources>
