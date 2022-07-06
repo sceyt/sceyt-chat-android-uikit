@@ -50,6 +50,18 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/sceyt_ic_save" />
 
+        <ProgressBar
+            android:id="@+id/loadingSave"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="16dp"
+            android:padding="4dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/icSave"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/icSave"
+            app:srcCompat="@drawable/sceyt_radio_button_checked_state" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
@@ -95,7 +107,7 @@
                 app:srcCompat="@drawable/sceyt_ic_pick_photo" />
 
             <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/title"
+                android:id="@+id/subjectInput"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
@@ -124,7 +136,6 @@
                 android:id="@+id/switchChannelMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:checked="true"
                 android:drawablePadding="18dp"
                 android:text="@string/make_channel_private"
                 android:textColor="@color/sceyt_color_text_themed"

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chat.ui.R
@@ -32,13 +31,16 @@ class ConversationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_conversation)
-
         statusBarIconsColorWithBackground(isNightTheme())
+
+        setContentView(ActivityConversationBinding.inflate(layoutInflater)
+            .also { binding = it }
+            .root)
+
 
         viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
-        viewModel.bindView(binding.headerView, replayMessage,lifecycleOwner = this)
+        viewModel.bindView(binding.headerView, replayMessage, lifecycleOwner = this)
 
         viewModel.loadMessages(0, false)
 
