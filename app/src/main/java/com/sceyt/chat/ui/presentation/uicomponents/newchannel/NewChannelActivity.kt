@@ -85,9 +85,8 @@ class NewChannelActivity : AppCompatActivity() {
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                launchActivity<CreateGroupActivity>()
-                overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
+                CreateGroupActivity.launch(this, members)
             }
         }
     }

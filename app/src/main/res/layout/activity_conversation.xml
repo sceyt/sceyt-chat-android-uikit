@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sceyt_color_bg"
+    tools:context=".presentation.uicomponents.conversation.ConversationActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
+        android:id="@+id/headerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
+        android:id="@+id/messagesListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/messageInputView"
+        app:layout_constraintTop_toBottomOf="@+id/headerView" />
+
+    <com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
+        android:id="@+id/messageInputView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:background="@color/sceyt_color_bg"
-        tools:context=".presentation.uicomponents.conversation.ConversationActivity">
+        app:layout_constraintBottom_toBottomOf="parent" />
 
-        <com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
-            android:id="@+id/headerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"/>
-
-        <com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
-            android:id="@+id/messagesListView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:clipToPadding="false"
-            android:orientation="vertical"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="10dp"
-            app:layout_constraintBottom_toTopOf="@+id/messageInputView"
-            app:layout_constraintTop_toBottomOf="@+id/headerView" />
-
-        <com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
-            android:id="@+id/messageInputView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/sceyt_color_bg"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
+</androidx.constraintlayout.widget.ConstraintLayout>
