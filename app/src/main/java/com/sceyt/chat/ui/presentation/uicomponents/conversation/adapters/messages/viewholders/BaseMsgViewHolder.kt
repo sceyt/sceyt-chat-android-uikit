@@ -32,8 +32,8 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.chat.ui.utils.DateTimeUtil.getDateTimeString
-import com.sceyt.chat.ui.presentation.common.RecyclerItemOffsetDecoration
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil.getDateTimeString
+import com.sceyt.chat.ui.shared.helpers.RecyclerItemOffsetDecoration
 import kotlin.math.min
 
 

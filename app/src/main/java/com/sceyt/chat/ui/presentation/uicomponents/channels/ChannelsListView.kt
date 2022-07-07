@@ -32,7 +32,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.genM
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.sortChannelsBy
-import com.sceyt.chat.ui.utils.BindingUtil
+import com.sceyt.chat.ui.shared.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

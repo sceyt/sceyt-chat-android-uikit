@@ -49,7 +49,7 @@
         tools:text="Montagabold.pdf" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvFileSize"
+        android:id="@+id/tvFileSizeAndDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
@@ -58,18 +58,6 @@
         android:textSize="@dimen/tinyTextSize"
         app:layout_constraintStart_toStartOf="@+id/tvFileName"
         app:layout_constraintTop_toBottomOf="@+id/tvFileName"
-        tools:text="67 KB" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:includeFontPadding="false"
-        android:textColor="@color/sceyt_color_gray_400"
-        android:textSize="@dimen/tinyTextSize"
-        app:layout_constraintStart_toEndOf="@+id/tvFileSize"
-        app:layout_constraintTop_toTopOf="@+id/tvFileSize"
-        tools:text="25/12/2001" />
+        tools:text="67 KB," />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.extensions.toPrettySize
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chat.ui.utils.DateTimeUtil
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 import java.io.File
 import java.util.*
 
@@ -29,16 +29,19 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
         with(binding) {
             tvFileName.text = file.name
 
-            if (item.message.incoming) {
-                tvFileSize.text = file.uploadedFileSize.toPrettySize()
+            val sizeText = if (item.message.incoming) {
+                file.uploadedFileSize.toPrettySize()
             } else {
                 val size = if (file.uploadedFileSize == 0L) {
                     getFileSize(file.url)
                 } else file.uploadedFileSize
 
-                tvFileSize.text = size.toPrettySize()
-                tvDate.text = DateTimeUtil.convertDateToString(Date(item.message.createdAt), "dd/MM/yyyy")
+                size.toPrettySize()
             }
+
+            val date = DateTimeUtil.convertDateToString(Date(item.message.createdAt), "dd/MM/yyyy")
+            val sizeAndDate = "$sizeText, $date"
+            tvFileSizeAndDate.text = sizeAndDate
         }
     }
 

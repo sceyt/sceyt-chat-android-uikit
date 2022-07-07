@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
-import com.sceyt.chat.ui.utils.MyDiffUtil
+import com.sceyt.chat.ui.shared.utils.MyDiffUtil
 
 class SelectableUsersAdapter(
         private var usersList: ArrayList<UserItem>,
