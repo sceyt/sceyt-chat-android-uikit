@@ -19,8 +19,8 @@ import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
 import com.sceyt.chat.ui.data.toPublicChannel
 import com.sceyt.chat.ui.databinding.SceytMessageInputViewBinding
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.presentation.common.chooseAttachment.AttachmentChooseType
-import com.sceyt.chat.ui.presentation.common.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.AttachmentChooseType
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.isTextMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentItem
@@ -28,7 +28,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.Attachme
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessageInputViewStyle
-import com.sceyt.chat.ui.utils.ViewUtil
+import com.sceyt.chat.ui.shared.utils.ViewUtil
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -108,6 +108,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun sendMessage() {
         val messageBody = binding.messageInput.text.toString().trim()
+
         if (messageBody != "" || allAttachments.isNotEmpty()) {
             if (message != null) {
                 message?.body = messageBody
@@ -117,7 +118,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             } else {
                 val messageToSend: Message? = Message.MessageBuilder()
                     .setAttachments(allAttachments.toTypedArray())
-                    .setType(getMessageType(allAttachments))
+                    .setType(getMessageType(allAttachments, messageBody))
                     .setBody(binding.messageInput.text.toString())
                     .apply {
                         replayMessage?.let {
@@ -168,13 +169,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
     }
 
-    private fun getMessageType(attachments: List<Attachment>): String {
+    private fun getMessageType(attachments: List<Attachment>, body: String?): String {
         if (attachments.isNotEmpty() && attachments.size == 1) {
             return if (attachments[0].type.isEqualsVideoOrImage())
                 "media"
             else "file"
         }
-        return "text"
+        return if (body.isLink()) "link" else "text"
     }
 
     private fun reset() {
@@ -270,7 +271,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.layoutInput.isVisible = true
     }
 
-    internal fun onChannelLeft(){
+    internal fun onChannelLeft() {
         binding.btnJoin.isVisible = true
         binding.layoutInput.isVisible = false
     }

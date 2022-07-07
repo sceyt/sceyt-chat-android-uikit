@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.utils
+package com.sceyt.chat.ui.shared.utils
 
 import android.annotation.SuppressLint
 import android.text.format.DateFormat

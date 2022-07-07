@@ -2,6 +2,8 @@ package com.sceyt.chat.ui.extensions
 
 import android.text.Editable
 import androidx.core.text.isDigitsOnly
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 fun isAllStringsNotNullOrBlank(vararg strings: Editable?): Boolean {
     for (string in strings) {
@@ -30,4 +32,13 @@ fun String.onlyLetters() = filter {
 
 fun String?.isEqualsVideoOrImage(): Boolean {
     return this == "video" || this == "image"
+}
+
+fun String?.isLink(): Boolean {
+    val regex = "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$"
+
+    val p: Pattern = Pattern.compile(regex)
+    val m: Matcher = p.matcher(this ?: return false)
+
+    return m.find()
 }

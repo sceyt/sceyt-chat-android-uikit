@@ -24,8 +24,8 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chat.ui.sceytconfigs.ConversationHeaderViewStyle
-import com.sceyt.chat.ui.utils.BindingUtil
-import com.sceyt.chat.ui.utils.DateTimeUtil.setLastActiveDateByTime
+import com.sceyt.chat.ui.shared.utils.BindingUtil
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil.setLastActiveDateByTime
 import kotlinx.coroutines.*
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)

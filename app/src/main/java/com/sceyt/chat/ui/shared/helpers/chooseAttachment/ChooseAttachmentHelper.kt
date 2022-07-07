@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.common.chooseAttachment
+package com.sceyt.chat.ui.shared.helpers.chooseAttachment
 
 import android.content.Context
 import android.content.Intent

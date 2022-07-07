@@ -9,22 +9,21 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.tabs.TabLayoutMediator
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
-import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.databinding.ActivityConversationInfoBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.SceytDialog
-import com.sceyt.chat.ui.presentation.common.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
 import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.genMemberBy
@@ -275,10 +274,12 @@ class ConversationInfoActivity : AppCompatActivity() {
     private fun setupPagerAdapter() {
         val fragments = arrayListOf(
             ChannelMediaFragment.newInstance(channel),
-            ChannelFilesFragment.newInstance(channel)
+            ChannelFilesFragment.newInstance(channel),
+            ChannelLinksFragment.newInstance(channel)
         )
         if (channel.channelType != ChannelTypeEnum.Direct)
             fragments.add(0, ChannelMembersFragment.newInstance(channel))
+
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
         binding.viewPager.adapter = pagerAdapter
