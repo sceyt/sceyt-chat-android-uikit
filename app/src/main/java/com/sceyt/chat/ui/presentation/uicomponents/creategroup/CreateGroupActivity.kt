@@ -13,7 +13,7 @@ import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.toMember
 import com.sceyt.chat.ui.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.presentation.common.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity

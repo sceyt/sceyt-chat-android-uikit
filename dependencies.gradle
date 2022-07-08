@@ -22,6 +22,8 @@ ext {
 
     exo_player_media_version = '1.0.0-beta01'
 
+    jsoup_version = '1.15.2'
+
     material_version = '1.7.0-alpha02'
 
     fragment_ktx_version = '1.5.0'
@@ -67,12 +69,13 @@ ext {
             datastorePreferences: "androidx.datastore:datastore-preferences:$datastore_version",
             exoPlayerMedia      : "androidx.media3:media3-exoplayer:$exo_player_media_version",
             exoPlayerUi         : "androidx.media3:media3-ui:$exo_player_media_version",
-            ion                 : "com.koushikdutta.ion:ion:$ion_version",
+            jsoup               : "org.jsoup:jsoup:$jsoup_version",
             firebaseMessaging   : "com.google.firebase:firebase-messaging:$firebase_messaging_version",
             firebaseBom         : "com.google.firebase:firebase-bom:$firebase_bom_version",
             firebaseCrashlytics : "com.google.firebase:firebase-crashlytics-ktx:$firebase_crashlitics_version",
             fragmentKtx         : "androidx.fragment:fragment-ktx:$fragment_ktx_version",
             glide               : "com.github.bumptech.glide:glide:$glide_version",
+            ion                 : "com.koushikdutta.ion:ion:$ion_version",
             koinAndroid         : "io.insert-koin:koin-android:$koin_version",
             lifecycleRuntime    : "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version",
             lifecycleViewModel  : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",

@@ -5,7 +5,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UserItem
-import com.sceyt.chat.ui.utils.MyDiffUtil
+import com.sceyt.chat.ui.shared.utils.MyDiffUtil
 
 class UsersAdapter(
         private var usersList: ArrayList<UserItem>,

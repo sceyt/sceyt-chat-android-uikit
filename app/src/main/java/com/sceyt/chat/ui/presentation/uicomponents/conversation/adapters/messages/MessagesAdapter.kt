@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
-import com.sceyt.chat.ui.utils.DateTimeUtil
-import com.sceyt.chat.ui.utils.MyDiffUtil
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil
+import com.sceyt.chat.ui.shared.utils.MyDiffUtil
 
 class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
