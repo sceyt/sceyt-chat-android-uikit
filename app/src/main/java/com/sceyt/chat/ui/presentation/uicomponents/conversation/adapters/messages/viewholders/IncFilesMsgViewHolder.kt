@@ -62,7 +62,8 @@ class IncFilesMsgViewHolder(
                 if (diff.filesChanged)
                     setFilesAdapter(message)
 
-                setReplayedMessageContainer(message, binding.viewReplay)
+                if (diff.replayContainerChanged)
+                    setReplayedMessageContainer(message, binding.viewReplay)
 
                 if (item.message.canShowAvatarAndName)
                     avatar.setOnClickListener {

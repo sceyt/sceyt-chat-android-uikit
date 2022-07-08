@@ -54,13 +54,13 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Henry Willian" />
 
-        <include
+        <ViewStub
             android:id="@+id/viewReplay"
-            layout="@layout/sceyt_recycler_replay_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
+            android:layout="@layout/sceyt_recycler_replay_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -127,17 +127,16 @@
         android:visibility="gone"
         tools:text="34 reply" />
 
-    <androidx.recyclerview.widget.RecyclerView
+    <ViewStub
         android:id="@+id/rvReactions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layoutDetails"
         android:layout_marginStart="3dp"
         android:layout_toEndOf="@+id/avatar"
+        android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:orientation="horizontal"
         android:paddingTop="4dp"
-        android:visibility="gone"
-        tools:itemCount="3"
-        tools:listitem="@layout/sceyt_item_reaction" />
+        android:visibility="gone" />
 
 </RelativeLayout>

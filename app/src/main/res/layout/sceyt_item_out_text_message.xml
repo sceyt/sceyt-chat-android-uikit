@@ -27,13 +27,13 @@
         android:background="@drawable/sceyt_bg_out_message"
         android:paddingTop="2dp">
 
-        <include
+        <ViewStub
             android:id="@+id/viewReplay"
-            layout="@layout/sceyt_recycler_replay_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="5dp"
+            android:layout="@layout/sceyt_recycler_replay_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -76,18 +76,17 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
+    <ViewStub
         android:id="@+id/rvReactions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layoutDetails"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="3dp"
+        android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:orientation="horizontal"
         android:paddingTop="4dp"
-        android:visibility="gone"
-        tools:itemCount="3"
-        tools:listitem="@layout/sceyt_item_reaction" />
+        android:visibility="gone" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplayCount"

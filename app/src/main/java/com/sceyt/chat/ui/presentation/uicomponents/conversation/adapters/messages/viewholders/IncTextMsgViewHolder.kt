@@ -55,7 +55,8 @@ class IncTextMsgViewHolder(
                 if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPool)
 
-                setReplayedMessageContainer(message, binding.viewReplay)
+                if (diff.replayContainerChanged)
+                    setReplayedMessageContainer(message, viewReplay)
 
                 if (messageItem.message.canShowAvatarAndName)
                     avatar.setOnClickListener {
