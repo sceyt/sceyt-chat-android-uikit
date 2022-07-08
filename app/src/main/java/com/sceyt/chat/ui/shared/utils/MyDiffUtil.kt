@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.utils
+package com.sceyt.chat.ui.shared.utils
 
 import androidx.recyclerview.widget.DiffUtil
 

@@ -17,7 +17,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelItemP
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.ChannelStyle
-import com.sceyt.chat.ui.utils.DateTimeUtil
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 
 class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                         private var listeners: ChannelClickListenersImpl) : BaseChannelViewHolder(binding.root) {

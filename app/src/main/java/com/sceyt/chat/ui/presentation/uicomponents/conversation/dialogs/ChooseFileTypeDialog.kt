@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.SceytDialogChooseFileTypeBinding
-import com.sceyt.chat.ui.presentation.common.chooseAttachment.AttachmentChooseType
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.AttachmentChooseType
 
 class ChooseFileTypeDialog(
         context: Context,

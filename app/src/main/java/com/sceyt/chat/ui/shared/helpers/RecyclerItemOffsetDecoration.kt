@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.common
+package com.sceyt.chat.ui.shared.helpers
 
 import android.content.Context
 import android.graphics.Rect

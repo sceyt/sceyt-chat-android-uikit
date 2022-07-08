@@ -21,7 +21,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import com.sceyt.chat.ui.utils.DateTimeUtil
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

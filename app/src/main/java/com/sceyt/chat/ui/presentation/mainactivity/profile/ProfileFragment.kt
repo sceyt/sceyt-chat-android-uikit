@@ -14,7 +14,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.presentation.common.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel.ProfileViewModel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
