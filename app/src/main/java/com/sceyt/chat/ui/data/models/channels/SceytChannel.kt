@@ -60,6 +60,14 @@ open class SceytChannel(open var id: Long,
         }
     }
 
+    fun getChannelAvatarUrl(): String? {
+        return when (this) {
+            is SceytDirectChannel -> peer?.avatarURL
+            is SceytGroupChannel -> avatarUrl
+            else -> null
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is SceytChannel) return false
         return other.id == id
