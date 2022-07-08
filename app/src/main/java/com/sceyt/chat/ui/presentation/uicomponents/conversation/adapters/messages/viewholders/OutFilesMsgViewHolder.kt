@@ -59,7 +59,8 @@ class OutFilesMsgViewHolder(
                 if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-                setReplayedMessageContainer(message, binding.viewReplay)
+                if (diff.replayContainerChanged)
+                    setReplayedMessageContainer(message, binding.viewReplay)
             }
         }
     }

@@ -92,7 +92,7 @@ class SceytUiKitApp : Application() {
     fun connect() {
         //  val token = getToken()
         if (/*token.isEmpty()*/ true) {
-            connectWithoutToken("37494202828")
+            connectWithoutToken("37498246245")
         }/* else {
             connectWithToken(token)
         }*/
