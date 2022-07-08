@@ -20,29 +20,36 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
     private var emptyStateView: View? = null
     private var emptySearchStateView: View? = null
 
+    private fun inflateView(@LayoutRes id: Int): View {
+        val viewDataBinding = DataBindingUtil.inflate<ViewDataBinding>(layoutInflater, id, this, false)
+        return viewDataBinding?.root ?: layoutInflater.inflate(id, this, false)
+    }
 
-    fun setLoadingStateView(@LayoutRes id: Int) {
-        val view = DataBindingUtil.inflate<ViewDataBinding>(layoutInflater, id, this, false)
-        addView(view.root.apply {
+    fun setLoadingStateView(@LayoutRes id: Int): View {
+        val view = inflateView(id)
+        addView(view.apply {
             isVisible = false
             loadingStateView = this
         })
+        return view
     }
 
-    fun setEmptyStateView(@LayoutRes id: Int) {
-        val view = DataBindingUtil.inflate<ViewDataBinding>(layoutInflater, id, this, false)
-        addView(view.root.apply {
+    fun setEmptyStateView(@LayoutRes id: Int): View {
+        val view = inflateView(id)
+        addView(view.apply {
             isVisible = false
             emptyStateView = this
         })
+        return view
     }
 
-    fun setEmptySearchStateView(@LayoutRes id: Int) {
-        val view = DataBindingUtil.inflate<ViewDataBinding>(layoutInflater, id, this, false)
-        addView(view.root.apply {
+    fun setEmptySearchStateView(@LayoutRes id: Int): View {
+        val view = inflateView(id)
+        addView(view.apply {
             isVisible = false
             emptySearchStateView = this
         })
+        return view
     }
 
     fun updateState(state: PageState, showLoadingIfNeed: Boolean = true) {

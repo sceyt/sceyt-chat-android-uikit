@@ -24,6 +24,12 @@
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
+            android:name=".presentation.uicomponents.conversationinfo.CustomConversationInfoActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
             android:name="com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
