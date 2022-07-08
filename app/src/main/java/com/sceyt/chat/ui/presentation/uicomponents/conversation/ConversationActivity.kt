@@ -20,9 +20,11 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.Messag
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessagePopupClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.bindView
+import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 
-class ConversationActivity : AppCompatActivity() {
+open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
     private val viewModel: MessageListViewModel by viewModels { MyViewModelFactory() }
     private lateinit var channel: SceytChannel
@@ -63,6 +65,12 @@ class ConversationActivity : AppCompatActivity() {
             override fun onSendMsgClick(view: View) {
                 super.onSendMsgClick(view)
                 println("send")
+            }
+        })
+
+        binding.headerView.setCustomClickListener(object : HeaderClickListenersImpl(binding.headerView) {
+            override fun onAvatarClick(view: View) {
+                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
             }
         })
     }

@@ -47,9 +47,10 @@ class ConversationInfoViewModel : BaseViewModel() {
         }
     }
 
-    fun saveChanges(channel: SceytChannel, newSubject: String, avatarUrl: String?, editedAvatar: Boolean) {
+    fun saveChanges(channel: SceytChannel, newSubject: String, avatarUrl: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
+            val editedAvatar = channel.getChannelAvatarUrl() != avatarUrl
             if (editedAvatar && avatarUrl != null) {
                 val uploadResult = repo.uploadAvatar(avatarUrl)
                 if (uploadResult is SceytResponse.Success) {
