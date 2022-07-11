@@ -51,12 +51,8 @@ class OutTextMsgViewHolder(
                 if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPool)
 
-                setReplayedMessageContainer(message, binding.viewReplay)
-
-                layoutDetails.setOnLongClickListener {
-                    messageListeners?.onMessageLongClick(it, item)
-                    return@setOnLongClickListener true
-                }
+                if (diff.replayContainerChanged)
+                    setReplayedMessageContainer(message, viewReplay)
             }
         }
     }

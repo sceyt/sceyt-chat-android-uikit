@@ -8,7 +8,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 
 sealed interface MessageClickListeners {
 
-    fun interface MessageClickLongClickListener : MessageClickListeners {
+    fun interface MessageLongClickListener : MessageClickListeners {
         fun onMessageLongClick(view: View, item: MessageListItem.MessageItem)
     }
 
@@ -40,9 +40,14 @@ sealed interface MessageClickListeners {
         fun onAttachmentLongClick(view: View, item: FileListItem)
     }
 
+    fun interface LinkClickListener : MessageClickListeners {
+        fun onLinkClick(view: View, item: MessageListItem.MessageItem)
+    }
+
     /** User this if you want to implement all callbacks */
     interface ClickListeners :
-            MessageClickLongClickListener,
+            LinkClickListener,
+            MessageLongClickListener,
             AvatarClickListener,
             ReplayCountClickListener,
             AddReactionClickListener,

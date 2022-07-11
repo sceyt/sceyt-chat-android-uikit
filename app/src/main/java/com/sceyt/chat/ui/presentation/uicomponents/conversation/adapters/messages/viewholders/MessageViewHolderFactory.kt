@@ -7,11 +7,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.databinding.*
+import com.sceyt.chat.ui.extensions.isLink
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.chat.ui.shared.helpers.LinkPreviewHelper
 
-open class MessageViewHolderFactory(context: Context) {
+open class MessageViewHolderFactory(context: Context,
+                                    private val linkPreview: LinkPreviewHelper) {
 
     private var listeners = MessageClickListenersImpl()
     private val layoutInflater = LayoutInflater.from(context)
@@ -22,6 +25,8 @@ open class MessageViewHolderFactory(context: Context) {
         return when (viewType) {
             MessageTypeEnum.IncText.ordinal -> createIncTextMsgViewHolder(parent)
             MessageTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(parent)
+            MessageTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(parent)
+            MessageTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
             MessageTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -42,6 +47,18 @@ open class MessageViewHolderFactory(context: Context) {
         return OutTextMsgViewHolder(
             SceytItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, listeners)
+    }
+
+    open fun createIncLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncLinkMsgViewHolder(
+            SceytItemIncLinkMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, linkPreview,listeners)
+    }
+
+    open fun createOutLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutLinkMsgViewHolder(
+            SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, linkPreview,listeners)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -92,7 +109,12 @@ open class MessageViewHolderFactory(context: Context) {
         val inc = message.incoming
         return when {
             message.state == MessageState.Deleted -> if (inc) MessageTypeEnum.IncDeleted else MessageTypeEnum.OutDeleted
-            message.attachments.isNullOrEmpty() -> if (inc) MessageTypeEnum.IncText else MessageTypeEnum.OutText
+            message.attachments.isNullOrEmpty() -> {
+                if (message.body.isLink())
+                    if (inc) MessageTypeEnum.IncLink else MessageTypeEnum.OutLink
+                else
+                    if (inc) MessageTypeEnum.IncText else MessageTypeEnum.OutText
+            }
             else -> if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
         }
     }
@@ -106,6 +128,8 @@ open class MessageViewHolderFactory(context: Context) {
     enum class MessageTypeEnum {
         IncText,
         OutText,
+        IncLink,
+        OutLink,
         IncDeleted,
         OutDeleted,
         IncFiles,
