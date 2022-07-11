@@ -28,7 +28,6 @@ abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
                 layoutLinkPreview.setLinPreview(message.linkPreviewData, messageBody, message.message)
             })
         } else layoutLinkPreview.setLinPreview(message.linkPreviewData, messageBody, message.message)
-
     }
 
     private fun SceytMessageLinkPreviewContainerBinding.setLinPreview(data: LinkPreviewHelper.PreviewMetaData?,

@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.ProfileRepository
 import com.sceyt.chat.ui.data.ProfileRepositoryImpl
@@ -20,6 +21,12 @@ class ProfileViewModel : BaseViewModel() {
 
     private val _editProfileLiveData = MutableLiveData<User>()
     val editProfileLiveData: LiveData<User> = _editProfileLiveData
+
+    private val _muteUnMuteLiveData = MutableLiveData<Boolean>()
+    val muteUnMuteLiveData: LiveData<Boolean> = _muteUnMuteLiveData
+
+    private val _settingsLiveData = MutableLiveData<Settings>()
+    val settingsLiveData: LiveData<Settings> = _settingsLiveData
 
     private val _editProfileErrorLiveData = MutableLiveData<String?>()
     val editProfileErrorLiveData: LiveData<String?> = _editProfileErrorLiveData
@@ -51,6 +58,41 @@ class ProfileViewModel : BaseViewModel() {
                 }
                 is SceytResponse.Error -> {
                     _editProfileErrorLiveData.postValue(response.message)
+                }
+            }
+        }
+    }
+
+    fun getSettings() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = profileRepo.getSettings()
+            notifyResponseAndPageState(_settingsLiveData, response)
+        }
+    }
+
+    fun muteNotifications(muteUntil: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            when (val response = profileRepo.muteNotifications(muteUntil)) {
+                is SceytResponse.Success -> {
+                    _muteUnMuteLiveData.postValue(true)
+                }
+                is SceytResponse.Error -> {
+                    _muteUnMuteLiveData.postValue(false)
+                    notifyPageStateWithResponse(response)
+                }
+            }
+        }
+    }
+
+    fun unMuteNotifications() {
+        viewModelScope.launch(Dispatchers.IO) {
+            when (val response = profileRepo.unMuteNotifications()) {
+                is SceytResponse.Success -> {
+                    _muteUnMuteLiveData.postValue(false)
+                }
+                is SceytResponse.Error -> {
+                    _muteUnMuteLiveData.postValue(true)
+                    notifyPageStateWithResponse(response)
                 }
             }
         }

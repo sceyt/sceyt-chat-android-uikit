@@ -119,6 +119,8 @@
     <string name="sceyt_unblock_user_desc">Are you sure you want to unblock this user?</string>
     <string name="sceyt_delete_channel_title">Delete channel?</string>
     <string name="sceyt_delete_channel_desc">Are you sure you want to delete channel?</string>
+    <string name="sceyt_sign_out_title">Sign out?</string>
+    <string name="sceyt_sign_out_desc">Are you sure you want to sign out?</string>
     <string name="sceyt_leave_channel">Leave Channel</string>
     <string name="sceyt_leave">Leave</string>
     <string name="sceyt_accept">Accept</string>

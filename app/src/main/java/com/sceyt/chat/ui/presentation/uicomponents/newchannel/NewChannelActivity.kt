@@ -23,6 +23,7 @@ class NewChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNewChannelBinding
     private val viewModel: UsersViewModel by viewModels()
     private lateinit var usersAdapter: UsersAdapter
+    private var creatingChannel = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +50,7 @@ class NewChannelActivity : AppCompatActivity() {
 
         viewModel.createChannelLiveData.observe(this) {
             ConversationActivity.newInstance(this, it)
+            creatingChannel = false
         }
     }
 
@@ -70,6 +72,8 @@ class NewChannelActivity : AppCompatActivity() {
     private fun setupUsersList(list: List<UserItem>) {
         if (::usersAdapter.isInitialized.not()) {
             binding.rvUsers.adapter = UsersAdapter(list as ArrayList, UserViewHolderFactory(this) {
+                if (creatingChannel) return@UserViewHolderFactory
+                creatingChannel = true
                 viewModel.createDirectChannel(it.user)
             }).also { usersAdapter = it }
 

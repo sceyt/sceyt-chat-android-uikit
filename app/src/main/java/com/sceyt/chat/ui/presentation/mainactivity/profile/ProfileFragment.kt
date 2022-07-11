@@ -12,12 +12,18 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.UserSharedPreference
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.ui.presentation.common.SceytDialog
+import com.sceyt.chat.ui.presentation.login.LoginActivity
 import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel.ProfileViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import java.util.concurrent.TimeUnit
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -28,6 +34,7 @@ class ProfileFragment : Fragment() {
     private var avatarUrl: String? = null
     private var isEditMode = false
     private var isSaveLoading = false
+    private var muted: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentProfileBinding.inflate(inflater, container, false).also {
@@ -41,7 +48,7 @@ class ProfileFragment : Fragment() {
         setUpThemeSwitch()
         binding.initViews()
         initViewModel()
-
+        viewModel.getSettings()
     }
 
     override fun onResume() {
@@ -67,14 +74,43 @@ class ProfileFragment : Fragment() {
             isSaveLoading = false
             customToastSnackBar(requireView(), it.toString())
         }
+
+        viewModel.settingsLiveData.observe(viewLifecycleOwner) {
+            binding.switchNotifications.isChecked = it.muted
+            binding.switchNotifications.jumpDrawablesToCurrentState()
+        }
+
+        viewModel.muteUnMuteLiveData.observe(viewLifecycleOwner) {
+            muted = it
+            binding.switchNotifications.isChecked = it
+        }
     }
 
     private fun FragmentProfileBinding.initViews() {
         displayNameDefaultBg = binding.displayName.background
         setEditMode(isEditMode)
+        switchNotifications.setOnlyClickable()
 
         avatar.setAvatarImageLoadListener {
             loadingProfileImage.isVisible = it
+        }
+
+        switchNotifications.setOnClickListener {
+            if (muted) {
+                viewModel.unMuteNotifications()
+                switchNotifications.isChecked = false
+            } else {
+                MuteNotificationDialog(requireContext()) {
+                    val until = when (it) {
+                        MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
+                        MuteTypeEnum.Mute2Hour -> TimeUnit.HOURS.toMillis(2)
+                        MuteTypeEnum.Mute1Day -> TimeUnit.DAYS.toMillis(1)
+                        MuteTypeEnum.MuteForever -> 0L
+                    }
+                    viewModel.muteNotifications(until)
+                    switchNotifications.isChecked = true
+                }.show()
+            }
         }
 
         tvEditOrSave.setOnClickListener {
@@ -111,6 +147,18 @@ class ProfileFragment : Fragment() {
                     }
                 }
             }.show()
+        }
+
+        signOut.setOnClickListener {
+            SceytDialog(requireContext(), positiveClickListener = {
+                UserSharedPreference.setToken(requireContext(), null)
+                LoginActivity.launch(requireContext())
+                requireActivity().finish()
+            }).setTitle(getString(R.string.sceyt_sign_out_title))
+                .setDescription(getString(R.string.sceyt_sign_out_desc))
+                .setPositiveButtonTitle(getString(R.string.sign_out))
+                .setPositiveButtonTextColor(requireContext().getCompatColor(R.color.sceyt_color_red))
+                .show()
         }
 
         displayName.setOnEditorActionListener { _, actionId, _ ->
