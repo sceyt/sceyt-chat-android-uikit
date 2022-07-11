@@ -9,7 +9,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 
 open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
-    private var messageLongClickListener: MessageClickListeners.MessageClickLongClickListener? = null
+    private var messageLongClickListener: MessageClickListeners.MessageLongClickListener? = null
     private var avatarClickListener: MessageClickListeners.AvatarClickListener? = null
     private var replayCountClickListener: MessageClickListeners.ReplayCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
@@ -17,6 +17,8 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
+    private var linkClickListener: MessageClickListeners.LinkClickListener? = null
+
 
     internal constructor()
 
@@ -64,6 +66,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         attachmentLongClickListener?.onAttachmentLongClick(view, item)
     }
 
+    override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onLinkClick(view, item)
+        linkClickListener?.onLinkClick(view, item)
+    }
+
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
@@ -75,8 +82,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 reactionLongClickListener = listener
                 attachmentClickListener = listener
                 attachmentLongClickListener = listener
+                linkClickListener = listener
             }
-            is MessageClickListeners.MessageClickLongClickListener -> {
+            is MessageClickListeners.MessageLongClickListener -> {
                 messageLongClickListener = listener
             }
             is MessageClickListeners.AvatarClickListener -> {
@@ -99,6 +107,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             }
             is MessageClickListeners.AttachmentLongClickListener -> {
                 attachmentLongClickListener = listener
+            }
+            is MessageClickListeners.LinkClickListener -> {
+                linkClickListener = listener
             }
         }
     }

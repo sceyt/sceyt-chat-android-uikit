@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Typeface
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewStub
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
@@ -32,8 +33,8 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactio
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.chat.ui.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chat.ui.shared.helpers.RecyclerItemOffsetDecoration
+import com.sceyt.chat.ui.shared.utils.DateTimeUtil.getDateTimeString
 import kotlin.math.min
 
 
@@ -41,8 +42,11 @@ abstract class BaseMsgViewHolder(view: View,
                                  private val messageListeners: MessageClickListenersImpl? = null)
     : RecyclerView.ViewHolder(view) {
 
+    private var replayMessageContainerBinding: SceytRecyclerReplayContainerBinding? = null
+    private var recyclerViewReactions: RecyclerView? = null
 
     abstract fun bind(item: MessageListItem, diff: MessageItemPayloadDiff)
+
     open fun onViewDetachedFromWindow() {
         reactionsAdapter = null
     }
@@ -72,13 +76,16 @@ abstract class BaseMsgViewHolder(view: View,
         message.setMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
-    protected fun setReplayedMessageContainer(message: SceytMessage, viewBinding: SceytRecyclerReplayContainerBinding) {
+    protected fun setReplayedMessageContainer(message: SceytMessage, viewStub: ViewStub) {
         if (message.parent == null || message.replyInThread || message.parent?.id == 0L) {
-            viewBinding.root.isVisible = false
+            viewStub.isVisible = false
             return
         }
-
-        with(viewBinding) {
+        if (viewStub.parent != null)
+            SceytRecyclerReplayContainerBinding.bind(viewStub.inflate()).also {
+                replayMessageContainerBinding = it
+            }
+        with(replayMessageContainerBinding ?: return) {
             val parent = message.parent
             tvName.text = parent?.from?.fullName?.trim()
             if (parent?.state == MessageState.Deleted) {
@@ -124,12 +131,12 @@ abstract class BaseMsgViewHolder(view: View,
         }
     }
 
-    protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactions: RecyclerView,
+    protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
                                        viewPool: RecyclerView.RecycledViewPool) {
         val reactions: List<ReactionItem>? = item.message.messageReactions
 
         if (reactions.isNullOrEmpty()) {
-            rvReactions.isVisible = false
+            rvReactionsViewStub.isVisible = false
             return
         }
 
@@ -142,7 +149,12 @@ abstract class BaseMsgViewHolder(view: View,
                 it.submitList(reactions)
             }
 
-            with(rvReactions) {
+            if (rvReactionsViewStub.parent != null)
+                rvReactionsViewStub.inflate().also {
+                    recyclerViewReactions = it as RecyclerView
+                }
+
+            with(recyclerViewReactions ?: return) {
                 setRecycledViewPool(viewPool)
                 itemAnimator = DefaultItemAnimator().also {
                     it.moveDuration = 100
@@ -155,10 +167,10 @@ abstract class BaseMsgViewHolder(view: View,
                 adapter = reactionsAdapter
             }
         } else {
-            rvReactions.layoutManager = gridLayoutManager
+            recyclerViewReactions?.layoutManager = gridLayoutManager
             reactionsAdapter?.submitList(reactions)
         }
-        rvReactions.isVisible = true
+        recyclerViewReactions?.isVisible = true
     }
 
     protected fun setMessageDateDependAttachments(messageDate: SceytDateStatusView, attachments: List<FileListItem>?) {

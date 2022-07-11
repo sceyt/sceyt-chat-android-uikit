@@ -11,10 +11,8 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
-import com.sceyt.chat.ui.extensions.findIndexed
-import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.extensions.getFragmentManager
-import com.sceyt.chat.ui.extensions.setClipboard
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -116,6 +114,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
                 if (enabledClickActions)
                     clickListeners.onAttachmentLongClick(view, item)
+            }
+
+            override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
+                if (enabledClickActions)
+                    clickListeners.onLinkClick(view, item)
             }
         })
     }
@@ -360,6 +363,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
         showMessageActionsPopup(view, item.sceytMessage)
+    }
+
+    override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
+        context.openLink(item.message.body)
     }
 
 

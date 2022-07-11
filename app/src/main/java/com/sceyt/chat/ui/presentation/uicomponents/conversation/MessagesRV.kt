@@ -3,20 +3,23 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 import android.content.Context
 import android.util.AttributeSet
 import android.view.animation.AnimationUtils
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
+import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.dpToPx
 import com.sceyt.chat.ui.extensions.getFirstVisibleItemPosition
+import com.sceyt.chat.ui.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import com.sceyt.chat.ui.presentation.common.SpeedyLinearLayoutManager
+import com.sceyt.chat.ui.shared.helpers.LinkPreviewHelper
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -27,7 +30,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToPrefetchDistanceListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var needLoadMoreMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var viewHolderFactory = MessageViewHolderFactory(context)
+    private var viewHolderFactory = MessageViewHolderFactory(context, LinkPreviewHelper(context.asAppCompatActivity().lifecycleScope))
     private var richToStartInvoked = AtomicBoolean(false)
     private var richToPrefetchDistanceInvoked = AtomicBoolean(false)
 

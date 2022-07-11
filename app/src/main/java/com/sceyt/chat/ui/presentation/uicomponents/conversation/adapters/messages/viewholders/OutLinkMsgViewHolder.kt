@@ -2,23 +2,23 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 
 import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
-import androidx.core.text.HtmlCompat.fromHtml
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.ui.databinding.SceytItemOutTextMessageBinding
+import com.sceyt.chat.ui.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
-import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.OUT_DEFAULT_SPACE
-import com.sceyt.chat.ui.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
+import com.sceyt.chat.ui.shared.helpers.LinkPreviewHelper
 
-class OutTextMsgViewHolder(
-        private val binding: SceytItemOutTextMessageBinding,
+class OutLinkMsgViewHolder(
+        private val binding: SceytItemOutLinkMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
+        linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListenersImpl?,
-) : BaseMsgViewHolder(binding.root, messageListeners) {
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners) {
 
     private lateinit var messageItem: MessageListItem.MessageItem
 
@@ -29,17 +29,22 @@ class OutTextMsgViewHolder(
             messageListeners?.onMessageLongClick(it, messageItem)
             return@setOnLongClickListener true
         }
+
+        binding.layoutDetails.setOnClickListener {
+            messageListeners?.onLinkClick(it, messageItem)
+        }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         if (item is MessageListItem.MessageItem) {
             messageItem = item
+
             with(binding) {
                 val message = item.message
 
-                if (diff.edited) {
-                    val space = if (message.state == MessageState.Edited) OUT_EDITED_SPACE else OUT_DEFAULT_SPACE
-                    messageBody.text = fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
+                if (diff.edited && layoutLinkPreview.root.isVisible.not()) {
+                    val space = if (message.state == MessageState.Edited) MessagesStyle.OUT_EDITED_SPACE else MessagesStyle.OUT_DEFAULT_SPACE
+                    messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
                 }
 
                 if (diff.edited || diff.statusChanged)
@@ -53,11 +58,13 @@ class OutTextMsgViewHolder(
 
                 if (diff.replayContainerChanged)
                     setReplayedMessageContainer(message, viewReplay)
+
+                loadLinkPreview(messageItem, layoutLinkPreview, messageBody)
             }
         }
     }
 
-    private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
+    private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         with(root.context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
         }

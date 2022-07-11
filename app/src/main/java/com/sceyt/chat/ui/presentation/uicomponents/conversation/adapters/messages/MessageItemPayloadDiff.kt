@@ -6,13 +6,14 @@ data class MessageItemPayloadDiff(
         val avatarChanged: Boolean,
         val nameChanged: Boolean,
         val replayCountChanged: Boolean,
+        val replayContainerChanged: Boolean,
         val reactionsChanged: Boolean,
         val showAvatarAndNameChanged: Boolean,
-        val filesChanged: Boolean,
+        val filesChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return edited || statusChanged || avatarChanged || nameChanged || replayCountChanged
-                || showAvatarAndNameChanged || reactionsChanged || filesChanged
+                || replayContainerChanged || showAvatarAndNameChanged || reactionsChanged || filesChanged
     }
 
     companion object {
@@ -22,6 +23,7 @@ data class MessageItemPayloadDiff(
             avatarChanged = true,
             nameChanged = true,
             replayCountChanged = true,
+            replayContainerChanged = true,
             reactionsChanged = true,
             showAvatarAndNameChanged = true,
             filesChanged = true
