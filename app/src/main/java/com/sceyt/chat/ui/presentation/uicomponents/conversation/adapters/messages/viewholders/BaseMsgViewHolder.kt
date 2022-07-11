@@ -46,6 +46,7 @@ abstract class BaseMsgViewHolder(view: View,
     private var recyclerViewReactions: RecyclerView? = null
 
     abstract fun bind(item: MessageListItem, diff: MessageItemPayloadDiff)
+
     open fun onViewDetachedFromWindow() {
         reactionsAdapter = null
     }

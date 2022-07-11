@@ -53,11 +53,6 @@ class OutTextMsgViewHolder(
 
                 if (diff.replayContainerChanged)
                     setReplayedMessageContainer(message, viewReplay)
-
-                layoutDetails.setOnLongClickListener {
-                    messageListeners?.onMessageLongClick(it, item)
-                    return@setOnLongClickListener true
-                }
             }
         }
     }

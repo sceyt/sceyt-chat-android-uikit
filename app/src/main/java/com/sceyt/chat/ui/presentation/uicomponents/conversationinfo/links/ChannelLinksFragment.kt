@@ -1,7 +1,5 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,10 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.databinding.FragmentChannelLinksBinding
-import com.sceyt.chat.ui.extensions.getString
-import com.sceyt.chat.ui.extensions.isLastItemDisplaying
-import com.sceyt.chat.ui.extensions.screenHeightPx
-import com.sceyt.chat.ui.extensions.setBundleArguments
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -71,10 +66,7 @@ open class ChannelLinksFragment : Fragment() {
     }
 
     private fun onLinkClick(messageListItem: LinkItem.Link) {
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(messageListItem.message.body)))
-        } catch (ex: Exception) {
-        }
+        requireContext().openLink(messageListItem.message.body)
     }
 
     private fun addPageStateView() {

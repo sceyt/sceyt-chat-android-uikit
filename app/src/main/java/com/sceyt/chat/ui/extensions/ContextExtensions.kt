@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.inputmethod.InputMethodManager
+import android.webkit.URLUtil
 import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.ColorRes
@@ -147,6 +148,13 @@ internal fun Context?.getFragmentManager(): FragmentManager? {
     }
 }
 
+fun Context.openLink(url: String?) {
+    if (url.isNullOrBlank()) return
+    try {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(URLUtil.guessUrl(url))))
+    } catch (ex: Exception) {
+    }
+}
 
 
 
