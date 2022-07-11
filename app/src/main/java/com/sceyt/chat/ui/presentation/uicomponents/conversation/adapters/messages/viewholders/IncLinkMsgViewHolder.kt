@@ -1,9 +1,10 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.core.text.HtmlCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.chat.ui.extensions.getCompatColorByTheme
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -15,8 +16,9 @@ import com.sceyt.chat.ui.shared.helpers.LinkPreviewHelper
 class IncLinkMsgViewHolder(
         private val binding: SceytItemIncLinkMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListenersImpl?,
-) : BaseMsgViewHolder(binding.root, messageListeners) {
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners) {
 
     private lateinit var messageItem: MessageListItem.MessageItem
 
@@ -27,6 +29,10 @@ class IncLinkMsgViewHolder(
             messageListeners?.onMessageLongClick(it, messageItem)
             return@setOnLongClickListener true
         }
+
+        binding.layoutDetails.setOnClickListener {
+            messageListeners?.onLinkClick(it, messageItem)
+        }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
@@ -35,8 +41,10 @@ class IncLinkMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                val body = message.body.trim()
-                messageBody.text = body
+                if (diff.edited && layoutLinkPreview.root.isVisible.not()) {
+                    val space = if (message.state == MessageState.Edited) MessagesStyle.INC_EDITED_SPACE else MessagesStyle.INC_DEFAULT_SPACE
+                    messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
+                }
 
                 if (diff.edited || diff.statusChanged) {
                     setMessageStatusAndDateText(message, messageDate)
@@ -60,18 +68,7 @@ class IncLinkMsgViewHolder(
                         messageListeners?.onAvatarClick(it, item)
                     }
 
-                LinkPreviewHelper().getPreview(message.id, message.body, successListener = {
-                    with(layoutLinkPreview) {
-                        if (it.imageUrl.isNullOrBlank().not()) {
-                            Glide.with(itemView.context).load(it.imageUrl).into(previewImage)
-                            previewImage.isVisible = true
-                        } else previewImage.isVisible = false
-
-                        tvLinkTitle.text = it.title
-                        tvLinkDesc.text = it.description
-                        root.isVisible = true
-                    }
-                })
+                loadLinkPreview(messageItem, layoutLinkPreview, messageBody)
             }
         }
     }

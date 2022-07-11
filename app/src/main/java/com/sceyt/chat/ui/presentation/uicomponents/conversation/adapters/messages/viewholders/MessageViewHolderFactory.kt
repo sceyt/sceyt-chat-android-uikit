@@ -11,8 +11,10 @@ import com.sceyt.chat.ui.extensions.isLink
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.chat.ui.shared.helpers.LinkPreviewHelper
 
-open class MessageViewHolderFactory(context: Context) {
+open class MessageViewHolderFactory(context: Context,
+                                    private val linkPreview: LinkPreviewHelper) {
 
     private var listeners = MessageClickListenersImpl()
     private val layoutInflater = LayoutInflater.from(context)
@@ -50,13 +52,13 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncLinkMsgViewHolder(
             SceytItemIncLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, listeners)
+            viewPoolReactions, linkPreview,listeners)
     }
 
     open fun createOutLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutLinkMsgViewHolder(
             SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, listeners)
+            viewPoolReactions, linkPreview,listeners)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
