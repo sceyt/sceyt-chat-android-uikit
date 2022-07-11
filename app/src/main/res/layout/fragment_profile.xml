@@ -139,12 +139,13 @@
                 android:layout_marginTop="24dp"
                 android:background="@drawable/sceyt_bg_top_bottom_lines"
                 android:backgroundTint="@color/sceyt_color_divider"
-                android:checked="true"
-                android:drawablePadding="18dp"
-                android:text="@string/notifications"
+                android:drawableStart="@drawable/ic_notification_on"
+                android:drawablePadding="12dp"
+                android:includeFontPadding="false"
+                android:text="@string/mute_notifications"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textSize="@dimen/mediumTextSize"
-                android:theme="@style/SwitchStyle"
+                android:theme="@style/SceytSwitchStyle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/avatar" />
@@ -157,7 +158,8 @@
                 android:layout_gravity="end"
                 android:text="@string/sceyt_dark_theme"
                 android:textColor="@color/sceyt_color_black_themed"
-                android:theme="@style/SwitchStyle"
+                android:textSize="@dimen/mediumTextSize"
+                android:theme="@style/SceytSwitchStyle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/switchNotifications" />
@@ -170,13 +172,15 @@
                 app:layout_constraintTop_toBottomOf="@+id/switchTheme" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/sign_out"
-                android:layout_width="wrap_content"
+                android:id="@+id/signOut"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="14dp"
+                android:paddingVertical="10dp"
                 android:text="@string/sign_out"
                 android:textColor="@color/sceyt_color_red"
                 android:textSize="@dimen/mediumTextSize"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="@id/switchNotifications"
                 app:layout_constraintTop_toBottomOf="@id/switchTheme" />
 
