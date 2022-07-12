@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.ProfileRepository
@@ -96,5 +97,10 @@ class ProfileViewModel : BaseViewModel() {
                 }
             }
         }
+    }
+
+    fun logout() {
+        ChatClient.getClient().disconnect()
+        //todo unregister push token
     }
 }

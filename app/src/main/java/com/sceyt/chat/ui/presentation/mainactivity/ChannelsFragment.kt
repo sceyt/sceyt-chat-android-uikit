@@ -8,6 +8,10 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.sceyt.chat.Types
+import com.sceyt.chat.connectivity_change.NetworkMonitor
+import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.SceytUiKitApp
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -34,14 +38,12 @@ class ChannelsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initViews()
         //mBinding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
 
         mViewModel.bindView(binding.channelListView, viewLifecycleOwner)
         mViewModel.bindView(binding.searchView)
 
-        binding.fabNewChannel.setOnClickListener {
-            NewChannelActivity.launch(requireContext())
-        }
 
         /* (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
              if (it == Types.ConnectState.StateConnected) {
@@ -59,6 +61,16 @@ class ChannelsFragment : Fragment() {
         binding.channelListView.setChannelClickListener(ChannelClickListeners.AvatarClickListener {
             Toast.makeText(context, "avatar", Toast.LENGTH_LONG).show()
         })
+    }
+
+    private fun initViews() {
+        (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
+            setupConnectionStatus(it)
+        }
+
+        binding.fabNewChannel.setOnClickListener {
+            NewChannelActivity.launch(requireContext())
+        }
     }
 
     class CustomViewHolderFactory(context: Context) : ChannelViewHolderFactory(context) {
@@ -80,5 +92,18 @@ class ChannelsFragment : Fragment() {
                 listener.onAvatarClick(item as ChannelListItem.ChannelItem)
             }
         }
+    }
+
+    private fun setupConnectionStatus(status: Types.ConnectState) {
+        val title = if (!NetworkMonitor.isOnline())
+            getString(R.string.waiting_for_network_title)
+        else when (status) {
+            Types.ConnectState.StateFailed -> getString(R.string.waiting_for_network_title)
+            Types.ConnectState.StateDisconnect -> getString(R.string.waiting_for_network_title)
+            Types.ConnectState.StateReconnecting,
+            Types.ConnectState.StateConnecting -> getString(R.string.connecting_title)
+            Types.ConnectState.StateConnected -> getString(R.string.channels)
+        }
+        binding.title.text = title
     }
 }
