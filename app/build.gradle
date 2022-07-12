@@ -50,7 +50,6 @@ dependencies {
     implementation supportDependencies.material
     implementation supportDependencies.constraintlayout
     implementation supportDependencies.recyclerView
-    implementation supportDependencies.swipeRefreshLayout
     implementation supportDependencies.fragmentKtx
     implementation supportDependencies.lifecycleRuntime
     implementation supportDependencies.asyncLayoutInflater
