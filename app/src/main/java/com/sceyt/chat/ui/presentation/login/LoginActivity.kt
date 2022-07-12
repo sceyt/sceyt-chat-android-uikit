@@ -5,9 +5,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.SceytUiKitApp
 import com.sceyt.chat.ui.data.UserSharedPreference
@@ -19,8 +16,6 @@ import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chat.ui.presentation.login.viewmodel.LoginViewModel
 import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
 import com.sceyt.chat.ui.presentation.root.PageState
-import com.sceyt.chat.ui.services.DataStoreManager
-import kotlinx.coroutines.flow.map
 
 class LoginActivity : AppCompatActivity() {
     private val viewModel: LoginViewModel by viewModels()

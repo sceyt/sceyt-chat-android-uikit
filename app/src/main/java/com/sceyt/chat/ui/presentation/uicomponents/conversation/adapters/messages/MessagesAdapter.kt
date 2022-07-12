@@ -92,25 +92,15 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
         val firstItem = getFirstMessageItem()
         val dateItem = messages.find { it is MessageListItem.DateSeparatorItem && it.msgId == firstItem?.message?.id }
         messages.addAll(0, items)
-        if (messages.size == items.size)
-            notifyDataSetChanged()
-        else {
-            notifyItemRangeInserted(0, items.size)
-            updateDateAndState(items.last(), firstItem, dateItem)
-        }
+        notifyItemRangeInserted(0, items.size)
+        updateDateAndState(items.last(), firstItem, dateItem)
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
         if (items.isEmpty()) return
-        // todo from typing item id needed
-
-        /*  if (messages.isNotEmpty() && messages.last().type == Typing) {
-              messages.addAll(messages.lastIndex, items.toList())
-              notifyItemRangeInserted(messages.lastIndex - 1, items.size)
-          } else {*/
         messages.addAll(items)
         notifyItemRangeInserted(messages.lastIndex, items.size)
-        //}
+
     }
 
     fun getData() = messages

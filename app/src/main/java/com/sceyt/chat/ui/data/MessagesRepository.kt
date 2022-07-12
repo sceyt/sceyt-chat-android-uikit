@@ -18,7 +18,7 @@ interface MessagesRepository {
     suspend fun editMessage(message: Message): SceytResponse<SceytMessage>
     suspend fun addReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
-    suspend fun markAsRead(id: Long): SceytResponse<MessageListMarker>
+    suspend fun markAsRead(vararg id: Long): SceytResponse<MessageListMarker>
     suspend fun sendTypingState(typing: Boolean)
     suspend fun markAllAsRead(): SceytResponse<MessageListMarker>
     suspend fun join(): SceytResponse<SceytChannel>
