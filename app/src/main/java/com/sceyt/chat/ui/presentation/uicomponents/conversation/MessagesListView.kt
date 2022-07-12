@@ -12,7 +12,6 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.extensions.getFragmentManager
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -27,7 +26,6 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionE
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
-import com.sceyt.chat.ui.shared.utils.BindingUtil
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -44,8 +42,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
-        if (!isInEditMode)
-            BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)

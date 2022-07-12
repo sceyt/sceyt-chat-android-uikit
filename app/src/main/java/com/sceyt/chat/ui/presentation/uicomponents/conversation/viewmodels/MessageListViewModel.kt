@@ -23,8 +23,10 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionE
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MessageListViewModel(conversationId: Long,
@@ -53,68 +55,44 @@ class MessageListViewModel(conversationId: Long,
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
 
-    val onNewMessageLiveData = MutableLiveData<SceytMessage>()
-    val onNewThreadMessageLiveData = MutableLiveData<SceytMessage>()
-    val onMessageStatusLiveData = MutableLiveData<MessageStatusChange>()
-    val onMessageReactionUpdatedLiveData = MutableLiveData<SceytMessage>()
-    val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytMessage>()
+    val onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
 
+    // Message events
+    val onNewMessageFlow: Flow<SceytMessage>
+    val onNewThreadMessageFlow: Flow<SceytMessage>
+    val onMessageStatusFlow: Flow<MessageStatusChange>
+    val onMessageReactionUpdatedFlow: Flow<SceytMessage>
+    val onMessageEditedOrDeletedLiveData: Flow<SceytMessage>
+
+    // Chanel events
+    val onChannelEventFlow: Flow<ChannelEventData>
+    val onChannelTypingEventLiveData: Flow<ChannelTypingEventData>
+
+    //Command events
     val onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
     val onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
 
-    // Chanel events
-    val onChannelEventLiveData: MutableLiveData<ChannelEventData> = MutableLiveData<ChannelEventData>()
-    val onChannelTypingEventLiveData = MutableLiveData<ChannelTypingEventData>()
-
 
     init {
-        addChannelListeners()
+        onMessageReactionUpdatedFlow = messagesRepository.onMessageReactionUpdatedFlow.map {
+            it.toSceytUiMessage(isGroup).apply {
+                messageReactions = initReactionsItems(this)
+            }
+        }
+        onMessageEditedOrDeletedLiveData = messagesRepository.onMessageEditedOrDeleteFlow.map {
+            it.toSceytUiMessage(isGroup)
+        }
+        onNewMessageFlow = messagesRepository.onMessageFlow
+
+        onNewThreadMessageFlow = messagesRepository.onThreadMessageFlow
+
+        onMessageStatusFlow = messagesRepository.onMessageStatusFlow
+
+        onChannelEventFlow = messagesRepository.onChannelEventFlow
+
+        onChannelTypingEventLiveData = messagesRepository.onChannelTypingEventFlow
     }
 
-    private fun addChannelListeners() {
-        viewModelScope.launch {
-            messagesRepository.onMessageFlow.collect {
-                onNewMessageLiveData.value = it
-            }
-        }
-
-        viewModelScope.launch {
-            messagesRepository.onThreadMessageFlow.collect {
-                onNewThreadMessageLiveData.value = it
-            }
-        }
-
-        viewModelScope.launch {
-            messagesRepository.onMessageStatusFlow.collect {
-                onMessageStatusLiveData.value = it
-            }
-        }
-
-        viewModelScope.launch {
-            messagesRepository.onMessageReactionUpdatedFlow.collect {
-                onMessageReactionUpdatedLiveData.value = it.toSceytUiMessage(isGroup).apply {
-                    messageReactions = initReactionsItems(this)
-                }
-            }
-        }
-        viewModelScope.launch {
-            messagesRepository.onMessageEditedOrDeleteFlow.collect {
-                onMessageEditedOrDeletedLiveData.value = it.toSceytUiMessage(isGroup)
-            }
-        }
-
-        viewModelScope.launch {
-            messagesRepository.onChannelEventFlow.collect {
-                onChannelEventLiveData.value = it
-            }
-        }
-
-        viewModelScope.launch {
-            messagesRepository.onChannelTypingEventFlow.collect {
-                onChannelTypingEventLiveData.value = it
-            }
-        }
-    }
 
     fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean) {
         loadingItems = true
@@ -184,7 +162,7 @@ class MessageListViewModel(conversationId: Long,
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.sendMessage(message) { tmpMessage ->
-                onNewMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup))
+                onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup))
             }
             _messageSentLiveData.postValue(response)
         }
@@ -193,7 +171,7 @@ class MessageListViewModel(conversationId: Long,
     fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.sendMessage(message) { tmpMessage ->
-                onNewMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
+                onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
                     this.parent = parent
                 })
             }
@@ -208,9 +186,9 @@ class MessageListViewModel(conversationId: Long,
         }
     }
 
-    fun markMessageAsDisplayed(id: Long) {
+    fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.markAsRead(id)
+            messagesRepository.markAsRead(*id)
         }
     }
 

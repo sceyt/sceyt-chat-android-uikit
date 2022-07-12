@@ -2,7 +2,6 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 
 import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.databinding.SceytItemIncLinkMessageBinding
@@ -41,7 +40,7 @@ class IncLinkMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited && layoutLinkPreview.root.isVisible.not()) {
+                if (diff.edited) {
                     val space = if (message.state == MessageState.Edited) MessagesStyle.INC_EDITED_SPACE else MessagesStyle.INC_DEFAULT_SPACE
                     messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
                 }

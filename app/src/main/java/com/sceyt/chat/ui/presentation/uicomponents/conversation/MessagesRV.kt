@@ -58,27 +58,31 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun addOnScrollListener() {
         post {
             addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
-                val firstVisiblePosition = getFirstVisibleItemPosition()
-                if (firstVisiblePosition <= SceytUIKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
-                    val skip = mAdapter.getSkip()
-                    val firstItem = mAdapter.getFirstMessageItem()
-                    if (firstVisiblePosition == 0) {
-                        if (!richToStartInvoked.get()) {
-                            richToStartInvoked.set(true)
-                            richToPrefetchDistanceInvoked.set(true)
-                            richToStartListener?.invoke(skip, firstItem)
-                            needLoadMoreMessagesListener?.invoke(skip, firstItem)
-                        }
-                    } else richToStartInvoked.set(false)
-
-                    if (!richToPrefetchDistanceInvoked.get()) {
-                        richToPrefetchDistanceInvoked.set(true)
-                        richToPrefetchDistanceListener?.invoke(skip, firstItem)
-                        needLoadMoreMessagesListener?.invoke(skip, firstItem)
-                    }
-                } else richToPrefetchDistanceInvoked.set(false)
+                checkNeedLoadMore(dy)
             }
         }
+    }
+
+    private fun checkNeedLoadMore(dy: Int) {
+        val firstVisiblePosition = getFirstVisibleItemPosition()
+        if (firstVisiblePosition <= SceytUIKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
+            val skip = mAdapter.getSkip()
+            val firstItem = mAdapter.getFirstMessageItem()
+            if (firstVisiblePosition == 0) {
+                if (!richToStartInvoked.get()) {
+                    richToStartInvoked.set(true)
+                    richToPrefetchDistanceInvoked.set(true)
+                    richToStartListener?.invoke(skip, firstItem)
+                    needLoadMoreMessagesListener?.invoke(skip, firstItem)
+                }
+            } else richToStartInvoked.set(false)
+
+            if (!richToPrefetchDistanceInvoked.get()) {
+                richToPrefetchDistanceInvoked.set(true)
+                richToPrefetchDistanceListener?.invoke(skip, firstItem)
+                needLoadMoreMessagesListener?.invoke(skip, firstItem)
+            }
+        } else richToPrefetchDistanceInvoked.set(false)
     }
 
     fun setData(messages: List<MessageListItem>) {
@@ -87,6 +91,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 .also { mAdapter = it }
         } else
             mAdapter.notifyUpdate(messages)
+
         scheduleLayoutAnimation()
     }
 

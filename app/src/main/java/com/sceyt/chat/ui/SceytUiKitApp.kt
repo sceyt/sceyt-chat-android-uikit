@@ -16,33 +16,17 @@ import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
 import com.sceyt.chat.connectivity_change.NetworkChangeDetector
 import com.sceyt.chat.connectivity_change.NetworkMonitor
-import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.Status
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_listeners.ClientListener
-import com.sceyt.chat.sceyt_listeners.MessageListener
+import com.sceyt.chat.ui.data.UserSharedPreference
 import org.json.JSONObject
 import java.util.*
 
 class SceytUiKitApp : Application() {
 
-    private val mSceytConnectionStatus: MutableLiveData<Types.ConnectState> = MutableLiveData()
-    val sceytConnectionStatus: LiveData<Types.ConnectState>
-        get() = mSceytConnectionStatus
-
-    private val mCurrentUser: MutableLiveData<User> = MutableLiveData()
-    val currentUser: LiveData<User>
-        get() = mCurrentUser
-
-    private val mConnectionError: MutableLiveData<SceytException> = MutableLiveData()
-    val connectionError: LiveData<SceytException>
-        get() = mConnectionError
-
-    val totalUnreadCount: MutableLiveData<Int> = MutableLiveData(0)
-
+    private val _sceytConnectionStatus: MutableLiveData<Types.ConnectState> = MutableLiveData()
+    val sceytConnectionStatus: LiveData<Types.ConnectState> = _sceytConnectionStatus
 
     private lateinit var chatClient: ChatClient
 
@@ -61,25 +45,13 @@ class SceytUiKitApp : Application() {
         val userId = UUID.randomUUID().toString() //Some unique userId
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         chatClient = ChatClient.setup(this, serverUrl, "89p65954oj", userId)
-//        ChatClient.setSceytLogLevel(SCTLogLevel.Verbose)
-        mSceytConnectionStatus.postValue(Types.ConnectState.StateDisconnect)
+        _sceytConnectionStatus.postValue(Types.ConnectState.StateDisconnect)
     }
 
     private fun setSceytListeners() {
-
-      /*  chatClient.addMessageListener("main", object : MessageListener {
-            override fun onMessage(channel: Channel, message: Message) {
-                totalUnreadCount.postValue(totalUnreadCount.value?.plus(1))
-                ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
-
-                }
-            }
-        })*/
-
-
-        var noNetworkObserver = NetworkMonitor.NetworkObserver { connectionType ->
+        val noNetworkObserver = NetworkMonitor.NetworkObserver { connectionType ->
             if (connectionType != NetworkChangeDetector.ConnectionType.CONNECTION_NONE) {
-                if (currentUser.value != null)
+                if (ClientWrapper.currentUser != null)
                     chatClient.reconnect()
                 else
                     connect()
@@ -90,53 +62,30 @@ class SceytUiKitApp : Application() {
     }
 
     fun connect() {
-        //  val token = getToken()
-        if (/*token.isEmpty()*/ true) {
-            connectWithoutToken("37494202829")
-        }/* else {
+        val token = UserSharedPreference.getToken(this)
+        val userName = UserSharedPreference.getUsername(this)
+        if (token.isNullOrBlank() && !userName.isNullOrEmpty()) {
+            connectWithoutToken(userName)
+        } else if (!token.isNullOrEmpty()) {
             connectWithToken(token)
-        }*/
+        }
     }
 
-    fun connectWithToken(token: String): LiveData<Boolean> {
+    private fun connectWithToken(token: String): LiveData<Boolean> {
         val success: MutableLiveData<Boolean> = MutableLiveData()
         chatClient.connect(token)
+        addListener(success, token)
         return success
     }
 
     fun connectWithoutToken(username: String): LiveData<Boolean> {
         val success: MutableLiveData<Boolean> = MutableLiveData()
 
-        if (currentUser.value == null) {
+        if (ClientWrapper.currentUser == null) {
             getTokenByUserName(username, {
                 val token = it.get("token")
                 chatClient.connect(token as String?)
-
-                chatClient.addClientListener("main", object : ClientListener {
-                    override fun onChangedConnectStatus(
-                            connectStatus: Types.ConnectState?,
-                            status: Status?
-                    ) {
-
-                        if (connectStatus == Types.ConnectState.StateConnected) {
-                            /*fetchCurrentUser()
-                            saveToken(token)
-                            registerPushToken()*/
-                            success.postValue(true)
-                            ClientWrapper.setPresence(PresenceState.Online, "") {
-
-                            }
-
-                        } else {
-                            mSceytConnectionStatus.postValue(Types.ConnectState.StateFailed)
-                            mConnectionError.postValue(status?.error)
-                            success.postValue(false)
-                        }
-
-                        mSceytConnectionStatus.postValue(connectStatus)
-                    }
-                })
-
+                addListener(success, token)
             }, {
                 success.postValue(false)
             }, this)
@@ -145,14 +94,28 @@ class SceytUiKitApp : Application() {
         return success
     }
 
-    fun getTokenByUserName(userName: String, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, context: Context) {
 
+    private fun addListener(success: MutableLiveData<Boolean>, token: String) {
+        chatClient.addClientListener("main", object : ClientListener {
+            override fun onChangedConnectStatus(connectStatus: Types.ConnectState?, status: Status?) {
+                if (connectStatus == Types.ConnectState.StateConnected) {
+                    UserSharedPreference.setToken(this@SceytUiKitApp, token)
+                    success.postValue(true)
+                    ClientWrapper.setPresence(PresenceState.Online, "") {
+
+                    }
+                } else if (connectStatus == Types.ConnectState.StateFailed)
+                    success.postValue(false)
+
+                _sceytConnectionStatus.postValue(connectStatus)
+            }
+        })
+    }
+
+    private fun getTokenByUserName(userName: String, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, context: Context) {
         val queue: RequestQueue = Volley.newRequestQueue(context)
-        val url =
-                "https://tlnig20qy7.execute-api.us-east-2.amazonaws.com/dev/user/genToken?user=$userName"
-
+        val url = "https://tlnig20qy7.execute-api.us-east-2.amazonaws.com/dev/user/genToken?user=$userName"
         val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null, listener, errorListener)
-
         queue.add(jsonObjectRequest)
     }
 }
