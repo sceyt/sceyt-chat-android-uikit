@@ -2,12 +2,10 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.shared.utils.DateTimeUtil
-import com.sceyt.chat.ui.shared.utils.MyDiffUtil
 
 class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
@@ -74,14 +72,6 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
                 notifyItemRemoved(dateIndex)
             }
         }
-    }
-
-    fun notifyUpdate(messages: List<MessageListItem>) {
-        val myDiffUtil = MyDiffUtil(this.messages, messages)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        this.messages.clear()
-        this.messages.addAll(messages)
-        productDiffResult.dispatchUpdatesTo(this)
     }
 
     @SuppressLint("NotifyDataSetChanged")

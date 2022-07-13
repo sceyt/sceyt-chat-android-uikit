@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.addRVScrollListener
@@ -49,7 +48,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
 
         addItemDecoration(ChatItemOffsetDecoration(dpToPx(8f)))
-        layoutManager = SpeedyLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
+        layoutManager = SpeedyLinearLayoutManager(context).apply {
             stackFromEnd = true
         }
         addOnScrollListener()
@@ -86,11 +85,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun setData(messages: List<MessageListItem>) {
-        if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(ArrayList(messages), viewHolderFactory)
-                .also { mAdapter = it }
-        } else
-            mAdapter.notifyUpdate(messages)
+        adapter = MessagesAdapter(ArrayList(messages), viewHolderFactory)
+            .also { mAdapter = it }
 
         scheduleLayoutAnimation()
     }
