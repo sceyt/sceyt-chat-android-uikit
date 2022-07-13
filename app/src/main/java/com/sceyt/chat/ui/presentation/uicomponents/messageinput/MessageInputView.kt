@@ -230,6 +230,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    private fun showHideJoinButton(show: Boolean) {
+        binding.btnJoin.isVisible = show
+        binding.layoutInput.isVisible = show.not()
+    }
+
     internal fun replayMessage(message: Message) {
         replayMessage = message
         with(binding.layoutReplayMessage) {
@@ -260,20 +265,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun checkIsParticipant(channel: SceytChannel) {
         if (channel.channelType == ChannelTypeEnum.Public) {
             if (channel.toPublicChannel().myRole() == Member.MemberType.MemberTypeNone) {
-                binding.btnJoin.isVisible = true
-                binding.layoutInput.isVisible = false
-            }
+                showHideJoinButton(true)
+            } else showHideJoinButton(false)
         }
     }
 
     internal fun joinSuccess() {
-        binding.btnJoin.isVisible = false
-        binding.layoutInput.isVisible = true
+        showHideJoinButton(false)
     }
 
     internal fun onChannelLeft() {
-        binding.btnJoin.isVisible = true
-        binding.layoutInput.isVisible = false
+        showHideJoinButton(true)
     }
 
     interface MessageInputActionCallback {

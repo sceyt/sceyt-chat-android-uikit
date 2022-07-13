@@ -22,6 +22,7 @@ import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
@@ -36,7 +37,7 @@ open class ChannelMediaFragment : Fragment() {
     private val mediaType = "media"
     private var pageStateView: PageStateView? = null
     private val viewModel: ChannelAttachmentsViewModel by viewModels {
-        getBundleArguments()
+        val channel: SceytChannel = requireNotNull(arguments?.getParcelable(ChannelFilesFragment.CHANNEL))
         ChannelAttachmentViewModelFactory(channel)
     }
 
@@ -49,6 +50,7 @@ open class ChannelMediaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        getBundleArguments()
         addPageStateView()
         initViewModel()
         loadInitialMediaList()

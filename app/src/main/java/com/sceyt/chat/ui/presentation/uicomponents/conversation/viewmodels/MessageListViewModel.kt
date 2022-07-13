@@ -7,11 +7,13 @@ import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.models.messages.SceytReaction
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
@@ -31,11 +33,12 @@ import kotlinx.coroutines.launch
 
 class MessageListViewModel(conversationId: Long,
                            internal val replayInThread: Boolean = false,
-                           internal val channel: SceytChannel) : BaseViewModel() {
+                           internal var channel: SceytChannel) : BaseViewModel() {
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
     // todo di
     private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
+    private val channelsRepository: ChannelsRepository = ChannelsRepositoryImpl()
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
@@ -54,6 +57,12 @@ class MessageListViewModel(conversationId: Long,
 
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
+
+    private val _channelLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
+    val channelLiveData: LiveData<SceytResponse<SceytChannel>> = _channelLiveData
+
+    private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
+    val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
 
     val onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
 
@@ -82,6 +91,7 @@ class MessageListViewModel(conversationId: Long,
         onMessageEditedOrDeletedLiveData = messagesRepository.onMessageEditedOrDeleteFlow.map {
             it.toSceytUiMessage(isGroup)
         }
+
         onNewMessageFlow = messagesRepository.onMessageFlow
 
         onNewThreadMessageFlow = messagesRepository.onThreadMessageFlow
@@ -91,6 +101,33 @@ class MessageListViewModel(conversationId: Long,
         onChannelEventFlow = messagesRepository.onChannelEventFlow
 
         onChannelTypingEventLiveData = messagesRepository.onChannelTypingEventFlow
+
+        viewModelScope.launch {
+            messagesRepository.onChannelMembersEventFlow.collect { eventData ->
+                val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
+                val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
+
+                when (eventData.eventType) {
+                    ChannelMembersEventEnum.Added -> {
+                        channelMembers.addAll(sceytMembers ?: return@collect)
+                        (channel as SceytGroupChannel).apply {
+                            members = channelMembers
+                            memberCount += sceytMembers.size
+                        }
+                        _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+                    }
+                    ChannelMembersEventEnum.Kicked -> {
+                        channelMembers.removeAll(sceytMembers ?: return@collect)
+                        (channel as SceytGroupChannel).apply {
+                            members = channelMembers
+                            memberCount -= sceytMembers.size
+                        }
+                        _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+                    }
+                    else -> return@collect
+                }
+            }
+        }
     }
 
 
@@ -202,6 +239,13 @@ class MessageListViewModel(conversationId: Long,
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.join()
             _joinLiveData.postValue(response)
+        }
+    }
+
+    fun getChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsRepository.getChannel(channelId)
+            _channelLiveData.postValue(response)
         }
     }
 
