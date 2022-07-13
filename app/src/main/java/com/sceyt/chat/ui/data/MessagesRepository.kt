@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.data
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
@@ -28,5 +29,6 @@ interface MessagesRepository {
     val onMessageReactionUpdatedFlow: Flow<Message>
     val onMessageEditedOrDeleteFlow: Flow<Message>
     val onChannelEventFlow: Flow<ChannelEventData>
+    val onChannelMembersEventFlow: Flow<ChannelMembersEventData>
     val onChannelTypingEventFlow: Flow<ChannelTypingEventData>
 }

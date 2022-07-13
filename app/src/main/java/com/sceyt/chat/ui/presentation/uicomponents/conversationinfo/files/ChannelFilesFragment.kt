@@ -35,7 +35,7 @@ open class ChannelFilesFragment : Fragment() {
     private var pageStateView: PageStateView? = null
     private val mediaType = "file"
     private val viewModel: ChannelAttachmentsViewModel by viewModels {
-        getBundleArguments()
+        val channel: SceytChannel = requireNotNull(arguments?.getParcelable(CHANNEL))
         ChannelAttachmentViewModelFactory(channel)
     }
 
@@ -48,6 +48,7 @@ open class ChannelFilesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        getBundleArguments()
         addPageStateView()
         initViewModel()
         loadInitialFilesList()

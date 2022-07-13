@@ -9,7 +9,6 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
 import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
@@ -21,9 +20,10 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListI
 import com.sceyt.chat.ui.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ChannelsViewModel : BaseViewModel() {
@@ -53,47 +53,23 @@ class ChannelsViewModel : BaseViewModel() {
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
-    val onNewMessageLiveData = MutableLiveData<Pair<Channel, Message>>()
-    val onMessageStatusLiveData = MutableLiveData<MessageStatusChange>()
-    val onMessageEditedOrDeletedLiveData = MutableLiveData<SceytMessage>()
-    val onChannelEventLiveData = MutableLiveData<ChannelEventData>()
-    val onChannelTypingEventLiveData = MutableLiveData<ChannelTypingEventData>()
+    val onNewMessageFlow: Flow<Pair<Channel, Message>>
+    val onMessageStatusFlow: Flow<MessageStatusChange>
+    val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
+    val onChannelEventFlow: Flow<ChannelEventData>
 
     init {
-        addChannelListeners()
-    }
+        onNewMessageFlow = channelsRepository.onMessageFlow
 
-    private fun addChannelListeners() {
-        viewModelScope.launch {
-            channelsRepository.onMessageFlow.collect {
-                onNewMessageLiveData.value = it
-            }
-        }
+        onMessageStatusFlow = channelsRepository.onMessageStatusFlow
 
-        viewModelScope.launch {
-            channelsRepository.onMessageStatusFlow.collect {
-                onMessageStatusLiveData.value = it
-            }
-        }
+        onChannelEventFlow = channelsRepository.onChannelEvenFlow
 
-        viewModelScope.launch {
-            channelsRepository.onMessageEditedOrDeleteFlow.collect {
-                onMessageEditedOrDeletedLiveData.value = it.toSceytUiMessage()
-            }
-        }
-
-        viewModelScope.launch {
-            channelsRepository.onChannelEvenFlow.collect {
-                onChannelEventLiveData.value = it
-            }
-        }
-
-        viewModelScope.launch {
-            channelsRepository.onChannelTypingEvenFlow.collect {
-                onChannelTypingEventLiveData.value = it
-            }
+        onMessageEditedOrDeletedFlow = channelsRepository.onMessageEditedOrDeleteFlow.map {
+            it.toSceytUiMessage()
         }
     }
+
 
     fun getChannels(query: String = searchQuery) {
         searchQuery = query

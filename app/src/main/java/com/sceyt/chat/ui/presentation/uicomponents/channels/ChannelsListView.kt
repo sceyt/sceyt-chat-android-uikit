@@ -1,6 +1,8 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
@@ -242,13 +244,17 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
         item.channel.unreadCount = 0
         ConversationActivity.newInstance(context, item.channel)
-        channelUpdated(item.channel)
+        Handler(Looper.getMainLooper()).postDelayed({
+            channelUpdated(item.channel)
+        }, 300)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
         item.channel.unreadCount = 0
         ConversationActivity.newInstance(context, item.channel)
-        channelUpdated(item.channel)
+        Handler(Looper.getMainLooper()).postDelayed({
+            channelUpdated(item.channel)
+        }, 300)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
