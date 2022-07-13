@@ -15,7 +15,6 @@ import com.sceyt.chat.ui.extensions.awaitAnimationEnd
 import com.sceyt.chat.ui.extensions.customToastSnackBar
 import com.sceyt.chat.ui.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
@@ -51,6 +50,44 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
         loadMoreChannelsFlow.collect {
             if (it is SceytResponse.Success && it.data != null)
                 channelsListView.addNewChannels(it.data)
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        onNewMessageFlow.collect {
+            if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), it.first.unreadMessageCount)) {
+                getChannels(query = searchQuery)
+            }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        onMessageEditedOrDeletedFlow.collect {
+            if (!channelsListView.updateLastMessage(it)) {
+                getChannels(query = searchQuery)
+            }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        onMessageStatusFlow.collect {
+            channelsListView.updateLastMessageStatus(it)
+        }
+
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        onChannelEventFlow.collect {
+            when (it.eventType) {
+                Created -> getChannels(query = searchQuery)
+                Deleted, Left -> channelsListView.deleteChannel(it.channelId)
+                ClearedHistory -> channelsListView.channelCleared(it.channelId ?: return@collect)
+                Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
+                Muted -> channelsListView.updateMuteState(true, it.channelId)
+                UnMuted -> channelsListView.updateMuteState(false, it.channelId)
+                MarkedUsUnread -> channelsListView.updateMuteState(false, it.channelId)
+                else -> return@collect
+            }
         }
     }
 
@@ -99,34 +136,6 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
         }
     }
 
-    onNewMessageLiveData.observe(lifecycleOwner) {
-        if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), it.first.unreadMessageCount)) {
-            getChannels(query = searchQuery)
-        }
-    }
-
-    onMessageEditedOrDeletedLiveData.observe(lifecycleOwner) {
-        if (!channelsListView.updateLastMessage(it)) {
-            getChannels(query = searchQuery)
-        }
-    }
-
-    onMessageStatusLiveData.observe(lifecycleOwner) {
-        channelsListView.updateLastMessageStatus(it)
-    }
-
-    onChannelEventLiveData.observe(lifecycleOwner) {
-        when (it.eventType) {
-            Created -> getChannels(query = searchQuery)
-            Deleted, Left -> channelsListView.deleteChannel(it.channelId)
-            ClearedHistory -> channelsListView.channelCleared(it.channelId ?: return@observe)
-            Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
-            Muted -> channelsListView.updateMuteState(true, it.channelId)
-            UnMuted -> channelsListView.updateMuteState(false, it.channelId)
-            MarkedUsUnread -> channelsListView.updateMuteState(false, it.channelId)
-            else -> return@observe
-        }
-    }
 
     pageStateLiveData.observe(lifecycleOwner) {
         channelsListView.updateStateView(it)

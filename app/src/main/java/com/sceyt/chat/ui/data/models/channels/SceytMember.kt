@@ -17,4 +17,14 @@ data class SceytMember(
         get() = "${user.firstName} ${user.lastName}".trim()
 
     val id: String get() = user.id
+
+    override fun equals(other: Any?): Boolean {
+        return other != null && other is SceytMember && other.id == id
+    }
+
+    override fun hashCode(): Int {
+        var result = role.hashCode()
+        result = 31 * result + user.hashCode()
+        return result
+    }
 }

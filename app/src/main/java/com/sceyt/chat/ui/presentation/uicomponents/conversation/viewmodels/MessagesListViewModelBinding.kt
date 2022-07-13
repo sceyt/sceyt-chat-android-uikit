@@ -13,6 +13,7 @@ import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.customToastSnackBar
+import com.sceyt.chat.ui.presentation.common.checkIsMemberInPublicChannel
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -34,7 +35,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
-    messagesListView.enableDisableClickActions(!replayInThread)
+    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInPublicChannel())
 
     lifecycleOwner.lifecycleScope.launch {
         messagesFlow.collect {
@@ -94,6 +95,10 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         messagesListView.updateViewState(PageState.Nothing)
 
         markMessageAsDisplayed(it.id)
+    }
+
+    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
+        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInPublicChannel())
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -167,6 +172,22 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
+    joinLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success) {
+            it.data?.let { channel ->
+                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInPublicChannel())
+            }
+        }
+    }
+
+    channelLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success) {
+            it.data?.let { channel ->
+                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInPublicChannel())
+            }
+        }
+    }
+
     pageStateLiveData.observe(lifecycleOwner) {
         messagesListView.updateViewState(it)
     }
@@ -195,9 +216,17 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
     messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
 
+
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError)
             customToastSnackBar(messageInputView, it.errorMessage.toString())
+    }
+
+    channelLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success) {
+            channel = it.data ?: return@observe
+            messageInputView.checkIsParticipant(channel)
+        }
     }
 
     joinLiveData.observe(lifecycleOwner) {
@@ -213,6 +242,10 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
 
     onReplayMessageCommandLiveData.observe(lifecycleOwner) {
         messageInputView.replayMessage(it.toMessage())
+    }
+
+    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
+        messageInputView.checkIsParticipant(channel)
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -272,6 +305,24 @@ fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
     lifecycleOwner.lifecycleScope.launch {
         onChannelTypingEventLiveData.collectLatest {
             headerView.onTyping(it)
+        }
+    }
+
+    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
+        if (!replayInThread)
+            headerView.setChannel(channel)
+    }
+
+    joinLiveData.observe(lifecycleOwner) {
+        if (!replayInThread)
+            getChannel(channel.id)
+    }
+
+    channelLiveData.observe(lifecycleOwner) {
+        if (it is SceytResponse.Success) {
+            channel = it.data ?: return@observe
+            if (!replayInThread)
+                headerView.setChannel(it.data)
         }
     }
 }

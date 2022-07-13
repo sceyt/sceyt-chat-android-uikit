@@ -35,6 +35,8 @@ open class ConversationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         statusBarIconsColorWithBackground(isNightTheme())
 
+        getDataFromIntent()
+
         setContentView(ActivityConversationBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
@@ -45,7 +47,6 @@ open class ConversationActivity : AppCompatActivity() {
         viewModel.bindView(binding.headerView, replayMessage, lifecycleOwner = this)
 
         viewModel.loadMessages(0, false)
-
 
         binding.messagesListView.setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
             override fun onReactMessageClick(view: View, message: SceytMessage) {
@@ -110,7 +111,7 @@ open class ConversationActivity : AppCompatActivity() {
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            getDataFromIntent()
+            val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))
             val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
 
             @Suppress("UNCHECKED_CAST")

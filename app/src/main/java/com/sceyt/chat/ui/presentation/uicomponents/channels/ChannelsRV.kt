@@ -2,19 +2,18 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.extensions.addRVScrollListener
-import com.sceyt.chat.ui.extensions.findIndexed
-import com.sceyt.chat.ui.extensions.isFirstItemDisplaying
-import com.sceyt.chat.ui.extensions.isLastItemDisplaying
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import kotlinx.coroutines.delay
 
 class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
@@ -40,10 +39,14 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun addOnScrollListener() {
         post {
             addRVScrollListener { _: RecyclerView, _: Int, _: Int ->
-                if (isLastItemDisplaying() && mAdapter.itemCount != 0)
-                    richToEndListener?.invoke(mAdapter.getSkip())
+               checkRichToEnd()
             }
         }
+    }
+
+    private fun checkRichToEnd(){
+        if (isLastItemDisplaying() && mAdapter.itemCount != 0)
+            richToEndListener?.invoke(mAdapter.getSkip())
     }
 
     fun setData(channels: List<ChannelListItem>) {
@@ -54,6 +57,11 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             mAdapter.notifyUpdate(channels)
             if (isFirstItemDisplaying())
                 scrollToPosition(0)
+
+            context.asAppCompatActivity().lifecycleScope.launchWhenResumed {
+                delay(500)
+                checkRichToEnd()
+            }
         }
     }
 
