@@ -64,49 +64,50 @@ class SceytUiKitApp : Application() {
     fun connect() {
         val token = UserSharedPreference.getToken(this)
         val userName = UserSharedPreference.getUsername(this)
-        if (token.isNullOrBlank() && !userName.isNullOrEmpty()) {
-            connectWithoutToken(userName)
-        } else if (!token.isNullOrEmpty()) {
-            connectWithToken(token)
-        }
+        if (token.isNullOrBlank()) {
+            connectWithoutToken(userName ?: return)
+        } else if (!token.isNullOrEmpty())
+            connectWithToken(token, userName ?: return)
     }
 
-    private fun connectWithToken(token: String): LiveData<Boolean> {
+    private fun connectWithToken(token: String, userName: String): LiveData<Boolean> {
         val success: MutableLiveData<Boolean> = MutableLiveData()
         chatClient.connect(token)
-        addListener(success, token)
+        addListener(success, token, userName)
         return success
     }
 
     fun connectWithoutToken(username: String): LiveData<Boolean> {
         val success: MutableLiveData<Boolean> = MutableLiveData()
 
-        if (ClientWrapper.currentUser == null) {
-            getTokenByUserName(username, {
-                val token = it.get("token")
-                chatClient.connect(token as String?)
-                addListener(success, token)
-            }, {
-                success.postValue(false)
-            }, this)
-        }
+        getTokenByUserName(username, {
+            val token = it.get("token")
+            chatClient.connect(token as String?)
+            addListener(success, token, username)
+        }, {
+            success.postValue(false)
+        }, this)
 
         return success
     }
 
 
-    private fun addListener(success: MutableLiveData<Boolean>, token: String) {
+    private fun addListener(success: MutableLiveData<Boolean>, token: String, username: String) {
         chatClient.addClientListener("main", object : ClientListener {
             override fun onChangedConnectStatus(connectStatus: Types.ConnectState?, status: Status?) {
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     UserSharedPreference.setToken(this@SceytUiKitApp, token)
+                    UserSharedPreference.setUsername(this@SceytUiKitApp, username)
                     success.postValue(true)
                     ClientWrapper.setPresence(PresenceState.Online, "") {
 
                     }
                 } else if (connectStatus == Types.ConnectState.StateFailed)
                     success.postValue(false)
-
+                else if (connectStatus == Types.ConnectState.StateDisconnect && status?.error?.code == 40102) {
+                    connectWithoutToken(UserSharedPreference.getUsername(this@SceytUiKitApp)
+                            ?: return)
+                }
                 _sceytConnectionStatus.postValue(connectStatus)
             }
         })

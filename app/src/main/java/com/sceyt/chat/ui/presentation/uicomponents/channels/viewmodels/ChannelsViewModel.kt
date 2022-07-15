@@ -8,8 +8,8 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.*
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserver.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
@@ -20,10 +20,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListI
 import com.sceyt.chat.ui.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class ChannelsViewModel : BaseViewModel() {
@@ -54,16 +51,23 @@ class ChannelsViewModel : BaseViewModel() {
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
     val onNewMessageFlow: Flow<Pair<Channel, Message>>
+    val onOutGoingMessageFlow: Flow<SceytMessage>
     val onMessageStatusFlow: Flow<MessageStatusChange>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onChannelEventFlow: Flow<ChannelEventData>
 
     init {
-        onNewMessageFlow = channelsRepository.onMessageFlow
-
         onMessageStatusFlow = channelsRepository.onMessageStatusFlow
 
         onChannelEventFlow = channelsRepository.onChannelEvenFlow
+
+        onNewMessageFlow = channelsRepository.onMessageFlow.filter {
+            !it.second.replyInThread
+        }
+
+        onOutGoingMessageFlow = channelsRepository.onOutGoingMessageFlow.filter {
+            !it.replyInThread
+        }
 
         onMessageEditedOrDeletedFlow = channelsRepository.onMessageEditedOrDeleteFlow.map {
             it.toSceytUiMessage()
