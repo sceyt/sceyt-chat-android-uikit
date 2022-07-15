@@ -41,4 +41,10 @@ object UserSharedPreference {
     private fun Context.getPref(): SharedPreferences {
         return getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
+
+    fun clear(ctx: Context) {
+        val editor = ctx.getPref().edit()
+        editor.clear()
+        editor.apply()
+    }
 }

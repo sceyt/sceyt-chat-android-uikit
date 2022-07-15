@@ -1,12 +1,10 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.Types
 import com.sceyt.chat.ui.SceytUiKitApp
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum.*
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.toSceytUiChannel
 import com.sceyt.chat.ui.data.toSceytUiMessage
@@ -21,19 +19,17 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     val connectionStatusLiveData = (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus
 
     lifecycleOwner.lifecycleScope.launch {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (connectionStatusLiveData?.value == Types.ConnectState.StateConnected)
-                channelsListView.getChannelsRv().awaitAnimationEnd {
-                    getChannels(query = searchQuery)
-                }
-            else
-                (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
-                    if (it == Types.ConnectState.StateConnected)
-                        channelsListView.getChannelsRv().awaitAnimationEnd {
-                            getChannels(query = searchQuery)
-                        }
-                }
-        }
+        if (connectionStatusLiveData?.value == Types.ConnectState.StateConnected)
+            channelsListView.getChannelsRv().awaitAnimationEnd {
+                getChannels(query = searchQuery)
+            }
+        else
+            (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
+                if (it == Types.ConnectState.StateConnected)
+                    channelsListView.getChannelsRv().awaitAnimationEnd {
+                        getChannels(query = searchQuery)
+                    }
+            }
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -56,6 +52,14 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     lifecycleOwner.lifecycleScope.launch {
         onNewMessageFlow.collect {
             if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), it.first.unreadMessageCount)) {
+                getChannels(query = searchQuery)
+            }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        onOutGoingMessageFlow.collect {
+            if (!channelsListView.updateLastMessage(it)) {
                 getChannels(query = searchQuery)
             }
         }

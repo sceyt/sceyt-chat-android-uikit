@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.data.channeleventobserverservice
+package com.sceyt.chat.ui.data.channeleventobserver
 
 import com.sceyt.chat.models.channel.Channel
 

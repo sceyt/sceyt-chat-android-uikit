@@ -6,10 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.*
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
+import com.sceyt.chat.ui.data.channeleventobserver.*
+import com.sceyt.chat.ui.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
@@ -71,11 +69,13 @@ class MessageListViewModel(conversationId: Long,
     val onNewThreadMessageFlow: Flow<SceytMessage>
     val onMessageStatusFlow: Flow<MessageStatusChange>
     val onMessageReactionUpdatedFlow: Flow<SceytMessage>
-    val onMessageEditedOrDeletedLiveData: Flow<SceytMessage>
+    val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
+    val onOutGoingThreadMessageFlow: Flow<SceytMessage>
 
     // Chanel events
     val onChannelEventFlow: Flow<ChannelEventData>
-    val onChannelTypingEventLiveData: Flow<ChannelTypingEventData>
+    val onChannelTypingEventFlow: Flow<ChannelTypingEventData>
+
 
     //Command events
     val onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
@@ -88,7 +88,7 @@ class MessageListViewModel(conversationId: Long,
                 messageReactions = initReactionsItems(this)
             }
         }
-        onMessageEditedOrDeletedLiveData = messagesRepository.onMessageEditedOrDeleteFlow.map {
+        onMessageEditedOrDeletedFlow = messagesRepository.onMessageEditedOrDeleteFlow.map {
             it.toSceytUiMessage(isGroup)
         }
 
@@ -100,34 +100,13 @@ class MessageListViewModel(conversationId: Long,
 
         onChannelEventFlow = messagesRepository.onChannelEventFlow
 
-        onChannelTypingEventLiveData = messagesRepository.onChannelTypingEventFlow
+        onChannelTypingEventFlow = messagesRepository.onChannelTypingEventFlow
 
         viewModelScope.launch {
-            messagesRepository.onChannelMembersEventFlow.collect { eventData ->
-                val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
-                val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
-
-                when (eventData.eventType) {
-                    ChannelMembersEventEnum.Added -> {
-                        channelMembers.addAll(sceytMembers ?: return@collect)
-                        (channel as SceytGroupChannel).apply {
-                            members = channelMembers
-                            memberCount += sceytMembers.size
-                        }
-                        _onChannelMemberAddedOrKickedLiveData.postValue(channel)
-                    }
-                    ChannelMembersEventEnum.Kicked -> {
-                        channelMembers.removeAll(sceytMembers ?: return@collect)
-                        (channel as SceytGroupChannel).apply {
-                            members = channelMembers
-                            memberCount -= sceytMembers.size
-                        }
-                        _onChannelMemberAddedOrKickedLiveData.postValue(channel)
-                    }
-                    else -> return@collect
-                }
-            }
+            messagesRepository.onChannelMembersEventFlow.collect(::onChannelMemberEvent)
         }
+
+        onOutGoingThreadMessageFlow = messagesRepository.onOutGoingThreadMessageFlow
     }
 
 
@@ -167,6 +146,9 @@ class MessageListViewModel(conversationId: Long,
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.deleteMessage(message.toMessage())
             _messageEditedDeletedLiveData.postValue(response)
+            if (response is SceytResponse.Success)
+                MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
+                        ?: return@launch)
         }
     }
 
@@ -196,10 +178,37 @@ class MessageListViewModel(conversationId: Long,
         }
     }
 
+    private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
+        val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
+        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
+
+        when (eventData.eventType) {
+            ChannelMembersEventEnum.Added -> {
+                channelMembers.addAll(sceytMembers ?: return)
+                (channel as SceytGroupChannel).apply {
+                    members = channelMembers
+                    memberCount += sceytMembers.size
+                }
+                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+            }
+            ChannelMembersEventEnum.Kicked -> {
+                channelMembers.removeAll(sceytMembers ?: return)
+                (channel as SceytGroupChannel).apply {
+                    members = channelMembers
+                    memberCount -= sceytMembers.size
+                }
+                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+            }
+            else -> return
+        }
+    }
+
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.sendMessage(message) { tmpMessage ->
-                onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup))
+                val outMessage = tmpMessage.toSceytUiMessage(isGroup)
+                onNewOutgoingMessageLiveData.postValue(outMessage)
+                MessageEventsObserver.emitOutgoingMessage(outMessage)
             }
             _messageSentLiveData.postValue(response)
         }
@@ -220,6 +229,9 @@ class MessageListViewModel(conversationId: Long,
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.editMessage(message)
             _messageEditedDeletedLiveData.postValue(response)
+            if (response is SceytResponse.Success)
+                MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
+                        ?: return@launch)
         }
     }
 

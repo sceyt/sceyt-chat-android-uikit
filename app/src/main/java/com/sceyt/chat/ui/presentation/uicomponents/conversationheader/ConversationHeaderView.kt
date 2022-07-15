@@ -9,7 +9,7 @@ import androidx.core.view.*
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel

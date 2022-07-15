@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.data.channeleventobserverservice
+package com.sceyt.chat.ui.data.channeleventobserver
 
 enum class ChannelMembersEventEnum {
     Role,

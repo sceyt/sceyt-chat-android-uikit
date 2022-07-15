@@ -11,7 +11,8 @@ import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.chat.ui.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -26,33 +27,37 @@ class MessagesRepositoryImpl(private val conversationId: Long,
                              private val channel: Channel,
                              private val replayInThread: Boolean) : MessagesRepository {
 
-    override val onMessageFlow = ChannelEventsObserverService.onMessageFlow
+    override val onMessageFlow = MessageEventsObserver.onMessageFlow
         .filter { it.first.id == channel.id && it.second.replyInThread == replayInThread }
         .mapNotNull { it.second.toSceytUiMessage() }
 
-    override val onThreadMessageFlow = ChannelEventsObserverService.onMessageFlow
+    override val onThreadMessageFlow = MessageEventsObserver.onMessageFlow
         .filter { it.first.id == channel.id && it.second.replyInThread }
         .mapNotNull { it.second.toSceytUiMessage() }
 
-    override val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
-        .filter { it.channel?.id == channel.id }
-
-    override val onMessageReactionUpdatedFlow = ChannelEventsObserverService.onMessageReactionUpdatedFlow
+    override val onMessageReactionUpdatedFlow = MessageEventsObserver.onMessageReactionUpdatedFlow
         .filterNotNull()
         .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
-    override val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
+    override val onMessageEditedOrDeleteFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
         .filterNotNull()
         .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
 
-    override val onChannelEventFlow = ChannelEventsObserverService.onChannelEventFlow
+    override val onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
+        .filter { it.channelId == channel.id && it.replyInThread }
+
+    override val onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
         .filter { it.channelId == channel.id }
 
-    override val onChannelMembersEventFlow = ChannelEventsObserverService.onChannelMembersEventFlow
+    override val onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
         .filter { it.channel?.id == channel.id }
 
-    override val onChannelTypingEventFlow = ChannelEventsObserverService.onChannelTypingEventFlow
+    override val onChannelMembersEventFlow = ChannelEventsObserver.onChannelMembersEventFlow
+        .filter { it.channel?.id == channel.id }
+
+    override val onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
         .filter { it.channel.id == channel.id }
+
 
     private val query = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
