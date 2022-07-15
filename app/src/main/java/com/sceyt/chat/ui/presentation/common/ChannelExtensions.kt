@@ -4,7 +4,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
-import com.sceyt.chat.ui.data.toPublicChannel
+import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 
 internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
@@ -20,6 +20,8 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     )
 }
 
-fun SceytChannel.checkIsMemberInPublicChannel(): Boolean {
-    return channelType == ChannelTypeEnum.Public && toPublicChannel().myRole() != Member.MemberType.MemberTypeNone
+fun SceytChannel.checkIsMemberInChannel(): Boolean {
+    return if (isGroup) {
+        toGroupChannel().myRole() != Member.MemberType.MemberTypeNone
+    } else true
 }

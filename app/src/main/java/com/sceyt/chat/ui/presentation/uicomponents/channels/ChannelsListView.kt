@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
+import com.sceyt.chat.ui.data.channeleventobserver.MessageStatusChange
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage

@@ -25,7 +25,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         statusBarIconsColorWithBackground(isNightTheme())
 
-        if (UserSharedPreference.getToken(this).isNullOrBlank().not()) {
+        if (UserSharedPreference.getUsername(this).isNullOrBlank().not()) {
             launchActivity<MainActivity>()
             finish()
         }

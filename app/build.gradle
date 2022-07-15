@@ -66,6 +66,7 @@ dependencies {
     implementation supportDependencies.datastorePreferences
     implementation supportDependencies.jsoup
     implementation supportDependencies.lottie
+    implementation supportDependencies.flexbox
     implementation supportDependencies.sdp
     implementation supportDependencies.ssp
 }

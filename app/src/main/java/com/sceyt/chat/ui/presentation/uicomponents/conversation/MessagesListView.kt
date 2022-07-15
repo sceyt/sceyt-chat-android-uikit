@@ -276,6 +276,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun newReplayMessage(messageId: Long?) {
+        messagesRV.getData()?.findIndexed {
+            it is MessageListItem.MessageItem && it.message.id == messageId
+        }?.let {
+            val message = (it.second as MessageListItem.MessageItem).message
+            val oldMessage = message.clone()
+            message.replyCount++
+            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+        }
+    }
+
     internal fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadMoreMessagesListener(listener)
     }

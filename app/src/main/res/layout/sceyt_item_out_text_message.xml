@@ -78,13 +78,12 @@
 
     <ViewStub
         android:id="@+id/rvReactions"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/bodyMaxWidth"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layoutDetails"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="3dp"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
-        android:orientation="horizontal"
         android:paddingTop="4dp"
         android:visibility="gone" />
 
