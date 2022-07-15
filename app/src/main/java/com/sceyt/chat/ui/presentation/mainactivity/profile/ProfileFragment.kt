@@ -151,7 +151,7 @@ class ProfileFragment : Fragment() {
 
         signOut.setOnClickListener {
             SceytDialog(requireContext(), positiveClickListener = {
-                viewModel.logout()
+                viewModel.logout(requireContext())
                 UserSharedPreference.setToken(requireContext(), null)
                 LoginActivity.launch(requireContext())
                 requireActivity().finish()

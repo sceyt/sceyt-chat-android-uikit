@@ -6,14 +6,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.presentation.common.checkIsMemberInPublicChannel
+import com.sceyt.chat.ui.presentation.common.checkIsMemberInChannel
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -35,7 +35,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
-    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInPublicChannel())
+    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel())
 
     lifecycleOwner.lifecycleScope.launch {
         messagesFlow.collect {
@@ -98,7 +98,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInPublicChannel())
+        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel())
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -124,6 +124,12 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     lifecycleOwner.lifecycleScope.launch {
+        onOutGoingThreadMessageFlow.collect {
+            messagesListView.newReplayMessage(it.parent?.id)
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
         onMessageStatusFlow.collect {
             messagesListView.updateMessagesStatus(it.status, it.messageIds)
         }
@@ -136,7 +142,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        onMessageEditedOrDeletedLiveData.collect {
+        onMessageEditedOrDeletedFlow.collect {
             messagesListView.messageEditedOrDeleted(it)
         }
     }
@@ -175,7 +181,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     joinLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInPublicChannel())
+                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel())
             }
         }
     }
@@ -183,7 +189,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     channelLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInPublicChannel())
+                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel())
             }
         }
     }
@@ -303,7 +309,7 @@ fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
         headerView.setChannel(channel)
 
     lifecycleOwner.lifecycleScope.launch {
-        onChannelTypingEventLiveData.collectLatest {
+        onChannelTypingEventFlow.collectLatest {
             headerView.onTyping(it)
         }
     }

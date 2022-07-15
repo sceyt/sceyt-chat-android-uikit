@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ui.data.ChannelsRepository
 import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
-import com.sceyt.chat.ui.data.channeleventobserverservice.*
+import com.sceyt.chat.ui.data.channeleventobserver.*
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
@@ -41,19 +41,19 @@ class ChannelMembersViewModel : BaseViewModel() {
 
     init {
         viewModelScope.launch {
-            ChannelEventsObserverService.onChannelMembersEventFlow.collect {
+            ChannelEventsObserver.onChannelMembersEventFlow.collect {
                 _channelMemberEventLiveData.postValue(it)
             }
         }
 
         viewModelScope.launch {
-            ChannelEventsObserverService.onChannelOwnerChangedEventFlow.collect {
+            ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect {
                 _channelOwnerChangedEventLiveData.postValue(it)
             }
         }
 
         viewModelScope.launch {
-            ChannelEventsObserverService.onChannelEventFlow.collect {
+            ChannelEventsObserver.onChannelEventFlow.collect {
                 _channelEventEventLiveData.postValue(it)
             }
         }

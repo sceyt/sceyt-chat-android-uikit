@@ -16,11 +16,11 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventEnum.*
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelMembersEventEnum
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelOwnerChangedEventData
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.toGroupChannel

@@ -11,9 +11,9 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
 import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -140,9 +140,6 @@ abstract class BaseMsgViewHolder(view: View,
             return
         }
 
-        val gridLayoutManager = GridLayoutManager(itemView.context,
-            getReactionSpanCount(reactions.size + 1, item.message.incoming))
-
         if (reactionsAdapter == null) {
             reactionsAdapter = ReactionsAdapter(
                 ReactionViewHolderFactory(itemView.context, messageListeners)).also {
@@ -163,14 +160,27 @@ abstract class BaseMsgViewHolder(view: View,
                 if (itemDecorationCount == 0)
                     addItemDecoration(RecyclerItemOffsetDecoration(0, 4, 8, 4))
 
-                layoutManager = gridLayoutManager
+                layoutManager = FlexboxLayoutManager(context).apply {
+                    flexDirection = FlexDirection.ROW
+                    flexWrap = FlexWrap.WRAP
+                    alignItems = AlignItems.FLEX_START
+                    justifyContentForReactions(item.message.incoming, reactions.size.plus(1))
+                }
                 adapter = reactionsAdapter
             }
         } else {
-            recyclerViewReactions?.layoutManager = gridLayoutManager
+            (recyclerViewReactions?.layoutManager as? FlexboxLayoutManager)?.justifyContentForReactions(
+                item.message.incoming, reactions.size.plus(1)
+            )
             reactionsAdapter?.submitList(reactions)
         }
         recyclerViewReactions?.isVisible = true
+    }
+
+    private fun FlexboxLayoutManager.justifyContentForReactions(incoming: Boolean, reactionsSize: Int) {
+        justifyContent = if (incoming) {
+            JustifyContent.FLEX_START
+        } else if (reactionsSize > 5) JustifyContent.FLEX_START else JustifyContent.FLEX_END
     }
 
     protected fun setMessageDateDependAttachments(messageDate: SceytDateStatusView, attachments: List<FileListItem>?) {

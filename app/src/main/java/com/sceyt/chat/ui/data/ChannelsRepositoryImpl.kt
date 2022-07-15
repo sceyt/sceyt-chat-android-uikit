@@ -10,7 +10,8 @@ import com.sceyt.chat.models.user.BlockUserRequest
 import com.sceyt.chat.models.user.UnBlockUserRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.*
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventsObserverService
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.chat.ui.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.CreateChannelData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
@@ -22,18 +23,19 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 class ChannelsRepositoryImpl : ChannelsRepository {
-    //todo need to add DI
-    //private val channelEventsService = ChannelEventsObserverService()
 
-    override val onMessageFlow = ChannelEventsObserverService.onMessageFlow
-    override val onMessageStatusFlow = ChannelEventsObserverService.onMessageStatusFlow
+    override val onMessageFlow = MessageEventsObserver.onMessageFlow
 
-    override val onMessageEditedOrDeleteFlow = ChannelEventsObserverService.onMessageEditedOrDeletedFlow
+    override val onOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
+
+    override val onMessageEditedOrDeleteFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
         .filterNotNull()
 
-    override val onChannelEvenFlow = ChannelEventsObserverService.onChannelEventFlow
+    override val onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
 
-    override val onChannelTypingEvenFlow = ChannelEventsObserverService.onChannelTypingEventFlow
+    override val onChannelEvenFlow = ChannelEventsObserver.onChannelEventFlow
+
+    override val onChannelTypingEvenFlow = ChannelEventsObserver.onChannelTypingEventFlow
 
     private lateinit var channelsQuery: ChannelListQuery
     private lateinit var memberListQuery: MemberListQuery

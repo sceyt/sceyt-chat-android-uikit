@@ -6,13 +6,14 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.ChannelTypingEventData
-import com.sceyt.chat.ui.data.channeleventobserverservice.MessageStatusChange
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventData
+import com.sceyt.chat.ui.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.chat.ui.data.channeleventobserver.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.CreateChannelData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -43,4 +44,5 @@ interface ChannelsRepository {
     val onMessageEditedOrDeleteFlow: Flow<Message>
     val onChannelEvenFlow: SharedFlow<ChannelEventData>
     val onChannelTypingEvenFlow: SharedFlow<ChannelTypingEventData>
+    val onOutGoingMessageFlow: Flow<SceytMessage>
 }

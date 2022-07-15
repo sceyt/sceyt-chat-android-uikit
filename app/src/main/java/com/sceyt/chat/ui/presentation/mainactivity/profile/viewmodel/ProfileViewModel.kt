@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.ProfileRepository
 import com.sceyt.chat.ui.data.ProfileRepositoryImpl
+import com.sceyt.chat.ui.data.UserSharedPreference
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
@@ -99,8 +101,9 @@ class ProfileViewModel : BaseViewModel() {
         }
     }
 
-    fun logout() {
+    fun logout(context: Context) {
         ChatClient.getClient().disconnect()
+        UserSharedPreference.clear(context)
         //todo unregister push token
     }
 }
