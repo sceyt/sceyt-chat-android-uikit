@@ -21,6 +21,7 @@ open class SceytChannel(open var id: Long,
                         open var metadata: String?,
                         open var muted: Boolean,
                         open var muteExpireDate: Date?,
+                        open var muteUntil: Long?,
                         open var channelType: ChannelTypeEnum) : BaseObservable(), Parcelable, Cloneable {
 
     @IgnoredOnParcel
@@ -54,7 +55,7 @@ open class SceytChannel(open var id: Long,
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {
-            is SceytDirectChannel -> Pair(peer?.getPresentableName() ?: "", peer?.avatarURL)
+            is SceytDirectChannel -> Pair(peer?.getPresentableName() ?: "", peer?.avatarUrl)
             is SceytGroupChannel -> Pair(subject ?: "", avatarUrl)
             else -> Pair("", null)
         }
@@ -62,7 +63,7 @@ open class SceytChannel(open var id: Long,
 
     fun getChannelAvatarUrl(): String? {
         return when (this) {
-            is SceytDirectChannel -> peer?.avatarURL
+            is SceytDirectChannel -> peer?.avatarUrl
             is SceytGroupChannel -> avatarUrl
             else -> null
         }
@@ -88,6 +89,6 @@ open class SceytChannel(open var id: Long,
     }
 
     public override fun clone(): SceytChannel {
-        return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label, metadata, muted, muteExpireDate, channelType)
+        return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label, metadata, muted, muteExpireDate, muteUntil, channelType)
     }
 }

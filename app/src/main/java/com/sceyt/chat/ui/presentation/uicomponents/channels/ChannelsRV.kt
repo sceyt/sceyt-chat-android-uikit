@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsAdapter
@@ -19,7 +20,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     : RecyclerView(context, attrs, defStyleAttr) {
 
     private lateinit var mAdapter: ChannelsAdapter
-    private var richToEndListener: ((offset: Int) -> Unit)? = null
+    private var richToEndListener: ((offset: Int, lastChannel: SceytChannel?) -> Unit)? = null
     private var viewHolderFactory = ChannelViewHolderFactory(context)
 
     init {
@@ -39,14 +40,14 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun addOnScrollListener() {
         post {
             addRVScrollListener { _: RecyclerView, _: Int, _: Int ->
-               checkRichToEnd()
+                checkRichToEnd()
             }
         }
     }
 
-    private fun checkRichToEnd(){
+    private fun checkRichToEnd() {
         if (isLastItemDisplaying() && mAdapter.itemCount != 0)
-            richToEndListener?.invoke(mAdapter.getSkip())
+            richToEndListener?.invoke(mAdapter.getSkip(), mAdapter.getChannels().lastOrNull()?.channel)
     }
 
     fun setData(channels: List<ChannelListItem>) {
@@ -76,8 +77,10 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun addNewChannels(channels: List<ChannelListItem>) {
         if (::mAdapter.isInitialized.not())
             setData(channels)
-        else
+        else {
             mAdapter.addList(channels as MutableList<ChannelListItem>)
+            //mAdapter.notifyUpdate(mAdapter.getData().updateCommon(channels) { old, new -> old == new })
+        }
     }
 
     fun deleteChannel(id: Long) {
@@ -86,6 +89,10 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
         return if (::mAdapter.isInitialized) mAdapter.getChannels() else null
+    }
+
+    fun getData(): List<ChannelListItem>? {
+        return if (::mAdapter.isInitialized) mAdapter.getData() else null
     }
 
     fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
@@ -103,7 +110,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         viewHolderFactory = factory
     }
 
-    fun setRichToEndListeners(listener: (offset: Int) -> Unit) {
+    fun setRichToEndListeners(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
         richToEndListener = listener
     }
 

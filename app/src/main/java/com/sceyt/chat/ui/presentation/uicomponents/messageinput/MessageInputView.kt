@@ -10,17 +10,15 @@ import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.data.SceytSharedPreference
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
-import com.sceyt.chat.ui.data.toPublicChannel
+import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.databinding.SceytMessageInputViewBinding
 import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.shared.helpers.chooseAttachment.AttachmentChooseType
-import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.isTextMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.AttachmentItem
@@ -28,12 +26,17 @@ import com.sceyt.chat.ui.presentation.uicomponents.messageinput.adapter.Attachme
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.chat.ui.sceytconfigs.MessageInputViewStyle
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.AttachmentChooseType
+import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.chat.ui.shared.utils.ViewUtil
 import kotlinx.coroutines.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners {
+    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners, KoinComponent {
+    private val preferences by inject<SceytSharedPreference>()
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
@@ -264,7 +267,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun checkIsParticipant(channel: SceytChannel) {
         if (channel.channelType == ChannelTypeEnum.Public) {
-            if (channel.toPublicChannel().myRole() == Member.MemberType.MemberTypeNone) {
+            if (channel.toGroupChannel().members.find { it.id == preferences.getUsername() } == null) {
                 showHideJoinButton(true)
             } else showHideJoinButton(false)
         }

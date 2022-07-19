@@ -9,10 +9,9 @@ import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.UserSharedPreference
+import com.sceyt.chat.ui.data.SceytSharedPreference
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.SceytDialog
@@ -23,12 +22,15 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.Mute
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.concurrent.TimeUnit
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
     private lateinit var displayNameDefaultBg: Drawable
-    private val viewModel: ProfileViewModel by viewModels()
+    private val viewModel by viewModel<ProfileViewModel>()
+    private val preference by inject<SceytSharedPreference>()
     private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
     private var currentUser: User? = null
     private var avatarUrl: String? = null
@@ -151,8 +153,8 @@ class ProfileFragment : Fragment() {
 
         signOut.setOnClickListener {
             SceytDialog(requireContext(), positiveClickListener = {
-                viewModel.logout(requireContext())
-                UserSharedPreference.setToken(requireContext(), null)
+                viewModel.logout()
+                preference.setToken(null)
                 LoginActivity.launch(requireContext())
                 requireActivity().finish()
             }).setTitle(getString(R.string.sceyt_sign_out_title))

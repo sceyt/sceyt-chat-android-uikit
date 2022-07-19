@@ -92,7 +92,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     private fun SceytItemChannelBinding.setOnlineStatus(channel: SceytChannel?) {
         val isOnline = (channel?.channelType == ChannelTypeEnum.Direct)
-                && (channel as? SceytDirectChannel)?.peer?.presence?.state == PresenceState.Online
+                && (channel as? SceytDirectChannel)?.peer?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline
     }
 

@@ -33,7 +33,7 @@ open class SceytMessage(var id: Long,
                         var reactionScores: Array<ReactionScore>? = null,
                         var markerCount: Array<MarkerCount>? = null,
                         var selfMarkers: Array<String>? = null,
-                        var mentionedUsers: Array<User>?,
+                        var mentionedUsers: Array<User>? = null,
                         var parent: Message?,
                         var replyInThread: Boolean = false,
                         var replyCount: Long = 0) : Parcelable, Cloneable {

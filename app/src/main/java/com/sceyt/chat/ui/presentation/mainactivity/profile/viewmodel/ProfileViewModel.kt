@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -8,16 +7,14 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.ProfileRepository
-import com.sceyt.chat.ui.data.ProfileRepositoryImpl
-import com.sceyt.chat.ui.data.UserSharedPreference
+import com.sceyt.chat.ui.data.SceytSharedPreference
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class ProfileViewModel : BaseViewModel() {
-    // Todo di
-    private val profileRepo: ProfileRepository = ProfileRepositoryImpl()
+class ProfileViewModel(private val profileRepo: ProfileRepository,
+                       private val preference: SceytSharedPreference) : BaseViewModel() {
 
     private val _currentUserLiveData = MutableLiveData<User>()
     val currentUserLiveData: LiveData<User> = _currentUserLiveData
@@ -101,9 +98,9 @@ class ProfileViewModel : BaseViewModel() {
         }
     }
 
-    fun logout(context: Context) {
+    fun logout() {
         ChatClient.getClient().disconnect()
-        UserSharedPreference.clear(context)
+        preference.clear()
         //todo unregister push token
     }
 }

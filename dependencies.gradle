@@ -25,6 +25,7 @@ ext {
     jsoup_version = '1.15.2'
 
     material_version = '1.7.0-alpha02'
+    moshi_converter_version = '2.9.0'
 
     fragment_ktx_version = '1.5.0'
     firebase_core_version = '20.0.2'
@@ -53,6 +54,7 @@ ext {
 
     recycler_view_version = '1.2.1'
     retrofit_version = '2.9.0'
+    room_version = '2.4.0'
 
     sdp_version = '1.1.0'
     ssp_version = '1.1.0'
@@ -81,12 +83,16 @@ ext {
             koinAndroid         : "io.insert-koin:koin-android:$koin_version",
             lifecycleRuntime    : "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version",
             lifecycleViewModel  : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",
-            lottie              : "com.airbnb.android:lottie:${lottie_version}",
+            lottie              : "com.airbnb.android:lottie:$lottie_version",
             voley               : "com.android.volley:volley:$voley_version",
             material            : "com.google.android.material:material:$material_version",
+            moshiConverter      : "com.squareup.retrofit2:converter-moshi:$moshi_converter_version",
             okHttp              : "com.squareup.okhttp3:okhttp:$ok_http_version",
             recyclerView        : "androidx.recyclerview:recyclerview:$recycler_view_version",
             retrofit            : "com.squareup.retrofit2:retrofit:$retrofit_version",
+            roomCompiler        : "androidx.room:room-compiler:$room_version",
+            roomKtx             : "androidx.room:room-ktx:$room_version",
+            roomRuntime         : "androidx.room:room-runtime:$room_version",
             sdp                 : "com.intuit.sdp:sdp-android:$sdp_version",
             ssp                 : "com.intuit.ssp:ssp-android:$ssp_version",
             swipeRefreshLayout  : "androidx.swiperefreshlayout:swiperefreshlayout:$swipe_refresh_layout_version",

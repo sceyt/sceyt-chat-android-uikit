@@ -18,6 +18,7 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
+import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.databinding.ActivityConversationInfoBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.SceytDialog
@@ -169,7 +170,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
             val positiveBtnTitleId: Int
             val callback: () -> Unit
 
-            if (user.blocked) {
+            if (user.user.blocked) {
                 dialogTitleId = R.string.sceyt_unblock_user_title
                 dialogDescId = R.string.sceyt_unblock_user_desc
                 positiveBtnTitleId = R.string.sceyt_unblock
@@ -281,7 +282,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
             blockAndLeaveChannel.isVisible = !isDirec
             blockUnblockUser.isVisible = isDirec
             if (isDirec)
-                blockUnblockUser.text = getBlockText((channel as SceytDirectChannel).peer?.blocked == true)
+                blockUnblockUser.text = getBlockText((channel as SceytDirectChannel).peer?.user?.blocked == true)
         }
     }
 
@@ -374,7 +375,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
     open fun onBlockUnblockUser(users: List<User>) {
         val peer = (channel as SceytDirectChannel).peer
         users.find { user -> user.id == peer?.id }?.let { user ->
-            (channel as SceytDirectChannel).peer = genMemberBy(user)
+            (channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
             binding?.blockUnblockUser?.text = getBlockText(user.blocked)
         }
     }

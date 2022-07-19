@@ -60,10 +60,15 @@ dependencies {
     implementation supportDependencies.firebaseMessaging
     implementation supportDependencies.okHttp
     implementation supportDependencies.voley
+    kapt supportDependencies.roomCompiler
+    implementation supportDependencies.roomRuntime
+    implementation supportDependencies.roomKtx
+    implementation supportDependencies.koinAndroid
     implementation supportDependencies.exoPlayerMedia
     implementation supportDependencies.exoPlayerUi
     implementation supportDependencies.datastore
     implementation supportDependencies.datastorePreferences
+    implementation supportDependencies.moshiConverter
     implementation supportDependencies.jsoup
     implementation supportDependencies.lottie
     implementation supportDependencies.flexbox

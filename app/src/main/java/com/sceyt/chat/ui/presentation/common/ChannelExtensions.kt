@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.presentation.common
 
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
@@ -16,12 +15,12 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         unreadCountChanged = unreadCount != other.unreadCount,
         muteStateChanged = muted != other.muted,
         onlineStateChanged = channelType == ChannelTypeEnum.Direct
-                && (this as? SceytDirectChannel)?.peer?.presence?.state != (other as? SceytDirectChannel)?.peer?.presence?.state
+                && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state
     )
 }
 
-fun SceytChannel.checkIsMemberInChannel(): Boolean {
+fun SceytChannel.checkIsMemberInChannel(myId: String?): Boolean {
     return if (isGroup) {
-        toGroupChannel().myRole() != Member.MemberType.MemberTypeNone
+        toGroupChannel().members.find { it.id == myId } != null
     } else true
 }

@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -7,7 +8,7 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.ui.data.*
+import com.sceyt.chat.ui.data.ChannelsRepository
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserver.MessageStatusChange
 import com.sceyt.chat.ui.data.models.SceytResponse
@@ -15,6 +16,10 @@ import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.toChannel
+import com.sceyt.chat.ui.data.toGroupChannel
+import com.sceyt.chat.ui.data.toSceytUiMessage
+import com.sceyt.chat.ui.persistence.PersistenceMiddleWare
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.events.ChannelEvent
@@ -23,11 +28,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class ChannelsViewModel : BaseViewModel() {
+class ChannelsViewModel(private val channelsRepository: ChannelsRepository) : BaseViewModel() {
     internal var searchQuery = ""
 
-    // todo di
-    private val channelsRepository: ChannelsRepository = ChannelsRepositoryImpl()
+    private val persistentMiddleWare: PersistenceMiddleWare = PersistenceMiddleWare()
 
     private val _channelsFlow = MutableStateFlow<SceytResponse<List<ChannelListItem>>>(SceytResponse.Success(null))
     val channelsFlow: StateFlow<SceytResponse<List<ChannelListItem>>> = _channelsFlow
@@ -82,16 +86,27 @@ class ChannelsViewModel : BaseViewModel() {
         notifyPageLoadingState(false)
 
         viewModelScope.launch(Dispatchers.IO) {
-            initResponse(channelsRepository.getChannels(query), false)
+            persistentMiddleWare.getChannels(searchQuery).collect {
+                if (it is SceytResponse.Success) {
+                    Log.i("asdasdasd"," data  ${it.data?.map { it.channelSubject }}")
+                }
+                initResponse(it, false)
+            }
         }
     }
 
-    fun loadMoreChannels() {
+
+    fun loadMoreChannels(offset: Int) {
         loadingItems = true
         notifyPageLoadingState(true)
 
         viewModelScope.launch(Dispatchers.IO) {
-            initResponse(channelsRepository.loadMoreChannels(), true)
+            persistentMiddleWare.loadMore(offset).collect {
+                if (it is SceytResponse.Success) {
+                    Log.i("asdasdasd","load more ${it.data?.map { it.channelSubject }}")
+                }
+                initResponse(it, true)
+            }
         }
     }
 
