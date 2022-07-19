@@ -23,11 +23,12 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelCli
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
 import com.sceyt.chat.ui.presentation.uicomponents.newchannel.NewChannelActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class ChannelsFragment : Fragment() {
     private lateinit var binding: FragmentChannelsBinding
-    private val mViewModel: ChannelsViewModel by viewModels()
+    private val mViewModel: ChannelsViewModel by viewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelsBinding.inflate(inflater, container, false)

@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 
 fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
+    val myId = preferences.getUsername()
 
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -35,7 +36,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         }
     }
 
-    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel())
+    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
 
     lifecycleOwner.lifecycleScope.launch {
         messagesFlow.collect {
@@ -98,7 +99,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel())
+        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel(myId))
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -181,7 +182,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     joinLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel())
+                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
             }
         }
     }
@@ -189,7 +190,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     channelLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel())
+                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
             }
         }
     }

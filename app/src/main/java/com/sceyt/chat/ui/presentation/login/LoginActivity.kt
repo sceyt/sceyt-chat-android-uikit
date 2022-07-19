@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.SceytUiKitApp
-import com.sceyt.chat.ui.data.UserSharedPreference
+import com.sceyt.chat.ui.data.SceytSharedPreference
 import com.sceyt.chat.ui.databinding.ActivityLoginBinding
 import com.sceyt.chat.ui.extensions.hideSoftInput
 import com.sceyt.chat.ui.extensions.isNightTheme
@@ -16,16 +16,18 @@ import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chat.ui.presentation.login.viewmodel.LoginViewModel
 import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
 import com.sceyt.chat.ui.presentation.root.PageState
+import org.koin.android.ext.android.inject
 
 class LoginActivity : AppCompatActivity() {
     private val viewModel: LoginViewModel by viewModels()
+    private val preference by inject<SceytSharedPreference>()
     private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         statusBarIconsColorWithBackground(isNightTheme())
 
-        if (UserSharedPreference.getUsername(this).isNullOrBlank().not()) {
+        if (preference.getUsername().isNullOrBlank().not()) {
             launchActivity<MainActivity>()
             finish()
         }

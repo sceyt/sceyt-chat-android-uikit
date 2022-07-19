@@ -16,26 +16,22 @@ import com.sceyt.chat.ui.presentation.uicomponents.searchinput.SearchInputView
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
-    val connectionStatusLiveData = (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus
+
+    getChannels(query = searchQuery)
 
     lifecycleOwner.lifecycleScope.launch {
-        if (connectionStatusLiveData?.value == Types.ConnectState.StateConnected)
-            channelsListView.getChannelsRv().awaitAnimationEnd {
-                getChannels(query = searchQuery)
-            }
-        else
-            (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
-                if (it == Types.ConnectState.StateConnected)
-                    channelsListView.getChannelsRv().awaitAnimationEnd {
-                        getChannels(query = searchQuery)
-                    }
-            }
+        (channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
+            if (it == Types.ConnectState.StateConnected)
+                channelsListView.getChannelsRv().awaitAnimationEnd {
+                    getChannels(query = searchQuery)
+                }
+        }
     }
 
     lifecycleOwner.lifecycleScope.launch {
         channelsFlow.collect {
             if (it is SceytResponse.Success) {
-                it.data?.let { data -> channelsListView.setChannelsList(data) }
+                it.data?.let { data -> channelsListView.setChannelsList(data, true) }
             } else if (it is SceytResponse.Error) {
                 customToastSnackBar(channelsListView, it.message ?: "")
             }
@@ -44,8 +40,9 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     lifecycleOwner.lifecycleScope.launch {
         loadMoreChannelsFlow.collect {
-            if (it is SceytResponse.Success && it.data != null)
+            if (it is SceytResponse.Success && it.data != null) {
                 channelsListView.addNewChannels(it.data)
+            }
         }
     }
 
@@ -149,10 +146,10 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
         onChannelEvent(it)
     }
 
-    channelsListView.setReachToEndListener {
+    channelsListView.setReachToEndListener { offset, lastChannel ->
         if (!loadingItems && hasNext) {
             loadingItems = true
-            loadMoreChannels()
+            loadMoreChannels(offset)
         }
     }
 }

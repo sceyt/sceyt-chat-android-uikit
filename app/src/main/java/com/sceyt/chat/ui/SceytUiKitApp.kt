@@ -19,16 +19,19 @@ import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.models.Status
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_listeners.ClientListener
-import com.sceyt.chat.ui.data.UserSharedPreference
+import com.sceyt.chat.ui.data.SceytSharedPreference
 import org.json.JSONObject
+import org.koin.android.ext.android.inject
 import java.util.*
 
 class SceytUiKitApp : Application() {
+    private val preference by inject<SceytSharedPreference>()
 
     private val _sceytConnectionStatus: MutableLiveData<Types.ConnectState> = MutableLiveData()
     val sceytConnectionStatus: LiveData<Types.ConnectState> = _sceytConnectionStatus
 
     private lateinit var chatClient: ChatClient
+    private val chatClientInitializer: SceytUIKitInitializer = SceytUIKitInitializer(this)
 
     override fun onCreate() {
         super.onCreate()
@@ -40,11 +43,7 @@ class SceytUiKitApp : Application() {
     }
 
     private fun initSceyt() {
-        val serverUrl = "https://us-ohio-api.sceyt.com/"
-//        val serverUrl = "http://192.168.178.213:3002"
-        val userId = UUID.randomUUID().toString() //Some unique userId
-        ChatClient.setEnableNetworkAwarenessReconnection(true)
-        chatClient = ChatClient.setup(this, serverUrl, "89p65954oj", userId)
+        chatClient = chatClientInitializer.initialize(UUID.randomUUID().toString(), true)
         _sceytConnectionStatus.postValue(Types.ConnectState.StateDisconnect)
     }
 
@@ -62,8 +61,8 @@ class SceytUiKitApp : Application() {
     }
 
     fun connect() {
-        val token = UserSharedPreference.getToken(this)
-        val userName = UserSharedPreference.getUsername(this)
+        val token = preference.getToken()
+        val userName = preference.getUsername()
         if (token.isNullOrBlank()) {
             connectWithoutToken(userName ?: return)
         } else if (!token.isNullOrEmpty())
@@ -96,8 +95,8 @@ class SceytUiKitApp : Application() {
         chatClient.addClientListener("main", object : ClientListener {
             override fun onChangedConnectStatus(connectStatus: Types.ConnectState?, status: Status?) {
                 if (connectStatus == Types.ConnectState.StateConnected) {
-                    UserSharedPreference.setToken(this@SceytUiKitApp, token)
-                    UserSharedPreference.setUsername(this@SceytUiKitApp, username)
+                    preference.setToken(token)
+                    preference.setUsername(username)
                     success.postValue(true)
                     ClientWrapper.setPresence(PresenceState.Online, "") {
 
@@ -105,7 +104,7 @@ class SceytUiKitApp : Application() {
                 } else if (connectStatus == Types.ConnectState.StateFailed)
                     success.postValue(false)
                 else if (connectStatus == Types.ConnectState.StateDisconnect && status?.error?.code == 40102) {
-                    connectWithoutToken(UserSharedPreference.getUsername(this@SceytUiKitApp)
+                    connectWithoutToken(preference.getUsername()
                             ?: return)
                 }
                 _sceytConnectionStatus.postValue(connectStatus)

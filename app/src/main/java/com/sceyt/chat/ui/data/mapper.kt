@@ -39,7 +39,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             label = label,
             metadata = metadata,
             muted = muted(),
-            peer = peer,
+            muteUntil = 0,
+            peer = peer.toSceytMember(),
             channelType = getChannelType(this),
         )
     }
@@ -49,7 +50,7 @@ fun SceytChannel.toChannel(): Channel {
     return when (channelType) {
         Direct -> {
             this as SceytDirectChannel
-            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer),
+            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer?.toMember()),
                 lastMessage?.toMessage(), unreadMessageCount, muted, 0)
         }
         Private -> {
@@ -89,8 +90,7 @@ fun SceytChannel.toPublicChannel(): GroupChannel {
         this as SceytGroupChannel
         PublicChannel(id, "", subject, metadata, avatarUrl,
             label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
-    }
-    else throw RuntimeException("Channel is not public")
+    } else throw RuntimeException("Channel is not public")
 }
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytMessage(

@@ -28,15 +28,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.parameter.parametersOf
 
 class MessageListViewModel(conversationId: Long,
                            internal val replayInThread: Boolean = false,
-                           internal var channel: SceytChannel) : BaseViewModel() {
+                           internal var channel: SceytChannel) : BaseViewModel(), KoinComponent {
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
-    // todo di
-    private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), replayInThread)
-    private val channelsRepository: ChannelsRepository = ChannelsRepositoryImpl()
+    val preferences by inject<SceytSharedPreference>()
+
+    private val channelsRepository by inject<ChannelsRepository>()
+    private val messagesRepository by inject<MessagesRepository> {
+        parametersOf(conversationId, channel.toChannel(), replayInThread)
+    }
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow

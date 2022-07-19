@@ -16,8 +16,10 @@ import com.sceyt.chat.ui.data.channeleventobserver.MessageStatusChange
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.getCompatColor
+import com.sceyt.chat.ui.extensions.updateCommon
 import com.sceyt.chat.ui.presentation.common.diff
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
@@ -90,8 +92,14 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    internal fun setChannelsList(channels: List<ChannelListItem>) {
-        channelsRV.setData(channels)
+    internal fun setChannelsList(channels: List<ChannelListItem>, onlyUpdateIfExist: Boolean) {
+        if (onlyUpdateIfExist) {
+            val data = channelsRV.getData()?.updateCommon(channels) { old, new ->
+                old == new
+            } ?: channels
+            channelsRV.setData(data)
+        } else
+            channelsRV.setData(channels)
     }
 
     internal fun addNewChannels(channels: List<ChannelListItem>) {
@@ -182,7 +190,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             channelsRV.getChannels()?.find {
                 it.channel is SceytDirectChannel && (it.channel as SceytDirectChannel).peer?.id == user.id
             }?.let {
-                (it.channel as SceytDirectChannel).peer = genMemberBy(user)
+                (it.channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
             }
         }
     }
@@ -211,7 +219,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.show()
     }
 
-    internal fun setReachToEndListener(listener: (offset: Int) -> Unit) {
+    internal fun setReachToEndListener(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
         channelsRV.setRichToEndListeners(listener)
     }
 
