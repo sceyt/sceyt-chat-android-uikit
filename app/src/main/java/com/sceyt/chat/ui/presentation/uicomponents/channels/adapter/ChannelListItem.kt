@@ -8,8 +8,6 @@ sealed class ChannelListItem {
 
     override fun equals(other: Any?): Boolean {
         return when {
-            other == null -> false
-            other !is ChannelListItem -> false
             other is ChannelItem && this is ChannelItem -> {
                 other.channel == channel
             }

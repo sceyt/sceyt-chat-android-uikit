@@ -24,9 +24,9 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.Conversation
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentViewModelFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelFilesFragment : Fragment() {
     private lateinit var channel: SceytChannel
@@ -34,10 +34,7 @@ open class ChannelFilesFragment : Fragment() {
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = "file"
-    private val viewModel: ChannelAttachmentsViewModel by viewModels {
-        val channel: SceytChannel = requireNotNull(arguments?.getParcelable(CHANNEL))
-        ChannelAttachmentViewModelFactory(channel)
-    }
+    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelFilesBinding.inflate(inflater, container, false).also {
@@ -82,7 +79,7 @@ open class ChannelFilesFragment : Fragment() {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext)
+                    if (isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext)
                         loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.sceytMessage?.id ?: 0)
                 }
             })
@@ -94,16 +91,15 @@ open class ChannelFilesFragment : Fragment() {
     }
 
     open fun onPageStateChange(pageState: PageState) {
-        if (pageStateView != null)
-            pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
+        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
     }
 
     protected fun loadInitialFilesList() {
-        viewModel.loadMessages(0, false, mediaType)
+        viewModel.loadMessages(channel, 0, false, mediaType)
     }
 
     protected fun loadMoreFilesList(lasMsgId: Long) {
-        viewModel.loadMessages(lasMsgId, true, mediaType)
+        viewModel.loadMessages(channel, lasMsgId, true, mediaType)
     }
 
     private fun addPageStateView() {

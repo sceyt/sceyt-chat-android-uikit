@@ -4,6 +4,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.persistence.entity.messages.MessageDb
 import com.sceyt.chat.ui.persistence.entity.messages.MessageEntity
+import kotlinx.coroutines.NonDisposableHandle.parent
 import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
@@ -15,6 +16,31 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     type = type,
     metadata = metadata,
     createdAt = createdAt,
+    updatedAt = updatedAt.time,
+    incoming = incoming,
+    receipt = receipt,
+    isTransient = isTransient,
+    silent = silent,
+    deliveryStatus = deliveryStatus,
+    state = state,
+    fromId = from?.id,
+
+
+    parentId = parent?.id,
+    replyInThread = replyInThread,
+    replyCount = replyCount
+)
+
+
+fun Message.toMessageEntity() = MessageEntity(
+    id = id,
+    tid = tid,
+    channelId = channelId,
+    to = to,
+    body = body,
+    type = type,
+    metadata = metadata,
+    createdAt = createdAt.time,
     updatedAt = updatedAt.time,
     incoming = incoming,
     receipt = receipt,

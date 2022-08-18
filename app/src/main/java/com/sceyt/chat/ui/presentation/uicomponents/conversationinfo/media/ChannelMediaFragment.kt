@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,13 +21,12 @@ import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentViewModelFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMediaFragment : Fragment() {
     private lateinit var channel: SceytChannel
@@ -36,10 +34,7 @@ open class ChannelMediaFragment : Fragment() {
     private var mediaAdapter: ChannelMediaAdapter? = null
     private val mediaType = "media"
     private var pageStateView: PageStateView? = null
-    private val viewModel: ChannelAttachmentsViewModel by viewModels {
-        val channel: SceytChannel = requireNotNull(arguments?.getParcelable(ChannelFilesFragment.CHANNEL))
-        ChannelAttachmentViewModelFactory(channel)
-    }
+    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelMediaBinding.inflate(inflater, container, false).also {
@@ -111,7 +106,7 @@ open class ChannelMediaFragment : Fragment() {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext)
+                    if (isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext)
                         loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.sceytMessage?.id ?: 0)
                 }
             })
@@ -123,16 +118,15 @@ open class ChannelMediaFragment : Fragment() {
     }
 
     open fun onPageStateChange(pageState: PageState) {
-        if (pageStateView != null)
-            pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
+        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
     }
 
     protected fun loadInitialMediaList() {
-        viewModel.loadMessages(0, false, mediaType)
+        viewModel.loadMessages(channel, 0, false, mediaType)
     }
 
     protected fun loadMoreMediaList(lasMsgId: Long) {
-        viewModel.loadMessages(lasMsgId, true, mediaType)
+        viewModel.loadMessages(channel, lasMsgId, true, mediaType)
     }
 
     companion object {

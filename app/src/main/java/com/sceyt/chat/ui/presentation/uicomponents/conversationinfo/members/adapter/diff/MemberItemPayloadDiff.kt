@@ -5,10 +5,10 @@ data class MemberItemPayloadDiff(
         var nameChanged: Boolean,
         var onlineStateChanged: Boolean,
         var roleChanged: Boolean,
-        var showMorItemChanged: Boolean,
+        var showMorIconChanged: Boolean,
 ) {
     fun hasDifference(): Boolean {
-        return avatarChanged || nameChanged || onlineStateChanged || roleChanged || showMorItemChanged
+        return avatarChanged || nameChanged || onlineStateChanged || roleChanged || showMorIconChanged
     }
 
     companion object {
@@ -17,7 +17,7 @@ data class MemberItemPayloadDiff(
             nameChanged = true,
             onlineStateChanged = true,
             roleChanged = true,
-            showMorItemChanged = true
+            showMorIconChanged = true
         )
 
         val NOT_CHANGED_STATE = MemberItemPayloadDiff(
@@ -25,7 +25,7 @@ data class MemberItemPayloadDiff(
             nameChanged = false,
             onlineStateChanged = false,
             roleChanged = false,
-            showMorItemChanged = false
+            showMorIconChanged = false
         )
     }
 }

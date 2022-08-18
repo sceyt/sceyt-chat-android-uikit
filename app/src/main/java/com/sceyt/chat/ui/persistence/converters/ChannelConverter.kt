@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.UserActivityStatus
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
+import com.sceyt.chat.ui.data.models.channels.RoleTypeEnum
 import com.sceyt.chat.ui.persistence.extensions.toEnum
 
 class ChannelConverter {
@@ -24,4 +25,10 @@ class ChannelConverter {
 
     @TypeConverter
     fun intToUserActivityStatus(value: Int) = value.toEnum<UserActivityStatus>()
+
+    @TypeConverter
+    fun memberTypeEnumToTnt(value: RoleTypeEnum?) = value?.ordinal
+
+    @TypeConverter
+    fun intToMemberTypeEnum(value: Int?) = value?.toEnum<RoleTypeEnum>()
 }

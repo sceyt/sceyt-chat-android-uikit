@@ -26,8 +26,6 @@ data class SceytMember(
     }
 
     override fun hashCode(): Int {
-        var result = role.hashCode()
-        result = 31 * result + user.hashCode()
-        return result
+        return javaClass.hashCode()
     }
 }

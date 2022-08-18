@@ -4,19 +4,19 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.ui.data.ChannelsRepository
-import com.sceyt.chat.ui.data.ChannelsRepositoryImpl
-import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
-import com.sceyt.chat.ui.data.toChannel
-import com.sceyt.chat.ui.data.toGroupChannel
+import com.sceyt.chat.ui.persistence.PersistenceChanelMiddleWare
+import com.sceyt.chat.ui.persistence.PersistenceMembersMiddleWare
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class ConversationInfoViewModel : BaseViewModel() {
+class ConversationInfoViewModel : BaseViewModel(), KoinComponent {
     // Todo di
-    private val repo: ChannelsRepository = ChannelsRepositoryImpl()
+    private val channelsMiddleWare by inject<PersistenceChanelMiddleWare>()
+    private val membersMiddleWare by inject<PersistenceMembersMiddleWare>()
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
     val channelLiveData: LiveData<SceytChannel> = _channelLiveData
@@ -40,83 +40,72 @@ class ConversationInfoViewModel : BaseViewModel() {
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
 
 
-    fun getChannel(id: Long) {
+    fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.getChannel(id)
+            val response = channelsMiddleWare.getChannelFromServer(id)
             notifyResponseAndPageState(_channelLiveData, response)
         }
     }
 
     fun saveChanges(channel: SceytChannel, newSubject: String, avatarUrl: String?) {
         viewModelScope.launch(Dispatchers.IO) {
-            var newUrl = avatarUrl
-            val editedAvatar = channel.getChannelAvatarUrl() != avatarUrl
-            if (editedAvatar && avatarUrl != null) {
-                val uploadResult = repo.uploadAvatar(avatarUrl)
-                if (uploadResult is SceytResponse.Success) {
-                    newUrl = uploadResult.data
-                } else {
-                    notifyPageStateWithResponse(uploadResult)
-                    return@launch
-                }
-            }
-            val response = repo.editChannel(channel.toChannel(), newSubject, newUrl)
+            val response = channelsMiddleWare.editChannel(channel, newSubject, avatarUrl)
             notifyResponseAndPageState(_editChannelLiveData, response)
         }
     }
 
     fun clearHistory(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.clearHistory(channel.toChannel())
+            val response = channelsMiddleWare.clearHistory(channel)
             notifyResponseAndPageState(_clearHistoryLiveData, response)
         }
     }
 
     fun leaveChannel(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.leaveChannel(channel.toGroupChannel())
+            val response = channelsMiddleWare.leaveChannel(channel)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
     fun blockAndLeaveChannel(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.blockChannel(channel.toGroupChannel())
+            val response = channelsMiddleWare.blockAndLeaveChannel(channel)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
     fun deleteChannel(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.deleteChannel(channel.toChannel())
+            val response = channelsMiddleWare.deleteChannel(channel)
             notifyResponseAndPageState(_deleteChannelLiveData, response)
         }
     }
 
     fun blockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.blockUser(userId)
+            val response = membersMiddleWare.blockUnBlockUser(userId, true)
             notifyResponseAndPageState(_blockUnblockUserLiveData, response)
         }
     }
 
     fun unblockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.unblockUser(userId)
+            val response = membersMiddleWare.blockUnBlockUser(userId, false)
             notifyResponseAndPageState(_blockUnblockUserLiveData, response)
         }
     }
 
     fun muteChannel(channel: SceytChannel, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.muteChannel(channel.toChannel(), muteUntil)
+            val response = channelsMiddleWare.muteChannel(channel, muteUntil)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 
     fun unMuteChannel(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repo.unMuteChannel(channel.toChannel())
+            val response = channelsMiddleWare.unMuteChannel(channel)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }

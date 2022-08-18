@@ -102,9 +102,11 @@ fun RecyclerView.checkIsNotCompletelyVisibleItem(position: Int): Boolean {
 
 
 fun RecyclerView.awaitAnimationEnd(callback: () -> Unit) {
-    if (itemAnimator == null)
-        callback.invoke()
-    else itemAnimator?.isRunning { callback.invoke() }
+    post {
+        if (itemAnimator == null)
+            callback.invoke()
+        else itemAnimator?.isRunning { callback.invoke() }
+    }
 }
 
 

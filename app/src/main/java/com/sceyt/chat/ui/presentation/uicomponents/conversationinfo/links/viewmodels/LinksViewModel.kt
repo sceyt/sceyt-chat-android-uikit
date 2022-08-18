@@ -1,11 +1,10 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.viewmodels
 
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ui.data.MessagesRepository
-import com.sceyt.chat.ui.data.MessagesRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.repositories.MessagesRepository
 import com.sceyt.chat.ui.data.toChannel
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.adapters.LinkItem
@@ -15,10 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class LinksViewModel(conversationId: Long,
-                     channel: SceytChannel) : BaseViewModel() {
-
-    private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), false)
+class LinksViewModel(private val messagesRepository: MessagesRepository) : BaseViewModel() {
 
     private val _messagesFlow = MutableStateFlow<List<LinkItem>>(arrayListOf())
     val messagesFlow: StateFlow<List<LinkItem>> = _messagesFlow
@@ -26,13 +22,13 @@ class LinksViewModel(conversationId: Long,
     private val _loadMoreMessagesFlow = MutableStateFlow<List<LinkItem>>(arrayListOf())
     val loadMoreMessagesFlow: StateFlow<List<LinkItem>> = _loadMoreMessagesFlow
 
-    fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean, type: String) {
-        loadingItems = true
+    fun loadMessages(channel: SceytChannel, lastMessageId: Long, isLoadingMore: Boolean, type: String) {
+        loadingItems.set(true)
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.getMessagesByType(lastMessageId, type)
+            val response = messagesRepository.getMessagesByType(channel.toChannel(), lastMessageId, type)
             initResponse(response, isLoadingMore)
         }
     }
@@ -43,7 +39,7 @@ class LinksViewModel(conversationId: Long,
             emitMessagesListResponse(mapToMessageListItem(it.data, hasNext), loadingNext)
         }
         notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())
-        loadingItems = false
+        loadingItems.set(false)
     }
 
     private fun emitMessagesListResponse(response: List<LinkItem>, loadingNext: Boolean) {

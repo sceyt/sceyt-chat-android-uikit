@@ -6,6 +6,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
+import com.sceyt.chat.ui.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.data.toSceytUiChannel
 import com.sceyt.chat.ui.extensions.TAG
@@ -15,12 +16,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object ChannelEventsObserver {
-
-    private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChange> = MutableSharedFlow(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
-
 
     private val onChannelEventFlow_ = MutableSharedFlow<ChannelEventData>(
         extraBufferCapacity = 1,
@@ -40,28 +35,24 @@ object ChannelEventsObserver {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val onChannelOwnerChangedEventFlow: SharedFlow<ChannelOwnerChangedEventData> =
-            onChannelOwnerChangedEventFlow_.asSharedFlow()
+    val onChannelOwnerChangedEventFlow: SharedFlow<ChannelOwnerChangedEventData> = onChannelOwnerChangedEventFlow_.asSharedFlow()
 
 
     private val onChannelTypingEventFlow_ = MutableSharedFlow<ChannelTypingEventData>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val onChannelTypingEventFlow: SharedFlow<ChannelTypingEventData> =
-            onChannelTypingEventFlow_.asSharedFlow()
+    val onChannelTypingEventFlow: SharedFlow<ChannelTypingEventData> = onChannelTypingEventFlow_.asSharedFlow()
+
+
+    private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
 
 
     init {
         ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
-
-            override fun onDeliveryReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow_.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Delivered, messageIds))
-            }
-
-            override fun onReadReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow_.tryEmit(MessageStatusChange(channel, from, DeliveryStatus.Read, messageIds))
-            }
 
             override fun onClearedHistory(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
@@ -123,7 +114,7 @@ object ChannelEventsObserver {
                 onChannelEventFlow_.tryEmit(data)
             }
 
-            override fun onOwnerChanged(channel: Channel?, newOwner: Member?, oldOwner: Member?) {
+            override fun onOwnerChanged(channel: Channel, newOwner: Member, oldOwner: Member) {
                 onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(channel, newOwner, oldOwner))
             }
 
@@ -155,6 +146,14 @@ object ChannelEventsObserver {
 
             override fun onMembersAdded(channel: Channel?, members: MutableList<Member>?) {
                 onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Added))
+            }
+
+            override fun onDeliveryReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
+                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel, from, DeliveryStatus.Delivered, messageIds))
+            }
+
+            override fun onReadReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
+                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel, from, DeliveryStatus.Read, messageIds))
             }
         })
     }

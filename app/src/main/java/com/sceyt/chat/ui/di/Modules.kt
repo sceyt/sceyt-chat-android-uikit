@@ -2,12 +2,20 @@ package com.sceyt.chat.ui.di
 
 import android.app.Application
 import androidx.room.Room
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.ui.data.*
-import com.sceyt.chat.ui.persistence.SceytDatabase
+import com.sceyt.chat.ui.data.repositories.*
+import com.sceyt.chat.ui.persistence.*
+import com.sceyt.chat.ui.persistence.logics.*
+import com.sceyt.chat.ui.persistence.logics.PersistenceChannelLogic
+import com.sceyt.chat.ui.persistence.logics.PersistenceChannelLogicImpl
+import com.sceyt.chat.ui.persistence.logics.PersistenceMembersLogic
+import com.sceyt.chat.ui.persistence.logics.PersistenceMessagesLogic
+import com.sceyt.chat.ui.persistence.logics.PersistenceMessagesLogicImpl
 import com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel.ProfileViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
-import org.koin.android.ext.koin.androidApplication
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.viewmodels.LinksViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -27,20 +35,31 @@ fun databaseModule(enableDatabase: Boolean) = module {
             Room.inMemoryDatabaseBuilder(application, SceytDatabase::class.java).build()
         }
     }
-    single { provideDatabase(androidApplication()) }
+    single { provideDatabase(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().userDao() }
     single { get<SceytDatabase>().messageDao() }
+
+    single { PersistenceMiddleWareImpl(get(), get(), get()) }
+    factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
+    factory<PersistenceMessagesMiddleWare> { get<PersistenceMiddleWareImpl>() }
+    factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
+
+    factory<PersistenceChannelLogic> { PersistenceChannelLogicImpl(get(), get(), get(), get()) }
+    factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get()) }
+    factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get()) }
 }
 
 val repositoryModule = module {
     factory<ChannelsRepository> { ChannelsRepositoryImpl() }
-    factory<MessagesRepository> { (conversationId: Long, channel: Channel, rep: Boolean) ->
-        MessagesRepositoryImpl(conversationId, channel, rep)
-    }
+    factory<ProfileRepository> { ProfileRepositoryImpl() }
+    factory<MessagesRepository> { MessagesRepositoryImpl() }
 }
 
 val viewModels = module {
-    viewModel { ChannelsViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get()) }
+    viewModel { ChannelsViewModel(get(), get()) }
+    viewModel { ProfileViewModel(get(), get(), get()) }
+    viewModel { LinksViewModel(get()) }
+    viewModel { ChannelAttachmentsViewModel(get()) }
+    viewModel { ChannelMembersViewModel(get()) }
 }

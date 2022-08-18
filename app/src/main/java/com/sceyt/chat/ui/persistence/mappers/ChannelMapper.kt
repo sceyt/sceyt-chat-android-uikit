@@ -1,22 +1,23 @@
 package com.sceyt.chat.ui.persistence.mappers
 
-import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
+import com.sceyt.chat.ClientWrapper
+import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.channel.DirectChannel
+import com.sceyt.chat.models.channel.GroupChannel
+import com.sceyt.chat.models.member.Member
+import com.sceyt.chat.ui.data.models.channels.*
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum.*
-import com.sceyt.chat.ui.data.models.channels.SceytChannel
-import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
-import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
-import com.sceyt.chat.ui.data.models.channels.SceytMember
-import com.sceyt.chat.ui.persistence.entity.MemberEntity
-import com.sceyt.chat.ui.persistence.entity.UserEntity
 import com.sceyt.chat.ui.persistence.entity.channel.ChannelDb
 import com.sceyt.chat.ui.persistence.entity.channel.ChannelEntity
 import java.util.*
 
 fun SceytChannel.toChannelEntity(): ChannelEntity {
     var memberCount = 1L
-    if (isGroup)
+    var myRole: RoleTypeEnum? = null
+    if (isGroup) {
         memberCount = (this as SceytGroupChannel).memberCount
+        myRole = getMyRoleType()
+    }
 
     return ChannelEntity(
         id = id,
@@ -30,10 +31,45 @@ fun SceytChannel.toChannelEntity(): ChannelEntity {
         metadata = metadata,
         muted = muted,
         muteExpireDate = muteExpireDate?.time,
-        muteUntil = muteUntil,
-        subject = channelSubject,
+        subject = if (isGroup) channelSubject else null,
         avatarUrl = getChannelAvatarUrl(),
-        memberCount = memberCount
+        memberCount = memberCount,
+        myRole = myRole
+    )
+}
+
+fun Channel.toChannelEntity(): ChannelEntity {
+    var memberCount = 1L
+    var subject = ""
+    val avatarUrl: String
+    var myRole: Member.MemberType? = null
+
+    if (this is GroupChannel) {
+        memberCount = this.memberCount
+        subject = this.subject
+        avatarUrl = this.avatarUrl
+        myRole = myRole()
+    } else {
+        this as DirectChannel
+        avatarUrl = this.peer.avatarURL
+    }
+
+    return ChannelEntity(
+        id = id,
+        type = getChannelType(this),
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        unreadMessageCount = unreadMessageCount,
+        lastMessageId = lastMessage?.id,
+        lastMessageAt = lastMessage?.createdAt?.time,
+        label = label,
+        metadata = metadata,
+        muted = muted(),
+        muteExpireDate = muteExpireDate()?.time,
+        subject = subject,
+        avatarUrl = avatarUrl,
+        memberCount = memberCount,
+        myRole = myRole?.toRoleType()
     )
 }
 
@@ -54,7 +90,7 @@ fun ChannelDb.toChannel(): SceytChannel {
                     channelType = type,
                     subject = subject,
                     avatarUrl = avatarUrl,
-                    members = members.map { it.toSceytMember() },
+                    members = members?.map { it.toSceytMember() } ?: arrayListOf(),
                     memberCount = memberCount,
                 )
             Direct -> SceytDirectChannel(
@@ -66,25 +102,16 @@ fun ChannelDb.toChannel(): SceytChannel {
                 label = label,
                 metadata = metadata,
                 muted = muted,
-                muteUntil = 0,
-                peer = members[0].toSceytMember())
+                peer = members?.firstOrNull()?.toSceytMember())
         }
     }
 }
 
-fun MemberEntity.toSceytMember() = SceytMember(
-    role = Role(link.role),
-    user = user.toUser()
-)
 
-fun UserEntity.toUser() = User(
-    id, firstName, lastName, avatarURL, metadata, presence, activityStatus, blocked
-)
-
-fun SceytMember.toMemberEntity(): UserEntity {
-    with(user) {
-        return UserEntity(
-            id, firstName, lastName, avatarURL, metadata, presence, activityState, blocked
-        )
-    }
+fun SceytGroupChannel.getMyRoleType(): RoleTypeEnum {
+    return members.find { it.id == ClientWrapper.currentUser.id }?.let {
+        if (it.role.name == "owner")
+            RoleTypeEnum.Owner
+        else RoleTypeEnum.Member
+    } ?: run { RoleTypeEnum.None }
 }

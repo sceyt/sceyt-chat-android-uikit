@@ -4,6 +4,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.sceyt.chat.ClientWrapper
+import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum
@@ -153,7 +155,9 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             when (it.eventType) {
                 ChannelEventEnum.ClearedHistory -> messagesListView.clearData()
                 ChannelEventEnum.Left -> {
-                    if (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private)
+                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                    if (leftUser == ClientWrapper.currentUser.id &&
+                            (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
                         messagesListView.context.asAppCompatActivity().finish()
                 }
                 ChannelEventEnum.Deleted -> messagesListView.context.asAppCompatActivity().finish()
@@ -208,8 +212,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     messagesListView.setNeedLoadMoreMessagesListener { _, message ->
-        if (!loadingItems && hasNext) {
-            loadingItems = true
+        if (!loadingItems.get() && hasNext) {
+            loadingItems.set(true)
             val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
             loadMessages(lastMessageId, true)
         }
@@ -259,12 +263,18 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
         onChannelEventFlow.collect {
             when (it.eventType) {
                 ChannelEventEnum.Left -> {
-                    if (channel.channelType == ChannelTypeEnum.Public)
-                        messageInputView.onChannelLeft()
+                    if (channel.channelType == ChannelTypeEnum.Public) {
+                        val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                        if (leftUser == ClientWrapper.currentUser.id)
+                            messageInputView.onChannelLeft()
+                    }
                 }
                 ChannelEventEnum.Joined -> {
-                    if (channel.channelType == ChannelTypeEnum.Public)
-                        messageInputView.joinSuccess()
+                    if (channel.channelType == ChannelTypeEnum.Public) {
+                        val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                        if (leftUser == ClientWrapper.currentUser.id)
+                            messageInputView.joinSuccess()
+                    }
                 }
                 else -> return@collect
             }

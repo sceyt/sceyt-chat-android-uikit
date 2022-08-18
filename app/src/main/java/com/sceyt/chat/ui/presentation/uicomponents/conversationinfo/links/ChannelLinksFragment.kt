@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
@@ -19,10 +18,10 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.Conversation
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.adapters.LinkItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.adapters.LinksAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.adapters.viewholders.ChannelLinkViewHolderFactory
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.viewmodels.ChannelLinksViewModelFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.links.viewmodels.LinksViewModel
 import com.sceyt.chat.ui.shared.helpers.LinkPreviewHelper
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelLinksFragment : Fragment() {
     private lateinit var channel: SceytChannel
@@ -30,10 +29,7 @@ open class ChannelLinksFragment : Fragment() {
     private var linksAdapter: LinksAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = "link"
-    private val viewModel: LinksViewModel by viewModels {
-        getBundleArguments()
-        ChannelLinksViewModelFactory(channel)
-    }
+    private val viewModel by viewModel<LinksViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelLinksBinding.inflate(inflater, container, false).also {
@@ -44,6 +40,7 @@ open class ChannelLinksFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        getBundleArguments()
         addPageStateView()
         initViewModel()
         loadInitialLinksList()
@@ -99,7 +96,7 @@ open class ChannelLinksFragment : Fragment() {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext) {
+                    if (isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext) {
                         loadMoreLinksList(linksAdapter?.getLastMediaItem()?.message?.id ?: 0)
                     }
                 }
@@ -112,16 +109,15 @@ open class ChannelLinksFragment : Fragment() {
     }
 
     open fun onPageStateChange(pageState: PageState) {
-        if (pageStateView != null)
-            pageStateView?.updateState(pageState, linksAdapter?.itemCount == 0)
+        pageStateView?.updateState(pageState, linksAdapter?.itemCount == 0)
     }
 
     protected fun loadInitialLinksList() {
-        viewModel.loadMessages(0, false, mediaType)
+        viewModel.loadMessages(channel, 0, false, mediaType)
     }
 
     protected fun loadMoreLinksList(lasMsgId: Long) {
-        viewModel.loadMessages(lasMsgId, true, mediaType)
+        viewModel.loadMessages(channel, lasMsgId, true, mediaType)
     }
 
     companion object {

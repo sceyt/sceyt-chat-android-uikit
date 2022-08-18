@@ -4,12 +4,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sceyt.chat.ui.data.models.SceytResponse
+import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseViewModel : ViewModel() {
     private val _pageStateLiveData = MutableLiveData<PageState>()
     val pageStateLiveData: LiveData<PageState> = _pageStateLiveData
     var hasNext: Boolean = false
-    var loadingItems: Boolean = false
+    var loadingItems: AtomicBoolean = AtomicBoolean(false)
 
     fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {

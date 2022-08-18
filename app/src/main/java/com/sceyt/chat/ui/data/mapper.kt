@@ -25,6 +25,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             channelType = getChannelType(this),
             subject = subject,
             avatarUrl = avatarUrl,
+            channelUrl = getChannelUrl(),
             members = members.map { it.toSceytMember() },
             memberCount = memberCount
         )
@@ -39,7 +40,6 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             label = label,
             metadata = metadata,
             muted = muted(),
-            muteUntil = 0,
             peer = peer.toSceytMember(),
             channelType = getChannelType(this),
         )
@@ -61,7 +61,7 @@ fun SceytChannel.toChannel(): Channel {
         }
         Public -> {
             this as SceytGroupChannel
-            PublicChannel(id, "", subject, metadata, avatarUrl,
+            PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
@@ -78,7 +78,7 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
         }
         Public -> {
             this as SceytGroupChannel
-            PublicChannel(id, "", subject, metadata, avatarUrl,
+            PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
         }
         else -> throw RuntimeException("Channel is direct channel")
@@ -88,7 +88,7 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
 fun SceytChannel.toPublicChannel(): GroupChannel {
     return if (channelType == Public) {
         this as SceytGroupChannel
-        PublicChannel(id, "", subject, metadata, avatarUrl,
+        PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
             label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
     } else throw RuntimeException("Channel is not public")
 }
@@ -162,6 +162,12 @@ fun Member.toSceytMember() = SceytMember(
 
 fun SceytMember.toMember(): Member {
     return Member(role, user)
+}
+
+fun GroupChannel.getChannelUrl(): String {
+    return if (this is PublicChannel)
+        uri
+    else ""
 }
 
 fun Attachment.toFileListItem(message: SceytMessage): FileListItem {

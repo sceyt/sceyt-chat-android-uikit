@@ -4,18 +4,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.ui.data.UsersRepository
-import com.sceyt.chat.ui.data.UsersRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.repositories.UsersRepository
+import com.sceyt.chat.ui.data.repositories.UsersRepositoryImpl
+import com.sceyt.chat.ui.persistence.PersistenceChanelMiddleWare
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.adapters.UserItem
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class UsersViewModel : BaseViewModel() {
+class UsersViewModel : BaseViewModel(), KoinComponent {
     private val usersRepository: UsersRepository = UsersRepositoryImpl()
+    private val middleWare by inject<PersistenceChanelMiddleWare>()
 
     private val _channelsLiveData = MutableLiveData<List<UserItem>>()
     val channelsLiveData: LiveData<List<UserItem>> = _channelsLiveData
@@ -27,7 +31,7 @@ class UsersViewModel : BaseViewModel() {
     val createChannelLiveData: LiveData<SceytChannel> = _createChannelLiveData
 
     fun loadUsers(query: String = "", isLoadMore: Boolean) {
-        loadingItems = true
+        loadingItems.set(true)
         viewModelScope.launch(Dispatchers.IO) {
             val response = if (isLoadMore)
                 usersRepository.loadMoreUsers()
@@ -42,7 +46,7 @@ class UsersViewModel : BaseViewModel() {
                 else _channelsLiveData.postValue(mapToUserItems(response.data, hasNext))
             }
             notifyPageStateWithResponse(response, isLoadMore, empty, searchQuery = query)
-            loadingItems = false
+            loadingItems.set(false)
         }
     }
 
@@ -56,7 +60,7 @@ class UsersViewModel : BaseViewModel() {
 
     fun createDirectChannel(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = usersRepository.createDirectChannel(user)
+            val response = middleWare.createDirectChannel(user)
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }

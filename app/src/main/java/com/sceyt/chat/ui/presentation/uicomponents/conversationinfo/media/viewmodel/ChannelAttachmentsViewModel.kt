@@ -1,11 +1,10 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.media.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ui.data.MessagesRepository
-import com.sceyt.chat.ui.data.MessagesRepositoryImpl
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
+import com.sceyt.chat.ui.data.repositories.MessagesRepository
 import com.sceyt.chat.ui.data.toChannel
 import com.sceyt.chat.ui.data.toFileListItem
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
@@ -16,10 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ChannelAttachmentsViewModel(conversationId: Long,
-                                  channel: SceytChannel) : BaseViewModel() {
-
-    private val messagesRepository: MessagesRepository = MessagesRepositoryImpl(conversationId, channel.toChannel(), false)
+class ChannelAttachmentsViewModel(private val messagesRepository: MessagesRepository) : BaseViewModel() {
 
     private val _filesFlow = MutableStateFlow<List<FileListItem>>(arrayListOf())
     val filesFlow: StateFlow<List<FileListItem>> = _filesFlow
@@ -27,13 +23,13 @@ class ChannelAttachmentsViewModel(conversationId: Long,
     private val _loadMoreFilesFlow = MutableStateFlow<List<FileListItem>>(arrayListOf())
     val loadMoreFilesFlow: StateFlow<List<FileListItem>> = _loadMoreFilesFlow
 
-    fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean, type: String) {
-        loadingItems = true
+    fun loadMessages(channel: SceytChannel, lastMessageId: Long, isLoadingMore: Boolean, type: String) {
+        loadingItems.set(true)
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.getMessagesByType(lastMessageId, type)
+            val response = messagesRepository.getMessagesByType(channel.toChannel(), lastMessageId, type)
             initResponse(response, isLoadingMore)
         }
     }
@@ -44,7 +40,7 @@ class ChannelAttachmentsViewModel(conversationId: Long,
             emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
         }
         notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())
-        loadingItems = false
+        loadingItems.set(false)
     }
 
     private fun emitMessagesListResponse(response: List<FileListItem>, loadingNext: Boolean) {

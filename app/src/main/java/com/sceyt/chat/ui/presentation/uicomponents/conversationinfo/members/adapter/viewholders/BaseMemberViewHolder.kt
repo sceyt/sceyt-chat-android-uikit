@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel
+package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView

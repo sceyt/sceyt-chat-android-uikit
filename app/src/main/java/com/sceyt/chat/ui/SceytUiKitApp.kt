@@ -2,6 +2,8 @@ package com.sceyt.chat.ui
 
 import android.app.Application
 import android.content.Context
+import android.os.Build.VERSION_CODES.M
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.android.volley.Request
@@ -103,9 +105,11 @@ class SceytUiKitApp : Application() {
                     }
                 } else if (connectStatus == Types.ConnectState.StateFailed)
                     success.postValue(false)
-                else if (connectStatus == Types.ConnectState.StateDisconnect && status?.error?.code == 40102) {
-                    connectWithoutToken(preference.getUsername()
-                            ?: return)
+                else if (connectStatus == Types.ConnectState.StateDisconnect) {
+                    if (status?.error?.code == 40102)
+                        connectWithoutToken(preference.getUsername()
+                                ?: return)
+                    else success.postValue(false)
                 }
                 _sceytConnectionStatus.postValue(connectStatus)
             }

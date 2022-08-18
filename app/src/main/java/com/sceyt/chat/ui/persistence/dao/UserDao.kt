@@ -9,7 +9,13 @@ import com.sceyt.chat.ui.persistence.entity.UserEntity
 @Dao
 interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUsers(vararg users: UserEntity)
+    fun insertUser(user: UserEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertUsers(users: List<UserEntity>)
+
+    @Query("update users set blocked =:blocked where user_id =:userId")
+    fun blockUnBlockUser(userId: String, blocked: Boolean)
 
     @Query("DELETE FROM users")
     fun deleteAll()
