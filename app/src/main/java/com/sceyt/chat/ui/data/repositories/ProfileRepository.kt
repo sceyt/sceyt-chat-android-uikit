@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.data
+package com.sceyt.chat.ui.data.repositories
 
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User

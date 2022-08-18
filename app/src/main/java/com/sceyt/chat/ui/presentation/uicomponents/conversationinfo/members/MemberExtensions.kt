@@ -11,7 +11,7 @@ fun SceytMember.diff(other: SceytMember, showMoreChanged: Boolean) = MemberItemP
     nameChanged = fullName != other.user.firstName,
     onlineStateChanged = user.presence?.state != other.user.presence?.state,
     roleChanged = role.name != other.role.name,
-    showMorItemChanged = showMoreChanged
+    showMorIconChanged = showMoreChanged
 )
 
 fun genMemberBy(user: User): Member {

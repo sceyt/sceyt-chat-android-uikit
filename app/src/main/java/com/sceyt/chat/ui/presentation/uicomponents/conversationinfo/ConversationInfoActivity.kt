@@ -59,7 +59,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
         initViewModel()
         binding?.initViews()
         setChannelDetails(channel)
-        viewModel.getChannel(channel.id)
+        viewModel.getChannelFromServer(channel.id)
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
     }
 

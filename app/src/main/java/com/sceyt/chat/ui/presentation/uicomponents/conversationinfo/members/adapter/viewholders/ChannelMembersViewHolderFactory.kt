@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel
+package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.viewholders
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import com.sceyt.chat.ui.databinding.ItemChannelMemberBinding
 import com.sceyt.chat.ui.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl

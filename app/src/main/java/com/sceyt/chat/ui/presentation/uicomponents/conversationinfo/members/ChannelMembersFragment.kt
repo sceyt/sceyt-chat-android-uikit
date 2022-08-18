@@ -8,8 +8,6 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.GroupChannel
@@ -21,35 +19,35 @@ import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.chat.ui.data.models.PaginationResponse
+import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.databinding.FragmentChannelMembersBinding
-import com.sceyt.chat.ui.extensions.asAppCompatActivity
-import com.sceyt.chat.ui.extensions.customToastSnackBar
-import com.sceyt.chat.ui.extensions.isLastItemDisplaying
-import com.sceyt.chat.ui.extensions.setBundleArguments
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.root.PageState
+import com.sceyt.chat.ui.presentation.root.PageStateView
 import com.sceyt.chat.ui.presentation.uicomponents.addmembers.AddMembersActivity
 import com.sceyt.chat.ui.presentation.uicomponents.changerole.ChangeRoleActivity
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListeners
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.viewholders.ChannelMembersViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.popups.PopupMenuMember
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMembersFragment : Fragment() {
     private var binding: FragmentChannelMembersBinding? = null
+    private val viewModel by viewModel<ChannelMembersViewModel>()
     private var membersAdapter: ChannelMembersAdapter? = null
-    private val viewModel: ChannelMembersViewModel by viewModels()
+    private var pageStateView: PageStateView? = null
     private lateinit var channel: SceytChannel
-    private var hasNext: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelMembersBinding.inflate(inflater, container, false).also {
@@ -63,6 +61,7 @@ open class ChannelMembersFragment : Fragment() {
         getBundleArguments()
         initViewModel()
         initViews()
+        addPageStateView()
         loadInitialMembers()
     }
 
@@ -71,11 +70,9 @@ open class ChannelMembersFragment : Fragment() {
     }
 
     private fun initViewModel() {
-        viewModel.membersLiveData.observe(viewLifecycleOwner, ::onInitialMembersList)
+        viewModel.membersLiveData.observe(viewLifecycleOwner, ::onMembersList)
 
-        viewModel.loadMoreMembersLiveData.observe(viewLifecycleOwner, ::onMoreMembersList)
-
-        viewModel.changeOwnerLiveData.observe(viewLifecycleOwner, ::changeOwnerSuccess)
+        viewModel.changeOwnerLiveData.observe(viewLifecycleOwner, ::onChangeOwnerSuccess)
 
         viewModel.channelMemberEventLiveData.observe(viewLifecycleOwner, ::onChannelMembersEvent)
 
@@ -106,7 +103,7 @@ open class ChannelMembersFragment : Fragment() {
         val newOwnerPair = membersAdapter?.getMemberItemById(newOwnerId)
         oldOwnerPair?.let { updateMemberRole("participant", it) }
         newOwnerPair?.let { updateMemberRole("owner", it) }
-        membersAdapter?.showHideMoreItem(newOwnerId == ChatClient.getClient().user.id)
+        membersAdapter?.showHideMoreIcon(newOwnerId == ChatClient.getClient().user.id)
     }
 
     private fun updateMemberRole(newRole: String, pair: Pair<Int, MemberItem>) {
@@ -154,6 +151,66 @@ open class ChannelMembersFragment : Fragment() {
         }
     }
 
+    private fun addPageStateView() {
+        binding?.root?.addView(PageStateView(requireContext()).apply {
+            setLoadingStateView(R.layout.sceyt_loading_state)
+            pageStateView = this
+
+            post {
+                (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
+                    if (it > 0) {
+                        layoutParams.height = screenHeightPx() - it
+                        layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                    }
+                }
+            }
+        })
+    }
+
+    private fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
+        if (membersAdapter == null) {
+            val currentUserIsOwner = channel.toGroupChannel().myRole() == Member.MemberType.MemberTypeOwner
+
+            membersAdapter = ChannelMembersAdapter(data as ArrayList, currentUserIsOwner,
+                ChannelMembersViewHolderFactory(requireContext()).also {
+                    it.setOnClickListener(MemberClickListeners.MoreClickClickListener(::showMemberMoreOptionPopup))
+                })
+
+            binding?.rvMembers?.adapter = membersAdapter
+            binding?.rvMembers?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext)
+                        loadMoreMembers(membersAdapter?.getSkip() ?: return)
+                }
+            })
+        } else {
+            binding?.rvMembers?.awaitAnimationEnd {
+                membersAdapter?.notifyUpdate(data)
+            }
+        }
+    }
+
+    private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
+        val itemsDb = data.dbData as ArrayList
+        binding?.rvMembers?.awaitAnimationEnd {
+            val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
+
+            if (members.size > itemsDb.size) {
+                val items = members.subList(itemsDb.size - 1, members.size)
+                itemsDb.addAll(items.minus(itemsDb.toSet()))
+            }
+
+            if (data.offset + SceytUIKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
+                if (hasNext) {
+                    if (!itemsDb.contains(MemberItem.LoadingMore))
+                        itemsDb.add(MemberItem.LoadingMore)
+                } else itemsDb.remove(MemberItem.LoadingMore)
+
+            setOrUpdateMembersAdapter(itemsDb)
+        }
+    }
+
     private fun addMembers(members: List<Member>?) {
         if (members.isNullOrEmpty()) return
         membersAdapter?.addNewItemsToStart(members.map {
@@ -170,11 +227,11 @@ open class ChannelMembersFragment : Fragment() {
     }
 
     protected fun loadInitialMembers() {
-        viewModel.getChannelMembers(channel.id, false)
+        viewModel.getChannelMembers(channel.id, 0)
     }
 
-    protected fun loadMoreMembers() {
-        viewModel.getChannelMembers(channel.id, true)
+    protected fun loadMoreMembers(offset: Int) {
+        viewModel.getChannelMembers(channel.id, offset)
     }
 
     protected fun addMembersToChannel(members: List<SceytMember>) {
@@ -197,33 +254,23 @@ open class ChannelMembersFragment : Fragment() {
         viewModel.kickMember(channel, memberId, true)
     }
 
-    open fun onInitialMembersList(list: List<MemberItem>) {
-        val currentUserIsOwner = channel.toGroupChannel().myRole() == Member.MemberType.MemberTypeOwner
-        membersAdapter = ChannelMembersAdapter(list as ArrayList, currentUserIsOwner,
-            ChannelMembersViewHolderFactory(requireContext()).also {
-                it.setOnClickListener(MemberClickListeners.MoreClickClickListener(::showMemberMoreOptionPopup))
-            })
-        binding?.rvMembers?.adapter = membersAdapter
-        binding?.rvMembers?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext)
-                    loadMoreMembers()
+    open fun onMembersList(data: PaginationResponse<MemberItem>) {
+        when (data) {
+            is PaginationResponse.DBResponse -> {
+                if (data.offset == 0) {
+                    setOrUpdateMembersAdapter(data.data)
+                } else
+                    membersAdapter?.addNewItems(data.data)
             }
-        })
-    }
-
-    open fun onMoreMembersList(list: List<MemberItem>) {
-        lifecycleScope.launch(Dispatchers.Default) {
-            val existingMembers = (membersAdapter ?: return@launch).getData()
-            (list as ArrayList).removeAll(existingMembers.toSet())
-            withContext(Dispatchers.Main) {
-                membersAdapter?.addNewItems(list)
+            is PaginationResponse.ServerResponse -> {
+                if (data.data is SceytResponse.Success)
+                    updateMembersWithServerResponse(data, data.hasNext)
             }
+            is PaginationResponse.Nothing -> return
         }
     }
 
-    open fun changeOwnerSuccess(newOwnerId: String) {
+    open fun onChangeOwnerSuccess(newOwnerId: String) {
         setNewOwner(newOwnerId)
     }
 
@@ -264,20 +311,17 @@ open class ChannelMembersFragment : Fragment() {
     }
 
     open fun onChannelOwnerChanged(eventData: ChannelOwnerChangedEventData) {
-        eventData.newOwner?.id?.let {
-            setNewOwner(it)
-        }
+        setNewOwner(eventData.newOwner.id)
     }
 
     open fun onPageStateChange(pageState: PageState) {
-        if (pageState is PageState.StateError)
-            customToastSnackBar(requireView(), pageState.errorMessage ?: "")
+        pageStateView?.updateState(pageState, (membersAdapter?.itemCount ?: 0) == 0)
     }
 
     fun updateChannel(channel: SceytChannel) {
         this.channel = channel
         val isOwner = channel.toGroupChannel().myRole() == Member.MemberType.MemberTypeOwner
-        membersAdapter?.showHideMoreItem(isOwner)
+        membersAdapter?.showHideMoreIcon(isOwner)
     }
 
     companion object {

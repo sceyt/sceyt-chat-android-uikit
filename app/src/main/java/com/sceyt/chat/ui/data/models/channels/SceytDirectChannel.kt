@@ -14,10 +14,9 @@ class SceytDirectChannel(
         override var unreadMessageCount: Long,
         override var lastMessage: SceytMessage? = null,
         override var muted: Boolean = false,
-        override var muteUntil: Long?,
         override var channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
         var peer: SceytMember? = null,
-) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, muteUntil, channelType) {
+) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, channelType) {
 
     override val channelSubject: String
         get() = peer?.getPresentableName() ?: ""

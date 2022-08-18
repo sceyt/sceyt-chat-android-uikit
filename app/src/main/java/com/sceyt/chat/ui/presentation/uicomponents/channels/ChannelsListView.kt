@@ -8,18 +8,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.channeleventobserver.MessageStatusChange
+import com.sceyt.chat.ui.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
+import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.extensions.getCompatColor
-import com.sceyt.chat.ui.extensions.updateCommon
 import com.sceyt.chat.ui.presentation.common.diff
 import com.sceyt.chat.ui.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.root.PageStateView
@@ -39,6 +40,7 @@ import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.sortChannelsBy
 import com.sceyt.chat.ui.shared.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
@@ -92,14 +94,46 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    internal fun setChannelsList(channels: List<ChannelListItem>, onlyUpdateIfExist: Boolean) {
-        if (onlyUpdateIfExist) {
-            val data = channelsRV.getData()?.updateCommon(channels) { old, new ->
-                old == new
-            } ?: channels
+    internal fun setChannelsList(channels: List<ChannelListItem>) {
+        channelsRV.setData(channels)
+    }
+
+    fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, lifecycleOwner: LifecycleOwner) {
+        val channels = ArrayList(channelsRV.getData() as? ArrayList ?: arrayListOf())
+        if (data.isEmpty() && offset == 0) {
             channelsRV.setData(data)
-        } else
+            return
+        }
+        if (channels.isEmpty()) {
+            channels.addAll(data)
             channelsRV.setData(channels)
+        } else {
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                var dataHasLoadingItem = false
+                // Update UI channels if exist, or add new channels
+                data.forEach { dataItem ->
+                    if (!dataHasLoadingItem)
+                        dataHasLoadingItem = dataItem is ChannelListItem.LoadingMoreItem
+
+                    channels.findIndexed {
+                        it is ChannelListItem.ChannelItem &&
+                                dataItem is ChannelListItem.ChannelItem &&
+                                it.channel.id == dataItem.channel.id
+                                || it is ChannelListItem.LoadingMoreItem
+                    }?.let {
+                        channels[it.first] = dataItem
+                    } ?: run {
+                        channels.add(dataItem)
+                    }
+                }
+                if (!dataHasLoadingItem)
+                    channels.remove(ChannelListItem.LoadingMoreItem)
+
+                withContext(Dispatchers.Main) {
+                    channelsRV.sortByAndSetNewData(sortChannelsBy, channels)
+                }
+            }
+        }
     }
 
     internal fun addNewChannels(channels: List<ChannelListItem>) {
@@ -123,7 +157,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return false
     }
 
-    internal fun updateLastMessageStatus(status: MessageStatusChange) {
+    internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
             val channelId = (status.channel ?: return@launch).id
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
@@ -151,7 +185,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             sortChannelsBy(sortChannelsBy)
         }
     }
-
 
     internal fun updateMuteState(muted: Boolean, channelId: Long?) {
         channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->

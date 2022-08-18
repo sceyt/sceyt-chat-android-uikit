@@ -1,14 +1,10 @@
-package com.sceyt.chat.ui.data
+package com.sceyt.chat.ui.data.repositories
 
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserListQuery
-import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.chat.ui.data.models.SceytResponse
-import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -51,20 +47,6 @@ class UsersRepositoryImpl : UsersRepository {
                     else {
                         continuation.resume(SceytResponse.Success(users))
                     }
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
-                }
-            })
-        }
-    }
-
-    override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
-        return suspendCancellableCoroutine { continuation ->
-            DirectChannel.createChannelRequest(user).execute(object : ChannelCallback {
-                override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {

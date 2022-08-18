@@ -77,10 +77,8 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun addNewChannels(channels: List<ChannelListItem>) {
         if (::mAdapter.isInitialized.not())
             setData(channels)
-        else {
+        else
             mAdapter.addList(channels as MutableList<ChannelListItem>)
-            //mAdapter.notifyUpdate(mAdapter.getData().updateCommon(channels) { old, new -> old == new })
-        }
     }
 
     fun deleteChannel(id: Long) {
@@ -119,14 +117,25 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun sortBy(sortChannelsBy: SceytUIKitConfig.ChannelSortType) {
-        val hasLoading = mAdapter.getData().findLast { it is ChannelListItem.LoadingMoreItem } != null
-        val sortedList = ArrayList(mAdapter.getChannels().map { it.channel })
+        sortAndUpdate(sortChannelsBy, mAdapter.getData())
+    }
+
+    fun sortByAndSetNewData(sortChannelsBy: SceytUIKitConfig.ChannelSortType, data: List<ChannelListItem>) {
+        sortAndUpdate(sortChannelsBy, data)
+    }
+
+    private fun sortAndUpdate(sortChannelsBy: SceytUIKitConfig.ChannelSortType, data: List<ChannelListItem>) {
+        val hasLoading = data.findLast { it is ChannelListItem.LoadingMoreItem } != null
+        val sortedList = ArrayList(data.filterIsInstance<ChannelListItem.ChannelItem>().map { it.channel })
             .sortedWith(ChannelsComparatorBy(sortChannelsBy))
 
         val newList: ArrayList<ChannelListItem> = ArrayList(sortedList.map { ChannelListItem.ChannelItem(it) })
         if (hasLoading)
             newList.add(ChannelListItem.LoadingMoreItem)
-        setData(newList)
+
+        awaitAnimationEnd {
+            post { setData(newList) }
+        }
     }
 
     override fun onDetachedFromWindow() {

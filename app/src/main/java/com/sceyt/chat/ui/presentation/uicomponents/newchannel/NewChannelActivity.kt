@@ -80,7 +80,7 @@ class NewChannelActivity : AppCompatActivity() {
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.not() && viewModel.hasNext)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext)
                         viewModel.loadUsers(binding.toolbar.getQuery(), true)
                 }
             })

@@ -11,7 +11,7 @@ import com.sceyt.chat.ui.extensions.getPresentableName
 import com.sceyt.chat.ui.extensions.setDrawableEnd
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.BaseMemberViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewholder.BaseMemberViewHolder
 
 class MemberViewHolder(private val binding: ItemChannelMemberBinding,
                        private val memberClickListeners: MemberClickListenersImpl) : BaseMemberViewHolder(binding.root) {
@@ -44,7 +44,7 @@ class MemberViewHolder(private val binding: ItemChannelMemberBinding,
             if (diff.roleChanged)
                 roleName.text = member.role.name
 
-            if (diff.showMorItemChanged || diff.roleChanged)
+            if (diff.showMorIconChanged || diff.roleChanged)
                 setMoreItem()
         }
     }

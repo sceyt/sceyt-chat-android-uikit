@@ -33,6 +33,7 @@ class CreateGroupActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
+        initViews()
         initViewModel()
         binding.initViews()
     }
@@ -49,6 +50,10 @@ class CreateGroupActivity : AppCompatActivity() {
             if (it is PageState.StateError)
                 customToastSnackBar(it.errorMessage)
         }
+    }
+
+    private fun initViews() {
+        binding.icBack.setOnClickListener { onBackPressed() }
     }
 
     private fun ActivityCreateGroupBinding.initViews() {

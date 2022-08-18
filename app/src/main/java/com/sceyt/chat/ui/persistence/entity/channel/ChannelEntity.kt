@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
+import com.sceyt.chat.ui.data.models.channels.RoleTypeEnum
 
 @Entity(tableName = "channels")
 data class ChannelEntity(
@@ -20,8 +21,8 @@ data class ChannelEntity(
         var metadata: String?,
         var muted: Boolean = false,
         var muteExpireDate: Long?,
-        var muteUntil: Long?,
         var subject: String?,
         var avatarUrl: String?,
-        var memberCount: Long
+        var memberCount: Long,
+        val myRole: RoleTypeEnum?
 )

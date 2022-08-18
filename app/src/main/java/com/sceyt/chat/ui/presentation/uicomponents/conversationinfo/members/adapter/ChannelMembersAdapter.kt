@@ -1,13 +1,15 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.extensions.TAG
 import com.sceyt.chat.ui.extensions.findIndexed
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberDiffUtil
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.BaseMemberViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewHolderFactory
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.viewholders.BaseMemberViewHolder
+import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.adapter.viewholders.ChannelMembersViewHolderFactory
 
 class ChannelMembersAdapter(
         private var members: ArrayList<MemberItem>,
@@ -46,11 +48,13 @@ class ChannelMembersAdapter(
         removeLoading()
         if (items.isEmpty()) return
 
-        members.addAll(items)
+        val filteredItems = items.minus(ArrayList(members).toSet())
+        members.addAll(filteredItems)
+
         if (members.size == items.size)
             notifyDataSetChanged()
         else
-            notifyItemRangeInserted(members.size - items.size, items.size)
+            notifyItemRangeInserted(members.size - filteredItems.size, filteredItems.size)
     }
 
     fun addNewItemsToStart(items: List<MemberItem>?) {
@@ -60,19 +64,30 @@ class ChannelMembersAdapter(
         notifyItemRangeInserted(0, items.size)
     }
 
+    fun notifyUpdate(data: List<MemberItem>, showMoreIconChanged: Boolean = false) {
+        try {
+            val myDiffUtil = MemberDiffUtil(members, data, showMoreIconChanged)
+            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+            members = data as ArrayList
+            productDiffResult.dispatchUpdatesTo(this)
+        } catch (ex: java.lang.IllegalStateException) {
+            Log.e(TAG, ex.message.toString())
+        }
+    }
+
     fun getMembers(): List<MemberItem.Member> = members.filterIsInstance<MemberItem.Member>()
 
     fun getData() = members
+
+    fun getSkip() = members.filterIsInstance<MemberItem.Member>().size
 
     fun getMemberItemById(memberId: String) = members.findIndexed { it is MemberItem.Member && it.member.id == memberId }
 
     fun getMemberItemByRole(role: String) = members.findIndexed { it is MemberItem.Member && it.member.role.name == role }
 
-    fun showHideMoreItem(show: Boolean) {
+    fun showHideMoreIcon(show: Boolean) {
         if (show == showMoreIcon) return
-        val myDiffUtil = MemberDiffUtil(members, members, true)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        notifyUpdate(members, true)
         showMoreIcon = show
-        productDiffResult.dispatchUpdatesTo(this)
     }
 }

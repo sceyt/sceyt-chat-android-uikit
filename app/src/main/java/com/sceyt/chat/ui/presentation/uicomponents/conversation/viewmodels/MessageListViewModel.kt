@@ -8,12 +8,17 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.*
 import com.sceyt.chat.ui.data.channeleventobserver.*
 import com.sceyt.chat.ui.data.messageeventobserver.MessageEventsObserver
+import com.sceyt.chat.ui.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.models.messages.SceytReaction
+import com.sceyt.chat.ui.data.repositories.MessagesRepository
+import com.sceyt.chat.ui.persistence.PersistenceChanelMiddleWare
+import com.sceyt.chat.ui.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -23,27 +28,21 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionE
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.parameter.parametersOf
 
-class MessageListViewModel(conversationId: Long,
+class MessageListViewModel(private val conversationId: Long,
                            internal val replayInThread: Boolean = false,
                            internal var channel: SceytChannel) : BaseViewModel(), KoinComponent {
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
     val preferences by inject<SceytSharedPreference>()
 
-    private val channelsRepository by inject<ChannelsRepository>()
-    private val messagesRepository by inject<MessagesRepository> {
-        parametersOf(conversationId, channel.toChannel(), replayInThread)
-    }
+    private val persistenceMiddleWare by inject<PersistenceMessagesMiddleWare>()
+    private val persistenceChanelMiddleWare by inject<PersistenceChanelMiddleWare>()
+    private val messagesRepository by inject<MessagesRepository>()
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
@@ -74,7 +73,7 @@ class MessageListViewModel(conversationId: Long,
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewThreadMessageFlow: Flow<SceytMessage>
-    val onMessageStatusFlow: Flow<MessageStatusChange>
+    val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageReactionUpdatedFlow: Flow<SceytMessage>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
@@ -90,48 +89,65 @@ class MessageListViewModel(conversationId: Long,
 
 
     init {
-        onMessageReactionUpdatedFlow = messagesRepository.onMessageReactionUpdatedFlow.map {
-            it.toSceytUiMessage(isGroup).apply {
-                messageReactions = initReactionsItems(this)
+        onMessageReactionUpdatedFlow = MessageEventsObserver.onMessageReactionUpdatedFlow
+            .filterNotNull()
+            .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
+            .map {
+                it.toSceytUiMessage(isGroup).apply {
+                    messageReactions = initReactionsItems(this)
+                }
             }
-        }
-        onMessageEditedOrDeletedFlow = messagesRepository.onMessageEditedOrDeleteFlow.map {
-            it.toSceytUiMessage(isGroup)
-        }
+        onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
+            .filterNotNull()
+            .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
+            .map { it.toSceytUiMessage(isGroup) }
 
-        onNewMessageFlow = messagesRepository.onMessageFlow
+        onNewMessageFlow = MessageEventsObserver.onMessageFlow
+            .filter { it.first.id == channel.id && it.second.replyInThread == replayInThread }
+            .mapNotNull { it.second.toSceytUiMessage() }
 
-        onNewThreadMessageFlow = messagesRepository.onThreadMessageFlow
+        onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
+            .filter { it.first.id == channel.id && it.second.replyInThread }
+            .mapNotNull { it.second.toSceytUiMessage() }
 
-        onMessageStatusFlow = messagesRepository.onMessageStatusFlow
+        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
+            .filter { it.channel?.id == channel.id }
 
-        onChannelEventFlow = messagesRepository.onChannelEventFlow
+        onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
+            .filter { it.channelId == channel.id }
 
-        onChannelTypingEventFlow = messagesRepository.onChannelTypingEventFlow
+        onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
+            .filter { it.channel.id == channel.id }
 
         viewModelScope.launch {
-            messagesRepository.onChannelMembersEventFlow.collect(::onChannelMemberEvent)
+            ChannelEventsObserver.onChannelMembersEventFlow
+                .filter { it.channel?.id == channel.id }
+                .collect(::onChannelMemberEvent)
         }
 
-        onOutGoingThreadMessageFlow = messagesRepository.onOutGoingThreadMessageFlow
+        onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
+            .filter { it.channelId == channel.id && it.replyInThread }
     }
 
 
     fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean) {
-        loadingItems = true
+        loadingItems.set(true)
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.getMessages(lastMessageId)
-            initResponse(response, isLoadingMore)
-            if (!isLoadingMore)
-                messagesRepository.markAllAsRead()
+            //TODO need to add messages db to UI
+            persistenceMiddleWare.loadMessages(channel, conversationId, lastMessageId, replayInThread).collect {
+                if (it is PaginationResponse.ServerResponse) {
+                    initResponse(it.data, isLoadingMore)
+                    if (!isLoadingMore)
+                        messagesRepository.markAllAsRead(channel.toChannel())
+                }
+            }
         }
     }
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
-        loadingItems = false
         when (it) {
             is SceytResponse.Success -> {
                 hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
@@ -139,6 +155,7 @@ class MessageListViewModel(conversationId: Long,
             }
             is SceytResponse.Error -> emitMessagesListResponse(SceytResponse.Error(it.message), loadingNext)
         }
+        loadingItems.set(false)
     }
 
     private fun emitMessagesListResponse(response: SceytResponse<List<MessageListItem>>, loadingNext: Boolean) {
@@ -151,7 +168,7 @@ class MessageListViewModel(conversationId: Long,
 
     private fun deleteMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.deleteMessage(message.toMessage())
+            val response = messagesRepository.deleteMessage(channel.toChannel(), message.toMessage())
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -161,7 +178,7 @@ class MessageListViewModel(conversationId: Long,
 
     private fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.addReaction(message.id, scoreKey)
+            val response = messagesRepository.addReaction(channel.toChannel(), message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
                 if (this is SceytResponse.Success) {
                     data?.let {
@@ -174,7 +191,7 @@ class MessageListViewModel(conversationId: Long,
 
     private fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.deleteReaction(message.id, scoreKey)
+            val response = messagesRepository.deleteReaction(channel.toChannel(), message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
                 if (this is SceytResponse.Success) {
                     data?.let {
@@ -212,7 +229,7 @@ class MessageListViewModel(conversationId: Long,
 
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.sendMessage(message) { tmpMessage ->
+            val response = messagesRepository.sendMessage(channel.toChannel(), message) { tmpMessage ->
                 val outMessage = tmpMessage.toSceytUiMessage(isGroup)
                 onNewOutgoingMessageLiveData.postValue(outMessage)
                 MessageEventsObserver.emitOutgoingMessage(outMessage)
@@ -223,7 +240,7 @@ class MessageListViewModel(conversationId: Long,
 
     fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.sendMessage(message) { tmpMessage ->
+            val response = messagesRepository.sendMessage(channel.toChannel(), message) { tmpMessage ->
                 onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
                     this.parent = parent
                 })
@@ -234,7 +251,7 @@ class MessageListViewModel(conversationId: Long,
 
     fun editMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.editMessage(message)
+            val response = messagesRepository.editMessage(channel.toChannel(), message)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -244,26 +261,26 @@ class MessageListViewModel(conversationId: Long,
 
     fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.markAsRead(*id)
+            messagesRepository.markAsRead(channel.toChannel(), *id)
         }
     }
 
     fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.sendTypingState(typing)
+            messagesRepository.sendTypingState(channel.toChannel(), typing)
         }
     }
 
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.join()
+            val response = messagesRepository.join(channel.toChannel())
             _joinLiveData.postValue(response)
         }
     }
 
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsRepository.getChannel(channelId)
+            val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
             _channelLiveData.postValue(response)
         }
     }

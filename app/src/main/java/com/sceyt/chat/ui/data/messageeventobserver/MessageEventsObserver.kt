@@ -25,16 +25,16 @@ object MessageEventsObserver {
     val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
 
 
-    private val onOutGoingMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
-
-
     private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
+
+
+    private val onOutGoingMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
 
 
     init {

@@ -6,7 +6,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.members.diff
 
 class MemberDiffUtil(private var oldList: List<MemberItem>,
                      private var newList: List<MemberItem>,
-                     private var showMoreItemChanged: Boolean) : DiffUtil.Callback() {
+                     private var showMoreIconChanged: Boolean) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int {
         return oldList.size
@@ -26,7 +26,7 @@ class MemberDiffUtil(private var oldList: List<MemberItem>,
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
         if (oldItem is MemberItem.Member && newItem is MemberItem.Member)
-            return oldItem.member.diff(newItem.member, showMoreItemChanged).hasDifference().not()
+            return oldItem.member.diff(newItem.member, showMoreIconChanged).hasDifference().not()
         return (oldItem == newItem)
     }
 
@@ -34,7 +34,7 @@ class MemberDiffUtil(private var oldList: List<MemberItem>,
         val oldMessage = oldList[oldItemPosition]
         val newMessage = newList[newItemPosition]
         if (oldMessage is MemberItem.Member && newMessage is MemberItem.Member)
-            return oldMessage.member.diff(newMessage.member, showMoreItemChanged)
+            return oldMessage.member.diff(newMessage.member, showMoreIconChanged)
         return MemberItemPayloadDiff.DEFAULT
     }
 }

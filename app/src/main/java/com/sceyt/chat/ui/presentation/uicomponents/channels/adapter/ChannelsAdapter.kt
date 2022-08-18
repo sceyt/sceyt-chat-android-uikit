@@ -49,11 +49,14 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
     @SuppressLint("NotifyDataSetChanged")
     fun addList(items: MutableList<ChannelListItem>) {
         removeLoading()
-        channels.addAll(items)
-        if (channels.size == items.size)
+
+        val filteredItems = items.minus(channels.toSet())
+        channels.addAll(filteredItems)
+
+        if (channels.size == filteredItems.size)
             notifyDataSetChanged()
         else
-            notifyItemRangeInserted(channels.size - items.size, items.size)
+            notifyItemRangeInserted(channels.size - filteredItems.size, filteredItems.size)
     }
 
     fun getSkip() = channels.filter { it !is ChannelListItem.LoadingMoreItem }.size
