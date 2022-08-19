@@ -12,6 +12,7 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.SceytUiKitApp
+import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -20,6 +21,7 @@ import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
+import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
 import com.sceyt.chat.ui.presentation.uicomponents.newchannel.NewChannelActivity
@@ -40,7 +42,8 @@ class ChannelsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initViews()
-        //mBinding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
+
+        binding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
 
         mViewModel.bindView(binding.channelListView, viewLifecycleOwner)
         mViewModel.bindView(binding.searchView)
@@ -56,6 +59,13 @@ class ChannelsFragment : Fragment() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
                 super.onChannelClick(item)
                 println("onChannelClick")
+            }
+        })
+
+        binding.channelListView.setCustomChannelPopupClickListener(object : ChannelPopupClickListenersImpl(binding.channelListView) {
+            override fun onMarkAsReadClick(channel: SceytChannel) {
+                super.onMarkAsReadClick(channel)
+                println("mark as read ")
             }
         })
 
@@ -76,8 +86,8 @@ class ChannelsFragment : Fragment() {
 
     class CustomViewHolderFactory(context: Context) : ChannelViewHolderFactory(context) {
         override fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
-
-            return CustomViewHolder(SceytItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false), clickListeners)
+            return super.createChannelViewHolder(parent)
+            // return CustomViewHolder(SceytItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false), clickListeners)
         }
     }
 
