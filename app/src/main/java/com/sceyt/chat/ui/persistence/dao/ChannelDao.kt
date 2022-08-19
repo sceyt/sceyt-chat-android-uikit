@@ -27,7 +27,7 @@ interface ChannelDao {
     fun insertUserChatLinks(userChatLinks: List<UserChatLink>): List<Long>
 
     @Transaction
-    @Query("select * from channels where myRole is null or myRole != :ignoreRole " +
+    @Query("select * from channels where myRole is null or myRole !=:ignoreRole " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
 
@@ -37,7 +37,7 @@ interface ChannelDao {
     fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
 
     @Transaction
-    @Query("select * from channels where chat_id = :id")
+    @Query("select * from channels where chat_id =:id")
     fun getChannelById(id: Long): ChannelDb?
 
     @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")

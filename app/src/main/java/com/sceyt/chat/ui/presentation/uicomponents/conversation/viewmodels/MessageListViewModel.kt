@@ -232,7 +232,16 @@ class MessageListViewModel(private val conversationId: Long,
             val response = messagesRepository.sendMessage(channel.toChannel(), message) { tmpMessage ->
                 val outMessage = tmpMessage.toSceytUiMessage(isGroup)
                 onNewOutgoingMessageLiveData.postValue(outMessage)
-                MessageEventsObserver.emitOutgoingMessage(outMessage)
+                MessageEventsObserver.emitOutgoingMessage(outMessage.clone())
+            }
+            when (response) {
+                is SceytResponse.Error -> {
+                    // Implement logic if you want to show failed status
+                }
+                is SceytResponse.Success -> {
+                    // Notify out message status is sent
+                    response.data?.let { MessageEventsObserver.emitOutgoingMessage(it.clone()) }
+                }
             }
             _messageSentLiveData.postValue(response)
         }
