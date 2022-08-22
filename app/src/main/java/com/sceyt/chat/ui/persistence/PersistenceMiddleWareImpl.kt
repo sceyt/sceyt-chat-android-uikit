@@ -153,7 +153,10 @@ internal class PersistenceMiddleWareImpl(
         return membersLogic.deleteMember(channel, memberId)
     }
 
-    override suspend fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long, replayInThread: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadMessages(channel, conversationId, lastMessageId, replayInThread)
+    override suspend fun loadMessages(channel: SceytChannel,
+                                      conversationId: Long,
+                                      lastMessageId: Long,
+                                      replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadMessages(channel, conversationId, lastMessageId, replayInThread, offset)
     }
 }

@@ -38,7 +38,7 @@ class IncTextMsgViewHolder(
                 messageItem = item
                 val message = item.message
 
-                if (diff.edited) {
+                if (diff.edited || diff.bodyChanged) {
                     val space = if (message.state == MessageState.Edited) INC_EDITED_SPACE else INC_DEFAULT_SPACE
                     messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
                 }

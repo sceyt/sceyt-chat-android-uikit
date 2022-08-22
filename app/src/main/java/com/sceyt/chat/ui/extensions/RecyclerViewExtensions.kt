@@ -162,6 +162,14 @@ fun RecyclerView.ViewHolder.bindPosition(cb: (Int) -> Unit) {
     }
 }
 
+fun RecyclerView.notifyItemChangedSafety(position: Int, payload: Any?) {
+    try {
+        adapter?.notifyItemChanged(position, payload)
+    } catch (ex: Exception) {
+        println(ex.message)
+    }
+}
+
 fun RecyclerView.smoothSnapToPosition(position: Int, snapMode: Int = LinearSmoothScroller.SNAP_TO_START) {
     val smoothScroller = object : LinearSmoothScroller(this.context) {
         override fun getVerticalSnapPreference(): Int = snapMode

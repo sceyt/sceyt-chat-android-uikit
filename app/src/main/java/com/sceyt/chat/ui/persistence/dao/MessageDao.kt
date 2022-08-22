@@ -16,7 +16,7 @@ interface MessageDao {
     fun insertMessages(messages: List<MessageEntity>)
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and message_id >=:lastMessageId " +
+    @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
             "order by message_id desc limit :limit")
     fun getMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 

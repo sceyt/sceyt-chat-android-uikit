@@ -41,16 +41,14 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.updateMessageStateAndBody(data.id, data.state, data.body)
     }
 
-    override fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long, replayInThread: Boolean): Flow<PaginationResponse<SceytMessage>> {
+    override fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
-            val dbMessages = getMessagesDb(channel.id, lastMessageId)
-            //Todo offset
-            trySend(PaginationResponse.DBResponse(dbMessages, 0))
+            val dbMessages = getMessagesDb(channel.id, lastMessageId).reversed()
+            trySend(PaginationResponse.DBResponse(dbMessages, offset))
 
             val response = messagesRepository.getMessages(channel.toChannel(), conversationId, lastMessageId, replayInThread)
 
-            //Todo offset
-            trySend(PaginationResponse.ServerResponse(data = response, offset = 0, dbData = arrayListOf()))
+            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf()))
 
             if (response is SceytResponse.Success) {
                 saveMessagesToDb(response.data ?: return@callbackFlow)

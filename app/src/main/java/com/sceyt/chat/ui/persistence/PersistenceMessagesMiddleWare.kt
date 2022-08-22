@@ -6,5 +6,8 @@ import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceMessagesMiddleWare {
-    suspend fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long, replayInThread: Boolean): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadMessages(channel: SceytChannel,
+                             conversationId: Long,
+                             lastMessageId: Long,
+                             replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
 }

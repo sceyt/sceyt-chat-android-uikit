@@ -37,7 +37,7 @@ class OutTextMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited) {
+                if (diff.edited || diff.bodyChanged) {
                     val space = if (message.state == MessageState.Edited) OUT_EDITED_SPACE else OUT_DEFAULT_SPACE
                     messageBody.text = fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
                 }

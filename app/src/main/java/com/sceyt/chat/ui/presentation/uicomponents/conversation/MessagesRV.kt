@@ -7,10 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.extensions.addRVScrollListener
-import com.sceyt.chat.ui.extensions.asAppCompatActivity
-import com.sceyt.chat.ui.extensions.dpToPx
-import com.sceyt.chat.ui.extensions.getFirstVisibleItemPosition
+import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -85,10 +82,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun setData(messages: List<MessageListItem>) {
-        adapter = MessagesAdapter(ArrayList(messages), viewHolderFactory)
-            .also { mAdapter = it }
-
-        scheduleLayoutAnimation()
+        if (::mAdapter.isInitialized.not()) {
+            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
+                .also { mAdapter = it }
+            scheduleLayoutAnimation()
+        } else
+            mAdapter.notifyUpdate(messages)
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
@@ -143,6 +142,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         check(::mAdapter.isInitialized.not()) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
         viewHolderFactory = factory
+    }
+
+    fun hideLoadingItem() {
+        mAdapter.removeLoading()
     }
 
     fun clearData() {

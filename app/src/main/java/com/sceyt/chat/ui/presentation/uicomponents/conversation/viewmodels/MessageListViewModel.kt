@@ -25,30 +25,28 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.message
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.MessageEvent
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionEvent
-import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
+import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class MessageListViewModel(private val conversationId: Long,
+class MessageListViewModel(internal val preferences: SceytSharedPreference,
+                           private val persistenceMiddleWare: PersistenceMessagesMiddleWare,
+                           private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare,
+                           private val messagesRepository: MessagesRepository,
+                           private val conversationId: Long,
                            internal val replayInThread: Boolean = false,
                            internal var channel: SceytChannel) : BaseViewModel(), KoinComponent {
+
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
-
-    val preferences by inject<SceytSharedPreference>()
-
-    private val persistenceMiddleWare by inject<PersistenceMessagesMiddleWare>()
-    private val persistenceChanelMiddleWare by inject<PersistenceChanelMiddleWare>()
-    private val messagesRepository by inject<MessagesRepository>()
 
     private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
     val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
 
-    private val _loadMoreMessagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
-    val loadMoreMessagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _loadMoreMessagesFlow
+    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<MessageListItem>>(PaginationResponse.Nothing())
+    val loadMessagesFlow: StateFlow<PaginationResponse<MessageListItem>> = _loadMessagesFlow
 
     private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytMessage?>>()
     val messageSentLiveData: LiveData<SceytResponse<SceytMessage?>> = _messageSentLiveData
@@ -130,40 +128,44 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
 
-    fun loadMessages(lastMessageId: Long, isLoadingMore: Boolean) {
+    fun loadMessages(lastMessageId: Long, offset: Int) {
         loadingItems.set(true)
+        val isLoadingMore = offset > 0
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            //TODO need to add messages db to UI
-            persistenceMiddleWare.loadMessages(channel, conversationId, lastMessageId, replayInThread).collect {
-                if (it is PaginationResponse.ServerResponse) {
-                    initResponse(it.data, isLoadingMore)
-                    if (!isLoadingMore)
-                        messagesRepository.markAllAsRead(channel.toChannel())
+            persistenceMiddleWare.loadMessages(channel, conversationId, lastMessageId, replayInThread, offset).collect {
+                initResponse(it)
+            }
+        }
+    }
+
+    private fun initResponse(it: PaginationResponse<SceytMessage>) {
+        when (it) {
+            is PaginationResponse.DBResponse -> {
+                if (it.data.isNotEmpty()) {
+                    hasNext = it.data.size == MESSAGES_LOAD_SIZE
+                    _loadMessagesFlow.value = PaginationResponse.DBResponse(mapToMessageListItem(it.data, hasNext), it.offset)
+                    notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
                 }
             }
-        }
-    }
+            is PaginationResponse.ServerResponse -> {
+                when (it.data) {
+                    is SceytResponse.Success -> {
+                        hasNext = it.data.data?.size == MESSAGES_LOAD_SIZE
 
-    private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
-        when (it) {
-            is SceytResponse.Success -> {
-                hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
-                emitMessagesListResponse(SceytResponse.Success(mapToMessageListItem(it.data, hasNext)), loadingNext)
+                        _loadMessagesFlow.value = PaginationResponse.ServerResponse(
+                            SceytResponse.Success(mapToMessageListItem(it.data.data, hasNext)), offset = it.offset, dbData = arrayListOf())
+
+                        notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+                    }
+                    is SceytResponse.Error -> notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+                }
             }
-            is SceytResponse.Error -> emitMessagesListResponse(SceytResponse.Error(it.message), loadingNext)
+            is PaginationResponse.Nothing -> return
         }
         loadingItems.set(false)
-    }
-
-    private fun emitMessagesListResponse(response: SceytResponse<List<MessageListItem>>, loadingNext: Boolean) {
-        if (loadingNext)
-            _loadMoreMessagesFlow.value = response
-        else _messagesFlow.value = response
-
-        notifyPageStateWithResponse(response, loadingNext, response.data.isNullOrEmpty())
     }
 
     private fun deleteMessage(message: SceytMessage) {

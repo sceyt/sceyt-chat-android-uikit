@@ -61,6 +61,7 @@ fun Attachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
 internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
+        bodyChanged = body != other.body,
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = from?.avatarURL != other.from?.avatarURL,
         nameChanged = from?.fullName != other.from?.fullName,

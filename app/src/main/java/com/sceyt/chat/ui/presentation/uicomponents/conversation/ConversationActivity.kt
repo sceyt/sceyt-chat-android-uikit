@@ -3,10 +3,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -23,10 +20,13 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.viewmodels.bindV
 import com.sceyt.chat.ui.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.chat.ui.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.ParametersHolder
+import org.koin.core.parameter.parametersOf
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
-    private val viewModel: MessageListViewModel by viewModels { MyViewModelFactory() }
+    private val viewModel: MessageListViewModel by viewModel(parameters = ::getParameters)
     private lateinit var channel: SceytChannel
     private var isReplayInThread = false
     private var replayMessage: SceytMessage? = null
@@ -46,7 +46,7 @@ open class ConversationActivity : AppCompatActivity() {
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
         viewModel.bindView(binding.headerView, replayMessage, lifecycleOwner = this)
 
-        viewModel.loadMessages(0, false)
+        viewModel.loadMessages(0, 0)
 
         binding.messagesListView.setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
             override fun onReactMessageClick(view: View, message: SceytMessage) {
@@ -104,18 +104,14 @@ open class ConversationActivity : AppCompatActivity() {
         }
     }
 
+    private fun getParameters(): ParametersHolder {
+        val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))
+        val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
+        return parametersOf(conversationId, isReplayInThread, channel)
+    }
+
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
-    }
-
-    inner class MyViewModelFactory : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))
-            val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
-
-            @Suppress("UNCHECKED_CAST")
-            return MessageListViewModel(conversationId, isReplayInThread, channel) as T
-        }
     }
 }

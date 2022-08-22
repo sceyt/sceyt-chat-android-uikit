@@ -4,11 +4,12 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.extensions.SyncArrayList
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 
 
-class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
+class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
                       private var viewHolderFactory: ChannelViewHolderFactory) :
         RecyclerView.Adapter<BaseChannelViewHolder>() {
 
@@ -42,7 +43,8 @@ class ChannelsAdapter(private var channels: ArrayList<ChannelListItem>,
     fun notifyUpdate(channels: List<ChannelListItem>) {
         val myDiffUtil = ChannelsDiffUtil(this.channels, channels)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        this.channels = channels as ArrayList
+        this.channels.clear()
+        this.channels.addAll(channels)
         productDiffResult.dispatchUpdatesTo(this)
     }
 

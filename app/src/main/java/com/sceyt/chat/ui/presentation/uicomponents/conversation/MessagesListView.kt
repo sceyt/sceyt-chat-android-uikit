@@ -2,11 +2,14 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
@@ -26,6 +29,9 @@ import com.sceyt.chat.ui.presentation.uicomponents.conversation.events.ReactionE
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.chat.ui.sceytconfigs.MessagesStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -174,6 +180,73 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetEmojisFragment(emojiListener = { emoji ->
                 onAddReaction(message, emoji.unicode)
             }).show(it, null)
+        }
+    }
+
+    private suspend fun addNewServerMessagesAndSort(newMessages: ArrayList<MessageListItem>,
+                                                    currentMessages: List<MessageListItem>, hasLoadingItem: Boolean) {
+        if (newMessages.isNotEmpty()) {
+            val messages2 = ArrayList(currentMessages)
+            messages2.addAll(newMessages)
+            messages2.sortBy {
+                when (it) {
+                    is MessageListItem.MessageItem -> it.message.createdAt
+                    is MessageListItem.DateSeparatorItem -> it.createdAt
+                    is MessageListItem.LoadingMoreItem -> 0
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                messagesRV.awaitAnimationEnd {
+                    if (messages2.isNotEmpty()) {
+                        val isLastItemDisplaying = messagesRV.isLastItemDisplaying()
+                        messagesRV.setData(messages2)
+                        if (isLastItemDisplaying)
+                            messagesRV.scrollToPosition(messages2.size - 1)
+                    }
+                }
+
+                if (!hasLoadingItem)
+                    messagesRV.hideLoadingItem()
+            }
+        }
+    }
+
+    internal fun updateMessagesWithServerData(data: List<MessageListItem>, offset: Int, lifecycleOwner: LifecycleOwner) {
+        val currentMessages = messagesRV.getData() ?: arrayListOf()
+        if (currentMessages.isEmpty() || data.isEmpty() && offset == 0) {
+            messagesRV.setData(data)
+            return
+        }
+
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            var dataHasLoadingItem = false
+            val newMessages: ArrayList<MessageListItem> = arrayListOf()
+            // Update UI messages if exist, or add new messages
+            data.forEach { dataItem ->
+                if (!dataHasLoadingItem)
+                    dataHasLoadingItem = dataItem is MessageListItem.LoadingMoreItem
+
+                if (dataItem !is MessageListItem.LoadingMoreItem && dataItem !is MessageListItem.DateSeparatorItem) {
+                    currentMessages.findIndexed {
+                        it is MessageListItem.MessageItem && dataItem is MessageListItem.MessageItem &&
+                                it.message.id == dataItem.message.id
+                    }?.let {
+                        val oldItem = currentMessages[it.first] as MessageListItem.MessageItem
+                        val diff = oldItem.message.diff((dataItem as MessageListItem.MessageItem).message)
+                        if (diff.hasDifference()) {
+                            currentMessages[it.first] = dataItem
+                            messagesRV.notifyItemChangedSafety(it.first, diff)
+                            Log.i(TAG, "update: changed item ${dataItem.message.body}")
+                        }
+                    } ?: run {
+                        Log.i(TAG, "update: addNewMessage ${(dataItem as MessageListItem.MessageItem).message.body}")
+                        newMessages.add(dataItem)
+                    }
+                }
+            }
+            // Add new messages and sort list
+            addNewServerMessagesAndSort(newMessages, currentMessages, dataHasLoadingItem)
         }
     }
 
