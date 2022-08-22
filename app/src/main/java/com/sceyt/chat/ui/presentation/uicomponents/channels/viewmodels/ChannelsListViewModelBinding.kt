@@ -62,7 +62,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
                         it.data.data?.let { data ->
                             channelsListView.updateChannelsWithServerData(data, it.offset, lifecycleOwner)
                             Log.i("responceee", "addOrUpdateChannel ->  data= ${
-                                it.data.data?.map { channelListItem ->
+                                it.data.data.map { channelListItem ->
                                     if (channelListItem is ChannelListItem.ChannelItem)
                                         channelListItem.channel.channelSubject
                                     else "Loading item"
@@ -79,7 +79,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     lifecycleOwner.lifecycleScope.launch {
         onNewMessageFlow.collect {
-            if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), it.first.unreadMessageCount)) {
+            if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), false, it.first.unreadMessageCount)) {
                 getChannels(0, query = searchQuery)
             }
         }
@@ -87,7 +87,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     lifecycleOwner.lifecycleScope.launch {
         onOutGoingMessageFlow.collect {
-            if (!channelsListView.updateLastMessage(it)) {
+            if (!channelsListView.updateLastMessage(it, edited = false)) {
                 getChannels(0, query = searchQuery)
             }
         }
@@ -95,7 +95,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     lifecycleOwner.lifecycleScope.launch {
         onMessageEditedOrDeletedFlow.collect {
-            if (!channelsListView.updateLastMessage(it)) {
+            if (!channelsListView.updateLastMessage(it, edited = true)) {
                 getChannels(0, query = searchQuery)
             }
         }

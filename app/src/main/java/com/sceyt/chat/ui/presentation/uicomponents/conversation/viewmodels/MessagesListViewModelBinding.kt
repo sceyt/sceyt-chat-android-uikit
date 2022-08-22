@@ -9,6 +9,7 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum
+import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
@@ -54,9 +55,23 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        loadMoreMessagesFlow.collect {
-            if (it is SceytResponse.Success && it.data != null)
-                messagesListView.addNextPageMessages(it.data)
+        loadMessagesFlow.collect {
+            when (it) {
+                is PaginationResponse.DBResponse -> {
+                    if (it.offset == 0) {
+                        messagesListView.setMessagesList(it.data)
+                    } else messagesListView.addNextPageMessages(it.data)
+                }
+                is PaginationResponse.ServerResponse -> {
+                    if (it.data is SceytResponse.Success) {
+                        it.data.data?.let { data ->
+                            messagesListView.updateMessagesWithServerData(data, it.offset, lifecycleOwner)
+                        }
+                    }
+                    notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+                }
+                is PaginationResponse.Nothing -> return@collect
+            }
         }
     }
 
@@ -211,11 +226,11 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
         onReactionEvent(it)
     }
 
-    messagesListView.setNeedLoadMoreMessagesListener { _, message ->
+    messagesListView.setNeedLoadMoreMessagesListener { offset, message ->
         if (!loadingItems.get() && hasNext) {
             loadingItems.set(true)
             val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
-            loadMessages(lastMessageId, true)
+            loadMessages(lastMessageId, offset)
         }
     }
 }

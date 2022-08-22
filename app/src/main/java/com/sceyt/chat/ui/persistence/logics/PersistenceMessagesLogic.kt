@@ -13,5 +13,6 @@ internal interface PersistenceMessagesLogic {
     fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     fun onMessageReactionUpdated(data: Message?)
     fun onMessageEditedOrDeleted(data: Message?)
-    fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long, replayInThread: Boolean): Flow<PaginationResponse<SceytMessage>>
+    fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long,
+                     replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
 }

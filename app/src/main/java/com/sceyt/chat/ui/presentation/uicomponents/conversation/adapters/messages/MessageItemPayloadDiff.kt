@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 
 data class MessageItemPayloadDiff(
         val edited: Boolean,
+        val bodyChanged: Boolean,
         val statusChanged: Boolean,
         val avatarChanged: Boolean,
         val nameChanged: Boolean,
@@ -12,13 +13,14 @@ data class MessageItemPayloadDiff(
         val filesChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
-        return edited || statusChanged || avatarChanged || nameChanged || replayCountChanged
-                || replayContainerChanged || showAvatarAndNameChanged || reactionsChanged || filesChanged
+        return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replayCountChanged
+                || replayContainerChanged || showAvatarAndNameChanged /*|| reactionsChanged || filesChanged*/
     }
 
     companion object {
         val DEFAULT = MessageItemPayloadDiff(
             edited = true,
+            bodyChanged = true,
             statusChanged = true,
             avatarChanged = true,
             nameChanged = true,

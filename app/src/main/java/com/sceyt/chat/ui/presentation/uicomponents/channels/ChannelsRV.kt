@@ -52,7 +52,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setData(channels: List<ChannelListItem>) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = ChannelsAdapter(channels as ArrayList<ChannelListItem>, viewHolderFactory)
+            adapter = ChannelsAdapter(SyncArrayList(channels), viewHolderFactory)
                 .also { mAdapter = it }
         } else {
             mAdapter.notifyUpdate(channels)

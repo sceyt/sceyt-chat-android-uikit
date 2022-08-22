@@ -2,15 +2,16 @@ package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messag
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.ui.extensions.SyncArrayList
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.shared.utils.DateTimeUtil
 
-class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
+class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
         RecyclerView.Adapter<BaseMsgViewHolder>() {
-
     private val mLoadingItem by lazy { MessageListItem.LoadingMoreItem }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
@@ -51,7 +52,7 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
 
     fun getLastMessageItem() = messages.findLast { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
 
-    private fun removeLoading() {
+    fun removeLoading() {
         if (messages.remove(mLoadingItem))
             notifyItemRemoved(0)
     }
@@ -90,7 +91,14 @@ class MessagesAdapter(private val messages: ArrayList<MessageListItem>,
         if (items.isEmpty()) return
         messages.addAll(items)
         notifyItemRangeInserted(messages.lastIndex, items.size)
+    }
 
+    fun notifyUpdate(messages: List<MessageListItem>) {
+        val myDiffUtil = MessagesDiffUtil(this.messages, messages)
+        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        this.messages.clear()
+        this.messages.addAll(messages as ArrayList)
+        productDiffResult.dispatchUpdatesTo(this)
     }
 
     fun getData() = messages

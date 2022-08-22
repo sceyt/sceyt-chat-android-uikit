@@ -98,7 +98,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.setData(channels)
     }
 
-    fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, lifecycleOwner: LifecycleOwner) {
+    internal fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, lifecycleOwner: LifecycleOwner) {
         val channels = ArrayList(channelsRV.getData() as? ArrayList ?: arrayListOf())
         if (data.isEmpty() && offset == 0) {
             channelsRV.setData(data)
@@ -140,12 +140,14 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.addNewChannels(channels)
     }
 
-    internal fun updateLastMessage(message: SceytMessage, unreadCount: Long? = null): Boolean {
+    internal fun updateLastMessage(message: SceytMessage, edited: Boolean, unreadCount: Long? = null): Boolean {
         channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
             val channel = pair.second.channel
             if (message.channelId == channel.id) {
                 val oldChannel = channel.clone()
-                channel.message = message
+                if (!edited || channel.message?.id == message.id)
+                    channel.message = message
+
                 unreadCount?.let { count ->
                     channel.unreadCount = count
                 }
@@ -162,13 +164,15 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val channelId = (status.channel ?: return@launch).id
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
-                val oldChannel = channel.clone()
                 channel.message?.let {
-                    if (it.deliveryStatus < status.status) {
-                        it.deliveryStatus = status.status
-                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
-                            message = it
-                        }))
+                    if (status.messageIds.contains(it.id)) {
+                        val oldChannel = channel.clone()
+                        if (it.deliveryStatus < status.status) {
+                            it.deliveryStatus = status.status
+                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
+                                message = it
+                            }))
+                        }
                     }
                 }
             }
