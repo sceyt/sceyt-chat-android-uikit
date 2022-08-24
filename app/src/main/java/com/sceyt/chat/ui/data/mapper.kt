@@ -6,6 +6,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.ui.data.models.channels.*
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum.*
+import com.sceyt.chat.ui.data.models.messages.SceytAttachment
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
 
@@ -85,7 +86,7 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
     }
 }
 
-fun SceytChannel.toPublicChannel(): GroupChannel {
+fun SceytChannel.toPublicChannel(): PublicChannel {
     return if (channelType == Public) {
         this as SceytGroupChannel
         PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
@@ -93,67 +94,79 @@ fun SceytChannel.toPublicChannel(): GroupChannel {
     } else throw RuntimeException("Channel is not public")
 }
 
-fun Message.toSceytUiMessage(isGroup: Boolean? = null) = SceytMessage(
-    id = id,
-    tid = tid,
-    channelId = channelId,
-    to = to,
-    body = body,
-    type = type,
-    metadata = metadata,
-    createdAt = createdAt.time,
-    updatedAt = updatedAt,
-    incoming = incoming,
-    receipt = receipt,
-    isTransient = isTransient,
-    silent = silent,
-    deliveryStatus = deliveryStatus,
-    state = state,
-    from = from,
-    attachments = attachments,
-    lastReactions = lastReactions,
-    selfReactions = selfReactions,
-    reactionScores = reactionScores,
-    markerCount = markerCount,
-    selfMarkers = selfMarkers,
-    mentionedUsers = mentionedUsers,
-    parent = parent,
-    replyInThread = replyInThread,
-    replyCount = replyCount
-).apply {
-    isGroup?.let {
-        this.isGroup = it
+fun SceytChannel.toPrivateChannel(): PrivateChannel {
+    return if (channelType == Private) {
+        this as SceytGroupChannel
+        PrivateChannel(id, subject, metadata, avatarUrl,
+            label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+    } else throw RuntimeException("Channel is not public")
+}
+
+fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
+    return SceytMessage(
+        id = id,
+        tid = tid,
+        channelId = channelId,
+        to = to,
+        body = body,
+        type = type,
+        metadata = metadata,
+        createdAt = createdAt.time,
+        updatedAt = updatedAt,
+        incoming = incoming,
+        receipt = receipt,
+        isTransient = isTransient,
+        silent = silent,
+        deliveryStatus = deliveryStatus,
+        state = state,
+        from = from,
+        attachments = attachments.map { it.toSceytAttachment() }.toTypedArray(),
+        lastReactions = lastReactions,
+        selfReactions = selfReactions,
+        reactionScores = reactionScores,
+        markerCount = markerCount,
+        selfMarkers = selfMarkers,
+        mentionedUsers = mentionedUsers,
+        parent = parent?.toSceytUiMessage(),
+        replyInThread = replyInThread,
+        replyCount = replyCount
+    ).apply {
+        isGroup?.let {
+            this.isGroup = it
+        }
     }
 }
 
-fun SceytMessage.toMessage() = Message(
-    id,
-    tid,
-    channelId,
-    to,
-    body,
-    type,
-    metadata,
-    createdAt,
-    updatedAt.time,
-    incoming,
-    receipt,
-    isTransient,
-    silent,
-    deliveryStatus,
-    state,
-    from,
-    attachments,
-    lastReactions,
-    selfReactions,
-    reactionScores,
-    markerCount,
-    selfMarkers,
-    mentionedUsers,
-    parent,
-    replyInThread,
-    replyCount
-)
+fun SceytMessage.toMessage(): Message {
+    return Message(
+        id,
+        tid,
+        channelId,
+        to,
+        body,
+        type,
+        metadata,
+        createdAt,
+        updatedAt.time,
+        incoming,
+        receipt,
+        isTransient,
+        silent,
+        deliveryStatus,
+        state,
+        from,
+        attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
+        lastReactions,
+        selfReactions,
+        reactionScores,
+        markerCount,
+        selfMarkers,
+        mentionedUsers,
+        parent?.toMessage(),
+        replyInThread,
+        replyCount)
+}
+
 
 fun Member.toSceytMember() = SceytMember(
     role = role,
@@ -170,7 +183,24 @@ fun GroupChannel.getChannelUrl(): String {
     else ""
 }
 
-fun Attachment.toFileListItem(message: SceytMessage): FileListItem {
+fun Attachment.toSceytAttachment() = SceytAttachment(
+    tid = tid,
+    name = name,
+    type = type,
+    metadata = metadata,
+    fileSize = uploadedFileSize,
+    url = url
+)
+
+
+fun SceytAttachment.toSceytAttachment() = Attachment.Builder(url, type)
+    .setMetadata(metadata)
+    .setName(name)
+    .withTid(tid)
+    .build()
+
+
+fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
     return when (type) {
         "image" -> FileListItem.Image(this, message)
         "video" -> FileListItem.Video(this, message)

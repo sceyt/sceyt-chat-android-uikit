@@ -7,12 +7,13 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
+import com.sceyt.chat.ui.data.models.messages.SceytAttachment
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.extensions.getFileSize
 import com.sceyt.chat.ui.extensions.isEqualsVideoOrImage
 import java.io.File
 
-fun Message.getShowBody(context: Context): String {
+fun SceytMessage.getShowBody(context: Context): String {
     return when {
         state == MessageState.Deleted -> context.getString(R.string.message_was_deleted)
         attachments.isNullOrEmpty() -> body.trim()
@@ -22,11 +23,11 @@ fun Message.getShowBody(context: Context): String {
 
 fun Message.isTextMessage() = attachments.isNullOrEmpty()
 
-fun Message.getAttachmentUrl(context: Context): String? {
+fun SceytMessage.getAttachmentUrl(context: Context): String? {
     if (!attachments.isNullOrEmpty()) {
-        attachments[0].apply {
+        attachments!![0].apply {
             if (type.isEqualsVideoOrImage()) {
-                val file = getLocaleFileByNameOrMetadata(File(context.filesDir, name))
+                val file = getLocaleFileByNameOrMetadata(File(context.filesDir, name ?: ""))
                 return if (file != null) file.path
                 else url
             }
@@ -35,7 +36,7 @@ fun Message.getAttachmentUrl(context: Context): String? {
     return null
 }
 
-fun Attachment?.getFileFromMetadata(): File? {
+fun SceytAttachment?.getFileFromMetadata(): File? {
     val metadata = this?.metadata ?: return null
     try {
         val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
@@ -45,10 +46,10 @@ fun Attachment?.getFileFromMetadata(): File? {
     return null
 }
 
-fun Attachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
+fun SceytAttachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
     if (this == null) return null
 
-    if (loadedFile.exists() && getFileSize(loadedFile.path) == uploadedFileSize)
+    if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)
         return loadedFile
 
     val fileFromMetadata = getFileFromMetadata()

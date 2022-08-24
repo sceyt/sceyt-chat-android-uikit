@@ -42,8 +42,8 @@ fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceMessagesMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
-    factory<PersistenceChannelLogic> { PersistenceChannelLogicImpl(get(), get(), get(), get()) }
-    factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get()) }
+    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get()) }
+    factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get()) }
 }
 

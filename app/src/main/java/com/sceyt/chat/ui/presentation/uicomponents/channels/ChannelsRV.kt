@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.extensions.*
+import com.sceyt.chat.ui.presentation.common.SyncArrayList
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelsComparatorBy

@@ -6,6 +6,7 @@ import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.CreateChannelData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceChanelMiddleWare {
@@ -20,5 +21,5 @@ interface PersistenceChanelMiddleWare {
     suspend fun muteChannel(channel: SceytChannel, muteUntil: Long): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channel: SceytChannel): SceytResponse<SceytChannel>
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun editChannel(channel: SceytChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel>
+    suspend fun editChannel(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel>
 }

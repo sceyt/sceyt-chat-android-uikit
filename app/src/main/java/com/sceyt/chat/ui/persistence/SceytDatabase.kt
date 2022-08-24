@@ -11,13 +11,15 @@ import com.sceyt.chat.ui.persistence.dao.UserDao
 import com.sceyt.chat.ui.persistence.entity.UserEntity
 import com.sceyt.chat.ui.persistence.entity.channel.ChannelEntity
 import com.sceyt.chat.ui.persistence.entity.channel.UserChatLink
+import com.sceyt.chat.ui.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chat.ui.persistence.entity.messages.MessageEntity
 
 @Database(entities = [
     ChannelEntity::class,
     UserEntity::class,
     UserChatLink::class,
-    MessageEntity::class
+    MessageEntity::class,
+    AttachmentEntity::class
 ], version = 1, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class)

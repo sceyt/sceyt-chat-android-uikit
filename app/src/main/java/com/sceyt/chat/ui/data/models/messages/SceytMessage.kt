@@ -1,7 +1,6 @@
 package com.sceyt.chat.ui.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -27,16 +26,16 @@ open class SceytMessage(var id: Long,
                         var deliveryStatus: DeliveryStatus,
                         var state: MessageState,
                         var from: User?,
-                        var attachments: Array<Attachment>? = null,
+                        var attachments: Array<SceytAttachment>? = null,
                         var lastReactions: Array<Reaction>? = null,
                         var selfReactions: Array<Reaction>? = null,
                         var reactionScores: Array<ReactionScore>? = null,
                         var markerCount: Array<MarkerCount>? = null,
                         var selfMarkers: Array<String>? = null,
                         var mentionedUsers: Array<User>? = null,
-                        var parent: Message?,
-                        var replyInThread: Boolean = false,
-                        var replyCount: Long = 0) : Parcelable, Cloneable {
+                        var parent: SceytMessage?,
+                        var replyInThread: Boolean,
+                        var replyCount: Long) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -84,9 +83,40 @@ open class SceytMessage(var id: Long,
     }
 
     public override fun clone(): SceytMessage {
-        return SceytMessage(id, tid, channelId, to, body, type,
-            metadata, createdAt, updatedAt, incoming, receipt, isTransient, silent, deliveryStatus,
-            state, from, attachments, lastReactions, selfReactions, reactionScores, markerCount,
-            selfMarkers, mentionedUsers, parent)
+        return SceytMessage(
+            id = id,
+            tid = tid,
+            channelId = channelId,
+            to = to,
+            body = body,
+            type = type,
+            metadata = metadata,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            incoming = incoming,
+            receipt = receipt,
+            isTransient = isTransient,
+            silent = silent,
+            deliveryStatus = deliveryStatus,
+            state = state,
+            from = from,
+            attachments = attachments?.map(SceytAttachment::clone)?.toTypedArray(),
+            lastReactions = lastReactions,
+            selfReactions = selfReactions,
+            reactionScores = reactionScores,
+            markerCount = markerCount,
+            selfMarkers = selfMarkers,
+            mentionedUsers = mentionedUsers,
+            parent = parent,
+            replyInThread = replyInThread,
+            replyCount = replyCount)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return (other as? SceytMessage)?.id == id
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.name.hashCode()
     }
 }

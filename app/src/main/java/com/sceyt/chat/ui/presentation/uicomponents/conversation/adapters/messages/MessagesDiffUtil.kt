@@ -27,11 +27,11 @@ class MessagesDiffUtil(private var oldList: List<MessageListItem>,
         else oldItem == newItem
     }
 
-    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
+    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
         if (oldItem is MessageListItem.MessageItem && newItem is MessageListItem.MessageItem)
             return oldItem.message.diff(newItem.message)
-        return null
+        return Unit
     }
 }

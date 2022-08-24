@@ -161,11 +161,31 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val channelId = (status.channel ?: return@launch).id
+            val channelId = status.channelId ?: return@launch
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
                 channel.message?.let {
                     if (status.messageIds.contains(it.id)) {
+                        val oldChannel = channel.clone()
+                        if (it.deliveryStatus < status.status) {
+                            it.deliveryStatus = status.status
+                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
+                                message = it
+                            }))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    internal fun updateOutgoingLastMessageStatus(status: MessageStatusChangeData) {
+        context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
+            val channelId = status.channelId ?: return@launch
+            channelsRV.getChannelIndexed(channelId)?.let { pair ->
+                val channel = pair.second.channel
+                channel.message?.let {
+                    if (status.messageIds.contains(it.tid)) {
                         val oldChannel = channel.clone()
                         if (it.deliveryStatus < status.status) {
                             it.deliveryStatus = status.status

@@ -1,10 +1,8 @@
 package com.sceyt.chat.ui.persistence.logics
 
 import com.sceyt.chat.ClientWrapper
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
@@ -13,30 +11,29 @@ import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.*
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.repositories.ChannelsRepository
-import com.sceyt.chat.ui.data.toChannel
-import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toSceytUiChannel
 import com.sceyt.chat.ui.persistence.dao.ChannelDao
 import com.sceyt.chat.ui.persistence.dao.MessageDao
 import com.sceyt.chat.ui.persistence.dao.UserDao
 import com.sceyt.chat.ui.persistence.entity.UserEntity
 import com.sceyt.chat.ui.persistence.entity.channel.UserChatLink
-import com.sceyt.chat.ui.persistence.entity.messages.MessageEntity
+import com.sceyt.chat.ui.persistence.entity.messages.MessageDb
 import com.sceyt.chat.ui.persistence.mappers.toChannel
 import com.sceyt.chat.ui.persistence.mappers.toChannelEntity
-import com.sceyt.chat.ui.persistence.mappers.toMessageEntity
+import com.sceyt.chat.ui.persistence.mappers.toMessageDb
 import com.sceyt.chat.ui.persistence.mappers.toUserEntity
 import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-internal class PersistenceChannelLogicImpl(
+internal class PersistenceChannelsLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
-        private val messageDao: MessageDao) : PersistenceChannelLogic {
+        private val messageDao: MessageDao) : PersistenceChannelsLogic {
 
     override fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
@@ -84,9 +81,9 @@ internal class PersistenceChannelLogicImpl(
         }
     }
 
-    override fun onMessage(data: Pair<Channel, Message>) {
+    override fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val lastMsg = data.second
-        channelDao.updateLastMessage(data.first.id, lastMsg.id, lastMsg.createdAt.time)
+        channelDao.updateLastMessage(data.first.id, lastMsg.id, lastMsg.createdAt)
     }
 
     private fun insertChannel(channel: SceytChannel, vararg members: Member) {
@@ -129,7 +126,7 @@ internal class PersistenceChannelLogicImpl(
 
         val links = arrayListOf<UserChatLink>()
         val users = arrayListOf<UserEntity>()
-        val lastMessages = arrayListOf<MessageEntity>()
+        val lastMessages = arrayListOf<MessageDb>()
 
         list.forEach { channel ->
             if (channel.isGroup) {
@@ -137,7 +134,7 @@ internal class PersistenceChannelLogicImpl(
                     links.add(UserChatLink(userId = member.id, chatId = channel.id, role = member.role.name))
                     users.add(member.toUserEntity())
                     channel.lastMessage?.let {
-                        lastMessages.add(it.toMessageEntity())
+                        lastMessages.add(it.toMessageDb())
                     }
                 }
             } else {
@@ -145,7 +142,7 @@ internal class PersistenceChannelLogicImpl(
                 links.add(UserChatLink(userId = peer.id, chatId = channel.id, role = peer.role.name))
                 users.add(peer.toUserEntity())
                 channel.lastMessage?.let {
-                    lastMessages.add(it.toMessageEntity())
+                    lastMessages.add(it.toMessageDb())
                 }
             }
         }
@@ -179,7 +176,7 @@ internal class PersistenceChannelLogicImpl(
     }
 
     override suspend fun markChannelAsRead(channel: SceytChannel): SceytResponse<MessageListMarker> {
-        val response = channelsRepository.markAsRead(channel.toChannel())
+        val response = channelsRepository.markAsRead(channel)
 
         if (response is SceytResponse.Success)
             messageDao.updateAllMessagesStatusAsRead(channel.id)
@@ -188,7 +185,7 @@ internal class PersistenceChannelLogicImpl(
     }
 
     override suspend fun clearHistory(channel: SceytChannel): SceytResponse<Long> {
-        val response = channelsRepository.clearHistory(channel.toChannel())
+        val response = channelsRepository.clearHistory(channel)
 
         if (response is SceytResponse.Success) {
             channelDao.updateLastMessage(channel.id, null, null)
@@ -199,7 +196,7 @@ internal class PersistenceChannelLogicImpl(
 
     override suspend fun blockAndLeaveChannel(channel: SceytChannel): SceytResponse<Long> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.blockChannel(channel.toGroupChannel())
+        val response = channelsRepository.blockChannel(channel)
 
         if (response is SceytResponse.Success) {
             channelDao.deleteChannelAndLinks(channel.id)
@@ -211,7 +208,7 @@ internal class PersistenceChannelLogicImpl(
 
     override suspend fun leaveChannel(channel: SceytChannel): SceytResponse<Long> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.leaveChannel(channel.toGroupChannel())
+        val response = channelsRepository.leaveChannel(channel)
 
         if (response is SceytResponse.Success) {
             channelDao.deleteChannelAndLinks(channel.id)
@@ -222,7 +219,7 @@ internal class PersistenceChannelLogicImpl(
     }
 
     override suspend fun deleteChannel(channel: SceytChannel): SceytResponse<Long> {
-        val response = channelsRepository.deleteChannel(channel.toChannel())
+        val response = channelsRepository.deleteChannel(channel)
 
         if (response is SceytResponse.Success) {
             channelDao.deleteChannelAndLinks(channel.id)
@@ -233,7 +230,7 @@ internal class PersistenceChannelLogicImpl(
     }
 
     override suspend fun muteChannel(channel: SceytChannel, muteUntil: Long): SceytResponse<SceytChannel> {
-        val response = channelsRepository.muteChannel(channel.toChannel(), muteUntil)
+        val response = channelsRepository.muteChannel(channel, muteUntil)
 
         if (response is SceytResponse.Success)
             channelDao.updateMuteState(channelId = channel.id, muted = true, muteUntil = muteUntil)
@@ -242,7 +239,7 @@ internal class PersistenceChannelLogicImpl(
     }
 
     override suspend fun unMuteChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
-        val response = channelsRepository.unMuteChannel(channel.toChannel())
+        val response = channelsRepository.unMuteChannel(channel)
 
         if (response is SceytResponse.Success)
             channelDao.updateMuteState(channelId = channel.id, muted = false)
@@ -259,7 +256,7 @@ internal class PersistenceChannelLogicImpl(
         return response
     }
 
-    override suspend fun editChannel(channel: SceytChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
+    override suspend fun editChannel(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
         var newUrl = avatarUrl
         val editedAvatar = channel.getChannelAvatarUrl() != avatarUrl
         if (editedAvatar && avatarUrl != null) {
@@ -269,7 +266,7 @@ internal class PersistenceChannelLogicImpl(
             } else
                 return SceytResponse.Error(uploadResult.message)
         }
-        val response = channelsRepository.editChannel(channel.toChannel(), newSubject, newUrl)
+        val response = channelsRepository.editChannel(channel, newSubject, newUrl)
         if (response is SceytResponse.Success)
             channelDao.updateChannelSubjectAndAvatarUrl(channel.id, newSubject, newUrl)
 

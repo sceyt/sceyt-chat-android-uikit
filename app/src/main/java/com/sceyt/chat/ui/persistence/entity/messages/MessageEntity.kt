@@ -2,17 +2,17 @@ package com.sceyt.chat.ui.persistence.entity.messages
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 
-@Entity(tableName = "messages")
+@Entity(tableName = "messages", indices = [Index(value = ["message_id"], unique = true)])
 data class MessageEntity(
         @PrimaryKey
-        @ColumnInfo(name = "message_id")
-        var id: Long,
-        @ColumnInfo(index = true)
         var tid: Long,
+        @ColumnInfo(name = "message_id")
+        var id: Long?,
         @ColumnInfo(index = true)
         var channelId: Long,
         var to: String?,
@@ -28,7 +28,7 @@ data class MessageEntity(
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
-    /* var attachments: Array<Attachment>? = null,
+    /*
      var lastReactions: Array<Reaction>? = null,
      var selfReactions: Array<Reaction>? = null,
      var reactionScores: Array<ReactionScore>? = null,

@@ -16,7 +16,9 @@ import com.sceyt.chat.ui.data.SceytSharedPreference
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.messages.AttachmentMetadata
+import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import com.sceyt.chat.ui.data.toGroupChannel
+import com.sceyt.chat.ui.data.toSceytUiMessage
 import com.sceyt.chat.ui.databinding.SceytMessageInputViewBinding
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.isTextMessage
@@ -116,7 +118,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (message != null) {
                 message?.body = messageBody
                 message?.let {
-                    messageInputActionCallback?.sendEditMessage(it)
+                    messageInputActionCallback?.sendEditMessage(it.toSceytUiMessage())
                 }
             } else {
                 val messageToSend: Message? = Message.MessageBuilder()
@@ -284,7 +286,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)
         fun sendReplayMessage(message: Message, parent: Message?)
-        fun sendEditMessage(message: Message)
+        fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
         fun join()
     }
