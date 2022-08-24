@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.extensions.*
 import com.sceyt.chat.ui.presentation.common.SpeedyLinearLayoutManager
+import com.sceyt.chat.ui.presentation.common.SyncArrayList
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter

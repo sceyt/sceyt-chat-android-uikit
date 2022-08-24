@@ -1,10 +1,11 @@
 package com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.extensions.SyncArrayList
+import com.sceyt.chat.ui.presentation.common.SyncArrayList
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.chat.ui.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.chat.ui.shared.utils.DateTimeUtil
@@ -55,6 +56,8 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     fun removeLoading() {
         if (messages.remove(mLoadingItem))
             notifyItemRemoved(0)
+
+        Log.i("sfdsfsf",messages.filterIsInstance<MessageListItem.LoadingMoreItem>().size.toString())
     }
 
     private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
@@ -69,8 +72,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val needShowDate = !DateTimeUtil.isSameDay(prevMessage.createdAt, newItem.message.createdAt)
             if (!needShowDate) {
                 val dateIndex = messages.indexOf(dateItem)
-                messages.removeAt(dateIndex)
-                notifyItemRemoved(dateIndex)
+                if (dateIndex != -1) {
+                    messages.removeAt(dateIndex)
+                    notifyItemRemoved(dateIndex)
+                }
             }
         }
     }

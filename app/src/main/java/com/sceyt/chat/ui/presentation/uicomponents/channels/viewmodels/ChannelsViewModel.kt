@@ -3,13 +3,12 @@ package com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventData
 import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.chat.ui.data.messageeventobserver.MessageEventsObserver
+import com.sceyt.chat.ui.data.messageeventobserver.MessageEventsObserver.onOutGoingMessageStatusFlow
 import com.sceyt.chat.ui.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
@@ -50,8 +49,9 @@ class ChannelsViewModel(private val channelMiddleWare: PersistenceChanelMiddleWa
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
-    val onNewMessageFlow: Flow<Pair<Channel, Message>>
+    val onNewMessageFlow: Flow<Pair<SceytChannel, SceytMessage>>
     val onOutGoingMessageFlow: Flow<SceytMessage>
+    val onOutGoingMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onChannelEventFlow: Flow<ChannelEventData>
@@ -68,6 +68,8 @@ class ChannelsViewModel(private val channelMiddleWare: PersistenceChanelMiddleWa
         onOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow.filter {
             !it.replyInThread
         }
+
+        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
 
         onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
             .filterNotNull()

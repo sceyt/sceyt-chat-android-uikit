@@ -11,7 +11,6 @@ import com.sceyt.chat.ui.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.toSceytUiChannel
-import com.sceyt.chat.ui.data.toSceytUiMessage
 import com.sceyt.chat.ui.extensions.asAppCompatActivity
 import com.sceyt.chat.ui.extensions.awaitAnimationEnd
 import com.sceyt.chat.ui.extensions.customToastSnackBar
@@ -79,7 +78,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
 
     lifecycleOwner.lifecycleScope.launch {
         onNewMessageFlow.collect {
-            if (!channelsListView.updateLastMessage(it.second.toSceytUiMessage(), false, it.first.unreadMessageCount)) {
+            if (!channelsListView.updateLastMessage(it.second, false, it.first.unreadMessageCount)) {
                 getChannels(0, query = searchQuery)
             }
         }
@@ -104,6 +103,12 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     lifecycleOwner.lifecycleScope.launch {
         onMessageStatusFlow.collect {
             channelsListView.updateLastMessageStatus(it)
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        onOutGoingMessageStatusFlow.collect {
+            channelsListView.updateOutgoingLastMessageStatus(it)
         }
     }
 

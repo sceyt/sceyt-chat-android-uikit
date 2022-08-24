@@ -184,7 +184,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private suspend fun addNewServerMessagesAndSort(newMessages: ArrayList<MessageListItem>,
-                                                    currentMessages: List<MessageListItem>, hasLoadingItem: Boolean) {
+                                                    currentMessages: List<MessageListItem>, hasLoadingItem: Boolean,
+                                                    mappingCb: (List<MessageListItem>, Boolean) -> List<MessageListItem>) {
         if (newMessages.isNotEmpty()) {
             val messages2 = ArrayList(currentMessages)
             messages2.addAll(newMessages)
@@ -195,58 +196,64 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     is MessageListItem.LoadingMoreItem -> 0
                 }
             }
+            val initList = mappingCb.invoke(messages2, hasLoadingItem)
 
             withContext(Dispatchers.Main) {
                 messagesRV.awaitAnimationEnd {
                     if (messages2.isNotEmpty()) {
                         val isLastItemDisplaying = messagesRV.isLastItemDisplaying()
-                        messagesRV.setData(messages2)
+                        messagesRV.setData(initList)
+
+                        if (!hasLoadingItem)
+                            messagesRV.hideLoadingItem()
+
                         if (isLastItemDisplaying)
-                            messagesRV.scrollToPosition(messages2.size - 1)
+                            messagesRV.scrollToPosition(initList.size - 1)
                     }
                 }
-
-                if (!hasLoadingItem)
-                    messagesRV.hideLoadingItem()
             }
         }
     }
 
-    internal fun updateMessagesWithServerData(data: List<MessageListItem>, offset: Int, lifecycleOwner: LifecycleOwner) {
+    internal fun updateMessagesWithServerData(data: List<MessageListItem>, offset: Int, lifecycleOwner: LifecycleOwner,
+                                              mapingCb: (List<MessageListItem>, Boolean) -> List<MessageListItem>) {
         val currentMessages = messagesRV.getData() ?: arrayListOf()
         if (currentMessages.isEmpty() || data.isEmpty() && offset == 0) {
             messagesRV.setData(data)
             return
-        }
+        } else if (data.isEmpty() && offset > 0)
+            messagesRV.hideLoadingItem()
 
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             var dataHasLoadingItem = false
             val newMessages: ArrayList<MessageListItem> = arrayListOf()
-            // Update UI messages if exist, or add new messages
+            // Update UI messages if exist and have diff, or add new messages
             data.forEach { dataItem ->
                 if (!dataHasLoadingItem)
                     dataHasLoadingItem = dataItem is MessageListItem.LoadingMoreItem
 
-                if (dataItem !is MessageListItem.LoadingMoreItem && dataItem !is MessageListItem.DateSeparatorItem) {
+                if (dataItem is MessageListItem.MessageItem) {
                     currentMessages.findIndexed {
-                        it is MessageListItem.MessageItem && dataItem is MessageListItem.MessageItem &&
-                                it.message.id == dataItem.message.id
+                        it is MessageListItem.MessageItem && it.message.id == dataItem.message.id
                     }?.let {
                         val oldItem = currentMessages[it.first] as MessageListItem.MessageItem
-                        val diff = oldItem.message.diff((dataItem as MessageListItem.MessageItem).message)
+                        val diff = oldItem.message.diff(dataItem.message)
+
                         if (diff.hasDifference()) {
                             currentMessages[it.first] = dataItem
                             messagesRV.notifyItemChangedSafety(it.first, diff)
-                            Log.i(TAG, "update: changed item ${dataItem.message.body}")
+                            Log.i(TAG, "update: changed item ${dataItem.message.body} $diff")
                         }
                     } ?: run {
-                        Log.i(TAG, "update: addNewMessage ${(dataItem as MessageListItem.MessageItem).message.body}")
+                        Log.i(TAG, "update: addNewMessage ${dataItem.message.body}")
                         newMessages.add(dataItem)
                     }
+                } else if (!currentMessages.contains(dataItem)) {
+                    newMessages.add(dataItem)
                 }
             }
             // Add new messages and sort list
-            addNewServerMessagesAndSort(newMessages, currentMessages, dataHasLoadingItem)
+            addNewServerMessagesAndSort(newMessages, currentMessages, dataHasLoadingItem, mapingCb)
         }
     }
 

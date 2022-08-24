@@ -12,7 +12,6 @@ import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.repositories.ChannelsRepository
-import com.sceyt.chat.ui.data.toGroupChannel
 import com.sceyt.chat.ui.data.toMember
 import com.sceyt.chat.ui.extensions.TAG
 import com.sceyt.chat.ui.persistence.dao.ChannelDao
@@ -112,7 +111,7 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun changeChannelOwner(channel: SceytChannel, newOwnerId: String): SceytResponse<SceytChannel> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.changeChannelOwner(channel.toGroupChannel(), newOwnerId)
+        val response = channelsRepository.changeChannelOwner(channel, newOwnerId)
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
@@ -124,7 +123,7 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun changeChannelMemberRole(channel: SceytChannel, member: SceytMember): SceytResponse<SceytChannel> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.changeChannelMemberRole(channel.toGroupChannel(), member.toMember())
+        val response = channelsRepository.changeChannelMemberRole(channel, member.toMember())
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.let { members ->
@@ -142,7 +141,7 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun addMembersToChannel(channel: SceytChannel, members: List<Member>): SceytResponse<SceytChannel> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.addMembersToChannel(channel.toGroupChannel(), members)
+        val response = channelsRepository.addMembersToChannel(channel, members)
 
         if (response is SceytResponse.Success) {
             usersDao.insertUsers(members.map { it.toUserEntity() })
@@ -155,7 +154,7 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun blockAndDeleteMember(channel: SceytChannel, memberId: String): SceytResponse<SceytChannel> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.blockAndDeleteMember(channel.toGroupChannel(), memberId)
+        val response = channelsRepository.blockAndDeleteMember(channel, memberId)
 
         if (response is SceytResponse.Success)
             channelDao.deleteUserChatLinks(channel.id, memberId)
@@ -165,7 +164,7 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun deleteMember(channel: SceytChannel, memberId: String): SceytResponse<SceytChannel> {
         require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.deleteMember(channel.toGroupChannel(), memberId)
+        val response = channelsRepository.deleteMember(channel, memberId)
 
         if (response is SceytResponse.Success)
             channelDao.deleteUserChatLinks(channel.id, memberId)

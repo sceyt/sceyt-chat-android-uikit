@@ -31,4 +31,10 @@ data class MessageItemPayloadDiff(
             filesChanged = true
         )
     }
+
+    override fun toString(): String {
+        return "edited: $edited, bodyChanged: $bodyChanged, statusChanged: $statusChanged, avatarChanged: $avatarChanged, " +
+                "nameChanged: $nameChanged, replayCountChanged: $replayCountChanged, reactionsChanged: $reactionsChanged, " +
+                "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged"
+    }
 }

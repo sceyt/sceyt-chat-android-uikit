@@ -149,11 +149,11 @@ object ChannelEventsObserver {
             }
 
             override fun onDeliveryReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel, from, DeliveryStatus.Delivered, messageIds))
+                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel?.id, from, DeliveryStatus.Delivered, messageIds))
             }
 
             override fun onReadReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel, from, DeliveryStatus.Read, messageIds))
+                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel?.id, from, DeliveryStatus.Read, messageIds))
             }
         })
     }

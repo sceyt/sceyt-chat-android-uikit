@@ -18,6 +18,7 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.models.channels.ChannelTypeEnum
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.data.models.channels.SceytDirectChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.toSceytMember
 import com.sceyt.chat.ui.databinding.ActivityConversationInfoBinding
 import com.sceyt.chat.ui.extensions.*
@@ -293,7 +294,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     protected fun editChannel(subject: String, avatarUrl: String?) {
-        viewModel.saveChanges(channel, subject, avatarUrl)
+        viewModel.saveChanges(channel as SceytGroupChannel, subject, avatarUrl)
     }
 
     protected fun clearHistory() {

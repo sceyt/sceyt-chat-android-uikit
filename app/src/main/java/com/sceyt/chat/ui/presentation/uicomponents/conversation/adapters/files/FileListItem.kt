@@ -5,25 +5,26 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.ui.data.models.messages.FileLoadData
+import com.sceyt.chat.ui.data.models.messages.SceytAttachment
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
 import kotlin.math.max
 
 sealed class FileListItem() {
-    lateinit var file: Attachment
+    lateinit var file: SceytAttachment
     lateinit var sceytMessage: SceytMessage
 
-    constructor(file: Attachment, sceytMessage: SceytMessage) : this() {
+    constructor(file: SceytAttachment, sceytMessage: SceytMessage) : this() {
         this.file = file
         this.sceytMessage = sceytMessage
     }
 
-    data class File(val attachment: Attachment,
+    data class File(val attachment: SceytAttachment,
                     val message: SceytMessage) : FileListItem(attachment, message)
 
-    data class Image(val attachment: Attachment,
+    data class Image(val attachment: SceytAttachment,
                      val message: SceytMessage) : FileListItem(attachment, message)
 
-    data class Video(val attachment: Attachment,
+    data class Video(val attachment: SceytAttachment,
                      val message: SceytMessage) : FileListItem(attachment, message)
 
     object LoadingMoreItem : FileListItem()
@@ -80,5 +81,21 @@ sealed class FileListItem() {
         fileLoadData.update(progress, loading = false, success = success)
         downloadProgressListener?.invoke(fileLoadData, result)
     }
+}
+
+private fun SceytAttachment.setUploaderProgress(progressCallback: ProgressCallback) {
+    Attachment.Builder(url, type)
+        .setName(name)
+        .setMetadata(metadata)
+        .withTid(tid)
+        .build().setUploaderProgress(progressCallback)
+}
+
+private fun SceytAttachment.setUploaderCompletion(progressCallback: ActionCallback) {
+    Attachment.Builder(url, type)
+        .setName(name)
+        .setMetadata(metadata)
+        .withTid(tid)
+        .build().setUploaderCompletion(progressCallback)
 }
 

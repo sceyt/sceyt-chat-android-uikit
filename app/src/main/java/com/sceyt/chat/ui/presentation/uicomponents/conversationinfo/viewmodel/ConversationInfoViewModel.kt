@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.persistence.PersistenceChanelMiddleWare
 import com.sceyt.chat.ui.persistence.PersistenceMembersMiddleWare
 import com.sceyt.chat.ui.presentation.root.BaseViewModel
@@ -47,7 +48,7 @@ class ConversationInfoViewModel : BaseViewModel(), KoinComponent {
         }
     }
 
-    fun saveChanges(channel: SceytChannel, newSubject: String, avatarUrl: String?) {
+    fun saveChanges(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.editChannel(channel, newSubject, avatarUrl)
             notifyResponseAndPageState(_editChannelLiveData, response)

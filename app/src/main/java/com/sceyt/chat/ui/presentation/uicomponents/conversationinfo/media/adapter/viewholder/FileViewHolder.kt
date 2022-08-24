@@ -30,11 +30,11 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
             tvFileName.text = file.name
 
             val sizeText = if (item.message.incoming) {
-                file.uploadedFileSize.toPrettySize()
+                file.fileSize.toPrettySize()
             } else {
-                val size = if (file.uploadedFileSize == 0L) {
+                val size = if (file.fileSize == 0L) {
                     getFileSize(file.url)
-                } else file.uploadedFileSize
+                } else file.fileSize
 
                 size.toPrettySize()
             }

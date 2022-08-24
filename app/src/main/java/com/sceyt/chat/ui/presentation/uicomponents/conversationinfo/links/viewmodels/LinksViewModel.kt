@@ -28,7 +28,7 @@ class LinksViewModel(private val messagesRepository: MessagesRepository) : BaseV
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.getMessagesByType(channel.toChannel(), lastMessageId, type)
+            val response = messagesRepository.getMessagesByType(channel, lastMessageId, type)
             initResponse(response, isLoadingMore)
         }
     }

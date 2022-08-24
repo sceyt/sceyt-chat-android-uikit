@@ -1,4 +1,4 @@
-package com.sceyt.chat.ui.extensions
+package com.sceyt.chat.ui.presentation.common
 
 import android.os.Build
 import androidx.annotation.RequiresApi

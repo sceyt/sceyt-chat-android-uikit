@@ -65,7 +65,10 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
                 is PaginationResponse.ServerResponse -> {
                     if (it.data is SceytResponse.Success) {
                         it.data.data?.let { data ->
-                            messagesListView.updateMessagesWithServerData(data, it.offset, lifecycleOwner)
+                            messagesListView.updateMessagesWithServerData(data, it.offset, lifecycleOwner) { list ,hasNext->
+
+                                return@updateMessagesWithServerData mapToMessageListItem(list.filterIsInstance<MessageListItem.MessageItem>().map { messageItem -> messageItem.message }, hasNext)
+                            }
                         }
                     }
                     notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
@@ -191,7 +194,7 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             }
             is SceytResponse.Error -> {
                 it.data?.let { msg ->
-                    messagesListView.messageSendFailed(msg.tid)
+                    //messagesListView.messageSendFailed(msg.tid)
                 }
                 customToastSnackBar(messagesListView, it.message ?: "")
             }
@@ -309,7 +312,7 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
             }
         }
 
-        override fun sendEditMessage(message: Message) {
+        override fun sendEditMessage(message: SceytMessage) {
             this@bindView.editMessage(message)
             messageInputView.cancelReplay()
         }

@@ -27,7 +27,3 @@ sealed class PaginationResponse<T> {
     /** Default value */
     class Nothing<T> : PaginationResponse<T>()
 }
-
-fun <A, B> PaginationResponse.ServerResponse<A>.mapTo(data: SceytResponse<List<B>>, dbData: List<B>) {
-    PaginationResponse.ServerResponse(data = data, dbData = dbData, offset = offset, hasNext = hasNext)
-}

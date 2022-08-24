@@ -34,11 +34,11 @@ class MessageFileViewHolder(
             tvFileName.text = file.name
 
             if (item.message.incoming) {
-                tvFileSize.text = file.uploadedFileSize.toPrettySize()
+                tvFileSize.text = file.fileSize.toPrettySize()
             } else {
-                val size = if (file.uploadedFileSize == 0L) {
+                val size = if (file.fileSize == 0L) {
                     getFileSize(file.url)
-                } else file.uploadedFileSize
+                } else file.fileSize
 
                 tvFileSize.text = size.toPrettySize()
             }

@@ -1,6 +1,5 @@
 package com.sceyt.chat.ui.persistence
 
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -15,9 +14,10 @@ import com.sceyt.chat.ui.data.models.PaginationResponse
 import com.sceyt.chat.ui.data.models.SceytResponse
 import com.sceyt.chat.ui.data.models.channels.CreateChannelData
 import com.sceyt.chat.ui.data.models.channels.SceytChannel
+import com.sceyt.chat.ui.data.models.channels.SceytGroupChannel
 import com.sceyt.chat.ui.data.models.channels.SceytMember
 import com.sceyt.chat.ui.data.models.messages.SceytMessage
-import com.sceyt.chat.ui.persistence.logics.PersistenceChannelLogic
+import com.sceyt.chat.ui.persistence.logics.PersistenceChannelsLogic
 import com.sceyt.chat.ui.persistence.logics.PersistenceMembersLogic
 import com.sceyt.chat.ui.persistence.logics.PersistenceMessagesLogic
 import kotlinx.coroutines.CoroutineScope
@@ -29,20 +29,21 @@ import kotlin.coroutines.CoroutineContext
 
 
 internal class PersistenceMiddleWareImpl(
-        private val channelLogic: PersistenceChannelLogic,
+        private val channelLogic: PersistenceChannelsLogic,
         private val messagesLogic: PersistenceMessagesLogic,
-        private val membersLogic: PersistenceMembersLogic) : PersistenceChanelMiddleWare,
-        PersistenceMembersMiddleWare, PersistenceMessagesMiddleWare, CoroutineScope {
+        private val membersLogic: PersistenceMembersLogic) : CoroutineScope,
+        PersistenceMembersMiddleWare, PersistenceMessagesMiddleWare, PersistenceChanelMiddleWare {
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
 
     init {
+        // Channel events
         launch { ChannelEventsObserver.onChannelEventFlow.collect(::onChannelEvent) }
         launch { ChannelEventsObserver.onChannelMembersEventFlow.collect(::onChannelMemberEvent) }
         launch { ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect(::onChannelOwnerChangedEvent) }
+        // Message events
         launch { ChannelEventsObserver.onMessageStatusFlow.collect(::onMessageStatusChangeEvent) }
-
         launch { MessageEventsObserver.onMessageFlow.collect(::onMessage) }
         launch { MessageEventsObserver.onMessageReactionUpdatedFlow.collect(::onMessageReactionUpdated) }
         launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
@@ -60,11 +61,11 @@ internal class PersistenceMiddleWareImpl(
         membersLogic.onChannelOwnerChangedEvent(data)
     }
 
-    private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
+    private suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         messagesLogic.onMessageStatusChangeEvent(data)
     }
 
-    private fun onMessage(data: Pair<Channel, Message>) {
+    private suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         messagesLogic.onMessage(data)
         channelLogic.onMessage(data)
     }
@@ -121,7 +122,7 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.getChannelFromServer(channelId)
     }
 
-    override suspend fun editChannel(channel: SceytChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
+    override suspend fun editChannel(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
         return channelLogic.editChannel(channel, newSubject, avatarUrl)
     }
 
@@ -158,5 +159,13 @@ internal class PersistenceMiddleWareImpl(
                                       lastMessageId: Long,
                                       replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadMessages(channel, conversationId, lastMessageId, replayInThread, offset)
+    }
+
+    override suspend fun sendMessage(channel: SceytChannel, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
+        return messagesLogic.sendMessage(channel, message, tmpMessageCb)
+    }
+
+    override suspend fun deleteMessage(channel: SceytChannel, messageId: Long): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channel, messageId)
     }
 }
