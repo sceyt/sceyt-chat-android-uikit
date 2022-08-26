@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Channel popup ids-->
+    <item name="sceyt_delete_channel" type="id" />
+    <item name="sceyt_leave_channel" type="id" />
+    <item name="sceyt_mark_as_read" type="id" />
+    <item name="sceyt_mark_as_unread" type="id" />
+    <item name="sceyt_block_channel" type="id" />
+    <item name="sceyt_block_user" type="id" />
+    <item name="sceyt_un_block_user" type="id" />
+    <item name="sceyt_clear_history" type="id" />
+
+    <!-- Message popup ids-->
+    <item name="sceyt_edit_message" type="id" />
+    <item name="sceyt_delete_message" type="id" />
+    <item name="sceyt_copy_message" type="id" />
+    <item name="sceyt_react" type="id" />
+    <item name="sceyt_replay" type="id" />
+    <item name="sceyt_replay_in_thread" type="id" />
+
+    <!-- Reaction popup ids-->
+    <item name="sceyt_remove" type="id" />
+    <item name="sceyt_delete" type="id" />
+    <item name="sceyt_add" type="id" />
+
+    <!-- Member popup ids-->
+    <item name="sceyt_set_owner" type="id" />
+    <item name="sceyt_change_role" type="id" />
+    <item name="sceyt_kick_member" type="id" />
+    <item name="sceyt_block_and_kick_member" type="id" />
+</resources>

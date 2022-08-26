@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <font
+        app:font="@font/roboto_medium_font"
+        app:fontStyle="normal"
+        app:fontWeight="500"
+        tools:ignore="ResourceCycle" />
+    <font
+        app:font="@font/roboto_medium_italic_font"
+        app:fontStyle="italic"
+        app:fontWeight="500"
+        tools:ignore="ResourceCycle" />
+
+</font-family>

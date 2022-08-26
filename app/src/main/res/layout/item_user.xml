@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="15dp">
 
-    <com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -17,7 +17,7 @@
         app:sceytAvatarViewFullName="Art d"
         app:sceytAvatarViewTextSize="15sp" />
 
-    <com.sceyt.chat.ui.presentation.customviews.SceytOnlineView
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"

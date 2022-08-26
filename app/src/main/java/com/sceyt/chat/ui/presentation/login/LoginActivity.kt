@@ -7,20 +7,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.SceytUiKitApp
-import com.sceyt.chat.ui.data.SceytSharedPreference
+import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.databinding.ActivityLoginBinding
-import com.sceyt.chat.ui.extensions.hideSoftInput
-import com.sceyt.chat.ui.extensions.isNightTheme
-import com.sceyt.chat.ui.extensions.launchActivity
-import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chat.ui.presentation.login.viewmodel.LoginViewModel
 import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
-import com.sceyt.chat.ui.presentation.root.PageState
+import com.sceyt.sceytchatuikit.extensions.hideSoftInput
+import com.sceyt.sceytchatuikit.extensions.isNightTheme
+import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
 import org.koin.android.ext.android.inject
 
 class LoginActivity : AppCompatActivity() {
-    private val viewModel: LoginViewModel by viewModels()
-    private val preference by inject<SceytSharedPreference>()
+    private val viewModel: ProfileViewModel by viewModels()
+    private val preference by inject<AppSharedPreference>()
     private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +47,7 @@ class LoginActivity : AppCompatActivity() {
             binding.loading = it is PageState.StateLoading
         }
 
-        viewModel.editNameLiveData.observe(this) {
+        viewModel.editProfileLiveData.observe(this) {
             launchActivity<MainActivity>()
             finish()
         }
@@ -86,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
         (application as SceytUiKitApp).connectWithoutToken(userId)
             .observe(this) { success ->
                 if (success == true) {
-                    viewModel.updateDisplayName(displayName)
+                    viewModel.saveProfile(displayName,null,false)
                 } else {
                     binding.userNameTextField.error = getString(R.string.connection_failed)
                     binding.loading = false

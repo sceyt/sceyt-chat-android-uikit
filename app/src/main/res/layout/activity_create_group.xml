@@ -83,7 +83,7 @@
             android:layout_height="match_parent"
             android:paddingHorizontal="16dp">
 
-            <com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
+            <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
                 android:id="@+id/avatar"
                 android:layout_width="72dp"
                 android:layout_height="72dp"

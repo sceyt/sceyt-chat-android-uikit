@@ -8,7 +8,7 @@
     android:paddingEnd="5dp"
     android:paddingBottom="6dp">
 
-    <com.sceyt.chat.ui.presentation.customviews.SceytAvatarView
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="48dp"
         android:layout_height="48dp"
@@ -36,7 +36,7 @@
 
     </FrameLayout>
 
-    <com.sceyt.chat.ui.presentation.customviews.SceytOnlineView
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"

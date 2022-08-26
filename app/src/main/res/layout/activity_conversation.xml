@@ -5,15 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sceyt_color_bg"
-    tools:context=".presentation.uicomponents.conversation.ConversationActivity">
+    tools:context=".presentation.conversation.ConversationActivity">
 
-    <com.sceyt.chat.ui.presentation.uicomponents.conversationheader.ConversationHeaderView
+    <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
         android:id="@+id/headerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chat.ui.presentation.uicomponents.conversation.MessagesListView
+    <com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
         android:id="@+id/messagesListView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -24,7 +24,7 @@
         app:layout_constraintBottom_toTopOf="@+id/messageInputView"
         app:layout_constraintTop_toBottomOf="@+id/headerView" />
 
-    <com.sceyt.chat.ui.presentation.uicomponents.messageinput.MessageInputView
+    <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
         android:id="@+id/messageInputView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

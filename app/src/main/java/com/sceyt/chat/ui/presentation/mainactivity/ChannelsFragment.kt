@@ -12,25 +12,25 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.SceytUiKitApp
-import com.sceyt.chat.ui.data.models.channels.SceytChannel
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
-import com.sceyt.chat.ui.databinding.SceytItemChannelBinding
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
-import com.sceyt.chat.ui.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
-import com.sceyt.chat.ui.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
-import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
-import com.sceyt.chat.ui.presentation.uicomponents.channels.viewmodels.bindView
-import com.sceyt.chat.ui.presentation.uicomponents.newchannel.NewChannelActivity
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
+import com.sceyt.chat.ui.presentation.newchannel.NewChannelActivity
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.bindView
 
 
 class ChannelsFragment : Fragment() {
     private lateinit var binding: FragmentChannelsBinding
-    private val mViewModel: ChannelsViewModel by viewModel()
+    private val mViewModel: ChannelsViewModel by viewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentChannelsBinding.inflate(inflater, container, false)
@@ -58,7 +58,7 @@ class ChannelsFragment : Fragment() {
         binding.channelListView.setCustomChannelClickListeners(object : ChannelClickListenersImpl(binding.channelListView) {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
                 super.onChannelClick(item)
-                println("onChannelClick")
+                ConversationActivity.newInstance(requireContext(), item.channel)
             }
         })
 

@@ -130,6 +130,7 @@
     <string name="sceyt_no_media_items_yet">No media items yet</string>
     <string name="sceyt_no_file_items_yet">No file items yet</string>
     <string name="sceyt_no_link_items_yet">No link items yet</string>
+
     <string name="history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="disable_notifications">Disable notifications</string>
     <string name="mute_for_1_hour">Mute for 1 hour</string>

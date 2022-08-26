@@ -5,18 +5,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityMainBinding
-import com.sceyt.chat.ui.extensions.isNightTheme
-import com.sceyt.chat.ui.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chat.ui.persistence.SceytDatabase
 import com.sceyt.chat.ui.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.ui.presentation.mainactivity.profile.ProfileFragment
-import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import org.koin.android.ext.android.inject
+import com.sceyt.sceytchatuikit.extensions.isNightTheme
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val appDatabase: SceytDatabase by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,13 +26,6 @@ class MainActivity : AppCompatActivity() {
 
         setPagerAdapter()
         setBottomNavClickListeners()
-
-
-        binding.con.setOnLongClickListener {
-            appDatabase.clearAllTables()
-            Toast.makeText(this,"Database was cleared",Toast.LENGTH_SHORT).show()
-            return@setOnLongClickListener false
-        }
     }
 
     override fun onBackPressed() {

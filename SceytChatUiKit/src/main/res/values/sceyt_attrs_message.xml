@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MessagesListView">
+
+        <attr name="sceytUiMessageIncBubbleColor" format="reference" />
+        <attr name="sceytUiMessageOutBubbleColor" format="reference" />
+
+
+    </declare-styleable>
+</resources>

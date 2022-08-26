@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".presentation.uicomponents.changerole.ChangeRoleActivity"
+    tools:context=".presentation.changerole.ChangeRoleActivity"
     android:background="@color/sceyt_color_bg">
 
     <androidx.constraintlayout.widget.ConstraintLayout

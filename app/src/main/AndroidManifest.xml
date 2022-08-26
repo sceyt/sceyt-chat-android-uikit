@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.sceyt.chat.ui">
+
+    <dist:module dist:instant="true" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -18,7 +21,6 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute">
-
         <activity
             android:name=".presentation.login.LoginActivity"
             android:exported="true"
@@ -30,45 +32,37 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name=".presentation.uicomponents.changerole.ChangeRoleActivity"
+            android:name="com.sceyt.chat.ui.presentation.changerole.ChangeRoleActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
-            android:name=".presentation.uicomponents.conversationinfo.CustomConversationInfoActivity"
+            android:name=".presentation.conversationinfo.CustomConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustNothing" />
-
         <activity
-            android:name="com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
+            android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustNothing" />
-
         <activity
-            android:name=".presentation.uicomponents.conversation.ConversationActivity"
+            android:name=".presentation.conversation.ConversationActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
-
         <activity
-            android:name=".presentation.uicomponents.addmembers.AddMembersActivity"
+            android:name="com.sceyt.chat.ui.presentation.addmembers.AddMembersActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
-            android:name=".presentation.uicomponents.newchannel.NewChannelActivity"
+            android:name="com.sceyt.chat.ui.presentation.newchannel.NewChannelActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
-            android:name=".presentation.uicomponents.creategroup.CreateGroupActivity"
+            android:name="com.sceyt.chat.ui.presentation.creategroup.CreateGroupActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
             android:name=".presentation.mainactivity.MainActivity"
             android:configChanges="uiMode"
@@ -87,13 +81,12 @@
         </provider>
 
         <service
-            android:name=".services.SceytFirebaseMessageReceiver"
+            android:name="com.sceyt.sceytchatuikit.services.SceytFirebaseMessageReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
     </application>
 
 </manifest>
