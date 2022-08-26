@@ -81,4 +81,5 @@
         <item name="colorControlActivated">@color/sceyt_color_accent</item>
         <item name="colorControlHighlight">@color/sceyt_color_accent</item>
     </style>
+
 </resources>

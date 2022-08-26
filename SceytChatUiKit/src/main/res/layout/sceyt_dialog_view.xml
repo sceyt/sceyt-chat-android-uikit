@@ -41,7 +41,7 @@
         android:background="?attr/selectableItemBackground"
         android:fontFamily="@font/roboto_medium"
         android:padding="8dp"
-        android:text="@string/cancel"
+        android:text="@string/sceyt_cancel"
         android:textAllCaps="false"
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/mediumTextSize"

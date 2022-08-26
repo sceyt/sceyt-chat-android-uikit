@@ -18,6 +18,8 @@ import com.sceyt.chat.ui.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
+import com.sceyt.sceytchatuikit.R.*
+import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
 
 class NewChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNewChannelBinding
@@ -65,7 +67,7 @@ class NewChannelActivity : AppCompatActivity() {
 
         binding.tvNewGroup.setOnClickListener {
             addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this))
-            overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            overridePendingTransition(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
         }
     }
 
@@ -101,7 +103,7 @@ class NewChannelActivity : AppCompatActivity() {
             viewModel.loadUsers(isLoadMore = false)
         } else {
             super.onBackPressed()
-            overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+            overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
         }
     }
 
@@ -109,7 +111,7 @@ class NewChannelActivity : AppCompatActivity() {
 
         fun launch(context: Context) {
             context.launchActivity<NewChannelActivity>()
-            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asAppCompatActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
         }
     }
 }

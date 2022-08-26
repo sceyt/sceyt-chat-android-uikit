@@ -34,7 +34,7 @@ object SearchInputViewStyle {
         hintTextColor = typedArray.getResourceId(R.styleable.SearchInputView_sceytUiHintTextColor, hintTextColor)
         backgroundColor = typedArray.getResourceId(R.styleable.SearchInputView_sceytUiBackgroundColor, backgroundColor)
         hintText = typedArray.getString(R.styleable.SearchInputView_sceytUiHintText)
-                ?: context.getString(R.string.search_for_channels)
+                ?: context.getString(R.string.sceyt_search_for_channels)
         disableDebouncedSearch = typedArray.getBoolean(R.styleable.SearchInputView_sceytUiDisableDebouncedSearch, disableDebouncedSearch)
         return this
     }

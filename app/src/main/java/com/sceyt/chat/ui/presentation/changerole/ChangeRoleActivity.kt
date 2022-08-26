@@ -11,6 +11,7 @@ import com.sceyt.chat.ui.databinding.ActivityChooseRoleBinding
 import com.sceyt.chat.ui.presentation.changerole.adapter.ChooseRoleAdapter
 import com.sceyt.chat.ui.presentation.changerole.adapter.RoleItem
 import com.sceyt.chat.ui.presentation.changerole.viewmodel.RoleViewModel
+import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.isNightTheme
@@ -84,12 +85,12 @@ class ChangeRoleActivity : AppCompatActivity() {
         result.putExtra(MEMBER, intent.getParcelableExtra<SceytMember>(MEMBER))
         setResult(Activity.RESULT_OK, result)
         finish()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 
     companion object {

@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
+import com.sceyt.sceytchatuikit.R.*
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 
 class CreateGroupActivity : AppCompatActivity() {
@@ -108,7 +109,7 @@ class CreateGroupActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 
     companion object {
@@ -118,8 +119,8 @@ class CreateGroupActivity : AppCompatActivity() {
             context.launchActivity<CreateGroupActivity> {
                 putParcelableArrayListExtra(MEMBERS, members)
             }
-            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right,
-                R.anim.sceyt_anim_slide_hold)
+            context.asAppCompatActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right,
+                anim.sceyt_anim_slide_hold)
         }
     }
 }

@@ -5,31 +5,31 @@
     <item
         android:id="@+id/sceyt_edit_message"
         android:icon="@drawable/sceyt_ic_edit_stroked"
-        android:title="@string/editing_message"
+        android:title="@string/sceyt_edit_message"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/sceyt_react"
         android:icon="@drawable/sceyt_ic_react"
-        android:title="@string/react"
+        android:title="@string/sceyt_react"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/sceyt_replay"
         android:icon="@drawable/sceyt_ic_replay"
-        android:title="@string/replay"
+        android:title="@string/sceyt_replay"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_replay_in_thread"
         android:icon="@drawable/sceyt_ic_replay_in_thread"
-        android:title="@string/replay_in_thread"
+        android:title="@string/sceyt_replay_in_thread"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_copy_message"
         android:icon="@drawable/sceyt_ic_copy"
-        android:title="@string/copy"
+        android:title="@string/sceyt_copy"
         app:showAsAction="ifRoom" />
 
     <item

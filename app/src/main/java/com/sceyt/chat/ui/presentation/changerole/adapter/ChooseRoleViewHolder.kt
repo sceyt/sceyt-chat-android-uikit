@@ -1,9 +1,9 @@
 package com.sceyt.chat.ui.presentation.changerole.adapter
 
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.databinding.SceytItemChooseRoleBinding
+import com.sceyt.chat.ui.databinding.ItemChooseRoleBinding
 
-class ChooseRoleViewHolder(private val binding: SceytItemChooseRoleBinding,
+class ChooseRoleViewHolder(private val binding: ItemChooseRoleBinding,
                            private val clickListener: ChooseRoleAdapter.ChooseRoleListener) :
         RecyclerView.ViewHolder(binding.root) {
 

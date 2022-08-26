@@ -14,9 +14,9 @@ import java.io.File
 
 fun SceytMessage.getShowBody(context: Context): String {
     return when {
-        state == MessageState.Deleted -> context.getString(R.string.message_was_deleted)
+        state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() -> body.trim()
-        else -> context.getString(R.string.attachment)
+        else -> context.getString(R.string.sceyt_attachment)
     }
 }
 

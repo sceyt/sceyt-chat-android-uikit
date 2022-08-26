@@ -18,7 +18,7 @@
     <item
         android:id="@+id/sceyt_clear_history"
         android:icon="@drawable/sceyt_ic_trash"
-        android:title="@string/clear_history"
+        android:title="@string/sceyt_clear_history"
         app:showAsAction="ifRoom" />
 
     <item

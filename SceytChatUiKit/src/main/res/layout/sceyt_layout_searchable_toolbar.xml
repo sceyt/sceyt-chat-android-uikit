@@ -41,7 +41,7 @@
         android:layout_marginStart="15dp"
         android:animateLayoutChanges="true"
         android:background="@null"
-        android:hint="@string/search"
+        android:hint="@string/sceyt_search"
         android:padding="10dp"
         android:textColor="@color/sceyt_color_text_themed"
         android:textColorHint="@color/sceyt_color_hint"

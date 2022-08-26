@@ -19,7 +19,7 @@ class DateSeparatorViewHolder(
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = when {
-                DateUtils.isToday(createdAt) -> itemView.context.getString(R.string.today)
+                DateUtils.isToday(createdAt) -> itemView.context.getString(R.string.sceyt_today)
                 else -> DateTimeUtil.getDateTimeString(createdAt, "MMMM dd")
             }
             binding.messageDay.text = dateText
