@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <declare-styleable name="ConversationHeaderView">
-        <attr name="sceytConvHeaderBackIcon" format="reference" />
-        <attr name="sceytConvHeaderTitleColor" format="reference" />
-        <attr name="sceytConvHeaderSubTitleColor" format="reference" />
-    </declare-styleable>
-</resources>

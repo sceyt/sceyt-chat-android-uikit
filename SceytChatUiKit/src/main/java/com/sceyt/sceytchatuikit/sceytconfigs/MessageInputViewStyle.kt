@@ -28,7 +28,7 @@ object MessageInputViewStyle {
         inputTextColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputTextColor, inputTextColor)
         inputHintTextColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputHintTextColor, inputHintTextColor)
         inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytMessageInputHintText)
-                ?: context.getString(R.string.message)
+                ?: context.getString(R.string.sceyt_message)
         return this
     }
 }

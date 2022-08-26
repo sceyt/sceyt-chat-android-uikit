@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/add_members" />
+        app:sceytSearchableToolbarTitle="@string/sceyt_add_members" />
 
     <View
         android:id="@+id/dividerToolbar"

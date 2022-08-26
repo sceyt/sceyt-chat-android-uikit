@@ -16,7 +16,7 @@
         android:lines="1"
         android:paddingHorizontal="15dp"
         android:paddingBottom="10dp"
-        android:text="@string/add_members"
+        android:text="@string/sceyt_add_members"
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintEnd_toEndOf="parent"

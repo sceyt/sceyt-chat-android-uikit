@@ -79,13 +79,13 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             val title = if (channel is SceytDirectChannel) {
                 val member = channel.peer ?: return@post
                 if (member.user.presence?.state == PresenceState.Online) {
-                    getString(R.string.online)
+                    getString(R.string.sceyt_online)
                 } else {
                     if (member.user.presence?.lastActiveAt != 0L)
                         setLastActiveDateByTime(member.user.presence.lastActiveAt)
                     else null
                 }
-            } else getString(R.string.members_count, (channel as SceytGroupChannel).memberCount)
+            } else getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
 
             binding.subTitle.text = title
             binding.subTitle.isVisible = !title.isNullOrBlank() && !isTyping
@@ -105,12 +105,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     internal fun setReplayMessage(message: SceytMessage?) {
         binding.avatar.isVisible = false
         with(binding.title) {
-            text = getString(R.string.thread_replay)
+            text = getString(R.string.sceyt_thread_replay)
             (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
         }
 
         val fullName = message?.from?.fullName
-        val subTitleText = String.format(getString(R.string.with), fullName)
+        val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
         binding.subTitle.text = subTitleText
         binding.subTitle.isVisible = !fullName.isNullOrBlank() && !isTyping
     }

@@ -57,7 +57,7 @@ abstract class BaseMsgViewHolder(view: View,
     protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: SceytToReplayLineView, item: MessageListItem.MessageItem) {
         val replayCount = item.message.replyCount
         if (replayCount > 0) {
-            tvReplayCount.text = "$replayCount ${itemView.context.getString(R.string.replays)}"
+            tvReplayCount.text = "$replayCount ${itemView.context.getString(R.string.sceyt_replays)}"
             tvReplayCount.isVisible = true
             toReplayLine.isVisible = true
 

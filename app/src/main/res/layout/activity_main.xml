@@ -37,7 +37,7 @@
             app:itemTextAppearanceInactive="@style/SceytBottomNavigationTextStyle"
             app:itemTextColor="@color/bottom_nav_item_color"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:menu="@menu/sceyt_menu_bottom_navigation" />
+            app:menu="@menu/menu_bottom_navigation" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

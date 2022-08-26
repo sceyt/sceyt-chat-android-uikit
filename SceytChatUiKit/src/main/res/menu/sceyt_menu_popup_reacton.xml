@@ -4,11 +4,11 @@
 
     <item
         android:id="@+id/sceyt_add"
-        android:title="@string/add"
+        android:title="@string/sceyt_add"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_remove"
-        android:title="@string/remove"
+        android:title="@string/sceyt_remove"
         app:showAsAction="ifRoom" />
 </menu>

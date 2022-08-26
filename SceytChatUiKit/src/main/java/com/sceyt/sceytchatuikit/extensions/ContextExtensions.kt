@@ -72,7 +72,7 @@ fun Context.asActivity(): Activity {
 
 fun Context.getFileUriWithProvider(file: File): Uri {
     return FileProvider.getUriForFile(this,
-        "BuildConfig.APPLICATION_ID" + ".provider", file)
+        "$packageName.provider", file)
 }
 
 fun Context.shortToast(message: String) {

@@ -8,13 +8,13 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityAddMembersBinding
 import com.sceyt.chat.ui.presentation.addmembers.adapters.SelectableUsersAdapter
 import com.sceyt.chat.ui.presentation.addmembers.adapters.SelectedUsersAdapter
 import com.sceyt.chat.ui.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.ui.presentation.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
 import com.sceyt.chat.ui.presentation.addmembers.viewmodel.UsersViewModel
+import com.sceyt.sceytchatuikit.R.*
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.isNightTheme
@@ -144,7 +144,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 
     companion object {

@@ -12,7 +12,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/take_photo"
+        android:text="@string/sceyt_take_photo"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -23,7 +23,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/upload_from_gallery"
+        android:text="@string/sceyt_upload_from_gallery"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 

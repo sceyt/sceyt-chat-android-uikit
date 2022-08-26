@@ -23,6 +23,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import okhttp3.internal.cache2.Relay.Companion.edit
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
@@ -157,8 +158,8 @@ class ProfileFragment : Fragment() {
                 preference.setToken(null)
                 LoginActivity.launch(requireContext())
                 requireActivity().finish()
-            }).setTitle(getString(R.string.sceyt_sign_out_title))
-                .setDescription(getString(R.string.sceyt_sign_out_desc))
+            }).setTitle(getString(R.string.sign_out_title))
+                .setDescription(getString(R.string.sign_out_desc))
                 .setPositiveButtonTitle(getString(R.string.sign_out))
                 .setPositiveButtonTextColor(requireContext().getCompatColor(R.color.sceyt_color_red))
                 .show()
@@ -188,12 +189,12 @@ class ProfileFragment : Fragment() {
             displayName.background = displayNameDefaultBg
             displayName.setSelection(displayName.text?.length ?: 0)
             displayName.setHint(R.string.display_name)
-            tvEditOrSave.text = getString(R.string.sceyt_save)
+            tvEditOrSave.text = getString(R.string.save)
             requireContext().showSoftInput(displayName)
         } else {
             displayName.background = null
             displayName.hint = ""
-            tvEditOrSave.text = getString(R.string.sceyt_edit)
+            tvEditOrSave.text = getString(R.string.edit)
             requireContext().hideKeyboard(displayName)
         }
     }

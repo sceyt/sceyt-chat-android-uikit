@@ -247,7 +247,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             ViewUtil.expandHeight(root, 1, 200)
             tvName.text = message.from.fullName.trim()
             tvMessageBody.text = if (message.isTextMessage())
-                message.body.trim() else context.getString(R.string.attachment)
+                message.body.trim() else context.getString(R.string.sceyt_attachment)
         }
     }
 

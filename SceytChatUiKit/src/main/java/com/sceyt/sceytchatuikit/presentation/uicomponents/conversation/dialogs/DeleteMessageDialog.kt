@@ -32,7 +32,7 @@ class DeleteMessageDialog(
             setTextColor(context.getCompatColor(R.color.sceyt_color_red))
         }
 
-        mBinding.buttonCancel.text = context.getString(R.string.cancel)
+        mBinding.buttonCancel.text = context.getString(R.string.sceyt_cancel)
 
         mBinding.buttonAccept.setOnClickListener {
             positiveClickListener?.invoke()

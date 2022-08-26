@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/disable_notifications"
+        android:text="@string/sceyt_disable_notifications"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold" />
@@ -23,7 +23,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/mute_for_1_hour"
+        android:text="@string/sceyt_mute_for_1_hour"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -34,7 +34,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/mute_for_2_hours"
+        android:text="@string/sceyt_mute_for_2_hours"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -45,7 +45,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/mute_for_1_day"
+        android:text="@string/sceyt_mute_for_1_day"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -56,7 +56,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/mute_forever"
+        android:text="@string/sceyt_mute_forever"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize" />
 

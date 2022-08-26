@@ -24,7 +24,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@null"
-        android:hint="@string/search_for_channels"
+        android:hint="@string/sceyt_search_for_channels"
         android:imeOptions="actionSearch"
         android:includeFontPadding="false"
         android:inputType="text"

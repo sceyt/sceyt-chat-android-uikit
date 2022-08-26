@@ -18,6 +18,11 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : BottomSheetDialogFragment() {
     private lateinit var mBinding: SceytFragmentBottomSheetEmojisBinding
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme);
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         mBinding = SceytFragmentBottomSheetEmojisBinding.inflate(inflater, container, false)
         return mBinding.root

@@ -103,14 +103,14 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             return
         }
         if (message.state == MessageState.Deleted) {
-            lastMessage.text = itemView.context.getString(R.string.message_was_deleted)
+            lastMessage.text = itemView.context.getString(R.string.sceyt_message_was_deleted)
             lastMessage.setTypeface(null, Typeface.ITALIC)
         } else {
             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
-                lastMessage.context.getString(R.string.attachment) else message.body
+                lastMessage.context.getString(R.string.sceyt_attachment) else message.body
 
             val showText = if (!message.incoming) {
-                lastMessage.getString(R.string.your_last_message).format(body.trim())
+                lastMessage.getString(R.string.sceyt_your_last_message).format(body.trim())
             } else body.trim()
             lastMessage.text = showText
             lastMessage.setTypeface(null, Typeface.NORMAL)

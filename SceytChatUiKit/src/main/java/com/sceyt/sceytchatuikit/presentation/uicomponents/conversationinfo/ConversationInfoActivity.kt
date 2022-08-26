@@ -237,7 +237,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
         if (isEditMode) {
             subject.background = displayNameDefaultBg
             subject.setSelection(subject.text?.length ?: 0)
-            subject.setHint(R.string.hint_channel_subject)
+            subject.setHint(R.string.sceyt_hint_channel_subject)
             tvEditOrSave.text = getString(R.string.sceyt_save)
             showSoftInput(subject)
         } else {
@@ -369,7 +369,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     open fun onClearHistory(channelId: Long) {
-        customToastSnackBar(getString(R.string.history_was_successfully_cleared))
+        customToastSnackBar(getString(R.string.sceyt_history_was_successfully_cleared))
     }
 
     open fun onBlockUnblockUser(users: List<User>) {

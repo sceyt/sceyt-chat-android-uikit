@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.CustomConversationInfoActivityBinding
+import com.sceyt.sceytchatuikit.R.*
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
@@ -79,7 +80,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             context.launchActivity<CustomConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
             }
-            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asAppCompatActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
     }
 }

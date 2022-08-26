@@ -221,7 +221,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     private fun initText(text: String): String {
-        return if (isEdited) "${context.getString(R.string.edited)} $text" else text
+        return if (isEdited) "${context.getString(R.string.sceyt_edited)} $text" else text
     }
 
     fun setStatusIcon(drawable: Drawable?) {

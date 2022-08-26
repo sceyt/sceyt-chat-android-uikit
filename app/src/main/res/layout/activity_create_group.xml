@@ -112,7 +112,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:ellipsize="end"
-                android:hint="@string/hint_channel_subject"
+                android:hint="@string/sceyt_hint_channel_subject"
                 android:maxLines="2"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textColorHint="@color/sceyt_color_hint"

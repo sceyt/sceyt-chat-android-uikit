@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
@@ -26,8 +25,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
-import org.koin.core.parameter.ParametersHolder
-import org.koin.core.parameter.parametersOf
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -126,11 +123,6 @@ open class ConversationActivity : AppCompatActivity() {
         }
     }
 
-    private fun getParameters(): ParametersHolder {
-        val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))
-        val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
-        return parametersOf(conversationId, isReplayInThread, channel)
-    }
 
     override fun onBackPressed() {
         super.onBackPressed()
