@@ -9,28 +9,28 @@ import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.data.SceytSharedPreference
+import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
-import com.sceyt.chat.ui.extensions.*
-import com.sceyt.chat.ui.presentation.common.SceytDialog
 import com.sceyt.chat.ui.presentation.login.LoginActivity
-import com.sceyt.chat.ui.presentation.mainactivity.profile.dialogs.EditAvatarTypeDialog
-import com.sceyt.chat.ui.presentation.mainactivity.profile.viewmodel.ProfileViewModel
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
-import com.sceyt.chat.ui.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
-import com.sceyt.chat.ui.sceytconfigs.SceytUIKitConfig
-import com.sceyt.chat.ui.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.concurrent.TimeUnit
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
     private lateinit var displayNameDefaultBg: Drawable
-    private val viewModel by viewModel<ProfileViewModel>()
-    private val preference by inject<SceytSharedPreference>()
+    private val viewModel by viewModels<ProfileViewModel>()
+    private val preference by inject<AppSharedPreference>()
     private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
     private var currentUser: User? = null
     private var avatarUrl: String? = null

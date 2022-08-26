@@ -22,7 +22,7 @@ ext {
 
     exo_player_media_version = '1.0.0-beta02'
 
-    jsoup_version = '1.15.2'
+    jsoup_version = '1.15.3'
 
     material_version = '1.7.0-beta01'
     moshi_converter_version = '2.9.0'

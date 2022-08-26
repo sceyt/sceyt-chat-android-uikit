@@ -2,8 +2,6 @@ package com.sceyt.chat.ui
 
 import android.app.Application
 import android.content.Context
-import android.os.Build.VERSION_CODES.M
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.android.volley.Request
@@ -11,8 +9,6 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
-import com.emojiview.emojiview.AXEmojiManager
-import com.emojiview.emojiview.provider.AXGoogleEmojiProvider
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
@@ -21,31 +17,37 @@ import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.models.Status
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_listeners.ClientListener
-import com.sceyt.chat.ui.data.SceytSharedPreference
+import com.sceyt.chat.ui.data.AppSharedPreference
+import com.sceyt.chat.ui.di.appModules
+import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import org.json.JSONObject
 import org.koin.android.ext.android.inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 import java.util.*
 
 class SceytUiKitApp : Application() {
-    private val preference by inject<SceytSharedPreference>()
+    private val preference by inject<AppSharedPreference>()
 
     private val _sceytConnectionStatus: MutableLiveData<Types.ConnectState> = MutableLiveData()
     val sceytConnectionStatus: LiveData<Types.ConnectState> = _sceytConnectionStatus
 
     private lateinit var chatClient: ChatClient
-    private val chatClientInitializer: SceytUIKitInitializer = SceytUIKitInitializer(this)
 
     override fun onCreate() {
         super.onCreate()
+        startKoin {
+            androidContext(this@SceytUiKitApp)
+            modules(arrayListOf(appModules))
+        }
+
         initSceyt()
         setSceytListeners()
         connect()
-
-        AXEmojiManager.install(applicationContext, AXGoogleEmojiProvider(applicationContext))
     }
 
     private fun initSceyt() {
-        chatClient = chatClientInitializer.initialize(UUID.randomUUID().toString(), true)
+        chatClient = SceytUIKitInitializer(this).initialize(UUID.randomUUID().toString(), true)
         _sceytConnectionStatus.postValue(Types.ConnectState.StateDisconnect)
     }
 
@@ -62,7 +64,7 @@ class SceytUiKitApp : Application() {
         NetworkMonitor.getInstance().addObserver(noNetworkObserver)
     }
 
-    fun connect() {
+    private fun connect() {
         val token = preference.getToken()
         val userName = preference.getUsername()
         if (token.isNullOrBlank()) {
@@ -111,7 +113,9 @@ class SceytUiKitApp : Application() {
                                 ?: return)
                     else success.postValue(false)
                 }
-                _sceytConnectionStatus.postValue(connectStatus)
+                connectStatus?.let {
+                    _sceytConnectionStatus.postValue(it)
+                }
             }
         })
     }

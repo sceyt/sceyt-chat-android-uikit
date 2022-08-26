@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="SceytAvatarView">
+        <attr name="sceytAvatarViewImageUrl" format="string" />
+        <attr name="sceytAvatarViewFullName" format="string" />
+        <attr name="sceytAvatarViewIsGroup" format="boolean" />
+        <attr name="sceytAvatarViewTextSize" format="dimension|integer" />
+        <attr name="sceytAvatarBackgroundColor" format="color|reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SceytToReplayLineView">
+        <attr name="sceytToReplayLineViewToLeft" format="boolean" />
+        <attr name="sceytToReplayLineViewStrokeColor" format="reference|color" />
+        <attr name="sceytToReplayLineViewConnectedViewTop" format="reference" />
+        <attr name="sceytToReplayLineViewConnectedViewBottom" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SceytDateStatusView">
+        <attr name="sceytDateStatusViewStatusIcon" format="reference" />
+        <attr name="sceytDateStatusViewStatusIconSize" format="dimension" />
+        <attr name="sceytDateStatusViewStatusIconMargin" format="dimension" />
+        <attr name="sceytDateStatusViewDateTextSize" format="dimension" />
+        <attr name="sceytDateStatusViewDateTextColor" format="reference|color" />
+        <attr name="sceytDateStatusViewDateText" format="string" />
+        <attr name="sceytDateStatusViewFirstStatus" format="boolean" />
+        <attr name="android:paddingStart" format="dimension" />
+        <attr name="android:paddingEnd" format="dimension" />
+        <attr name="android:paddingBottom" format="dimension" />
+        <attr name="android:paddingTop" format="dimension" />
+        <attr name="android:padding" format="dimension" />
+        <attr name="android:paddingVertical" format="dimension" />
+        <attr name="android:paddingHorizontal" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="SceytReactionView">
+        <attr name="sceytReactionViewInnerPadding" format="integer|dimension" />
+        <attr name="sceytReactionViewInnerPaddingHorizontal" format="integer|dimension" />
+        <attr name="sceytReactionViewInnerPaddingVertical" format="integer|dimension" />
+        <attr name="sceytReactionViewCountTextSize" format="integer|dimension" />
+        <attr name="sceytReactionViewSmileTextSize" format="integer|dimension" />
+        <attr name="sceytReactionViewCountTextColor" format="color|reference" />
+        <attr name="sceytReactionViewCountTextMargin" format="integer|dimension" />
+        <attr name="sceytReactionViewStrokeColor" format="color|reference" />
+        <attr name="sceytReactionViewStrokeWidth" format="integer|dimension" />
+        <attr name="sceytReactionViewStrokeCornerRadius" format="integer|dimension" />
+        <attr name="sceytReactionViewCountText" format="string|reference" />
+        <attr name="sceytReactionViewSmileText" format="string|reference" />
+        <attr name="sceytReactionViewBackgroundColor" format="color|reference|string" />
+        <attr name="sceytReactionViewCountTextMinWidth" format="integer|dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="SceytVideoControllerView">
+        <attr name="sceytVideoControllerShowPlayPause" format="boolean" />
+        <attr name="sceytVideoControllerPlayPauseSize" format="integer|dimension" />
+        <attr name="sceytVideoControllerPlayIcon" format="reference" />
+        <attr name="sceytVideoControllerPauseIcon" format="reference" />
+
+    </declare-styleable>
+</resources>
