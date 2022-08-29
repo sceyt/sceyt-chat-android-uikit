@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
@@ -47,7 +48,6 @@ class ChannelsFragment : Fragment() {
 
         mViewModel.bindView(binding.channelListView, viewLifecycleOwner)
         mViewModel.bindView(binding.searchView)
-
 
         /* (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
              if (it == Types.ConnectState.StateConnected) {

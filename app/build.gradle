@@ -42,7 +42,6 @@ android {
 }
 
 dependencies {
-    implementation project(':SceytSDK-debug')
     implementation project(':SceytChatUiKit')
 
     implementation supportDependencies.coreKtx
@@ -52,26 +51,12 @@ dependencies {
     implementation supportDependencies.recyclerView
     implementation supportDependencies.fragmentKtx
     implementation supportDependencies.lifecycleRuntime
-    implementation supportDependencies.asyncLayoutInflater
     implementation supportDependencies.glide
-    implementation supportDependencies.axEmoji
-    implementation supportDependencies.ion
-    implementation supportDependencies.firebaseBom
-    implementation supportDependencies.firebaseMessaging
     implementation supportDependencies.okHttp
     implementation supportDependencies.voley
-    kapt supportDependencies.roomCompiler
-    implementation supportDependencies.roomRuntime
-    implementation supportDependencies.roomKtx
     implementation supportDependencies.koinAndroid
-    implementation supportDependencies.exoPlayerMedia
-    implementation supportDependencies.exoPlayerUi
-    implementation supportDependencies.datastore
-    implementation supportDependencies.datastorePreferences
     implementation supportDependencies.moshiConverter
     implementation supportDependencies.jsoup
-    implementation supportDependencies.lottie
-    implementation supportDependencies.flexbox
     implementation supportDependencies.sdp
     implementation supportDependencies.ssp
 }
