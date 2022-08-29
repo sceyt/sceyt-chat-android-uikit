@@ -50,7 +50,6 @@ open class ConversationActivity : AppCompatActivity() {
         viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
         viewModel.bindView(binding.headerView, replayMessage, lifecycleOwner = this)
 
-        viewModel.loadMessages(0, 0)
 
         //This listener will not work if you have added custom click listener
         binding.messagesListView.setMessageClickListener(MessageClickListeners.ReplayCountClickListener { _, item ->

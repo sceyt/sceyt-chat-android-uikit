@@ -68,7 +68,8 @@ class MessageListViewModel(private val conversationId: Long,
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
 
-    val onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
+    private val _onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
+    val onNewOutgoingMessageLiveData: LiveData<SceytMessage> = _onNewOutgoingMessageLiveData
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -83,8 +84,10 @@ class MessageListViewModel(private val conversationId: Long,
     val onChannelTypingEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData>
 
     //Command events
-    val onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    val onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
+    private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
+    val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
+    private val _onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
+    val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
 
 
     init {
@@ -234,7 +237,7 @@ class MessageListViewModel(private val conversationId: Long,
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.sendMessage(channel, message) { tmpMessage ->
                 val outMessage = tmpMessage.toSceytUiMessage(isGroup)
-                onNewOutgoingMessageLiveData.postValue(outMessage)
+                _onNewOutgoingMessageLiveData.postValue(outMessage)
                 MessageEventsObserver.emitOutgoingMessage(outMessage.clone())
             }
             when (response) {
@@ -250,10 +253,10 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun sendReplayMessage(message: Message, parent: Message?) {
+    internal fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.sendMessage(channel, message) { tmpMessage ->
-                onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
+                _onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
                     this.parent = parent?.toSceytUiMessage()
                 })
             }
@@ -261,7 +264,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun editMessage(message: SceytMessage) {
+    internal fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.editMessage(channel, message)
             _messageEditedDeletedLiveData.postValue(response)
@@ -271,26 +274,26 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun markMessageAsDisplayed(vararg id: Long) {
+    internal fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.markAsRead(channel, *id)
         }
     }
 
-    fun sendTypingEvent(typing: Boolean) {
+    internal fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(channel, typing)
         }
     }
 
-    fun join() {
+    internal fun join() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messagesRepository.join(channel)
             _joinLiveData.postValue(response)
         }
     }
 
-    fun getChannel(channelId: Long) {
+    internal fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
             _channelLiveData.postValue(response)
@@ -345,21 +348,21 @@ class MessageListViewModel(private val conversationId: Long,
         else isGroup && (prevMessage.from?.id != sceytMessage.from?.id || shouldShowDate(sceytMessage, prevMessage))
     }
 
-    fun onMessageCommandEvent(event: MessageCommandEvent) {
+    internal fun onMessageCommandEvent(event: MessageCommandEvent) {
         when (event) {
             is MessageCommandEvent.DeleteMessage -> {
                 deleteMessage(event.message.id)
             }
             is MessageCommandEvent.EditMessage -> {
-                onEditMessageCommandLiveData.postValue(event.message)
+                _onEditMessageCommandLiveData.postValue(event.message)
             }
             is MessageCommandEvent.Replay -> {
-                onReplayMessageCommandLiveData.postValue(event.message)
+                _onReplayMessageCommandLiveData.postValue(event.message)
             }
         }
     }
 
-    fun onReactionEvent(event: ReactionEvent) {
+    internal fun onReactionEvent(event: ReactionEvent) {
         when (event) {
             is ReactionEvent.AddReaction -> {
                 addReaction(event.message, event.scoreKey)

@@ -170,7 +170,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun onChannelEvent(event: ChannelEvent) {
+    internal fun onChannelEvent(event: ChannelEvent) {
         when (event) {
             is ChannelEvent.MarkAsRead -> markAsRead(event.channel)
             is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel)

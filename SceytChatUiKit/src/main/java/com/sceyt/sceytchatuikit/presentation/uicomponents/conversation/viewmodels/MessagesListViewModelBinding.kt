@@ -28,6 +28,8 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
     val myId = ClientWrapper.currentUser.id
 
+    loadMessages(0, 0)
+
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (pendingDisplayMsgIds.isNotEmpty()) {
