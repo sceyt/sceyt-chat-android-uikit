@@ -117,6 +117,10 @@ class SceytUiKitApp : Application() {
                     _sceytConnectionStatus.postValue(it)
                 }
             }
+
+            override fun onTokenExpired() {
+                connectWithoutToken(preference.getUsername() ?: return)
+            }
         })
     }
 

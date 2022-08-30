@@ -12,8 +12,13 @@ class ChannelsComparatorBy(private val compareBy: SceytUIKitConfig.ChannelSortTy
     }
 
     private fun compareByLastMessageCreatedAt(first: SceytChannel?, second: SceytChannel?): Int {
-        val firstMsgCreatedAt = first?.lastMessage?.createdAt
-        val secondMsgCreatedAt = second?.lastMessage?.createdAt
+        //Todo need review sorting
+        val firstMsgCreatedAt = first?.lastMessage?.createdAt?.run { this * 1000 }
+                ?: second?.createdAt
+        val secondMsgCreatedAt = second?.lastMessage?.createdAt?.run { this * 1000 }
+                ?: second?.createdAt
+
+
         return when {
             firstMsgCreatedAt != null && secondMsgCreatedAt != null -> return secondMsgCreatedAt.compareTo(firstMsgCreatedAt)
             firstMsgCreatedAt != null -> -1
