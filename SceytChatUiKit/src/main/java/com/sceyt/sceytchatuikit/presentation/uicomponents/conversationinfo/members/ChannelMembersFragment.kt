@@ -116,18 +116,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             popupMenuMember.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.sceyt_set_owner -> {
-                        changeOwner(item.member.id)
+                        changeOwnerClick(item.member.id)
                     }
                     R.id.sceyt_change_role -> {
-                        /* changeRoleActivityLauncher.launch(ChangeRoleActivity.newInstance(requireContext(), item.member))
-                         requireContext().asAppCompatActivity()
-                             .overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)*/
+                        changeRoleClick(item.member)
                     }
                     R.id.sceyt_kick_member -> {
-                        kickMember(item.member.id)
+                        kickMemberClick(item.member.id)
                     }
                     R.id.sceyt_block_and_kick_member -> {
-                        blockAndKickMember(item.member.id)
+                        blockAndKickMemberClick(item.member.id)
                     }
                 }
                 return@setOnMenuItemClickListener false
@@ -235,23 +233,27 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.addMembersToChannel(channel, members as ArrayList)
     }
 
-    protected fun changeOwner(newOwnerId: String) {
+    protected open fun changeOwnerClick(newOwnerId: String) {
         viewModel.changeOwner(channel, newOwnerId)
     }
 
-    protected fun changeRole(member: SceytMember, role: String) {
+    protected open fun changeRoleClick(member: SceytMember) {
+        //Override Do your functional
+    }
+
+    protected open fun changeRoleClick(member: SceytMember, role: String) {
         viewModel.changeRole(channel, member.copy(role = Role(role)))
     }
 
-    protected fun kickMember(memberId: String) {
+    protected open fun kickMemberClick(memberId: String) {
         viewModel.kickMember(channel, memberId, false)
     }
 
-    protected fun blockAndKickMember(memberId: String) {
+    protected open fun blockAndKickMemberClick(memberId: String) {
         viewModel.kickMember(channel, memberId, true)
     }
 
-    open fun onMembersList(data: PaginationResponse<MemberItem>) {
+    protected open fun onMembersList(data: PaginationResponse<MemberItem>) {
         when (data) {
             is PaginationResponse.DBResponse -> {
                 if (data.offset == 0) {
@@ -267,11 +269,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun onChangeOwnerSuccess(newOwnerId: String) {
+    protected open fun onChangeOwnerSuccess(newOwnerId: String) {
         setNewOwner(newOwnerId)
     }
 
-    open fun onChannelEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData) {
+    protected open fun onChannelEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData) {
         val groupChannel = (eventData.channel as? GroupChannel) ?: return
         when (eventData.eventType) {
             com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left -> {
@@ -284,7 +286,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun onChannelMembersEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
+    protected open fun onChannelMembersEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
         when (eventData.eventType) {
             com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Role -> {
                 eventData.members?.forEach { member ->
@@ -307,11 +309,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun onChannelOwnerChanged(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData) {
+    protected open fun onChannelOwnerChanged(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData) {
         setNewOwner(eventData.newOwner.id)
     }
 
-    open fun onPageStateChange(pageState: PageState) {
+    protected open fun onPageStateChange(pageState: PageState) {
         pageStateView?.updateState(pageState, (membersAdapter?.itemCount ?: 0) == 0)
     }
 
