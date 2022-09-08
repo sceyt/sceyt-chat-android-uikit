@@ -14,8 +14,9 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
                                      view: View,
-                                     messageListeners: MessageClickListenersImpl? = null)
-    : BaseMsgViewHolder(view, messageListeners) {
+                                     messageListeners: MessageClickListenersImpl? = null,
+                                     displayListItem: ((SceytMessage) -> Unit)? = null)
+    : BaseMsgViewHolder(view, messageListeners, displayListItem) {
 
     fun loadLinkPreview(message: MessageListItem.MessageItem, layoutLinkPreview: SceytMessageLinkPreviewContainerBinding, messageBody: TextView) {
         if (message.linkPreviewData == null) {

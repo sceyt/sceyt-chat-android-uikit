@@ -21,12 +21,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.bindView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.bind
 
 
 class ChannelsFragment : Fragment() {
@@ -46,8 +45,8 @@ class ChannelsFragment : Fragment() {
 
         binding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
 
-        mViewModel.bindView(binding.channelListView, viewLifecycleOwner)
-        mViewModel.bindView(binding.searchView)
+        mViewModel.bind(binding.channelListView, viewLifecycleOwner)
+        mViewModel.bind(binding.searchView)
 
         /* (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
              if (it == Types.ConnectState.StateConnected) {

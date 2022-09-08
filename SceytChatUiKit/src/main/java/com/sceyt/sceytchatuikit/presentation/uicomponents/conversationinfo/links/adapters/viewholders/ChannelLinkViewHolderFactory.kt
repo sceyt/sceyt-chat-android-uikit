@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.adapters.LinkItem
 import com.sceyt.sceytchatuikit.databinding.ItemChannelLinkBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 open class ChannelLinkViewHolderFactory(context: Context,
@@ -14,7 +15,7 @@ open class ChannelLinkViewHolderFactory(context: Context,
 
     private val layoutInflater = LayoutInflater.from(context)
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem> {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<LinkItem> {
         return when (viewType) {
             ItemType.Link.ordinal -> createLinkViewHolder(parent)
             ItemType.Loading.ordinal -> createLoadingMoreViewHolder(parent)
@@ -22,15 +23,15 @@ open class ChannelLinkViewHolderFactory(context: Context,
         }
     }
 
-    open fun createLinkViewHolder(parent: ViewGroup): com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem> {
+    open fun createLinkViewHolder(parent: ViewGroup): BaseViewHolder<LinkItem> {
         return LinkViewHolder(
             ItemChannelLinkBinding.inflate(layoutInflater, parent, false),
             linkPreview, clickListener)
     }
 
-    open fun createLoadingMoreViewHolder(parent: ViewGroup): com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem> {
+    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseViewHolder<LinkItem> {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
-        return object : com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem>(binding.root) {
+        return object : BaseViewHolder<LinkItem>(binding.root) {
             override fun bind(item: LinkItem) {
 
             }

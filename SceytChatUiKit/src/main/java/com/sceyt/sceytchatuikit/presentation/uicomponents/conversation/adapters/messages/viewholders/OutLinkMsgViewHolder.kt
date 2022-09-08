@@ -4,11 +4,11 @@ import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutLinkMessageBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutLinkMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
@@ -16,28 +16,26 @@ class OutLinkMsgViewHolder(
         private val binding: SceytItemOutLinkMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
-        private val messageListeners: MessageClickListenersImpl?,
+        private val messageListeners: MessageClickListenersImpl?
 ) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners) {
-
-    private lateinit var messageItem: MessageListItem.MessageItem
 
     init {
         binding.setMessageItemStyle()
 
         binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageItem)
+            messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
             return@setOnLongClickListener true
         }
 
         binding.layoutDetails.setOnClickListener {
-            messageListeners?.onLinkClick(it, messageItem)
+            messageListeners?.onLinkClick(it, messageItem as MessageListItem.MessageItem)
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
-        if (item is MessageListItem.MessageItem) {
-            messageItem = item
+        super.bind(item, diff)
 
+        if (item is MessageListItem.MessageItem) {
             with(binding) {
                 val message = item.message
 
@@ -58,7 +56,7 @@ class OutLinkMsgViewHolder(
                 if (diff.replayContainerChanged)
                     setReplayedMessageContainer(message, viewReplay)
 
-                loadLinkPreview(messageItem, layoutLinkPreview, messageBody)
+                loadLinkPreview(item, layoutLinkPreview, messageBody)
             }
         }
     }

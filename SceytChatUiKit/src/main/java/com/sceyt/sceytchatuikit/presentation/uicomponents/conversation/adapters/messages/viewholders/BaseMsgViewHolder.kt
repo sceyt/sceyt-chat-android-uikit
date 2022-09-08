@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.widget.TextView
+import androidx.annotation.CallSuper
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -37,19 +39,34 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(view: View,
-                                 private val messageListeners: MessageClickListenersImpl? = null)
+                                 private val messageListeners: MessageClickListenersImpl? = null,
+                                 private val displayedListener: ((SceytMessage) -> Unit)? = null)
     : RecyclerView.ViewHolder(view) {
 
     private var replayMessageContainerBinding: SceytRecyclerReplayContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
+    protected lateinit var messageItem: MessageListItem
 
-    abstract fun bind(item: MessageListItem, diff: MessageItemPayloadDiff)
+    @CallSuper
+    open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        messageItem = item
 
+        if (messageItem is MessageListItem.MessageItem) {
+            val message = (messageItem as MessageListItem.MessageItem).message
+            if (message.incoming && message.deliveryStatus != DeliveryStatus.Read)
+                displayedListener?.invoke(message)
+        }
+    }
+
+    @CallSuper
     open fun onViewDetachedFromWindow() {
         reactionsAdapter = null
     }
 
-    open fun onViewAttachedToWindow() {}
+    @CallSuper
+    open fun onViewAttachedToWindow() {
+
+    }
 
     private var reactionsAdapter: ReactionsAdapter? = null
 

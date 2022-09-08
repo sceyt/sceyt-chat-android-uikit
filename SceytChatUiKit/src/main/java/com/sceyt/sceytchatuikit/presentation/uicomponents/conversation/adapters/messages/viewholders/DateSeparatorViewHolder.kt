@@ -16,6 +16,8 @@ class DateSeparatorViewHolder(
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = when {

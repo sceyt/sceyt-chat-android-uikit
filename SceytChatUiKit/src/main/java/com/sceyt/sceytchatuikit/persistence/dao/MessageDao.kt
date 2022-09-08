@@ -67,6 +67,9 @@ abstract class MessageDao {
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId")
     abstract fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
+    @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
+    abstract fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
+
     @Query("delete from messages where channelId =:channelId")
     abstract fun deleteAllMessages(channelId: Long)
 

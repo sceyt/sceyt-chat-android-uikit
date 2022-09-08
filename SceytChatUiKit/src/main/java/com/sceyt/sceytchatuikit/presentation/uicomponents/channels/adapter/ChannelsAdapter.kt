@@ -43,9 +43,9 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
     fun notifyUpdate(channels: List<ChannelListItem>) {
         val myDiffUtil = ChannelsDiffUtil(this.channels, channels)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        productDiffResult.dispatchUpdatesTo(this)
         this.channels.clear()
         this.channels.addAll(channels)
-        productDiffResult.dispatchUpdatesTo(this)
     }
 
     @SuppressLint("NotifyDataSetChanged")

@@ -156,6 +156,7 @@ class ProfileFragment : Fragment() {
             SceytDialog(requireContext(), positiveClickListener = {
                 viewModel.logout()
                 preference.setToken(null)
+                preference.setUsername(null)
                 LoginActivity.launch(requireContext())
                 requireActivity().finish()
             }).setTitle(getString(R.string.sign_out_title))

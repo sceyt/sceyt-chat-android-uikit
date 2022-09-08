@@ -5,18 +5,19 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 
 class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
                          private val viewCallbacks: AttachmentFileViewHolder.Callbacks) :
-        RecyclerView.Adapter<com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<AttachmentItem>>() {
+        RecyclerView.Adapter<BaseViewHolder<AttachmentItem>>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<AttachmentItem> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<AttachmentItem> {
         val itemView = SceytItemInputAttachmentBinding.inflate(LayoutInflater.from(parent.context),
             parent, false)
         return AttachmentFileViewHolder(itemView, viewCallbacks)
     }
 
-    override fun onBindViewHolder(holder: com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<AttachmentItem>, position: Int) {
+    override fun onBindViewHolder(holder: BaseViewHolder<AttachmentItem>, position: Int) {
         val attachment = attachments[position]
         holder.bind(attachment)
     }

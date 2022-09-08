@@ -44,9 +44,6 @@ class MessageListViewModel(private val conversationId: Long,
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
-    private val _messagesFlow = MutableStateFlow<SceytResponse<List<MessageListItem>>>(SceytResponse.Success(null))
-    val messagesFlow: StateFlow<SceytResponse<List<MessageListItem>>> = _messagesFlow
-
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<MessageListItem>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<MessageListItem>> = _loadMessagesFlow
 
@@ -276,7 +273,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.markAsRead(channel, *id)
+            persistenceMessageMiddleWare.markAsRead(channel, *id)
         }
     }
 

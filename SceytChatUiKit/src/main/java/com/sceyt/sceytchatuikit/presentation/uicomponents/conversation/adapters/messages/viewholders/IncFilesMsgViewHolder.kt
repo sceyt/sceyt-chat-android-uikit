@@ -3,39 +3,39 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.shared.utils.ViewUtil.dpToPx
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.databinding.SceytItemIncFilesMessageBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytItemIncFilesMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
+import com.sceyt.sceytchatuikit.shared.utils.ViewUtil.dpToPx
 
 class IncFilesMsgViewHolder(
         private val binding: SceytItemIncFilesMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl?,
-) : BaseMsgViewHolder(binding.root, messageListeners) {
-
-    private lateinit var messageItem: MessageListItem.MessageItem
+        displayedListener: ((SceytMessage) -> Unit)?,
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener) {
 
     init {
         binding.setMessageItemStyle()
 
         binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageItem)
+            messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
             return@setOnLongClickListener true
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+
         if (item is MessageListItem.MessageItem) {
-            messageItem = item
             with(binding) {
                 val message = item.message
 

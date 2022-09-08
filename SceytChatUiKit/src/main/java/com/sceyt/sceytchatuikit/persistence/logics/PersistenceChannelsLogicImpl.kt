@@ -1,11 +1,14 @@
 package com.sceyt.sceytchatuikit.persistence.logics
 
 import com.sceyt.chat.ClientWrapper
+import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -33,20 +36,21 @@ internal class PersistenceChannelsLogicImpl(
         private val usersDao: UserDao,
         private val messageDao: MessageDao) : PersistenceChannelsLogic {
 
-    override fun onChannelEvent(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData) {
+    override fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Created -> {
+            Created -> {
                 data.channel?.let { channel ->
-                    insertChannel(channel.toSceytUiChannel(), *(channel as GroupChannel).members.toTypedArray())
+                    val members = if (channel is GroupChannel) channel.members else arrayListOf((channel as DirectChannel).peer)
+                    insertChannel(channel.toSceytUiChannel(), *members.toTypedArray())
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Deleted -> {
+            Deleted -> {
                 data.channelId?.let { channelId ->
                     channelDao.deleteChannelAndLinks(channelId)
                     messageDao.deleteAllMessages(channelId)
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left -> {
+            Left -> {
                 val leftUser = (data.channel as? GroupChannel)?.members?.getOrNull(0)?.id
                 if (leftUser == ClientWrapper.currentUser.id) {
                     data.channelId?.let { channelId ->
@@ -55,22 +59,22 @@ internal class PersistenceChannelsLogicImpl(
                     }
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory -> {
+            ClearedHistory -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateLastMessage(channelId, null, null)
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Updated -> {
+            Updated -> {
                 data.channel?.let { channel ->
                     channelDao.insertChannel(channel.toChannelEntity())
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Muted -> {
+            Muted -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateMuteState(channelId, true, data.channel?.muteExpireDate()?.time)
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnMuted -> {
+            UnMuted -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateMuteState(channelId, false)
                 }

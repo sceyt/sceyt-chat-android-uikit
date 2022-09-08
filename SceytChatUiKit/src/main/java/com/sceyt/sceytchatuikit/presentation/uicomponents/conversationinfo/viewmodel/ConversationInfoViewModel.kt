@@ -7,6 +7,8 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,8 +16,8 @@ import org.koin.core.component.inject
 
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     // Todo di
-    private val channelsMiddleWare by inject<com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare>()
-    private val membersMiddleWare by inject<com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare>()
+    private val channelsMiddleWare by inject<PersistenceChanelMiddleWare>()
+    private val membersMiddleWare by inject<PersistenceMembersMiddleWare>()
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
     val channelLiveData: LiveData<SceytChannel> = _channelLiveData

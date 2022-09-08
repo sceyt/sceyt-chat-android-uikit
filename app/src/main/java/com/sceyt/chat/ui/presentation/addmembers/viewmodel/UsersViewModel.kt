@@ -10,16 +10,15 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepositoryImpl
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class UsersViewModel : BaseViewModel(), KoinComponent {
+class UsersViewModel : BaseViewModel() {
     private val usersRepository: UsersRepository = UsersRepositoryImpl()
-    private val middleWare by inject<PersistenceChanelMiddleWare>()
+    private val middleWare: PersistenceChanelMiddleWare = PersistenceMiddleWareImpl()
 
     private val _channelsLiveData = MutableLiveData<List<UserItem>>()
     val channelsLiveData: LiveData<List<UserItem>> = _channelsLiveData

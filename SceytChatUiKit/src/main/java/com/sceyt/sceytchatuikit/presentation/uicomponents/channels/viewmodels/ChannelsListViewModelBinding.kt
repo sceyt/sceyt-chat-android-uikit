@@ -13,7 +13,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import kotlinx.coroutines.launch
 
-fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
+fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
     getChannels(0, query = searchQuery)
 
@@ -194,7 +194,7 @@ fun ChannelsViewModel.bindView(channelsListView: ChannelsListView, lifecycleOwne
     }
 }
 
-fun ChannelsViewModel.bindView(searchView: SearchInputView) {
+fun ChannelsViewModel.bind(searchView: SearchInputView) {
     searchView.setDebouncedTextChangeListener {
         getChannels(0, query = it)
     }
@@ -206,9 +206,9 @@ fun ChannelsViewModel.bindView(searchView: SearchInputView) {
 
 
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bindView(channelsListView, lifecycleOwner)
+    viewModel.bind(channelsListView, lifecycleOwner)
 }
 
 fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchInputView) {
-    viewModel.bindView(searchView)
+    viewModel.bind(searchView)
 }

@@ -3,6 +3,8 @@ package com.sceyt.sceytchatuikit.persistence.logics
 import android.util.Log
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -27,7 +29,7 @@ internal class PersistenceMembersLogicImpl(
         private val channelDao: ChannelDao,
         private val usersDao: UserDao) : PersistenceMembersLogic {
 
-    override fun onChannelMemberEvent(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
+    override fun onChannelMemberEvent(data: ChannelMembersEventData) {
         if (data.channel == null || data.members == null) return
         val chatId = data.channel.id
         when (data.eventType) {
@@ -44,7 +46,7 @@ internal class PersistenceMembersLogicImpl(
         }
     }
 
-    override fun onChannelOwnerChangedEvent(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData) {
+    override fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
         channelDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
     }
 
