@@ -36,7 +36,7 @@ class LinkViewHolder(private var binding: ItemChannelLinkBinding,
                 setLinkInfo(null)
 
                 linkPreview.getPreview(message.id, message.body, successListener = {
-                    if (it.loadId == listItem.message.id) {
+                    if (it.messageId == listItem.message.id) {
                         listItem.linkPreviewMetaData = it
 
                         setLinkInfo(it)
@@ -47,7 +47,7 @@ class LinkViewHolder(private var binding: ItemChannelLinkBinding,
     }
 
     private fun ItemChannelLinkBinding.setLinkInfo(data: LinkPreviewHelper.PreviewMetaData?) {
-        if (data == null || ::listItem.isInitialized.not() || data.loadId != listItem.message.id) {
+        if (data == null || ::listItem.isInitialized.not() || data.messageId != listItem.message.id) {
             tvLinkName.text = ""
             tvLinkName.isVisible = false
             icLinkImage.setImageResource(R.drawable.sceyt_ic_link_with_background)

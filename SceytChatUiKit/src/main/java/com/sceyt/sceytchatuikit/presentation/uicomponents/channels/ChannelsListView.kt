@@ -240,6 +240,15 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun markedChannelAsRead(channelId: Long?) {
+        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
+            val channel = pair.second.channel
+            val oldChannel = channel.clone()
+            channel.unreadCount = 0
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        }
+    }
+
     internal fun userBlocked(data: List<User>?) {
         data?.forEach { user ->
             channelsRV.getChannels()?.find {

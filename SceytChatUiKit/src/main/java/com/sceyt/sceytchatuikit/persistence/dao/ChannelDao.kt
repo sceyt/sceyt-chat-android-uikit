@@ -49,7 +49,7 @@ interface ChannelDao {
     fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMember>
 
     @Query("update channels set subject =:subject, avatarUrl =:avatarUrl where chat_id= :channelId")
-    fun updateChannelSubjectAndAvatarUrl(channelId: Long, subject: String, avatarUrl: String?)
+    fun updateChannelSubjectAndAvatarUrl(channelId: Long, subject: String?, avatarUrl: String?)
 
     @Query("update channels set lastMessageId =:lastMessageId, lastMessageAt =:lastMessageAt where chat_id= :channelId")
     fun updateLastMessage(channelId: Long, lastMessageId: Long?, lastMessageAt: Long?)

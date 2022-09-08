@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 
 import androidx.lifecycle.viewModelScope
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
@@ -22,13 +21,13 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
     private val _loadMoreFilesFlow = MutableStateFlow<List<FileListItem>>(arrayListOf())
     val loadMoreFilesFlow: StateFlow<List<FileListItem>> = _loadMoreFilesFlow
 
-    fun loadMessages(channel: SceytChannel, lastMessageId: Long, isLoadingMore: Boolean, type: String) {
+    fun loadMessages(channelId: Long, lastMessageId: Long, isLoadingMore: Boolean, type: String) {
         loadingItems.set(true)
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.getMessagesByType(channel, lastMessageId, type)
+            val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
             initResponse(response, isLoadingMore)
         }
     }

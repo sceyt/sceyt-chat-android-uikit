@@ -14,10 +14,10 @@ internal interface PersistenceMessagesLogic {
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     fun onMessageReactionUpdated(data: Message?)
     fun onMessageEditedOrDeleted(data: Message?)
-    fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long,
+    fun loadMessages(conversationId: Long, lastMessageId: Long,
                      replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun sendMessage(channel: SceytChannel, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
-    suspend fun deleteMessage(channel: SceytChannel, messageId: Long): SceytResponse<SceytMessage>
-    suspend fun markAsRead(channel: SceytChannel, vararg ids: Long): SceytResponse<MessageListMarker>
+    suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
+    suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
+    suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
 }

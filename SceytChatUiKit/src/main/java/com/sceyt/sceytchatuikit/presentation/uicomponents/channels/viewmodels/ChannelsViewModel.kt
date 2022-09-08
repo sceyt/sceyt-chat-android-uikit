@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
@@ -36,8 +35,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<ChannelListItem>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<ChannelListItem>> = _loadChannelsFlow
 
-    private val _markAsReadLiveData = MutableLiveData<SceytResponse<MessageListMarker>>()
-    val markAsReadLiveData: LiveData<SceytResponse<MessageListMarker>> = _markAsReadLiveData
+    private val _markAsReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
+    val markAsReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsReadLiveData
 
     private val _blockChannelLiveData = MutableLiveData<SceytResponse<Long>>()
     val blockChannelLiveData: LiveData<SceytResponse<Long>> = _blockChannelLiveData
@@ -128,16 +127,16 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         return channelItems
     }
 
-    private fun markAsRead(channel: SceytChannel) {
+    private fun markAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsRead(channel)
+            val response = channelMiddleWare.markChannelAsRead(channelId)
             _markAsReadLiveData.postValue(response)
         }
     }
 
-    private fun blockAndLeaveChannel(channel: SceytChannel) {
+    private fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.blockAndLeaveChannel(channel)
+            val response = channelMiddleWare.blockAndLeaveChannel(channelId)
             _blockChannelLiveData.postValue(response)
         }
     }
@@ -156,26 +155,26 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    private fun clearHistory(channel: SceytChannel) {
+    private fun clearHistory(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.clearHistory(channel)
+            val response = channelMiddleWare.clearHistory(channelId)
             _clearHistoryLiveData.postValue(response)
         }
     }
 
-    private fun leaveChannel(channel: SceytChannel) {
+    private fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.leaveChannel(channel)
+            val response = channelMiddleWare.leaveChannel(channelId)
             _leaveChannelLiveData.postValue(response)
         }
     }
 
     internal fun onChannelEvent(event: ChannelEvent) {
         when (event) {
-            is ChannelEvent.MarkAsRead -> markAsRead(event.channel)
-            is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel)
-            is ChannelEvent.ClearHistory -> clearHistory(event.channel)
-            is ChannelEvent.LeaveChannel -> leaveChannel(event.channel)
+            is ChannelEvent.MarkAsRead -> markAsRead(event.channel.id)
+            is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
+            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id)
+            is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
             is ChannelEvent.BlockUser -> {
                 if (event.channel.channelType == ChannelTypeEnum.Direct)
                     blockUser(((event.channel as SceytDirectChannel).peer ?: return).id)

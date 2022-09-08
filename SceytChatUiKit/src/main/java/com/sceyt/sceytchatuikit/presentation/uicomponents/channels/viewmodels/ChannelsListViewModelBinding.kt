@@ -1,15 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import kotlinx.coroutines.launch
 
@@ -32,39 +31,16 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 is PaginationResponse.DBResponse -> {
                     if (it.offset == 0) {
                         channelsListView.setChannelsList(it.data)
-                        Log.i("responceee", "setChannelsList DB ->  data= ${
-                            it.data.map { channelListItem ->
-                                if (channelListItem is ChannelListItem.ChannelItem)
-                                    channelListItem.channel.channelSubject
-                                else "Loading item"
-                            }
-                        }")
-                    } else {
+                    } else
                         channelsListView.addNewChannels(it.data)
-                        Log.i("responceee", "addNewChannels DB->  data= ${
-                            it.data.map { channelListItem ->
-                                if (channelListItem is ChannelListItem.ChannelItem)
-                                    channelListItem.channel.channelSubject
-                                else "Loading item"
-                            }
-                        }")
-                    }
                 }
                 is PaginationResponse.ServerResponse -> {
                     if (it.data is SceytResponse.Success) {
                         it.data.data?.let { data ->
                             channelsListView.updateChannelsWithServerData(data, it.offset, lifecycleOwner)
-                            Log.i("responceee", "addOrUpdateChannel ->  data= ${
-                                it.data.data.map { channelListItem ->
-                                    if (channelListItem is ChannelListItem.ChannelItem)
-                                        channelListItem.channel.channelSubject
-                                    else "Loading item"
-                                }
-                            }")
                         }
                     } else if (it.data is SceytResponse.Error)
-                        com.sceyt.sceytchatuikit.extensions.customToastSnackBar(channelsListView, it.data.message
-                                ?: "")
+                        customToastSnackBar(channelsListView, it.data.message ?: "")
                 }
                 is PaginationResponse.Nothing -> return@collect
             }
@@ -130,9 +106,9 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     markAsReadLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> {
-                channelsListView.markedUsRead(it.data)
+                channelsListView.markedChannelAsRead(it.data?.id)
             }
-            is SceytResponse.Error -> com.sceyt.sceytchatuikit.extensions.customToastSnackBar(channelsListView, it.message
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
                     ?: "")
         }
     }
@@ -142,7 +118,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.deleteChannel(it.data)
             }
-            is SceytResponse.Error -> com.sceyt.sceytchatuikit.extensions.customToastSnackBar(channelsListView, it.message
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
                     ?: "")
         }
     }
@@ -152,7 +128,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.channelCleared(it.data)
             }
-            is SceytResponse.Error -> com.sceyt.sceytchatuikit.extensions.customToastSnackBar(channelsListView, it.message
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
                     ?: "")
         }
     }
@@ -162,7 +138,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.deleteChannel(it.data)
             }
-            is SceytResponse.Error -> com.sceyt.sceytchatuikit.extensions.customToastSnackBar(channelsListView, it.message
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
                     ?: "")
         }
     }
@@ -172,7 +148,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.userBlocked(it.data)
             }
-            is SceytResponse.Error -> com.sceyt.sceytchatuikit.extensions.customToastSnackBar(channelsListView, it.message
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
                     ?: "")
         }
     }

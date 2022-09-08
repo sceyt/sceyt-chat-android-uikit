@@ -38,7 +38,7 @@ abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
             data == null -> {
                 root.isVisible = false
             }
-            data.loadId != message.id -> {
+            data.messageId != message.id -> {
                 return
             }
             data.title.isNullOrBlank() && data.description.isNullOrBlank() && data.imageUrl.isNullOrBlank() -> {
