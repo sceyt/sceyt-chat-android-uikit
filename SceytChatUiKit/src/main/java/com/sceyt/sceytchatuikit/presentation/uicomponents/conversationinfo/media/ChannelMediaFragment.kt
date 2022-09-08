@@ -122,11 +122,11 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
     }
 
     protected fun loadInitialMediaList() {
-        viewModel.loadMessages(channel, 0, false, mediaType)
+        viewModel.loadMessages(channel.id, 0, false, mediaType)
     }
 
     protected fun loadMoreMediaList(lasMsgId: Long) {
-        viewModel.loadMessages(channel, lasMsgId, true, mediaType)
+        viewModel.loadMessages(channel.id, lasMsgId, true, mediaType)
     }
 
     companion object {

@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -48,12 +49,12 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.updateMessageStateAndBody(data.id, data.state, data.body)
     }
 
-    override fun loadMessages(channel: SceytChannel, conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+    override fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             val dbMessages = getMessagesDb(conversationId, lastMessageId, offset)
             trySend(PaginationResponse.DBResponse(dbMessages, offset))
 
-            val response = messagesRepository.getMessages(channel, conversationId, lastMessageId, replayInThread)
+            val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
             trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf()))
 
@@ -97,11 +98,11 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun sendMessage(channel: SceytChannel, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
-        val response = messagesRepository.sendMessage(channel, message) { tmpMessage ->
+    override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
+        val response = messagesRepository.sendMessage(channelId, message) { tmpMessage ->
             val tmpMessageDb = tmpMessage.toMessageDb().also { it.messageEntity.id = null }
             messageDao.insertMessage(tmpMessageDb)
-            channelDao.updateLastMessage(channel.id, tmpMessage.tid, tmpMessage.createdAt.time)
+            channelDao.updateLastMessage(channelId, tmpMessage.tid, tmpMessage.createdAt.time)
             tmpMessageCb.invoke(tmpMessage)
         }
         if (response is SceytResponse.Success) {
@@ -109,14 +110,14 @@ internal class PersistenceMessagesLogicImpl(
                 messageDao.updateMessageByParams(
                     tid = responseMsg.tid, serverId = responseMsg.id,
                     date = responseMsg.createdAt, status = DeliveryStatus.Sent)
-                channelDao.updateLastMessage(channel.id, responseMsg.id, responseMsg.createdAt)
+                channelDao.updateLastMessage(channelId, responseMsg.id, responseMsg.createdAt)
             }
         }
         return response
     }
 
-    override suspend fun deleteMessage(channel: SceytChannel, messageId: Long): SceytResponse<SceytMessage> {
-        val response = messagesRepository.deleteMessage(channel, messageId)
+    override suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteMessage(channelId, messageId)
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
                 messageDao.deleteAttachments(messageId)
@@ -126,12 +127,12 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
-    override suspend fun markAsRead(channel: SceytChannel, vararg ids: Long): SceytResponse<MessageListMarker> {
-        val response = messagesRepository.markAsRead(channel, *ids)
+    override suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+        val response = messagesRepository.markAsRead(channelId, *ids)
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
                 messageListMarker.messageIds
-                messageDao.updateMessagesStatusAsRead(channel.id, messageListMarker.messageIds)
+                messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
             }
         }
         return response

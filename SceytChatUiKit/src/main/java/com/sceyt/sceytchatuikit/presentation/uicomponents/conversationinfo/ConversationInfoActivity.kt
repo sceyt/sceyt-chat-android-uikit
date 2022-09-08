@@ -15,10 +15,7 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.ActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -119,24 +116,24 @@ open class ConversationInfoActivity : AppCompatActivity() {
         }
 
         icEditPhoto.setOnClickListener {
-             EditAvatarTypeDialog(this@ConversationInfoActivity) {
-                 when (it) {
-                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
-                         chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
-                             if (uris.isNotEmpty())
-                                 setAvatarImage(uris[0])
-                         }
-                     }
-                     EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
-                         chooseAttachmentHelper.takePicture { uri ->
-                             setAvatarImage(uri)
-                         }
-                     }
-                     EditAvatarTypeDialog.EditAvatarType.Delete -> {
-                         setAvatarImage(null)
-                     }
-                 }
-             }.show()
+            EditAvatarTypeDialog(this@ConversationInfoActivity) {
+                when (it) {
+                    EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
+                        chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
+                            if (uris.isNotEmpty())
+                                setAvatarImage(uris[0])
+                        }
+                    }
+                    EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
+                        chooseAttachmentHelper.takePicture { uri ->
+                            setAvatarImage(uri)
+                        }
+                    }
+                    EditAvatarTypeDialog.EditAvatarType.Delete -> {
+                        setAvatarImage(null)
+                    }
+                }
+            }.show()
         }
 
         subject.setOnEditorActionListener { _, actionId, _ ->
@@ -293,19 +290,28 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     protected fun editChannel(subject: String, avatarUrl: String?) {
-        viewModel.saveChanges(channel as SceytGroupChannel, subject, avatarUrl)
+        val data = EditChannelData(
+            newSubject = subject,
+            metadata = channel.metadata,
+            label = channel.label,
+            avatarUrl = avatarUrl,
+            channelUrl = (channel as SceytGroupChannel).channelUrl,
+            channelType = channel.channelType,
+            avatarEdited = channel.getChannelAvatarUrl() == avatarUrl
+        )
+        viewModel.saveChanges(channel.id, data)
     }
 
     protected fun clearHistory() {
-        viewModel.clearHistory(channel)
+        viewModel.clearHistory(channel.id)
     }
 
     protected fun leaveChannel() {
-        viewModel.leaveChannel(channel)
+        viewModel.leaveChannel(channel.id)
     }
 
     protected fun blockAndLeaveChannel() {
-        viewModel.blockAndLeaveChannel(channel)
+        viewModel.blockAndLeaveChannel(channel.id)
     }
 
     protected fun blockUser(userId: String) {
@@ -317,15 +323,15 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     protected fun deleteChannel() {
-        viewModel.deleteChannel(channel)
+        viewModel.deleteChannel(channel.id)
     }
 
     protected fun muteChannel(until: Long) {
-        viewModel.muteChannel(channel, until)
+        viewModel.muteChannel(channel.id, until)
     }
 
     protected fun unMuteChannel() {
-        viewModel.unMuteChannel(channel)
+        viewModel.unMuteChannel(channel.id)
     }
 
     protected fun showSceytDialog(@StringRes titleId: Int,

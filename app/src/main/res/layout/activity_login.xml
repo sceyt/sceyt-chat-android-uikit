@@ -58,13 +58,12 @@
                     android:layout_marginTop="35dp"
                     android:background="@android:color/transparent"
                     android:hint="@string/username"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="-10dp"
                     android:textColorHint="@color/sceyt_color_hint"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxCollapsedPaddingTop="5dp"
                     app:endIconMode="custom"
                     app:endIconTint="@color/sceyt_color_accent"
+                    style="@style/My.TextInputLayout.FilledBox.Padding"
                     app:errorEnabled="true"
                     app:layout_constraintTop_toBottomOf="@id/subTitle"
                     app:placeholderText="@string/enter_username">
@@ -96,6 +95,7 @@
                     app:endIconMode="custom"
                     app:endIconTint="@color/sceyt_color_accent"
                     app:errorEnabled="true"
+                    style="@style/My.TextInputLayout.FilledBox.Padding"
                     app:layout_constraintTop_toBottomOf="@id/userNameTextField"
                     app:placeholderText="@string/enter_display_name">
 

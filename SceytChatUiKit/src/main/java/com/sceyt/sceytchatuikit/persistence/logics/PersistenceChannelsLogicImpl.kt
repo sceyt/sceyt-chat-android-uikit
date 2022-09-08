@@ -4,12 +4,10 @@ import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
@@ -26,6 +24,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -177,74 +176,72 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override suspend fun markChannelAsRead(channel: SceytChannel): SceytResponse<MessageListMarker> {
-        val response = channelsRepository.markAsRead(channel)
+    override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.markAsRead(channelId)
 
         if (response is SceytResponse.Success)
-            messageDao.updateAllMessagesStatusAsRead(channel.id)
+            messageDao.updateAllMessagesStatusAsRead(channelId)
 
         return response
     }
 
-    override suspend fun clearHistory(channel: SceytChannel): SceytResponse<Long> {
-        val response = channelsRepository.clearHistory(channel)
+    override suspend fun clearHistory(channelId: Long): SceytResponse<Long> {
+        val response = channelsRepository.clearHistory(channelId)
 
         if (response is SceytResponse.Success) {
-            channelDao.updateLastMessage(channel.id, null, null)
-            messageDao.deleteAllMessages(channel.id)
+            channelDao.updateLastMessage(channelId, null, null)
+            messageDao.deleteAllMessages(channelId)
         }
         return response
     }
 
-    override suspend fun blockAndLeaveChannel(channel: SceytChannel): SceytResponse<Long> {
-        require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.blockChannel(channel)
+    override suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long> {
+        val response = channelsRepository.blockChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            channelDao.deleteChannelAndLinks(channel.id)
-            messageDao.deleteAllMessages(channel.id)
-        }
-
-        return response
-    }
-
-    override suspend fun leaveChannel(channel: SceytChannel): SceytResponse<Long> {
-        require(channel is SceytGroupChannel) { "Channel must be group" }
-        val response = channelsRepository.leaveChannel(channel)
-
-        if (response is SceytResponse.Success) {
-            channelDao.deleteChannelAndLinks(channel.id)
-            messageDao.deleteAllMessages(channel.id)
+            channelDao.deleteChannelAndLinks(channelId)
+            messageDao.deleteAllMessages(channelId)
         }
 
         return response
     }
 
-    override suspend fun deleteChannel(channel: SceytChannel): SceytResponse<Long> {
-        val response = channelsRepository.deleteChannel(channel)
+    override suspend fun leaveChannel(channelId: Long): SceytResponse<Long> {
+        val response = channelsRepository.leaveChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            channelDao.deleteChannelAndLinks(channel.id)
-            messageDao.deleteAllMessages(channel.id)
+            channelDao.deleteChannelAndLinks(channelId)
+            messageDao.deleteAllMessages(channelId)
         }
 
         return response
     }
 
-    override suspend fun muteChannel(channel: SceytChannel, muteUntil: Long): SceytResponse<SceytChannel> {
-        val response = channelsRepository.muteChannel(channel, muteUntil)
+    override suspend fun deleteChannel(channelId: Long): SceytResponse<Long> {
+        val response = channelsRepository.deleteChannel(channelId)
+
+        if (response is SceytResponse.Success) {
+            channelDao.deleteChannelAndLinks(channelId)
+            messageDao.deleteAllMessages(channelId)
+        }
+
+        return response
+    }
+
+    override suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.muteChannel(channelId, muteUntil)
 
         if (response is SceytResponse.Success)
-            channelDao.updateMuteState(channelId = channel.id, muted = true, muteUntil = muteUntil)
+            channelDao.updateMuteState(channelId = channelId, muted = true, muteUntil = muteUntil)
 
         return response
     }
 
-    override suspend fun unMuteChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
-        val response = channelsRepository.unMuteChannel(channel)
+    override suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.unMuteChannel(channelId)
 
         if (response is SceytResponse.Success)
-            channelDao.updateMuteState(channelId = channel.id, muted = false)
+            channelDao.updateMuteState(channelId = channelId, muted = false)
 
         return response
     }
@@ -258,19 +255,18 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override suspend fun editChannel(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
-        var newUrl = avatarUrl
-        val editedAvatar = channel.getChannelAvatarUrl() != avatarUrl
-        if (editedAvatar && avatarUrl != null) {
-            val uploadResult = channelsRepository.uploadAvatar(avatarUrl)
+    override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
+        var newUrl = data.avatarUrl
+        if (data.avatarEdited && data.avatarUrl != null) {
+            val uploadResult = channelsRepository.uploadAvatar(data.avatarUrl)
             if (uploadResult is SceytResponse.Success) {
                 newUrl = uploadResult.data
             } else
                 return SceytResponse.Error(uploadResult.message)
         }
-        val response = channelsRepository.editChannel(channel, newSubject, newUrl)
+        val response = channelsRepository.editChannel(channelId, data)
         if (response is SceytResponse.Success)
-            channelDao.updateChannelSubjectAndAvatarUrl(channel.id, newSubject, newUrl)
+            channelDao.updateChannelSubjectAndAvatarUrl(channelId, data.newSubject, newUrl)
 
         return response
     }

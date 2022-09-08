@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toMember
@@ -100,9 +99,9 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
         return memberItems
     }
 
-    fun changeOwner(channel: SceytChannel, id: String) {
+    fun changeOwner(channelId: Long, id: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.changeChannelOwner(channel, id)
+            val response = membersMiddleWare.changeChannelOwner(channelId, id)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 _changeOwnerLiveData.postValue((groupChannel.members.find { it.role.name == "owner" }
@@ -112,10 +111,10 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
         }
     }
 
-    fun kickMember(channel: SceytChannel, memberId: String, block: Boolean) {
+    fun kickMember(channelId: Long, memberId: String, block: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = if (block) membersMiddleWare.blockAndDeleteMember(channel, memberId)
-            else membersMiddleWare.deleteMember(channel, memberId)
+            val response = if (block) membersMiddleWare.blockAndDeleteMember(channelId, memberId)
+            else membersMiddleWare.deleteMember(channelId, memberId)
 
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
@@ -130,9 +129,9 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
         }
     }
 
-    fun changeRole(channel: SceytChannel, member: SceytMember) {
+    fun changeRole(channelId: Long, member: SceytMember) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.changeChannelMemberRole(channel, member)
+            val response = membersMiddleWare.changeChannelMemberRole(channelId, member)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 _channelMemberEventLiveData.postValue(com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData(
@@ -146,10 +145,10 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
         }
     }
 
-    fun addMembersToChannel(channel: SceytChannel, users: ArrayList<SceytMember>) {
+    fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
             val members = users.map { it.toMember() }
-            val response = membersMiddleWare.addMembersToChannel(channel, members)
+            val response = membersMiddleWare.addMembersToChannel(channelId, members)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 if (groupChannel.members.isNullOrEmpty()) return@launch

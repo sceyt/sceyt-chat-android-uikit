@@ -26,7 +26,7 @@ class LinkPreviewHelper {
         val url = URLUtil.guessUrl(link)
         scope.launch(Dispatchers.IO) {
             val doc: Document
-            val previewMetaData = PreviewMetaData(loadId = loadId)
+            val previewMetaData = PreviewMetaData(messageId = loadId)
             try {
                 doc = Jsoup.connect(URLUtil.guessUrl(url))
                     .timeout(10 * 1000)
@@ -168,7 +168,7 @@ class LinkPreviewHelper {
     }
 
     data class PreviewMetaData(
-            val loadId: Long,
+            val messageId: Long,
             var url: String? = null,
             var imageUrl: String? = null,
             var title: String? = null,

@@ -13,8 +13,8 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.logics.PersistenceChannelsLogic
@@ -84,24 +84,24 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return channelLogic.loadChannels(offset, searchQuery)
     }
 
-    override suspend fun markChannelAsRead(channel: SceytChannel): SceytResponse<MessageListMarker> {
-        return channelLogic.markChannelAsRead(channel)
+    override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.markChannelAsRead(channelId)
     }
 
-    override suspend fun clearHistory(channel: SceytChannel): SceytResponse<Long> {
-        return channelLogic.clearHistory(channel)
+    override suspend fun clearHistory(channelId: Long): SceytResponse<Long> {
+        return channelLogic.clearHistory(channelId)
     }
 
-    override suspend fun blockAndLeaveChannel(channel: SceytChannel): SceytResponse<Long> {
-        return channelLogic.blockAndLeaveChannel(channel)
+    override suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long> {
+        return channelLogic.blockAndLeaveChannel(channelId)
     }
 
-    override suspend fun deleteChannel(channel: SceytChannel): SceytResponse<Long> {
-        return channelLogic.deleteChannel(channel)
+    override suspend fun deleteChannel(channelId: Long): SceytResponse<Long> {
+        return channelLogic.deleteChannel(channelId)
     }
 
-    override suspend fun leaveChannel(channel: SceytChannel): SceytResponse<Long> {
-        return channelLogic.leaveChannel(channel)
+    override suspend fun leaveChannel(channelId: Long): SceytResponse<Long> {
+        return channelLogic.leaveChannel(channelId)
     }
 
     override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
@@ -112,20 +112,20 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return channelLogic.createChannel(createChannelData)
     }
 
-    override suspend fun muteChannel(channel: SceytChannel, muteUntil: Long): SceytResponse<SceytChannel> {
-        return channelLogic.muteChannel(channel, muteUntil)
+    override suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel> {
+        return channelLogic.muteChannel(channelId, muteUntil)
     }
 
-    override suspend fun unMuteChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
-        return channelLogic.unMuteChannel(channel)
+    override suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.unMuteChannel(channelId)
     }
 
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.getChannelFromServer(channelId)
     }
 
-    override suspend fun editChannel(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?): SceytResponse<SceytChannel> {
-        return channelLogic.editChannel(channel, newSubject, avatarUrl)
+    override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
+        return channelLogic.editChannel(channelId, data)
     }
 
     override suspend fun loadChannelMembers(channelId: Long, offset: Int): Flow<PaginationResponse<SceytMember>> {
@@ -136,42 +136,41 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return membersLogic.blockUnBlockUser(userId, block)
     }
 
-    override suspend fun changeChannelOwner(channel: SceytChannel, newOwnerId: String): SceytResponse<SceytChannel> {
-        return membersLogic.changeChannelOwner(channel, newOwnerId)
+    override suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel> {
+        return membersLogic.changeChannelOwner(channelId, newOwnerId)
     }
 
-    override suspend fun changeChannelMemberRole(channel: SceytChannel, member: SceytMember): SceytResponse<SceytChannel> {
-        return membersLogic.changeChannelMemberRole(channel, member)
+    override suspend fun changeChannelMemberRole(channelId: Long, member: SceytMember): SceytResponse<SceytChannel> {
+        return membersLogic.changeChannelMemberRole(channelId, member)
     }
 
-    override suspend fun addMembersToChannel(channel: SceytChannel, members: List<Member>): SceytResponse<SceytChannel> {
-        return membersLogic.addMembersToChannel(channel, members)
+    override suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel> {
+        return membersLogic.addMembersToChannel(channelId, members)
     }
 
-    override suspend fun blockAndDeleteMember(channel: SceytChannel, memberId: String): SceytResponse<SceytChannel> {
-        return membersLogic.blockAndDeleteMember(channel, memberId)
+    override suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
+        return membersLogic.blockAndDeleteMember(channelId, memberId)
     }
 
-    override suspend fun deleteMember(channel: SceytChannel, memberId: String): SceytResponse<SceytChannel> {
-        return membersLogic.deleteMember(channel, memberId)
+    override suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
+        return membersLogic.deleteMember(channelId, memberId)
     }
 
-    override suspend fun loadMessages(channel: SceytChannel,
-                                      conversationId: Long,
+    override suspend fun loadMessages(conversationId: Long,
                                       lastMessageId: Long,
                                       replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadMessages(channel, conversationId, lastMessageId, replayInThread, offset)
+        return messagesLogic.loadMessages(conversationId, lastMessageId, replayInThread, offset)
     }
 
-    override suspend fun sendMessage(channel: SceytChannel, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
-        return messagesLogic.sendMessage(channel, message, tmpMessageCb)
+    override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
+        return messagesLogic.sendMessage(channelId, message, tmpMessageCb)
     }
 
-    override suspend fun deleteMessage(channel: SceytChannel, messageId: Long): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteMessage(channel, messageId)
+    override suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channelId, messageId)
     }
 
-    override suspend fun markAsRead(channel: SceytChannel, vararg ids: Long): SceytResponse<MessageListMarker> {
-        return messagesLogic.markAsRead(channel, *ids)
+    override suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+        return messagesLogic.markAsRead(channelId, *ids)
     }
 }

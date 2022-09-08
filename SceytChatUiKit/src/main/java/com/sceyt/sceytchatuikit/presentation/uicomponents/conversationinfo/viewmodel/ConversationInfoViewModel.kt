@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -48,37 +48,37 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun saveChanges(channel: SceytGroupChannel, newSubject: String, avatarUrl: String?) {
+    fun saveChanges(channelId: Long, data: EditChannelData) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.editChannel(channel, newSubject, avatarUrl)
+            val response = channelsMiddleWare.editChannel(channelId, data)
             notifyResponseAndPageState(_editChannelLiveData, response)
         }
     }
 
-    fun clearHistory(channel: SceytChannel) {
+    fun clearHistory(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.clearHistory(channel)
+            val response = channelsMiddleWare.clearHistory(channelId)
             notifyResponseAndPageState(_clearHistoryLiveData, response)
         }
     }
 
-    fun leaveChannel(channel: SceytChannel) {
+    fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.leaveChannel(channel)
+            val response = channelsMiddleWare.leaveChannel(channelId)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
-    fun blockAndLeaveChannel(channel: SceytChannel) {
+    fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.blockAndLeaveChannel(channel)
+            val response = channelsMiddleWare.blockAndLeaveChannel(channelId)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
-    fun deleteChannel(channel: SceytChannel) {
+    fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.deleteChannel(channel)
+            val response = channelsMiddleWare.deleteChannel(channelId)
             notifyResponseAndPageState(_deleteChannelLiveData, response)
         }
     }
@@ -97,16 +97,16 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun muteChannel(channel: SceytChannel, muteUntil: Long) {
+    fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.muteChannel(channel, muteUntil)
+            val response = channelsMiddleWare.muteChannel(channelId, muteUntil)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 
-    fun unMuteChannel(channel: SceytChannel) {
+    fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.unMuteChannel(channel)
+            val response = channelsMiddleWare.unMuteChannel(channelId)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }

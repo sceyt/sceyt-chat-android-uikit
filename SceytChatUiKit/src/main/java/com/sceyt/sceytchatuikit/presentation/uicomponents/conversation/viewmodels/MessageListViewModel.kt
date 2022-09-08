@@ -136,7 +136,7 @@ class MessageListViewModel(private val conversationId: Long,
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadMessages(channel, conversationId, lastMessageId, replayInThread, offset).collect {
+            persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
                 initResponse(it)
             }
         }
@@ -171,7 +171,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     private fun deleteMessage(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel, messageId)
+            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -181,7 +181,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     private fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.addReaction(channel, message.id, scoreKey)
+            val response = messagesRepository.addReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
                 if (this is SceytResponse.Success) {
                     data?.let {
@@ -194,7 +194,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     private fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.deleteReaction(channel, message.id, scoreKey)
+            val response = messagesRepository.deleteReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
                 if (this is SceytResponse.Success) {
                     data?.let {
@@ -232,7 +232,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.sendMessage(channel, message) { tmpMessage ->
+            val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
                 val outMessage = tmpMessage.toSceytUiMessage(isGroup)
                 _onNewOutgoingMessageLiveData.postValue(outMessage)
                 MessageEventsObserver.emitOutgoingMessage(outMessage.clone())
@@ -252,7 +252,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.sendMessage(channel, message) { tmpMessage ->
+            val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
                 _onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
                     this.parent = parent?.toSceytUiMessage()
                 })
@@ -263,7 +263,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.editMessage(channel, message)
+            val response = messagesRepository.editMessage(channel.id, message)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -273,19 +273,19 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.markAsRead(channel, *id)
+            persistenceMessageMiddleWare.markAsRead(channel.id, *id)
         }
     }
 
     internal fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.sendTypingState(channel, typing)
+            messagesRepository.sendTypingState(channel.id, typing)
         }
     }
 
     internal fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.join(channel)
+            val response = messagesRepository.join(channel.id)
             _joinLiveData.postValue(response)
         }
     }

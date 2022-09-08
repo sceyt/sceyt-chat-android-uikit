@@ -13,14 +13,21 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
-import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
+import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
+import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.screenHeightPx
+import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
@@ -29,14 +36,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.viewholders.ChannelMembersViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.popups.PopupMenuMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
-import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
-import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.screenHeightPx
-import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
@@ -87,7 +87,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
         /* if (result.resultCode == Activity.RESULT_OK) {
              result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
                  addMembersToChannel(users)
@@ -230,11 +230,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected fun addMembersToChannel(members: List<SceytMember>) {
-        viewModel.addMembersToChannel(channel, members as ArrayList)
+        viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
     protected open fun changeOwnerClick(newOwnerId: String) {
-        viewModel.changeOwner(channel, newOwnerId)
+        viewModel.changeOwner(channel.id, newOwnerId)
     }
 
     protected open fun changeRoleClick(member: SceytMember) {
@@ -242,15 +242,15 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun changeRoleClick(member: SceytMember, role: String) {
-        viewModel.changeRole(channel, member.copy(role = Role(role)))
+        viewModel.changeRole(channel.id, member.copy(role = Role(role)))
     }
 
     protected open fun kickMemberClick(memberId: String) {
-        viewModel.kickMember(channel, memberId, false)
+        viewModel.kickMember(channel.id, memberId, false)
     }
 
     protected open fun blockAndKickMemberClick(memberId: String) {
-        viewModel.kickMember(channel, memberId, true)
+        viewModel.kickMember(channel.id, memberId, true)
     }
 
     protected open fun onMembersList(data: PaginationResponse<MemberItem>) {
