@@ -22,7 +22,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessagePopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bind
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 
@@ -46,9 +46,9 @@ open class ConversationActivity : AppCompatActivity() {
             .root)
 
 
-        viewModel.bindView(binding.messagesListView, lifecycleOwner = this)
-        viewModel.bindView(binding.messageInputView, replayMessage, lifecycleOwner = this)
-        viewModel.bindView(binding.headerView, replayMessage, lifecycleOwner = this)
+        viewModel.bind(binding.messagesListView, lifecycleOwner = this)
+        viewModel.bind(binding.messageInputView, replayMessage, lifecycleOwner = this)
+        viewModel.bind(binding.headerView, replayMessage, lifecycleOwner = this)
 
 
         //This listener will not work if you have added custom click listener

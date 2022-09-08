@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
+    //Todo need review
     private val profileRepo: ProfileRepository by inject()
     private val preference: SceytSharedPreference by inject()
     private val sceytDatabase: SceytDatabase by inject()

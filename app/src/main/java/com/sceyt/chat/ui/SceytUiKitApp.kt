@@ -19,6 +19,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
+import com.sceyt.chat.ui.di.viewModelModules
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import org.json.JSONObject
 import org.koin.android.ext.android.inject
@@ -38,7 +39,7 @@ class SceytUiKitApp : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@SceytUiKitApp)
-            modules(arrayListOf(appModules))
+            modules(arrayListOf(appModules, viewModelModules))
         }
 
         initSceyt()

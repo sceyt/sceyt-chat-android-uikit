@@ -5,13 +5,14 @@ import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.adapters.LinkItem
 import com.sceyt.sceytchatuikit.databinding.ItemChannelLinkBinding
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 
 class LinkViewHolder(private var binding: ItemChannelLinkBinding,
                      private val linkPreview: LinkPreviewHelper,
                      private val clickListener: ChannelLinkViewHolderFactory.LinkClickListener)
-    : com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem>(binding.root) {
+    : BaseViewHolder<LinkItem>(binding.root) {
 
     private lateinit var listItem: LinkItem.Link
 

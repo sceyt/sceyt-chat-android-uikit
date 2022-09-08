@@ -367,6 +367,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
+        messagesRV.setMessageDisplayedListener(listener)
+    }
+
     internal fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadMoreMessagesListener(listener)
     }
@@ -481,7 +485,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReplayMessageInThreadClick(message: SceytMessage) {
-       // Override and add your logic if you
+        // Override and add your logic if you
     }
 
 

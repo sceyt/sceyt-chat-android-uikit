@@ -6,6 +6,7 @@ import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 
-abstract class BaseFileViewHolder(itemView: View) : com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<FileListItem>(itemView) {
+abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
     protected lateinit var fileItem: FileListItem
 
     override fun bind(item: FileListItem) {

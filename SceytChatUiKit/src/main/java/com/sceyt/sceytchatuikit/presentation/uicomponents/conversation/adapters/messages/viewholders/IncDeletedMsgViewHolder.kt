@@ -16,6 +16,8 @@ class IncDeletedMsgViewHolder(
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+
         if (item is MessageListItem.MessageItem) {
             with(binding) {
                 val message = item.message

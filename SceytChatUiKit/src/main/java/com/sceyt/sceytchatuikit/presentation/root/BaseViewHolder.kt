@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.common
+package com.sceyt.sceytchatuikit.presentation.root
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView

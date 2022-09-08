@@ -2,17 +2,18 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.link
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.adapters.viewholders.ChannelLinkViewHolderFactory
 
 class LinksAdapter(private val attachments: ArrayList<LinkItem>,
                    private val viewHolderFactory: ChannelLinkViewHolderFactory)
-    : RecyclerView.Adapter<com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem>>() {
+    : RecyclerView.Adapter<BaseViewHolder<LinkItem>>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<LinkItem> {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<LinkItem>, position: Int) {
+    override fun onBindViewHolder(holder: BaseViewHolder<LinkItem>, position: Int) {
         holder.bind(attachments[position])
     }
 

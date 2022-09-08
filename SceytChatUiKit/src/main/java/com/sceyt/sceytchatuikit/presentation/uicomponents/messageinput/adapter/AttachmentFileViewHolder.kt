@@ -7,10 +7,11 @@ import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import java.io.File
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBinding,
-                               private val callbacks: Callbacks) : com.sceyt.sceytchatuikit.presentation.common.BaseViewHolder<AttachmentItem>(binding.root) {
+                               private val callbacks: Callbacks) : BaseViewHolder<AttachmentItem>(binding.root) {
 
     override fun bind(item: AttachmentItem) {
         with(binding.fileImage) {

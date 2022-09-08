@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -17,26 +18,26 @@ class IncLinkMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListenersImpl?,
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners) {
-
-    private lateinit var messageItem: MessageListItem.MessageItem
+        displayedListener: ((SceytMessage) -> Unit)?,
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener) {
 
     init {
         binding.setMessageItemStyle()
 
         binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageItem)
+            messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
             return@setOnLongClickListener true
         }
 
         binding.layoutDetails.setOnClickListener {
-            messageListeners?.onLinkClick(it, messageItem)
+            messageListeners?.onLinkClick(it, messageItem as MessageListItem.MessageItem)
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+
         if (item is MessageListItem.MessageItem) {
-            messageItem = item
             with(binding) {
                 val message = item.message
 
@@ -67,7 +68,7 @@ class IncLinkMsgViewHolder(
                         messageListeners?.onAvatarClick(it, item)
                     }
 
-                loadLinkPreview(messageItem, layoutLinkPreview, messageBody)
+                loadLinkPreview(item, layoutLinkPreview, messageBody)
             }
         }
     }

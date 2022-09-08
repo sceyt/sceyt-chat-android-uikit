@@ -4,6 +4,10 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -21,14 +25,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext
 
+//todo need review from users view model
+class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
+        PersistenceMessagesMiddleWare, PersistenceChanelMiddleWare, SceytKoinComponent {
 
-internal class PersistenceMiddleWareImpl(
-        private val channelLogic: PersistenceChannelsLogic,
-        private val messagesLogic: PersistenceMessagesLogic,
-        private val membersLogic: PersistenceMembersLogic) : CoroutineScope,
-        com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare, com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare, com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare {
+    private val channelLogic: PersistenceChannelsLogic by inject()
+    private val messagesLogic: PersistenceMessagesLogic by inject()
+    private val membersLogic: PersistenceMembersLogic by inject()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -45,15 +51,15 @@ internal class PersistenceMiddleWareImpl(
         launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
     }
 
-    private fun onChannelEvent(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData) {
+    private fun onChannelEvent(data: ChannelEventData) {
         channelLogic.onChannelEvent(data)
     }
 
-    private fun onChannelMemberEvent(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
+    private fun onChannelMemberEvent(data: ChannelMembersEventData) {
         membersLogic.onChannelMemberEvent(data)
     }
 
-    private fun onChannelOwnerChangedEvent(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData) {
+    private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
         membersLogic.onChannelOwnerChangedEvent(data)
     }
 
@@ -163,5 +169,9 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun deleteMessage(channel: SceytChannel, messageId: Long): SceytResponse<SceytMessage> {
         return messagesLogic.deleteMessage(channel, messageId)
+    }
+
+    override suspend fun markAsRead(channel: SceytChannel, vararg ids: Long): SceytResponse<MessageListMarker> {
+        return messagesLogic.markAsRead(channel, *ids)
     }
 }

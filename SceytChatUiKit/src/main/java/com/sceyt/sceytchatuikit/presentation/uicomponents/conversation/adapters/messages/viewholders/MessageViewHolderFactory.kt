@@ -16,10 +16,11 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 open class MessageViewHolderFactory(context: Context,
                                     private val linkPreview: LinkPreviewHelper) {
 
-    private var listeners = MessageClickListenersImpl()
     private val layoutInflater = LayoutInflater.from(context)
     private val viewPoolReactions = RecyclerView.RecycledViewPool()
     private val viewPoolFiles = RecyclerView.RecycledViewPool()
+    private var clickListeners = MessageClickListenersImpl()
+    private var displayedListener: ((SceytMessage) -> Unit)? = null
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return when (viewType) {
@@ -40,39 +41,39 @@ open class MessageViewHolderFactory(context: Context,
     open fun createIncTextMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncTextMsgViewHolder(
             SceytItemIncTextMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, listeners)
+            viewPoolReactions, clickListeners, displayedListener)
     }
 
     open fun createOutTextMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutTextMsgViewHolder(
             SceytItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, listeners)
+            viewPoolReactions, clickListeners)
     }
 
     open fun createIncLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncLinkMsgViewHolder(
             SceytItemIncLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, linkPreview, listeners)
+            viewPoolReactions, linkPreview, clickListeners, displayedListener)
     }
 
     open fun createOutLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutLinkMsgViewHolder(
             SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, linkPreview, listeners)
+            viewPoolReactions, linkPreview, clickListeners)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncFilesMsgViewHolder(
             SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions,
-            viewPoolFiles, listeners)
+            viewPoolFiles, clickListeners, displayedListener)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutFilesMsgViewHolder(
             SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions,
-            viewPoolFiles, listeners)
+            viewPoolFiles, clickListeners)
     }
 
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -120,10 +121,14 @@ open class MessageViewHolderFactory(context: Context,
     }
 
     fun setMessageListener(listener: MessageClickListeners) {
-        listeners.setListener(listener)
+        clickListeners.setListener(listener)
     }
 
-    protected val clickListeners get() = listeners as MessageClickListeners.ClickListeners
+    fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
+        displayedListener = listener
+    }
+
+    protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners
 
     enum class MessageTypeEnum {
         IncText,

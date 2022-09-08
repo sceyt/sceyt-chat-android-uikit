@@ -17,23 +17,22 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
 class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl?,
+        private val messageListeners: MessageClickListenersImpl?
 ) : BaseMsgViewHolder(binding.root, messageListeners) {
-
-    private lateinit var messageItem: MessageListItem.MessageItem
 
     init {
         binding.setMessageItemStyle()
 
         binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageItem)
+            messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
             return@setOnLongClickListener true
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+
         if (item is MessageListItem.MessageItem) {
-            messageItem = item
             with(binding) {
                 val message = item.message
 

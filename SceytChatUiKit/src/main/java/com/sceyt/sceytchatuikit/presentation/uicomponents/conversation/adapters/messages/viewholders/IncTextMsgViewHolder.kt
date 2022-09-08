@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
@@ -16,26 +17,26 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.INC_EDITED_SPACE
 class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl?
-) : BaseMsgViewHolder(binding.root, messageListeners) {
-
-    private lateinit var messageItem: MessageListItem.MessageItem
+        private val messageListeners: MessageClickListenersImpl?,
+        displayedListener: ((SceytMessage) -> Unit)?
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener) {
 
     init {
         with(binding) {
             setMessageItemStyle()
 
             layoutDetails.setOnLongClickListener {
-                messageListeners?.onMessageLongClick(it, messageItem)
+                messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
             }
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+
         if (item is MessageListItem.MessageItem) {
             with(binding) {
-                messageItem = item
                 val message = item.message
 
                 if (diff.edited || diff.bodyChanged) {
@@ -58,9 +59,9 @@ class IncTextMsgViewHolder(
                 if (diff.replayContainerChanged)
                     setReplayedMessageContainer(message, viewReplay)
 
-                if (messageItem.message.canShowAvatarAndName)
+                if (item.message.canShowAvatarAndName)
                     avatar.setOnClickListener {
-                        messageListeners?.onAvatarClick(it, messageItem)
+                        messageListeners?.onAvatarClick(it, item)
                     }
             }
         }

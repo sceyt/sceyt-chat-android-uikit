@@ -7,16 +7,17 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
+import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
+import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
+import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
-import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
-import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
-import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 import java.util.concurrent.atomic.AtomicBoolean
@@ -139,6 +140,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         viewHolderFactory.setMessageListener(listener)
     }
 
+    fun setMessageDisplayedListener(listener: (message: SceytMessage) -> Unit) {
+        viewHolderFactory.setMessageDisplayedListener(listener)
+    }
 
     /** Call this function to customise MessageViewHolderFactory and set your own.
      * Note: Call this function before initialising messages adapter.*/

@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 
-fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
     val myId = ClientWrapper.currentUser.id
 
@@ -42,37 +42,29 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
     messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
 
     lifecycleOwner.lifecycleScope.launch {
-        messagesFlow.collect {
-            when (it) {
-                is SceytResponse.Success -> {
-                    it.data?.let { data -> messagesListView.setMessagesList(data) }
-                }
-                is SceytResponse.Error -> {
-                    com.sceyt.sceytchatuikit.extensions.customToastSnackBar(messagesListView, it.message
-                            ?: "")
-                }
-            }
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        loadMessagesFlow.collect {
-            when (it) {
+        loadMessagesFlow.collect { response ->
+            when (response) {
                 is PaginationResponse.DBResponse -> {
-                    if (it.offset == 0) {
-                        messagesListView.setMessagesList(it.data)
-                    } else messagesListView.addNextPageMessages(it.data)
+                    if (response.offset == 0) {
+                        messagesListView.setMessagesList(response.data)
+                    } else messagesListView.addNextPageMessages(response.data)
                 }
                 is PaginationResponse.ServerResponse -> {
-                    if (it.data is SceytResponse.Success) {
-                        it.data.data?.let { data ->
-                            messagesListView.updateMessagesWithServerData(data, it.offset, lifecycleOwner) { list, hasNext ->
-
-                                return@updateMessagesWithServerData mapToMessageListItem(list.filterIsInstance<MessageListItem.MessageItem>().map { messageItem -> messageItem.message }, hasNext)
+                    if (response.data is SceytResponse.Success) {
+                        response.data.data?.let { data ->
+                            //todo temporary send last message as read to update peer messages as read
+                            if (response.offset == 0 && data.isNotEmpty()) {
+                                data.findLast { it is MessageListItem.MessageItem }?.let { item ->
+                                    markMessageAsDisplayed((item as MessageListItem.MessageItem).message.id)
+                                }
+                            }
+                            messagesListView.updateMessagesWithServerData(data, response.offset, lifecycleOwner) { list, hasNext ->
+                                return@updateMessagesWithServerData mapToMessageListItem(
+                                    list.filterIsInstance<MessageListItem.MessageItem>().map { messageItem -> messageItem.message }, hasNext)
                             }
                         }
                     }
-                    notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+                    notifyPageStateWithResponse(response.data, response.offset > 0, response.data.data.isNullOrEmpty())
                 }
                 is PaginationResponse.Nothing -> return@collect
             }
@@ -240,11 +232,16 @@ fun MessageListViewModel.bindView(messagesListView: MessagesListView, lifecycleO
             loadMessages(lastMessageId, offset)
         }
     }
+
+    messagesListView.setMessageDisplayedListener {
+        //todo temporary disable send per message read ack
+        //markMessageAsDisplayed(it.id)
+    }
 }
 
-fun MessageListViewModel.bindView(messageInputView: MessageInputView,
-                                  replayInThreadMessage: SceytMessage?,
-                                  lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bind(messageInputView: MessageInputView,
+                              replayInThreadMessage: SceytMessage?,
+                              lifecycleOwner: LifecycleOwner) {
 
     messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
@@ -306,18 +303,18 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
             messageInputView.cancelReplay {
-                this@bindView.sendMessage(message)
+                this@bind.sendMessage(message)
             }
         }
 
         override fun sendReplayMessage(message: Message, parent: Message?) {
             messageInputView.cancelReplay {
-                this@bindView.sendReplayMessage(message, parent)
+                this@bind.sendReplayMessage(message, parent)
             }
         }
 
         override fun sendEditMessage(message: SceytMessage) {
-            this@bindView.editMessage(message)
+            this@bind.editMessage(message)
             messageInputView.cancelReplay()
         }
 
@@ -326,14 +323,14 @@ fun MessageListViewModel.bindView(messageInputView: MessageInputView,
         }
 
         override fun join() {
-            this@bindView.join()
+            this@bind.join()
         }
     }
 }
 
-fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
-                                  replayInThreadMessage: SceytMessage?,
-                                  lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bind(headerView: ConversationHeaderView,
+                              replayInThreadMessage: SceytMessage?,
+                              lifecycleOwner: LifecycleOwner) {
 
 
     if (replayInThread)
@@ -368,5 +365,5 @@ fun MessageListViewModel.bindView(headerView: ConversationHeaderView,
 
 
 fun bindViewFromJava(viewModel: MessageListViewModel, messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bindView(messagesListView, lifecycleOwner)
+    viewModel.bind(messagesListView, lifecycleOwner)
 }

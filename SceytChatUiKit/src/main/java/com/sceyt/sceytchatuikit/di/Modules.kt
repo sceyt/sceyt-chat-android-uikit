@@ -35,7 +35,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().userDao() }
     single { get<SceytDatabase>().messageDao() }
 
-    single { PersistenceMiddleWareImpl(get(), get(), get()) }
+    single { PersistenceMiddleWareImpl() }
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMessagesMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }

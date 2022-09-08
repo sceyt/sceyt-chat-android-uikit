@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics
 
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -120,6 +121,17 @@ internal class PersistenceMessagesLogicImpl(
             response.data?.let { message ->
                 messageDao.deleteAttachments(messageId)
                 messageDao.insertMessage(message.toMessageDb())
+            }
+        }
+        return response
+    }
+
+    override suspend fun markAsRead(channel: SceytChannel, vararg ids: Long): SceytResponse<MessageListMarker> {
+        val response = messagesRepository.markAsRead(channel, *ids)
+        if (response is SceytResponse.Success) {
+            response.data?.let { messageListMarker ->
+                messageListMarker.messageIds
+                messageDao.updateMessagesStatusAsRead(channel.id, messageListMarker.messageIds)
             }
         }
         return response
