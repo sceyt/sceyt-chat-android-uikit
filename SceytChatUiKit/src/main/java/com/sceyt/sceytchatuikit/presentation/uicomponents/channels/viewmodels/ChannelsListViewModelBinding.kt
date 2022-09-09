@@ -2,8 +2,8 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.GroupChannel
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
@@ -86,18 +86,18 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     lifecycleOwner.lifecycleScope.launch {
         onChannelEventFlow.collect {
             when (it.eventType) {
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Created -> getChannels(0, query = searchQuery)
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Deleted -> channelsListView.deleteChannel(it.channelId)
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left -> {
+                Created -> getChannels(0, query = searchQuery)
+                Deleted -> channelsListView.deleteChannel(it.channelId)
+                Left -> {
                     val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                    if (leftUser == ClientWrapper.currentUser.id)
+                    if (leftUser == preference.getUserId())
                         channelsListView.deleteChannel(it.channelId)
                 }
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory -> channelsListView.channelCleared(it.channelId
+                ClearedHistory -> channelsListView.channelCleared(it.channelId
                         ?: return@collect)
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Muted -> channelsListView.updateMuteState(true, it.channelId)
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnMuted -> channelsListView.updateMuteState(false, it.channelId)
+                Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
+                Muted -> channelsListView.updateMuteState(true, it.channelId)
+                UnMuted -> channelsListView.updateMuteState(false, it.channelId)
                 else -> return@collect
             }
         }

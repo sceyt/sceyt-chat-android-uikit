@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.logics
+package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User

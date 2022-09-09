@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.delay
 
-class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
 
     private lateinit var mAdapter: ChannelsAdapter

@@ -36,6 +36,9 @@ abstract class MessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insertAttachments(attachments: List<AttachmentEntity>)
 
+    @Update
+    abstract fun updateMessage(messageEntity: MessageEntity)
+
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
             "order by createdAt desc limit :limit")

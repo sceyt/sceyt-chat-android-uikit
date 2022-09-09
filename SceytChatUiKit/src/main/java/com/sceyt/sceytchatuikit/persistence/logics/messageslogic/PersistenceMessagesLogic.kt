@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.logics
+package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -20,4 +20,5 @@ internal interface PersistenceMessagesLogic {
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
     suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
+    suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage>
 }

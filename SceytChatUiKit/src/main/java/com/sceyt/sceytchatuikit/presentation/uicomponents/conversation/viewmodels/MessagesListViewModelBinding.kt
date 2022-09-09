@@ -4,16 +4,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toMessage
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
@@ -26,7 +27,6 @@ import kotlinx.coroutines.launch
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
-    val myId = ClientWrapper.currentUser.id
 
     loadMessages(0, 0)
 
@@ -81,8 +81,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         it.data?.deliveryStatus == DeliveryStatus.Failed) {
                     messagesListView.messageEditedOrDeleted(it.data)
                 } else
-                    com.sceyt.sceytchatuikit.extensions.customToastSnackBar(messagesListView, it.message
-                            ?: "")
+                    customToastSnackBar(messagesListView, it.message ?: "")
             }
         }
     }
@@ -95,8 +94,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
             }
             is SceytResponse.Error -> {
-                com.sceyt.sceytchatuikit.extensions.customToastSnackBar(messagesListView, it.message
-                        ?: "")
+                customToastSnackBar(messagesListView, it.message ?: "")
             }
         }
     }
@@ -166,14 +164,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     lifecycleOwner.lifecycleScope.launch {
         onChannelEventFlow.collect {
             when (it.eventType) {
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory -> messagesListView.clearData()
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left -> {
+                ClearedHistory -> messagesListView.clearData()
+                Left -> {
                     val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                    if (leftUser == ClientWrapper.currentUser.id &&
-                            (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
+                    if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
                         messagesListView.context.asAppCompatActivity().finish()
                 }
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Deleted -> messagesListView.context.asAppCompatActivity().finish()
+                Deleted -> messagesListView.context.asAppCompatActivity().finish()
                 else -> return@collect
             }
         }
@@ -191,8 +188,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 it.data?.let {
                     //messagesListView.messageSendFailed(msg.tid)
                 }
-                com.sceyt.sceytchatuikit.extensions.customToastSnackBar(messagesListView, it.message
-                        ?: "")
+                customToastSnackBar(messagesListView, it.message ?: "")
             }
         }
     }
@@ -249,7 +245,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError)
-            com.sceyt.sceytchatuikit.extensions.customToastSnackBar(messageInputView, it.errorMessage.toString())
+            customToastSnackBar(messageInputView, it.errorMessage.toString())
     }
 
     channelLiveData.observe(lifecycleOwner) {
@@ -281,17 +277,17 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     lifecycleOwner.lifecycleScope.launch {
         onChannelEventFlow.collect {
             when (it.eventType) {
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left -> {
+                Left -> {
                     if (channel.channelType == ChannelTypeEnum.Public) {
                         val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                        if (leftUser == ClientWrapper.currentUser.id)
+                        if (leftUser == myId)
                             messageInputView.onChannelLeft()
                     }
                 }
-                com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Joined -> {
+                Joined -> {
                     if (channel.channelType == ChannelTypeEnum.Public) {
                         val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                        if (leftUser == ClientWrapper.currentUser.id)
+                        if (leftUser == myId)
                             messageInputView.joinSuccess()
                     }
                 }

@@ -26,6 +26,9 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertUserChatLinks(userChatLinks: List<UserChatLink>): List<Long>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertUserChatLink(userChatLink: UserChatLink): Long
+
     @Transaction
     @Query("select * from channels where myRole is null or myRole !=:ignoreRole " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")

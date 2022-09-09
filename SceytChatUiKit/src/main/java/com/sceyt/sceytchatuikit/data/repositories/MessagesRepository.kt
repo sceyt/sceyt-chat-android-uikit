@@ -16,5 +16,4 @@ interface MessagesRepository {
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun markAsRead(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker>
     suspend fun sendTypingState(channelId: Long, typing: Boolean)
-    suspend fun join(channelId: Long): SceytResponse<SceytChannel>
 }

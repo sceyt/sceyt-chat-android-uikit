@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
@@ -10,12 +9,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import java.util.*
 
-fun SceytChannel.toChannelEntity(): ChannelEntity {
+fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
     var memberCount = 1L
     var myRole: RoleTypeEnum? = null
     if (isGroup) {
         memberCount = (this as SceytGroupChannel).memberCount
-        myRole = getMyRoleType()
+        myRole = getMyRoleType(currentUserId)
     }
 
     return ChannelEntity(
@@ -107,8 +106,8 @@ fun ChannelDb.toChannel(): SceytChannel {
 }
 
 
-fun SceytGroupChannel.getMyRoleType(): RoleTypeEnum {
-    return members.find { it.id == ClientWrapper.currentUser.id }?.let {
+fun SceytGroupChannel.getMyRoleType(currentUserId: String?): RoleTypeEnum {
+    return members.find { it.id == currentUserId }?.let {
         if (it.role.name == "owner")
             RoleTypeEnum.Owner
         else RoleTypeEnum.Member

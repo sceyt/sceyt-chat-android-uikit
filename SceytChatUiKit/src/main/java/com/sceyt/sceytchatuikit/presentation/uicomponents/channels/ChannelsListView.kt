@@ -10,6 +10,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
@@ -283,36 +284,61 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.show()
     }
 
+    /**
+     * @param listener Showing that scroll is finished, and return the current offset and last
+     * showing channel item.
+     */
     internal fun setReachToEndListener(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
         channelsRV.setRichToEndListeners(listener)
     }
 
+    /**
+     * @param listener From listening events connected with channel.
+     */
     internal fun setChannelEvenListener(listener: (ChannelEvent) -> Unit) {
         channelEventListener = listener
     }
 
+    /**
+     * @param listener Channel click listeners, to listen click events.
+     */
     fun setChannelClickListener(listener: ChannelClickListeners) {
         clickListeners.setListener(listener)
     }
 
-    fun setCustomChannelClickListeners(listeners: ChannelClickListenersImpl) {
-        clickListeners = listeners
+    /**
+     * @param listener The custom channel click listeners.
+     */
+    fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
+        clickListeners = listener
     }
 
+    /**
+     * User this method to set your custom popup click listeners.
+     * @param listener is the custom listener.
+     */
     fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListenersImpl) {
         popupClickListeners = listener
     }
 
+    /**
+     * User this method to set your custom view holder factory,
+     * which is extended from [ChannelViewHolderFactory].
+     * @param factory custom view holder factory, extended from [ChannelViewHolderFactory].
+     */
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         channelsRV.setViewHolderFactory(factory.also {
             it.setChannelListener(channelClickListeners)
         })
     }
 
-    fun getChannelsRv() = channelsRV
+    /**
+     * Returns the inner [RecyclerView] that is used to display a list of channel list items.
+     * @return The inner [RecyclerView] with channels.
+     */
+    fun getChannelsRv(): RecyclerView = channelsRV
 
-
-    //Channel Click callbacks
+    // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
         item.channel.unreadCount = 0
         Handler(Looper.getMainLooper()).postDelayed({
@@ -329,7 +355,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
 
-    //Channel Popup callbacks
+    // Channel Popup callbacks
     override fun onMarkAsReadClick(channel: SceytChannel) {
         channelEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
     }

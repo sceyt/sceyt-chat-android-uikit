@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.logics
+package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
@@ -7,7 +7,6 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
@@ -26,4 +25,5 @@ internal interface PersistenceChannelsLogic {
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
+    suspend fun join(channelId: Long): SceytResponse<SceytChannel>
 }

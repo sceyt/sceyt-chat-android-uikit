@@ -428,4 +428,18 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             })
         }
     }
+
+    override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            PublicChannelOperator.build(channelId).join(object : ChannelCallback {
+                override fun onResult(result: Channel) {
+                    continuation.resume(SceytResponse.Success(result.toSceytUiChannel()))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error?.message))
+                }
+            })
+        }
+    }
 }

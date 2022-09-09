@@ -3,9 +3,9 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -16,10 +16,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
-import com.sceyt.sceytchatuikit.data.toFileListItem
-import com.sceyt.sceytchatuikit.data.toMessage
-import com.sceyt.sceytchatuikit.data.toSceytMember
-import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -41,6 +37,9 @@ class MessageListViewModel(private val conversationId: Long,
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
+    private val preference: SceytSharedPreference by inject()
+    internal val myId = preference.getUserId()
+
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
@@ -263,7 +262,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.editMessage(channel.id, message)
+            val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -285,7 +284,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.join(channel.id)
+            val response = persistenceChanelMiddleWare.join(channel.id)
             _joinLiveData.postValue(response)
         }
     }
@@ -324,11 +323,10 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
-        val currentUserId = ClientWrapper.currentUser.id
         return message.reactionScores?.map {
             ReactionItem.Reaction(SceytReaction(it.key, it.score,
                 message.lastReactions?.find { reaction ->
-                    reaction.key == it.key && reaction.user.id == currentUserId
+                    reaction.key == it.key && reaction.user.id == myId
                 } != null), message)
         }?.sortedByDescending { it.reaction.score }
     }
