@@ -1,13 +1,17 @@
 package com.sceyt.sceytchatuikit.persistence
 
+import com.sceyt.chat.Types
+import com.sceyt.chat.models.Status
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -17,9 +21,10 @@ import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.persistence.logics.PersistenceChannelsLogic
-import com.sceyt.sceytchatuikit.persistence.logics.PersistenceMembersLogic
-import com.sceyt.sceytchatuikit.persistence.logics.PersistenceMessagesLogic
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
+import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,21 +40,26 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val membersLogic: PersistenceMembersLogic by inject()
+    private val connectionLogic: PersistenceConnectionLogic by inject()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
 
     init {
         // Channel events
-        launch { com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelEventFlow.collect(::onChannelEvent) }
-        launch { com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelMembersEventFlow.collect(::onChannelMemberEvent) }
-        launch { com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect(::onChannelOwnerChangedEvent) }
+        launch { ChannelEventsObserver.onChannelEventFlow.collect(::onChannelEvent) }
+        launch { ChannelEventsObserver.onChannelMembersEventFlow.collect(::onChannelMemberEvent) }
+        launch { ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect(::onChannelOwnerChangedEvent) }
         // Message events
-        launch { com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onMessageStatusFlow.collect(::onMessageStatusChangeEvent) }
+        launch { ChannelEventsObserver.onMessageStatusFlow.collect(::onMessageStatusChangeEvent) }
         launch { MessageEventsObserver.onMessageFlow.collect(::onMessage) }
         launch { MessageEventsObserver.onMessageReactionUpdatedFlow.collect(::onMessageReactionUpdated) }
         launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
+
+        // Connection events
+        launch { ConnectionObserver.onChangedConnectStatusFlow.collect(::onChangedConnectStatus) }
     }
+
 
     private fun onChannelEvent(data: ChannelEventData) {
         channelLogic.onChannelEvent(data)
@@ -62,6 +72,7 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
     private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
         membersLogic.onChannelOwnerChangedEvent(data)
     }
+
 
     private suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         messagesLogic.onMessageStatusChangeEvent(data)
@@ -78,6 +89,10 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
 
     private fun onMessageEditedOrDeleted(data: Message?) {
         messagesLogic.onMessageEditedOrDeleted(data)
+    }
+
+    private fun onChangedConnectStatus(data: Pair<Types.ConnectState, Status?>) {
+        connectionLogic.onChangedConnectStatus(data.first, data.second)
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>> {
@@ -128,6 +143,10 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return channelLogic.editChannel(channelId, data)
     }
 
+    override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.join(channelId)
+    }
+
     override suspend fun loadChannelMembers(channelId: Long, offset: Int): Flow<PaginationResponse<SceytMember>> {
         return membersLogic.loadChannelMembers(channelId, offset)
     }
@@ -172,5 +191,9 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
 
     override suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
         return messagesLogic.markAsRead(channelId, *ids)
+    }
+
+    override suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage> {
+        return messagesLogic.editMessage(id, message)
     }
 }

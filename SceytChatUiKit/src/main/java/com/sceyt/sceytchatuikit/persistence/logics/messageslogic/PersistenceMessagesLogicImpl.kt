@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.logics
+package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -14,10 +14,10 @@ import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -131,8 +131,17 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.markAsRead(channelId, *ids)
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
-                messageListMarker.messageIds
                 messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
+            }
+        }
+        return response
+    }
+
+    override suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage> {
+        val response = messagesRepository.editMessage(id, message)
+        if (response is SceytResponse.Success) {
+            response.data?.let { updatedMsg ->
+                messageDao.updateMessage(updatedMsg.toMessageEntity())
             }
         }
         return response

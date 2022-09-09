@@ -1,22 +1,17 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessagesListQuery
 import com.sceyt.chat.models.message.MessagesListQueryByType
 import com.sceyt.chat.operators.ChannelOperator
-import com.sceyt.chat.operators.PublicChannelOperator
-import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toMessage
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -153,20 +148,6 @@ class MessagesRepositoryImpl : MessagesRepository {
             ChannelOperator.build(channelId).markMessagesAsRead(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     continuation.resume(SceytResponse.Success(result))
-                }
-
-                override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message))
-                }
-            })
-        }
-    }
-
-    override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
-        return suspendCancellableCoroutine { continuation ->
-            PublicChannelOperator.build(channelId).join(object : ChannelCallback {
-                override fun onResult(result: Channel) {
-                    continuation.resume(SceytResponse.Success(result.toSceytUiChannel()))
                 }
 
                 override fun onError(error: SceytException?) {

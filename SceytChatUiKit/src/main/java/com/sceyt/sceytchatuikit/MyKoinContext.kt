@@ -2,6 +2,6 @@ package com.sceyt.sceytchatuikit
 
 import org.koin.core.KoinApplication
 
-object MyKoinContext {
+internal object MyKoinContext {
     var koinApp: KoinApplication? = null
 }

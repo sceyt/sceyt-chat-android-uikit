@@ -9,11 +9,11 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
-import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
@@ -38,7 +38,7 @@ import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners, SceytKoinComponent {
-    private val preferences by inject<com.sceyt.sceytchatuikit.data.SceytSharedPreference>()
+    private val preferences by inject<SceytSharedPreference>()
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
@@ -269,7 +269,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun checkIsParticipant(channel: SceytChannel) {
         if (channel.channelType == ChannelTypeEnum.Public) {
-            if (channel.toGroupChannel().members.find { it.id == ClientWrapper.currentUser.id } == null) {
+            if (channel.toGroupChannel().members.find { it.id == preferences.getUserId() } == null) {
                 showHideJoinButton(true)
             } else showHideJoinButton(false)
         }

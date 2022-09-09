@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.logics
+package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
 import android.util.Log
 import com.sceyt.chat.models.member.Member
