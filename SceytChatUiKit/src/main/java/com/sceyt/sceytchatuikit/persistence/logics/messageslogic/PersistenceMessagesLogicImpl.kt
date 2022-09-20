@@ -4,6 +4,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -13,10 +14,8 @@ import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
-import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +25,8 @@ internal class PersistenceMessagesLogicImpl(
         private val messageDao: MessageDao,
         private val channelDao: ChannelDao,
         private val userDao: UserDao,
-        private val messagesRepository: MessagesRepository
+        private val messagesRepository: MessagesRepository,
+        private val preference: SceytSharedPreference
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
@@ -92,10 +92,21 @@ internal class PersistenceMessagesLogicImpl(
         })
 
         // Update users
+        val usersDb = arrayListOf<UserEntity>()
         list.filter { it.incoming && it.from != null }.map { it.from!! }.toSet().let { users ->
             if (users.isNotEmpty())
-                userDao.insertUsers(users.map { it.toUserEntity() })
+                usersDb.addAll(users.map { it.toUserEntity() })
         }
+
+        // Users which added reaction
+        val usersByReaction = list.flatMap {
+            it.lastReactions?.toMutableList() ?: mutableListOf()
+        }.map {
+            it.user.toUserEntity()
+        }
+        usersDb.addAll(usersByReaction)
+
+        userDao.insertUsers(usersDb)
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
@@ -121,6 +132,8 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
                 messageDao.deleteAttachments(messageId)
+                messageDao.deleteAllReactions(messageId)
+                messageDao.deleteAllReactionsScores(messageId)
                 messageDao.insertMessage(message.toMessageDb())
             }
         }
@@ -142,6 +155,35 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
                 messageDao.updateMessage(updatedMsg.toMessageEntity())
+            }
+        }
+        return response
+    }
+
+    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        val response = messagesRepository.addReaction(channelId, messageId, scoreKey)
+        if (response is SceytResponse.Success) {
+            response.data?.let { message ->
+                message.lastReactions?.let {
+                    messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity(messageId) })
+                }
+                message.reactionScores?.let {
+                    messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
+                }
+            }
+        }
+        return response
+    }
+
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteReaction(channelId, messageId, scoreKey)
+        if (response is SceytResponse.Success) {
+            response.data?.let { message ->
+                message.reactionScores?.let {
+                    val fromId = preference.getUserId()
+                    if (fromId != null)
+                        messageDao.deleteReactionAndScore(messageId, scoreKey, fromId)
+                }
             }
         }
         return response

@@ -34,3 +34,4 @@ fun AttachmentEntity.toAttachment() = SceytAttachment(
     fileSize = fileSize,
     url = url
 )
+

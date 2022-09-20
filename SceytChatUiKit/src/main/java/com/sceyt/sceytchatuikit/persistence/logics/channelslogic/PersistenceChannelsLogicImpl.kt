@@ -89,6 +89,12 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private fun insertChannel(channel: SceytChannel, vararg members: Member) {
+        val users = members.map { it.toUserEntity() }
+        channel.lastMessage?.let {
+            it.lastReactions?.map { reaction -> reaction.user }?.let { it1 ->
+                (users as ArrayList).addAll(it1.map { user -> user.toUserEntity() })
+            }
+        }
         usersDao.insertUsers(members.map { it.toUserEntity() })
         channelDao.insertChannelAndLinks(channel.toChannelEntity(preference.getUserId()), members.map {
             UserChatLink(userId = it.id, chatId = channel.id, role = it.role.name)
@@ -137,6 +143,11 @@ internal class PersistenceChannelsLogicImpl(
                     users.add(member.toUserEntity())
                     channel.lastMessage?.let {
                         lastMessages.add(it.toMessageDb())
+
+                        //Add users from reactions
+                        it.lastReactions?.let { lastReactions ->
+                            users.addAll(lastReactions.map { reaction -> reaction.user.toUserEntity() })
+                        }
                     }
                 }
             } else {
@@ -145,6 +156,10 @@ internal class PersistenceChannelsLogicImpl(
                 users.add(peer.toUserEntity())
                 channel.lastMessage?.let {
                     lastMessages.add(it.toMessageDb())
+                    //Add users from reactions
+                    it.lastReactions?.let { lastReactions ->
+                        users.addAll(lastReactions.map { reaction -> reaction.user.toUserEntity() })
+                    }
                 }
             }
         }

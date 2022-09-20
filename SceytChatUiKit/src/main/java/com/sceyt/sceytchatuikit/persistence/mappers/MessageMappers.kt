@@ -56,14 +56,18 @@ fun SceytMessage.toMessageDb() = MessageDb(
     messageEntity = toMessageEntity(),
     from = from?.toUserEntity(),
     parent = parent?.toMessageEntity(),
-    attachments = attachments?.map { it.toAttachmentEntity(id) }
+    attachments = attachments?.map { it.toAttachmentEntity(id) },
+    lastReactions = lastReactions?.map { it.toReactionDb(id) },
+    reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
 )
 
 fun Message.toMessageDb() = MessageDb(
     messageEntity = toMessageEntity(),
     from = from?.toUserEntity(),
     parent = parent?.toMessageEntity(),
-    attachments = attachments?.map { it.toAttachmentEntity(id) }
+    attachments = attachments?.map { it.toAttachmentEntity(id) },
+    lastReactions = lastReactions?.map { it.toReactionDb(id) },
+    reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
 )
 
 fun MessageDb.toSceytMessage(): SceytMessage {
@@ -86,6 +90,8 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             state = state,
             from = from?.toUser(),
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
+            lastReactions = lastReactions?.map { it.toReaction() }?.toTypedArray(),
+            reactionScores = reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             parent = parent?.toSceytMessage(),
             replyInThread = replyInThread,
             replyCount = replyCount

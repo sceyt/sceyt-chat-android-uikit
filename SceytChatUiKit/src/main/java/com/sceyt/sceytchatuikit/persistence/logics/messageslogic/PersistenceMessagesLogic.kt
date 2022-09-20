@@ -21,4 +21,6 @@ internal interface PersistenceMessagesLogic {
     suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
     suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage>
+    suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
+    suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
 }
