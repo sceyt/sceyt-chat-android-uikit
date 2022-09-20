@@ -13,13 +13,17 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
 
 @Database(entities = [
     ChannelEntity::class,
     UserEntity::class,
     UserChatLink::class,
     MessageEntity::class,
-    AttachmentEntity::class
+    AttachmentEntity::class,
+    ReactionEntity::class,
+    ReactionScoreEntity::class
 ], version = 1, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class)

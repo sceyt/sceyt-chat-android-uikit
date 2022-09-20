@@ -28,9 +28,8 @@ data class MessageEntity(
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
-    /*
-     var lastReactions: Array<Reaction>? = null,
-     var selfReactions: Array<Reaction>? = null,
+
+     /*  var selfReactions: Array<Reaction>? = null,
      var reactionScores: Array<ReactionScore>? = null,
      var markerCount: Array<MarkerCount>? = null,
      var selfMarkers: Array<String>? = null,

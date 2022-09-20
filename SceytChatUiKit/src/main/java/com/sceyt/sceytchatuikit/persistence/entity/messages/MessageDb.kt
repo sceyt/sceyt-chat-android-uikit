@@ -15,5 +15,11 @@ data class MessageDb(
         val parent: MessageEntity?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
-        val attachments: List<AttachmentEntity>?
+        val attachments: List<AttachmentEntity>?,
+
+        @Relation(parentColumn = "message_id", entityColumn = "messageId", entity = ReactionEntity::class)
+        val lastReactions: List<ReactionDb>?,
+
+        @Relation(parentColumn = "message_id", entityColumn = "messageId")
+        val reactionsScores: List<ReactionScoreEntity>?
 )

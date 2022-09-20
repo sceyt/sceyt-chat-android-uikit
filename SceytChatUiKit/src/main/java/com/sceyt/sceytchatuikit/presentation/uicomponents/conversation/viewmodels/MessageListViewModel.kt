@@ -180,7 +180,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     private fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.addReaction(channel.id, message.id, scoreKey)
+            val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
                 if (this is SceytResponse.Success) {
                     data?.let {
@@ -193,7 +193,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     private fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.deleteReaction(channel.id, message.id, scoreKey)
+            val response = persistenceMessageMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
                 if (this is SceytResponse.Success) {
                     data?.let {

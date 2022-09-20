@@ -193,7 +193,15 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return messagesLogic.markAsRead(channelId, *ids)
     }
 
-    override suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage> {
-        return messagesLogic.editMessage(id, message)
+    override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
+        return messagesLogic.editMessage(channelId, message)
+    }
+
+    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        return messagesLogic.addReaction(channelId, messageId, scoreKey)
+    }
+
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
     }
 }

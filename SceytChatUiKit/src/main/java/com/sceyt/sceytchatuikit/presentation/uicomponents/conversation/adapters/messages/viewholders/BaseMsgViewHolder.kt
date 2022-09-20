@@ -20,6 +20,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplayContainerBinding
+import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
@@ -205,7 +206,7 @@ abstract class BaseMsgViewHolder(view: View,
             setHighlighted(needHighlight)
             val marginEndBottom = if (needHighlight) Pair(25, 25) else {
                 //Set the value which is set in xml
-                Pair(com.sceyt.sceytchatuikit.extensions.dpToPx(5f), com.sceyt.sceytchatuikit.extensions.dpToPx(2f))
+                Pair(dpToPx(5f), dpToPx(2f))
             }
             (layoutParams as ViewGroup.MarginLayoutParams).apply {
                 setMargins(0, marginTop, marginEndBottom.first, marginEndBottom.second)
