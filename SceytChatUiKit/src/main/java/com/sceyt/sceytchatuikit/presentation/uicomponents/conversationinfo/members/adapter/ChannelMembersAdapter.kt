@@ -68,8 +68,8 @@ class ChannelMembersAdapter(
         try {
             val myDiffUtil = MemberDiffUtil(members, data, showMoreIconChanged)
             val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-            members = data as ArrayList
             productDiffResult.dispatchUpdatesTo(this)
+            members = data as ArrayList
         } catch (ex: java.lang.IllegalStateException) {
             Log.e(TAG, ex.message.toString())
         }

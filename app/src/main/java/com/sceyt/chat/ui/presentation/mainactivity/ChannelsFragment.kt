@@ -8,13 +8,14 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.Types
 import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.ui.R
-import com.sceyt.chat.ui.SceytUiKitApp
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.newchannel.NewChannelActivity
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -26,6 +27,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.bind
+import kotlinx.coroutines.launch
 
 
 class ChannelsFragment : Fragment() {
@@ -74,8 +76,10 @@ class ChannelsFragment : Fragment() {
     }
 
     private fun initViews() {
-        (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
-            setupConnectionStatus(it)
+        lifecycleScope.launch {
+            ConnectionObserver.onChangedConnectStatusFlow.collect {
+                setupConnectionStatus(it.first)
+            }
         }
 
         binding.fabNewChannel.setOnClickListener {

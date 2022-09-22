@@ -5,8 +5,6 @@ import android.graphics.Typeface
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -17,7 +15,9 @@ import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                         private var listeners: ChannelClickListenersImpl) : BaseChannelViewHolder(binding.root) {
@@ -68,10 +68,11 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                         if (lastMessageStatusChanged)
                             channel.lastMessage.setMessageDateAndStatusIcon(updateDate, getDateTxt(channel), false)
 
-                        if (lastMessageChanged) {
+                        if (lastMessageChanged)
                             setLastMessageText(channel)
+
+                        if (unreadCountChanged)
                             setUnreadCount(channel.unreadCount)
-                        }
 
                         if (onlineStateChanged)
                             setOnlineStatus(channel)
@@ -146,6 +147,11 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
             lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))
             unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
+            onlineStatus.setIndicatorColor(getCompatColorByTheme(ChannelStyle.onlineStatusColor))
+            divider.isVisible = if (ChannelStyle.enableDivider) {
+                divider.setBackgroundColor(getCompatColorByTheme(ChannelStyle.dividerColor))
+                true
+            } else false
         }
     }
 }

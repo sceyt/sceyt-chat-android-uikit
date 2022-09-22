@@ -2,9 +2,6 @@
 <resources>
     <declare-styleable name="ChannelsListView">
 
-        <!-- Channel list items separator drawable TODO-->
-        <attr name="sceytUiChannelsItemSeparatorDrawable" format="reference" />
-
         <!--Background layout-->
         <!-- Channel list items separator drawable TODO-->
         <attr name="sceytUiChannelOptionsIcon" format="reference" />
@@ -20,6 +17,10 @@
         <attr name="sceytUiChannelListBackgroundColor" format="color|reference" />
         <!-- Background color of channel item layout TODO-->
         <attr name="sceytUiBackgroundLayoutColor" format="color|reference" />
+
+        <attr name="sceytUiOnlineIndicatorColor" format="color|reference" />
+        <attr name="sceytUiDividerColor" format="color|reference" />
+        <attr name="sceytUiEnableDivider" format="boolean" />
 
         <!--Foreground layout-->
         <!-- Text size of the channel title text TODO-->
@@ -67,14 +68,18 @@
             <flag name="italic" value="2" />
         </attr>
 
-        <!-- Drawable of the message sent state indicator TODO-->
-        <attr name="sceytUiShowChannelDeliveryStatusIndicator" format="boolean" />
         <!--TODO-->
+        <attr name="sceytUiShowChannelDeliveryStatusIndicator" format="boolean" />
+        <!-- Drawable of the message sent state indicator -->
         <attr name="sceytUiIndicatorSentIcon" format="reference" />
-        <!-- Drawable of the message read state indicator TODO-->
+        <!-- Drawable of the message read state indicator -->
         <attr name="sceytUiIndicatorReadIcon" format="reference" />
-        <!-- Drawable of the message pending sync indicator  TODO-->
-        <attr name="sceytUiIndicatorPendingSyncIcon" format="reference" />
+        <!-- Drawable of the message pending indicator -->
+        <attr name="sceytUiIndicatorDeliveredIcon" format="reference" />
+        <!-- Drawable of the message pending indicator -->
+        <attr name="sceytUiIndicatorPendingIcon" format="reference" />
+
+
         <!-- Foreground color of channel list item  TODO-->
         <attr name="sceytUiForegroundLayoutColor" format="color|reference" />
 

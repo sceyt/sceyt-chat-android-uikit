@@ -9,6 +9,7 @@ import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 
 class PageStateView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
@@ -64,7 +65,7 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
                 loadingStateView?.isVisible = state.isLoading && showLoadingIfNeed
             }
             is PageState.StateError -> {
-                com.sceyt.sceytchatuikit.extensions.customToastSnackBar(this, state.errorMessage.toString())
+                customToastSnackBar(this, state.errorMessage.toString())
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = false

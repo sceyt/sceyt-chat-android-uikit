@@ -26,5 +26,9 @@ class SceytDirectChannel(
 
     override val isGroup: Boolean
         get() = false
+
+    override fun clone(): SceytChannel {
+        return SceytDirectChannel(id, metadata, label, createdAt, updatedAt, unreadMessageCount, lastMessage, muted, channelType, peer)
+    }
 }
 

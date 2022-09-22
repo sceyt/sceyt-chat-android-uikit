@@ -15,9 +15,10 @@
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
             android:id="@+id/avatar"
-            android:layout_width="@dimen/_42sdp"
-            android:layout_height="@dimen/_42sdp"
+            android:layout_width="@dimen/_45sdp"
+            android:layout_height="@dimen/_45sdp"
             android:layout_marginVertical="8dp"
+            android:layout_marginStart="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -51,10 +52,12 @@
             android:textSize="@dimen/mediumTextSize"
             android:textStyle="bold"
             app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toTopOf="@+id/lastMessage"
             app:layout_constraintEnd_toStartOf="@+id/updateDate"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@+id/avatar"
-            app:layout_constraintTop_toTopOf="@id/avatar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
             tools:text="Title" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -62,17 +65,20 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="10dp"
             android:ellipsize="end"
             android:lines="1"
             android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/smallTextSize"
-            app:layout_constraintEnd_toStartOf="@+id/updateDate"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="@id/channelTitle"
             app:layout_constraintTop_toBottomOf="@+id/channelTitle"
             tools:text="Description" />
 
         <View
+            android:id="@+id/divider"
             themedBackgroundColor="@{R.color.sceyt_color_divider}"
             android:layout_width="0dp"
             android:layout_height="0.5dp"
@@ -85,9 +91,9 @@
             android:id="@+id/updateDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginEnd="10dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/avatar"
+            app:layout_constraintTop_toTopOf="@+id/channelTitle"
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="13sp"
             app:sceytDateStatusViewFirstStatus="true"
@@ -102,6 +108,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
             android:background="@drawable/sceyt_bg_corners_30"
             android:includeFontPadding="false"
             android:maxLength="3"

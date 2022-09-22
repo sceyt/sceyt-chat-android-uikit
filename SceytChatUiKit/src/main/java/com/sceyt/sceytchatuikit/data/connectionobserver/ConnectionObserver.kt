@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.data.connectionobserver
 
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
 import com.sceyt.chat.models.Status
 import com.sceyt.chat.sceyt_listeners.ClientListener
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object ConnectionObserver {
+    val connectionState get() = ClientWrapper.connectState ?: Types.ConnectState.StateDisconnect
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<Pair<Types.ConnectState, Status?>> = MutableSharedFlow(
         extraBufferCapacity = 1,

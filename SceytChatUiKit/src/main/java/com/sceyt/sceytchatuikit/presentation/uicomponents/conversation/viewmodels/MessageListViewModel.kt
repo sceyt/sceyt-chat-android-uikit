@@ -242,7 +242,7 @@ class MessageListViewModel(private val conversationId: Long,
                 }
                 is SceytResponse.Success -> {
                     // Notify out message status is sent
-                    response.data?.let { MessageEventsObserver.emitOutgoingMessageSent(channel.id, response.data.tid) }
+                    response.data?.let { MessageEventsObserver.emitOutgoingMessageSent(channel.id, response.data) }
                 }
             }
             _messageSentLiveData.postValue(response)
