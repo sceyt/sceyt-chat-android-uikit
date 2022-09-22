@@ -47,8 +47,8 @@ class UsersAdapter(
     fun notifyUpdate(list: List<UserItem>) {
         val myDiffUtil = MyDiffUtil(usersList, list)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        usersList = list as ArrayList<UserItem>
         productDiffResult.dispatchUpdatesTo(this)
+        usersList = list as ArrayList<UserItem>
     }
 
     fun interface ClickListener {

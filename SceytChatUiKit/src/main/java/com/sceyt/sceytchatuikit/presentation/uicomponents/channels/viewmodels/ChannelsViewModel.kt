@@ -54,7 +54,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     val onNewMessageFlow: Flow<Pair<SceytChannel, SceytMessage>>
     val onOutGoingMessageFlow: Flow<SceytMessage>
-    val onOutGoingMessageStatusFlow: Flow<MessageStatusChangeData>
+    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onChannelEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>

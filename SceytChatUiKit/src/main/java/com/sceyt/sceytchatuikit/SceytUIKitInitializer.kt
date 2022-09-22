@@ -16,13 +16,13 @@ import org.koin.dsl.koinApplication
 
 class SceytUIKitInitializer(private val application: Application) {
 
-    fun initialize(userId: String, enableDatabase: Boolean): ChatClient {
-        val serverUrl = "https://us-ohio-api.sceyt.com/"
-//        val serverUrl = "http://192.168.178.213:3002"
+    fun initialize(userId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
+        // val serverUrl = "https://us-ohio-api.sceyt.com/"
+        // val appId = "89p65954oj"
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         AXEmojiManager.install(application, AXGoogleEmojiProvider(application))
         initKoin(enableDatabase)
-        return ChatClient.setup(application, serverUrl, "89p65954oj", userId)
+        return ChatClient.setup(application, host, appId, userId)
     }
 
 
@@ -40,7 +40,7 @@ class SceytUIKitInitializer(private val application: Application) {
         }
     }
 
-    private fun KoinApplication.init(enableDatabase: Boolean){
+    private fun KoinApplication.init(enableDatabase: Boolean) {
         androidContext(application)
         modules(arrayListOf(
             appModules,

@@ -101,9 +101,9 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     fun notifyUpdate(messages: List<MessageListItem>) {
         val myDiffUtil = MessagesDiffUtil(this.messages, messages)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        productDiffResult.dispatchUpdatesTo(this)
         this.messages.clear()
         this.messages.addAll(messages as ArrayList)
-        productDiffResult.dispatchUpdatesTo(this)
     }
 
     fun getData() = messages

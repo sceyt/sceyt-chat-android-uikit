@@ -41,7 +41,7 @@ object MessageEventsObserver {
     val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
 
 
-    private val onOutGoingMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
+    private val onOutGoingMessageStatusFlow_: MutableSharedFlow<Pair<Long, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
@@ -80,8 +80,8 @@ object MessageEventsObserver {
         onOutGoingMessageFlow_.tryEmit(sceytMessage)
     }
 
-    fun emitOutgoingMessageSent(channelId: Long, messageId: Long) {
-        onOutGoingMessageStatusFlow_.tryEmit(MessageStatusChangeData(channelId, null, DeliveryStatus.Sent, mutableListOf(messageId)))
+    fun emitOutgoingMessageSent(channelId: Long, message: SceytMessage) {
+        onOutGoingMessageStatusFlow_.tryEmit(Pair(channelId, message))
     }
 
     fun emitMessageEditedOrDeletedByMe(message: Message) {

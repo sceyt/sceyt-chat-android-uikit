@@ -30,9 +30,6 @@ import java.util.*
 class SceytUiKitApp : Application() {
     private val preference by inject<AppSharedPreference>()
 
-    private val _sceytConnectionStatus: MutableLiveData<Types.ConnectState> = MutableLiveData()
-    val sceytConnectionStatus: LiveData<Types.ConnectState> = _sceytConnectionStatus
-
     private lateinit var chatClient: ChatClient
 
     override fun onCreate() {
@@ -48,8 +45,11 @@ class SceytUiKitApp : Application() {
     }
 
     private fun initSceyt() {
-        chatClient = SceytUIKitInitializer(this).initialize(UUID.randomUUID().toString(), true)
-        _sceytConnectionStatus.postValue(Types.ConnectState.StateDisconnect)
+        chatClient = SceytUIKitInitializer(this).initialize(
+            userId = UUID.randomUUID().toString(),
+            appId = "89p65954oj",
+            host = "https://us-ohio-api.sceyt.com/",
+            enableDatabase = true)
     }
 
     private fun setSceytListeners() {
@@ -113,9 +113,6 @@ class SceytUiKitApp : Application() {
                         connectWithoutToken(preference.getUsername()
                                 ?: return)
                     else success.postValue(false)
-                }
-                connectStatus?.let {
-                    _sceytConnectionStatus.postValue(it)
                 }
             }
 

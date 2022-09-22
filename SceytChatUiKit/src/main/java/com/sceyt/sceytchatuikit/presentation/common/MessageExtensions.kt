@@ -2,10 +2,11 @@ package com.sceyt.sceytchatuikit.presentation.common
 
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
+import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 
 fun SceytMessage?.setMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean) {
     if (this?.deliveryStatus == null || incoming) {
@@ -13,10 +14,10 @@ fun SceytMessage?.setMessageDateAndStatusIcon(dateStatusView: SceytDateStatusVie
         return
     }
     val iconResId = when (deliveryStatus) {
-        DeliveryStatus.Pending -> R.drawable.sceyt_ic_status_not_sent
-        DeliveryStatus.Sent -> R.drawable.sceyt_ic_status_on_server
-        DeliveryStatus.Delivered -> R.drawable.sceyt_ic_status_delivered
-        DeliveryStatus.Read -> R.drawable.sceyt_ic_status_read
+        DeliveryStatus.Pending -> ChannelStyle.indicatorPendingIcon
+        DeliveryStatus.Sent -> ChannelStyle.indicatorSentIcon
+        DeliveryStatus.Delivered -> ChannelStyle.indicatorDeliveredIcon
+        DeliveryStatus.Read -> ChannelStyle.indicatorReadIcon
         DeliveryStatus.Failed -> R.drawable.sceyt_ic_status_faild
         else -> null
     }

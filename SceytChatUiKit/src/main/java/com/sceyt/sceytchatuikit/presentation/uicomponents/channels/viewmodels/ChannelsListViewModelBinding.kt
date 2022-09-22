@@ -2,27 +2,36 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
+    var connectAnlLoadInitialChannelsJob: Job? = null
 
-    getChannels(0, query = searchQuery)
-
-    lifecycleOwner.lifecycleScope.launch {
-        /*(channelsListView.context.asAppCompatActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(lifecycleOwner) {
-            if (it == Types.ConnectState.StateConnected)
-                channelsListView.getChannelsRv().awaitAnimationEnd {
-                    //getChannels(0, query = searchQuery)
-                }
-        }*/
+    if (ConnectionObserver.connectionState == Types.ConnectState.StateConnected) {
+        getChannels(0, query = searchQuery)
+    } else {
+        /** Await to connect, and load channels **/
+        connectAnlLoadInitialChannelsJob = lifecycleOwner.lifecycleScope.launch {
+            ConnectionObserver.onChangedConnectStatusFlow.collect {
+                if (it.first == Types.ConnectState.StateConnected)
+                    channelsListView.getChannelsRv().awaitAnimationEnd {
+                        getChannels(0, query = searchQuery)
+                        connectAnlLoadInitialChannelsJob?.cancel()
+                    }
+            }
+        }
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -79,7 +88,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     lifecycleOwner.lifecycleScope.launch {
         onOutGoingMessageStatusFlow.collect {
-            channelsListView.updateOutgoingLastMessageStatus(it)
+            channelsListView.updateOutgoingLastMessageStatus(it.first, it.second)
         }
     }
 

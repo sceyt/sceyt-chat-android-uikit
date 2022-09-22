@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -159,10 +160,14 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
+        Log.i("sdfsdfsdf","updateLastMessageStatus  "+status.messageIds.get(0).toString())
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
             val channelId = status.channelId ?: return@launch
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
+
                 val channel = pair.second.channel
+                Log.i("sdfsdfsdf","channel lst  "+" id "+channel.lastMessage?.id+" body "+channel.lastMessage?.body)
+
                 channel.message?.let {
                     if (status.messageIds.contains(it.id)) {
                         val oldChannel = channel.clone()
@@ -178,21 +183,22 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateOutgoingLastMessageStatus(status: MessageStatusChangeData) {
+    internal fun updateOutgoingLastMessageStatus(channelId: Long, sceytMessage: SceytMessage) {
+        Log.i("sdfsdfsdf","updateOutgoingLastMessageStatus  "+channelId.toString()+" body-> "+sceytMessage.body+" id-> "+sceytMessage.id+ " tid "+ sceytMessage.tid)
+
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val channelId = status.channelId ?: return@launch
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
+                val oldChannel = channel.clone()
+
                 channel.message?.let {
-                    if (status.messageIds.contains(it.tid)) {
-                        val oldChannel = channel.clone()
-                        if (it.deliveryStatus < status.status) {
-                            it.deliveryStatus = status.status
-                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
-                                message = it
-                            }))
-                        }
+                    if (/*sceytMessage.id == it.id ||*/ sceytMessage.tid == it.tid) {
+                        channel.message = sceytMessage
+                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                     }
+                } ?: run {
+                    channel.message = sceytMessage
+                    channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                 }
             }
         }
@@ -340,9 +346,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        item.channel.unreadCount = 0
+        val updateChannel = item.channel.clone().apply { unreadCount = 0 }
         Handler(Looper.getMainLooper()).postDelayed({
-            channelUpdated(item.channel)
+            channelUpdated(updateChannel)
         }, 300)
     }
 

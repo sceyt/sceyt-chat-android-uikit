@@ -31,5 +31,10 @@ class SceytGroupChannel(
 
     override val isGroup: Boolean
         get() = true
+
+    override fun clone(): SceytChannel {
+        return SceytGroupChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label,
+            metadata, muted, muteExpireDate, channelType, subject, avatarUrl, channelUrl, members)
+    }
 }
 
