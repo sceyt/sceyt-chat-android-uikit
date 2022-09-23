@@ -1,7 +1,7 @@
 <resources>
     <string name="sceyt_search_for_channels">Search for channels</string>
     <string name="sceyt_search">Search</string>
-    <string name="sceyt_your_last_message">You: %1$s</string>
+    <string name="sceyt_your_last_message">You</string>
     <string name="sceyt_copy">Copy</string>
     <string name="sceyt_no_channels">No Channels</string>
     <string name="sceyt_message">Message</string>

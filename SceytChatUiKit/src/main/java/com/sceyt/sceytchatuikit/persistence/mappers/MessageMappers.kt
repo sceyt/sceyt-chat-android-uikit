@@ -8,7 +8,7 @@ import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
     id = id,
-    tid = tid,
+    tid = getTid(id, tid, incoming),
     channelId = channelId,
     to = to,
     body = body,
@@ -28,10 +28,15 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     replyCount = replyCount
 )
 
+private fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
+    return if (incoming)
+        msgId
+    else tid
+}
 
 fun Message.toMessageEntity() = MessageEntity(
     id = id,
-    tid = tid,
+    tid = getTid(id, tid, incoming),
     channelId = channelId,
     to = to,
     body = body,

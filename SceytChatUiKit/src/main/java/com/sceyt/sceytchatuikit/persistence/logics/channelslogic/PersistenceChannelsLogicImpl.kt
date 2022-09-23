@@ -136,31 +136,39 @@ internal class PersistenceChannelsLogicImpl(
         val users = arrayListOf<UserEntity>()
         val lastMessages = arrayListOf<MessageDb>()
 
+        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>, lastMessage: SceytMessage?) {
+            members.forEach { member ->
+                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
+                users.add(member.toUserEntity())
+            }
+
+            lastMessage?.let {
+                lastMessages.add(it.toMessageDb())
+
+                //Add user from last message
+                it.from?.let { user ->
+                    // Add if not exist
+                    users.find { entity -> entity.id == user.id } ?: run {
+                        users.add(user.toUserEntity())
+                    }
+                }
+
+                //Add users from reactions
+                it.lastReactions?.let { lastReactions ->
+                    users.addAll(lastReactions.map { reaction -> reaction.user.toUserEntity() })
+                }
+            }
+        }
+
         list.forEach { channel ->
             if (channel.isGroup) {
-                (channel as SceytGroupChannel).members.forEach { member ->
-                    links.add(UserChatLink(userId = member.id, chatId = channel.id, role = member.role.name))
-                    users.add(member.toUserEntity())
-                    channel.lastMessage?.let {
-                        lastMessages.add(it.toMessageDb())
-
-                        //Add users from reactions
-                        it.lastReactions?.let { lastReactions ->
-                            users.addAll(lastReactions.map { reaction -> reaction.user.toUserEntity() })
-                        }
-                    }
-                }
+                addEntitiesToLists(channel.id, (channel as SceytGroupChannel).members, channel.lastMessage)
             } else {
-                val peer = (channel as SceytDirectChannel).peer ?: return
-                links.add(UserChatLink(userId = peer.id, chatId = channel.id, role = peer.role.name))
-                users.add(peer.toUserEntity())
-                channel.lastMessage?.let {
-                    lastMessages.add(it.toMessageDb())
-                    //Add users from reactions
-                    it.lastReactions?.let { lastReactions ->
-                        users.addAll(lastReactions.map { reaction -> reaction.user.toUserEntity() })
-                    }
+                val members = arrayListOf<SceytMember>()
+                (channel as SceytDirectChannel).peer?.let {
+                    members.add(it)
                 }
+                addEntitiesToLists(channel.id, members, channel.lastMessage)
             }
         }
         usersDao.insertUsers(users)
