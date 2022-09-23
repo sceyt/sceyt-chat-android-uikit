@@ -48,6 +48,7 @@
         <item name="android:textColor">@color/sceyt_color_text_themed</item>
         <item name="android:overScrollMode">never</item>
         <item name="android:scrollbars">none</item>
+        <item name="android:tint">@color/sceyt_color_accent</item>
         <item name="android:scrollbarSize">0dp</item>
         <item name="android:layoutAnimation">@anim/sceyt_layout_animation_fall_down</item>
     </style>

@@ -17,8 +17,8 @@ import com.sceyt.chat.ui.presentation.addmembers.viewmodel.UsersViewModel
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 
 class AddMembersActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddMembersBinding
@@ -29,7 +29,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(isNightTheme())
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         setContentView(ActivityAddMembersBinding.inflate(layoutInflater)
             .also { binding = it }

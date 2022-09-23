@@ -2,115 +2,43 @@
 <resources>
     <declare-styleable name="ChannelsListView">
 
-        <!--Background layout-->
-        <!-- Channel list items separator drawable TODO-->
-        <attr name="sceytUiChannelOptionsIcon" format="reference" />
-        <!-- Delete icon drawable TODO-->
-        <attr name="sceytUiChannelDeleteIcon" format="reference" />
-        <!-- Delete icon drawable TODO-->
-        <attr name="sceytUiChannelOptionsEnabled" format="boolean" />
-        <!-- Shows or hides channel delete option TODO-->
-        <attr name="sceytUiChannelDeleteEnabled" format="boolean" />
-        <!-- Enables or disables channel item swiping TODO-->
-        <attr name="sceytUiSwipeEnabled" format="boolean" />
-        <!--TODO-->
+        <!--Background layout TODO-->
         <attr name="sceytUiChannelListBackgroundColor" format="color|reference" />
         <!-- Background color of channel item layout TODO-->
         <attr name="sceytUiBackgroundLayoutColor" format="color|reference" />
-
         <attr name="sceytUiOnlineIndicatorColor" format="color|reference" />
         <attr name="sceytUiDividerColor" format="color|reference" />
         <attr name="sceytUiEnableDivider" format="boolean" />
-
-        <!--Foreground layout-->
-        <!-- Text size of the channel title text TODO-->
-        <attr name="sceytUiChannelTitleTextSize" format="dimension|reference" />
-        <!-- A color of the channel title text -->
+        <!-- A color of the channel title text color-->
         <attr name="sceytUiChannelTitleTextColor" format="reference" />
-        <!-- Font name of the channel title text TODO-->
-        <attr name="sceytUiChannelTitleTextFont" format="reference" />
-        <!-- Font assets reference for the channel title text TODO-->
-        <attr name="sceytUiChannelTitleFontAssets" format="string" />
-        <!-- Text style of the channel title text: "normal", "bold", and "italic".TODO -->
-        <attr name="sceytUiChannelTitleTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
-
-        <!-- Text size of the last message text TODO -->
-        <attr name="sceytUiLastMessageTextSize" format="dimension|reference" />
-        <!-- A color of the last message text -->
+        <!-- A color of the last message text color-->
         <attr name="sceytUiLastMessageTextColor" format="reference" />
-        <!-- Font name of the last message text TODO-->
-        <attr name="sceytUiLastMessageTextFont" format="reference" />
-        <!-- Font assets reference for the last message text TODO-->
-        <attr name="sceytUiLastMessageFontAssets" format="string" />/
-        <!-- Text style of the last message text: "normal", "bold", and "italic".TODO -->
-        <attr name="sceytUiLastMessageTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
-
-        <!-- Text size of the date text TODO-->
-        <attr name="sceytUiLastMessageDateTextSize" format="dimension|reference" />
-        <!-- A color of the date text TODO-->
+        <!-- A color of the date text color-->
         <attr name="sceytUiLastMessageDateTextColor" format="color|reference" />
-        <!-- Font name of the date text TODO -->
-        <attr name="sceytUiLastMessageDateTextFont" format="reference" />
-        <!-- Font assets reference for the date text TODO-->
-        <attr name="sceytUiLastMessageDateFontAssets" format="string" />
-        <!-- Text style of the date text: "normal", "bold", and "italic".TODO -->
-        <attr name="sceytUiLastMessageDateTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
-
-        <!--TODO-->
-        <attr name="sceytUiShowChannelDeliveryStatusIndicator" format="boolean" />
+        <!-- Show message status icon-->
+        <attr name="sceytUiStatusIndicatorSize" format="dimension" />
         <!-- Drawable of the message sent state indicator -->
         <attr name="sceytUiIndicatorSentIcon" format="reference" />
         <!-- Drawable of the message read state indicator -->
         <attr name="sceytUiIndicatorReadIcon" format="reference" />
-        <!-- Drawable of the message pending indicator -->
+        <!-- Drawable of the message delivery indicator -->
         <attr name="sceytUiIndicatorDeliveredIcon" format="reference" />
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiIndicatorPendingIcon" format="reference" />
-
-
-        <!-- Foreground color of channel list item  TODO-->
-        <attr name="sceytUiForegroundLayoutColor" format="color|reference" />
-
-        <!-- Text size of the unread message count text TODO-->
-        <attr name="sceytUiUnreadMessageCounterTextSize" format="dimension|reference" />
         <!-- A color of the unread message count text -->
         <attr name="sceytUiUnreadMessageCounterTextColor" format="reference" />
-        <!-- Font name of the unread message count text TODO-->
-        <attr name="sceytUiUnreadMessageCounterTextFont" format="reference" />
-        <!-- Font assets reference for the unread message count text TODO-->
-        <attr name="sceytUiUnreadMessageCounterFontAssets" format="string" />
-        <!-- Text style of the unread message count text: "normal", "bold", and "italic". TODO-->
-        <attr name="sceytUiUnreadMessageCounterTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
         <!-- Background color of the unread message counter -->
         <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="color|reference" />
-
         <!-- Drawable of the muted channel icon  -->
         <attr name="sceytUiMutedChannelIcon" format="reference" />
-
         <!-- Reference to layout resource of the channel list "loading" view -->
         <attr name="sceytUiLoadingView" format="reference" />
         <!-- Reference to layout resource of the channel list empty state view -->
         <attr name="sceytUiEmptyStateView" format="reference" />
         <!-- Reference to layout resource of the channel list empty search state view -->
         <attr name="sceytUiEmptySearchStateView" format="reference" />
-        <!-- Reference to layout resource of the channel list "loading more" view TODO-->
-        <attr name="sceytUiLoadingMoreView" format="reference" />
+        <!-- Reference to channel long click popup style -->
+        <attr name="sceytUiPopupStyle" format="reference" />
 
     </declare-styleable>
 </resources>

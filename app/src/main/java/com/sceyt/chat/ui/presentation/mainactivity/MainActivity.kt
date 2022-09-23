@@ -1,7 +1,6 @@
 package com.sceyt.chat.ui.presentation.mainactivity
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityMainBinding

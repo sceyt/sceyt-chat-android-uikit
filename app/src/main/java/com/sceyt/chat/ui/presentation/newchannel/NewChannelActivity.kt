@@ -7,19 +7,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityNewChannelBinding
 import com.sceyt.chat.ui.presentation.addmembers.AddMembersActivity
 import com.sceyt.chat.ui.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.ui.presentation.addmembers.viewmodel.UsersViewModel
+import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.creategroup.CreateGroupActivity
 import com.sceyt.chat.ui.presentation.newchannel.adapters.UserViewHolderFactory
 import com.sceyt.chat.ui.presentation.newchannel.adapters.UsersAdapter
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
-import com.sceyt.sceytchatuikit.R.*
+import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 
 class NewChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNewChannelBinding
@@ -29,7 +32,7 @@ class NewChannelActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(isNightTheme())
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         setContentView(ActivityNewChannelBinding.inflate(layoutInflater)
             .also { binding = it }

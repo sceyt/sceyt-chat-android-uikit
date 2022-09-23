@@ -21,7 +21,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
 import com.sceyt.sceytchatuikit.extensions.findIndexed
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -53,7 +53,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var channelEventListener: ((ChannelEvent) -> Unit)? = null
 
     init {
-        setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
+        setBackgroundColor(context.getCompatColorByTheme(R.color.sceyt_color_bg))
         BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
@@ -266,7 +266,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
-        val popup = PopupMenuChannel(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, channel = item.channel)
+        val popup = PopupMenuChannel(ContextThemeWrapper(context, ChannelStyle.popupStyle), view, channel = item.channel)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)

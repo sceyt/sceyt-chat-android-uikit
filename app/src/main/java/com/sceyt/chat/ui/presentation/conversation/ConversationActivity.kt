@@ -13,7 +13,6 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
-import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -25,6 +24,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bind
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -37,7 +37,7 @@ open class ConversationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(isNightTheme())
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         getDataFromIntent()
 
