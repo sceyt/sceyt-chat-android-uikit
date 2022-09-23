@@ -43,6 +43,12 @@ abstract class MessageDao {
             insertReactionScores(reactionScores)
     }
 
+    @Transaction
+    open fun insertReactionsAndScores(reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionScoreEntity>) {
+        insertReactions(reactionsDb)
+        insertReactionScores(scoresDb)
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract fun insert(messages: MessageEntity): Long
 

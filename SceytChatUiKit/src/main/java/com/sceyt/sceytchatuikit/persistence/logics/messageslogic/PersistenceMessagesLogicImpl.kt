@@ -41,7 +41,9 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun onMessageReactionUpdated(data: Message?) {
         data ?: return
-        //TODO not yet implemented
+        messageDao.insertReactionsAndScores(
+            reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
+            scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
     }
 
     override fun onMessageEditedOrDeleted(data: Message?) {
