@@ -28,7 +28,7 @@ class SceytDirectChannel(
         get() = false
 
     override fun clone(): SceytChannel {
-        return SceytDirectChannel(id, metadata, label, createdAt, updatedAt, unreadMessageCount, lastMessage, muted, channelType, peer)
+        return SceytDirectChannel(id, metadata, label, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), muted, channelType, peer)
     }
 }
 

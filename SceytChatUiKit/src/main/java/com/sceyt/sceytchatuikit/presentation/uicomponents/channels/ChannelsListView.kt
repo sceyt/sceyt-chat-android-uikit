@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -14,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -23,21 +21,22 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
 import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.presentation.common.diff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -145,11 +144,11 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val channel = pair.second.channel
             if (message.channelId == channel.id) {
                 val oldChannel = channel.clone()
-                if (!edited || channel.message?.id == message.id)
-                    channel.message = message
+                if (!edited || channel.lastMessage?.id == message.id)
+                    channel.lastMessage = message
 
                 unreadCount?.let { count ->
-                    channel.unreadCount = count
+                    channel.unreadMessageCount = count
                 }
                 channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                 sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
@@ -160,22 +159,16 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
-        Log.i("sdfsdfsdf","updateLastMessageStatus  "+status.messageIds.get(0).toString())
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
             val channelId = status.channelId ?: return@launch
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
-
                 val channel = pair.second.channel
-                Log.i("sdfsdfsdf","channel lst  "+" id "+channel.lastMessage?.id+" body "+channel.lastMessage?.body)
-
-                channel.message?.let {
+                channel.lastMessage?.let {
                     if (status.messageIds.contains(it.id)) {
                         val oldChannel = channel.clone()
                         if (it.deliveryStatus < status.status) {
                             it.deliveryStatus = status.status
-                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel.apply {
-                                message = it
-                            }))
+                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                         }
                     }
                 }
@@ -184,20 +177,18 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateOutgoingLastMessageStatus(channelId: Long, sceytMessage: SceytMessage) {
-        Log.i("sdfsdfsdf","updateOutgoingLastMessageStatus  "+channelId.toString()+" body-> "+sceytMessage.body+" id-> "+sceytMessage.id+ " tid "+ sceytMessage.tid)
-
         context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
                 val oldChannel = channel.clone()
 
-                channel.message?.let {
-                    if (/*sceytMessage.id == it.id ||*/ sceytMessage.tid == it.tid) {
-                        channel.message = sceytMessage
+                channel.lastMessage?.let {
+                    if (sceytMessage.tid == it.tid) {
+                        channel.lastMessage = sceytMessage
                         channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                     }
                 } ?: run {
-                    channel.message = sceytMessage
+                    channel.lastMessage = sceytMessage
                     channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                 }
             }
@@ -208,8 +199,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
             val channel = pair.second.channel
             val oldChannel = channel.clone()
-            channel.message = null
-            channel.unreadCount = 0
+            channel.lastMessage = null
+            channel.unreadMessageCount = 0
             channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
             sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
         }
@@ -242,7 +233,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.getChannelIndexed(channelId)?.let { pair ->
             val channel = pair.second.channel
             val oldChannel = channel.clone()
-            channel.unreadCount = 0
+            channel.unreadMessageCount = 0
             channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
         }
     }
@@ -251,7 +242,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
             val channel = pair.second.channel
             val oldChannel = channel.clone()
-            channel.unreadCount = 0
+            channel.unreadMessageCount = 0
             channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
         }
     }
@@ -346,7 +337,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        val updateChannel = item.channel.clone().apply { unreadCount = 0 }
+        val updateChannel = item.channel.clone().apply { unreadMessageCount = 0 }
         Handler(Looper.getMainLooper()).postDelayed({
             channelUpdated(updateChannel)
         }, 300)

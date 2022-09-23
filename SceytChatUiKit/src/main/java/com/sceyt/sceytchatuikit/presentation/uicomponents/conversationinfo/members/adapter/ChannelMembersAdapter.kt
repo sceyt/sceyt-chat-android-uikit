@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -39,11 +40,11 @@ class ChannelMembersAdapter(
     }
 
     private fun removeLoading() {
-        if (members.removeIf { it is MemberItem.LoadingMore }) {
+        if (members.remove(MemberItem.LoadingMore))
             notifyItemRemoved(members.lastIndex + 1)
-        }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun addNewItems(items: List<MemberItem>) {
         removeLoading()
         if (items.isEmpty()) return

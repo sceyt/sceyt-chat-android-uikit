@@ -14,7 +14,7 @@ import com.sceyt.chat.ui.presentation.addmembers.adapters.SelectedUsersAdapter
 import com.sceyt.chat.ui.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.ui.presentation.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
 import com.sceyt.chat.ui.presentation.addmembers.viewmodel.UsersViewModel
-import com.sceyt.sceytchatuikit.R.*
+import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.isNightTheme
@@ -121,7 +121,10 @@ class AddMembersActivity : AppCompatActivity() {
     private fun addOrRemoveFromSelectedUsers(userItem: UserItem.User, isAdd: Boolean) {
         if (isAdd)
             selectedUsers.add(SceytMember(userItem.user))
-        else selectedUsers.removeIf { member -> member.user.id == userItem.user.id }
+        else {
+            val member = selectedUsers.find { it.user.id == userItem.user.id }
+            selectedUsers.remove(member)
+        }
     }
 
     private fun initSelectedItems(data: List<UserItem>) {

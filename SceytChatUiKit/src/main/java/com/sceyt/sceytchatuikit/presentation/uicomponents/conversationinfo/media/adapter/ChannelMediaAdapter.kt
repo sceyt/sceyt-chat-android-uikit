@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -26,10 +27,11 @@ class ChannelMediaAdapter(private val attachments: ArrayList<FileListItem>,
     }
 
     private fun removeLoading() {
-        if (attachments.removeIf { it is FileListItem.LoadingMoreItem })
+        if (attachments.remove(FileListItem.LoadingMoreItem))
             notifyItemRemoved(attachments.lastIndex + 1)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun addNewItems(items: List<FileListItem>) {
         removeLoading()
         if (items.isEmpty()) return
