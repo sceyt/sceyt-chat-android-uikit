@@ -33,8 +33,8 @@ class SceytGroupChannel(
         get() = true
 
     override fun clone(): SceytChannel {
-        return SceytGroupChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label,
-            metadata, muted, muteExpireDate, channelType, subject, avatarUrl, channelUrl, members)
+        return SceytGroupChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label,
+            metadata, muted, muteExpireDate, channelType, subject, avatarUrl, channelUrl, members, memberCount)
     }
 }
 

@@ -1,14 +1,11 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
 import android.os.Parcelable
-import androidx.databinding.BaseObservable
-import androidx.databinding.Bindable
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.util.*
-import com.sceyt.sceytchatuikit.BR
 
 @Parcelize
 open class SceytChannel(open var id: Long,
@@ -20,27 +17,7 @@ open class SceytChannel(open var id: Long,
                         open var metadata: String?,
                         open var muted: Boolean,
                         open var muteExpireDate: Date?,
-                        open var channelType: ChannelTypeEnum) : BaseObservable(), Parcelable, Cloneable {
-
-    @IgnoredOnParcel
-    @Bindable
-    var message: SceytMessage? = null
-        get() = lastMessage
-        set(value) {
-            field = value
-            lastMessage = value
-            notifyPropertyChanged(BR.message)
-        }
-
-    @IgnoredOnParcel
-    @Bindable
-    var unreadCount = 0L
-        get() = unreadMessageCount
-        set(value) {
-            field = value
-            unreadMessageCount = value
-            notifyPropertyChanged(BR.unreadCount)
-        }
+                        open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
     open val channelSubject = ""
@@ -87,6 +64,7 @@ open class SceytChannel(open var id: Long,
     }
 
     public override fun clone(): SceytChannel {
-        return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label, metadata, muted, muteExpireDate, channelType)
+        return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(),
+            label, metadata, muted, muteExpireDate, channelType)
     }
 }

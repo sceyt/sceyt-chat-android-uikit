@@ -12,7 +12,7 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         avatarViewChanged = iconUrl != other.iconUrl,
         lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body != other.lastMessage?.body,
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
-        unreadCountChanged = unreadCount != other.unreadCount,
+        unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
         muteStateChanged = muted != other.muted,
         onlineStateChanged = channelType == ChannelTypeEnum.Direct
                 && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state

@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.newchannel.adapters
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -29,10 +30,11 @@ class UsersAdapter(
     }
 
     private fun removeLoading() {
-        if (usersList.removeIf { it is UserItem.LoadingMore })
+        if (usersList.remove(UserItem.LoadingMore))
             notifyItemRemoved(usersList.lastIndex + 1)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun addNewItems(data: List<UserItem>) {
         removeLoading()
         if (data.isEmpty()) return

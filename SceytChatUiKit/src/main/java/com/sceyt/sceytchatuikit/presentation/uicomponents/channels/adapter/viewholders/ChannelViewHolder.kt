@@ -72,7 +72,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             setLastMessageText(channel)
 
                         if (unreadCountChanged)
-                            setUnreadCount(channel.unreadCount)
+                            setUnreadCount(channel.unreadMessageCount)
 
                         if (onlineStateChanged)
                             setOnlineStatus(channel)

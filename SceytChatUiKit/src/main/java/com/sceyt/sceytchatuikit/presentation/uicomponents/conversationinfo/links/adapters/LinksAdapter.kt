@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.adapters
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
@@ -26,10 +27,11 @@ class LinksAdapter(private val attachments: ArrayList<LinkItem>,
     }
 
     private fun removeLoading() {
-        if (attachments.removeIf { it is LinkItem.LoadingMore })
+        if (attachments.remove(LinkItem.LoadingMore))
             notifyItemRemoved(attachments.lastIndex + 1)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun addNewItems(items: List<LinkItem>) {
         removeLoading()
         if (items.isEmpty()) return
