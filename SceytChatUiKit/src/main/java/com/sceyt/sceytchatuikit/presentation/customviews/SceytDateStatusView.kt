@@ -231,6 +231,13 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         invalidate()
     }
 
+    fun setStatusIconSize(size: Int) {
+        statusIconSize = size
+        init()
+        requestLayout()
+        invalidate()
+    }
+
     fun setDateText(text: String, edited: Boolean) {
         dateText = text
         isEdited = edited
@@ -264,6 +271,31 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         init()
         invalidate()
     }
+
+    inner class BuildStyle {
+        private var statusIconSize: Int = this@SceytDateStatusView.statusIconSize
+        private var dateTextColor: Int = this@SceytDateStatusView.textColor
+
+        fun setStatusIconSize(size: Int): BuildStyle {
+            statusIconSize = size
+            return this
+        }
+
+        fun setDateColor(@ColorRes color: Int): BuildStyle {
+            dateTextColor = context.getCompatColorByTheme(color)
+            return this
+        }
+
+        fun build() {
+            this@SceytDateStatusView.statusIconSize = statusIconSize
+            this@SceytDateStatusView.textColor = dateTextColor
+            init()
+            requestLayout()
+            invalidate()
+        }
+    }
+
+    fun buildStyle() = BuildStyle()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = textBoundsRect.width() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd

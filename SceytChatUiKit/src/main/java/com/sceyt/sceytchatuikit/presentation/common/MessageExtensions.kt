@@ -14,10 +14,10 @@ fun SceytMessage?.setMessageDateAndStatusIcon(dateStatusView: SceytDateStatusVie
         return
     }
     val iconResId = when (deliveryStatus) {
-        DeliveryStatus.Pending -> ChannelStyle.indicatorPendingIcon
-        DeliveryStatus.Sent -> ChannelStyle.indicatorSentIcon
-        DeliveryStatus.Delivered -> ChannelStyle.indicatorDeliveredIcon
-        DeliveryStatus.Read -> ChannelStyle.indicatorReadIcon
+        DeliveryStatus.Pending -> ChannelStyle.statusIndicatorPendingIcon
+        DeliveryStatus.Sent -> ChannelStyle.statusIndicatorSentIcon
+        DeliveryStatus.Delivered -> ChannelStyle.statusIndicatorDeliveredIcon
+        DeliveryStatus.Read -> ChannelStyle.statusIndicatorReadIcon
         DeliveryStatus.Failed -> R.drawable.sceyt_ic_status_faild
         else -> null
     }

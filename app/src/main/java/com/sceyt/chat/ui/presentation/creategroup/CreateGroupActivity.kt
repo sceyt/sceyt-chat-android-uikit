@@ -7,17 +7,17 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityCreateGroupBinding
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.creategroup.viewmodel.CreateGroupViewModel
+import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
-import com.sceyt.sceytchatuikit.R.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 
 class CreateGroupActivity : AppCompatActivity() {
@@ -27,7 +27,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private val createChannelData by lazy { CreateChannelData() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        statusBarIconsColorWithBackground(isNightTheme())
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
         super.onCreate(savedInstanceState)
 
         setContentView(ActivityCreateGroupBinding.inflate(layoutInflater)

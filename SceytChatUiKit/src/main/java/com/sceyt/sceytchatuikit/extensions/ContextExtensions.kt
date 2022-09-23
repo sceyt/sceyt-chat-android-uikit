@@ -42,8 +42,7 @@ fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
 
 fun Context.getCompatColorByTheme(@ColorRes colorId: Int?, isDark: Boolean = SceytUIKitConfig.isDarkMode): Int {
     colorId ?: return 0
-    val res = resources
-    val configuration = Configuration(res.configuration)
+    val configuration = Configuration(resources.configuration)
     configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
     return createConfigurationContext(configuration)?.getCompatColor(colorId) ?: 0
 }

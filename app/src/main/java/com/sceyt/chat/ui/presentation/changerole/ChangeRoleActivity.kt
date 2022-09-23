@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityChooseRoleBinding
 import com.sceyt.chat.ui.presentation.changerole.adapter.ChooseRoleAdapter
 import com.sceyt.chat.ui.presentation.changerole.adapter.RoleItem
@@ -14,8 +13,8 @@ import com.sceyt.chat.ui.presentation.changerole.viewmodel.RoleViewModel
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.findIndexed
-import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 
 class ChangeRoleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChooseRoleBinding
@@ -25,7 +24,7 @@ class ChangeRoleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(isNightTheme())
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         setContentView(ActivityChooseRoleBinding.inflate(layoutInflater)
             .also { binding = it }

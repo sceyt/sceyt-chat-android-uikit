@@ -9,10 +9,9 @@ import androidx.appcompat.widget.PopupMenu
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
 
-class PopupMenuChannel(private val context: Context, anchor: View, private var channel: SceytChannel)
-    : PopupMenu(context, anchor, Gravity.RIGHT) {
+class PopupMenuChannel(context: Context, anchor: View, private var channel: SceytChannel)
+    : PopupMenu(context, anchor, Gravity.END) {
 
     @SuppressLint("RestrictedApi")
     override fun show() {
@@ -20,7 +19,6 @@ class PopupMenuChannel(private val context: Context, anchor: View, private var c
         (menu as MenuBuilder).setOptionalIconsVisible(true)
 
         val isGroup = channel.isGroup
-        menu.findItem(R.id.sceyt_clear_history).icon?.setTint(context.getCompatColor(R.color.sceyt_color_accent))
         menu.findItem(R.id.sceyt_leave_channel).isVisible = isGroup
         menu.findItem(R.id.sceyt_block_channel)?.isVisible = isGroup
 

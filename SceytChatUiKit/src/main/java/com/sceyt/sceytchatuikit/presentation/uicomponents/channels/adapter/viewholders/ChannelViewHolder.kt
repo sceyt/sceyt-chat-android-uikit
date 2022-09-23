@@ -67,7 +67,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             avatar.setNameAndImageUrl(name, url)
 
                         if (lastMessageStatusChanged)
-                            channel.lastMessage.setMessageDateAndStatusIcon(updateDate, getDateTxt(channel), false)
+                            channel.lastMessage.setMessageDateAndStatusIcon(dateStatus, getDateTxt(channel), false)
 
                         if (lastMessageChanged)
                             setLastMessageText(channel)
@@ -158,6 +158,11 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))
             unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
             onlineStatus.setIndicatorColor(getCompatColorByTheme(ChannelStyle.onlineStatusColor))
+            dateStatus.buildStyle()
+                .setStatusIconSize(ChannelStyle.statusIconSize)
+                .setDateColor(ChannelStyle.dateTextColor)
+                .build()
+
             divider.isVisible = if (ChannelStyle.enableDivider) {
                 divider.setBackgroundColor(getCompatColorByTheme(ChannelStyle.dividerColor))
                 true
