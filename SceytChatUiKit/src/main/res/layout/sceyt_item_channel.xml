@@ -61,6 +61,23 @@
             tools:text="Title" />
 
         <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvYou"
+            themedTextColor="@{R.color.sceyt_color_last_message_from}"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="0dp"
+            android:paddingEnd="3dp"
+            android:text="@string/sceyt_your_last_message"
+            android:textColor="@color/sceyt_color_last_message_from"
+            android:textSize="@dimen/smallTextSize"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/lastMessage"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="@id/channelTitle"
+            app:layout_constraintTop_toTopOf="@+id/lastMessage"
+            tools:visibility="visible" />
+
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/lastMessage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -73,7 +90,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="@id/channelTitle"
+            app:layout_constraintStart_toEndOf="@id/tvYou"
             app:layout_constraintTop_toBottomOf="@+id/channelTitle"
             tools:text="Description" />
 
