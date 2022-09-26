@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -115,7 +116,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 lastMessage.context.getString(R.string.sceyt_attachment) else message.body
 
             tvYou.isVisible = if (message.incoming) {
-                val userFirstName = channel.lastMessage?.from?.firstName?.trim()
+                val userFirstName = channel.lastMessage?.from?.getPresentableFirstName()?.trim()
                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
                     tvYou.text = "$userFirstName:"
                     true

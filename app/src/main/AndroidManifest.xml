@@ -63,6 +63,7 @@
             android:name=".presentation.mainactivity.MainActivity"
             android:configChanges="uiMode"
             android:exported="false"
+            android:windowSoftInputMode="adjustNothing"
             android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme" />
 

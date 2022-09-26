@@ -19,7 +19,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/sceyt_ic_search" />
 
-    <androidx.appcompat.widget.AppCompatEditText
+    <com.sceyt.sceytchatuikit.shared.helpers.SceytClearFocusEditText
         android:id="@+id/input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
