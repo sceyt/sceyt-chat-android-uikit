@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.databinding.SceytSearchViewBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.hideSoftInput
 import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.sceytconfigs.SearchInputViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
@@ -75,6 +76,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
             when (actionId) {
                 EditorInfo.IME_ACTION_SEARCH -> {
                     clickListeners.onKeyboardSearchClick()
+                    hideSoftInput()
                     true
                 }
                 else -> false
