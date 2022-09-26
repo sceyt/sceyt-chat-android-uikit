@@ -157,11 +157,9 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.userBlocked(it.data)
             }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
-                    ?: "")
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
     }
-
 
     pageStateLiveData.observe(lifecycleOwner) {
         channelsListView.updateStateView(it)

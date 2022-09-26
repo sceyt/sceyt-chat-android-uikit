@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
@@ -21,6 +22,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var textSize = 50
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private var avatarBackgroundColor: Int = 0
+    private var defaultAvatarResId: Int = 0
 
     init {
         attrs?.let {
@@ -39,9 +41,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         super.draw(canvas)
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
-            setImageResource(0)
-            drawBackgroundColor(canvas)
-            drawName(canvas)
+            if (defaultAvatarResId == 0) {
+                setImageResource(0)
+                drawBackgroundColor(canvas)
+                drawName(canvas)
+            } else
+                loadDefaultImage()
         }
     }
 
@@ -99,15 +104,25 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
     }
 
-    fun setNameAndImageUrl(name: String?, url: String?) {
+    private fun loadDefaultImage() {
+        Glide.with(context.applicationContext)
+            .load(defaultAvatarResId)
+            .override(width)
+            .circleCrop()
+            .into(this)
+    }
+
+    fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultIcon: Int = 0) {
         fullName = name
         imageUrl = url
+        defaultAvatarResId = defaultIcon
         invalidate()
         loadAvatarImage()
     }
 
-    fun setImageUrl(url: String?) {
+    fun setImageUrl(url: String?, @DrawableRes defaultIcon: Int = 0) {
         imageUrl = url
+        defaultAvatarResId = defaultIcon
         invalidate()
         loadAvatarImage()
     }
@@ -118,6 +133,11 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     fun setAvatarBackgroundColor(color: Int) {
         avatarBackgroundColor = color
+        invalidate()
+    }
+
+    fun setDefaultIcon(@DrawableRes id: Int) {
+        defaultAvatarResId = id
         invalidate()
     }
 

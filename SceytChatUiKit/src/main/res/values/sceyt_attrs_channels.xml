@@ -2,12 +2,13 @@
 <resources>
     <declare-styleable name="ChannelsListView">
 
-        <!--Background layout TODO-->
+        <!--Background color channel list view-->
         <attr name="sceytUiChannelListBackgroundColor" format="color|reference" />
-        <!-- Background color of channel item layout TODO-->
-        <attr name="sceytUiBackgroundLayoutColor" format="color|reference" />
+        <!-- A color of the online indicator-->
         <attr name="sceytUiOnlineIndicatorColor" format="color|reference" />
+        <!-- A color of the channels divider-->
         <attr name="sceytUiDividerColor" format="color|reference" />
+        <!-- Show/Hide channels divider-->
         <attr name="sceytUiEnableDivider" format="boolean" />
         <!-- A color of the channel title text color-->
         <attr name="sceytUiChannelTitleTextColor" format="reference" />

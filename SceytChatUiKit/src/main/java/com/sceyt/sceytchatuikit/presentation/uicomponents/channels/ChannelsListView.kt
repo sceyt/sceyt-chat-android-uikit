@@ -53,14 +53,15 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var channelEventListener: ((ChannelEvent) -> Unit)? = null
 
     init {
-        setBackgroundColor(context.getCompatColorByTheme(R.color.sceyt_color_bg))
-        BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.ChannelsListView)
             ChannelStyle.updateWithAttributes(a)
             a.recycle()
         }
+
+        setBackgroundColor(context.getCompatColorByTheme(ChannelStyle.backgroundColor))
+        BindingUtil.themedBackgroundColor(this, ChannelStyle.backgroundColor)
 
         channelsRV = ChannelsRV(context)
         channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)

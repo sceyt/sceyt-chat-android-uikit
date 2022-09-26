@@ -74,7 +74,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-                app:sceytUiStatusIndicatorSize="16dp"/>
+                app:sceytUiStatusIndicatorSize="16dp" />
 
             <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
                 android:id="@+id/fabNewChannel"
