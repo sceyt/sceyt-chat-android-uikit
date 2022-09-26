@@ -24,8 +24,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentManager
-import com.google.android.datatransport.BuildConfig.APPLICATION_ID
-import com.sceyt.sceytchatuikit.BuildConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import java.io.File
 
