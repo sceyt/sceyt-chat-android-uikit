@@ -12,7 +12,8 @@ object SceytUIKitConfig {
     const val USERS_LOAD_SIZE = 30
     const val MESSAGES_LOAD_SIZE = 30
 
-    val isDarkMode get() = SceytUITheme.isDarkMode
+    var enableDarkMode = true
+    val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
     var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
 
     class ThemeConfig : BaseObservable() {

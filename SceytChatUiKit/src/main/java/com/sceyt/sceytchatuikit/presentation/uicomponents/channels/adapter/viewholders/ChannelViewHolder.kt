@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
@@ -64,7 +65,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             channelTitle.text = channel.channelSubject
 
                         if (subjectChanged || avatarViewChanged)
-                            avatar.setNameAndImageUrl(name, url)
+                            avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else AvatarStyle.userDefaultAvatar)
 
                         if (lastMessageStatusChanged)
                             channel.lastMessage.setMessageDateAndStatusIcon(dateStatus, getDateTxt(channel), false)

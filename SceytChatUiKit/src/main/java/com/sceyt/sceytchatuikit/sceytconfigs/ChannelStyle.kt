@@ -10,6 +10,9 @@ import com.sceyt.sceytchatuikit.extensions.pxToDp
 
 object ChannelStyle {
     @ColorRes
+    var backgroundColor: Int = R.color.sceyt_color_bg
+
+    @ColorRes
     var titleColor: Int = R.color.sceyt_color_text_themed
 
     @ColorRes
@@ -58,6 +61,8 @@ object ChannelStyle {
     @StyleRes
     var popupStyle: Int = R.style.SceytPopupMenuStyle
 
+    var lastMessageDateFormat = DateFormatter()
+
     /*internal constructor(context: Context) : this(
         titleColor = context.getCompatColor(R.color.colorFontDark),
         lastMessageTextColor = context.getCompatColor(R.color.colorFontGray),
@@ -81,6 +86,7 @@ object ChannelStyle {
 
 
     internal fun updateWithAttributes(typedArray: TypedArray): ChannelStyle {
+        backgroundColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelListBackgroundColor, backgroundColor)
         titleColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelTitleTextColor, titleColor)
         lastMessageTextColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiLastMessageTextColor, lastMessageTextColor)
         unreadCountColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor)

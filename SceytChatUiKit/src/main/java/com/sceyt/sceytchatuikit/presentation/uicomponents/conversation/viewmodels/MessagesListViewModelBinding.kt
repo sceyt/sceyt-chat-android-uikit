@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toMessage
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
@@ -241,7 +242,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
     messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
-
+    getChannel(channel.id)
 
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError)
@@ -256,8 +257,10 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     }
 
     joinLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success)
+        if (it is SceytResponse.Success) {
             messageInputView.joinSuccess()
+            (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
+        }
 
         notifyPageStateWithResponse(it)
     }
@@ -327,7 +330,6 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 fun MessageListViewModel.bind(headerView: ConversationHeaderView,
                               replayInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
-
 
     if (replayInThread)
         headerView.setReplayMessage(replayInThreadMessage)

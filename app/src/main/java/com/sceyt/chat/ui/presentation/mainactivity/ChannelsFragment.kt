@@ -50,12 +50,6 @@ class ChannelsFragment : Fragment() {
         mViewModel.bind(binding.channelListView, viewLifecycleOwner)
         mViewModel.bind(binding.searchView)
 
-        /* (requireActivity().application as? SceytUiKitApp)?.sceytConnectionStatus?.observe(viewLifecycleOwner) {
-             if (it == Types.ConnectState.StateConnected) {
-                 mViewModel.loadChannels(0)
-             }
-         }*/
-
         binding.channelListView.setCustomChannelClickListeners(object : ChannelClickListenersImpl(binding.channelListView) {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
                 super.onChannelClick(item)
