@@ -258,6 +258,15 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun muteUnMuteChannel(channelId: Long, muted: Boolean) {
+        channelsRV.getChannelIndexed(channelId)?.let { pair ->
+            val channel = pair.second.channel
+            val oldChannel = channel.clone()
+            channel.muted = muted
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        }
+    }
+
     internal fun updateStateView(state: PageState) {
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
@@ -345,7 +354,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        onChannelClick(item)
+
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {

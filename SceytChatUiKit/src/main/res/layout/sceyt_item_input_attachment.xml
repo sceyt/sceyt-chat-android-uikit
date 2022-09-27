@@ -50,6 +50,6 @@
         app:layout_constraintEnd_toEndOf="@+id/viewBgClose"
         app:layout_constraintStart_toStartOf="@id/viewBgClose"
         app:layout_constraintTop_toTopOf="@+id/viewBgClose"
-        app:srcCompat="@drawable/close_btn" />
+        app:srcCompat="@drawable/sceyt_close_btn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

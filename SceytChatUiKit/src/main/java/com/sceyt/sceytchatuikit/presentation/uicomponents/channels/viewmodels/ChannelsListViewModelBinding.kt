@@ -117,8 +117,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.markedChannelAsRead(it.data?.id)
             }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
-                    ?: "")
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
     }
 
@@ -127,8 +126,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.deleteChannel(it.data)
             }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
-                    ?: "")
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
     }
 
@@ -137,8 +135,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.channelCleared(it.data)
             }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
-                    ?: "")
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
     }
 
@@ -147,8 +144,16 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.deleteChannel(it.data)
             }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message
-                    ?: "")
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
+        }
+    }
+
+    deleteChannelLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                channelsListView.deleteChannel(it.data)
+            }
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
     }
 
@@ -156,6 +161,17 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         when (it) {
             is SceytResponse.Success -> {
                 channelsListView.userBlocked(it.data)
+            }
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
+        }
+    }
+
+    muteUnMuteLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                it.data?.let { channel ->
+                    channelsListView.muteUnMuteChannel(channel.id, channel.muted)
+                }
             }
             is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
