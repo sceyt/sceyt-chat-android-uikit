@@ -29,6 +29,7 @@ fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
         metadata = metadata,
         muted = muted,
         muteExpireDate = muteExpireDate?.time,
+        markedUsUnread = markedUsUnread,
         subject = if (isGroup) channelSubject else null,
         avatarUrl = getChannelAvatarUrl(),
         memberCount = memberCount,
@@ -64,6 +65,7 @@ fun Channel.toChannelEntity(): ChannelEntity {
         metadata = metadata,
         muted = muted(),
         muteExpireDate = muteExpireDate()?.time,
+        markedUsUnread = false,/////Todo
         subject = subject,
         avatarUrl = avatarUrl,
         memberCount = memberCount,
@@ -85,6 +87,7 @@ fun ChannelDb.toChannel(): SceytChannel {
                     metadata = metadata,
                     muted = muted,
                     muteExpireDate = Date(muteExpireDate ?: 0),
+                    markedUsUnread = markedUsUnread,
                     channelType = type,
                     subject = subject,
                     avatarUrl = avatarUrl,

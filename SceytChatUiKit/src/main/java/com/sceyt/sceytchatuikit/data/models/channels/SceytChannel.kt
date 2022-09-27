@@ -17,6 +17,7 @@ open class SceytChannel(open var id: Long,
                         open var metadata: String?,
                         open var muted: Boolean,
                         open var muteExpireDate: Date?,
+                        open var markedUsUnread: Boolean,
                         open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
@@ -65,6 +66,6 @@ open class SceytChannel(open var id: Long,
 
     public override fun clone(): SceytChannel {
         return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(),
-            label, metadata, muted, muteExpireDate, channelType)
+            label, metadata, muted, muteExpireDate, markedUsUnread, channelType)
     }
 }

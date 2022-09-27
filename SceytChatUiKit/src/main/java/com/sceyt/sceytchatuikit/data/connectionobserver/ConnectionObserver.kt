@@ -43,4 +43,6 @@ object ConnectionObserver {
             }
         })
     }
+
+    internal fun init() {}
 }

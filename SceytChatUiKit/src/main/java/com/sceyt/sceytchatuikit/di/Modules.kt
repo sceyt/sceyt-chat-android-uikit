@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.viewmodels.LinksViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateGroupViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -66,4 +67,5 @@ internal val viewModels = module {
     viewModel { LinksViewModel(get()) }
     viewModel { ChannelAttachmentsViewModel(get()) }
     viewModel { ChannelMembersViewModel(get()) }
+    viewModel { CreateGroupViewModel() }
 }

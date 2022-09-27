@@ -15,13 +15,14 @@ class SceytGroupChannel(
         override var metadata: String? = null,
         override var muted: Boolean = false,
         override var muteExpireDate: Date? = null,
+        override var markedUsUnread: Boolean,
         override var channelType: ChannelTypeEnum,
         var subject: String? = "",
         var avatarUrl: String? = "",
         var channelUrl: String? = "",
         var members: List<SceytMember>,
         var memberCount: Long = 0L
-) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, channelType) {
+) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, markedUsUnread, channelType) {
 
     override val channelSubject: String
         get() = subject ?: ""
@@ -34,7 +35,7 @@ class SceytGroupChannel(
 
     override fun clone(): SceytChannel {
         return SceytGroupChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label,
-            metadata, muted, muteExpireDate, channelType, subject, avatarUrl, channelUrl, members, memberCount)
+            metadata, muted, muteExpireDate, markedUsUnread, channelType, subject, avatarUrl, channelUrl, members, memberCount)
     }
 }
 

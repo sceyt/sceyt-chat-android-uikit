@@ -1,18 +1,18 @@
-package com.sceyt.chat.ui.presentation.creategroup.viewmodel
+package com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.sceytchatuikit.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class CreateGroupViewModel : BaseViewModel(), KoinComponent {
+class CreateGroupViewModel : BaseViewModel(), SceytKoinComponent {
     private val middleWare: PersistenceChanelMiddleWare by inject()
 
     private val _createChannelLiveData = MutableLiveData<SceytChannel>()

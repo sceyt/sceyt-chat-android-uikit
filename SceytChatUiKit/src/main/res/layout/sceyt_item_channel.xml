@@ -53,45 +53,29 @@
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             app:layout_constrainedWidth="true"
-            app:layout_constraintBottom_toTopOf="@+id/lastMessage"
             app:layout_constraintEnd_toStartOf="@+id/dateStatus"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@+id/avatar"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/avatar"
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="Title" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvYou"
-            themedTextColor="@{R.color.sceyt_color_last_message_from}"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="0dp"
-            android:paddingEnd="3dp"
-            android:text="@string/sceyt_your_last_message"
-            android:textColor="@color/sceyt_color_last_message_from"
-            android:textSize="@dimen/smallTextSize"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/lastMessage"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="@id/channelTitle"
-            app:layout_constraintTop_toTopOf="@+id/lastMessage"
-            tools:visibility="visible" />
-
-        <androidx.appcompat.widget.AppCompatTextView
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
             android:id="@+id/lastMessage"
+            themedSpannableTextColor="@{true}"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="10dp"
             android:ellipsize="end"
-            android:lines="1"
+            android:includeFontPadding="false"
+            android:lines="2"
+            android:maxLines="2"
             android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/smallTextSize"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@id/tvYou"
+            app:layout_constraintStart_toStartOf="@+id/channelTitle"
             app:layout_constraintTop_toBottomOf="@+id/channelTitle"
             tools:text="Description" />
 

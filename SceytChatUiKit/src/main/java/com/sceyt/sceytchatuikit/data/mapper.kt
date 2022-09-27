@@ -22,6 +22,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             metadata = metadata,
             muted = muted(),
             muteExpireDate = muteExpireDate(),
+            markedUsUnread = false,
             channelType = getChannelType(this),
             subject = subject,
             avatarUrl = avatarUrl,

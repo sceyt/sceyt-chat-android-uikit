@@ -21,6 +21,7 @@ data class ChannelEntity(
         var metadata: String?,
         var muted: Boolean = false,
         var muteExpireDate: Long?,
+        var markedUsUnread: Boolean,
         var subject: String?,
         var avatarUrl: String?,
         var memberCount: Long,
