@@ -46,11 +46,17 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _clearHistoryLiveData = MutableLiveData<SceytResponse<Long>>()
     val clearHistoryLiveData: LiveData<SceytResponse<Long>> = _clearHistoryLiveData
 
+    private val _deleteChannelLiveData = MutableLiveData<SceytResponse<Long>>()
+    val deleteChannelLiveData: LiveData<SceytResponse<Long>> = _deleteChannelLiveData
+
     private val _leaveChannelLiveData = MutableLiveData<SceytResponse<Long>>()
     val leaveChannelLiveData: LiveData<SceytResponse<Long>> = _leaveChannelLiveData
 
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
+
+    private val _muteUnMuteLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
+    val muteUnMuteLiveData: LiveData<SceytResponse<SceytChannel>> = _muteUnMuteLiveData
 
     val onNewMessageFlow: Flow<Pair<SceytChannel, SceytMessage>>
     val onOutGoingMessageFlow: Flow<SceytMessage>
@@ -129,45 +135,66 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         return channelItems
     }
 
-    private fun markAsRead(channelId: Long) {
+    fun markAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.markChannelAsRead(channelId)
             _markAsReadLiveData.postValue(response)
         }
     }
 
-    private fun blockAndLeaveChannel(channelId: Long) {
+    fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.blockAndLeaveChannel(channelId)
             _blockChannelLiveData.postValue(response)
         }
     }
 
-    private fun blockUser(userId: String) {
+    fun blockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersMiddleWare.blockUnBlockUser(userId, true)
             _blockUserLiveData.postValue(response)
         }
     }
 
-    private fun unBlockUser(userId: String) {
+    fun unBlockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersMiddleWare.blockUnBlockUser(userId, false)
             _blockUserLiveData.postValue(response)
         }
     }
 
-    private fun clearHistory(channelId: Long) {
+    fun clearHistory(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.clearHistory(channelId)
             _clearHistoryLiveData.postValue(response)
         }
     }
 
-    private fun leaveChannel(channelId: Long) {
+    fun deleteChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelMiddleWare.deleteChannel(channelId)
+            _deleteChannelLiveData.postValue(response)
+        }
+    }
+
+    fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.leaveChannel(channelId)
             _leaveChannelLiveData.postValue(response)
+        }
+    }
+
+    fun muteChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelMiddleWare.muteChannel(channelId,0)
+            _muteUnMuteLiveData.postValue(response)
+        }
+    }
+
+    fun unMuteChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelMiddleWare.unMuteChannel(channelId)
+            _muteUnMuteLiveData.postValue(response)
         }
     }
 
