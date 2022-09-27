@@ -13,10 +13,11 @@ class SceytDirectChannel(
         override var updatedAt: Long,
         override var unreadMessageCount: Long,
         override var lastMessage: SceytMessage? = null,
+        override var markedUsUnread: Boolean = false,
         override var muted: Boolean = false,
         override var channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
         var peer: SceytMember? = null,
-) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, channelType) {
+) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, markedUsUnread, channelType) {
 
     override val channelSubject: String
         get() = peer?.getPresentableName() ?: ""
@@ -28,7 +29,7 @@ class SceytDirectChannel(
         get() = false
 
     override fun clone(): SceytChannel {
-        return SceytDirectChannel(id, metadata, label, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), muted, channelType, peer)
+        return SceytDirectChannel(id, metadata, label, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), muted, markedUsUnread, channelType, peer)
     }
 }
 

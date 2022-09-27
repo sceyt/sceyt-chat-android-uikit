@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders
 
-import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import androidx.core.view.isVisible
@@ -72,7 +71,7 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                             channel.lastMessage.setMessageDateAndStatusIcon(dateStatus, getDateTxt(channel), false)
 
                         if (lastMessageChanged)
-                            setLastMessageText(channel)
+                            setLastMessagedText(channel)
 
                         if (unreadCountChanged)
                             setUnreadCount(channel.unreadMessageCount)
@@ -100,12 +99,39 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         onlineStatus.isVisible = isOnline
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun SceytItemChannelBinding.setLastMessageText(channel: SceytChannel) {
+    /* @SuppressLint("SetTextI18n")
+     private fun SceytItemChannelBinding.setLastMessageText(channel: SceytChannel) {
+         val message = channel.lastMessage
+         if (message == null) {
+             lastMessage.text = ""
+             return
+         }
+         if (message.state == MessageState.Deleted) {
+             lastMessage.text = itemView.context.getString(R.string.sceyt_message_was_deleted)
+             lastMessage.setTypeface(null, Typeface.ITALIC)
+         } else {
+             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
+                 lastMessage.context.getString(R.string.sceyt_attachment) else message.body
+
+             tvYou.isVisible = if (message.incoming) {
+                 val userFirstName = channel.lastMessage?.from?.getPresentableFirstName()?.trim()
+                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
+                     tvYou.text = "$userFirstName:"
+                     true
+                 } else false
+             } else {
+                 tvYou.text = "${root.getString(R.string.sceyt_your_last_message)}:"
+                 true
+             }
+             lastMessage.text = body.trim()
+             lastMessage.setTypeface(null, Typeface.NORMAL)
+         }
+     }*/
+
+    private fun SceytItemChannelBinding.setLastMessagedText(channel: SceytChannel) {
         val message = channel.lastMessage
         if (message == null) {
             lastMessage.text = ""
-            tvYou.isVisible = false
             return
         }
         if (message.state == MessageState.Deleted) {
@@ -115,17 +141,20 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
                 lastMessage.context.getString(R.string.sceyt_attachment) else message.body
 
-            tvYou.isVisible = if (message.incoming) {
+            val fromText = if (message.incoming) {
                 val userFirstName = channel.lastMessage?.from?.getPresentableFirstName()?.trim()
                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
-                    tvYou.text = "$userFirstName:"
-                    true
-                } else false
-            } else {
-                tvYou.text = "${root.getString(R.string.sceyt_your_last_message)}:"
-                true
-            }
-            lastMessage.text = body.trim()
+                    "${userFirstName}: "
+                } else ""
+            } else
+                "${root.getString(R.string.sceyt_your_last_message)}: "
+
+            lastMessage.buildSpannable()
+                .setString("$fromText${body.trim()}")
+                .setForegroundColorId(R.color.sceyt_color_last_message_from)
+                .setIndexSpan(0, fromText.length)
+                .build()
+
             lastMessage.setTypeface(null, Typeface.NORMAL)
         }
     }

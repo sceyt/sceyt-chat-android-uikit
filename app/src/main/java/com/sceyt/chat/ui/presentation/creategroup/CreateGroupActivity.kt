@@ -9,7 +9,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.ui.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
-import com.sceyt.chat.ui.presentation.creategroup.viewmodel.CreateGroupViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateGroupViewModel
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember

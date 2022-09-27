@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.emojiview.emojiview.AXEmojiManager
 import com.emojiview.emojiview.provider.AXGoogleEmojiProvider
 import com.sceyt.chat.ChatClient
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.di.appModules
 import com.sceyt.sceytchatuikit.di.databaseModule
 import com.sceyt.sceytchatuikit.di.repositoryModule
@@ -26,10 +27,9 @@ class SceytUIKitInitializer(private val application: Application) {
         initKoin(enableDatabase)
         if (SceytUIKitConfig.isDarkMode.not())
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        else  AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         return ChatClient.setup(application, host, appId, userId)
     }
-
 
     private fun initKoin(enableDatabase: Boolean) {
         val koin = GlobalContext.getOrNull()
