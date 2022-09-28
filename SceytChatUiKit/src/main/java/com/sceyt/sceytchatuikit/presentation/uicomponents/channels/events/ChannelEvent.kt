@@ -7,6 +7,10 @@ sealed class ChannelEvent {
             val channel: SceytChannel
     ) : ChannelEvent()
 
+    data class MarkAsUnRead(
+            val channel: SceytChannel
+    ) : ChannelEvent()
+
     data class ClearHistory(
             val channel: SceytChannel
     ) : ChannelEvent()

@@ -17,6 +17,7 @@ internal interface PersistenceChannelsLogic {
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun clearHistory(channelId: Long): SceytResponse<Long>
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>

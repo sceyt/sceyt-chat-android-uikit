@@ -203,8 +203,23 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.markAsRead(channelId)
 
+        if (response is SceytResponse.Success) {
+            response.data?.let {
+                messageDao.updateAllMessagesStatusAsRead(channelId)
+                channelDao.updateChannel(it.toChannelEntity(preference.getUserId()))
+            }
+        }
+
+        return response
+    }
+
+    override suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.markAsUnRead(channelId)
+
         if (response is SceytResponse.Success)
-            messageDao.updateAllMessagesStatusAsRead(channelId)
+            response.data?.let {
+                channelDao.updateChannel(it.toChannelEntity(preference.getUserId()))
+            }
 
         return response
     }
@@ -216,6 +231,7 @@ internal class PersistenceChannelsLogicImpl(
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
         }
+
         return response
     }
 

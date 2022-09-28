@@ -11,7 +11,6 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -229,21 +228,21 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.deleteChannel(channelId ?: return)
     }
 
-    internal fun markedUsRead(data: MessageListMarker?) {
-        val channelId = data?.channelId ?: return
-        channelsRV.getChannelIndexed(channelId)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.unreadMessageCount = 0
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
-    }
-
     internal fun markedChannelAsRead(channelId: Long?) {
         channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
             val channel = pair.second.channel
             val oldChannel = channel.clone()
             channel.unreadMessageCount = 0
+            channel.markedUsUnread = false
+            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        }
+    }
+
+    internal fun markedChannelAsUnRead(channelId: Long?) {
+        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
+            val channel = pair.second.channel
+            val oldChannel = channel.clone()
+            channel.markedUsUnread = true
             channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
         }
     }
@@ -280,6 +279,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
+                R.id.sceyt_mark_as_unread -> popupClickListeners.onMarkAsUnReadClick(item.channel)
                 R.id.sceyt_clear_history -> popupClickListeners.onClearHistoryClick(item.channel)
                 R.id.sceyt_leave_channel -> popupClickListeners.onLeaveChannelClick(item.channel)
                 R.id.sceyt_block_channel -> popupClickListeners.onBlockChannelClick(item.channel)
@@ -365,6 +365,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     // Channel Popup callbacks
     override fun onMarkAsReadClick(channel: SceytChannel) {
         channelEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
+    }
+
+    override fun onMarkAsUnReadClick(channel: SceytChannel) {
+        channelEventListener?.invoke(ChannelEvent.MarkAsUnRead(channel))
     }
 
     override fun onLeaveChannelClick(channel: SceytChannel) {

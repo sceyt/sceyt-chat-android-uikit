@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopupClickListeners.PopupClickListeners {
     private var defaultListeners: ChannelPopupClickListeners.PopupClickListeners = view
     private var markAsReadListener: ChannelPopupClickListeners.MarkAsRead? = null
+    private var markAsUnReadListener: ChannelPopupClickListeners.MarkAsUnRead? = null
     private var leaveChannelListener: ChannelPopupClickListeners.LeaveChannel? = null
     private var clearHistoryListener: ChannelPopupClickListeners.ClearHistory? = null
     private var blockChannelListener: ChannelPopupClickListeners.BlockChannel? = null
@@ -15,6 +16,11 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
     override fun onMarkAsReadClick(channel: SceytChannel) {
         defaultListeners.onMarkAsReadClick(channel)
         markAsReadListener?.onMarkAsReadClick(channel)
+    }
+
+    override fun onMarkAsUnReadClick(channel: SceytChannel) {
+        defaultListeners.onMarkAsUnReadClick(channel)
+        markAsUnReadListener?.onMarkAsUnReadClick(channel)
     }
 
     override fun onLeaveChannelClick(channel: SceytChannel) {
@@ -45,15 +51,19 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
     fun setListener(listener: ChannelPopupClickListeners) {
         when (listener) {
             is ChannelPopupClickListeners.PopupClickListeners -> {
+                markAsReadListener = listener
+                markAsUnReadListener = listener
                 leaveChannelListener = listener
                 clearHistoryListener = listener
                 blockChannelListener = listener
-                markAsReadListener = listener
                 blockUserListener = listener
                 unBlockUserListener = listener
             }
             is ChannelPopupClickListeners.MarkAsRead -> {
                 markAsReadListener = listener
+            }
+            is ChannelPopupClickListeners.MarkAsUnRead -> {
+                markAsUnReadListener = listener
             }
             is ChannelPopupClickListeners.LeaveChannel -> {
                 leaveChannelListener = listener

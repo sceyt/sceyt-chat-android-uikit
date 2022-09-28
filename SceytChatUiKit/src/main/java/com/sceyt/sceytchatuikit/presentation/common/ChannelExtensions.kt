@@ -15,7 +15,8 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
         muteStateChanged = muted != other.muted,
         onlineStateChanged = channelType == ChannelTypeEnum.Direct
-                && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state
+                && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state,
+        markedUsUnreadChanged = markedUsUnread != other.markedUsUnread
     )
 }
 

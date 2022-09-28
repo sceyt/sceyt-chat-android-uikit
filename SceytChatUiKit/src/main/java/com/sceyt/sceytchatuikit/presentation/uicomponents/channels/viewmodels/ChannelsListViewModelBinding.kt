@@ -102,8 +102,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                     if (leftUser == preference.getUserId())
                         channelsListView.deleteChannel(it.channelId)
                 }
-                ClearedHistory -> channelsListView.channelCleared(it.channelId
-                        ?: return@collect)
+                ClearedHistory -> channelsListView.channelCleared(it.channelId ?: return@collect)
                 Updated -> channelsListView.channelUpdated(it.channel?.toSceytUiChannel())
                 Muted -> channelsListView.updateMuteState(true, it.channelId)
                 UnMuted -> channelsListView.updateMuteState(false, it.channelId)
@@ -116,6 +115,15 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         when (it) {
             is SceytResponse.Success -> {
                 channelsListView.markedChannelAsRead(it.data?.id)
+            }
+            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
+        }
+    }
+
+    markAsUnReadLiveData.observe(lifecycleOwner) {
+        when (it) {
+            is SceytResponse.Success -> {
+                channelsListView.markedChannelAsUnRead(it.data?.id)
             }
             is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }

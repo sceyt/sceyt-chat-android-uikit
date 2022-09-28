@@ -51,6 +51,9 @@ interface ChannelDao {
             "order by user_id limit :limit offset :offset")
     fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMember>
 
+    @Update
+    fun updateChannel(channelEntity: ChannelEntity)
+
     @Query("update channels set subject =:subject, avatarUrl =:avatarUrl where chat_id= :channelId")
     fun updateChannelSubjectAndAvatarUrl(channelId: Long, subject: String?, avatarUrl: String?)
 

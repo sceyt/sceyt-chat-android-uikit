@@ -103,6 +103,10 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return channelLogic.markChannelAsRead(channelId)
     }
 
+    override suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.markChannelAsUnRead(channelId)
+    }
+
     override suspend fun clearHistory(channelId: Long): SceytResponse<Long> {
         return channelLogic.clearHistory(channelId)
     }

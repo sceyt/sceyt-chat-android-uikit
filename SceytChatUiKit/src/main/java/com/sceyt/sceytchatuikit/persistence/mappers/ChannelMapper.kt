@@ -4,6 +4,7 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
+import com.sceyt.sceytchatuikit.data.getChannelUrl
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
@@ -12,9 +13,11 @@ import java.util.*
 fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
     var memberCount = 1L
     var myRole: RoleTypeEnum? = null
+    var channelUrl: String? = null
     if (isGroup) {
         memberCount = (this as SceytGroupChannel).memberCount
         myRole = getMyRoleType(currentUserId)
+        channelUrl = this.channelUrl
     }
 
     return ChannelEntity(
@@ -33,7 +36,8 @@ fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
         subject = if (isGroup) channelSubject else null,
         avatarUrl = getChannelAvatarUrl(),
         memberCount = memberCount,
-        myRole = myRole
+        myRole = myRole,
+        channelUrl = channelUrl
     )
 }
 
@@ -41,12 +45,14 @@ fun Channel.toChannelEntity(): ChannelEntity {
     var memberCount = 1L
     var subject = ""
     val avatarUrl: String
+    var channelUrl: String? = null
     var myRole: Member.MemberType? = null
 
     if (this is GroupChannel) {
         memberCount = this.memberCount
         subject = this.subject
         avatarUrl = this.avatarUrl
+        channelUrl = this.getChannelUrl()
         myRole = myRole()
     } else {
         this as DirectChannel
@@ -65,11 +71,12 @@ fun Channel.toChannelEntity(): ChannelEntity {
         metadata = metadata,
         muted = muted(),
         muteExpireDate = muteExpireDate()?.time,
-        markedUsUnread = false,/////Todo
+        markedUsUnread = markedAsUnread(),
         subject = subject,
         avatarUrl = avatarUrl,
         memberCount = memberCount,
-        myRole = myRole?.toRoleType()
+        myRole = myRole?.toRoleType(),
+        channelUrl = channelUrl
     )
 }
 
@@ -91,6 +98,7 @@ fun ChannelDb.toChannel(): SceytChannel {
                     channelType = type,
                     subject = subject,
                     avatarUrl = avatarUrl,
+                    channelUrl = channelUrl,
                     members = members?.map { it.toSceytMember() } ?: arrayListOf(),
                     memberCount = memberCount,
                 )
@@ -103,7 +111,9 @@ fun ChannelDb.toChannel(): SceytChannel {
                 label = label,
                 metadata = metadata,
                 muted = muted,
-                peer = members?.firstOrNull()?.toSceytMember())
+                peer = members?.firstOrNull()?.toSceytMember(),
+                markedUsUnread = markedUsUnread
+            )
         }
     }
 }
