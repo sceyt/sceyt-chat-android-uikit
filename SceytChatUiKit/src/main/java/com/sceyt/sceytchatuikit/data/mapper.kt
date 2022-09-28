@@ -4,6 +4,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.user.Presence
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -169,4 +170,8 @@ fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
         "video" -> FileListItem.Video(this, message)
         else -> FileListItem.File(this, message)
     }
+}
+
+fun Presence.hasDiff(other: Presence): Boolean {
+    return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }

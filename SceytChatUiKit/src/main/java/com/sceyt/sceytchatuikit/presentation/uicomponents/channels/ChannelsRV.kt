@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -102,6 +104,17 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         else null
     }
 
+    fun getDirectChannelByUserIdIndexed(userId: String): Pair<Int, ChannelListItem.ChannelItem>? {
+        return if (::mAdapter.isInitialized)
+            mAdapter.getData().findIndexed {
+                it is ChannelListItem.ChannelItem && !it.channel.isGroup
+                        && (it.channel as? SceytDirectChannel)?.peer?.id==userId
+            }?.let {
+                return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
+            }
+        else null
+    }
+
     /** Call this function to customise ChannelViewHolderFactory and set your own.
      * Note: Call this function before initialising channels adapter.*/
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
@@ -111,6 +124,10 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
 
     fun setRichToEndListeners(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
         richToEndListener = listener
+    }
+
+    fun setAttachDetachListeners(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
+        viewHolderFactory.setChannelAttachDetachListener(listener)
     }
 
     fun setChannelListener(listener: ChannelClickListeners) {

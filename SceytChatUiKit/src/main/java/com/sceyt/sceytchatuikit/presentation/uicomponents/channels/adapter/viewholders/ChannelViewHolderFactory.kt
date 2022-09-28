@@ -20,9 +20,9 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 open class ChannelViewHolderFactory(context: Context) {
-
     private val layoutInflater = LayoutInflater.from(context)
     private val channelClickListenersImpl = ChannelClickListenersImpl()
+    private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -44,7 +44,7 @@ open class ChannelViewHolderFactory(context: Context) {
                 it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
         }
-        return ChannelViewHolder(binding, channelClickListenersImpl)
+        return ChannelViewHolder(binding, channelClickListenersImpl, attachDetachListener)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -54,6 +54,10 @@ open class ChannelViewHolderFactory(context: Context) {
 
     fun setChannelListener(listener: ChannelClickListeners) {
         channelClickListenersImpl.setListener(listener)
+    }
+
+    fun setChannelAttachDetachListener(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
+        attachDetachListener = listener
     }
 
     protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners

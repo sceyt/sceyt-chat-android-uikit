@@ -49,7 +49,7 @@ class SceytDirectChannel(
             markedUsUnread = markedUsUnread,
             muted = muted,
             channelType = channelType,
-            peer = peer)
+            peer = peer?.copy())
     }
 }
 

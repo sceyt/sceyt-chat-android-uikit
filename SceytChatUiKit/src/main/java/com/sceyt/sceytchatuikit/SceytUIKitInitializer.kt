@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.emojiview.emojiview.AXEmojiManager
 import com.emojiview.emojiview.provider.AXGoogleEmojiProvider
 import com.sceyt.chat.ChatClient
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.di.MyKoinContext
 import com.sceyt.sceytchatuikit.di.appModules
 import com.sceyt.sceytchatuikit.di.databaseModule
 import com.sceyt.sceytchatuikit.di.repositoryModule

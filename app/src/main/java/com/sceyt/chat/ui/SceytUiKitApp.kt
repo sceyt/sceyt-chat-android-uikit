@@ -2,8 +2,11 @@ package com.sceyt.chat.ui
 
 import android.app.Application
 import android.content.Context
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.Response
@@ -21,6 +24,7 @@ import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -41,7 +45,14 @@ class SceytUiKitApp : Application() {
 
         initSceyt()
         setSceytListeners()
-        connect()
+
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (ConnectionObserver.connectionState == Types.ConnectState.StateDisconnect)
+                    connect()
+            }
+        })
     }
 
     private fun initSceyt() {

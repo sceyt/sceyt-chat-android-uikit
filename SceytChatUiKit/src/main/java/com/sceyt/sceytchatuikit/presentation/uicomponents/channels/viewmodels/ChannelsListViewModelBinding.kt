@@ -8,29 +8,28 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
-import kotlinx.coroutines.Job
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
-    var connectAnlLoadInitialChannelsJob: Job? = null
 
-    if (ConnectionObserver.connectionState == Types.ConnectState.StateConnected) {
-        getChannels(0, query = searchQuery)
-    } else {
-        /** Await to connect, and load channels **/
-        connectAnlLoadInitialChannelsJob = lifecycleOwner.lifecycleScope.launch {
-            ConnectionObserver.onChangedConnectStatusFlow.collect {
-                if (it.first == Types.ConnectState.StateConnected)
-                    channelsListView.getChannelsRv().awaitAnimationEnd {
-                        getChannels(0, query = searchQuery)
-                        connectAnlLoadInitialChannelsJob?.cancel()
-                    }
-            }
+    getChannels(0, query = searchQuery)
+
+    /** Await to connect, and load channels **/
+    lifecycleOwner.lifecycleScope.launch {
+        ConnectionObserver.onChangedConnectStatusFlow.collect {
+            if (it.first == Types.ConnectState.StateConnected)
+                channelsListView.getChannelsRv().awaitAnimationEnd {
+                    getChannels(0, query = searchQuery)
+                }
         }
     }
 
@@ -108,6 +107,12 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 UnMuted -> channelsListView.updateMuteState(false, it.channelId)
                 else -> return@collect
             }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        SceytPresenceChecker.onPresenceCheckUsersFlow.collect {
+            channelsListView.updateUsersPresenceIfNeeded(it)
         }
     }
 
@@ -197,6 +202,17 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         if (!loadingItems.get() && hasNext) {
             loadingItems.set(true)
             getChannels(offset, searchQuery)
+        }
+    }
+
+    channelsListView.setChannelAttachDetachListener { item, attached ->
+        if (item is ChannelListItem.ChannelItem && !item.channel.isGroup) {
+            val peer = (item.channel as SceytDirectChannel).peer
+            peer?.let {
+                if (attached)
+                    SceytPresenceChecker.addNewUserToPresenceCheck(it.id)
+                else SceytPresenceChecker.removeFromPresenceCheck(it.id)
+            }
         }
     }
 }

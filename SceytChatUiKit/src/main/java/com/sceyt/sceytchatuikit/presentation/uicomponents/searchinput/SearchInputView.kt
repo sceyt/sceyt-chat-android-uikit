@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.databinding.SceytSearchViewBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.hideSoftInput

@@ -20,14 +20,10 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentManager
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import java.io.File
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 

@@ -56,21 +56,30 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
         canvas.drawCircle(width / 2f, height / 2f, width / 2f - strokeWidth - smallDiff, indicatorPaint)
     }
 
-    fun setVisibilityWithAnim(visible: Boolean) {
-        if (animation == null || !animation.hasStarted() || animation.hasEnded()) {
-            if (visible) {
-                if (!isVisible) {
-                    visibility = VISIBLE
-                    scaleViewOut(0f, 1f)
-                }
-            } else {
-                if (isVisible) {
-                    scaleViewWithAnim(1f, 0f) {
-                        visibility = GONE
+    private fun setVisibilityWithAnim(visible: Boolean) {
+        if (isAttachedToWindow) {
+            if (animation == null || !animation.hasStarted() || animation.hasEnded()) {
+                if (visible) {
+                    if (!isVisible) {
+                        super.setVisibility(VISIBLE)
+                        scaleViewOut(0f, 1f)
+                    }
+                } else {
+                    if (isVisible) {
+                        scaleViewWithAnim(1f, 0f) {
+                            super.setVisibility(GONE)
+                        }
                     }
                 }
             }
-        }
+        } else isVisible = visible
+    }
+
+    override fun setVisibility(visibility: Int) {
+        if (changeVisibilityWithAnim && isAttachedToWindow) {
+            setVisibilityWithAnim(visibility == VISIBLE)
+        } else
+            super.setVisibility(visibility)
     }
 
     fun setStrokeColor(color: Int) {

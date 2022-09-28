@@ -58,7 +58,7 @@ class SceytGroupChannel(
             subject = subject,
             avatarUrl = avatarUrl,
             channelUrl = channelUrl,
-            members = members,
+            members = members.map { it.copy() },
             memberCount = memberCount)
     }
 }

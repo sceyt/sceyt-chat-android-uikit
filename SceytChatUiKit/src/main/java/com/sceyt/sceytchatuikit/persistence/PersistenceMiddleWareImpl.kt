@@ -6,7 +6,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChan
 import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,11 +36,12 @@ import kotlin.coroutines.CoroutineContext
 
 //todo need review from users view model
 class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
-        PersistenceMessagesMiddleWare, PersistenceChanelMiddleWare, SceytKoinComponent {
+        PersistenceMessagesMiddleWare, PersistenceChanelMiddleWare, PersistenceUsersMiddleWare, SceytKoinComponent {
 
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val membersLogic: PersistenceMembersLogic by inject()
+    private val usersLogic: PersistenceUsersLogic by inject()
     private val connectionLogic: PersistenceConnectionLogic by inject()
 
     override val coroutineContext: CoroutineContext
@@ -207,5 +209,9 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
 
     override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
         return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
+    }
+
+    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
+        return usersLogic.getSceytUsers(ids)
     }
 }

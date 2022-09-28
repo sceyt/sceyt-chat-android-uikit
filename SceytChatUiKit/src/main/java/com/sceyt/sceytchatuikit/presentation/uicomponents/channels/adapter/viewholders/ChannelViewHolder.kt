@@ -22,7 +22,8 @@ import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class ChannelViewHolder(private val binding: SceytItemChannelBinding,
-                        private var listeners: ChannelClickListenersImpl) : BaseChannelViewHolder(binding.root) {
+                        private var listeners: ChannelClickListenersImpl,
+                        private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)?) : BaseChannelViewHolder(binding.root) {
 
     private lateinit var channelItem: ChannelListItem.ChannelItem
 
@@ -87,6 +88,18 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             ChannelListItem.LoadingMoreItem -> Unit
         }
     }
+
+    override fun onViewAttachedToWindow() {
+        super.onViewAttachedToWindow()
+        attachDetachListener?.invoke(getChannelItem(), true)
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        attachDetachListener?.invoke(getChannelItem(), false)
+    }
+
+    private fun getChannelItem() = if (::channelItem.isInitialized) channelItem else null
 
     private fun SceytItemChannelBinding.setMuteState(channel: SceytChannel) {
         if (channel.muted) {

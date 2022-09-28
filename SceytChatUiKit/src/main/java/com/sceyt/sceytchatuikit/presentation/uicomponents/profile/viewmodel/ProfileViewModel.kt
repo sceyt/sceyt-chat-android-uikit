@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
