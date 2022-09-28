@@ -6,23 +6,33 @@ import java.util.*
 
 @Parcelize
 class SceytGroupChannel(
-        override var id: Long = 0,
-        override var createdAt: Long = 0,
-        override var updatedAt: Long = 0,
-        override var unreadMessageCount: Long = 0,
-        override var lastMessage: SceytMessage? = null,
-        override var label: String? = null,
-        override var metadata: String? = null,
-        override var muted: Boolean = false,
-        override var muteExpireDate: Date? = null,
+        override var id: Long,
+        override var createdAt: Long,
+        override var updatedAt: Long,
+        override var unreadMessageCount: Long,
+        override var lastMessage: SceytMessage?,
+        override var label: String?,
+        override var metadata: String?,
+        override var muted: Boolean,
+        override var muteExpireDate: Date?,
         override var markedUsUnread: Boolean,
         override var channelType: ChannelTypeEnum,
-        var subject: String? = "",
-        var avatarUrl: String? = "",
-        var channelUrl: String? = "",
+        var subject: String?,
+        var avatarUrl: String?,
+        var channelUrl: String?,
         var members: List<SceytMember>,
-        var memberCount: Long = 0L
-) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, muteExpireDate, markedUsUnread, channelType) {
+        var memberCount: Long
+) : SceytChannel(id = id,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    unreadMessageCount = unreadMessageCount,
+    lastMessage = lastMessage,
+    label = label,
+    metadata = metadata,
+    muted = muted,
+    muteExpireDate = muteExpireDate,
+    markedUsUnread = markedUsUnread,
+    channelType = channelType) {
 
     override val channelSubject: String
         get() = subject ?: ""
@@ -34,8 +44,22 @@ class SceytGroupChannel(
         get() = true
 
     override fun clone(): SceytChannel {
-        return SceytGroupChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), label,
-            metadata, muted, muteExpireDate, markedUsUnread, channelType, subject, avatarUrl, channelUrl, members, memberCount)
+        return SceytGroupChannel(id = id,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            unreadMessageCount = unreadMessageCount,
+            lastMessage = lastMessage?.clone(),
+            label = label,
+            metadata = metadata,
+            muted = muted,
+            muteExpireDate = muteExpireDate,
+            markedUsUnread = markedUsUnread,
+            channelType = channelType,
+            subject = subject,
+            avatarUrl = avatarUrl,
+            channelUrl = channelUrl,
+            members = members,
+            memberCount = memberCount)
     }
 }
 

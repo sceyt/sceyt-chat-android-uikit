@@ -12,7 +12,7 @@ open class SceytChannel(open var id: Long,
                         open var createdAt: Long,
                         open var updatedAt: Long,
                         open var unreadMessageCount: Long,
-                        open var lastMessage: SceytMessage? = null,
+                        open var lastMessage: SceytMessage?,
                         open var label: String?,
                         open var metadata: String?,
                         open var muted: Boolean,
@@ -65,7 +65,16 @@ open class SceytChannel(open var id: Long,
     }
 
     public override fun clone(): SceytChannel {
-        return SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(),
-            label, metadata, muted, muteExpireDate, markedUsUnread, channelType)
+        return SceytChannel(id = id,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            unreadMessageCount = unreadMessageCount,
+            lastMessage = lastMessage?.clone(),
+            label = label,
+            metadata = metadata,
+            muted = muted,
+            muteExpireDate = muteExpireDate,
+            markedUsUnread = markedUsUnread,
+            channelType = channelType)
     }
 }

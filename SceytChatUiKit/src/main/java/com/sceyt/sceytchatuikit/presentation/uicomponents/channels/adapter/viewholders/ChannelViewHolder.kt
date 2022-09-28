@@ -78,6 +78,9 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
                         if (onlineStateChanged)
                             setOnlineStatus(channel)
+
+                        if (markedUsUnreadChanged)
+                            setChannelMarkedUsUnread(channel)
                     }
                 }
             }
@@ -98,35 +101,6 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 && (channel as? SceytDirectChannel)?.peer?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline
     }
-
-    /* @SuppressLint("SetTextI18n")
-     private fun SceytItemChannelBinding.setLastMessageText(channel: SceytChannel) {
-         val message = channel.lastMessage
-         if (message == null) {
-             lastMessage.text = ""
-             return
-         }
-         if (message.state == MessageState.Deleted) {
-             lastMessage.text = itemView.context.getString(R.string.sceyt_message_was_deleted)
-             lastMessage.setTypeface(null, Typeface.ITALIC)
-         } else {
-             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
-                 lastMessage.context.getString(R.string.sceyt_attachment) else message.body
-
-             tvYou.isVisible = if (message.incoming) {
-                 val userFirstName = channel.lastMessage?.from?.getPresentableFirstName()?.trim()
-                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
-                     tvYou.text = "$userFirstName:"
-                     true
-                 } else false
-             } else {
-                 tvYou.text = "${root.getString(R.string.sceyt_your_last_message)}:"
-                 true
-             }
-             lastMessage.text = body.trim()
-             lastMessage.setTypeface(null, Typeface.NORMAL)
-         }
-     }*/
 
     private fun SceytItemChannelBinding.setLastMessagedText(channel: SceytChannel) {
         val message = channel.lastMessage
@@ -171,6 +145,17 @@ class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         unreadMessagesCount.apply {
             text = title
             isVisible = true
+        }
+    }
+
+    private fun SceytItemChannelBinding.setChannelMarkedUsUnread(channel: SceytChannel) {
+        if (channel.unreadMessageCount == 0L) {
+            if (channel.markedUsUnread)
+                unreadMessagesCount.apply {
+                    text = "  "
+                    isVisible = true
+                }
+            else unreadMessagesCount.isVisible = false
         }
     }
 

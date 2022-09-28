@@ -22,7 +22,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             metadata = metadata,
             muted = muted(),
             muteExpireDate = muteExpireDate(),
-            markedUsUnread = false,
+            markedUsUnread = markedAsUnread(),
             channelType = getChannelType(this),
             subject = subject,
             avatarUrl = avatarUrl,
@@ -41,31 +41,10 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             label = label,
             metadata = metadata,
             muted = muted(),
+            markedUsUnread = markedAsUnread(),
             peer = peer.toSceytMember(),
             channelType = getChannelType(this),
         )
-    }
-}
-
-fun SceytChannel.toChannel(): Channel {
-    return when (channelType) {
-        ChannelTypeEnum.Direct -> {
-            this as SceytDirectChannel
-            DirectChannel(id, metadata, label, createdAt, updatedAt, arrayOf(peer?.toMember()),
-                lastMessage?.toMessage(), unreadMessageCount, muted, 0)
-        }
-        ChannelTypeEnum.Private -> {
-            this as SceytGroupChannel
-            PrivateChannel(id, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
-        }
-        ChannelTypeEnum.Public -> {
-            this as SceytGroupChannel
-            PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
-        }
     }
 }
 
@@ -75,31 +54,15 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
             this as SceytGroupChannel
             PrivateChannel(id, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0, markedUsUnread)
         }
         ChannelTypeEnum.Public -> {
             this as SceytGroupChannel
             PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
+                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0, markedUsUnread)
         }
         else -> throw RuntimeException("Channel is direct channel")
     }
-}
-
-fun SceytChannel.toPublicChannel(): PublicChannel {
-    return if (channelType == ChannelTypeEnum.Public) {
-        this as SceytGroupChannel
-        PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
-            label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
-    } else throw RuntimeException("Channel is not public")
-}
-
-fun SceytChannel.toPrivateChannel(): PrivateChannel {
-    return if (channelType == ChannelTypeEnum.Private) {
-        this as SceytGroupChannel
-        PrivateChannel(id, subject, metadata, avatarUrl,
-            label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(), lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0)
-    } else throw RuntimeException("Channel is not public")
 }
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {

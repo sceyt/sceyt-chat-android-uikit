@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface PersistenceChanelMiddleWare {
     suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun clearHistory(channelId: Long): SceytResponse<Long>
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>

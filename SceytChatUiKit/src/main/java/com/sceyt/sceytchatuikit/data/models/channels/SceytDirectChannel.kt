@@ -6,18 +6,28 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class SceytDirectChannel(
-        override var id: Long = 0,
-        override var metadata: String? = null,
-        override var label: String? = null,
+        override var id: Long,
+        override var metadata: String?,
+        override var label: String?,
         override var createdAt: Long,
         override var updatedAt: Long,
         override var unreadMessageCount: Long,
-        override var lastMessage: SceytMessage? = null,
-        override var markedUsUnread: Boolean = false,
-        override var muted: Boolean = false,
+        override var lastMessage: SceytMessage?,
+        override var muted: Boolean,
+        override var markedUsUnread: Boolean,
         override var channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
-        var peer: SceytMember? = null,
-) : SceytChannel(id, createdAt, updatedAt, unreadMessageCount, lastMessage, label, metadata, muted, null, markedUsUnread, channelType) {
+        var peer: SceytMember?,
+) : SceytChannel(id = id,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    unreadMessageCount = unreadMessageCount,
+    lastMessage = lastMessage,
+    label = label,
+    metadata = metadata,
+    muted = muted,
+    muteExpireDate = null,
+    markedUsUnread = markedUsUnread,
+    channelType = channelType) {
 
     override val channelSubject: String
         get() = peer?.getPresentableName() ?: ""
@@ -29,7 +39,17 @@ class SceytDirectChannel(
         get() = false
 
     override fun clone(): SceytChannel {
-        return SceytDirectChannel(id, metadata, label, createdAt, updatedAt, unreadMessageCount, lastMessage?.clone(), muted, markedUsUnread, channelType, peer)
+        return SceytDirectChannel(id = id,
+            metadata = metadata,
+            label = label,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            unreadMessageCount = unreadMessageCount,
+            lastMessage = lastMessage?.clone(),
+            markedUsUnread = markedUsUnread,
+            muted = muted,
+            channelType = channelType,
+            peer = peer)
     }
 }
 

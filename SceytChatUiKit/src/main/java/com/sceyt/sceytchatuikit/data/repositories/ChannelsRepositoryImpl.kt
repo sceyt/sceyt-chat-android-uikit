@@ -156,7 +156,21 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun markAsRead(channelId: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).markAllMessagesAsRead(object : ChannelCallback {
+            ChannelOperator.build(channelId).markUsRead(object : ChannelCallback {
+                override fun onResult(data: Channel) {
+                    continuation.resume(SceytResponse.Success(data.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    override suspend fun markAsUnRead(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).markUsUnread(object : ChannelCallback {
                 override fun onResult(data: Channel) {
                     continuation.resume(SceytResponse.Success(data.toSceytUiChannel()))
                 }

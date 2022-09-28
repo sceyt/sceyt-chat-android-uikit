@@ -8,6 +8,10 @@ sealed interface ChannelPopupClickListeners {
         fun onMarkAsReadClick(channel: SceytChannel)
     }
 
+    fun interface MarkAsUnRead : ChannelPopupClickListeners {
+        fun onMarkAsUnReadClick(channel: SceytChannel)
+    }
+
     fun interface LeaveChannel : ChannelPopupClickListeners {
         fun onLeaveChannelClick(channel: SceytChannel)
     }
@@ -30,5 +34,5 @@ sealed interface ChannelPopupClickListeners {
 
     /** User this if you want to implement all callbacks */
     interface PopupClickListeners : LeaveChannel, ClearHistory,
-            BlockChannel, MarkAsRead, BlockUser, UnBlockUser
+            BlockChannel, MarkAsRead, MarkAsUnRead, BlockUser, UnBlockUser
 }
