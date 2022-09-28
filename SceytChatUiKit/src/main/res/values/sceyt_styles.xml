@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="SceytAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/sceyt_color_primary</item>
         <item name="colorPrimaryDark">@color/sceyt_color_primary_dark</item>
@@ -16,7 +16,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="DefaultFontTheme" parent="AppTheme">
+    <style name="DefaultFontTheme" parent="SceytAppTheme">
         <item name="android:fontFamily">@font/roboto_regular</item>
     </style>
 

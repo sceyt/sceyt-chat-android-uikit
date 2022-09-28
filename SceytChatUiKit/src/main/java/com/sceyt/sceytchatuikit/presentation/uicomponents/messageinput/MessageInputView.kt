@@ -12,7 +12,7 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel

@@ -14,6 +14,8 @@ import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembe
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogicImpl
+import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
+import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogicImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.viewmodels.LinksViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
@@ -47,10 +49,12 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMessagesMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
+    factory<PersistenceUsersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
     factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get()) }
+    factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get()) }
     factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get()) }
 }
 
@@ -58,6 +62,7 @@ internal val repositoryModule = module {
     factory<ChannelsRepository> { ChannelsRepositoryImpl() }
     factory<ProfileRepository> { ProfileRepositoryImpl() }
     factory<MessagesRepository> { MessagesRepositoryImpl() }
+    factory<UsersRepository> { UsersRepositoryImpl() }
 }
 
 internal val viewModels = module {

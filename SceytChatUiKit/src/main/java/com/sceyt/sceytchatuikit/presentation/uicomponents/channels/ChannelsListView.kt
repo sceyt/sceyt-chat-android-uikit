@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
@@ -270,6 +271,22 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         pageStateView?.updateState(state, channelsRV.isEmpty())
     }
 
+    internal suspend fun updateUsersPresenceIfNeeded(users: List<User>) {
+        users.forEach {
+            channelsRV.getDirectChannelByUserIdIndexed(it.id)?.let { pair ->
+                val channel = (pair.second.channel as SceytDirectChannel)
+                val hasDiff = channel.peer?.user?.presence?.hasDiff(it.presence)
+                if (hasDiff == true) {
+                    val oldChannel = channel.clone()
+                    channel.peer?.user = it
+                    withContext(Dispatchers.Main){
+                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+                    }
+                }
+            }
+        }
+    }
+
     private fun sortChannelsBy(sortBy: SceytUIKitConfig.ChannelSortType) {
         channelsRV.sortBy(sortBy)
     }
@@ -297,6 +314,13 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     internal fun setReachToEndListener(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
         channelsRV.setRichToEndListeners(listener)
+    }
+
+    /**
+     * @param listener Showing that channel is currently showing in the screen or not
+     */
+    internal fun setChannelAttachDetachListener(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
+        channelsRV.setAttachDetachListeners(listener)
     }
 
     /**
@@ -347,7 +371,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        val updateChannel = item.channel.clone().apply { unreadMessageCount = 0 }
+        val updateChannel = item.channel.clone().apply {
+            unreadMessageCount = 0
+            markedUsUnread = false
+        }
         Handler(Looper.getMainLooper()).postDelayed({
             channelUpdated(updateChannel)
         }, 300)

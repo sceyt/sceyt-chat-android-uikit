@@ -8,7 +8,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class SceytMember(
         var role: Role,
-        val user: User,
+        var user: User,
 ) : Parcelable {
 
     constructor(user: User) : this(Role("participant"), user)

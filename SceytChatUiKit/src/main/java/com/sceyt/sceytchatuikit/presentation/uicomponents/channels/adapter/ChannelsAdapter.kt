@@ -35,6 +35,16 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
         return viewHolderFactory.getItemViewType(channels[position], position)
     }
 
+    override fun onViewAttachedToWindow(holder: BaseChannelViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        holder.onViewAttachedToWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: BaseChannelViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
+    }
+
     private fun removeLoading() {
         if (channels.remove(mLoadingItem))
             notifyItemRemoved(channels.lastIndex + 1)

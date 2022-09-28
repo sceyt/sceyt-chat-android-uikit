@@ -14,7 +14,7 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel

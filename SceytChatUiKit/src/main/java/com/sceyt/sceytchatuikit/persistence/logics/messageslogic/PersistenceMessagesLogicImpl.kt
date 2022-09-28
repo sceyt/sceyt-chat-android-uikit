@@ -3,7 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.sceytchatuikit.SceytKoinComponent
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -147,6 +147,7 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
                 messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
+                channelDao.clearUnreadCount(channelId, 0)
             }
         }
         return response

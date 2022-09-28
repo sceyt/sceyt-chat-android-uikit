@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit
+package com.sceyt.sceytchatuikit.di
 
 import org.koin.core.KoinApplication
 

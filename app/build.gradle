@@ -43,6 +43,8 @@ android {
 
 dependencies {
     implementation project(':SceytChatUiKit')
+    implementation project(':SceytSDK-debug')
+    implementation project(':AXEmojiView')
 
     implementation supportDependencies.coreKtx
     implementation supportDependencies.appCompat

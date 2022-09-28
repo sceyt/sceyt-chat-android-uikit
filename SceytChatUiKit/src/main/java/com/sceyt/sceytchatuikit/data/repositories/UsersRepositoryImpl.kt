@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.data.repositories
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserListQuery
+import com.sceyt.chat.models.user.UserListQueryByIds
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
@@ -47,6 +48,24 @@ class UsersRepositoryImpl : UsersRepository {
                     else {
                         continuation.resume(SceytResponse.Success(users))
                     }
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e?.message))
+                }
+            })
+        }
+    }
+
+    override suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<User>> {
+        return suspendCancellableCoroutine { continuation ->
+            val builder = UserListQueryByIds.Builder()
+                .setIds(ids)
+                .build()
+
+            builder.load(object : UsersCallback {
+                override fun onResult(users: MutableList<User>) {
+                    continuation.resume(SceytResponse.Success(users))
                 }
 
                 override fun onError(e: SceytException?) {
