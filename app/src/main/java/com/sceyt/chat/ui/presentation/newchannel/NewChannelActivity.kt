@@ -66,6 +66,7 @@ class NewChannelActivity : AppCompatActivity() {
 
         binding.toolbar.setBackClickListener {
             super.onBackPressed()
+            overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
         }
 
         binding.tvNewGroup.setOnClickListener {

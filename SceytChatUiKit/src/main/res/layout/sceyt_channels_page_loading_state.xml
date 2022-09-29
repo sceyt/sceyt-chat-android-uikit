@@ -7,7 +7,7 @@
     <ProgressBar
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginBottom="?actionBarSize"
+        android:layout_marginBottom="?android:attr/actionBarSize"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

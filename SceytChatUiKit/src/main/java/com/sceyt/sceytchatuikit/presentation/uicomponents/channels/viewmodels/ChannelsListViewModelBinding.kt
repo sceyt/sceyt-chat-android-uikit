@@ -110,7 +110,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+    lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
         SceytPresenceChecker.onPresenceCheckUsersFlow.collect {
             channelsListView.updateUsersPresenceIfNeeded(it)
         }
