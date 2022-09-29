@@ -9,6 +9,7 @@ import androidx.core.view.*
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
@@ -115,8 +116,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.subTitle.isVisible = !fullName.isNullOrBlank() && !isTyping
     }
 
-    internal fun onTyping(data: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData) {
-        if (data.member.id == ChatClient.getClient().user.id) return
+    internal fun onTyping(data: ChannelTypingEventData) {
+        if (data.member.id == ChatClient.getClient().user?.id) return
         val typing = data.typing
         isTyping = typing
 

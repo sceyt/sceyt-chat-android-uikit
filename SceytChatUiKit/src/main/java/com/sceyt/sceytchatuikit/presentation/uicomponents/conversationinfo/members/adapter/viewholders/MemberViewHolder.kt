@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
 
 class MemberViewHolder(private val binding: ItemChannelMemberBinding,
+                       private val currentUserId: String?,
                        private val memberClickListeners: MemberClickListenersImpl) : BaseMemberViewHolder(binding.root) {
 
     private lateinit var memberItem: MemberItem.Member
@@ -32,7 +33,7 @@ class MemberViewHolder(private val binding: ItemChannelMemberBinding,
             if (diff.nameChanged || diff.avatarChanged) {
                 avatar.setNameAndImageUrl(presentableName, member.user.avatarURL)
 
-                memberName.text = if (member.id == ChatClient.getClient().user.id) {
+                memberName.text = if (member.id == currentUserId) {
                     val text = SpannableStringBuilder()
                         .append(presentableName)
                         .color(youColor) { append(" " + itemView.context.getString(R.string.sceyt_member_name_you)) }
