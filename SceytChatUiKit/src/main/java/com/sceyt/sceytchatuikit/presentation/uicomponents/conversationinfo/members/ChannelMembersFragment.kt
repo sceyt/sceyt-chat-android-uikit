@@ -14,14 +14,17 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -38,10 +41,12 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.component.inject
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     private var binding: FragmentChannelMembersBinding? = null
     private val viewModel by viewModel<ChannelMembersViewModel>()
+    private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
     private var pageStateView: PageStateView? = null
     private lateinit var channel: SceytChannel
@@ -100,7 +105,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         val newOwnerPair = membersAdapter?.getMemberItemById(newOwnerId)
         oldOwnerPair?.let { updateMemberRole("participant", it) }
         newOwnerPair?.let { updateMemberRole("owner", it) }
-        membersAdapter?.showHideMoreIcon(newOwnerId == ChatClient.getClient().user.id)
+        membersAdapter?.showHideMoreIcon(newOwnerId == ChatClient.getClient().user?.id)
     }
 
     private fun updateMemberRole(newRole: String, pair: Pair<Int, MemberItem>) {
@@ -164,7 +169,9 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
-            val currentUserIsOwner = channel.toGroupChannel().myRole() == Member.MemberType.MemberTypeOwner
+            val currentUserIsOwner = (channel as SceytGroupChannel).members.find {
+                it.id == preferences.getUserId()
+            }?.role?.name == RoleTypeEnum.Owner.toString()
 
             membersAdapter = ChannelMembersAdapter(data as ArrayList, currentUserIsOwner,
                 ChannelMembersViewHolderFactory(requireContext()).also {
