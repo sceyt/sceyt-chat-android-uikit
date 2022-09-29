@@ -11,6 +11,7 @@ import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 
 
 class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -31,7 +32,9 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
             imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
+            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
             avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, getAvatarRandomColor())
+            defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
@@ -95,7 +98,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
                 .override(width)
                 .transition(DrawableTransitionOptions.withCrossFade(100))
                 .error(R.drawable.sceyt_bg_circle_gray)
-                .placeholder(R.drawable.sceyt_bg_circle_gray)
+                .placeholder(drawable ?: context.getCompatDrawable(R.drawable.sceyt_bg_circle_gray))
                 .listener(com.sceyt.sceytchatuikit.extensions.glideRequestListener {
                     avatarLoadCb?.invoke(false)
                 })
@@ -105,14 +108,18 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun loadDefaultImage() {
-        Glide.with(context.applicationContext)
-            .load(defaultAvatarResId)
-            .override(width)
-            .circleCrop()
-            .into(this)
+        if (isInEditMode) {
+            if (defaultAvatarResId != 0)
+                setImageResource(defaultAvatarResId)
+        } else
+            Glide.with(context.applicationContext)
+                .load(defaultAvatarResId)
+                .override(width)
+                .circleCrop()
+                .into(this)
     }
 
-    fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultIcon: Int = 0) {
+    fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
         fullName = name
         imageUrl = url
         defaultAvatarResId = defaultIcon
@@ -120,7 +127,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         loadAvatarImage()
     }
 
-    fun setImageUrl(url: String?, @DrawableRes defaultIcon: Int = 0) {
+    fun setImageUrl(url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
         imageUrl = url
         defaultAvatarResId = defaultIcon
         invalidate()

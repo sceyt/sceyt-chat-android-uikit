@@ -2,7 +2,13 @@
 <resources>
     <declare-styleable name="SceytSearchableToolbar">
 
-        <attr name="sceytSearchableToolbarTitle" format="string" />
+        <attr name="sceytSearchableToolbarTitle" format="string" localization="suggested" />
+        <attr name="sceytSearchableToolbarTitleColor" format="reference|color" />
+        <attr name="sceytSearchableToolbarEnableSearch" format="boolean" />
+        <attr name="sceytSearchableToolbarIconsTint" format="reference" />
+        <attr name="sceytSearchableToolbarBackIcon" format="reference" />
+        <attr name="sceytSearchableToolbarClearIcon" format="reference" />
+        <attr name="sceytSearchableToolbarSearchIcon" format="reference" />
 
     </declare-styleable>
 </resources>

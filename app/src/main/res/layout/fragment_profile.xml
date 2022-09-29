@@ -19,7 +19,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutToolbar"
             android:layout_width="match_parent"
-            android:layout_height="?actionBarSize"
+            android:layout_height="?android:attr/actionBarSize"
             android:paddingHorizontal="15dp"
             app:layout_constraintTop_toTopOf="parent">
 
