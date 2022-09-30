@@ -34,7 +34,6 @@ class CreateGroupActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        initViews()
         initViewModel()
         binding.initViews()
     }
@@ -53,12 +52,10 @@ class CreateGroupActivity : AppCompatActivity() {
         }
     }
 
-    private fun initViews() {
-        binding.icBack.setOnClickListener { onBackPressed() }
-    }
-
     private fun ActivityCreateGroupBinding.initViews() {
         layoutDetails.layoutTransition = LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
+
+        binding.icBack.setOnClickListener { onBackPressed() }
 
         icEditPhoto.setOnClickListener {
             EditAvatarTypeDialog(this@CreateGroupActivity) {

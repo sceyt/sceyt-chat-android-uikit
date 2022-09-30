@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
@@ -25,11 +26,14 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
     private var backIcon: Int
     private var clearIcon: Int
     private var iconsTint: Int = 0
+    private var titleTextSize: Int
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytSearchableToolbar)
         toolbarTitle = a.getString(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitle)
         titleColor = a.getColor(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitleColor, context.getCompatColor(R.color.sceyt_color_text_themed))
+        titleTextSize = a.getDimensionPixelSize(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitleTextSize,
+            context.resources.getDimension(R.dimen.bigTextSize).toInt())
         enableSearch = a.getBoolean(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarEnableSearch, enableSearch)
         searchIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarSearchIcon, R.drawable.sceyt_ic_search)
         backIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarBackIcon, R.drawable.sceyt_ic_arrow_back)
@@ -45,7 +49,10 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
     private fun setIconsAndColors() {
         binding.icSearch.setImageResource(searchIcon)
         binding.icBack.setImageResource(backIcon)
-        binding.tvTitle.setTextColor(titleColor)
+        binding.tvTitle.apply {
+            setTextColor(titleColor)
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize.toFloat())
+        }
         if (iconsTint != 0) {
             binding.icSearch.setColorFilter(context.getCompatColor(iconsTint))
             binding.icBack.setColorFilter(context.getCompatColor(iconsTint))

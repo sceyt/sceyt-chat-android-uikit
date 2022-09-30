@@ -50,9 +50,18 @@ class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, at
         fun build() {
             if (fromIndex < toIndex)
                 spanString.setSpan(ForegroundColorSpan(context.getCompatColorByTheme(spanColorId)), fromIndex, toIndex, flag)
-            text = spanString
+            setSpannableText(spanString)
             buildSpannable = this
         }
+    }
+
+    private fun setSpannableText(text: SpannableString) {
+        super.setText(text)
+    }
+
+    override fun setText(text: CharSequence?, type: BufferType?) {
+        buildSpannable = null
+        super.setText(text, type)
     }
 
     fun buildSpannable() = BuildSpannable()

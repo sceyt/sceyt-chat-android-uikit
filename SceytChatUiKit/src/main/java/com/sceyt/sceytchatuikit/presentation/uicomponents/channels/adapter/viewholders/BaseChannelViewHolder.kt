@@ -11,11 +11,9 @@ abstract class BaseChannelViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
     @CallSuper
     open fun onViewDetachedFromWindow() {
-
     }
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-
     }
 }
