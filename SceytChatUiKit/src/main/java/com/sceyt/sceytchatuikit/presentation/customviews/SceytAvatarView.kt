@@ -32,7 +32,6 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
             imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
-            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
             avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, getAvatarRandomColor())
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
             a.recycle()
