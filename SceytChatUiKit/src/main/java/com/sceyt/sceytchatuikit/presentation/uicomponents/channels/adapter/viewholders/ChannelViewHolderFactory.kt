@@ -62,6 +62,8 @@ open class ChannelViewHolderFactory(context: Context) {
 
     protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners
 
+    protected fun getAttachDetachListener() = attachDetachListener
+
     companion object {
         private lateinit var asyncLayoutInflater: AsyncLayoutInflater
         private var cachedViews: Stack<SceytItemChannelBinding>? = Stack<SceytItemChannelBinding>()
