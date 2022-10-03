@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -21,6 +22,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
@@ -45,7 +47,7 @@ class ChannelsFragment : Fragment() {
 
         initViews()
 
-        binding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
+        //binding.channelListView.setViewHolderFactory(CustomViewHolderFactory(requireContext()))
 
         mViewModel.bind(binding.channelListView, viewLifecycleOwner)
         mViewModel.bind(binding.searchView)
@@ -83,13 +85,31 @@ class ChannelsFragment : Fragment() {
 
     class CustomViewHolderFactory(context: Context) : ChannelViewHolderFactory(context) {
         override fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
-            return super.createChannelViewHolder(parent)
-            // return CustomViewHolder(SceytItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false), clickListeners)
+
+            //return super.createChannelViewHolder(parent)
+
+            return ViewHolderWithSceytUiAndCustomLogic(SceytItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+                clickListeners, getAttachDetachListener())
         }
     }
 
+    /**This is custom view holder extended ChannelViewHolder.
+     * Use this to customise your logic*/
+    class ViewHolderWithSceytUiAndCustomLogic(
+            binding: SceytItemChannelBinding,
+            listener: ChannelClickListeners.ClickListeners,
+            attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)?) : ChannelViewHolder(binding, listener, attachDetachListener) {
+
+        override fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
+            textView.text = "Bla Bla"
+        }
+    }
+
+    /**This is custom view holder extended BaseChannelViewHolder.
+     * Use this to customise your UI*/
     class CustomViewHolder(private val binding: SceytItemChannelBinding,
-                           val listener: ChannelClickListeners.ClickListeners) : BaseChannelViewHolder(binding.root) {
+                           private val listener: ChannelClickListeners.ClickListeners) : BaseChannelViewHolder(binding.root) {
+
         override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
 
             binding.root.setOnClickListener {

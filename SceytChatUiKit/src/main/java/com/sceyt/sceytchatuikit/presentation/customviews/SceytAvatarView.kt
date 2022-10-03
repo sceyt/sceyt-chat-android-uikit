@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
 
 
 class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -79,7 +80,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun getAvatarRandomColor(): Int {
-        val colors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
+        val colors = AvatarStyle.avatarColors
         var colorIndex: Int = (0..6).random()
 
         if (colorIndex >= colors.size)
