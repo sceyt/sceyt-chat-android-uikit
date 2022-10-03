@@ -25,17 +25,17 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        setContentView(ActivityLoginBinding.inflate(layoutInflater)
+            .also { binding = it }
+            .root)
+
         statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         if (preference.getUsername().isNullOrBlank().not()) {
             launchActivity<MainActivity>()
             finish()
         }
-
-
-        setContentView(ActivityLoginBinding.inflate(layoutInflater)
-            .also { binding = it }
-            .root)
 
         initViewModel()
         binding.initViews()

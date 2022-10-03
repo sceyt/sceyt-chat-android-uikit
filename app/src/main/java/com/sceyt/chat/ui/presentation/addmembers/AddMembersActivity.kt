@@ -29,11 +29,12 @@ class AddMembersActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         setContentView(ActivityAddMembersBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
+
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         initViewModel()
         initViews()

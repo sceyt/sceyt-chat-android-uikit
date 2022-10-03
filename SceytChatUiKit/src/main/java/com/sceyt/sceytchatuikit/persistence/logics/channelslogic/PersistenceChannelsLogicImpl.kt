@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
+import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
@@ -8,6 +9,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
@@ -25,9 +27,11 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlin.coroutines.resume
 
 internal class PersistenceChannelsLogicImpl(
         private val channelsRepository: ChannelsRepository,
@@ -106,15 +110,34 @@ internal class PersistenceChannelsLogicImpl(
             val dbChannels = getChannelsDb(offset, searchQuery)
             trySend(PaginationResponse.DBResponse(dbChannels, offset))
 
+            awaitToConnectSceyt()
+
             val response = if (offset == 0) channelsRepository.getChannels(searchQuery)
             else channelsRepository.loadMoreChannels()
 
             trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf()))
 
-            if (response is SceytResponse.Success) {
+            if (response is SceytResponse.Success)
                 saveChannelsToDb(response.data ?: return@callbackFlow)
-            }
+
             awaitClose()
+        }
+    }
+
+    private suspend fun awaitToConnectSceyt(): Boolean {
+        if (ConnectionObserver.connectionState == Types.ConnectState.StateConnected)
+            return true
+
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        return suspendCancellableCoroutine { continuation ->
+            scope.launch {
+                ConnectionObserver.onChangedConnectStatusFlow.collect {
+                    if (it.first == Types.ConnectState.StateConnected) {
+                        continuation.resume(true)
+                        scope.cancel()
+                    }
+                }
+            }
         }
     }
 

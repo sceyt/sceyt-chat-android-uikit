@@ -24,11 +24,12 @@ class ChangeRoleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         setContentView(ActivityChooseRoleBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
+
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         getBundleArguments()
         initViewModel()

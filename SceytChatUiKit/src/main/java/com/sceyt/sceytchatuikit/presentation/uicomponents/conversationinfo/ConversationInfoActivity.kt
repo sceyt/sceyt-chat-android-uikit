@@ -49,9 +49,8 @@ open class ConversationInfoActivity : AppCompatActivity() {
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
-
         setActivityContentView()
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         getBundleArguments()
         initViewModel()

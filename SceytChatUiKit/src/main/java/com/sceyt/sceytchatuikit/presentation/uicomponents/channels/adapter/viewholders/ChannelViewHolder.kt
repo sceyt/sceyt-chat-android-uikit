@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.CallSuper
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
@@ -30,7 +31,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)?) : BaseChannelViewHolder(binding.root) {
 
-    private lateinit var channelItem: ChannelListItem.ChannelItem
+    protected lateinit var channelItem: ChannelListItem.ChannelItem
 
     init {
         with(binding) {
@@ -51,6 +52,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
+    @CallSuper
     override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
         when (item) {
             is ChannelListItem.ChannelItem -> {
@@ -94,15 +96,15 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
-        attachDetachListener?.invoke(getChannelItem(), true)
+        attachDetachListener?.invoke(getChannelListItem(), true)
     }
 
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
-        attachDetachListener?.invoke(getChannelItem(), false)
+        attachDetachListener?.invoke(getChannelListItem(), false)
     }
 
-    private fun getChannelItem() = if (::channelItem.isInitialized) channelItem else null
+    protected fun getChannelListItem() = if (::channelItem.isInitialized) channelItem else null
 
     open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
         val message = channel.lastMessage

@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -11,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -73,14 +73,15 @@ internal class PersistenceMessagesLogicImpl(
             lastMsgId = Long.MAX_VALUE
 
 
-        val messages = messageDao.getMessages(channelId, lastMsgId, SceytUIKitConfig.MESSAGES_LOAD_SIZE)
+        var messages = messageDao.getMessages(channelId, lastMsgId, SceytUIKitConfig.MESSAGES_LOAD_SIZE)
             .map { messageDb -> messageDb.toSceytMessage() }.reversed()
 
         if (offset == 0) {
             val pendingMessage = messageDao.getPendingMessages(channelId)
                 .map { messageDb -> messageDb.toSceytMessage() }
+
             if (pendingMessage.isNotEmpty())
-                (messages as ArrayList).addAll(pendingMessage)
+                messages = ArrayList(messages).apply { addAll(pendingMessage) }
         }
         return messages
     }

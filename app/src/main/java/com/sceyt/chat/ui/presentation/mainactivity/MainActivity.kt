@@ -8,7 +8,6 @@ import com.sceyt.chat.ui.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.ui.presentation.mainactivity.profile.ProfileFragment
 import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 
 

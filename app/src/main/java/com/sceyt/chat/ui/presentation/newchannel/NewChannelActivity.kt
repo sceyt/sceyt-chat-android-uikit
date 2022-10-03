@@ -32,11 +32,12 @@ class NewChannelActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         setContentView(ActivityNewChannelBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
+
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         initViewModel()
         initViews()

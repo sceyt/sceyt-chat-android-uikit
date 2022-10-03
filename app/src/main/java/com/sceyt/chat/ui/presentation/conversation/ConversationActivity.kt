@@ -37,14 +37,14 @@ open class ConversationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
-
-        getDataFromIntent()
 
         setContentView(ActivityConversationBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+
+        getDataFromIntent()
 
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
         viewModel.bind(binding.messageInputView, replayMessage, lifecycleOwner = this)
