@@ -21,18 +21,21 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateGroupViewModel
+import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
+import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateServiceImpl
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
+    single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
 
     fun provideDatabase(context: Context): SceytDatabase {
         return if (enableDatabase)
-            Room.databaseBuilder(context, SceytDatabase::class.java, "sceyt_database")
+            Room.databaseBuilder(context, SceytDatabase::class.java, "sceyt_ui_kit_database")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build()

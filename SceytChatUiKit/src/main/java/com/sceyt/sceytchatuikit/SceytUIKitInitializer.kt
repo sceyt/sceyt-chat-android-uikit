@@ -19,7 +19,7 @@ import org.koin.dsl.koinApplication
 
 class SceytUIKitInitializer(private val application: Application) {
 
-    fun initialize(userId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
+    fun initialize(clientId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
         // val serverUrl = "https://us-ohio-api.sceyt.com/"
         // val appId = "89p65954oj"
         ChatClient.setEnableNetworkAwarenessReconnection(true)
@@ -28,7 +28,7 @@ class SceytUIKitInitializer(private val application: Application) {
         if (SceytUIKitConfig.isDarkMode.not())
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        return ChatClient.setup(application, host, appId, userId)
+        return ChatClient.setup(application, host, appId, clientId)
     }
 
     private fun initKoin(enableDatabase: Boolean) {

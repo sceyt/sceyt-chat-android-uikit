@@ -2,9 +2,9 @@ package com.sceyt.chat.ui
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.android.volley.Request
@@ -15,14 +15,10 @@ import com.android.volley.toolbox.Volley
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
-import com.sceyt.chat.connectivity_change.NetworkChangeDetector
-import com.sceyt.chat.connectivity_change.NetworkMonitor
-import com.sceyt.chat.models.Status
-import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import org.json.JSONObject
@@ -44,36 +40,37 @@ class SceytUiKitApp : Application() {
         }
 
         initSceyt()
-        setSceytListeners()
-
+        setNetworkListeners()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                if (ConnectionObserver.connectionState == Types.ConnectState.StateDisconnect)
-                    connect()
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    if (ConnectionObserver.connectionState == Types.ConnectState.StateDisconnect)
+                        connect()
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    SceytKitClient.disconnect()
+                }
+                else -> {}
             }
         })
     }
 
     private fun initSceyt() {
         chatClient = SceytUIKitInitializer(this).initialize(
-            userId = UUID.randomUUID().toString(),
+            clientId = UUID.randomUUID().toString(),
             appId = "89p65954oj",
             host = "https://us-ohio-api.sceyt.com/",
             enableDatabase = true)
     }
 
-    private fun setSceytListeners() {
-        val noNetworkObserver = NetworkMonitor.NetworkObserver { connectionType ->
-            if (connectionType != NetworkChangeDetector.ConnectionType.CONNECTION_NONE) {
-                if (ClientWrapper.currentUser != null)
-                    chatClient.reconnect()
-                else
-                    connect()
-            }
+    private fun setNetworkListeners() {
+        SceytKitClient.getConnectionService().getOnAvailableLiveData().observeForever {
+            if (ClientWrapper.currentUser != null)
+                SceytKitClient.reconnect()
+            else
+                connect()
         }
-
-        NetworkMonitor.getInstance().addObserver(noNetworkObserver)
     }
 
     private fun connect() {
@@ -85,52 +82,26 @@ class SceytUiKitApp : Application() {
             connectWithToken(token, userName ?: return)
     }
 
-    private fun connectWithToken(token: String, userName: String): LiveData<Boolean> {
-        val success: MutableLiveData<Boolean> = MutableLiveData()
-        chatClient.connect(token)
-        addListener(success, token, userName)
-        return success
+    private fun connectWithToken(token: String, userName: String) {
+        SceytKitClient.connect(token, userName)
     }
 
-    fun connectWithoutToken(username: String): LiveData<Boolean> {
-        val success: MutableLiveData<Boolean> = MutableLiveData()
+    fun connectWithoutToken(userName: String): MutableLiveData<Boolean> {
+        val successLiveData: MutableLiveData<Boolean> = MutableLiveData()
 
-        getTokenByUserName(username, {
-            val token = it.get("token")
-            chatClient.connect(token as String?)
-            addListener(success, token, username)
-        }, {
-            success.postValue(false)
-        }, this)
-
-        return success
-    }
-
-
-    private fun addListener(success: MutableLiveData<Boolean>, token: String, username: String) {
-        chatClient.addClientListener("main", object : ClientListener {
-            override fun onChangedConnectStatus(connectStatus: Types.ConnectState?, status: Status?) {
-                if (connectStatus == Types.ConnectState.StateConnected) {
-                    preference.setToken(token)
-                    preference.setUsername(username)
-                    success.postValue(true)
-                    ClientWrapper.setPresence(PresenceState.Online, "") {
-
-                    }
-                } else if (connectStatus == Types.ConnectState.StateFailed)
-                    success.postValue(false)
-                else if (connectStatus == Types.ConnectState.StateDisconnect) {
-                    if (status?.error?.code == 40102)
-                        connectWithoutToken(preference.getUsername()
-                                ?: return)
-                    else success.postValue(false)
+        getTokenByUserName(userName, {
+            (it.get("token") as? String)?.let { token ->
+                SceytKitClient.connect(token, userName) { success, errorMessage ->
+                    successLiveData.postValue(success)
+                    if (!success)
+                        Log.e("sceytConnectError", errorMessage.toString())
                 }
             }
+        }, {
+            successLiveData.postValue(false)
+        }, this)
 
-            override fun onTokenExpired() {
-                connectWithoutToken(preference.getUsername() ?: return)
-            }
-        })
+        return successLiveData
     }
 
     private fun getTokenByUserName(userName: String, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, context: Context) {

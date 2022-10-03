@@ -34,6 +34,8 @@ ext {
     firebase_crashlitics_version = '18.2.6'
     flex_box_version = "3.0.0"
 
+    live_event_version = '1.2.0'
+
     glide_version = '4.13.2'
     glide_compiler_version = '4.12.0'
     gson_version = '2.8.9'
@@ -83,6 +85,7 @@ ext {
             lifecycleRuntime    : "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version",
             lifecycleViewModel  : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",
             lottie              : "com.airbnb.android:lottie:$lottie_version",
+            liveEvent           : "com.github.hadilq.liveevent:liveevent:$live_event_version",
             voley               : "com.android.volley:volley:$voley_version",
             material            : "com.google.android.material:material:$material_version",
             moshiConverter      : "com.squareup.retrofit2:converter-moshi:$moshi_converter_version",

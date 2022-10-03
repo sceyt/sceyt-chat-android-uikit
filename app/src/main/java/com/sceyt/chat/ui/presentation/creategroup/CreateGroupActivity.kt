@@ -27,12 +27,13 @@ class CreateGroupActivity : AppCompatActivity() {
     private val createChannelData by lazy { CreateChannelData() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
         super.onCreate(savedInstanceState)
 
         setContentView(ActivityCreateGroupBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
+
+        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         initViewModel()
         binding.initViews()

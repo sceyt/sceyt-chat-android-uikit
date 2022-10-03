@@ -7,7 +7,10 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -23,6 +26,9 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentManager
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import java.io.File
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -132,6 +138,32 @@ fun Context.setClipboard(text: String) {
 
 fun Context.isNightTheme(): Boolean {
     return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+}
+
+fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
+    if (hasActiveNetwork()) {
+        try {
+            val urlConnection: HttpURLConnection = URL("http://www.google.com").openConnection() as HttpURLConnection
+            urlConnection.setRequestProperty("User-Agent", "Test")
+            urlConnection.setRequestProperty("Connection", "close")
+            urlConnection.connectTimeout = timeout
+            urlConnection.connect()
+            return urlConnection.responseCode == 200
+        } catch (e: IOException) {
+        }
+    }
+    return false
+}
+
+
+fun Context.hasActiveNetwork(): Boolean {
+    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val capability = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
+    } else {
+        connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo!!.isConnected
+    }
 }
 
 internal fun Context?.getFragmentManager(): FragmentManager? {

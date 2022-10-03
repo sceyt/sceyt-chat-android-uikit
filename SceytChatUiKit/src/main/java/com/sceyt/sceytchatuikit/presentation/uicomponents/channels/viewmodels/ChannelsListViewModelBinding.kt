@@ -2,15 +2,12 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
-import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -24,14 +21,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     getChannels(0, query = searchQuery)
 
     /** Await to connect, and load channels **/
-    lifecycleOwner.lifecycleScope.launch {
+   /* lifecycleOwner.lifecycleScope.launch {
         ConnectionObserver.onChangedConnectStatusFlow.collect {
             if (it.first == Types.ConnectState.StateConnected)
                 channelsListView.getChannelsRv().awaitAnimationEnd {
                     getChannels(0, query = searchQuery)
                 }
         }
-    }
+    }*/
 
     lifecycleOwner.lifecycleScope.launch {
         loadChannelsFlow.collect {
