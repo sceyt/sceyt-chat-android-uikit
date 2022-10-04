@@ -23,7 +23,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
-import okhttp3.internal.cache2.Relay.Companion.edit
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
@@ -156,7 +155,7 @@ class ProfileFragment : Fragment() {
             SceytDialog(requireContext(), positiveClickListener = {
                 viewModel.logout()
                 preference.setToken(null)
-                preference.setUsername(null)
+                preference.setUserName(null)
                 LoginActivity.launch(requireContext())
                 requireActivity().finish()
             }).setTitle(getString(R.string.sign_out_title))

@@ -135,7 +135,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_add -> reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
-                R.id.sceyt_remove -> reactionClickListeners.onDeleteReaction(reaction)
+                R.id.sceyt_remove -> reactionClickListeners.onRemoveReaction(reaction)
             }
             false
         }
@@ -162,14 +162,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         reactionEventListener?.invoke(ReactionEvent.AddReaction(message, key))
     }
 
-    private fun onReduceReaction(reaction: ReactionItem.Reaction) {
-
-    }
-
     private fun onReactionClick(reaction: ReactionItem.Reaction) {
         val containsSelf = reaction.reaction.containsSelf
         if (containsSelf)
-            reactionClickListeners.onDeleteReaction(reaction)
+            reactionClickListeners.onRemoveReaction(reaction)
         else
             reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
 
@@ -495,10 +491,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
-        onReduceReaction(reactionItem)
-    }
-
-    override fun onDeleteReaction(reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.DeleteReaction(reactionItem.message, reactionItem.reaction.key))
+        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
     }
 }

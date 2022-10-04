@@ -21,6 +21,9 @@ import com.sceyt.chat.ui.di.viewModelModules
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -71,11 +74,19 @@ class SceytUiKitApp : Application() {
             else
                 connect()
         }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            SceytKitClient.onTokenExpired.collect {
+                preference.getUserName()?.let {
+                    connectWithoutToken(it)
+                }
+            }
+        }
     }
 
     private fun connect() {
         val token = preference.getToken()
-        val userName = preference.getUsername()
+        val userName = preference.getUserName()
         if (token.isNullOrBlank()) {
             connectWithoutToken(userName ?: return)
         } else if (!token.isNullOrEmpty())

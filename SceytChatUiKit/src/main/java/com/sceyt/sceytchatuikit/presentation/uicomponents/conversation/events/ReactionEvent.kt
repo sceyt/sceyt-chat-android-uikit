@@ -9,7 +9,7 @@ sealed class ReactionEvent {
             val scoreKey: String
     ) : ReactionEvent()
 
-    data class DeleteReaction(
+    data class RemoveReaction(
             val message: SceytMessage,
             val scoreKey: String
     ) : ReactionEvent()

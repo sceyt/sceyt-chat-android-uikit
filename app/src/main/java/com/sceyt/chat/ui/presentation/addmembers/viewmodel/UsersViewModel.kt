@@ -20,8 +20,8 @@ class UsersViewModel : BaseViewModel() {
     private val usersRepository: UsersRepository = UsersRepositoryImpl()
     private val middleWare: PersistenceChanelMiddleWare = PersistenceMiddleWareImpl()
 
-    private val _channelsLiveData = MutableLiveData<List<UserItem>>()
-    val channelsLiveData: LiveData<List<UserItem>> = _channelsLiveData
+    private val _usersLiveData = MutableLiveData<List<UserItem>>()
+    val usersLiveData: LiveData<List<UserItem>> = _usersLiveData
 
     private val _loadMoreChannelsLiveData = MutableLiveData<List<UserItem>>()
     val loadMoreChannelsLiveData: LiveData<List<UserItem>> = _loadMoreChannelsLiveData
@@ -42,7 +42,7 @@ class UsersViewModel : BaseViewModel() {
                 hasNext = response.data?.size == USERS_LOAD_SIZE
                 if (isLoadMore)
                     _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
-                else _channelsLiveData.postValue(mapToUserItems(response.data, hasNext))
+                else _usersLiveData.postValue(mapToUserItems(response.data, hasNext))
             }
             notifyPageStateWithResponse(response, isLoadMore, empty, searchQuery = query)
             loadingItems.set(false)

@@ -13,10 +13,6 @@ sealed interface ReactionPopupClickListeners {
         fun onRemoveReaction(reactionItem: ReactionItem.Reaction)
     }
 
-    fun interface DeleteReaction : ReactionPopupClickListeners {
-        fun onDeleteReaction(reactionItem: ReactionItem.Reaction)
-    }
-
     /** User this if you want to implement all callbacks */
-    interface PopupClickListeners : AddReaction, RemoveReaction, DeleteReaction
+    interface PopupClickListeners : AddReaction, RemoveReaction
 }

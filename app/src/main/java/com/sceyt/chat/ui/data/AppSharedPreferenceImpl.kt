@@ -12,13 +12,13 @@ class AppSharedPreferenceImpl (application: Application) : AppSharedPreference {
 
     private val pref = application.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
-    override fun setUsername(userName: String?) {
+    override fun setUserName(userName: String?) {
         val editor = pref.edit()
         editor.putString(PREF_USER_NAME, userName)
         editor.apply()
     }
 
-    override fun getUsername(): String? {
+    override fun getUserName(): String? {
         return pref.getString(PREF_USER_NAME, "")
     }
 

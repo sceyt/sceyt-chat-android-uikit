@@ -362,7 +362,7 @@ class MessageListViewModel(private val conversationId: Long,
             is ReactionEvent.AddReaction -> {
                 addReaction(event.message, event.scoreKey)
             }
-            is ReactionEvent.DeleteReaction -> {
+            is ReactionEvent.RemoveReaction -> {
                 deleteReaction(event.message, event.scoreKey)
             }
         }
