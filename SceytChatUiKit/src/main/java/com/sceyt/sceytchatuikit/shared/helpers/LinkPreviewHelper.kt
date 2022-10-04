@@ -1,6 +1,9 @@
 package com.sceyt.sceytchatuikit.shared.helpers
 
+import android.content.Context
 import android.webkit.URLUtil
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -10,13 +13,19 @@ import java.net.URISyntaxException
 class LinkPreviewHelper {
     private var scope: CoroutineScope
 
+    constructor(context: Context) {
+        scope = (context as? AppCompatActivity)?.lifecycleScope ?: initDefaultScope()
+    }
+
     constructor(scope: CoroutineScope) {
         this.scope = scope
     }
 
     constructor() {
-        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        scope = initDefaultScope()
     }
+
+    private fun initDefaultScope() = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun getPreview(loadId: Long,
                    link: String,

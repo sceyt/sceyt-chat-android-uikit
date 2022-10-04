@@ -46,14 +46,14 @@ abstract class BaseMsgViewHolder(view: View,
 
     private var replayMessageContainerBinding: SceytRecyclerReplayContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
-    protected lateinit var messageItem: MessageListItem
+    protected lateinit var messageListItem: MessageListItem
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
-        messageItem = item
+        messageListItem = item
 
-        if (messageItem is MessageListItem.MessageItem) {
-            val message = (messageItem as MessageListItem.MessageItem).message
+        if (messageListItem is MessageListItem.MessageItem) {
+            val message = (messageListItem as MessageListItem.MessageItem).message
             if (message.incoming && message.deliveryStatus != DeliveryStatus.Read)
                 displayedListener?.invoke(message)
         }

@@ -4,7 +4,7 @@
     <declare-styleable name="MessageInputView">
         <attr name="sceytMessageInputAttachmentIcon" format="reference" />
         <attr name="sceytMessageInputSendIcon" format="reference" />
-        <attr name="sceytMessageInputHintText" format="reference|string" localization="suggested" />
+        <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
         <attr name="sceytMessageInputTextColor" format="reference" />
         <attr name="sceytMessageInputHintTextColor" format="reference" />
     </declare-styleable>

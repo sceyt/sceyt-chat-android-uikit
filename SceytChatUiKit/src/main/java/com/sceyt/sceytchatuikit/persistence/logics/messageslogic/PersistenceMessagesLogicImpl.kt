@@ -4,12 +4,14 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -118,6 +120,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.insertMessage(tmpMessageDb)
             channelDao.updateLastMessage(channelId, tmpMessage.tid, tmpMessage.createdAt.time)
             tmpMessageCb.invoke(tmpMessage)
+            MessageEventsObserver.emitOutgoingMessage(tmpMessage.toSceytUiMessage())
         }
         if (response is SceytResponse.Success) {
             response.data?.let { responseMsg ->

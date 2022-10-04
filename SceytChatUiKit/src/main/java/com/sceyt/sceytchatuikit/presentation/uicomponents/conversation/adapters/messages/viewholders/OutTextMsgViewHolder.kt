@@ -24,7 +24,7 @@ class OutTextMsgViewHolder(
         binding.setMessageItemStyle()
 
         binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
+            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
             return@setOnLongClickListener true
         }
     }

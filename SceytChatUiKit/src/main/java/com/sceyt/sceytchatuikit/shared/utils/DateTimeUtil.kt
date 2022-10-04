@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.shared.utils
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.text.format.DateFormat
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import java.text.ParseException
@@ -145,17 +146,17 @@ object DateTimeUtil {
             )
     }
 
-    fun getDateTimeStringCheckToday(time: Long?): String {
+    fun getDateTimeStringCheckToday(context: Context, time: Long?): String {
         if (time == null) return ""
         val now = Calendar.getInstance()
         val cal = Calendar.getInstance()
         cal.timeInMillis = time
         return when {
             (now.get(Calendar.DAY_OF_YEAR) - cal.get(Calendar.DAY_OF_YEAR) < 1) ->
-                DateFormat.format(ChannelStyle.lastMessageDateFormat.today, cal).toString()
+                DateFormat.format(ChannelStyle.channelDateFormat.today(context), cal).toString()
             (now.get(Calendar.YEAR) - cal.get(Calendar.YEAR) <= 1) ->
-                DateFormat.format(ChannelStyle.lastMessageDateFormat.thisYear, cal).toString()
-            else -> DateFormat.format(ChannelStyle.lastMessageDateFormat.olderThisYear, cal).toString()
+                DateFormat.format(ChannelStyle.channelDateFormat.thisYear(context), cal).toString()
+            else -> DateFormat.format(ChannelStyle.channelDateFormat.olderThisYear(context), cal).toString()
         }
     }
 

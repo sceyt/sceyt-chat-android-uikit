@@ -13,12 +13,12 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
-open class MessageViewHolderFactory(context: Context,
-                                    private val linkPreview: LinkPreviewHelper) {
+open class MessageViewHolderFactory(context: Context) {
 
-    private val layoutInflater = LayoutInflater.from(context)
+    private val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
     private val viewPoolReactions = RecyclerView.RecycledViewPool()
     private val viewPoolFiles = RecyclerView.RecycledViewPool()
+    protected val layoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((SceytMessage) -> Unit)? = null
 
@@ -100,15 +100,15 @@ open class MessageViewHolderFactory(context: Context,
 
     open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
-            is MessageListItem.MessageItem -> getMessageType(item.message).ordinal
+            is MessageListItem.MessageItem -> getMessageType(item.message)
             is MessageListItem.DateSeparatorItem -> return MessageTypeEnum.DateSeparator.ordinal
             is MessageListItem.LoadingMoreItem -> return MessageTypeEnum.Loading.ordinal
         }
     }
 
-    open fun getMessageType(message: SceytMessage): MessageTypeEnum {
+    open fun getMessageType(message: SceytMessage): Int {
         val inc = message.incoming
-        return when {
+        val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageTypeEnum.IncDeleted else MessageTypeEnum.OutDeleted
             message.attachments.isNullOrEmpty() -> {
                 if (message.body.isLink())
@@ -118,6 +118,7 @@ open class MessageViewHolderFactory(context: Context,
             }
             else -> if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
         }
+        return type.ordinal
     }
 
     fun setMessageListener(listener: MessageClickListeners) {

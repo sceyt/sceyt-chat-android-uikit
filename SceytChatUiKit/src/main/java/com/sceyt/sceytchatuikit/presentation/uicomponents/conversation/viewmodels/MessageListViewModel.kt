@@ -234,7 +234,6 @@ class MessageListViewModel(private val conversationId: Long,
             val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
                 val outMessage = tmpMessage.toSceytUiMessage(isGroup)
                 _onNewOutgoingMessageLiveData.postValue(outMessage)
-                MessageEventsObserver.emitOutgoingMessage(outMessage.clone())
             }
             when (response) {
                 is SceytResponse.Error -> {
