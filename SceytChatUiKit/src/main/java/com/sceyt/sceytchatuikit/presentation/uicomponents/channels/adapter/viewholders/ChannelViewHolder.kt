@@ -193,9 +193,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         if (channel == null) return ""
         val lastMsgCreatedAt = channel.lastMessage?.createdAt
         return if (lastMsgCreatedAt != null && lastMsgCreatedAt != 0L)
-            DateTimeUtil.getDateTimeStringCheckToday(lastMsgCreatedAt)
+            DateTimeUtil.getDateTimeStringCheckToday(itemView.context, lastMsgCreatedAt)
         else
-            DateTimeUtil.getDateTimeStringCheckToday(channel.createdAt / 1000)
+            DateTimeUtil.getDateTimeStringCheckToday(itemView.context, channel.createdAt / 1000)
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {

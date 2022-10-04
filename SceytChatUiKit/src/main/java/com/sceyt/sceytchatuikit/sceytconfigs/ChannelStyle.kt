@@ -7,6 +7,7 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StyleRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.pxToDp
+import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.ChannelDateFormatter
 
 object ChannelStyle {
     @ColorRes
@@ -61,7 +62,7 @@ object ChannelStyle {
     @StyleRes
     var popupStyle: Int = R.style.SceytPopupMenuStyle
 
-    var lastMessageDateFormat = DateFormatter()
+    var channelDateFormat = ChannelDateFormatter()
 
     /*internal constructor(context: Context) : this(
         titleColor = context.getCompatColor(R.color.colorFontDark),

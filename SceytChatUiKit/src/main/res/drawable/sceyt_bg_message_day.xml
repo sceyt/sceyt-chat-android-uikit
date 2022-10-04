@@ -5,4 +5,10 @@
         android:width="1.2dp"
         android:color="@color/sceyt_color_divider" />
 
+    <padding
+        android:bottom="4dp"
+        android:left="8dp"
+        android:right="8dp"
+        android:top="4dp" />
+
 </shape>

@@ -3,13 +3,12 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 import android.content.Context
 import android.util.AttributeSet
 import android.view.animation.AnimationUtils
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
@@ -19,7 +18,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -30,7 +28,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToPrefetchDistanceListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var needLoadMoreMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var viewHolderFactory = MessageViewHolderFactory(context, LinkPreviewHelper(context.asAppCompatActivity().lifecycleScope))
+    private var viewHolderFactory = MessageViewHolderFactory(context)
     private var richToStartInvoked = AtomicBoolean(false)
     private var richToPrefetchDistanceInvoked = AtomicBoolean(false)
 
@@ -48,7 +46,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
 
-        addItemDecoration(ChatItemOffsetDecoration(com.sceyt.sceytchatuikit.extensions.dpToPx(8f)))
+        addItemDecoration(ChatItemOffsetDecoration(dpToPx(8f)))
         layoutManager = SpeedyLinearLayoutManager(context).apply {
             stackFromEnd = true
         }

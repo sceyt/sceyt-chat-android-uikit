@@ -4,7 +4,7 @@
     <declare-styleable name="SearchInputView">
         <attr name="sceytUiSearchIcon" format="reference" />
         <attr name="sceytUiClearIcon" format="reference" />
-        <attr name="sceytUiHintText" format="reference|string" localization="suggested" />
+        <attr name="sceytUiHintText" format="string" localization="suggested" />
         <attr name="sceytUiBackgroundColor" format="reference" />
         <attr name="sceytUiTextColor" format="reference" />
         <attr name="sceytUiHintTextColor" format="reference" />

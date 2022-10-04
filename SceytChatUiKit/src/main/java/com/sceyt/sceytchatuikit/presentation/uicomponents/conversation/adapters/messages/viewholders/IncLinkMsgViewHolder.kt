@@ -25,12 +25,12 @@ class IncLinkMsgViewHolder(
         binding.setMessageItemStyle()
 
         binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageItem as MessageListItem.MessageItem)
+            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
             return@setOnLongClickListener true
         }
 
         binding.layoutDetails.setOnClickListener {
-            messageListeners?.onLinkClick(it, messageItem as MessageListItem.MessageItem)
+            messageListeners?.onLinkClick(it, messageListItem as MessageListItem.MessageItem)
         }
     }
 

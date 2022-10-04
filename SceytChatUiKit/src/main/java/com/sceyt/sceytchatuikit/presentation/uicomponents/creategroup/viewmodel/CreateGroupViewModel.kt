@@ -7,13 +7,15 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class CreateGroupViewModel : BaseViewModel(), SceytKoinComponent {
-    private val middleWare: PersistenceChanelMiddleWare by inject()
+    val channelMiddleWare: PersistenceChanelMiddleWare by inject()
+    val messageMiddleWare: PersistenceMessagesMiddleWare by inject()
 
     private val _createChannelLiveData = MutableLiveData<SceytChannel>()
     val createChannelLiveData: LiveData<SceytChannel> = _createChannelLiveData
@@ -21,7 +23,7 @@ class CreateGroupViewModel : BaseViewModel(), SceytKoinComponent {
     fun createChannel(createChannelData: CreateChannelData) {
         notifyPageLoadingState(false)
         viewModelScope.launch(Dispatchers.IO) {
-            val response = middleWare.createChannel(createChannelData)
+            val response = channelMiddleWare.createChannel(createChannelData)
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }
