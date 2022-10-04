@@ -32,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
 
         statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
-        if (preference.getUsername().isNullOrBlank().not()) {
+        if (preference.getUserName().isNullOrBlank().not()) {
             launchActivity<MainActivity>()
             finish()
         }

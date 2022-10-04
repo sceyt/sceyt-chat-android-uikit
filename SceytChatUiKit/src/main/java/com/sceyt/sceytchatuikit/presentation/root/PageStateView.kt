@@ -52,7 +52,7 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
         return view
     }
 
-    fun updateState(state: PageState, showLoadingIfNeed: Boolean = true) {
+    fun updateState(state: PageState, showLoadingIfNeed: Boolean = true, enableErrorSnackBar: Boolean = true) {
         when (state) {
             is PageState.StateEmpty -> {
                 emptyStateView?.isVisible = !state.isSearch && !state.wasLoadingMore
@@ -65,7 +65,8 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
                 loadingStateView?.isVisible = state.isLoading && showLoadingIfNeed
             }
             is PageState.StateError -> {
-                customToastSnackBar(this, state.errorMessage.toString())
+                if (enableErrorSnackBar)
+                    customToastSnackBar(this, state.errorMessage.toString())
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = false

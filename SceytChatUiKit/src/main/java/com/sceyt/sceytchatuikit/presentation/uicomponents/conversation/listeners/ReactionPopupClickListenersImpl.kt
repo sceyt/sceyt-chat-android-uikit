@@ -8,7 +8,6 @@ class ReactionPopupClickListenersImpl(view: MessagesListView) : ReactionPopupCli
     private var defaultListeners: ReactionPopupClickListeners.PopupClickListeners = view
     private var addReaction: ReactionPopupClickListeners.AddReaction? = null
     private var removeReactionListener: ReactionPopupClickListeners.RemoveReaction? = null
-    private var deleteReactionListener: ReactionPopupClickListeners.DeleteReaction? = null
 
     override fun onAddReaction(message: SceytMessage, key: String) {
         defaultListeners.onAddReaction(message, key)
@@ -20,26 +19,18 @@ class ReactionPopupClickListenersImpl(view: MessagesListView) : ReactionPopupCli
         removeReactionListener?.onRemoveReaction(reactionItem)
     }
 
-    override fun onDeleteReaction(reactionItem: ReactionItem.Reaction) {
-        defaultListeners.onDeleteReaction(reactionItem)
-        deleteReactionListener?.onDeleteReaction(reactionItem)
-    }
 
     fun setListener(listener: ReactionPopupClickListeners) {
         when (listener) {
             is ReactionPopupClickListeners.PopupClickListeners -> {
                 addReaction = listener
                 removeReactionListener = listener
-                deleteReactionListener = listener
             }
             is ReactionPopupClickListeners.AddReaction -> {
                 addReaction = listener
             }
             is ReactionPopupClickListeners.RemoveReaction -> {
                 removeReactionListener = listener
-            }
-            is ReactionPopupClickListeners.DeleteReaction -> {
-                deleteReactionListener = listener
             }
         }
     }

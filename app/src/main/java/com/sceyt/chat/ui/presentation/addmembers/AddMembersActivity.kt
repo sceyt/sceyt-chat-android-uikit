@@ -43,7 +43,7 @@ class AddMembersActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() {
-        viewModel.channelsLiveData.observe(this) {
+        viewModel.usersLiveData.observe(this) {
             setupUsersList(it)
         }
 

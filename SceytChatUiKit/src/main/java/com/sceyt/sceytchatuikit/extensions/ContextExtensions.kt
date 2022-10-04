@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.webkit.URLUtil
 import android.widget.EditText
@@ -150,6 +151,7 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
             urlConnection.connect()
             return urlConnection.responseCode == 200
         } catch (e: IOException) {
+            Log.e("internetConnection", e.message.toString())
         }
     }
     return false

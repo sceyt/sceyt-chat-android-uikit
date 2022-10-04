@@ -268,7 +268,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateStateView(state: PageState) {
-        pageStateView?.updateState(state, channelsRV.isEmpty())
+        pageStateView?.updateState(state, channelsRV.isEmpty(), enableErrorSnackBar = false)
     }
 
     internal suspend fun updateUsersPresenceIfNeeded(users: List<User>) {
@@ -279,7 +279,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (hasDiff == true) {
                     val oldChannel = channel.clone()
                     channel.peer?.user = it
-                    withContext(Dispatchers.Main){
+                    withContext(Dispatchers.Main) {
                         channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
                     }
                 }

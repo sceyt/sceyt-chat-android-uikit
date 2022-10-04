@@ -46,10 +46,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
 
-    init {
-        if (!isInEditMode)
-            chooseAttachmentHelper = ChooseAttachmentHelper(context.asAppCompatActivity())
-    }
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     var message: Message? = null
@@ -66,6 +62,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var replayThreadMessageId: Long? = null
 
     init {
+        if (!isInEditMode)
+            chooseAttachmentHelper = ChooseAttachmentHelper(context.asAppCompatActivity())
+
         binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this, true)
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.MessageInputView)
