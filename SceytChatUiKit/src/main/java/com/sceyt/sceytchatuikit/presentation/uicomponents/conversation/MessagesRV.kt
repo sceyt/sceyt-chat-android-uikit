@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
-import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
@@ -46,7 +45,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
 
-        addItemDecoration(ChatItemOffsetDecoration(dpToPx(8f)))
+        addItemDecoration(ChatItemOffsetDecoration())
         layoutManager = SpeedyLinearLayoutManager(context).apply {
             stackFromEnd = true
         }
