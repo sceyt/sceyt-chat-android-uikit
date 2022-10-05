@@ -15,7 +15,7 @@ data class ChannelEntity(
         var createdAt: Long,
         var updatedAt: Long,
         var unreadMessageCount: Long,
-        var lastMessageId: Long?,
+        var lastMessageTid: Long?,
         var lastMessageAt: Long?,
         var label: String?,
         var metadata: String?,

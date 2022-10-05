@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:dist="http://schemas.android.com/apk/distribution"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.sceyt.chat.ui">
 
     <dist:module dist:instant="true" />
@@ -18,9 +17,7 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/SceytAppTheme"
-        android:usesCleartextTraffic="true"
-        tools:ignore="UnusedAttribute">
+        android:theme="@style/SceytAppTheme">
         <activity
             android:name=".presentation.login.LoginActivity"
             android:exported="true"

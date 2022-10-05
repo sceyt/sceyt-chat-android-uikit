@@ -8,9 +8,10 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import com.hadilq.liveevent.LiveEvent
+import com.sceyt.sceytchatuikit.extensions.checkActiveInternetConnection
 
 
-class ConnectionStateServiceImpl(application: Application) : ConnectionStateService {
+class ConnectionStateServiceImpl(private val application: Application) : ConnectionStateService {
     private val mOnAvailableLiveData by lazy { LiveEvent<Network>() }
     private val mOnUnavailableLiveData by lazy { LiveEvent<Boolean>() }
     private val mOnLostLiveData by lazy { LiveEvent<Network>() }
@@ -42,9 +43,11 @@ class ConnectionStateServiceImpl(application: Application) : ConnectionStateServ
 
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                mOnAvailableLiveData.postValue(network)
-                mAvailableCallbackList.values.forEach {
-                    it.invoke(true)
+                if (application.checkActiveInternetConnection(5000)) {
+                    mOnAvailableLiveData.postValue(network)
+                    mAvailableCallbackList.values.forEach {
+                        it.invoke(true)
+                    }
                 }
             }
         }

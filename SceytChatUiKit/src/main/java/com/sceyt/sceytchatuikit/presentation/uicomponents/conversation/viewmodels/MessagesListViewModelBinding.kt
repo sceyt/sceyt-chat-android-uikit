@@ -177,20 +177,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    messageSentLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                it.data?.let { sceytUiMessage ->
-                    sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
-                    messagesListView.updateMessage(sceytUiMessage)
-                }
-            }
-            is SceytResponse.Error -> {
-                it.data?.let {
-                    //messagesListView.messageSendFailed(msg.tid)
-                }
-                customToastSnackBar(messagesListView, it.message ?: "")
-            }
+    lifecycleOwner.lifecycleScope.launch {
+        onOutGoingMessageStatusFlow.collect {
+            val sceytUiMessage = it.second
+            sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
+            messagesListView.updateMessage(sceytUiMessage)
         }
     }
 

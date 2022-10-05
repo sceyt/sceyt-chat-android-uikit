@@ -300,7 +300,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == data.id }?.let {
             val message = (it.second as MessageListItem.MessageItem).message
             val oldMessage = message.clone()
-            message.updateMessage(data)
+            message.reactionScores = data.reactionScores
+            message.lastReactions = data.lastReactions
+            message.selfReactions = data.selfReactions
             message.messageReactions = data.messageReactions
             messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
         }

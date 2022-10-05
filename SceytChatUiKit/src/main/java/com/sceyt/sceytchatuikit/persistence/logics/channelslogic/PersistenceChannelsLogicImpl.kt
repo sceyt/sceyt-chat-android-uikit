@@ -89,7 +89,9 @@ internal class PersistenceChannelsLogicImpl(
 
     override fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val lastMsg = data.second
-        channelDao.updateLastMessage(data.first.id, lastMsg.id, lastMsg.createdAt)
+        //Message tid is message id
+        val tid = lastMsg.tid
+        channelDao.updateLastMessage(data.first.id, tid, lastMsg.createdAt)
     }
 
     private fun insertChannel(channel: SceytChannel, vararg members: Member) {
