@@ -144,7 +144,7 @@ fun Context.isNightTheme(): Boolean {
 fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
     if (hasActiveNetwork()) {
         try {
-            val urlConnection: HttpURLConnection = URL("http://www.google.com").openConnection() as HttpURLConnection
+            val urlConnection: HttpURLConnection = URL("https://www.google.com").openConnection() as HttpURLConnection
             urlConnection.setRequestProperty("User-Agent", "Test")
             urlConnection.setRequestProperty("Connection", "close")
             urlConnection.connectTimeout = timeout

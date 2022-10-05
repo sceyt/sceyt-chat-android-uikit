@@ -12,6 +12,6 @@ data class ChannelDb(
         @Relation(parentColumn = "chat_id", entityColumn = "chat_id", entity = UserChatLink::class)
         val members: List<ChanelMember>?,
 
-        @Relation(parentColumn = "lastMessageId", entityColumn = "message_id", entity = MessageEntity::class)
+        @Relation(parentColumn = "lastMessageTid", entityColumn = "tid", entity = MessageEntity::class)
         val lastMessage: MessageDb?
 )

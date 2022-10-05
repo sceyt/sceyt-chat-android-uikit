@@ -7,9 +7,12 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.Types
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
@@ -25,6 +28,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -92,6 +97,13 @@ open class ConversationActivity : AppCompatActivity() {
                 CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
             }
         })
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            ConnectionObserver.onChangedConnectStatusFlow.collect {
+                if (it.first == Types.ConnectState.StateConnected)
+                    viewModel.sendPendingMessages()
+            }
+        }
     }
 
     private fun getDataFromIntent() {
@@ -126,6 +138,11 @@ open class ConversationActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.sendPendingMessages()
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {

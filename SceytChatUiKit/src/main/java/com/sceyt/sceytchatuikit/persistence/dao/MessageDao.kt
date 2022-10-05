@@ -11,7 +11,11 @@ abstract class MessageDao {
 
     @Transaction
     open fun insertMessage(messageDb: MessageDb) {
-        insert(messageDb.messageEntity)
+        upsertMessageEntity(messageDb.messageEntity)
+
+        //Delete attachments before insert
+        deleteAttachments(listOf(messageDb.messageEntity.tid))
+
         //Insert attachments
         messageDb.attachments?.let {
             insertAttachments(it)
@@ -28,7 +32,10 @@ abstract class MessageDao {
 
     @Transaction
     open fun insertMessages(messageDb: List<MessageDb>) {
-        insertMany(messageDb.map { it.messageEntity })
+        upsertMessageEntities(messageDb.map { it.messageEntity })
+        //Delete attachments before insert
+        deleteAttachments(messageDb.map { it.messageEntity.tid })
+
         //Insert attachments
         val attachments = messageDb.flatMap { it.attachments ?: arrayListOf() }
         if (attachments.isNotEmpty())
@@ -44,16 +51,30 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open fun insertReactionsAndScores(reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionScoreEntity>) {
-        insertReactions(reactionsDb)
-        insertReactionScores(scoresDb)
+    open fun upsertMessageEntity(messageEntity: MessageEntity) {
+        val rowId = insert(messageEntity)
+        if (rowId == -1L) {
+            updateMessage(messageEntity)
+        }
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Transaction
+    open fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
+        val rowIds = insertMany(messageEntities)
+        val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
+            if (rowId == -1L) messageEntities[index] else null
+        }
+        entitiesToUpdate.forEach { updateMessage(it) }
+    }
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract fun insert(messages: MessageEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    protected abstract fun insertMany(messages: List<MessageEntity>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract fun insertMany(messages: List<MessageEntity>): List<Long>
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    abstract fun updateMessage(messageEntity: MessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insertAttachments(attachments: List<AttachmentEntity>)
@@ -63,9 +84,6 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
-
-    @Update
-    abstract fun updateMessage(messageEntity: MessageEntity)
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
@@ -82,9 +100,6 @@ abstract class MessageDao {
 
     @Query("select * from messages where tid =:tid")
     abstract fun getMessageByTid(tid: Long): MessageEntity?
-
-    @Query("select * from ReactionScoreEntity where messageId =:messageId and reaction_key =:key")
-    abstract fun getReactionScore(messageId: Long, key: String): ReactionScoreEntity?
 
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
@@ -104,36 +119,18 @@ abstract class MessageDao {
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
-    @Update
-    abstract fun updateReactionScore(reactionScore: ReactionScoreEntity)
-
     @Query("delete from messages where channelId =:channelId")
     abstract fun deleteAllMessages(channelId: Long)
 
-    @Query("delete from AttachmentEntity where messageId =:messageId")
-    abstract fun deleteAttachments(messageId: Long)
-
-    @Query("delete from ReactionEntity where messageId =:messageId")
-    abstract fun deleteAllReactions(messageId: Long)
-
-    @Query("delete from ReactionScoreEntity where messageId =:messageId")
-    abstract fun deleteAllReactionsScores(messageId: Long)
-
-    @Query("delete from ReactionScoreEntity where id =:id")
-    abstract fun deleteReactionScoreById(id: Int)
-
-    @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")
-    protected abstract fun deleteReaction(messageId: Long, key: String, fromId: String)
-
     @Transaction
-    open fun deleteReactionAndScore(messageId: Long, key: String, fromId: String) {
-        deleteReaction(messageId, key, fromId)
-        getReactionScore(messageId, key)?.let {
-            if (it.score > 1) {
-                it.score--
-                updateReactionScore(it)
-            } else
-                deleteReactionScoreById(it.id)
-        }
+    open fun deleteAttachments(messageTides: List<Long>) {
+        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsChunked)
+    }
+
+    @Query("DELETE FROM AttachmentEntity WHERE messageTid in (:messageTides)")
+    abstract fun deleteAttachmentsChunked(messageTides: List<Long>)
+
+    private companion object {
+        private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999
     }
 }

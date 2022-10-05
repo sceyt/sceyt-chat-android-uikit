@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.persistence.converters.ChannelConverter
 import com.sceyt.sceytchatuikit.persistence.converters.MessageConverter
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
@@ -31,4 +32,5 @@ abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun userDao(): UserDao
     abstract fun messageDao(): MessageDao
+    abstract fun reactionDao(): ReactionDao
 }

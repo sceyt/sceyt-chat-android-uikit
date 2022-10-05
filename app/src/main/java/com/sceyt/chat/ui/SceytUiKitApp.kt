@@ -99,6 +99,8 @@ class SceytUiKitApp : Application() {
 
     fun connectWithoutToken(userName: String): MutableLiveData<Boolean> {
         val successLiveData: MutableLiveData<Boolean> = MutableLiveData()
+        if (userName.isBlank()) return successLiveData
+        preference.setUserName(userName)
 
         getTokenByUserName(userName, {
             (it.get("token") as? String)?.let { token ->

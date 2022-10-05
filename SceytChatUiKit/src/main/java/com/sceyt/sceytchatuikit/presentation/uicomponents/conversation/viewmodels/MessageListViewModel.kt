@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -46,9 +47,6 @@ class MessageListViewModel(private val conversationId: Long,
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<MessageListItem>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<MessageListItem>> = _loadMessagesFlow
 
-    private val _messageSentLiveData = MutableLiveData<SceytResponse<SceytMessage?>>()
-    val messageSentLiveData: LiveData<SceytResponse<SceytMessage?>> = _messageSentLiveData
-
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
 
@@ -73,6 +71,7 @@ class MessageListViewModel(private val conversationId: Long,
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageReactionUpdatedFlow: Flow<SceytMessage>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
+    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
 
     // Chanel events
@@ -123,6 +122,8 @@ class MessageListViewModel(private val conversationId: Long,
                 .collect(::onChannelMemberEvent)
         }
 
+        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
+
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
     }
@@ -138,6 +139,13 @@ class MessageListViewModel(private val conversationId: Long,
             persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
                 initResponse(it)
             }
+        }
+    }
+
+
+    fun sendPendingMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.sendPendingMessages(conversationId)
         }
     }
 
@@ -168,9 +176,9 @@ class MessageListViewModel(private val conversationId: Long,
         loadingItems.set(false)
     }
 
-    private fun deleteMessage(messageId: Long) {
+    private fun deleteMessage(messageId: Long, messageTid: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId)
+            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -235,16 +243,10 @@ class MessageListViewModel(private val conversationId: Long,
                 val outMessage = tmpMessage.toSceytUiMessage(isGroup)
                 _onNewOutgoingMessageLiveData.postValue(outMessage)
             }
-            when (response) {
-                is SceytResponse.Error -> {
-                    // Implement logic if you want to show failed status
-                }
-                is SceytResponse.Success -> {
-                    // Notify out message status is sent
-                    response.data?.let { MessageEventsObserver.emitOutgoingMessageSent(channel.id, response.data) }
-                }
+            if (response is SceytResponse.Error) {
+                // Implement logic if you want to show failed status
+                Log.e("sendMessage", "send message error-> ${response.message}")
             }
-            _messageSentLiveData.postValue(response)
         }
     }
 
@@ -255,7 +257,10 @@ class MessageListViewModel(private val conversationId: Long,
                     this.parent = parent?.toSceytUiMessage()
                 })
             }
-            _messageSentLiveData.postValue(response)
+            if (response is SceytResponse.Error) {
+                // Implement logic if you want to show failed status
+                Log.e("sendMessage", "send message error-> ${response.message}")
+            }
         }
     }
 
@@ -345,7 +350,7 @@ class MessageListViewModel(private val conversationId: Long,
     internal fun onMessageCommandEvent(event: MessageCommandEvent) {
         when (event) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message.id)
+                deleteMessage(event.message.id, event.message.tid)
             }
             is MessageCommandEvent.EditMessage -> {
                 _onEditMessageCommandLiveData.postValue(event.message)

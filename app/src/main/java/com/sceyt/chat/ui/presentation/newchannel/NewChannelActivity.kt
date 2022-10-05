@@ -56,6 +56,7 @@ class NewChannelActivity : AppCompatActivity() {
 
         viewModel.createChannelLiveData.observe(this) {
             ConversationActivity.newInstance(this, it)
+            finish()
             creatingChannel = false
         }
     }
@@ -97,8 +98,14 @@ class NewChannelActivity : AppCompatActivity() {
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
-                CreateGroupActivity.launch(this, members)
+                createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members))
             }
+        }
+    }
+
+    private val createGroupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            finish()
         }
     }
 

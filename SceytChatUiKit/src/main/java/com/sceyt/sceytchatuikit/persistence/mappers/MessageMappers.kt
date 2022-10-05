@@ -57,23 +57,29 @@ fun Message.toMessageEntity() = MessageEntity(
 )
 
 
-fun SceytMessage.toMessageDb() = MessageDb(
-    messageEntity = toMessageEntity(),
-    from = from?.toUserEntity(),
-    parent = parent?.toMessageEntity(),
-    attachments = attachments?.map { it.toAttachmentEntity(id) },
-    lastReactions = lastReactions?.map { it.toReactionDb(id) },
-    reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
-)
+fun SceytMessage.toMessageDb(): MessageDb {
+    val tid = getTid(id, tid, incoming)
+    return MessageDb(
+        messageEntity = toMessageEntity(),
+        from = from?.toUserEntity(),
+        parent = parent?.toMessageEntity(),
+        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
+        lastReactions = lastReactions?.map { it.toReactionDb(id) },
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+    )
+}
 
-fun Message.toMessageDb() = MessageDb(
-    messageEntity = toMessageEntity(),
-    from = from?.toUserEntity(),
-    parent = parent?.toMessageEntity(),
-    attachments = attachments?.map { it.toAttachmentEntity(id) },
-    lastReactions = lastReactions?.map { it.toReactionDb(id) },
-    reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
-)
+fun Message.toMessageDb(): MessageDb {
+    val tid = getTid(id, tid, incoming)
+    return MessageDb(
+        messageEntity = toMessageEntity(),
+        from = from?.toUserEntity(),
+        parent = parent?.toMessageEntity(),
+        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
+        lastReactions = lastReactions?.map { it.toReactionDb(id) },
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+    )
+}
 
 fun MessageDb.toSceytMessage(): SceytMessage {
     with(messageEntity) {
@@ -131,5 +137,50 @@ fun MessageEntity.toSceytMessage() = SceytMessage(
     null,
     replyInThread,
     replyCount
-
 )
+
+fun MessageDb.toMessage(): Message {
+    with(messageEntity) {
+        return Message(
+            id ?: 0,
+            tid,
+            channelId,
+            to,
+            body,
+            type,
+            metadata,
+            createdAt,
+            updatedAt,
+            incoming,
+            receipt,
+            isTransient,
+            silent,
+            deliveryStatus,
+            state,
+            from?.toUser(),
+            attachments?.map { it.toSdkAttachment() }?.toTypedArray(),
+            emptyArray(),
+            emptyArray(),
+            emptyArray(),
+            emptyArray(),
+            emptyArray(),
+            emptyArray(),
+            null,
+            replyInThread,
+            replyCount
+        )
+    }
+}
+
+
+fun MessageDb.toParentMessage() {
+    /* with(messageEntity){
+         Message(Message.MessageBuilder(channelId)
+             .setParentMessageId(parentId?:0)
+             .setAttachments(attachments?.map { it.toSdkAttachment() }?.toTypedArray()))
+
+
+     }*/
+
+
+}

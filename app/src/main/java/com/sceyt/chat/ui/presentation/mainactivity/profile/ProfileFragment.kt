@@ -15,6 +15,7 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.presentation.login.LoginActivity
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
@@ -156,6 +157,7 @@ class ProfileFragment : Fragment() {
                 viewModel.logout()
                 preference.setToken(null)
                 preference.setUserName(null)
+                SceytKitClient.clearData()
                 LoginActivity.launch(requireContext())
                 requireActivity().finish()
             }).setTitle(getString(R.string.sign_out_title))

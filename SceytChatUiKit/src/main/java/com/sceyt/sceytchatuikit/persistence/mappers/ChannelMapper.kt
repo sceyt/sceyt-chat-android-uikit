@@ -26,7 +26,7 @@ fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
         createdAt = createdAt,
         updatedAt = updatedAt,
         unreadMessageCount = unreadMessageCount,
-        lastMessageId = lastMessage?.id,
+        lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
         lastMessageAt = lastMessage?.createdAt,
         label = label,
         metadata = metadata,
@@ -39,6 +39,12 @@ fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
         myRole = myRole,
         channelUrl = channelUrl
     )
+}
+
+private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {
+    return if (incoming == true)
+        msgId
+    else tid
 }
 
 fun Channel.toChannelEntity(): ChannelEntity {
@@ -65,7 +71,7 @@ fun Channel.toChannelEntity(): ChannelEntity {
         createdAt = createdAt,
         updatedAt = updatedAt,
         unreadMessageCount = unreadMessageCount,
-        lastMessageId = lastMessage?.id,
+        lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
         lastMessageAt = lastMessage?.createdAt?.time,
         label = label,
         metadata = metadata,

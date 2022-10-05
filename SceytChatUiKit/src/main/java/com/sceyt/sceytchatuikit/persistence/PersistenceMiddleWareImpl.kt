@@ -6,7 +6,6 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
@@ -21,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
@@ -191,8 +191,12 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return messagesLogic.sendMessage(channelId, message, tmpMessageCb)
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteMessage(channelId, messageId)
+    override suspend fun sendPendingMessages(channelId: Long) {
+        return messagesLogic.sendPendingMessages(channelId)
+    }
+
+    override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channelId, messageId, messageTid)
     }
 
     override suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {

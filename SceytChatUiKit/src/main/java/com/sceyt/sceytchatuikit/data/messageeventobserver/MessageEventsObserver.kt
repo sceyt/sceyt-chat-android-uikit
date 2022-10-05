@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.data.messageeventobserver
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.sceyt_listeners.MessageListener

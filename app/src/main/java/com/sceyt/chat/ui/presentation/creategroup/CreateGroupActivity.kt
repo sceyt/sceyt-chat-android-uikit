@@ -2,6 +2,7 @@ package com.sceyt.chat.ui.presentation.creategroup
 
 import android.animation.LayoutTransition
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -42,6 +43,9 @@ class CreateGroupActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.createChannelLiveData.observe(this) {
             ConversationActivity.newInstance(this, it)
+
+            val intent = Intent()
+            setResult(RESULT_OK, intent)
             finish()
         }
 
@@ -113,12 +117,10 @@ class CreateGroupActivity : AppCompatActivity() {
     companion object {
         private const val MEMBERS = "MEMBERS"
 
-        fun launch(context: Context, members: ArrayList<SceytMember>) {
-            context.launchActivity<CreateGroupActivity> {
-                putParcelableArrayListExtra(MEMBERS, members)
-            }
-            context.asAppCompatActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right,
-                anim.sceyt_anim_slide_hold)
+        fun newIntent(context: Context, members: ArrayList<SceytMember>): Intent {
+            val intent = Intent(context, CreateGroupActivity::class.java)
+            intent.putParcelableArrayListExtra(MEMBERS, members)
+            return intent
         }
     }
 }

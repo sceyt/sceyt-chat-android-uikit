@@ -1,11 +1,16 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 
-@Entity(indices = [Index("messageId", "reaction_key", unique = true)])
+@Entity(foreignKeys = [
+    ForeignKey(
+        entity = MessageEntity::class,
+        parentColumns = ["message_id"],
+        childColumns = ["messageId"],
+        onDelete = ForeignKey.CASCADE,
+        deferred = true
+    )],
+    indices = [Index("messageId", "reaction_key", unique = true)])
 data class ReactionScoreEntity(
         @PrimaryKey(autoGenerate = true)
         val id: Int = 0,
