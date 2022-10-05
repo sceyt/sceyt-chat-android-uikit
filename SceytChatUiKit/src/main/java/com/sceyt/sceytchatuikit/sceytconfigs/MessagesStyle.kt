@@ -2,9 +2,11 @@ package com.sceyt.sceytchatuikit.sceytconfigs
 
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
+import androidx.annotation.Dimension
 import androidx.annotation.DrawableRes
 import androidx.annotation.LayoutRes
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormatter
 
 object MessagesStyle {
@@ -33,11 +35,19 @@ object MessagesStyle {
 
     var dateSeparatorDateFormat = MessageDateSeparatorFormatter()
 
+    @Dimension
+    var sameSenderMsgDistance = dpToPx(4f)
+
+    @Dimension
+    var differentSenderMsgDistance = dpToPx(8f)
+
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
         dateSeparatorItemBackground = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackground, dateSeparatorItemBackground)
         dateSeparatorItemTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor, dateSeparatorItemTextColor)
+        sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameMessageSenderDistance, sameSenderMsgDistance)
+        differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentMessageSenderDistance, differentSenderMsgDistance)
         return this
     }
 }

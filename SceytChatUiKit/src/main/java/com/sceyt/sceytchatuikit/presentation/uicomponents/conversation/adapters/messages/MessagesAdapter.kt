@@ -116,7 +116,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 return prevItem.message.incoming != currentItem.message.incoming
         } catch (ex: Exception) {
         }
-        return false
+        return true
     }
 
     @SuppressLint("NotifyDataSetChanged")

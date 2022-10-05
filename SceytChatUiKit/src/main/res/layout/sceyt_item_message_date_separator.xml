@@ -9,7 +9,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginVertical="8dp"
         android:background="@drawable/sceyt_bg_message_day"
         android:includeFontPadding="false"
         android:textColor="@color/sceyt_color_gray_400"

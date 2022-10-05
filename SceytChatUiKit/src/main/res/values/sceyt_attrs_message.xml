@@ -8,6 +8,9 @@
         <attr name="sceytUiDateSeparatorItemTextColor" format="reference|color" />
         <attr name="sceytUiDateSeparatorItemBackground" format="reference" />
 
+        <attr name="sceytUiSameMessageSenderDistance" format="dimension" />
+        <attr name="sceytUiDifferentMessageSenderDistance" format="dimension" />
+
 
     </declare-styleable>
 </resources>

@@ -8,7 +8,9 @@ import com.sceyt.sceytchatuikit.extensions.isThisYear
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.DateFormatData
+import java.text.SimpleDateFormat
+import java.util.*
 
 class DateSeparatorViewHolder(
         private val binding: SceytItemMessageDateSeparatorBinding
@@ -24,11 +26,23 @@ class DateSeparatorViewHolder(
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = when {
-                DateUtils.isToday(createdAt) -> MessagesStyle.dateSeparatorDateFormat.today(itemView.context)
-                createdAt.isThisYear() -> DateTimeUtil.getDateTimeString(createdAt, MessagesStyle.dateSeparatorDateFormat.thisYear(itemView.context))
-                else -> DateTimeUtil.getDateTimeString(createdAt, MessagesStyle.dateSeparatorDateFormat.olderThisYear(itemView.context))
+                DateUtils.isToday(createdAt) -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.today(itemView.context))
+                createdAt.isThisYear() -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.thisYear(itemView.context))
+                else -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.olderThisYear(itemView.context))
             }
             binding.messageDay.text = dateText
+        }
+    }
+
+    private fun getDateText(createdAt: Long, data: DateFormatData): String {
+        if (data.format == null)
+            return "${data.beginTittle}${data.endTitle}"
+
+        return try {
+            val simpleDateFormat = SimpleDateFormat(data.format, Locale.getDefault())
+            "${data.beginTittle}${simpleDateFormat.format(Date(createdAt))}${data.endTitle}"
+        } catch (ex: Exception) {
+            "${data.beginTittle}${data.format}${data.endTitle}"
         }
     }
 
