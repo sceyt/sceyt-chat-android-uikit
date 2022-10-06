@@ -5,9 +5,11 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.core.view.*
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -15,29 +17,40 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.setLastActiveDateByTime
 import kotlinx.coroutines.*
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners {
+    : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
+        HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytConversationHeaderViewBinding
     private var clickListeners = HeaderClickListenersImpl(this)
+    private var eventListeners = HeaderEventsListenerImpl(this)
+    private var uiElementsListeners = HeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
+    private var replayMessage: SceytMessage? = null
     private val typingUsers by lazy { mutableSetOf<SceytMember>() }
     private var isTyping: Boolean = false
+    private var isReplayInThread: Boolean = false
     private var updateTypingJob: Job? = null
     private var isGroup = false
+    private lateinit var typingTextBuilder: (SceytMember) -> String
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -67,6 +80,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.layoutToolbar.setOnClickListener {
             clickListeners.onToolbarClick(it)
         }
+
+        typingTextBuilder = { member ->
+            if (isGroup)
+                buildString {
+                    append(member.getPresentableFirstName().take(10))
+                    append(" ${getString(R.string.sceyt_typing)}")
+                }
+            else getString(R.string.sceyt_typing)
+        }
     }
 
     private fun SceytConversationHeaderViewBinding.setUpStyle() {
@@ -75,10 +97,20 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
     }
 
-    private fun setChannelSubTitle(channel: SceytChannel) {
-        post {
+    private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage? = null, replayInThread: Boolean = false) {
+        if (replayInThread) {
+            with(titleTextView) {
+                text = getString(R.string.sceyt_thread_replay)
+                (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
+            }
+        } else
+            titleTextView.text = channel.channelSubject
+    }
+
+    private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage? = null, replayInThread: Boolean = false) {
+        if (!replayInThread) {
             val title = if (channel is SceytDirectChannel) {
-                val member = channel.peer ?: return@post
+                val member = channel.peer ?: return
                 if (member.user.presence?.state == PresenceState.Online) {
                     getString(R.string.sceyt_online)
                 } else {
@@ -88,59 +120,46 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 }
             } else getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
 
-            binding.subTitle.text = title
-            binding.subTitle.isVisible = !title.isNullOrBlank() && !isTyping
+            subjectTextView.text = title
+            subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping
+        } else {
+            val fullName = replayMessage?.from?.fullName
+            val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
+            subjectTextView.text = subTitleText
+            subjectTextView.isVisible = !fullName.isNullOrBlank() && !isTyping
+        }
+    }
+
+    private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replayInThread: Boolean = false) {
+        binding.avatar.isVisible = !replayInThread
+        if (!replayInThread) {
+            val subjAndSUrl = channel.getSubjectAndAvatarUrl()
+            avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second)
         }
     }
 
     internal fun setChannel(channel: SceytChannel) {
         this.channel = channel
         isGroup = channel.isGroup
-        val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-        binding.avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second)
-        binding.title.text = subjAndSUrl.first
 
-        setChannelSubTitle(channel)
-    }
-
-    internal fun setReplayMessage(message: SceytMessage?) {
-        binding.avatar.isVisible = false
-        with(binding.title) {
-            text = getString(R.string.sceyt_thread_replay)
-            (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
+        with(binding) {
+            uiElementsListeners.onAvatar(avatar, channel, false)
+            uiElementsListeners.onTitle(title, channel, null, false)
+            uiElementsListeners.onSubject(subTitle, channel, null, false)
         }
-
-        val fullName = message?.from?.fullName
-        val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-        binding.subTitle.text = subTitleText
-        binding.subTitle.isVisible = !fullName.isNullOrBlank() && !isTyping
     }
 
-    internal fun onTyping(data: ChannelTypingEventData) {
-        if (data.member.id == ChatClient.getClient().user?.id) return
-        val typing = data.typing
-        isTyping = typing
+    internal fun setReplayMessage(channel: SceytChannel, message: SceytMessage?) {
+        this.channel = channel
+        replayMessage = message
+        isGroup = channel.isGroup
+        isReplayInThread = true
 
-        if (isGroup) {
-            if (typing) {
-                typingUsers.add(data.member)
-            } else
-                typingUsers.remove(data.member)
-
-            updateTypingText()
-        } else
-            binding.tvTyping.text = initTypingTitle(data.member)
-
-        setTypingState(typing)
-    }
-
-    private fun initTypingTitle(member: SceytMember): String {
-        return if (isGroup)
-            buildString {
-                append(member.getPresentableFirstName().take(10))
-                append(" ${getString(R.string.sceyt_typing)}")
-            }
-        else getString(R.string.sceyt_typing)
+        with(binding) {
+            uiElementsListeners.onAvatar(avatar, channel, true)
+            uiElementsListeners.onTitle(title, channel, message, true)
+            uiElementsListeners.onSubject(subTitle, channel, message, true)
+        }
     }
 
     private fun updateTypingText() {
@@ -149,7 +168,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 updateTypingJob?.cancel()
             }
             typingUsers.size == 1 -> {
-                binding.tvTyping.text = initTypingTitle(typingUsers.last())
+                binding.tvTyping.text = typingTextBuilder(typingUsers.last())
                 updateTypingJob?.cancel()
             }
             else -> {
@@ -164,11 +183,29 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         updateTypingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
             while (true) {
                 typingUsers.toList().forEach {
-                    binding.tvTyping.text = initTypingTitle(it)
+                    binding.tvTyping.text = typingTextBuilder(it)
                     delay(2000)
                 }
             }
         }
+    }
+
+    private fun setTyping(data: ChannelTypingEventData) {
+        if (data.member.id == ChatClient.getClient().user?.id) return
+        val typing = data.typing
+        isTyping = typing
+
+        if (isGroup) {
+            if (typing) {
+                typingUsers.add(data.member)
+            } else
+                typingUsers.remove(data.member)
+
+            updateTypingText()
+        } else
+            binding.tvTyping.text = /*initTypingTitle(data.member)*/typingTextBuilder.invoke(data.member)
+
+        setTypingState(typing)
     }
 
     private fun setTypingState(typing: Boolean) {
@@ -181,6 +218,38 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
+    private fun setPresenceUpdated(users: List<User>) {
+        if (::channel.isInitialized.not() || channel.isGroup) return
+        (channel as? SceytDirectChannel)?.let { directChannel ->
+            val peer = directChannel.peer
+            if (users.contains(peer?.user)) {
+                users.find { user -> user.id == peer?.id }?.let {
+                    directChannel.peer?.user = it
+                    if (!isTyping)
+                        uiElementsListeners.onSubject(binding.subTitle, channel, replayMessage, isReplayInThread)
+                }
+            }
+        }
+    }
+
+    internal fun onTyping(data: ChannelTypingEventData) {
+        eventListeners.onTypingEvent(data)
+    }
+
+    internal fun onPresenceUpdate(users: List<User>) {
+        eventListeners.onPresenceUpdateEvent(users)
+    }
+
+    fun isTyping() = isTyping
+
+    fun isGroup() = isGroup
+
+    fun isReplayInThread() = isReplayInThread
+
+    fun getChannel() = if (::channel.isInitialized) channel else null
+
+    fun getReplayMessage() = replayMessage
+
     fun setCustomClickListener(headerClickListenersImpl: HeaderClickListenersImpl) {
         clickListeners = headerClickListenersImpl
     }
@@ -189,6 +258,49 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         clickListeners.setListener(listeners)
     }
 
+    fun setEventListener(listener: HeaderEventsListener) {
+        eventListeners.setListener(listener)
+    }
+
+    fun setCustomEventListener(listener: HeaderEventsListenerImpl) {
+        eventListeners = listener
+    }
+
+    fun setUiElementsListener(listener: HeaderUIElementsListener) {
+        uiElementsListeners.setListener(listener)
+    }
+
+    fun setCustomUiElementsListener(listener: HeaderUIElementsListenerImpl) {
+        uiElementsListeners = listener
+    }
+
+    fun setTypingTextBuilder(builder: (SceytMember) -> String) {
+        typingTextBuilder = builder
+    }
+
+    //Event listeners
+    override fun onTypingEvent(data: ChannelTypingEventData) {
+        setTyping(data)
+    }
+
+    override fun onPresenceUpdateEvent(users: List<User>) {
+        setPresenceUpdated(users)
+    }
+
+    //Ui elements listeners
+    override fun onTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
+        setChannelTitle(titleTextView, channel, replayMessage, replayInThread)
+    }
+
+    override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
+        post { setChannelSubTitle(subjectTextView, channel, replayMessage, replayInThread) }
+    }
+
+    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replayInThread: Boolean) {
+        setAvatar(avatar, channel, replayInThread)
+    }
+
+    //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
             ConversationInfoActivity.newInstance(context, channel)

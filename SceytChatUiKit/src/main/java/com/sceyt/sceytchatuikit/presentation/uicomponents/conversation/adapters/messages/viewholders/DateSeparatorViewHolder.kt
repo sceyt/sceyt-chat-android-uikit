@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.text.format.DateUtils
+import androidx.core.content.res.ResourcesCompat
 import com.sceyt.sceytchatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
@@ -48,8 +49,13 @@ class DateSeparatorViewHolder(
 
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
         with(root.context) {
-            messageDay.background = getCompatDrawable(MessagesStyle.dateSeparatorItemBackground)
-            messageDay.setTextColor(getCompatColor(MessagesStyle.dateSeparatorItemTextColor))
+            messageDay.apply {
+                background = getCompatDrawable(MessagesStyle.dateSeparatorItemBackground)
+                setTextColor(getCompatColor(MessagesStyle.dateSeparatorItemTextColor))
+                val dateTypeface = if (MessagesStyle.dateSeparatorTextFont != -1)
+                    ResourcesCompat.getFont(context, MessagesStyle.dateSeparatorTextFont) else typeface
+                setTypeface(dateTypeface, MessagesStyle.dateSeparatorTextStyle)
+            }
         }
     }
 }

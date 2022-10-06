@@ -15,6 +15,11 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
@@ -87,7 +92,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun initViews() {
         binding?.addMembers?.setOnClickListener {
-            /* addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
+          /*  *//* addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
              requireContext().asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)*/
         }
     }
@@ -280,22 +285,22 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         setNewOwner(newOwnerId)
     }
 
-    protected open fun onChannelEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData) {
+    protected open fun onChannelEvent(eventData: ChannelEventData) {
         val groupChannel = (eventData.channel as? GroupChannel) ?: return
         when (eventData.eventType) {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left -> {
+            Left -> {
                 groupChannel.members?.forEach {
                     removeMember(it.id)
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Joined, com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Invited -> addMembers(groupChannel.members)
+            Joined, Invited -> addMembers(groupChannel.members)
             else -> return
         }
     }
 
-    protected open fun onChannelMembersEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
+    protected open fun onChannelMembersEvent(eventData: ChannelMembersEventData) {
         when (eventData.eventType) {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Role -> {
+            ChannelMembersEventEnum.Role -> {
                 eventData.members?.forEach { member ->
                     membersAdapter?.getMemberItemById(member.id)?.let {
                         val memberItem = it.second as MemberItem.Member
@@ -304,19 +309,19 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     }
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Kicked, com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Blocked -> {
+            ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 eventData.members?.forEach { member ->
                     removeMember(member.id)
                 }
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Added -> {
+            ChannelMembersEventEnum.Added -> {
                 addMembers(eventData.members)
             }
             else -> return
         }
     }
 
-    protected open fun onChannelOwnerChanged(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData) {
+    protected open fun onChannelOwnerChanged(eventData: ChannelOwnerChangedEventData) {
         setNewOwner(eventData.newOwner.id)
     }
 

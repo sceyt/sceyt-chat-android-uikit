@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.conversation
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
@@ -12,6 +13,7 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -25,7 +27,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessagePopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bind
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners.HeaderClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +54,22 @@ open class ConversationActivity : AppCompatActivity() {
         statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
 
         getDataFromIntent()
+
+        with(binding.headerView) {
+            setCustomUiElementsListener(object : HeaderUIElementsListenerImpl(this) {
+                override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
+                    super.onSubject(subjectTextView, channel, replayMessage, replayInThread)
+                    println("onSubject")
+                }
+            })
+
+            setCustomEventListener(object : HeaderEventsListenerImpl(this) {
+                override fun onTypingEvent(data: ChannelTypingEventData) {
+                    super.onTypingEvent(data)
+                    println("typing")
+                }
+            })
+        }
 
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
         viewModel.bind(binding.messageInputView, replayMessage, lifecycleOwner = this)

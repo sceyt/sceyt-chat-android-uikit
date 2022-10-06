@@ -1,14 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
@@ -56,8 +56,6 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     fun removeLoading() {
         if (messages.remove(mLoadingItem))
             notifyItemRemoved(0)
-
-        Log.i("sfdsfsf",messages.filterIsInstance<MessageListItem.LoadingMoreItem>().size.toString())
     }
 
     private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
@@ -98,10 +96,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         notifyItemRangeInserted(messages.lastIndex, items.size)
     }
 
-    fun notifyUpdate(messages: List<MessageListItem>) {
+    fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
         val myDiffUtil = MessagesDiffUtil(this.messages, messages)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        productDiffResult.dispatchUpdatesTo(this)
+        productDiffResult.dispatchUpdatesToSafety(recyclerView)
         this.messages.clear()
         this.messages.addAll(messages)
     }

@@ -88,7 +88,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
         } else
-            mAdapter.notifyUpdate(messages)
+            mAdapter.notifyUpdate(messages, this)
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0

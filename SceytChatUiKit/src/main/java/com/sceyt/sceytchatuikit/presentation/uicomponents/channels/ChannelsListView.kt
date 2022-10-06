@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -19,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
 import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -272,18 +274,22 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal suspend fun updateUsersPresenceIfNeeded(users: List<User>) {
-        users.forEach {
-            channelsRV.getDirectChannelByUserIdIndexed(it.id)?.let { pair ->
-                val channel = (pair.second.channel as SceytDirectChannel)
-                val hasDiff = channel.peer?.user?.presence?.hasDiff(it.presence)
-                if (hasDiff == true) {
-                    val oldChannel = channel.clone()
-                    channel.peer?.user = it
-                    withContext(Dispatchers.Main) {
-                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+        try {
+            users.forEach {
+                channelsRV.getDirectChannelByUserIdIndexed(it.id)?.let { pair ->
+                    val channel = (pair.second.channel as SceytDirectChannel)
+                    val hasDiff = channel.peer?.user?.presence?.hasDiff(it.presence)
+                    if (hasDiff == true) {
+                        val oldChannel = channel.clone()
+                        channel.peer?.user = it
+                        withContext(Dispatchers.Main) {
+                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+                        }
                     }
                 }
             }
+        } catch (ex: ConcurrentModificationException) {
+            Log.e(TAG, ex.message.toString())
         }
     }
 

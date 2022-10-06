@@ -58,7 +58,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
             adapter = ChannelsAdapter(SyncArrayList(channels), viewHolderFactory)
                 .also { mAdapter = it }
         } else {
-            mAdapter.notifyUpdate(channels)
+            mAdapter.notifyUpdate(channels, this)
             if (isFirstItemDisplaying())
                 scrollToPosition(0)
 
@@ -108,7 +108,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         return if (::mAdapter.isInitialized)
             mAdapter.getData().findIndexed {
                 it is ChannelListItem.ChannelItem && !it.channel.isGroup
-                        && (it.channel as? SceytDirectChannel)?.peer?.id==userId
+                        && (it.channel as? SceytDirectChannel)?.peer?.id == userId
             }?.let {
                 return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
             }

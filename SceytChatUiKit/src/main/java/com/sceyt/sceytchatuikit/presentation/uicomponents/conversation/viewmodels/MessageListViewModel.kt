@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -24,7 +25,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -128,9 +128,8 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channelId == channel.id && it.replyInThread }
     }
 
-
     fun loadMessages(lastMessageId: Long, offset: Int) {
-        loadingItems.set(true)
+        setPagingLoadingStarted()
         val isLoadingMore = offset > 0
 
         notifyPageLoadingState(isLoadingMore)
@@ -142,7 +141,6 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.sendPendingMessages(conversationId)
@@ -153,27 +151,20 @@ class MessageListViewModel(private val conversationId: Long,
         when (it) {
             is PaginationResponse.DBResponse -> {
                 if (it.data.isNotEmpty()) {
-                    hasNext = it.data.size == MESSAGES_LOAD_SIZE
-                    _loadMessagesFlow.value = PaginationResponse.DBResponse(mapToMessageListItem(it.data, hasNext), it.offset)
+                    _loadMessagesFlow.value = PaginationResponse.DBResponse(mapToMessageListItem(it.data, it.hasNext), it.offset)
                     notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                when (it.data) {
-                    is SceytResponse.Success -> {
-                        hasNext = it.data.data?.size == MESSAGES_LOAD_SIZE
-
-                        _loadMessagesFlow.value = PaginationResponse.ServerResponse(
-                            SceytResponse.Success(mapToMessageListItem(it.data.data, hasNext)), offset = it.offset, dbData = arrayListOf())
-
-                        notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
-                    }
-                    is SceytResponse.Error -> notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+                if (it.data is SceytResponse.Success) {
+                    _loadMessagesFlow.value = PaginationResponse.ServerResponse(
+                        SceytResponse.Success(mapToMessageListItem(it.data.data, it.hasNext)), offset = it.offset, dbData = arrayListOf())
                 }
+                notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
             }
             is PaginationResponse.Nothing -> return
         }
-        loadingItems.set(false)
+        pagingResponseReceived(it)
     }
 
     private fun deleteMessage(messageId: Long, messageTid: Long) {
@@ -217,7 +208,7 @@ class MessageListViewModel(private val conversationId: Long,
         val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
 
         when (eventData.eventType) {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Added -> {
+            ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers ?: return)
                 (channel as SceytGroupChannel).apply {
                     members = channelMembers
@@ -225,7 +216,7 @@ class MessageListViewModel(private val conversationId: Long,
                 }
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Kicked -> {
+            ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers ?: return)
                 (channel as SceytGroupChannel).apply {
                     members = channelMembers

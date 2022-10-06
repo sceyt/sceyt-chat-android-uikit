@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
@@ -50,10 +51,10 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
             notifyItemRemoved(channels.lastIndex + 1)
     }
 
-    fun notifyUpdate(channels: List<ChannelListItem>) {
+    fun notifyUpdate(channels: List<ChannelListItem>, recyclerView: RecyclerView) {
         val myDiffUtil = ChannelsDiffUtil(this.channels, channels)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        productDiffResult.dispatchUpdatesTo(this)
+        productDiffResult.dispatchUpdatesToSafety(recyclerView)
         this.channels.clear()
         this.channels.addAll(channels)
     }

@@ -29,7 +29,7 @@ sealed interface MessagePopupClickListeners {
         fun onReplayMessageInThreadClick(message: SceytMessage)
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface PopupClickListeners : CopyMessage, DeleteMessage, EditMessage, ReactMessage,
             ReplayMessage, ReplayInThreadMessage
 }

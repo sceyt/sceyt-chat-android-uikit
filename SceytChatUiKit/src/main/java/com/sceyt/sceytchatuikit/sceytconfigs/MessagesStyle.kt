@@ -1,10 +1,8 @@
 package com.sceyt.sceytchatuikit.sceytconfigs
 
 import android.content.res.TypedArray
-import androidx.annotation.ColorRes
-import androidx.annotation.Dimension
-import androidx.annotation.DrawableRes
-import androidx.annotation.LayoutRes
+import android.graphics.Typeface
+import androidx.annotation.*
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormatter
@@ -35,6 +33,11 @@ object MessagesStyle {
 
     var dateSeparatorDateFormat = MessageDateSeparatorFormatter()
 
+    @FontRes
+    var dateSeparatorTextFont: Int = -1
+
+    var dateSeparatorTextStyle: Int = Typeface.NORMAL
+
     @Dimension
     var sameSenderMsgDistance = dpToPx(4f)
 
@@ -48,6 +51,8 @@ object MessagesStyle {
         dateSeparatorItemTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor, dateSeparatorItemTextColor)
         sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameMessageSenderDistance, sameSenderMsgDistance)
         differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentMessageSenderDistance, differentSenderMsgDistance)
+        dateSeparatorTextFont = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, dateSeparatorTextFont)
+        dateSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, dateSeparatorTextStyle)
         return this
     }
 }

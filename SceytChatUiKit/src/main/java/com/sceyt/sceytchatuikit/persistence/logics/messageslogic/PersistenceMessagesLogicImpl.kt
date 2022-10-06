@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.*
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -57,11 +57,12 @@ internal class PersistenceMessagesLogicImpl(
     override fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             val dbMessages = getMessagesDb(conversationId, lastMessageId, offset)
-            trySend(PaginationResponse.DBResponse(dbMessages, offset))
+            trySend(PaginationResponse.DBResponse(dbMessages, offset, hasNext = dbMessages.size == MESSAGES_LOAD_SIZE))
 
             val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
-            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf()))
+            val hasNext = response is SceytResponse.Success && response.data?.size == MESSAGES_LOAD_SIZE
+            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf(), hasNext = hasNext))
 
             if (response is SceytResponse.Success)
                 saveMessagesToDb(response.data ?: return@callbackFlow)
@@ -76,7 +77,7 @@ internal class PersistenceMessagesLogicImpl(
             lastMsgId = Long.MAX_VALUE
 
 
-        var messages = messageDao.getMessages(channelId, lastMsgId, SceytUIKitConfig.MESSAGES_LOAD_SIZE)
+        var messages = messageDao.getMessages(channelId, lastMsgId, MESSAGES_LOAD_SIZE)
             .map { messageDb -> messageDb.toSceytMessage() }.reversed()
 
         if (offset == 0) {
