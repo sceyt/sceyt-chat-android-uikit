@@ -9,6 +9,6 @@ sealed interface MemberClickListeners {
         fun onMoreClick(view: View, item: MemberItem.Member)
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface ClickListeners : MoreClickClickListener
 }

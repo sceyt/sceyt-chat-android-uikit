@@ -12,6 +12,6 @@ sealed interface SearchInputClickListeners {
         fun onKeyboardSearchClick()
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface ClickListeners : ClearClickListener, KeyboardSearchClickListener
 }

@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners
 
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView

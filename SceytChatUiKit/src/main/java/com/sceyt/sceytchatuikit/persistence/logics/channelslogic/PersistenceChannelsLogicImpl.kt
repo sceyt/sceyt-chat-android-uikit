@@ -26,7 +26,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -110,14 +110,15 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             val dbChannels = getChannelsDb(offset, searchQuery)
-            trySend(PaginationResponse.DBResponse(dbChannels, offset))
+            trySend(PaginationResponse.DBResponse(dbChannels, offset, hasNext = dbChannels.size == CHANNELS_LOAD_SIZE))
 
             awaitToConnectSceyt()
 
             val response = if (offset == 0) channelsRepository.getChannels(searchQuery)
             else channelsRepository.loadMoreChannels()
 
-            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf()))
+            val hasNext = response is SceytResponse.Success && response.data?.size == CHANNELS_LOAD_SIZE
+            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf(), hasNext = hasNext))
 
             if (response is SceytResponse.Success)
                 saveChannelsToDb(response.data ?: return@callbackFlow)
@@ -145,10 +146,10 @@ internal class PersistenceChannelsLogicImpl(
 
     private fun getChannelsDb(offset: Int, searchQuery: String): List<SceytChannel> {
         return if (searchQuery.isBlank())
-            channelDao.getChannels(limit = SceytUIKitConfig.CHANNELS_LOAD_SIZE, offset = offset)
+            channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset)
                 .map { channel -> channel.toChannel() }
         else channelDao.getChannelsByQuery(
-            limit = SceytUIKitConfig.CHANNELS_LOAD_SIZE,
+            limit = CHANNELS_LOAD_SIZE,
             offset = offset,
             query = searchQuery
         ).map { channel -> channel.toChannel() }

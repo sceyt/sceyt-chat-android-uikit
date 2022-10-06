@@ -14,6 +14,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
@@ -21,14 +23,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     getChannels(0, query = searchQuery)
 
     /** Await to connect, and load channels **/
-   /* lifecycleOwner.lifecycleScope.launch {
-        ConnectionObserver.onChangedConnectStatusFlow.collect {
-            if (it.first == Types.ConnectState.StateConnected)
-                channelsListView.getChannelsRv().awaitAnimationEnd {
-                    getChannels(0, query = searchQuery)
-                }
-        }
-    }*/
+    /* lifecycleOwner.lifecycleScope.launch {
+         ConnectionObserver.onChangedConnectStatusFlow.collect {
+             if (it.first == Types.ConnectState.StateConnected)
+                 channelsListView.getChannelsRv().awaitAnimationEnd {
+                     getChannels(0, query = searchQuery)
+                 }
+         }
+     }*/
 
     lifecycleOwner.lifecycleScope.launch {
         loadChannelsFlow.collect {
@@ -108,8 +110,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 
     lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-        SceytPresenceChecker.onPresenceCheckUsersFlow.collect {
-            channelsListView.updateUsersPresenceIfNeeded(it)
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().collect {
+            channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
         }
     }
 
@@ -196,10 +198,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 
     channelsListView.setReachToEndListener { offset, _ ->
-        if (!loadingItems.get() && hasNext) {
-            loadingItems.set(true)
+        if (canLoadMore())
             getChannels(offset, searchQuery)
-        }
     }
 
     channelsListView.setChannelAttachDetachListener { item, attached ->

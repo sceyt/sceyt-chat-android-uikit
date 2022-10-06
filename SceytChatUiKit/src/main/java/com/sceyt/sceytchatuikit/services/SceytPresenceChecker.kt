@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.services
 
+import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -16,7 +17,7 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
 
     private val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
 
-    private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<User>> = MutableSharedFlow(
+    private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<PresenceUser>> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onPresenceCheckUsersFlow = onPresenceCheckUsersFlow_.asSharedFlow()
@@ -51,7 +52,7 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
                     users.forEach {
                         updateUserPresence(it)
                     }
-                    onPresenceCheckUsersFlow_.tryEmit(users)
+                    onPresenceCheckUsersFlow_.tryEmit(users.map { PresenceUser(it) })
                 }
             }
         }
@@ -62,7 +63,8 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
         if (oldUser != null) presenceCheckUsers[user.id] = user
     }
 
-    fun addNewUserToPresenceCheck(userId: String) {
+    fun addNewUserToPresenceCheck(userId: String?) {
+        userId ?: return
         presenceCheckUsers[userId] = User(userId)
     }
 
@@ -86,4 +88,20 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
+
+    data class PresenceUser(val user: User) {
+
+        private fun arePresencesEquals(one: Presence, two: Presence): Boolean {
+            return one.status == two.status && one.state == two.state && one.lastActiveAt == two.lastActiveAt
+        }
+
+        override fun equals(other: Any?): Boolean {
+            return other is PresenceUser && other.user.id == user.id
+                    && arePresencesEquals(other.user.presence, user.presence)
+        }
+
+        override fun hashCode(): Int {
+            return user.hashCode()
+        }
+    }
 }

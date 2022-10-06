@@ -2,10 +2,8 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.os.Handler
 import android.os.Looper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSmoothScroller
-import androidx.recyclerview.widget.PagerSnapHelper
-import androidx.recyclerview.widget.RecyclerView
+import android.view.ViewTreeObserver
+import androidx.recyclerview.widget.*
 
 fun RecyclerView.isItemCompletelyDisplaying(position: Int): Boolean {
     if (adapter?.itemCount != 0) {
@@ -176,4 +174,26 @@ fun RecyclerView.smoothSnapToPosition(position: Int, snapMode: Int = LinearSmoot
     }
     smoothScroller.targetPosition = position
     layoutManager?.startSmoothScroll(smoothScroller)
+}
+
+fun RecyclerView.runWhenReady(action: () -> Unit) {
+    if (!isComputingLayout)
+        action()
+    else {
+        val globalLayoutListener = object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                action()
+                viewTreeObserver.removeOnGlobalLayoutListener(this)
+            }
+        }
+        viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
+    }
+}
+
+fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
+    recyclerView.adapter?.let { adapter->
+        recyclerView.runWhenReady {
+            dispatchUpdatesTo(adapter)
+        }
+    }
 }

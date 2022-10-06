@@ -44,7 +44,7 @@ sealed interface MessageClickListeners {
         fun onLinkClick(view: View, item: MessageListItem.MessageItem)
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             LinkClickListener,
             MessageLongClickListener,

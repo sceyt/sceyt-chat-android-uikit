@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.listeners
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners
 
 import android.view.View
 
@@ -16,6 +16,6 @@ sealed interface HeaderClickListeners {
         fun onBackClick(view: View)
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface ClickListeners : AvatarClickListener, ToolbarClickListener, BackClickListener
 }

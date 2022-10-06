@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -15,12 +15,12 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiMessage
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -69,9 +69,9 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     val onChannelEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>
 
     init {
-        onMessageStatusFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onMessageStatusFlow
+        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
 
-        onChannelEventFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelEventFlow
+        onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
 
         onNewMessageFlow = MessageEventsObserver.onMessageFlow.filter {
             !it.second.replyInThread
@@ -91,7 +91,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
-        loadingItems.set(true)
+        setPagingLoadingStarted()
 
         notifyPageLoadingState(false)
 
@@ -106,27 +106,21 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         when (it) {
             is PaginationResponse.DBResponse -> {
                 if (it.data.isNotEmpty()) {
-                    hasNext = it.data.size == SceytUIKitConfig.CHANNELS_LOAD_SIZE
-                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, hasNext), it.offset)
+                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), it.offset)
                     notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty(), searchQuery)
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                when (it.data) {
-                    is SceytResponse.Success -> {
-                        hasNext = it.data.data?.size == SceytUIKitConfig.CHANNELS_LOAD_SIZE
-
-                        _loadChannelsFlow.value = PaginationResponse.ServerResponse(
-                            SceytResponse.Success(mapToChannelItem(it.data.data, hasNext)), offset = it.offset, dbData = arrayListOf())
-
-                        notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty(), searchQuery)
-                    }
-                    is SceytResponse.Error -> notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty(), searchQuery)
+                if (it.data is SceytResponse.Success) {
+                    _loadChannelsFlow.value = PaginationResponse.ServerResponse(
+                        SceytResponse.Success(mapToChannelItem(it.data.data, it.hasNext)), offset = it.offset, dbData = arrayListOf())
                 }
+                notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty(), searchQuery)
             }
             is PaginationResponse.Nothing -> return
         }
-        loadingItems.set(false)
+
+        pagingResponseReceived(it)
     }
 
     private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
@@ -196,7 +190,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun muteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.muteChannel(channelId,0)
+            val response = channelMiddleWare.muteChannel(channelId, 0)
             _muteUnMuteLiveData.postValue(response)
         }
     }

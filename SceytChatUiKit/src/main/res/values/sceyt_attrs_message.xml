@@ -5,11 +5,19 @@
         <attr name="sceytUiMessageIncBubbleColor" format="reference" />
         <attr name="sceytUiMessageOutBubbleColor" format="reference" />
 
+        <!--Date separator item-->
         <attr name="sceytUiDateSeparatorItemTextColor" format="reference|color" />
         <attr name="sceytUiDateSeparatorItemBackground" format="reference" />
+        <attr name="sceytUiDateSeparatorItemTextFont" format="reference" />
+        <attr name="sceytUiDateSeparatorItemTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
         <attr name="sceytUiSameMessageSenderDistance" format="dimension" />
         <attr name="sceytUiDifferentMessageSenderDistance" format="dimension" />
+
 
 
     </declare-styleable>

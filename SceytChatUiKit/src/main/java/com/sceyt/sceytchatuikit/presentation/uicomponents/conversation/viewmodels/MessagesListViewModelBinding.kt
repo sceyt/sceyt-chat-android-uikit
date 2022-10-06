@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toMessage
@@ -22,7 +23,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesL
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 
@@ -59,7 +62,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                                     markMessageAsDisplayed((item as MessageListItem.MessageItem).message.id)
                                 }
                             }
-                            messagesListView.updateMessagesWithServerData(data, response.offset, lifecycleOwner) { list, hasNext ->
+                            messagesListView.updateMessagesWithServerData(data, response.offset, response.hasNext, lifecycleOwner) { list, hasNext ->
                                 return@updateMessagesWithServerData mapToMessageListItem(
                                     list.filterIsInstance<MessageListItem.MessageItem>().map { messageItem -> messageItem.message }, hasNext)
                             }
@@ -214,8 +217,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setNeedLoadMoreMessagesListener { offset, message ->
-        if (!loadingItems.get() && hasNext) {
-            loadingItems.set(true)
+        if (canLoadMore()) {
             val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
             loadMessages(lastMessageId, offset)
         }
@@ -323,9 +325,18 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
                               lifecycleOwner: LifecycleOwner) {
 
     if (replayInThread)
-        headerView.setReplayMessage(replayInThreadMessage)
+        headerView.setReplayMessage(channel, replayInThreadMessage)
     else
         headerView.setChannel(channel)
+
+    if (channel is SceytDirectChannel)
+        SceytPresenceChecker.addNewUserToPresenceCheck((channel as SceytDirectChannel).peer?.id)
+
+    lifecycleOwner.lifecycleScope.launch {
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().collect {
+            headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
+        }
+    }
 
     lifecycleOwner.lifecycleScope.launch {
         onChannelTypingEventFlow.collectLatest {

@@ -9,6 +9,6 @@ sealed interface AttachmentClickListeners {
         fun onAttachmentClick(view: View, item: FileListItem)
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface ClickListeners : AttachmentClickListener
 }

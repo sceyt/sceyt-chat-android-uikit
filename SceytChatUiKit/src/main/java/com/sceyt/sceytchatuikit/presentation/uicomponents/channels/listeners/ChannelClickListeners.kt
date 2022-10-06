@@ -18,7 +18,7 @@ sealed interface ChannelClickListeners {
         fun onAvatarClick(item: ChannelListItem.ChannelItem)
     }
 
-    /** User this if you want to implement all callbacks */
+    /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             ChannelClickClickListener,
             ChannelClickLongClickListener,

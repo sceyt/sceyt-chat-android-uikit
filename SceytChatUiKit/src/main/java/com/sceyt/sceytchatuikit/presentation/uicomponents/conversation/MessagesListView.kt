@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -211,8 +210,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateMessagesWithServerData(data: List<MessageListItem>, offset: Int, lifecycleOwner: LifecycleOwner,
-                                              mapingCb: (List<MessageListItem>, Boolean) -> List<MessageListItem>) {
+    internal fun updateMessagesWithServerData(data: List<MessageListItem>, offset: Int, hasNext: Boolean, lifecycleOwner: LifecycleOwner,
+                                              mappingCb: (List<MessageListItem>, Boolean) -> List<MessageListItem>) {
         val currentMessages = messagesRV.getData() ?: arrayListOf()
         if (currentMessages.isEmpty() || data.isEmpty() && offset == 0) {
             messagesRV.setData(data)
@@ -221,13 +220,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messagesRV.hideLoadingItem()
 
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            var dataHasLoadingItem = false
             val newMessages: ArrayList<MessageListItem> = arrayListOf()
             // Update UI messages if exist and have diff, or add new messages
             data.forEach { dataItem ->
-                if (!dataHasLoadingItem)
-                    dataHasLoadingItem = dataItem is MessageListItem.LoadingMoreItem
-
                 if (dataItem is MessageListItem.MessageItem) {
                     currentMessages.findIndexed {
                         it is MessageListItem.MessageItem && it.message.id == dataItem.message.id
@@ -238,18 +233,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                         if (diff.hasDifference()) {
                             currentMessages[it.first] = dataItem
                             messagesRV.notifyItemChangedSafety(it.first, diff)
-                            Log.i(TAG, "update: changed item ${dataItem.message.body} $diff")
                         }
-                    } ?: run {
-                        Log.i(TAG, "update: addNewMessage ${dataItem.message.body}")
-                        newMessages.add(dataItem)
-                    }
-                } else if (!currentMessages.contains(dataItem)) {
+                    } ?: run { newMessages.add(dataItem) }
+                } else if (!currentMessages.contains(dataItem))
                     newMessages.add(dataItem)
-                }
             }
             // Add new messages and sort list
-            addNewServerMessagesAndSort(newMessages, currentMessages, dataHasLoadingItem, mapingCb)
+            addNewServerMessagesAndSort(newMessages, currentMessages, hasNext, mappingCb)
         }
     }
 
