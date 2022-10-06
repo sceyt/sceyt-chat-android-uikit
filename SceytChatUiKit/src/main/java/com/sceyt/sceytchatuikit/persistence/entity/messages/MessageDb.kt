@@ -11,8 +11,8 @@ data class MessageDb(
         @Relation(parentColumn = "fromId", entityColumn = "user_id")
         val from: UserEntity?,
 
-        @Relation(parentColumn = "parentId", entityColumn = "message_id")
-        val parent: MessageEntity?,
+        @Relation(parentColumn = "parentId", entityColumn = "message_id", entity = MessageEntity::class)
+        val parent: ParentMessageDb?,
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid")
         val attachments: List<AttachmentEntity>?,
