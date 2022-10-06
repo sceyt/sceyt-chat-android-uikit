@@ -2,8 +2,11 @@ package com.sceyt.sceytchatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.toMessage
+import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
@@ -62,7 +65,7 @@ fun SceytMessage.toMessageDb(): MessageDb {
     return MessageDb(
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
-        parent = parent?.toMessageEntity(),
+        parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
@@ -74,7 +77,7 @@ fun Message.toMessageDb(): MessageDb {
     return MessageDb(
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
-        parent = parent?.toMessageEntity(),
+        parent = parent?.toSceytUiMessage()?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
@@ -110,7 +113,17 @@ fun MessageDb.toSceytMessage(): SceytMessage {
     }
 }
 
-fun MessageEntity.toSceytMessage() = SceytMessage(
+fun ParentMessageDb.toSceytMessage(): SceytMessage {
+    return messageEntity.toSceytMessage().apply {
+        this.from = this@toSceytMessage.from?.toUser()
+    }
+}
+
+fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
+    return ParentMessageDb(toMessageEntity(), from?.toUserEntity())
+}
+
+private fun MessageEntity.toSceytMessage() = SceytMessage(
     id ?: 0,
     tid,
     channelId,
@@ -165,22 +178,9 @@ fun MessageDb.toMessage(): Message {
             emptyArray(),
             emptyArray(),
             emptyArray(),
-            null,
+            parent?.toSceytMessage()?.toMessage(),
             replyInThread,
             replyCount
         )
     }
-}
-
-
-fun MessageDb.toParentMessage() {
-    /* with(messageEntity){
-         Message(Message.MessageBuilder(channelId)
-             .setParentMessageId(parentId?:0)
-             .setAttachments(attachments?.map { it.toSdkAttachment() }?.toTypedArray()))
-
-
-     }*/
-
-
 }

@@ -143,9 +143,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         isGroup = channel.isGroup
 
         with(binding) {
-            uiElementsListeners.onAvatar(avatar, channel, false)
             uiElementsListeners.onTitle(title, channel, null, false)
             uiElementsListeners.onSubject(subTitle, channel, null, false)
+            uiElementsListeners.onAvatar(avatar, channel, false)
         }
     }
 
@@ -156,9 +156,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         isReplayInThread = true
 
         with(binding) {
-            uiElementsListeners.onAvatar(avatar, channel, true)
             uiElementsListeners.onTitle(title, channel, message, true)
             uiElementsListeners.onSubject(subTitle, channel, message, true)
+            uiElementsListeners.onAvatar(avatar, channel, true)
         }
     }
 
@@ -203,7 +203,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             updateTypingText()
         } else
-            binding.tvTyping.text = /*initTypingTitle(data.member)*/typingTextBuilder.invoke(data.member)
+            binding.tvTyping.text = typingTextBuilder.invoke(data.member)
 
         setTypingState(typing)
     }
@@ -276,6 +276,14 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
         typingTextBuilder = builder
+    }
+
+    fun invalidateUi() {
+        with(binding) {
+            uiElementsListeners.onTitle(title, channel, replayMessage, isReplayInThread)
+            uiElementsListeners.onSubject(subTitle, channel, replayMessage, isReplayInThread)
+            uiElementsListeners.onAvatar(avatar, channel, isReplayInThread)
+        }
     }
 
     //Event listeners
