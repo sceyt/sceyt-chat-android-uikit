@@ -8,6 +8,8 @@ import android.view.View
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import com.sceyt.sceytchatuikit.R
 
 class PopupMenuMessage(private val context: Context, anchor: View, private var incoming: Boolean) : PopupMenu(context, anchor) {
@@ -23,6 +25,8 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var i
         } else
             deleteMessageItem.apply {
                 title = setColoredTitle(title.toString())
+                icon.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                    ContextCompat.getColor(context, R.color.sceyt_color_red), BlendModeCompat.SRC_ATOP)
             }
         super.show()
     }

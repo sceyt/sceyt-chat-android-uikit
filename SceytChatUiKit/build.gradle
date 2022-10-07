@@ -123,4 +123,5 @@ dependencies {
     api supportDependencies.flexbox
     api supportDependencies.sdp
     api supportDependencies.ssp
+    implementation 'com.github.shuhart:stickyheader:1.1.0'
 }
