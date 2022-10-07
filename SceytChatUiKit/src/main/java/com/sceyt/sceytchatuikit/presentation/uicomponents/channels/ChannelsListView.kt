@@ -369,6 +369,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
+    fun setUserNameBuilder(builder: (User) -> String) {
+        channelsRV.getViewHolderFactory().setUserNameBuilder(builder)
+    }
+
     /**
      * Returns the inner [RecyclerView] that is used to display a list of channel list items.
      * @return The inner [RecyclerView] with channels.

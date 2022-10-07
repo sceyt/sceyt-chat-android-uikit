@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Typeface
 import android.view.View
 import android.view.ViewGroup
@@ -17,11 +18,13 @@ import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -35,15 +38,18 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(view: View,
                                  private val messageListeners: MessageClickListenersImpl? = null,
-                                 private val displayedListener: ((SceytMessage) -> Unit)? = null)
+                                 private val displayedListener: ((SceytMessage) -> Unit)? = null,
+                                 private val senderNameBuilder: ((User) -> String)? = null)
     : RecyclerView.ViewHolder(view) {
 
+    protected val context: Context by lazy { view.context }
     private var replayMessageContainerBinding: SceytRecyclerReplayContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
     protected lateinit var messageListItem: MessageListItem
@@ -57,6 +63,13 @@ abstract class BaseMsgViewHolder(view: View,
             if (message.incoming && message.deliveryStatus != DeliveryStatus.Read)
                 displayedListener?.invoke(message)
         }
+    }
+
+    fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
+        return if (::messageListItem.isInitialized) {
+            bind(messageListItem, diff)
+            true
+        } else false
     }
 
     @CallSuper
@@ -103,7 +116,7 @@ abstract class BaseMsgViewHolder(view: View,
             }
         with(replayMessageContainerBinding ?: return) {
             val parent = message.parent
-            tvName.text = parent?.from?.fullName?.trim()
+            tvName.text = getSenderName(parent?.from)
             if (parent?.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
                 tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_gray_400))
@@ -134,10 +147,8 @@ abstract class BaseMsgViewHolder(view: View,
 
         if (message.canShowAvatarAndName) {
             val user = message.from
-            var displayName = user?.fullName?.trim()
-            if (displayName.isNullOrBlank())
-                displayName = user?.id.toString()
-            avatarView.setNameAndImageUrl(displayName, user?.avatarURL)
+            val displayName = getSenderName(user)
+            avatarView.setNameAndImageUrl(displayName, user?.avatarURL, AvatarStyle.userDefaultAvatar)
             tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true
@@ -218,5 +229,10 @@ abstract class BaseMsgViewHolder(view: View,
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
         if (incoming) return 5
         return min(5, reactionsSize)
+    }
+
+    private fun getSenderName(user: User?): String {
+        user ?: return ""
+        return senderNameBuilder?.invoke(user) ?: user.getPresentableName()
     }
 }

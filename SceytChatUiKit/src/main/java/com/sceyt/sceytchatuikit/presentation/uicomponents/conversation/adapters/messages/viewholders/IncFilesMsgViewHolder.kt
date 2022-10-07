@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncFilesMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -21,7 +22,8 @@ class IncFilesMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl?,
         displayedListener: ((SceytMessage) -> Unit)?,
-) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener) {
+        senderNameBuilder: ((User) -> String)?,
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
 
     init {
         binding.setMessageItemStyle()
@@ -83,12 +85,12 @@ class IncFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = itemView.context, messageListeners))
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners))
         }
     }
 
     private fun SceytItemIncFilesMessageBinding.setMessageItemStyle() {
-        with(root.context) {
+        with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
         }
     }

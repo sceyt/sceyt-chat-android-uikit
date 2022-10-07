@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -45,7 +46,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var clickListeners = MessageInputClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
-
+    private var userNameBuilder: ((User) -> String)? = null
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     var message: Message? = null
@@ -244,7 +245,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding.layoutReplayMessage) {
             isVisible = true
             ViewUtil.expandHeight(root, 1, 200)
-            tvName.text = message.from.fullName.trim()
+            tvName.text = userNameBuilder?.invoke(message.from) ?: message.from.getPresentableName()
             tvMessageBody.text = if (message.isTextMessage())
                 message.body.trim() else context.getString(R.string.sceyt_attachment)
         }
@@ -292,6 +293,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setClickListener(listener: MessageInputClickListeners) {
         clickListeners.setListener(listener)
+    }
+
+    fun setUserNameBuilder(builder: (User) -> String) {
+        userNameBuilder = builder
     }
 
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {

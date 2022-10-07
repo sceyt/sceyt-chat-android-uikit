@@ -5,6 +5,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -15,8 +16,9 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
                                      view: View,
                                      messageListeners: MessageClickListenersImpl? = null,
-                                     displayListItem: ((SceytMessage) -> Unit)? = null)
-    : BaseMsgViewHolder(view, messageListeners, displayListItem) {
+                                     displayListItem: ((SceytMessage) -> Unit)? = null,
+                                     senderNameBuilder: ((User) -> String)? = null)
+    : BaseMsgViewHolder(view, messageListeners, displayListItem, senderNameBuilder) {
 
     fun loadLinkPreview(message: MessageListItem.MessageItem, layoutLinkPreview: SceytMessageLinkPreviewContainerBinding, messageBody: TextView) {
         if (message.linkPreviewData == null) {
@@ -46,7 +48,7 @@ abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
             }
             else -> {
                 if (data.imageUrl.isNullOrBlank().not()) {
-                    Glide.with(itemView.context)
+                    Glide.with(context)
                         .load(data.imageUrl)
                         .override(previewImage.width)
                         .transition(DrawableTransitionOptions.withCrossFade(100))

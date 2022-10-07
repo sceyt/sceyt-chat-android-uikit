@@ -8,6 +8,7 @@ import androidx.annotation.CallSuper
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -15,7 +16,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
-import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -29,35 +29,34 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private var listeners: ChannelClickListeners.ClickListeners,
-                             private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)?) : BaseChannelViewHolder(binding.root) {
+                             private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
+                             private val userNameBuilder: ((User) -> String)? = null) : BaseChannelViewHolder(binding.root) {
 
-    protected lateinit var channelItem: ChannelListItem.ChannelItem
 
     init {
         with(binding) {
             setChannelItemStyle()
 
             root.setOnClickListener {
-                listeners.onChannelClick(channelItem)
+                listeners.onChannelClick(channelItem as ChannelListItem.ChannelItem)
             }
 
             parentLayout.setOnLongClickListener {
-                listeners.onChannelLongClick(it, channelItem)
+                listeners.onChannelLongClick(it, (channelItem as ChannelListItem.ChannelItem))
                 return@setOnLongClickListener true
             }
 
             avatar.setOnClickListener {
-                listeners.onAvatarClick(channelItem)
+                listeners.onAvatarClick((channelItem as ChannelListItem.ChannelItem))
             }
         }
     }
 
     @CallSuper
     override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
+        super.bind(item, diff)
         when (item) {
             is ChannelListItem.ChannelItem -> {
-                channelItem = item
-
                 val channel = item.channel
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
@@ -104,8 +103,6 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         attachDetachListener?.invoke(getChannelListItem(), false)
     }
 
-    protected fun getChannelListItem() = if (::channelItem.isInitialized) channelItem else null
-
     open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
         val message = channel.lastMessage
         if (message == null) {
@@ -113,19 +110,22 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             return
         }
         if (message.state == MessageState.Deleted) {
-            textView.text = itemView.context.getString(R.string.sceyt_message_was_deleted)
+            textView.text = context.getString(R.string.sceyt_message_was_deleted)
             textView.setTypeface(null, Typeface.ITALIC)
         } else {
             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
-                textView.context.getString(R.string.sceyt_attachment) else message.body
+                context.getString(R.string.sceyt_attachment) else message.body
 
             val fromText = if (message.incoming) {
-                val userFirstName = channel.lastMessage?.from?.getPresentableFirstName()?.trim()
+                val from = channel.lastMessage?.from
+                val userFirstName = from?.let {
+                    userNameBuilder?.invoke(from) ?: from.getPresentableFirstName()
+                }
                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
                     "${userFirstName}: "
                 } else ""
             } else
-                "${textView.getString(R.string.sceyt_your_last_message)}: "
+                "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
                 .setString("$fromText${body.trim()}")
@@ -138,7 +138,12 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setSubject(channel: SceytChannel, textView: TextView) {
-        textView.text = channel.channelSubject
+        textView.text = if (channel.isGroup) channel.channelSubject
+        else {
+            (channel as? SceytDirectChannel)?.peer?.user?.let { from ->
+                userNameBuilder?.invoke(from) ?: from.getPresentableFirstName()
+            }
+        }
     }
 
     open fun setMuteState(channel: SceytChannel, textView: TextView) {
@@ -193,9 +198,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         if (channel == null) return ""
         val lastMsgCreatedAt = channel.lastMessage?.createdAt
         return if (lastMsgCreatedAt != null && lastMsgCreatedAt != 0L)
-            DateTimeUtil.getDateTimeStringCheckToday(itemView.context, lastMsgCreatedAt)
+            DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt)
         else
-            DateTimeUtil.getDateTimeStringCheckToday(itemView.context, channel.createdAt / 1000)
+            DateTimeUtil.getDateTimeStringCheckToday(context, channel.createdAt / 1000)
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {

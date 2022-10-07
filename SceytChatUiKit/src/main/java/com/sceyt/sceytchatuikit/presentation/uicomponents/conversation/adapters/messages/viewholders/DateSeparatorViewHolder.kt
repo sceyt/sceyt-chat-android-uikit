@@ -15,7 +15,7 @@ import java.util.*
 
 class DateSeparatorViewHolder(
         private val binding: SceytItemMessageDateSeparatorBinding
-) : BaseMsgViewHolder(binding.root) {
+) : BaseMsgViewHolder(view = binding.root) {
 
     init {
         binding.setMessageItemStyle()
@@ -27,9 +27,9 @@ class DateSeparatorViewHolder(
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = when {
-                DateUtils.isToday(createdAt) -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.today(itemView.context))
-                createdAt.isThisYear() -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.thisYear(itemView.context))
-                else -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.olderThisYear(itemView.context))
+                DateUtils.isToday(createdAt) -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.today(context))
+                createdAt.isThisYear() -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.thisYear(context))
+                else -> getDateText(createdAt, MessagesStyle.dateSeparatorDateFormat.olderThisYear(context))
             }
             binding.messageDay.text = dateText
         }
@@ -48,12 +48,12 @@ class DateSeparatorViewHolder(
     }
 
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
-        with(root.context) {
+        with(context) {
             messageDay.apply {
                 background = getCompatDrawable(MessagesStyle.dateSeparatorItemBackground)
                 setTextColor(getCompatColor(MessagesStyle.dateSeparatorItemTextColor))
                 val dateTypeface = if (MessagesStyle.dateSeparatorTextFont != -1)
-                    ResourcesCompat.getFont(context, MessagesStyle.dateSeparatorTextFont) else typeface
+                    ResourcesCompat.getFont(this@with, MessagesStyle.dateSeparatorTextFont) else typeface
                 setTypeface(dateTypeface, MessagesStyle.dateSeparatorTextStyle)
             }
         }
