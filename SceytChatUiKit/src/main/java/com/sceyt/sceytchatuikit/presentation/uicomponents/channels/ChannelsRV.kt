@@ -142,6 +142,8 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         sortAndUpdate(sortChannelsBy, data)
     }
 
+    fun getViewHolderFactory() = viewHolderFactory
+
     private fun sortAndUpdate(sortChannelsBy: SceytUIKitConfig.ChannelSortType, data: List<ChannelListItem>) {
         val hasLoading = data.findLast { it is ChannelListItem.LoadingMoreItem } != null
         val sortedList = ArrayList(data.filterIsInstance<ChannelListItem.ChannelItem>().map { it.channel })

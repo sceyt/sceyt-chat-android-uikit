@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.extensions.isLink
@@ -18,9 +19,10 @@ open class MessageViewHolderFactory(context: Context) {
     private val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
     private val viewPoolReactions = RecyclerView.RecycledViewPool()
     private val viewPoolFiles = RecyclerView.RecycledViewPool()
-    protected val layoutInflater = LayoutInflater.from(context)
+    protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((SceytMessage) -> Unit)? = null
+    private var userNameBuilder: ((User) -> String)? = null
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return when (viewType) {
@@ -41,44 +43,43 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncTextMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncTextMsgViewHolder(
             SceytItemIncTextMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, clickListeners, displayedListener)
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder)
     }
 
     open fun createOutTextMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutTextMsgViewHolder(
             SceytItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, clickListeners)
+            viewPoolReactions, clickListeners, userNameBuilder)
     }
 
     open fun createIncLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncLinkMsgViewHolder(
             SceytItemIncLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, linkPreview, clickListeners, displayedListener)
+            viewPoolReactions, linkPreview, clickListeners, displayedListener, userNameBuilder)
     }
 
     open fun createOutLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutLinkMsgViewHolder(
             SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, linkPreview, clickListeners)
+            viewPoolReactions, linkPreview, clickListeners, userNameBuilder)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncFilesMsgViewHolder(
             SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions,
-            viewPoolFiles, clickListeners, displayedListener)
+            viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutFilesMsgViewHolder(
             SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions,
-            viewPoolFiles, clickListeners)
+            viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder)
     }
 
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncDeletedMsgViewHolder(
-            SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false))
+            SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
+            userNameBuilder)
     }
 
     open fun createOutDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -127,6 +128,10 @@ open class MessageViewHolderFactory(context: Context) {
 
     fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
         displayedListener = listener
+    }
+
+    fun setUserNameBuilder(builder: (User) -> String) {
+        userNameBuilder = builder
     }
 
     protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners

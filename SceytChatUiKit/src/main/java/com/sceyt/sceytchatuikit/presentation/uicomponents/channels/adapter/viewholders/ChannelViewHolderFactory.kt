@@ -7,6 +7,7 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.asynclayoutinflater.view.AsyncLayoutInflater
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.sceytchatuikit.R
@@ -23,6 +24,7 @@ open class ChannelViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
     private val channelClickListenersImpl = ChannelClickListenersImpl()
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
+    private var userNameBuilder: ((User) -> String)? = null
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -44,7 +46,7 @@ open class ChannelViewHolderFactory(context: Context) {
                 it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
         }
-        return ChannelViewHolder(binding, channelClickListenersImpl, attachDetachListener)
+        return ChannelViewHolder(binding, channelClickListenersImpl, attachDetachListener, userNameBuilder)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -58,6 +60,10 @@ open class ChannelViewHolderFactory(context: Context) {
 
     fun setChannelAttachDetachListener(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
         attachDetachListener = listener
+    }
+
+    fun setUserNameBuilder(builder: (User) -> String) {
+        userNameBuilder = builder
     }
 
     protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners

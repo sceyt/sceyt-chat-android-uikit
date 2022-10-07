@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -19,7 +20,8 @@ class IncLinkMsgViewHolder(
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListenersImpl?,
         displayedListener: ((SceytMessage) -> Unit)?,
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener) {
+        senderNameBuilder: ((User) -> String)?,
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, senderNameBuilder) {
 
     init {
         binding.setMessageItemStyle()
@@ -74,7 +76,7 @@ class IncLinkMsgViewHolder(
     }
 
     private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {
-        with(root.context) {
+        with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
         }
     }

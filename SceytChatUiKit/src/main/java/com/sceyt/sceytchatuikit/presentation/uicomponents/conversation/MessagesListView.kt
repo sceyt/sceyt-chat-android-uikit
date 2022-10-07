@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
@@ -389,6 +390,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             it.setMessageListener(clickListeners)
         })
     }
+
+    fun setUserNameBuilder(builder: (User) -> String) {
+        messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
+    }
+
+    fun getMessagesRecyclerView() = messagesRV
 
     // Click listeners
     fun setMessageClickListener(listener: MessageClickListeners) {

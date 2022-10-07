@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncDeletedMessageBinding
@@ -8,8 +9,9 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class IncDeletedMsgViewHolder(
-        private val binding: SceytItemIncDeletedMessageBinding
-) : BaseMsgViewHolder(binding.root) {
+        private val binding: SceytItemIncDeletedMessageBinding,
+        senderNameBuilder: ((User) -> String)?
+) : BaseMsgViewHolder(binding.root, senderNameBuilder = senderNameBuilder) {
 
     init {
         binding.setMessageItemStyle()
@@ -32,7 +34,7 @@ class IncDeletedMsgViewHolder(
     }
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
-        with(root.context) {
+        with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
         }
     }

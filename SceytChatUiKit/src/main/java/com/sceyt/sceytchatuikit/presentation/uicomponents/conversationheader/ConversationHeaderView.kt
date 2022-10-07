@@ -18,10 +18,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
-import com.sceyt.sceytchatuikit.extensions.asActivity
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
-import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
@@ -30,6 +27,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.setLastActiveDateByTime
@@ -50,7 +48,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var isReplayInThread: Boolean = false
     private var updateTypingJob: Job? = null
     private var isGroup = false
-    private lateinit var typingTextBuilder: (SceytMember) -> String
+    private var typingTextBuilder: ((SceytMember) -> String)? = null
+    private var userNameBuilder: ((User) -> String)? = null
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -80,15 +79,6 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.layoutToolbar.setOnClickListener {
             clickListeners.onToolbarClick(it)
         }
-
-        typingTextBuilder = { member ->
-            if (isGroup)
-                buildString {
-                    append(member.getPresentableFirstName().take(10))
-                    append(" ${getString(R.string.sceyt_typing)}")
-                }
-            else getString(R.string.sceyt_typing)
-        }
     }
 
     private fun SceytConversationHeaderViewBinding.setUpStyle() {
@@ -104,7 +94,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
         } else
-            titleTextView.text = channel.channelSubject
+            titleTextView.text = if (isGroup) channel.channelSubject else {
+                val member = (channel as? SceytDirectChannel)?.peer ?: return
+                userNameBuilder?.invoke(member.user) ?: member.getPresentableName()
+            }
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage? = null, replayInThread: Boolean = false) {
@@ -134,7 +127,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.avatar.isVisible = !replayInThread
         if (!replayInThread) {
             val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-            avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second)
+            avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else AvatarStyle.userDefaultAvatar)
         }
     }
 
@@ -168,7 +161,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 updateTypingJob?.cancel()
             }
             typingUsers.size == 1 -> {
-                binding.tvTyping.text = typingTextBuilder(typingUsers.last())
+                binding.tvTyping.text = initTypingTitle(typingUsers.last())
                 updateTypingJob?.cancel()
             }
             else -> {
@@ -183,11 +176,21 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         updateTypingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
             while (true) {
                 typingUsers.toList().forEach {
-                    binding.tvTyping.text = typingTextBuilder(it)
+                    binding.tvTyping.text = initTypingTitle(it)
                     delay(2000)
                 }
             }
         }
+    }
+
+    private fun initTypingTitle(member: SceytMember): String {
+        return typingTextBuilder?.invoke(member) ?: if (isGroup)
+            buildString {
+                append(userNameBuilder?.invoke(member.user)
+                        ?: member.getPresentableFirstName().take(10))
+                append(" ${getString(R.string.sceyt_typing)}")
+            }
+        else getString(R.string.sceyt_typing)
     }
 
     private fun setTyping(data: ChannelTypingEventData) {
@@ -203,7 +206,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             updateTypingText()
         } else
-            binding.tvTyping.text = typingTextBuilder.invoke(data.member)
+            binding.tvTyping.text = initTypingTitle(data.member)
 
         setTypingState(typing)
     }
@@ -276,6 +279,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
         typingTextBuilder = builder
+    }
+
+    fun setUserNameBuilder(builder: (User) -> String) {
+        userNameBuilder = builder
     }
 
     fun invalidateUi() {

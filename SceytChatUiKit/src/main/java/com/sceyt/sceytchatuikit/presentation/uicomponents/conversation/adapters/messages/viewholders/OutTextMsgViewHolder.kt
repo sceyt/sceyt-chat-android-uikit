@@ -5,11 +5,12 @@ import androidx.core.text.HtmlCompat
 import androidx.core.text.HtmlCompat.fromHtml
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutTextMessageBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutTextMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.OUT_DEFAULT_SPACE
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
@@ -17,8 +18,9 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.OUT_EDITED_SPACE
 class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl?
-) : BaseMsgViewHolder(binding.root, messageListeners) {
+        private val messageListeners: MessageClickListenersImpl?,
+        senderNameBuilder: ((User) -> String)?
+) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
 
     init {
         binding.setMessageItemStyle()
@@ -57,7 +59,7 @@ class OutTextMsgViewHolder(
     }
 
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
-        with(root.context) {
+        with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
         }
     }

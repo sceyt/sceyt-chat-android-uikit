@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -27,9 +28,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessagePopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bind
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.Dispatchers
@@ -55,45 +58,54 @@ open class ConversationActivity : AppCompatActivity() {
 
         getDataFromIntent()
 
-        with(binding.headerView) {
-            setCustomUiElementsListener(object : HeaderUIElementsListenerImpl(this) {
-                override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
-                    super.onSubject(subjectTextView, channel, replayMessage, replayInThread)
-                    println("onSubject")
-                }
-            })
-
-            setCustomEventListener(object : HeaderEventsListenerImpl(this) {
-                override fun onTypingEvent(data: ChannelTypingEventData) {
-                    super.onTypingEvent(data)
-                    println("typing")
-                }
-            })
-        }
+        binding.headerView.initHeaderView()
+        binding.messagesListView.initConversationView()
+        binding.messageInputView.initMessageInputView()
 
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
         viewModel.bind(binding.messageInputView, replayMessage, lifecycleOwner = this)
         viewModel.bind(binding.headerView, replayMessage, lifecycleOwner = this)
 
 
+        lifecycleScope.launch(Dispatchers.IO) {
+            ConnectionObserver.onChangedConnectStatusFlow.collect {
+                if (it.first == Types.ConnectState.StateConnected)
+                    viewModel.sendPendingMessages()
+            }
+        }
+    }
+
+    private fun ConversationHeaderView.initHeaderView() {
+        //Example
+        setCustomUiElementsListener(object : HeaderUIElementsListenerImpl(this) {
+            override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
+                super.onSubject(subjectTextView, channel, replayMessage, replayInThread)
+                println("onSubject")
+            }
+        })
+
+        setCustomEventListener(object : HeaderEventsListenerImpl(this) {
+            override fun onTypingEvent(data: ChannelTypingEventData) {
+                super.onTypingEvent(data)
+                println("typing")
+            }
+        })
+
+        setCustomClickListener(object : HeaderClickListenersImpl(this) {
+            override fun onAvatarClick(view: View) {
+                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
+            }
+        })
+    }
+
+    private fun MessagesListView.initConversationView() {
         //This listener will not work if you have added custom click listener
-        binding.messagesListView.setMessageClickListener(MessageClickListeners.ReplayCountClickListener { _, item ->
-            newInstance(this, channel, item.message)
+        setMessageClickListener(MessageClickListeners.ReplayCountClickListener { _, item ->
+            newInstance(this@ConversationActivity, channel, item.message)
         })
 
-        binding.messagesListView.setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
-            override fun onReactMessageClick(view: View, message: SceytMessage) {
-                super.onReactMessageClick(view, message)
-                println("React")
-            }
 
-            override fun onReplayMessageInThreadClick(message: SceytMessage) {
-                super.onReplayMessageInThreadClick(message)
-                newInstance(this@ConversationActivity, channel, message)
-            }
-        })
-
-        binding.messagesListView.setCustomMessageClickListener(object : MessageClickListenersImpl(binding.messagesListView) {
+        setCustomMessageClickListener(object : MessageClickListenersImpl(binding.messagesListView) {
             override fun onAttachmentClick(view: View, item: FileListItem) {
                 super.onAttachmentClick(view, item)
                 println("AttachmentClick")
@@ -105,25 +117,27 @@ open class ConversationActivity : AppCompatActivity() {
             }
         })
 
-        binding.messageInputView.setCustomClickListener(object : MessageInputClickListenersImpl(binding.messageInputView) {
+        setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
+            override fun onReactMessageClick(view: View, message: SceytMessage) {
+                super.onReactMessageClick(view, message)
+                println("React")
+            }
+
+            override fun onReplayMessageInThreadClick(message: SceytMessage) {
+                super.onReplayMessageInThreadClick(message)
+                newInstance(this@ConversationActivity, channel, message)
+            }
+        })
+
+    }
+
+    private fun MessageInputView.initMessageInputView() {
+        setCustomClickListener(object : MessageInputClickListenersImpl(this) {
             override fun onSendMsgClick(view: View) {
                 super.onSendMsgClick(view)
                 println("send")
             }
         })
-
-        binding.headerView.setCustomClickListener(object : HeaderClickListenersImpl(binding.headerView) {
-            override fun onAvatarClick(view: View) {
-                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
-            }
-        })
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            ConnectionObserver.onChangedConnectStatusFlow.collect {
-                if (it.first == Types.ConnectState.StateConnected)
-                    viewModel.sendPendingMessages()
-            }
-        }
     }
 
     private fun getDataFromIntent() {
