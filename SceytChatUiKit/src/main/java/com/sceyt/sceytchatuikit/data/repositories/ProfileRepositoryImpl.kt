@@ -86,7 +86,7 @@ class ProfileRepositoryImpl : ProfileRepository {
     }
 
     override suspend fun uploadAvatar(avatarUri: String): SceytResponse<String> {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             ChatClient.getClient().upload(avatarUri, object : ProgressCallback {
                 override fun onResult(pct: Float) {
                 }
