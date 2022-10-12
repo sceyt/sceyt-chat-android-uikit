@@ -9,16 +9,16 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.databinding.SceytSearchViewBinding
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.hideSoftInput
+import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
-import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.databinding.SceytSearchViewBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.hideSoftInput
-import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.sceytconfigs.SearchInputViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import org.koin.core.component.inject
@@ -51,7 +51,6 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var disableDebouncedSearchDuringTyping = false
 
     init {
-        isSaveFromParentEnabled = false
         binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
         if (!isInEditMode)
             BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
