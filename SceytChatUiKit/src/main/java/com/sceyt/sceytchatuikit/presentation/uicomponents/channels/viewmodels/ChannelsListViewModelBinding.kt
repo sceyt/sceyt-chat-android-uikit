@@ -15,7 +15,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInpu
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
