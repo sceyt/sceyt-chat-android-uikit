@@ -32,7 +32,7 @@ class UsersRepositoryImpl : UsersRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -51,7 +51,7 @@ class UsersRepositoryImpl : UsersRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -69,7 +69,7 @@ class UsersRepositoryImpl : UsersRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }

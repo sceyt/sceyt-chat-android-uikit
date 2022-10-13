@@ -52,12 +52,12 @@ open class BaseViewModel : ViewModel() {
             _pageStateLiveData.postValue(PageState.StateLoading())
     }
 
-    fun notifyPageStateWithResponse(response: SceytResponse<*>,
+    fun <T> notifyPageStateWithResponse(response: SceytResponse<T>,
                                     wasLoadingMore: Boolean = false,
                                     isEmpty: Boolean = false,
                                     searchQuery: String? = null) {
         val state = when {
-            response is SceytResponse.Error -> PageState.StateError(response.message, searchQuery, wasLoadingMore)
+            response is SceytResponse.Error -> PageState.StateError(response, searchQuery, wasLoadingMore)
             isEmpty -> PageState.StateEmpty(searchQuery, wasLoadingMore)
             wasLoadingMore -> PageState.StateLoadingMore(false)
             else -> PageState.StateLoading(false)

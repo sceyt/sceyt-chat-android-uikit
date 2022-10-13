@@ -21,7 +21,7 @@ class RoleViewModel : BaseViewModel() {
                 if (status == null || status.isOk) {
                     _rolesLiveData.postValue(roles.map { RoleItem(it) })
                 } else
-                    notifyPageStateWithResponse(SceytResponse.Error<List<Role>>(status.error.message))
+                    notifyPageStateWithResponse(SceytResponse.Error<List<Role>>(status.error))
             }
         }
     }
