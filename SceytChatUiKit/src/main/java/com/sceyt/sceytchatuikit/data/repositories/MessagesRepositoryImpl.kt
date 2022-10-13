@@ -45,7 +45,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                     if (replayInThread && lastMessageId == 0L)
                         continuation.resume(SceytResponse.Success(arrayListOf()))
                     else
-                        continuation.resume(SceytResponse.Error(e?.message))
+                        continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -65,7 +65,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -80,7 +80,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message, data = tmpMessage?.toSceytUiMessage()))
+                    continuation.resume(SceytResponse.Error(error, data = tmpMessage?.toSceytUiMessage()))
                 }
             })
             tmpMessageCb.invoke(tmpMessage)
@@ -95,7 +95,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(ex: SceytException?) {
-                    continuation.resume(SceytResponse.Error(ex?.message))
+                    continuation.resume(SceytResponse.Error(ex))
                 }
             })
         }
@@ -109,7 +109,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(ex: SceytException?) {
-                    continuation.resume(SceytResponse.Error(ex?.message))
+                    continuation.resume(SceytResponse.Error(ex))
                 }
             })
         }
@@ -123,7 +123,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message))
+                    continuation.resume(SceytResponse.Error(error))
                 }
             })
         }
@@ -137,7 +137,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message))
+                    continuation.resume(SceytResponse.Error(error))
                 }
             })
         }
@@ -151,7 +151,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message))
+                    continuation.resume(SceytResponse.Error(error))
                 }
             })
         }

@@ -132,7 +132,7 @@ class ProfileFragment : Fragment() {
         }
 
         icEditPhoto.setOnClickListener {
-            EditAvatarTypeDialog(requireContext()) {
+            EditAvatarTypeDialog(requireContext(), avatarUrl.isNullOrBlank().not()) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
                         chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->

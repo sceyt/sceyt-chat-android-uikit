@@ -116,7 +116,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
         }
 
         icEditPhoto.setOnClickListener {
-            EditAvatarTypeDialog(this@ConversationInfoActivity) {
+            EditAvatarTypeDialog(this@ConversationInfoActivity, avatarUrl.isNullOrBlank().not()) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
                         chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->

@@ -10,14 +10,16 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.ui.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateGroupViewModel
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.hideSoftInput
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateGroupViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 
@@ -63,7 +65,7 @@ class CreateGroupActivity : AppCompatActivity() {
         binding.icBack.setOnClickListener { onBackPressed() }
 
         icEditPhoto.setOnClickListener {
-            EditAvatarTypeDialog(this@CreateGroupActivity) {
+            EditAvatarTypeDialog(this@CreateGroupActivity, createChannelData.avatarUrl.isNullOrBlank().not()) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
                         chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->

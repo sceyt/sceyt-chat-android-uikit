@@ -42,3 +42,7 @@ fun String?.isLink(): Boolean {
 
     return m.find()
 }
+
+fun CharSequence?.isNotNullOrBlank(): Boolean {
+    return isNullOrBlank().not()
+}

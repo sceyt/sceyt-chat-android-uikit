@@ -2,7 +2,9 @@ package com.sceyt.sceytchatuikit.data.repositories
 
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.*
+import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.channel.ChannelListQuery
+import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
 import com.sceyt.chat.models.user.BlockUserRequest
@@ -10,9 +12,10 @@ import com.sceyt.chat.models.user.UnBlockUserRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.operators.*
 import com.sceyt.chat.sceyt_callbacks.*
-import com.sceyt.sceytchatuikit.data.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.toSceytMember
+import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -45,7 +48,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -70,7 +73,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -88,7 +91,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -102,7 +105,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -110,11 +113,13 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel> {
         if (channelData.avatarUrl.isNullOrBlank().not() && channelData.avatarUploaded.not()) {
-            val uploadResult = uploadAvatar(channelData.avatarUrl!!)
-            if (uploadResult is SceytResponse.Success) {
-                channelData.avatarUrl = uploadResult.data
-                channelData.avatarUploaded = true
-            } else return SceytResponse.Error(uploadResult.message)
+            when (val uploadResult = uploadAvatar(channelData.avatarUrl!!)) {
+                is SceytResponse.Success -> {
+                    channelData.avatarUrl = uploadResult.data
+                    channelData.avatarUploaded = true
+                }
+                is SceytResponse.Error -> return SceytResponse.Error(uploadResult.exception)
+            }
         }
 
         return suspendCancellableCoroutine { continuation ->
@@ -126,10 +131,10 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException) {
-                    continuation.resume(SceytResponse.Error(e.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             }) ?: run {
-                continuation.resume(SceytResponse.Error("Invalid channel type"))
+                continuation.resume(SceytResponse.Error(SceytException(0, "Invalid channel type")))
             }
         }
     }
@@ -162,7 +167,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -176,7 +181,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -190,7 +195,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -204,7 +209,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -218,7 +223,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
 
             })
@@ -233,7 +238,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -247,7 +252,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -261,7 +266,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -275,7 +280,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -295,7 +300,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -309,7 +314,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             }
 
@@ -322,7 +327,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     PublicChannelOperator.build(channelId).update(data.channelUrl, data.newSubject, data.metadata, data.label,
                         data.avatarUrl ?: "", channelCallback)
                 }
-                else -> continuation.resume(SceytResponse.Error("This is Direct channel"))
+                else -> continuation.resume(SceytResponse.Error(SceytException(0, "This is Direct channel")))
             }
         }
     }
@@ -339,7 +344,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     }
 
                     override fun onError(e: SceytException?) {
-                        continuation.resume(SceytResponse.Error(e?.message))
+                        continuation.resume(SceytResponse.Error(e))
                     }
                 })
         }
@@ -353,7 +358,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -367,7 +372,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -381,7 +386,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -395,7 +400,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -409,7 +414,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -423,7 +428,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -437,7 +442,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -451,7 +456,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error?.message))
+                    continuation.resume(SceytResponse.Error(error))
                 }
             })
         }

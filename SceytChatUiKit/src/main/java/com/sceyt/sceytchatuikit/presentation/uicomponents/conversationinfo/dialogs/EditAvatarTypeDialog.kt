@@ -4,33 +4,37 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytDialogEditAvatarTypeBinding
 
 class EditAvatarTypeDialog(
         context: Context,
+        private val enableDelete: Boolean,
         private val chooseListener: ((EditAvatarType) -> Unit)? = null,
 ) : Dialog(context, R.style.SceytDialogNoTitle) {
-    private lateinit var mBinding: SceytDialogEditAvatarTypeBinding
+    private lateinit var binding: SceytDialogEditAvatarTypeBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = SceytDialogEditAvatarTypeBinding.inflate(LayoutInflater.from(context))
-        setContentView(mBinding.root)
+        binding = SceytDialogEditAvatarTypeBinding.inflate(LayoutInflater.from(context))
+        setContentView(binding.root)
         initView()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
     private fun initView() {
-        mBinding.tvTakePhoto.setOnClickListener {
+        binding.tvDelete.isVisible = enableDelete
+
+        binding.tvTakePhoto.setOnClickListener {
             chooseListener?.invoke(EditAvatarType.TakePhoto)
             dismiss()
         }
-        mBinding.tvUploadFromGallery.setOnClickListener {
+        binding.tvUploadFromGallery.setOnClickListener {
             chooseListener?.invoke(EditAvatarType.ChooseFromGallery)
             dismiss()
         }
-        mBinding.tvDelete.setOnClickListener {
+        binding.tvDelete.setOnClickListener {
             chooseListener?.invoke(EditAvatarType.Delete)
             dismiss()
         }

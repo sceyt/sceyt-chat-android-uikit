@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.data.models
 
-sealed class SceytResponse<T>(val data: T? = null, val message: String? = null) {
+import com.sceyt.chat.models.SceytException
+
+sealed class SceytResponse<T>(val data: T? = null, val message: String? = null, val code: Int? = null) {
     class Success<T>(data: T?) : SceytResponse<T>(data)
-    class Error<T>(message: String? = null, data: T? = null) : SceytResponse<T>(data, message)
+    class Error<T>(val exception: SceytException? = null, data: T? = null) : SceytResponse<T>(data, exception?.message, exception?.code)
 }

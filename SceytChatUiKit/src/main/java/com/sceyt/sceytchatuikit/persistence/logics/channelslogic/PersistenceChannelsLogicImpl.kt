@@ -326,11 +326,13 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
         var newUrl = data.avatarUrl
         if (data.avatarEdited && data.avatarUrl != null) {
-            val uploadResult = channelsRepository.uploadAvatar(data.avatarUrl)
-            if (uploadResult is SceytResponse.Success) {
-                newUrl = uploadResult.data
-            } else
-                return SceytResponse.Error(uploadResult.message)
+            when (val uploadResult = channelsRepository.uploadAvatar(data.avatarUrl)) {
+                is SceytResponse.Success -> {
+                    newUrl = uploadResult.data
+                }
+                is SceytResponse.Error -> return SceytResponse.Error(uploadResult.exception)
+
+            }
         }
         val response = channelsRepository.editChannel(channelId, data)
         if (response is SceytResponse.Success)

@@ -21,7 +21,7 @@ class ProfileRepositoryImpl : ProfileRepository {
             ClientWrapper.currentUser?.let {
                 return@let continuation.resume(SceytResponse.Success(it))
             } ?: run {
-                return@run continuation.resume(SceytResponse.Error("User not found"))
+                return@run continuation.resume(SceytResponse.Error(SceytException(0, "User not found")))
             }
         }
     }
@@ -41,7 +41,7 @@ class ProfileRepositoryImpl : ProfileRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -55,7 +55,7 @@ class ProfileRepositoryImpl : ProfileRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -69,7 +69,7 @@ class ProfileRepositoryImpl : ProfileRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }
@@ -99,7 +99,7 @@ class ProfileRepositoryImpl : ProfileRepository {
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e?.message))
+                    continuation.resume(SceytResponse.Error(e))
                 }
             })
         }

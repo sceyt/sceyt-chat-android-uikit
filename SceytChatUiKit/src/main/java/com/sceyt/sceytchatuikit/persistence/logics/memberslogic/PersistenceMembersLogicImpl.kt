@@ -4,6 +4,7 @@ import android.util.Log
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -33,16 +34,16 @@ internal class PersistenceMembersLogicImpl(
         if (data.channel == null || data.members == null) return
         val chatId = data.channel.id
         when (data.eventType) {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Role, com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Added -> {
+            ChannelMembersEventEnum.Role, ChannelMembersEventEnum.Added -> {
                 usersDao.insertUsers(data.members.map { it.toUserEntity() })
                 channelDao.insertUserChatLinks(data.members.map {
                     UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Kicked, com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Blocked -> {
+            ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
             }
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.UnBlocked -> {}
+            ChannelMembersEventEnum.UnBlocked -> {}
         }
     }
 
