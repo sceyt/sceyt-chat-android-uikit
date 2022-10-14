@@ -72,6 +72,8 @@ class ChannelsFragment : Fragment() {
     }
 
     private fun initViews() {
+        setupConnectionStatus(ConnectionObserver.connectionState)
+
         lifecycleScope.launch {
             ConnectionObserver.onChangedConnectStatusFlow.collect {
                 setupConnectionStatus(it.first)
@@ -111,6 +113,7 @@ class ChannelsFragment : Fragment() {
                            private val listener: ChannelClickListeners.ClickListeners) : BaseChannelViewHolder(binding.root) {
 
         override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
+            super.bind(item, diff)
 
             binding.root.setOnClickListener {
                 listener.onChannelClick(item as ChannelListItem.ChannelItem)
@@ -126,8 +129,8 @@ class ChannelsFragment : Fragment() {
         val title = if (!NetworkMonitor.isOnline())
             getString(R.string.waiting_for_network_title)
         else when (status) {
-            Types.ConnectState.StateFailed -> getString(R.string.waiting_for_network_title)
-            Types.ConnectState.StateDisconnect -> getString(R.string.waiting_for_network_title)
+            Types.ConnectState.StateFailed -> getString(R.string.connecting_title)
+            Types.ConnectState.StateDisconnect -> getString(R.string.connecting_title)
             Types.ConnectState.StateReconnecting,
             Types.ConnectState.StateConnecting -> getString(R.string.connecting_title)
             Types.ConnectState.StateConnected -> getString(R.string.channels)
