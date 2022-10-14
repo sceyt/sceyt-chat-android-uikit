@@ -3,12 +3,13 @@ package com.sceyt.sceytchatuikit.presentation.root
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseViewModel : ViewModel() {
-    private val _pageStateLiveData = MutableLiveData<PageState>()
+    private val _pageStateLiveData = LiveEvent<PageState>()
     val pageStateLiveData: LiveData<PageState> = _pageStateLiveData
     var hasNextDb: Boolean = false
     var hasNext: Boolean = false
@@ -53,9 +54,9 @@ open class BaseViewModel : ViewModel() {
     }
 
     fun <T> notifyPageStateWithResponse(response: SceytResponse<T>,
-                                    wasLoadingMore: Boolean = false,
-                                    isEmpty: Boolean = false,
-                                    searchQuery: String? = null) {
+                                        wasLoadingMore: Boolean = false,
+                                        isEmpty: Boolean = false,
+                                        searchQuery: String? = null) {
         val state = when {
             response is SceytResponse.Error -> PageState.StateError(response, searchQuery, wasLoadingMore)
             isEmpty -> PageState.StateEmpty(searchQuery, wasLoadingMore)

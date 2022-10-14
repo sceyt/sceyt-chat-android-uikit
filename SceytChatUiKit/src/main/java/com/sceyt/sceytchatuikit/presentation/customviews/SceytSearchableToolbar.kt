@@ -93,6 +93,11 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
 
     fun getQuery() = binding.input.text.toString()
 
+    fun setTitle(title: String) {
+        toolbarTitle = title.trim()
+        binding.tvTitle.text = title.trim()
+    }
+
     fun setQueryChangeListener(listener: (String) -> Unit) {
         binding.input.addTextChangedListener {
             debounceHelper.submit {

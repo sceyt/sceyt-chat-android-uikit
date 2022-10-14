@@ -7,6 +7,9 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +19,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import org.koin.core.component.get
 import org.koin.core.component.inject
 
 object SceytKitClient : SceytKoinComponent {
@@ -80,6 +84,12 @@ object SceytKitClient : SceytKoinComponent {
     private fun getChatClient(): ChatClient? = ChatClient.getClient()
 
     fun getConnectionService() = connectionStateService
+
+    fun getChannelsMiddleWare() = get<PersistenceChanelMiddleWare>()
+
+    fun getMessagesMiddleWare() = get<PersistenceMessagesMiddleWare>()
+
+    fun getMembersMiddleWare() = get<PersistenceMembersMiddleWare>()
 
     fun clearData() {
         database.clearAllTables()

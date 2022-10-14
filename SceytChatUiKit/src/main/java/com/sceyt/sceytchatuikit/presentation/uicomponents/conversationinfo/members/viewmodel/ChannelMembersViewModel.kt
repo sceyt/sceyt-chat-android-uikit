@@ -3,18 +3,20 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.memb
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare) : BaseViewModel() {
+class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersMiddleWare) : BaseViewModel() {
 
     private val _membersLiveData = MutableLiveData<PaginationResponse<MemberItem>>()
     val membersLiveData: LiveData<PaginationResponse<MemberItem>> = _membersLiveData
@@ -22,30 +24,30 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
     private val _changeOwnerLiveData = MutableLiveData<String>()
     val changeOwnerLiveData: LiveData<String> = _changeOwnerLiveData
 
-    private val _channelMemberEventLiveData = MutableLiveData<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData>()
-    val channelMemberEventLiveData: LiveData<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData> = _channelMemberEventLiveData
+    private val _channelMemberEventLiveData = MutableLiveData<ChannelMembersEventData>()
+    val channelMemberEventLiveData: LiveData<ChannelMembersEventData> = _channelMemberEventLiveData
 
-    private val _channelOwnerChangedEventLiveData = MutableLiveData<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData>()
-    val channelOwnerChangedEventLiveData: LiveData<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
+    private val _channelOwnerChangedEventLiveData = MutableLiveData<ChannelOwnerChangedEventData>()
+    val channelOwnerChangedEventLiveData: LiveData<ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
 
-    private val _channelEventEventLiveData = MutableLiveData<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>()
-    val channelEventEventLiveData: LiveData<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData> = _channelEventEventLiveData
+    private val _channelEventEventLiveData = MutableLiveData<ChannelEventData>()
+    val channelEventEventLiveData: LiveData<ChannelEventData> = _channelEventEventLiveData
 
     init {
         viewModelScope.launch {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelMembersEventFlow.collect {
+            ChannelEventsObserver.onChannelMembersEventFlow.collect {
                 _channelMemberEventLiveData.postValue(it)
             }
         }
 
         viewModelScope.launch {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect {
+            ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect {
                 _channelOwnerChangedEventLiveData.postValue(it)
             }
         }
 
         viewModelScope.launch {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelEventFlow.collect {
+            ChannelEventsObserver.onChannelEventFlow.collect {
                 _channelEventEventLiveData.postValue(it)
             }
         }
@@ -118,10 +120,10 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
 
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
-                _channelMemberEventLiveData.postValue(com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData(
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
                     channel = groupChannel,
                     members = groupChannel.members,
-                    eventType = if (block) com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Blocked else com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Kicked
+                    eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
                 ))
             }
 
@@ -134,10 +136,10 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
             val response = membersMiddleWare.changeChannelMemberRole(channelId, member)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
-                _channelMemberEventLiveData.postValue(com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData(
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
                     channel = groupChannel,
                     members = groupChannel.members,
-                    eventType = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Role
+                    eventType = ChannelMembersEventEnum.Role
                 ))
             }
 
@@ -153,10 +155,10 @@ class ChannelMembersViewModel(private val membersMiddleWare: com.sceyt.sceytchat
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 if (groupChannel.members.isNullOrEmpty()) return@launch
 
-                _channelMemberEventLiveData.postValue(com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData(
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
                     channel = groupChannel,
                     members = groupChannel.members,
-                    eventType = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum.Added
+                    eventType = ChannelMembersEventEnum.Added
                 ))
             }
 

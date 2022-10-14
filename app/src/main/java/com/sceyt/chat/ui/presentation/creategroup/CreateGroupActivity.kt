@@ -19,13 +19,13 @@ import com.sceyt.sceytchatuikit.extensions.hideSoftInput
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateGroupViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateChatViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 
 class CreateGroupActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCreateGroupBinding
-    private val viewModel: CreateGroupViewModel by viewModels()
+    private val viewModel: CreateChatViewModel by viewModels()
     private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
     private val createChannelData by lazy { CreateChannelData() }
 
@@ -43,7 +43,7 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() {
-        viewModel.createChannelLiveData.observe(this) {
+        viewModel.createChatLiveData.observe(this) {
             ConversationActivity.newInstance(this, it)
 
             val intent = Intent()
@@ -101,7 +101,7 @@ class CreateGroupActivity : AppCompatActivity() {
                 } ?: arrayListOf()
             }
 
-            viewModel.createChannel(createChannelData)
+            viewModel.createChat(createChannelData)
             hideSoftInput()
         }
     }
