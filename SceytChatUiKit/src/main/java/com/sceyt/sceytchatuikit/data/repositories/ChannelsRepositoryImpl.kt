@@ -54,6 +54,30 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>> {
+        return suspendCancellableCoroutine { continuation ->
+            val query = ChannelListQuery.Builder()
+                .limit(1)
+                .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
+                .query(url)
+                .build()
+
+            query.loadNext(object : ChannelsCallback {
+                override fun onResult(channels: MutableList<Channel>?) {
+                    if (channels.isNullOrEmpty())
+                        continuation.resume(SceytResponse.Success(emptyList()))
+                    else {
+                        continuation.resume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                    }
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.resume(SceytResponse.Error(e))
+                }
+            })
+        }
+    }
+
     override suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
             val channelListQuery = ChannelListQuery.Builder()

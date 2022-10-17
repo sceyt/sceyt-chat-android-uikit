@@ -72,6 +72,7 @@ class IncTextMsgViewHolder(
     private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
         }
     }
 }
