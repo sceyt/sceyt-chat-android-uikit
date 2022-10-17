@@ -48,6 +48,7 @@ class AddMembersActivity : AppCompatActivity() {
         }
 
         viewModel.loadMoreChannelsLiveData.observe(this) {
+            initSelectedItems(it)
             usersAdapter.addNewItems(it)
         }
     }

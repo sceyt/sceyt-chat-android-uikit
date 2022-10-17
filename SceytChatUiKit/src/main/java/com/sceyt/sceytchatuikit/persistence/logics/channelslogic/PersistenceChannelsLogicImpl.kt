@@ -323,6 +323,10 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
+    override suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>> {
+        return channelsRepository.getChannelFromServerByUrl(url)
+    }
+
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
         var newUrl = data.avatarUrl
         if (data.avatarEdited && data.avatarUrl != null) {

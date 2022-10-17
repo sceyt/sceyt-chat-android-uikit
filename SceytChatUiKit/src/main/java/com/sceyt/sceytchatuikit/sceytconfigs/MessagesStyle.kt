@@ -19,6 +19,9 @@ object MessagesStyle {
     @ColorRes
     var outBubbleColor: Int = R.color.sceyt_color_bg_out_message
 
+    @ColorRes
+    var senderNameTextColor: Int = R.color.sceyt_color_accent
+
     @DrawableRes
     var dateSeparatorItemBackground = R.drawable.sceyt_bg_message_day
 
@@ -47,6 +50,7 @@ object MessagesStyle {
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
+        senderNameTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageSenderNameTextColor, senderNameTextColor)
         dateSeparatorItemBackground = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackground, dateSeparatorItemBackground)
         dateSeparatorItemTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor, dateSeparatorItemTextColor)
         sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameMessageSenderDistance, sameSenderMsgDistance)

@@ -95,6 +95,10 @@ open class ConversationActivity : AppCompatActivity() {
             override fun onAvatarClick(view: View) {
                 CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
             }
+
+            override fun onToolbarClick(view: View) {
+                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
+            }
         })
     }
 

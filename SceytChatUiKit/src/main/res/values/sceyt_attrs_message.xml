@@ -5,6 +5,8 @@
         <attr name="sceytUiMessageIncBubbleColor" format="reference" />
         <attr name="sceytUiMessageOutBubbleColor" format="reference" />
 
+        <attr name="sceytUiMessageSenderNameTextColor" format="reference" />
+
         <!--Date separator item-->
         <attr name="sceytUiDateSeparatorItemTextColor" format="reference" />
         <attr name="sceytUiDateSeparatorItemBackground" format="reference" />
@@ -17,8 +19,6 @@
 
         <attr name="sceytUiSameMessageSenderDistance" format="dimension" />
         <attr name="sceytUiDifferentMessageSenderDistance" format="dimension" />
-
-
 
     </declare-styleable>
 </resources>

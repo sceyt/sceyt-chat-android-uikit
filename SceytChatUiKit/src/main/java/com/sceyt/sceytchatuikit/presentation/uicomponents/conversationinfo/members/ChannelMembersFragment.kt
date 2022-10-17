@@ -92,7 +92,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun initViews() {
         binding?.addMembers?.setOnClickListener {
-          /*  *//* addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
+            onAddMembersClick()
+            /*  *//* addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
              requireContext().asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)*/
         }
     }
@@ -245,12 +246,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
+    protected open fun onAddMembersClick() {
+        // Override and add your logic
+    }
+
     protected open fun changeOwnerClick(newOwnerId: String) {
         viewModel.changeOwner(channel.id, newOwnerId)
     }
 
     protected open fun changeRoleClick(member: SceytMember) {
-        //Override Do your functional
+        // Override and add your logic
     }
 
     protected open fun changeRoleClick(member: SceytMember, role: String) {

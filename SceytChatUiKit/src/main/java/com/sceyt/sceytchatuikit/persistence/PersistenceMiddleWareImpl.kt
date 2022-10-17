@@ -145,6 +145,10 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
         return channelLogic.getChannelFromServer(channelId)
     }
 
+    override suspend fun getChannelFromServerByUrl(uri: String): SceytResponse<List<SceytChannel>> {
+        return channelLogic.getChannelFromServerByUrl(uri)
+    }
+
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
         return channelLogic.editChannel(channelId, data)
     }

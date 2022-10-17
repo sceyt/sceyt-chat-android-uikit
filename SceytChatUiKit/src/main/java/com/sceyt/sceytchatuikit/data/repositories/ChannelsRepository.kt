@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
+    suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>>
     suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>>
     suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
