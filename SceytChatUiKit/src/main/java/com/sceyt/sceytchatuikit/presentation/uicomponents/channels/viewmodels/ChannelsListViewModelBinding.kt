@@ -43,7 +43,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 is PaginationResponse.ServerResponse -> {
                     if (it.data is SceytResponse.Success) {
                         it.data.data?.let { data ->
-                            channelsListView.updateChannelsWithServerData(data, it.offset, lifecycleOwner)
+                            channelsListView.updateChannelsWithServerData(data, it.offset, it.hasNext, lifecycleOwner)
                         }
                     } else if (it.data is SceytResponse.Error)
                         customToastSnackBar(channelsListView, it.data.message ?: "")
