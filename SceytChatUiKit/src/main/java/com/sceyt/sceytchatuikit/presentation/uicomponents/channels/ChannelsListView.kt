@@ -100,7 +100,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.setData(channels)
     }
 
-    internal fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, lifecycleOwner: LifecycleOwner) {
+    internal fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, hasNext: Boolean, lifecycleOwner: LifecycleOwner) {
         val channels = ArrayList(channelsRV.getData() as? ArrayList ?: arrayListOf())
         if (data.isEmpty() && offset == 0) {
             channelsRV.setData(data)
@@ -111,11 +111,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             channelsRV.setData(channels)
         } else {
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                var dataHasLoadingItem = false
                 // Update UI channels if exist, or add new channels
                 data.forEach { dataItem ->
-                    if (!dataHasLoadingItem)
-                        dataHasLoadingItem = dataItem is ChannelListItem.LoadingMoreItem
 
                     channels.findIndexed {
                         it is ChannelListItem.ChannelItem &&
@@ -128,7 +125,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                         channels.add(dataItem)
                     }
                 }
-                if (!dataHasLoadingItem)
+
+                if (!hasNext)
                     channels.remove(ChannelListItem.LoadingMoreItem)
 
                 withContext(Dispatchers.Main) {

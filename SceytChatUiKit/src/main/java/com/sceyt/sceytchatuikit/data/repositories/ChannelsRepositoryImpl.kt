@@ -4,6 +4,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
+import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListFilterQueryType
 import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
@@ -59,6 +60,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             val query = ChannelListQuery.Builder()
                 .limit(1)
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
+                .queryType(ChannelListFilterQueryType.ListQueryFilterEqual)
                 .query(url)
                 .build()
 
