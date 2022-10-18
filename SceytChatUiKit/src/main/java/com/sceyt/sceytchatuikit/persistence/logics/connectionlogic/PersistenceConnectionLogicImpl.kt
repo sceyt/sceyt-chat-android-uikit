@@ -5,9 +5,13 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.models.Status
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 
-internal class PersistenceConnectionLogicImpl(private var preference: SceytSharedPreference) : PersistenceConnectionLogic {
+internal class PersistenceConnectionLogicImpl(
+        private var preference: SceytSharedPreference,
+        private val usersDao: UserDao) : PersistenceConnectionLogic {
 
     init {
         if (ConnectionObserver.connectionState == Types.ConnectState.StateConnected)
@@ -17,7 +21,14 @@ internal class PersistenceConnectionLogicImpl(private var preference: SceytShare
     override fun onChangedConnectStatus(connectStatus: Types.ConnectState, status: Status?) {
         if (connectStatus == Types.ConnectState.StateConnected) {
             preference.setUserId(ClientWrapper.currentUser?.id)
+            insertCurrentUser()
             SceytPresenceChecker.startPresenceCheck()
         } else SceytPresenceChecker.stopPresenceCheck()
+    }
+
+    private fun insertCurrentUser() {
+        ClientWrapper.currentUser?.let {
+            usersDao.insertUser(it.toUserEntity())
+        }
     }
 }

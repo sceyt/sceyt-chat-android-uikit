@@ -31,18 +31,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext
 
-//todo need review from users view model
-class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
-        PersistenceMessagesMiddleWare, PersistenceChanelMiddleWare, PersistenceUsersMiddleWare, SceytKoinComponent {
+internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceChannelsLogic,
+                                         private val messagesLogic: PersistenceMessagesLogic,
+                                         private val membersLogic: PersistenceMembersLogic,
+                                         private val usersLogic: PersistenceUsersLogic,
+                                         private val connectionLogic: PersistenceConnectionLogic) :
+        CoroutineScope, PersistenceMembersMiddleWare, PersistenceMessagesMiddleWare,
+        PersistenceChanelMiddleWare, PersistenceUsersMiddleWare, SceytKoinComponent {
 
-    private val channelLogic: PersistenceChannelsLogic by inject()
-    private val messagesLogic: PersistenceMessagesLogic by inject()
-    private val membersLogic: PersistenceMembersLogic by inject()
-    private val usersLogic: PersistenceUsersLogic by inject()
-    private val connectionLogic: PersistenceConnectionLogic by inject()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -221,5 +219,9 @@ class PersistenceMiddleWareImpl : CoroutineScope, PersistenceMembersMiddleWare,
 
     override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
         return usersLogic.getSceytUsers(ids)
+    }
+
+    override suspend fun getCurrentUser(): User? {
+        return usersLogic.getCurrentUser()
     }
 }

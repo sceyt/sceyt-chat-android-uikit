@@ -49,7 +49,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().messageDao() }
     single { get<SceytDatabase>().reactionDao() }
 
-    single { PersistenceMiddleWareImpl() }
+    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get()) }
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMessagesMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
@@ -58,8 +58,8 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get()) }
-    factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get()) }
-    factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get()) }
+    factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get()) }
+    factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get()) }
 }
 
 internal val repositoryModule = module {

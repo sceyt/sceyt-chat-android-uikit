@@ -15,6 +15,7 @@ object SceytUIKitConfig {
     var enableDarkMode = true
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
     var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
+    var presenceStatusText = ""
 
     class ThemeConfig : BaseObservable() {
         @Bindable
