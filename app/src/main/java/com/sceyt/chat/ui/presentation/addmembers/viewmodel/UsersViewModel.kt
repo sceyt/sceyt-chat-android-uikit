@@ -5,20 +5,19 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.ui.presentation.addmembers.adapters.UserItem
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepositoryImpl
-import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.sceytchatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class UsersViewModel : BaseViewModel() {
+    //Todo
     private val usersRepository: UsersRepository = UsersRepositoryImpl()
-    private val middleWare: PersistenceChanelMiddleWare = PersistenceMiddleWareImpl()
 
     private val _usersLiveData = MutableLiveData<List<UserItem>>()
     val usersLiveData: LiveData<List<UserItem>> = _usersLiveData
@@ -59,7 +58,7 @@ class UsersViewModel : BaseViewModel() {
 
     fun createDirectChannel(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = middleWare.createDirectChannel(user)
+            val response = SceytKitClient.getChannelsMiddleWare().createDirectChannel(user)
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }

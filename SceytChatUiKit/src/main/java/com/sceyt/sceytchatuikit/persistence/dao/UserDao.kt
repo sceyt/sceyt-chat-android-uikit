@@ -12,10 +12,13 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertUsers(users: List<UserEntity>)
 
-    @Update
+    @Query("select * from users where user_id =:id")
+    fun getUserById(id: String): UserEntity?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateUser(user: UserEntity)
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateUsers(users: List<UserEntity>)
 
     @Query("update users set blocked =:blocked where user_id =:userId")

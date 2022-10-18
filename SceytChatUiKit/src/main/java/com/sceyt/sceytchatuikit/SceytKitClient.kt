@@ -7,10 +7,8 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
-import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.sceytchatuikit.persistence.SceytDatabase
+import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +17,6 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import org.koin.core.component.get
 import org.koin.core.component.inject
 
 object SceytKitClient : SceytKoinComponent {
@@ -27,6 +24,10 @@ object SceytKitClient : SceytKoinComponent {
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
     private val scope by lazy { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
+    private val persistenceChannelsMiddleWare by inject<PersistenceChanelMiddleWare>()
+    private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
+    private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
+    private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
         extraBufferCapacity = 1,
@@ -55,7 +56,7 @@ object SceytKitClient : SceytKoinComponent {
                 val connectStatus = it.first
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     listener?.invoke(true, null)
-                    ClientWrapper.setPresence(PresenceState.Online, "") {
+                    ClientWrapper.setPresence(PresenceState.Online, SceytUIKitConfig.presenceStatusText) {
 
                     }
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
@@ -85,11 +86,13 @@ object SceytKitClient : SceytKoinComponent {
 
     fun getConnectionService() = connectionStateService
 
-    fun getChannelsMiddleWare() = get<PersistenceChanelMiddleWare>()
+    fun getChannelsMiddleWare() = persistenceChannelsMiddleWare
 
-    fun getMessagesMiddleWare() = get<PersistenceMessagesMiddleWare>()
+    fun getMessagesMiddleWare() = persistenceMessagesMiddleWare
 
-    fun getMembersMiddleWare() = get<PersistenceMembersMiddleWare>()
+    fun getMembersMiddleWare() = persistenceMembersMiddleWare
+
+    fun getUserMiddleWare() = persistenceUsersMiddleWare
 
     fun clearData() {
         database.clearAllTables()
