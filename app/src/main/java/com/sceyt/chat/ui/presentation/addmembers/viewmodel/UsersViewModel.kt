@@ -11,7 +11,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepositoryImpl
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

@@ -22,7 +22,7 @@ import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
@@ -124,7 +124,7 @@ class ProfileFragment : Fragment() {
                 if (isEditedAvatar || isEditedDisplayName) {
                     binding.isSaveLoading = true
                     this@ProfileFragment.isSaveLoading = true
-                    viewModel.saveProfile(newDisplayName, avatarUrl, isEditedAvatar)
+                    viewModel.saveProfile(newDisplayName, null, avatarUrl, isEditedAvatar)
                 }
             }
             isEditMode = !isEditMode
@@ -204,8 +204,8 @@ class ProfileFragment : Fragment() {
     private fun setUpThemeSwitch() {
         binding.switchTheme.isChecked = requireContext().isNightTheme()
         binding.switchTheme.setOnClickListener {
-            val oldIsDark = SceytUIKitConfig.SceytUITheme.isDarkMode
-            SceytUIKitConfig.SceytUITheme.isDarkMode = !oldIsDark
+            val oldIsDark = SceytKitConfig.SceytUITheme.isDarkMode
+            SceytKitConfig.SceytUITheme.isDarkMode = !oldIsDark
             requireActivity().statusBarIconsColorWithBackground(!oldIsDark)
             if (oldIsDark) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)

@@ -13,7 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiMessage
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.MESSAGES_LOAD_SIZE
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 

@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -16,7 +15,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.delay
 
 internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -62,7 +61,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
             if (isFirstItemDisplaying())
                 scrollToPosition(0)
 
-            context.asAppCompatActivity().lifecycleScope.launchWhenResumed {
+            context.asComponentActivity().lifecycleScope.launchWhenResumed {
                 delay(500)
                 checkRichToEnd()
             }
@@ -134,17 +133,17 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         viewHolderFactory.setChannelListener(listener)
     }
 
-    fun sortBy(sortChannelsBy: SceytUIKitConfig.ChannelSortType) {
+    fun sortBy(sortChannelsBy: SceytKitConfig.ChannelSortType) {
         sortAndUpdate(sortChannelsBy, mAdapter.getData())
     }
 
-    fun sortByAndSetNewData(sortChannelsBy: SceytUIKitConfig.ChannelSortType, data: List<ChannelListItem>) {
+    fun sortByAndSetNewData(sortChannelsBy: SceytKitConfig.ChannelSortType, data: List<ChannelListItem>) {
         sortAndUpdate(sortChannelsBy, data)
     }
 
     fun getViewHolderFactory() = viewHolderFactory
 
-    private fun sortAndUpdate(sortChannelsBy: SceytUIKitConfig.ChannelSortType, data: List<ChannelListItem>) {
+    private fun sortAndUpdate(sortChannelsBy: SceytKitConfig.ChannelSortType, data: List<ChannelListItem>) {
         val hasLoading = data.findLast { it is ChannelListItem.LoadingMoreItem } != null
         val sortedList = ArrayList(data.filterIsInstance<ChannelListItem.ChannelItem>().map { it.channel })
             .sortedWith(ChannelsComparatorBy(sortChannelsBy))

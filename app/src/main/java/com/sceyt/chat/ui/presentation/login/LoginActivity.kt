@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import org.koin.android.ext.android.inject
 
 class LoginActivity : AppCompatActivity() {
@@ -30,7 +30,7 @@ class LoginActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
         if (preference.getUserName().isNullOrBlank().not()) {
             launchActivity<MainActivity>()
@@ -86,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
         (application as SceytUiKitApp).connectWithoutToken(userId)
             .observe(this) { success ->
                 if (success == true) {
-                    viewModel.saveProfile(displayName, null, false)
+                    viewModel.saveProfile(displayName, null, null, false)
                 } else {
                     binding.userNameTextField.error = getString(R.string.connection_failed)
                     binding.loading = false

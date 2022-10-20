@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

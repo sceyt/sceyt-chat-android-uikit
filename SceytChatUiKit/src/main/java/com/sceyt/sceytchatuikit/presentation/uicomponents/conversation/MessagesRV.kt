@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -62,7 +62,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private fun checkNeedLoadMore(dy: Int) {
         val firstVisiblePosition = getFirstVisibleItemPosition()
-        if (firstVisiblePosition <= SceytUIKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
+        if (firstVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
             val skip = mAdapter.getSkip()
             val firstItem = mAdapter.getFirstMessageItem()
             if (firstVisiblePosition == 0) {

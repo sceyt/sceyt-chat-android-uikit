@@ -64,7 +64,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     init {
         if (!isInEditMode)
-            chooseAttachmentHelper = ChooseAttachmentHelper(context.asAppCompatActivity())
+            chooseAttachmentHelper = ChooseAttachmentHelper(context.asComponentActivity())
 
         binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this, true)
         if (attrs != null) {
@@ -258,7 +258,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             replayMessage = null
             ViewUtil.collapseHeight(binding.layoutReplayMessage.root, to = 1, duration = 200) {
                 binding.layoutReplayMessage.root.isVisible = false
-                context.asAppCompatActivity().lifecycleScope.launchWhenResumed { readyCb?.invoke() }
+                context.asComponentActivity().lifecycleScope.launchWhenResumed { readyCb?.invoke() }
             }
         }
     }

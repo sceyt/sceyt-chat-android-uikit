@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateChatViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 
 class CreateGroupActivity : AppCompatActivity() {
@@ -36,7 +36,7 @@ class CreateGroupActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
         initViewModel()
         binding.initViews()

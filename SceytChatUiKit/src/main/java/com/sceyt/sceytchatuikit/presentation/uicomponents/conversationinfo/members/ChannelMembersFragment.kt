@@ -44,7 +44,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.viewholders.ChannelMembersViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.popups.PopupMenuMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.inject
 
@@ -209,7 +209,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                 itemsDb.addAll(items.minus(itemsDb.toSet()))
             }
 
-            if (data.offset + SceytUIKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
+            if (data.offset + SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
                 if (hasNext) {
                     if (!itemsDb.contains(MemberItem.LoadingMore))
                         itemsDb.add(MemberItem.LoadingMore)

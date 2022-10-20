@@ -14,7 +14,7 @@ data class UserEntity(
         var id: String,
         val firstName: String?,
         val lastName: String?,
-        val avatarURL: String?,
+        var avatarURL: String?,
         val metadata: String?,
         @Embedded
         val presence: Presence? = null,

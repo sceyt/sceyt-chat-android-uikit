@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class ChangeRoleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChooseRoleBinding
@@ -29,7 +29,7 @@ class ChangeRoleActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
         getBundleArguments()
         initViewModel()

@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toMessage
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -172,9 +172,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 Left -> {
                     val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
                     if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
-                        messagesListView.context.asAppCompatActivity().finish()
+                        messagesListView.context.asActivity().finish()
                 }
-                Deleted -> messagesListView.context.asAppCompatActivity().finish()
+                Deleted -> messagesListView.context.asActivity().finish()
                 else -> return@collect
             }
         }

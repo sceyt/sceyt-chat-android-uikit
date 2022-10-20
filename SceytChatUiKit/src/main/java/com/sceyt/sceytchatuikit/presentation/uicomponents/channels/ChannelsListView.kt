@@ -21,7 +21,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -37,7 +37,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -130,7 +130,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     channels.remove(ChannelListItem.LoadingMoreItem)
 
                 withContext(Dispatchers.Main) {
-                    channelsRV.sortByAndSetNewData(SceytUIKitConfig.sortChannelsBy, channels)
+                    channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, channels)
                 }
             }
         }
@@ -152,7 +152,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     channel.unreadMessageCount = count
                 }
                 channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
+                sortChannelsBy(SceytKitConfig.sortChannelsBy)
                 return true
             }
         }
@@ -160,7 +160,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
-        context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
+        context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
             val channelId = status.channelId ?: return@launch
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
@@ -178,7 +178,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateOutgoingLastMessageStatus(channelId: Long, sceytMessage: SceytMessage) {
-        context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.Default) {
+        context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
                 val oldChannel = channel.clone()
@@ -203,7 +203,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             channel.lastMessage = null
             channel.unreadMessageCount = 0
             channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-            sortChannelsBy(SceytUIKitConfig.sortChannelsBy)
+            sortChannelsBy(SceytKitConfig.sortChannelsBy)
         }
     }
 
@@ -291,7 +291,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun sortChannelsBy(sortBy: SceytUIKitConfig.ChannelSortType) {
+    private fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
         channelsRV.sortBy(sortBy)
     }
 

@@ -5,7 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
@@ -66,7 +66,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             loadedFile.createNewFile()
             item.updateDownloadState(1f, loading = true)
 
-            itemView.context.asAppCompatActivity().lifecycleScope.launch(Dispatchers.IO) {
+            itemView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.IO) {
                 Ion.with(itemView.context)
                     .load(attachment.url)
                     .progress { downloaded, total ->

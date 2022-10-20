@@ -5,6 +5,7 @@ import com.sceyt.chat.models.Status
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
@@ -223,5 +224,29 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun getCurrentUser(): User? {
         return usersLogic.getCurrentUser()
+    }
+
+    override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
+        return usersLogic.uploadAvatar(avatarUrl)
+    }
+
+    override suspend fun updateProfile(firsName: String?, lastName: String?, avatarUrl: String?): SceytResponse<User> {
+        return usersLogic.updateProfile(firsName, lastName, avatarUrl)
+    }
+
+    override suspend fun updateStatus(status: String): SceytResponse<Boolean> {
+        return usersLogic.updateStatus(status)
+    }
+
+    override suspend fun getSettings(): SceytResponse<Settings> {
+        return usersLogic.getSettings()
+    }
+
+    override suspend fun muteNotifications(muteUntil: Long): SceytResponse<Boolean> {
+        return usersLogic.muteNotifications(muteUntil)
+    }
+
+    override suspend fun unMuteNotifications(): SceytResponse<Boolean> {
+        return usersLogic.unMuteNotifications()
     }
 }

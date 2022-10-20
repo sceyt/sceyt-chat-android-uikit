@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +34,7 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
         if (it is SceytResponse.Success) {
-            hasNext = it.data?.size == SceytUIKitConfig.MESSAGES_LOAD_SIZE
+            hasNext = it.data?.size == SceytKitConfig.MESSAGES_LOAD_SIZE
             emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
         }
         notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())

@@ -3,12 +3,14 @@ package com.sceyt.sceytchatuikit
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,12 +36,29 @@ object SceytKitClient : SceytKoinComponent {
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenExpired = onTokenExpired_.asSharedFlow()
 
+    private val onTokenWillExpire_: MutableSharedFlow<Unit> = MutableSharedFlow(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
+
     fun connect(token: String, userName: String,
-                successListener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+                listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
 
         preferences.setUserId(userName)
         getChatClient()?.connect(token)
-        addListener(successListener)
+        addListener(listener)
+    }
+
+    fun updateToken(token: String, listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+        ChatClient.updateToken(token, object : ActionCallback {
+            override fun onSuccess() {
+                listener?.invoke(true, null)
+            }
+
+            override fun onError(error: SceytException?) {
+                listener?.invoke(false, error?.message)
+            }
+        })
     }
 
     fun reconnect() {
@@ -56,8 +75,9 @@ object SceytKitClient : SceytKoinComponent {
                 val connectStatus = it.first
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     listener?.invoke(true, null)
-                    ClientWrapper.setPresence(PresenceState.Online, SceytUIKitConfig.presenceStatusText) {
-
+                    val status = ClientWrapper.currentUser.presence.status
+                    ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
+                        SceytKitConfig.presenceStatusText else status) {
                     }
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
                     listener?.invoke(false, it.second?.error?.message)
@@ -77,7 +97,7 @@ object SceytKitClient : SceytKoinComponent {
 
         scope.launch {
             ConnectionObserver.onTokenWillExpire.collect {
-                onTokenExpired_.tryEmit(Unit)
+                onTokenWillExpire_.tryEmit(Unit)
             }
         }
     }

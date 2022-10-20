@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -27,14 +27,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     private lateinit var channelsQuery: ChannelListQuery
 
     private fun getOrder(): ChannelListQuery.ChannelListOrder {
-        return if (SceytUIKitConfig.sortChannelsBy == SceytUIKitConfig.ChannelSortType.ByLastMsg)
+        return if (SceytKitConfig.sortChannelsBy == SceytKitConfig.ChannelSortType.ByLastMsg)
             ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage
         else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
     }
 
     private fun createMemberListQuery(channelId: Long, offset: Int): MemberListQuery {
         return MemberListQuery.Builder(channelId)
-            .limit(SceytUIKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+            .limit(SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
             .orderType(MemberListQuery.QueryOrderType.ListQueryOrderAscending)
             .order(MemberListQuery.MemberListOrder.MemberListQueryOrderKeyUserName)
             .offset(offset)

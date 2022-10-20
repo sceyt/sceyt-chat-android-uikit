@@ -17,7 +17,8 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
@@ -34,7 +35,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -54,7 +55,7 @@ open class ConversationActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
         getDataFromIntent()
 
@@ -159,7 +160,7 @@ open class ConversationActivity : AppCompatActivity() {
             context.launchActivity<ConversationActivity> {
                 putExtra(CHANNEL, channel)
             }
-            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
 
         fun newInstance(context: Context, channel: SceytChannel, message: SceytMessage) {
@@ -168,7 +169,7 @@ open class ConversationActivity : AppCompatActivity() {
                 putExtra(REPLAY_IN_THREAD, true)
                 putExtra(REPLAY_IN_THREAD_MESSAGE, message)
             }
-            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
     }
 
