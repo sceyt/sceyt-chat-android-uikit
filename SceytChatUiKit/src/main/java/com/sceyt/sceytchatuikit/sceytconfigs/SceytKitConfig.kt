@@ -4,7 +4,7 @@ import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import androidx.databinding.library.baseAdapters.BR
 
-object SceytUIKitConfig {
+object SceytKitConfig {
     val SceytUITheme = ThemeConfig()
 
     const val CHANNELS_LOAD_SIZE = 20

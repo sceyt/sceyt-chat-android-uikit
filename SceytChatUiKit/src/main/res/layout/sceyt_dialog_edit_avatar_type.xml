@@ -35,7 +35,7 @@
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_delete"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_red"
         android:textSize="@dimen/mediumTextSize" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

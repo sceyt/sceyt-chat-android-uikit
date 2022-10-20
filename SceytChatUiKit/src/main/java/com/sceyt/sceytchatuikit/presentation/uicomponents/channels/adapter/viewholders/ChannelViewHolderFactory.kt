@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -39,8 +39,8 @@ open class ChannelViewHolderFactory(context: Context) {
             cashViews(parent.context)
             SceytItemChannelBinding.inflate(layoutInflater, parent, false)
         } else {
-            if (cachedViews!!.size < SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
-                cashViews(parent.context, SceytUIKitConfig.CHANNELS_LOAD_SIZE / 2)
+            if (cachedViews!!.size < SceytKitConfig.CHANNELS_LOAD_SIZE / 2)
+                cashViews(parent.context, SceytKitConfig.CHANNELS_LOAD_SIZE / 2)
 
             cachedViews!!.pop().also {
                 it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -75,7 +75,7 @@ open class ChannelViewHolderFactory(context: Context) {
         private var cachedViews: Stack<SceytItemChannelBinding>? = Stack<SceytItemChannelBinding>()
         private var cashJob: Job? = null
 
-        fun cashViews(context: Context, count: Int = SceytUIKitConfig.CHANNELS_LOAD_SIZE) {
+        fun cashViews(context: Context, count: Int = SceytKitConfig.CHANNELS_LOAD_SIZE) {
             asyncLayoutInflater = AsyncLayoutInflater(context)
 
             cashJob = (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {

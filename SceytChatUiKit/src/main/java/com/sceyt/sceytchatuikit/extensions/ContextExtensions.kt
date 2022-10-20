@@ -19,17 +19,19 @@ import android.view.inputmethod.InputMethodManager
 import android.webkit.URLUtil
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentManager
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.AccessController.getContext
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -41,7 +43,7 @@ fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
     return createConfigurationContext(configuration).getCompatColor(colorId)
 }
 
-fun Context.getCompatColorByTheme(@ColorRes colorId: Int?, isDark: Boolean = SceytUIKitConfig.isDarkMode): Int {
+fun Context.getCompatColorByTheme(@ColorRes colorId: Int?, isDark: Boolean = SceytKitConfig.isDarkMode): Int {
     colorId ?: return 0
     val configuration = Configuration(resources.configuration)
     configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
@@ -58,16 +60,28 @@ fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Bool
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)
 
-fun Context.asAppCompatActivity(): AppCompatActivity {
-    if (this is AppCompatActivity)
-        return this
-    else throw RuntimeException("Context should be AppCompatActivity")
+fun Context.asComponentActivity(): ComponentActivity {
+    return when (this) {
+        is ComponentActivity -> return this
+        is ContextWrapper -> {
+            if (baseContext is ComponentActivity)
+                baseContext as ComponentActivity
+            else throw RuntimeException("Context should be ComponentActivity but was $this")
+        }
+        else -> throw RuntimeException("Context should be ComponentActivity but was $this")
+    }
 }
 
 fun Context.asActivity(): Activity {
-    if (this is Activity)
-        return this
-    else throw RuntimeException("Context should be Activity")
+    return when (this) {
+        is Activity -> return this
+        is ContextWrapper -> {
+            if (baseContext is Activity)
+                baseContext as Activity
+            else throw RuntimeException("Context should be Activity but was $this")
+        }
+        else -> throw RuntimeException("Context should be Activity but was $this")
+    }
 }
 
 fun Context.getFileUriWithProvider(file: File): Uri {
@@ -180,7 +194,7 @@ fun Context.openLink(url: String?) {
     if (url.isNullOrBlank()) return
     try {
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(URLUtil.guessUrl(url))))
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
 }
 

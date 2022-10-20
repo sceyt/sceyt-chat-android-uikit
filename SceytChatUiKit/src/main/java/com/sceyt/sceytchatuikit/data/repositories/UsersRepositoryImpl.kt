@@ -6,7 +6,7 @@ import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.models.user.UserListQueryByIds
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig.USERS_LOAD_SIZE
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 

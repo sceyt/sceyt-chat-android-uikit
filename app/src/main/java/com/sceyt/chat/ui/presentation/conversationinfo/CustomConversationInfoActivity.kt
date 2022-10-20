@@ -9,7 +9,8 @@ import com.sceyt.chat.ui.presentation.changerole.ChangeRoleActivity
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
+import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -25,13 +26,13 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
 
         override fun changeRoleClick(member: SceytMember) {
             changeRoleActivityLauncher.launch(ChangeRoleActivity.newInstance(requireContext(), member))
-            requireContext().asAppCompatActivity()
+            requireContext().asComponentActivity()
                 .overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
 
         override fun onAddMembersClick() {
             addMembersActivityLauncher.launch(Intent(requireContext(), AddMembersActivity::class.java))
-            requireContext().asAppCompatActivity()
+            requireContext().asComponentActivity()
                 .overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
 
@@ -72,7 +73,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             context.launchActivity<CustomConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
             }
-            context.asAppCompatActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
+            context.asActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
     }
 }

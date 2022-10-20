@@ -1,12 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter
 
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class ChannelsComparatorBy(private val compareBy: SceytUIKitConfig.ChannelSortType) : Comparator<SceytChannel> {
+class ChannelsComparatorBy(private val compareBy: SceytKitConfig.ChannelSortType) : Comparator<SceytChannel> {
 
     override fun compare(first: SceytChannel, second: SceytChannel): Int {
-        return if (compareBy == SceytUIKitConfig.ChannelSortType.ByLastMsg)
+        return if (compareBy == SceytKitConfig.ChannelSortType.ByLastMsg)
             compareByLastMessageCreatedAt(first, second)
         else compareByChannelCreatedAt(first, second)
     }

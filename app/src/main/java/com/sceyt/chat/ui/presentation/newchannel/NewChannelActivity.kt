@@ -18,11 +18,8 @@ import com.sceyt.chat.ui.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.asAppCompatActivity
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class NewChannelActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNewChannelBinding
@@ -37,7 +34,7 @@ class NewChannelActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
         initViewModel()
         initViews()
@@ -123,7 +120,7 @@ class NewChannelActivity : AppCompatActivity() {
 
         fun launch(context: Context) {
             context.launchActivity<NewChannelActivity>()
-            context.asAppCompatActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
+            context.asActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
         }
     }
 }

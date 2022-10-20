@@ -4,20 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
-import com.sceyt.sceytchatuikit.extensions.checkDeniedOneOfPermissions
-import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
-import com.sceyt.sceytchatuikit.extensions.getPathFromFile
 import com.sceyt.sceytchatuikit.extensions.initAttachmentLauncher
 import com.sceyt.sceytchatuikit.extensions.initCameraLauncher
-import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
-import com.sceyt.sceytchatuikit.extensions.shortToast
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -35,7 +30,7 @@ class ChooseAttachmentHelper {
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
     private var takePictureCb: ((String) -> Unit)? = null
 
-    constructor(activity: AppCompatActivity) {
+    constructor(activity: ComponentActivity) {
         with(activity) {
             this@ChooseAttachmentHelper.context = activity
 

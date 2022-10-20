@@ -30,7 +30,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import java.util.concurrent.TimeUnit
 
@@ -41,7 +41,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
     private var displayNameDefaultBg: Drawable? = null
     private var binding: ActivityConversationInfoBinding? = null
     private val viewModel: ConversationInfoViewModel by viewModels()
-    private val chooseAttachmentHelper = ChooseAttachmentHelper(asAppCompatActivity())
+    private val chooseAttachmentHelper = ChooseAttachmentHelper(asComponentActivity())
     private var isEditMode = false
     private var isSaveLoading = false
     private var avatarUrl: String? = null
@@ -50,7 +50,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setActivityContentView()
-        statusBarIconsColorWithBackground(SceytUIKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
         getBundleArguments()
         initViewModel()
@@ -428,7 +428,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
             context.launchActivity<ConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
             }
-            context.asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
     }
 }

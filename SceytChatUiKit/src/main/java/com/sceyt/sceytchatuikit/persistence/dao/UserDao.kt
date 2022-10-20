@@ -19,6 +19,9 @@ interface UserDao {
     fun updateUser(user: UserEntity)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
+    fun updateUserAvatar(userId: UserEntity)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateUsers(users: List<UserEntity>)
 
     @Query("update users set blocked =:blocked where user_id =:userId")

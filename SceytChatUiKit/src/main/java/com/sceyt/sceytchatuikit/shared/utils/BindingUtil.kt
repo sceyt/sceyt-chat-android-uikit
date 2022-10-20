@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawableByTheme
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytUIKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 object BindingUtil {
     private val themeTextColorsViews: HashSet<Pair<View, Int>> = HashSet()
@@ -27,11 +27,11 @@ object BindingUtil {
     private val themeStrokeColorOnlineViews: HashSet<Pair<SceytOnlineView, Int>> = HashSet()
 
     init {
-        if (SceytUIKitConfig.enableDarkMode)
-            SceytUIKitConfig.SceytUITheme.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        if (SceytKitConfig.enableDarkMode)
+            SceytKitConfig.SceytUITheme.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
                 override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
                     if (propertyId == BR.isDarkMode) {
-                        val isDark = SceytUIKitConfig.isDarkMode
+                        val isDark = SceytKitConfig.isDarkMode
                         themeTextColorsViews.forEach {
                             setThemedColor(it.first, it.second, isDark)
                         }
@@ -86,13 +86,13 @@ object BindingUtil {
     @BindingAdapter("themedTextColor")
     @JvmStatic
     fun themedTextColor(view: View, colorId: Int?) {
-        if (colorId == null || !SceytUIKitConfig.enableDarkMode) return
+        if (colorId == null || !SceytKitConfig.enableDarkMode) return
         val pair = Pair(view, colorId)
         themeTextColorsViews.add(pair)
 
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(p0: View) {
-                setThemedColor(view, colorId, SceytUIKitConfig.isDarkMode)
+                setThemedColor(view, colorId, SceytKitConfig.isDarkMode)
                 themeTextColorsViews.add(pair)
             }
 
@@ -105,7 +105,7 @@ object BindingUtil {
     @BindingAdapter("themedSpannableTextColor")
     @JvmStatic
     fun themedSpannableTextColor(view: SceytColorSpannableTextView, param: Boolean) {
-        if (!SceytUIKitConfig.enableDarkMode) return
+        if (!SceytKitConfig.enableDarkMode) return
         themeColorSpannableTextViews.add(view)
 
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -123,14 +123,14 @@ object BindingUtil {
     @BindingAdapter("themedBackgroundColor")
     @JvmStatic
     fun themedBackgroundColor(view: View, @ColorRes colorId: Int?) {
-        if (colorId == null || !SceytUIKitConfig.enableDarkMode) return
-        setThemedBackground(view, colorId, SceytUIKitConfig.isDarkMode)
+        if (colorId == null || !SceytKitConfig.enableDarkMode) return
+        setThemedBackground(view, colorId, SceytKitConfig.isDarkMode)
         val pair = Pair(view, colorId)
         backgroundColorsViews.add(pair)
 
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(p0: View) {
-                setThemedBackground(view, colorId, SceytUIKitConfig.isDarkMode)
+                setThemedBackground(view, colorId, SceytKitConfig.isDarkMode)
                 backgroundColorsViews.add(pair)
             }
 
@@ -143,14 +143,14 @@ object BindingUtil {
     @BindingAdapter("themedBackgroundTintColor")
     @JvmStatic
     fun themedBackgroundTintColor(view: View, @ColorRes colorId: Int) {
-        if (!SceytUIKitConfig.enableDarkMode) return
-        setThemedBackgroundTint(view, colorId, SceytUIKitConfig.isDarkMode)
+        if (!SceytKitConfig.enableDarkMode) return
+        setThemedBackgroundTint(view, colorId, SceytKitConfig.isDarkMode)
         val pair = Pair(view, colorId)
         backgroundTintColorsViews.add(pair)
 
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(p0: View) {
-                setThemedBackgroundTint(view, colorId, SceytUIKitConfig.isDarkMode)
+                setThemedBackgroundTint(view, colorId, SceytKitConfig.isDarkMode)
                 backgroundTintColorsViews.add(pair)
             }
 
@@ -163,14 +163,14 @@ object BindingUtil {
     @BindingAdapter("themedDrawable")
     @JvmStatic
     fun themedDrawable(view: ImageView, @DrawableRes drawableId: Int?) {
-        if (drawableId == null || !SceytUIKitConfig.enableDarkMode) return
-        setThemedDrawable(view, drawableId, SceytUIKitConfig.isDarkMode)
+        if (drawableId == null || !SceytKitConfig.enableDarkMode) return
+        setThemedDrawable(view, drawableId, SceytKitConfig.isDarkMode)
         val pair = Pair(view, drawableId)
         themeDrawablesViews.add(pair)
 
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(p0: View) {
-                setThemedDrawable(view, drawableId, SceytUIKitConfig.isDarkMode)
+                setThemedDrawable(view, drawableId, SceytKitConfig.isDarkMode)
                 themeDrawablesViews.add(pair)
             }
 
@@ -183,14 +183,14 @@ object BindingUtil {
     @BindingAdapter("themeStrokeColorOnlineView")
     @JvmStatic
     fun themeStrokeColorOnlineView(view: SceytOnlineView, @ColorRes colorId: Int) {
-        if (!SceytUIKitConfig.enableDarkMode) return
-        view.setStrokeColor(view.context.getCompatColorByTheme(colorId, SceytUIKitConfig.isDarkMode))
+        if (!SceytKitConfig.enableDarkMode) return
+        view.setStrokeColor(view.context.getCompatColorByTheme(colorId, SceytKitConfig.isDarkMode))
         val pair = Pair(view, colorId)
         themeStrokeColorOnlineViews.add(pair)
 
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(p0: View) {
-                view.setStrokeColor(view.context.getCompatColorByTheme(colorId, SceytUIKitConfig.isDarkMode))
+                view.setStrokeColor(view.context.getCompatColorByTheme(colorId, SceytKitConfig.isDarkMode))
                 themeStrokeColorOnlineViews.add(pair)
             }
 

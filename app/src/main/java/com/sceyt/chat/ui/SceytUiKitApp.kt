@@ -82,6 +82,21 @@ class SceytUiKitApp : Application() {
                 }
             }
         }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            SceytKitClient.onTokenWillExpire.collect {
+                preference.getUserName()?.let {
+                    getTokenByUserName(it, { jsonObject ->
+                        (jsonObject.get("token") as? String)?.let { token ->
+                            SceytKitClient.updateToken(token) { success, errorMessage ->
+                                if (!success)
+                                    Log.e("sceytConnectError", errorMessage.toString())
+                            }
+                        }
+                    }, {}, applicationContext)
+                }
+            }
+        }
     }
 
     private fun connect() {
@@ -89,7 +104,7 @@ class SceytUiKitApp : Application() {
         val userName = preference.getUserName()
         if (token.isNullOrBlank()) {
             connectWithoutToken(userName ?: return)
-        } else if (!token.isNullOrEmpty())
+        } else if (token.isNotEmpty())
             connectWithToken(token, userName ?: return)
     }
 

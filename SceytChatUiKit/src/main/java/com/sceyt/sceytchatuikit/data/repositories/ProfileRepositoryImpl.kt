@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
@@ -14,27 +13,16 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class ProfileRepositoryImpl : ProfileRepository {
+internal class ProfileRepositoryImpl : ProfileRepository {
 
-    override suspend fun getCurrentUser(): SceytResponse<User> {
+    override suspend fun updateProfile(firstName: String?, lastName: String?, avatarUri: String?): SceytResponse<User> {
         return suspendCoroutine { continuation ->
-            ClientWrapper.currentUser?.let {
-                return@let continuation.resume(SceytResponse.Success(it))
-            } ?: run {
-                return@run continuation.resume(SceytResponse.Error(SceytException(0, "User not found")))
-            }
-        }
-    }
-
-    override suspend fun editProfile(displayName: String, avatarUri: String?): SceytResponse<User> {
-        return suspendCoroutine { continuation ->
-            val names = displayName.split(" ".toRegex(), 2)
             User.setProfileRequest().apply {
                 avatarUri?.let { uri ->
                     setAvatar(uri)
                 }
-                setFirstName(names.getOrNull(0) ?: "")
-                setLastName(names.getOrNull(1) ?: "")
+                setFirstName(firstName ?: "")
+                setLastName(lastName ?: "")
             }.execute(object : UserCallback {
                 override fun onResult(user: User) {
                     continuation.resume(SceytResponse.Success(user))

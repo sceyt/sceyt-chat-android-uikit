@@ -28,7 +28,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
 ], version = 1, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class)
-abstract class SceytDatabase : RoomDatabase() {
+internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun userDao(): UserDao
     abstract fun messageDao(): MessageDao
