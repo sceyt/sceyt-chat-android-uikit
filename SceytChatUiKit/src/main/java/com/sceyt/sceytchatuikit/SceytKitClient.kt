@@ -116,5 +116,6 @@ object SceytKitClient : SceytKoinComponent {
 
     fun clearData() {
         database.clearAllTables()
+        preferences.clear()
     }
 }
