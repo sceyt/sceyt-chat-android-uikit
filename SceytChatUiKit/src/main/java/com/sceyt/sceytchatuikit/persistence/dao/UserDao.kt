@@ -18,8 +18,8 @@ interface UserDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateUser(user: UserEntity)
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun updateUserAvatar(userId: UserEntity)
+    @Query("update users set status =:status where user_id =:userId")
+    fun updateUserStatus(userId: String, status: String)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateUsers(users: List<UserEntity>)
