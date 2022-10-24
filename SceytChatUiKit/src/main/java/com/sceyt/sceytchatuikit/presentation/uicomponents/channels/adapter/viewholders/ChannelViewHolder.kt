@@ -194,7 +194,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
-    private fun getDateTxt(channel: SceytChannel?): String {
+    protected fun getDateTxt(channel: SceytChannel?): String {
         if (channel == null) return ""
         val lastMsgCreatedAt = channel.lastMessage?.createdAt
         return if (lastMsgCreatedAt != null && lastMsgCreatedAt != 0L)

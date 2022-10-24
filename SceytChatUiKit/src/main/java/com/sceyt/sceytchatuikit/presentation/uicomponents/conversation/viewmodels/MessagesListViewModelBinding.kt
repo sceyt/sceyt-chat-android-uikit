@@ -56,12 +56,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 is PaginationResponse.ServerResponse -> {
                     if (response.data is SceytResponse.Success) {
                         response.data.data?.let { data ->
-                            //todo temporary send last message as read to update peer messages as read
-                            if (response.offset == 0 && data.isNotEmpty()) {
-                                data.findLast { it is MessageListItem.MessageItem }?.let { item ->
-                                    markMessageAsDisplayed((item as MessageListItem.MessageItem).message.id)
-                                }
-                            }
                             messagesListView.updateMessagesWithServerData(data, response.offset, response.hasNext, lifecycleOwner) { list, hasNext ->
                                 return@updateMessagesWithServerData mapToMessageListItem(
                                     list.filterIsInstance<MessageListItem.MessageItem>().map { messageItem -> messageItem.message }, hasNext)
@@ -111,12 +105,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(PageState.Nothing)
-
-        markMessageAsDisplayed(it.id)
     }
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel(myId))
+    }
+
+    fun checkStateAndMarkAsRead(message: SceytMessage) {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED)
+            markMessageAsDisplayed(message.id)
+        else pendingDisplayMsgIds.add(message.id)
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -129,9 +127,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.addNewMessages(*initMessage.toTypedArray())
             messagesListView.updateViewState(PageState.Nothing)
 
-            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED)
-                markMessageAsDisplayed(it.id)
-            else pendingDisplayMsgIds.add(it.id)
+            checkStateAndMarkAsRead(it)
         }
     }
 
@@ -224,8 +220,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setMessageDisplayedListener {
-        //todo temporary disable send per message read ack
-        //markMessageAsDisplayed(it.id)
+        checkStateAndMarkAsRead(it)
     }
 }
 

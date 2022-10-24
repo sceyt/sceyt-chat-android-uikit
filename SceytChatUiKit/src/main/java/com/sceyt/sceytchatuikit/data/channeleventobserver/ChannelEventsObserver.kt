@@ -52,7 +52,7 @@ object ChannelEventsObserver {
 
 
     init {
-        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
+        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener() {
 
             override fun onClearedHistory(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
