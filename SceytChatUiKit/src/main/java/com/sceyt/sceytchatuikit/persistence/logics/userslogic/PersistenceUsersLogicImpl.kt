@@ -9,7 +9,6 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -38,13 +37,13 @@ internal class PersistenceUsersLogicImpl(
     }
 
     override suspend fun getCurrentUser(): User? {
-        val clientUser = ClientWrapper.currentUser
-        if (clientUser != null && clientUser.id.isNotNullOrBlank())
-            return clientUser
+        var clientUser = ClientWrapper.currentUser
+        if (clientUser?.id.isNullOrBlank())
+            clientUser = null
 
-        preference.getUserId()?.let {
-            return userDao.getUserById(it)?.toUser()
-        } ?: return null
+        return preference.getUserId()?.let {
+            userDao.getUserById(it)?.toUser()
+        } ?: clientUser
     }
 
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
@@ -75,8 +74,7 @@ internal class PersistenceUsersLogicImpl(
         }
 
         if (response is SceytResponse.Success)
-            ClientWrapper.currentUser?.toUserEntity()?.let { userDao.updateUser(it) }
-
+            preference.getUserId()?.let { userDao.updateUserStatus(it, status) }
 
         return response
     }

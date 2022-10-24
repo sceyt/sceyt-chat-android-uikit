@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (binding.viewPager.currentItem == 1) {
+        if (binding.viewPager.currentItem > 0) {
             binding.viewPager.setCurrentItem(0, false)
             binding.bottomNavigationView.menu.findItem(R.id.channelsFragment).isChecked = true
         } else
@@ -50,8 +50,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setPagerAdapter() {
-        val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelsFragment(), ProfileFragment()),
-            arrayListOf(::ChannelsFragment.name, ::ProfileFragment.name))
+        val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelsFragment(), ProfileFragment()))
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
     }
