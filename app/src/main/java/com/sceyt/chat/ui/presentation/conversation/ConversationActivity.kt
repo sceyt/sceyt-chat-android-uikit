@@ -18,7 +18,6 @@ import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView

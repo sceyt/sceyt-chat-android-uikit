@@ -7,10 +7,10 @@ import androidx.databinding.library.baseAdapters.BR
 object SceytKitConfig {
     val SceytUITheme = ThemeConfig()
 
-    const val CHANNELS_LOAD_SIZE = 20
-    const val CHANNELS_MEMBERS_LOAD_SIZE = 20
-    const val USERS_LOAD_SIZE = 30
-    const val MESSAGES_LOAD_SIZE = 30
+    var CHANNELS_LOAD_SIZE = 20
+    var CHANNELS_MEMBERS_LOAD_SIZE = 20
+    var USERS_LOAD_SIZE = 30
+    var MESSAGES_LOAD_SIZE = 30
 
     var enableDarkMode = true
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode

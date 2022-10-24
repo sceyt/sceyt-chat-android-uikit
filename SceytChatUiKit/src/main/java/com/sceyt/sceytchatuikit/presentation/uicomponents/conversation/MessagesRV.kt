@@ -9,6 +9,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
+import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
@@ -82,6 +83,22 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         } else richToPrefetchDistanceInvoked.set(false)
     }
 
+    private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean): Boolean {
+        var scrollToEnd: Boolean = isMySendMessage
+        if (!isMySendMessage) {
+            val last = lastVisibleItemPosition()
+            scrollToEnd = if (last == NO_POSITION)
+                true
+            else {
+                val lastIndex = mAdapter.itemCount - 1
+                last == lastIndex || (lastIndex > 0 && last == lastIndex - addedItemsCount)
+            }
+        }
+        if (scrollToEnd)
+            scrollToPosition(mAdapter.itemCount - 1)
+        return scrollToEnd
+    }
+
     fun setData(messages: List<MessageListItem>) {
         if (::mAdapter.isInitialized.not()) {
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
@@ -117,7 +134,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             setData(items.toList())
         else {
             mAdapter.addNewMessages(items.toList())
-            scrollToPosition(mAdapter.itemCount - 1)
+            var outGoing = true
+            items.find { it is MessageListItem.MessageItem }?.let {
+                outGoing = (it as MessageListItem.MessageItem).message.incoming.not()
+            }
+            checkScrollToEnd(items.size, outGoing)
         }
     }
 

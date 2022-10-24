@@ -35,6 +35,8 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val message = data.second
+        //Message tid is message id
+        message.tid = message.id
         messageDao.insertMessage(message.toMessageDb())
     }
 

@@ -136,6 +136,8 @@ open class MessageViewHolderFactory(context: Context) {
 
     protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners
 
+    protected fun getDisplayedListener() = displayedListener
+
     enum class MessageTypeEnum {
         IncText,
         OutText,
