@@ -62,7 +62,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             }
                         }
                     }
-                    notifyPageStateWithResponse(response.data, response.offset > 0, response.data.data.isNullOrEmpty())
                 }
                 is PaginationResponse.Nothing -> return@collect
             }
@@ -201,7 +200,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
-        messagesListView.updateViewState(it)
+        messagesListView.updateViewState(it, false)
     }
 
     messagesListView.setMessageCommandEventListener {
@@ -232,10 +231,10 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
 
-    pageStateLiveData.observe(lifecycleOwner) {
+   /* pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError)
             customToastSnackBar(messageInputView, it.errorMessage.toString())
-    }
+    }*/
 
     channelLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {

@@ -22,6 +22,7 @@ class MessagesRepositoryImpl : MessagesRepository {
     private fun getQuery(conversationId: Long, replayInThread: Boolean) = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
         setLimit(MESSAGES_LOAD_SIZE)
+        setReversed(true)
     }.build()
 
     private fun getQueryByType(type: String, conversationId: Long) = MessagesListQueryByType.Builder(conversationId, type).apply {

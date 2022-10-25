@@ -57,12 +57,6 @@ abstract class BaseMsgViewHolder(view: View,
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
-
-        if (messageListItem is MessageListItem.MessageItem) {
-            val message = (messageListItem as MessageListItem.MessageItem).message
-            if (message.incoming && message.deliveryStatus != DeliveryStatus.Read)
-                displayedListener?.invoke(message)
-        }
     }
 
     fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
@@ -79,7 +73,12 @@ abstract class BaseMsgViewHolder(view: View,
 
     @CallSuper
     open fun onViewAttachedToWindow() {
+        if (messageListItem is MessageListItem.MessageItem) {
 
+            val message = (messageListItem as MessageListItem.MessageItem).message
+            if (message.incoming && message.deliveryStatus != DeliveryStatus.Read)
+                displayedListener?.invoke(message)
+        }
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null

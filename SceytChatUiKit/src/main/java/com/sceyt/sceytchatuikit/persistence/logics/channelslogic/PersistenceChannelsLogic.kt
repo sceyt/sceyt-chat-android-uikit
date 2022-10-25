@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 
 internal interface PersistenceChannelsLogic {
     fun onChannelEvent(data: ChannelEventData)
+    fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
     fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>

@@ -9,6 +9,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -85,6 +86,10 @@ internal class PersistenceChannelsLogicImpl(
             }
             else -> return
         }
+    }
+
+    override fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
+       //todo
     }
 
     override fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
