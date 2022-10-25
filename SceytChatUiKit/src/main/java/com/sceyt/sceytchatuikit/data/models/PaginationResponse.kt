@@ -1,5 +1,7 @@
 package com.sceyt.sceytchatuikit.data.models
 
+import com.sceyt.sceytchatuikit.data.models.SceytResponse.Companion.mapTo
+
 sealed class PaginationResponse<T> {
 
     /**
@@ -26,4 +28,16 @@ sealed class PaginationResponse<T> {
 
     /** Default value */
     class Nothing<T> : PaginationResponse<T>()
+
+    companion object {
+        fun <F, T> DBResponse<F>.mapTo(mapper: (List<F>) -> List<T>): PaginationResponse<T> {
+            return DBResponse(mapper(data), offset, hasNext)
+        }
+
+        fun <F, T> ServerResponse<F>.mapTo(mapperResponse: (List<F>?) -> List<T>?, mapperDbData: ((List<F>) -> List<T>?)? = null): PaginationResponse<T> {
+            return ServerResponse(data.mapTo { mapperResponse.invoke(data.data) }, mapperDbData?.invoke(dbData)
+                    ?: arrayListOf(), offset, hasNext)
+        }
+
+    }
 }

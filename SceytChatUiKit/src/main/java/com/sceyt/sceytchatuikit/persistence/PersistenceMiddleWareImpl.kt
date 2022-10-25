@@ -7,10 +7,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -49,6 +46,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     init {
         // Channel events
         launch { ChannelEventsObserver.onChannelEventFlow.collect(::onChannelEvent) }
+        launch { ChannelEventsObserver.onTotalUnreadChangedFlow.collect(::onChannelUnreadCountUpdatedEvent) }
         launch { ChannelEventsObserver.onChannelMembersEventFlow.collect(::onChannelMemberEvent) }
         launch { ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect(::onChannelOwnerChangedEvent) }
         // Message events
@@ -64,6 +62,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     private fun onChannelEvent(data: ChannelEventData) {
         channelLogic.onChannelEvent(data)
+    }
+
+    private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
+        channelLogic.onChannelUnreadCountUpdatedEvent(data)
     }
 
     private fun onChannelMemberEvent(data: ChannelMembersEventData) {

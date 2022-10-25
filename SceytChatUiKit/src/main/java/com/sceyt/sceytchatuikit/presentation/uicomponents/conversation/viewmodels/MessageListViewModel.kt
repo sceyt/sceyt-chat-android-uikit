@@ -6,10 +6,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.Companion.mapTo
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -107,17 +109,17 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.first.id == channel.id && it.second.replyInThread }
             .mapNotNull { it.second }
 
-        onMessageStatusFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onMessageStatusFlow
+        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
             .filter { it.channelId == channel.id }
 
-        onChannelEventFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelEventFlow
+        onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
             .filter { it.channelId == channel.id }
 
-        onChannelTypingEventFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelTypingEventFlow
+        onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
             .filter { it.channel.id == channel.id }
 
         viewModelScope.launch {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelMembersEventFlow
+            ChannelEventsObserver.onChannelMembersEventFlow
                 .filter { it.channel?.id == channel.id }
                 .collect(::onChannelMemberEvent)
         }
@@ -147,24 +149,23 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun initResponse(it: PaginationResponse<SceytMessage>) {
-        when (it) {
+    private fun initResponse(response: PaginationResponse<SceytMessage>) {
+        when (response) {
             is PaginationResponse.DBResponse -> {
-                if (it.data.isNotEmpty()) {
-                    _loadMessagesFlow.value = PaginationResponse.DBResponse(mapToMessageListItem(it.data, it.hasNext), it.offset)
-                    notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
+                if (response.data.isNotEmpty()) {
+                    _loadMessagesFlow.value = response.mapTo(mapper = { mapToMessageListItem(response.data, response.hasNext) })
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                if (it.data is SceytResponse.Success) {
-                    _loadMessagesFlow.value = PaginationResponse.ServerResponse(
-                        SceytResponse.Success(mapToMessageListItem(it.data.data, it.hasNext)), offset = it.offset, dbData = arrayListOf())
+                if (response.data is SceytResponse.Success) {
+                    _loadMessagesFlow.value = response.mapTo(mapperResponse = { mapToMessageListItem(response.data.data, response.hasNext) })
                 }
-                notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+                notifyPageStateWithResponse(response.data, response.offset > 0, response.data.data.isNullOrEmpty())
             }
             is PaginationResponse.Nothing -> return
         }
-        pagingResponseReceived(it)
+        pagingResponseReceived(response)
     }
 
     private fun deleteMessage(messageId: Long, messageTid: Long) {

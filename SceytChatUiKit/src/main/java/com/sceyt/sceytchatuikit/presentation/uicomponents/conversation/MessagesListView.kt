@@ -299,8 +299,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateViewState(state: PageState) {
-        pageStateView?.updateState(state, messagesRV.isEmpty())
+    internal fun updateViewState(state: PageState, enableErrorSnackBar: Boolean = true) {
+        pageStateView?.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
@@ -314,12 +314,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                             item.message.deliveryStatus = status
                         messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                         break
-                    } else {
+                    } /*else {
                         if (item.message.deliveryStatus < status && item.message.deliveryStatus != DeliveryStatus.Pending) {
                             item.message.deliveryStatus = status
                             messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                         }
-                    }
+                    }*/
                 }
             }
         }

@@ -17,6 +17,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 object ChannelEventsObserver {
 
+    private val onTotalUnreadChangedFlow_ = MutableSharedFlow<ChannelUnreadCountUpdatedEventData>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onTotalUnreadChangedFlow: SharedFlow<ChannelUnreadCountUpdatedEventData> = onTotalUnreadChangedFlow_.asSharedFlow()
+
+
     private val onChannelEventFlow_ = MutableSharedFlow<ChannelEventData>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -53,6 +60,10 @@ object ChannelEventsObserver {
 
     init {
         ChatClient.getClient().addChannelListener(TAG, object : ChannelListener() {
+            override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
+                val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
+                onTotalUnreadChangedFlow_.tryEmit(data)
+            }
 
             override fun onClearedHistory(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
