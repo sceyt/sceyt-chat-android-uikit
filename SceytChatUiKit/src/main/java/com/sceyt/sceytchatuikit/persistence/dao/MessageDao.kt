@@ -4,7 +4,6 @@ import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 abstract class MessageDao {
@@ -15,6 +14,11 @@ abstract class MessageDao {
 
         //Delete attachments before insert
         deleteAttachments(listOf(messageDb.messageEntity.tid))
+
+        //Delete reactions before insert
+        messageDb.messageEntity.id?.let {
+            deleteMessageReactionsAndScores(listOf(it))
+        }
 
         //Insert attachments
         messageDb.attachments?.let {
@@ -35,6 +39,9 @@ abstract class MessageDao {
         upsertMessageEntities(messageDb.map { it.messageEntity })
         //Delete attachments before insert
         deleteAttachments(messageDb.map { it.messageEntity.tid })
+
+        //Delete reactions before insert
+        deleteMessageReactionsAndScores(messageDb.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
         val attachments = messageDb.flatMap { it.attachments ?: arrayListOf() }
@@ -131,8 +138,26 @@ abstract class MessageDao {
         messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsChunked)
     }
 
-    @Query("DELETE FROM AttachmentEntity WHERE messageTid in (:messageTides)")
+    @Transaction
+    open fun deleteMessageReactionsAndScores(messageIdes: List<Long>) {
+        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
+    }
+
+    @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
     abstract fun deleteAttachmentsChunked(messageTides: List<Long>)
+
+
+    @Transaction
+    open fun deleteAllReactionsAndScores(messageIds: List<Long>) {
+        deleteAllReactionScoresByMessageId(messageIds)
+        deleteAllReactionsByMessageId(messageIds)
+    }
+
+    @Query("delete from ReactionScoreEntity where messageId in (:messageId)")
+    abstract fun deleteAllReactionScoresByMessageId(messageId: List<Long>)
+
+    @Query("delete from ReactionEntity where messageId in (:messageId)")
+    protected abstract fun deleteAllReactionsByMessageId(messageId: List<Long>)
 
     private companion object {
         private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999
