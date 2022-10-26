@@ -75,6 +75,7 @@ object SceytKitClient : SceytKoinComponent {
                 val connectStatus = it.first
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     listener?.invoke(true, null)
+                    persistenceMessagesMiddleWare.sendAllPendingMessages()
                     val status = ClientWrapper.currentUser.presence.status
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {

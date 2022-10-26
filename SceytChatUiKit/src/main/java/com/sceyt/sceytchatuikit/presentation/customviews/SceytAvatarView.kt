@@ -13,6 +13,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
+import kotlin.math.abs
 
 
 class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -33,7 +34,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
             imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
-            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, getAvatarRandomColor())
+            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, 0)
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
             a.recycle()
         }
@@ -67,7 +68,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private fun drawBackgroundColor(canvas: Canvas) {
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
-            color = avatarBackgroundColor
+            color = if (avatarBackgroundColor == 0) getAvatarRandomColor() else avatarBackgroundColor
         })
     }
 
@@ -81,12 +82,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun getAvatarRandomColor(): Int {
         val colors = AvatarStyle.avatarColors
-        var colorIndex: Int = (0..6).random()
-
-        if (colorIndex >= colors.size)
-            colorIndex -= colors.size
-
-        return colors[colorIndex].toColorInt()
+        return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
     }
 
     private fun loadAvatarImage() {

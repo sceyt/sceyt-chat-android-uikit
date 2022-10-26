@@ -11,7 +11,7 @@ import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
     id = id,
-    tid = getTid(id, tid, incoming),
+    tid = getTid(id, tid),
     channelId = channelId,
     to = to,
     body = body,
@@ -31,15 +31,15 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     replyCount = replyCount
 )
 
-private fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
-    return if (incoming)
+private fun getTid(msgId: Long, tid: Long): Long {
+    return if (tid == 0L)
         msgId
     else tid
 }
 
 fun Message.toMessageEntity() = MessageEntity(
     id = id,
-    tid = getTid(id, tid, incoming),
+    tid = getTid(id, tid),
     channelId = channelId,
     to = to,
     body = body,
@@ -61,7 +61,7 @@ fun Message.toMessageEntity() = MessageEntity(
 
 
 fun SceytMessage.toMessageDb(): MessageDb {
-    val tid = getTid(id, tid, incoming)
+    val tid = getTid(id, tid)
     return MessageDb(
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
@@ -73,7 +73,7 @@ fun SceytMessage.toMessageDb(): MessageDb {
 }
 
 fun Message.toMessageDb(): MessageDb {
-    val tid = getTid(id, tid, incoming)
+    val tid = getTid(id, tid)
     return MessageDb(
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),

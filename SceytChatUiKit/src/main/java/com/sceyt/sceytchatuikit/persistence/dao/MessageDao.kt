@@ -95,11 +95,15 @@ abstract class MessageDao {
             "order by createdAt")
     abstract suspend fun getPendingMessages(channelId: Long, status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
 
-    @Query("select * from messages where message_id =:id")
-    abstract fun getMessageById(id: Long): Flow<List<MessageEntity>>
+    @Transaction
+    @Query("select * from messages where deliveryStatus =:status order by createdAt")
+    abstract suspend fun getAllPendingMessages(status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
+
+    @Query("select * from messages where message_id in(:ids)")
+    abstract fun getMessageByIds(ids: List<Long>): List<MessageDb>
 
     @Query("select * from messages where tid =:tid")
-    abstract fun getMessageByTid(tid: Long): MessageEntity?
+    abstract fun getMessageByTid(tid: Long): MessageDb?
 
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
@@ -108,7 +112,7 @@ abstract class MessageDao {
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long, status: DeliveryStatus): Int
 
     @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
-    abstract fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
+    abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
     @Query("update messages set state =:state, body=:body where message_id =:messageId")
     abstract fun updateMessageStateAndBody(messageId: Long, state: MessageState, body: String)
@@ -117,7 +121,7 @@ abstract class MessageDao {
     abstract fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
-    abstract fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
+    abstract suspend fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
     @Query("delete from messages where channelId =:channelId")
     abstract fun deleteAllMessages(channelId: Long)
