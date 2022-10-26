@@ -5,8 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
-import com.sceyt.sceytchatuikit.data.*
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -18,6 +19,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.data.toFileListItem
+import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
@@ -84,9 +87,9 @@ class MessageListViewModel(private val conversationId: Long,
 
     //Command events
     private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
+    internal val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
     private val _onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
+    internal val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
 
 
     init {
@@ -140,7 +143,7 @@ class MessageListViewModel(private val conversationId: Long,
 
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.Main) {
                     initResponse(it)
                 }
             }
@@ -170,7 +173,7 @@ class MessageListViewModel(private val conversationId: Long,
         pagingResponseReceived(response)
     }
 
-    private fun deleteMessage(messageId: Long, messageTid: Long) {
+    fun deleteMessage(messageId: Long, messageTid: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid)
             _messageEditedDeletedLiveData.postValue(response)
@@ -180,7 +183,15 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun addReaction(message: SceytMessage, scoreKey: String) {
+    fun prepareToEditMessage(message: SceytMessage) {
+        _onEditMessageCommandLiveData.postValue(message)
+    }
+
+    fun prepareToReplayMessage(message: SceytMessage) {
+        _onReplayMessageCommandLiveData.postValue(message)
+    }
+
+    fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
@@ -193,7 +204,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun deleteReaction(message: SceytMessage, scoreKey: String) {
+    fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
@@ -203,31 +214,6 @@ class MessageListViewModel(private val conversationId: Long,
                     }
                 }
             })
-        }
-    }
-
-    private fun onChannelMemberEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
-        val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
-        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
-
-        when (eventData.eventType) {
-            ChannelMembersEventEnum.Added -> {
-                channelMembers.addAll(sceytMembers ?: return)
-                (channel as SceytGroupChannel).apply {
-                    members = channelMembers
-                    memberCount += sceytMembers.size
-                }
-                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
-            }
-            ChannelMembersEventEnum.Kicked -> {
-                channelMembers.removeAll(sceytMembers ?: return)
-                (channel as SceytGroupChannel).apply {
-                    members = channelMembers
-                    memberCount -= sceytMembers.size
-                }
-                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
-            }
-            else -> return
         }
     }
 
@@ -244,7 +230,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun sendReplayMessage(message: Message, parent: Message?) {
+    fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
                 _onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
@@ -258,7 +244,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun editMessage(message: SceytMessage) {
+    fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
             _messageEditedDeletedLiveData.postValue(response)
@@ -268,26 +254,26 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun markMessageAsDisplayed(vararg id: Long) {
+    fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.markAsRead(channel.id, *id)
         }
     }
 
-    internal fun sendTypingEvent(typing: Boolean) {
+    fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(channel.id, typing)
         }
     }
 
-    internal fun join() {
+    fun join() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.join(channel.id)
             _joinLiveData.postValue(response)
         }
     }
 
-    internal fun getChannel(channelId: Long) {
+    fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
             _channelLiveData.postValue(response)
@@ -347,10 +333,10 @@ class MessageListViewModel(private val conversationId: Long,
                 deleteMessage(event.message.id, event.message.tid)
             }
             is MessageCommandEvent.EditMessage -> {
-                _onEditMessageCommandLiveData.postValue(event.message)
+                prepareToEditMessage(event.message)
             }
             is MessageCommandEvent.Replay -> {
-                _onReplayMessageCommandLiveData.postValue(event.message)
+                prepareToReplayMessage(event.message)
             }
         }
     }
@@ -363,6 +349,31 @@ class MessageListViewModel(private val conversationId: Long,
             is ReactionEvent.RemoveReaction -> {
                 deleteReaction(event.message, event.scoreKey)
             }
+        }
+    }
+
+    private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
+        val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
+        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
+
+        when (eventData.eventType) {
+            ChannelMembersEventEnum.Added -> {
+                channelMembers.addAll(sceytMembers ?: return)
+                (channel as SceytGroupChannel).apply {
+                    members = channelMembers
+                    memberCount += sceytMembers.size
+                }
+                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+            }
+            ChannelMembersEventEnum.Kicked -> {
+                channelMembers.removeAll(sceytMembers ?: return)
+                (channel as SceytGroupChannel).apply {
+                    members = channelMembers
+                    memberCount -= sceytMembers.size
+                }
+                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+            }
+            else -> return
         }
     }
 }
