@@ -11,7 +11,6 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnu
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.Companion.mapTo
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -31,6 +30,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class MessageListViewModel(private val conversationId: Long,
@@ -46,8 +46,8 @@ class MessageListViewModel(private val conversationId: Long,
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
-    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<MessageListItem>>(PaginationResponse.Nothing())
-    val loadMessagesFlow: StateFlow<PaginationResponse<MessageListItem>> = _loadMessagesFlow
+    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
+    val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
 
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
@@ -138,7 +138,9 @@ class MessageListViewModel(private val conversationId: Long,
 
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
-                initResponse(it)
+                withContext(Dispatchers.Main){
+                    initResponse(it)
+                }
             }
         }
     }
@@ -153,17 +155,15 @@ class MessageListViewModel(private val conversationId: Long,
         when (response) {
             is PaginationResponse.DBResponse -> {
                 if (response.data.isNotEmpty()) {
-                    _loadMessagesFlow.value = response.mapTo(mapper = { mapToMessageListItem(response.data, response.hasNext) })
+                    _loadMessagesFlow.value = response
                     notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
-            is PaginationResponse.ServerResponse -> {
-                if (response.data is SceytResponse.Success) {
-                    _loadMessagesFlow.value = response.mapTo(mapperResponse = { mapToMessageListItem(response.data.data, response.hasNext) })
-                }
-                notifyPageStateWithResponse(response.data, response.offset > 0, response.data.data.isNullOrEmpty())
+            is PaginationResponse.ServerResponse2 -> {
+                _loadMessagesFlow.value = response
+                notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
             }
-            is PaginationResponse.Nothing -> return
+            else -> return
         }
         pagingResponseReceived(response)
     }

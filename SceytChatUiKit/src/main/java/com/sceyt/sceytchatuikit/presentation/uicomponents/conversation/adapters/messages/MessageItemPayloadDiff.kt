@@ -14,7 +14,7 @@ data class MessageItemPayloadDiff(
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replayCountChanged
-                || replayContainerChanged || showAvatarAndNameChanged /*|| reactionsChanged || filesChanged*/
+                || replayContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
     }
 
     companion object {

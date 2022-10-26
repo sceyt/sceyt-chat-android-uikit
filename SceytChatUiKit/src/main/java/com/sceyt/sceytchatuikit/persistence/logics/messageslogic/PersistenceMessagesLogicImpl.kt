@@ -32,6 +32,7 @@ internal class PersistenceMessagesLogicImpl(
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference
 ) : PersistenceMessagesLogic, SceytKoinComponent {
+    private val messagesCash by lazy { MessagesCash() }
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val message = data.second
@@ -56,18 +57,26 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.updateMessageStateAndBody(data.id, data.state, data.body)
     }
 
-    override fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
+            if (offset == 0) messagesCash.clear()
+
             val dbMessages = getMessagesDb(conversationId, lastMessageId, offset)
+
+            messagesCash.addAll(dbMessages)
             trySend(PaginationResponse.DBResponse(dbMessages, offset, hasNext = dbMessages.size == MESSAGES_LOAD_SIZE))
 
             val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
-            val hasNext = response is SceytResponse.Success && response.data?.size == MESSAGES_LOAD_SIZE
-            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf(), hasNext = hasNext))
-
-            if (response is SceytResponse.Success)
+            if (response is SceytResponse.Success) {
                 saveMessagesToDb(response.data ?: return@callbackFlow)
+
+                messagesCash.addAll(response.data)
+
+                val hasNext = response.data.size == MESSAGES_LOAD_SIZE
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = messagesCash.get(), offset = offset, hasNext = hasNext))
+            } else
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = arrayListOf(), offset = offset, hasNext = false))
 
             awaitClose()
         }
@@ -92,7 +101,7 @@ internal class PersistenceMessagesLogicImpl(
         return messages
     }
 
-    private fun saveMessagesToDb(list: List<SceytMessage>) {
+    private suspend fun saveMessagesToDb(list: List<SceytMessage>) {
         if (list.isEmpty()) return
 
         messageDao.insertMessages(list.map {

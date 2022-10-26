@@ -14,7 +14,7 @@ internal interface PersistenceMessagesLogic {
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     fun onMessageReactionUpdated(data: Message?)
     fun onMessageEditedOrDeleted(data: Message?)
-    fun loadMessages(conversationId: Long, lastMessageId: Long,
+    suspend fun loadMessages(conversationId: Long, lastMessageId: Long,
                      replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>

@@ -49,6 +49,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                         customToastSnackBar(channelsListView, it.data.message ?: "")
                 }
                 is PaginationResponse.Nothing -> return@collect
+                else -> {}
             }
         }
     }

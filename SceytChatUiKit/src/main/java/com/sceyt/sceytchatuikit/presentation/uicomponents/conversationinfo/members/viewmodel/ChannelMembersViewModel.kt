@@ -89,6 +89,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                 notifyPageStateWithResponse(it.data, it.offset > 0)
             }
             is PaginationResponse.Nothing -> return
+            else -> {}
         }
         loadingItems.set(false)
     }

@@ -40,7 +40,7 @@ fun SceytAttachment?.getFileFromMetadata(): File? {
     try {
         val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
         return File(data.localPath)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
     }
     return null
 }

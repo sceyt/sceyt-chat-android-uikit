@@ -160,7 +160,7 @@ internal class PersistenceChannelsLogicImpl(
         ).map { channel -> channel.toChannel() }
     }
 
-    private fun saveChannelsToDb(list: List<SceytChannel>) {
+    private suspend fun saveChannelsToDb(list: List<SceytChannel>) {
         if (list.isEmpty()) return
 
         val links = arrayListOf<UserChatLink>()

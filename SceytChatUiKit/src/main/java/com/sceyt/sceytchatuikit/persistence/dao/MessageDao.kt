@@ -31,7 +31,7 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open fun insertMessages(messageDb: List<MessageDb>) {
+    open suspend fun insertMessages(messageDb: List<MessageDb>) {
         upsertMessageEntities(messageDb.map { it.messageEntity })
         //Delete attachments before insert
         deleteAttachments(messageDb.map { it.messageEntity.tid })
