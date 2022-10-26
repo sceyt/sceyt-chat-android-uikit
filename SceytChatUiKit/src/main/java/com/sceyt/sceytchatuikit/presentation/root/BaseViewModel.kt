@@ -43,6 +43,11 @@ open class BaseViewModel : ViewModel() {
                     hasNext = response.hasNext
             }
             is PaginationResponse.Nothing -> return
+            is PaginationResponse.ServerResponse2 -> {
+                loadingItems.set(false)
+                if (response.data is SceytResponse.Success)
+                    hasNext = response.hasNext
+            }
         }
     }
 

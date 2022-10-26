@@ -71,7 +71,11 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = false
             }
-            is PageState.StateLoadingMore -> return
+            is PageState.StateLoadingMore -> {
+                emptyStateView?.isVisible = false
+                emptySearchStateView?.isVisible = false
+                loadingStateView?.isVisible = false
+            }
             is PageState.Nothing -> {
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false

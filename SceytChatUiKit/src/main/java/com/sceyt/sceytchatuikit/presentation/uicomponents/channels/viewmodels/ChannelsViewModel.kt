@@ -118,6 +118,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                 notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty(), searchQuery)
             }
             is PaginationResponse.Nothing -> return
+            is PaginationResponse.ServerResponse2 -> TODO()
         }
 
         pagingResponseReceived(it)

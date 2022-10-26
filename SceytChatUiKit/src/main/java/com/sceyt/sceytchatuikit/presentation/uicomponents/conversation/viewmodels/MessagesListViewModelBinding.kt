@@ -50,20 +50,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             when (response) {
                 is PaginationResponse.DBResponse -> {
                     if (response.offset == 0) {
-                        messagesListView.setMessagesList(response.data)
-                    } else messagesListView.addNextPageMessages(response.data)
+                        messagesListView.setMessagesList(mapToMessageListItem(response.data, response.hasNext))
+                    } else messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
                 }
-                is PaginationResponse.ServerResponse -> {
+                is PaginationResponse.ServerResponse2 -> {
                     if (response.data is SceytResponse.Success) {
-                        response.data.data?.let { data ->
-                            messagesListView.updateMessagesWithServerData(data, response.offset, response.hasNext, lifecycleOwner) { list, hasNext ->
-                                return@updateMessagesWithServerData mapToMessageListItem(
-                                    list.filterIsInstance<MessageListItem.MessageItem>().map { messageItem -> messageItem.message }, hasNext)
-                            }
-                        }
+                        val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
+                        messagesListView.setMessagesList(newMessages)
                     }
                 }
-                is PaginationResponse.Nothing -> return@collect
+                else -> return@collect
             }
         }
     }
@@ -231,10 +227,10 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
 
-   /* pageStateLiveData.observe(lifecycleOwner) {
-        if (it is PageState.StateError)
-            customToastSnackBar(messageInputView, it.errorMessage.toString())
-    }*/
+    /* pageStateLiveData.observe(lifecycleOwner) {
+         if (it is PageState.StateError)
+             customToastSnackBar(messageInputView, it.errorMessage.toString())
+     }*/
 
     channelLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
