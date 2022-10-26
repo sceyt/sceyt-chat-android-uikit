@@ -15,7 +15,7 @@ class MessagesCash {
 
     fun add(message: SceytMessage) {
         synchronized(syncOb) {
-            cashedMessages[message.id] = message
+            cashedMessages[message.tid] = message
         }
     }
 
@@ -34,7 +34,7 @@ class MessagesCash {
     fun updateMessage(vararg message: SceytMessage) {
         synchronized(syncOb) {
             message.forEach {
-                cashedMessages[it.id] = it
+                cashedMessages[it.tid] = it
             }
         }
     }

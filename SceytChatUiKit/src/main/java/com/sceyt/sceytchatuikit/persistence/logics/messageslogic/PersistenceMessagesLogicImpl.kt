@@ -11,7 +11,6 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
-import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -36,8 +35,6 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val message = data.second
-        // Message tid is message id
-        checkAndInitMessageTid(message)
         messageDao.insertMessage(message.toMessageDb())
         messagesCash.add(message)
     }
@@ -50,6 +47,7 @@ internal class PersistenceMessagesLogicImpl(
     override fun onMessageReactionUpdated(data: Message?) {
         data ?: return
         reactionDao.insertReactionsAndScores(
+            messageId = data.id,
             reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
             scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
         messagesCash.updateMessage(data.toSceytUiMessage())
@@ -57,7 +55,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun onMessageEditedOrDeleted(data: Message?) {
         data ?: return
-        messageDao.updateMessageStateAndBody(data.id, data.state, data.body)
+        messageDao.updateMessage(data.toMessageEntity())
         messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
@@ -73,9 +71,7 @@ internal class PersistenceMessagesLogicImpl(
             val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
             if (response is SceytResponse.Success) {
-                checkAndInitMessageTid(*(response.data?.toTypedArray()) ?: return@callbackFlow)
-
-                saveMessagesToDb(response.data)
+                saveMessagesToDb(response.data ?: return@callbackFlow)
                 messagesCash.addAll(response.data)
 
                 val hasNext = response.data.size == MESSAGES_LOAD_SIZE
@@ -256,12 +252,5 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         return response
-    }
-
-    private fun checkAndInitMessageTid(vararg messages: SceytMessage) {
-        messages.forEach {
-            if (it.tid == 0L)
-                it.tid = it.id
-        }
     }
 }
