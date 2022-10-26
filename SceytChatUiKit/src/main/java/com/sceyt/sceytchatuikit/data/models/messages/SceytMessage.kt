@@ -109,7 +109,12 @@ open class SceytMessage(var id: Long,
             mentionedUsers = mentionedUsers,
             parent = parent,
             replyInThread = replyInThread,
-            replyCount = replyCount)
+            replyCount = replyCount).apply {
+            this@SceytMessage.isGroup = isGroup
+            this@SceytMessage.canShowAvatarAndName = isGroup
+            this@SceytMessage.files = files
+            this@SceytMessage.messageReactions = messageReactions
+        }
     }
 
     override fun equals(other: Any?): Boolean {

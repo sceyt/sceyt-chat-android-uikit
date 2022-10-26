@@ -200,6 +200,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.sendPendingMessages(channelId)
     }
 
+    override suspend fun sendAllPendingMessages() {
+        return messagesLogic.sendAllPendingMessages()
+    }
+
     override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long): SceytResponse<SceytMessage> {
         return messagesLogic.deleteMessage(channelId, messageId, messageTid)
     }

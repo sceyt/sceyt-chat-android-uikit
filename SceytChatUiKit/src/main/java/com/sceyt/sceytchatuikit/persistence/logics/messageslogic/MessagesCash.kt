@@ -9,7 +9,13 @@ class MessagesCash {
 
     fun addAll(list: List<SceytMessage>) {
         synchronized(syncOb) {
-            cashedMessages.putAll(list.associateBy { it.id })
+            cashedMessages.putAll(list.associateBy { it.tid })
+        }
+    }
+
+    fun add(message: SceytMessage) {
+        synchronized(syncOb) {
+            cashedMessages[message.id] = message
         }
     }
 
@@ -22,6 +28,14 @@ class MessagesCash {
     fun get(): List<SceytMessage> {
         synchronized(syncOb) {
             return cashedMessages.values.sortedBy { it.createdAt }.map { it.clone() }
+        }
+    }
+
+    fun updateMessage(vararg message: SceytMessage) {
+        synchronized(syncOb) {
+            message.forEach {
+                cashedMessages[it.id] = it
+            }
         }
     }
 }

@@ -36,13 +36,15 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val message = data.second
-        //Message tid is message id
-        message.tid = message.id
+        // Message tid is message id
+        checkAndInitMessageTid(message)
         messageDao.insertMessage(message.toMessageDb())
+        messagesCash.add(message)
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         messageDao.updateMessageStatus(data.status, *data.messageIds.toLongArray())
+        messagesCash.updateMessage(*messageDao.getMessageByIds(data.messageIds).map { it.toSceytMessage() }.toTypedArray())
     }
 
     override fun onMessageReactionUpdated(data: Message?) {
@@ -50,11 +52,13 @@ internal class PersistenceMessagesLogicImpl(
         reactionDao.insertReactionsAndScores(
             reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
             scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
+        messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
     override fun onMessageEditedOrDeleted(data: Message?) {
         data ?: return
         messageDao.updateMessageStateAndBody(data.id, data.state, data.body)
+        messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
     override suspend fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
@@ -69,8 +73,9 @@ internal class PersistenceMessagesLogicImpl(
             val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
             if (response is SceytResponse.Success) {
-                saveMessagesToDb(response.data ?: return@callbackFlow)
+                checkAndInitMessageTid(*(response.data?.toTypedArray()) ?: return@callbackFlow)
 
+                saveMessagesToDb(response.data)
                 messagesCash.addAll(response.data)
 
                 val hasNext = response.data.size == MESSAGES_LOAD_SIZE
@@ -168,6 +173,24 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
+    override suspend fun sendAllPendingMessages() {
+        val pendingMessages = messageDao.getAllPendingMessages()
+        if (pendingMessages.isNotEmpty()) {
+            pendingMessages.forEach {
+                val response = messagesRepository.sendMessage(it.messageEntity.channelId, it.toMessage())
+                if (response is SceytResponse.Success) {
+                    response.data?.let { responseMsg ->
+                        messageDao.updateMessageByParams(
+                            tid = responseMsg.tid, serverId = responseMsg.id,
+                            date = responseMsg.createdAt, status = DeliveryStatus.Sent)
+
+                        MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long): SceytResponse<SceytMessage> {
         val response = messagesRepository.deleteMessage(channelId, messageId)
         if (response is SceytResponse.Success) {
@@ -175,6 +198,7 @@ internal class PersistenceMessagesLogicImpl(
                 messageDao.deleteAttachments(listOf(messageTid))
                 reactionDao.deleteAllReactionsAndScores(messageId)
                 messageDao.updateMessage(message.toMessageEntity())
+                messagesCash.updateMessage(message)
             }
         }
         return response
@@ -185,6 +209,7 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
                 messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
+                messagesCash.updateMessage(*messageDao.getMessageByIds(ids.toList()).map { it.toSceytMessage() }.toTypedArray())
                 channelDao.clearUnreadCount(channelId, 0)
             }
         }
@@ -196,6 +221,7 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
                 messageDao.updateMessage(updatedMsg.toMessageEntity())
+                messagesCash.updateMessage(updatedMsg)
             }
         }
         return response
@@ -211,6 +237,7 @@ internal class PersistenceMessagesLogicImpl(
                 message.reactionScores?.let {
                     messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
                 }
+                messagesCash.updateMessage(message)
             }
         }
         return response
@@ -225,8 +252,16 @@ internal class PersistenceMessagesLogicImpl(
                     if (fromId != null)
                         reactionDao.deleteReactionAndScore(messageId, scoreKey, fromId)
                 }
+                messagesCash.updateMessage(message)
             }
         }
         return response
+    }
+
+    private fun checkAndInitMessageTid(vararg messages: SceytMessage) {
+        messages.forEach {
+            if (it.tid == 0L)
+                it.tid = it.id
+        }
     }
 }
