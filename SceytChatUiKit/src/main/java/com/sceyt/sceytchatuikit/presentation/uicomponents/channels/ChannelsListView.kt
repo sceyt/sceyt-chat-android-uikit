@@ -51,7 +51,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var pageStateView: PageStateView? = null
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
-    private var channelClickListeners: ChannelClickListeners.ClickListeners
     private var channelEventListener: ((ChannelEvent) -> Unit)? = null
 
     init {
@@ -91,8 +90,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
                 clickListeners.onAvatarClick(item)
             }
-        }.also {
-            channelClickListeners = it
         })
     }
 
@@ -346,6 +343,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
         clickListeners = listener
+        channelsRV.getViewHolderFactory().setChannelListener(listener)
     }
 
     /**
@@ -363,7 +361,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         channelsRV.setViewHolderFactory(factory.also {
-            it.setChannelListener(channelClickListeners)
+            it.setChannelListener(clickListeners)
         })
     }
 
