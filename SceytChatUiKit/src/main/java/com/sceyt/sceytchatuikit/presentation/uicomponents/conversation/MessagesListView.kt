@@ -334,6 +334,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
         clickListeners = listener
+        messagesRV.getViewHolderFactory().setMessageListener(listener)
     }
 
     fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
