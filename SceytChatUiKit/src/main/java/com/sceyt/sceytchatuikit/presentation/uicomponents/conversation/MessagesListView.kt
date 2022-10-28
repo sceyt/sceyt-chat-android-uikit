@@ -146,7 +146,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
                 R.id.sceyt_replay_in_thread -> messagePopupClickListeners.onReplayMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message)
+                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message, false)
             }
             false
         }
@@ -203,6 +203,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 break
             }
         }
+    }
+
+    internal fun sortMessages() {
+        messagesRV.sortMessages()
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
@@ -392,9 +396,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.setClipboard(message.body)
     }
 
-    override fun onDeleteMessageClick(message: SceytMessage) {
+    override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
         DeleteMessageDialog(context, positiveClickListener = {
-            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(message))
+            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(message, onlyForMe))
         }).show()
     }
 

@@ -137,12 +137,12 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.addNewChannels(channels)
     }
 
-    internal fun updateLastMessage(message: SceytMessage, edited: Boolean, unreadCount: Long? = null): Boolean {
+    internal fun updateLastMessage(message: SceytMessage, checkId: Boolean, unreadCount: Long? = null): Boolean {
         channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
             val channel = pair.second.channel
             if (message.channelId == channel.id) {
                 val oldChannel = channel.clone()
-                if (!edited || channel.lastMessage?.id == message.id)
+                if (!checkId || channel.lastMessage?.id == message.id)
                     channel.lastMessage = message
 
                 unreadCount?.let { count ->

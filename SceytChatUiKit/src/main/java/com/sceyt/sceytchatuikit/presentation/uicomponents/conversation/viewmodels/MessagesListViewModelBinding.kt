@@ -51,7 +51,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 is PaginationResponse.DBResponse -> {
                     if (response.offset == 0) {
                         messagesListView.setMessagesList(mapToMessageListItem(response.data, response.hasNext))
-                    } else messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
+                    } else {
+                        if (response.data.isNotEmpty() || !hasNext)
+                            messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
+                    }
                 }
                 is PaginationResponse.ServerResponse2 -> {
                     if (response.data is SceytResponse.Success) {
@@ -181,6 +184,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             val sceytUiMessage = it.second
             sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
             messagesListView.updateMessage(sceytUiMessage)
+            messagesListView.sortMessages()
         }
     }
 

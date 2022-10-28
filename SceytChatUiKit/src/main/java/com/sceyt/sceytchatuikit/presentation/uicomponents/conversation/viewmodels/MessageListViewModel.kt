@@ -159,10 +159,8 @@ class MessageListViewModel(private val conversationId: Long,
     private fun initResponse(response: PaginationResponse<SceytMessage>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
-                if (response.data.isNotEmpty()) {
-                    _loadMessagesFlow.value = response
-                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
-                }
+                _loadMessagesFlow.value = response
+                notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
             }
             is PaginationResponse.ServerResponse2 -> {
                 _loadMessagesFlow.value = response
@@ -173,9 +171,9 @@ class MessageListViewModel(private val conversationId: Long,
         pagingResponseReceived(response)
     }
 
-    fun deleteMessage(messageId: Long, messageTid: Long) {
+    fun deleteMessage(messageId: Long, messageTid: Long, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid)
+            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid, onlyForMe)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -330,7 +328,7 @@ class MessageListViewModel(private val conversationId: Long,
     internal fun onMessageCommandEvent(event: MessageCommandEvent) {
         when (event) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message.id, event.message.tid)
+                deleteMessage(event.message.id, event.message.tid, event.onlyForMe)
             }
             is MessageCommandEvent.EditMessage -> {
                 prepareToEditMessage(event.message)

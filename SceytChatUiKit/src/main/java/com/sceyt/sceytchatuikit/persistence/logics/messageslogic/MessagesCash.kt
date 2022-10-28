@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diffContent
 
 class MessagesCash {
@@ -31,9 +32,9 @@ class MessagesCash {
         }
     }
 
-    fun get(): List<SceytMessage> {
+    fun getSorted(): List<SceytMessage> {
         synchronized(syncOb) {
-            return cashedMessages.values.sortedBy { it.createdAt }.map { it.clone() }
+            return cashedMessages.values.sortedWith(MessageComparator()).map { it.clone() }
         }
     }
 

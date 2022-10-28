@@ -164,19 +164,19 @@ inline fun animatorListener(
         crossinline onAnimationCancel: (animation: Animator?) -> Unit = { _ -> },
         crossinline onAnimationStart: (animation: Animator?) -> Unit = { _ -> }): Animator.AnimatorListener {
     return object : Animator.AnimatorListener {
-        override fun onAnimationRepeat(animation: Animator?) {
+        override fun onAnimationRepeat(animation: Animator) {
             onAnimationRepeat.invoke(animation)
         }
 
-        override fun onAnimationEnd(animation: Animator?) {
+        override fun onAnimationEnd(animation: Animator) {
             onAnimationEnd.invoke(animation)
         }
 
-        override fun onAnimationCancel(animation: Animator?) {
+        override fun onAnimationCancel(animation: Animator) {
             onAnimationCancel.invoke(animation)
         }
 
-        override fun onAnimationStart(animation: Animator?) {
+        override fun onAnimationStart(animation: Animator) {
             onAnimationStart.invoke(animation)
         }
 
