@@ -159,8 +159,11 @@ class MessageListViewModel(private val conversationId: Long,
     private fun initResponse(response: PaginationResponse<SceytMessage>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
-                _loadMessagesFlow.value = response
-                notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                // Ignore the case, when db data is empty, but still not received server response.
+                if (response.data.isNotEmpty() || (!hasNext && loadingItems.get().not())) {
+                    _loadMessagesFlow.value = response
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                }
             }
             is PaginationResponse.ServerResponse2 -> {
                 _loadMessagesFlow.value = response
