@@ -178,11 +178,6 @@ open class ConversationActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.sendPendingMessages()
-    }
-
     inner class MyViewModelFactory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))

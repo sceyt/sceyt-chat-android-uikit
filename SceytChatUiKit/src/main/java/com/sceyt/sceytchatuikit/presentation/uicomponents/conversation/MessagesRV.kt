@@ -171,6 +171,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun getViewHolderFactory() = viewHolderFactory
 
+    fun sortMessages() {
+        if (::mAdapter.isInitialized.not()) return
+        mAdapter.sort(this)
+    }
+
     fun hideLoadingItem() {
         if (::mAdapter.isInitialized)
             mAdapter.removeLoading()

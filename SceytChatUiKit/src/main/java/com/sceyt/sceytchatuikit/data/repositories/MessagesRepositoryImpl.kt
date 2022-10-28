@@ -88,9 +88,9 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).deleteMessage(messageId, true, object : MessageCallback {
+            ChannelOperator.build(channelId).deleteMessage(messageId, onlyForMe, object : MessageCallback {
                 override fun onResult(msg: Message) {
                     continuation.resume(SceytResponse.Success(msg.toSceytUiMessage()))
                 }

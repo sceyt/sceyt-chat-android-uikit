@@ -26,17 +26,15 @@ sealed class MessageListItem {
         }
     }
 
-    override fun hashCode(): Int {
-        return javaClass.hashCode()
+    fun getMessageCreatedAt(): Long {
+        return when (this) {
+            is MessageItem -> message.createdAt
+            is DateSeparatorItem -> createdAt
+            is LoadingMoreItem -> 0
+        }
     }
 
-    companion object {
-        fun comparator(it: MessageListItem): Long {
-            return when (it) {
-                is MessageItem -> it.message.createdAt
-                is DateSeparatorItem -> it.createdAt
-                is LoadingMoreItem -> 0
-            }
-        }
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
     }
 }

@@ -113,7 +113,11 @@ open class SceytMessage(var id: Long,
     }
 
     override fun equals(other: Any?): Boolean {
-        return (other as? SceytMessage)?.id == id
+        if (other == null || other !is SceytMessage) return false
+
+        return if (other.deliveryStatus != DeliveryStatus.Pending)
+            other.id == id
+        else other.tid == tid
     }
 
     override fun hashCode(): Int {

@@ -75,7 +75,7 @@ internal class PersistenceMessagesLogicImpl(
                 val hasDiff = messagesCash.addAll(response.data, true)
 
                 val hasNext = response.data.size == MESSAGES_LOAD_SIZE
-                trySend(PaginationResponse.ServerResponse2(data = response, cashData = messagesCash.get(), offset = offset, hasDiff = hasDiff, hasNext = hasNext))
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = messagesCash.getSorted(), offset = offset, hasDiff = hasDiff, hasNext = hasNext))
             } else
                 trySend(PaginationResponse.ServerResponse2(data = response, cashData = arrayListOf(), offset = offset, hasDiff = false, hasNext = false))
 
@@ -136,6 +136,7 @@ internal class PersistenceMessagesLogicImpl(
             }
             messageDao.insertMessage(tmpMessageDb)
             channelDao.updateLastMessage(channelId, tmpMessage.tid, tmpMessage.createdAt.time)
+            messagesCash.add(tmpMessage.toSceytUiMessage())
             tmpMessageCb.invoke(tmpMessage)
             MessageEventsObserver.emitOutgoingMessage(tmpMessage.toSceytUiMessage())
         }
@@ -145,6 +146,7 @@ internal class PersistenceMessagesLogicImpl(
                     tid = responseMsg.tid, serverId = responseMsg.id,
                     date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
+                messagesCash.updateMessage(responseMsg)
                 MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
             }
         }
@@ -162,6 +164,7 @@ internal class PersistenceMessagesLogicImpl(
                             tid = responseMsg.tid, serverId = responseMsg.id,
                             date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
+                        messagesCash.updateMessage(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
                     }
                 }
@@ -180,6 +183,7 @@ internal class PersistenceMessagesLogicImpl(
                             tid = responseMsg.tid, serverId = responseMsg.id,
                             date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
+                        messagesCash.updateMessage(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
                     }
                 }
@@ -187,8 +191,8 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long): SceytResponse<SceytMessage> {
-        val response = messagesRepository.deleteMessage(channelId, messageId)
+    override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteMessage(channelId, messageId, onlyForMe)
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
                 messageDao.deleteAttachments(listOf(messageTid))
