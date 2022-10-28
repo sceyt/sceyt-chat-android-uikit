@@ -19,6 +19,12 @@ object MessageInputViewStyle {
     @ColorRes
     var inputHintTextColor: Int = R.color.sceyt_color_hint
 
+    @ColorRes
+    var horizontalLineColor: Int = R.color.sceyt_color_accent
+
+    @ColorRes
+    var userNameTextColor: Int = R.color.sceyt_color_accent
+
     lateinit var inputHintText: String
 
 
@@ -29,6 +35,8 @@ object MessageInputViewStyle {
         inputHintTextColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputHintTextColor, inputHintTextColor)
         inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytMessageInputHintText)
                 ?: context.getString(R.string.sceyt_message)
+        horizontalLineColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputHorizontalLineColor, horizontalLineColor)
+        userNameTextColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputUserNameTextColor, userNameTextColor)
         return this
     }
 }

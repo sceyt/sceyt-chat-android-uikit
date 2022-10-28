@@ -311,6 +311,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateViewState(PageState.StateEmpty())
     }
 
+    fun hideLoadingMore() {
+        messagesRV.hideLoadingItem()
+    }
+
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
             it.setMessageListener(clickListeners)

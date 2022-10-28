@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -172,6 +173,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
+        with(layoutReplayMessage) {
+            horizontalView.backgroundTintList = ColorStateList.valueOf(context.getCompatColorByTheme(MessageInputViewStyle.horizontalLineColor))
+            tvName.setTextColor(context.getCompatColorByTheme(MessageInputViewStyle.userNameTextColor))
+        }
     }
 
     private fun getMessageType(attachments: List<Attachment>, body: String?): String {

@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +17,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
@@ -38,7 +38,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import kotlin.math.min
@@ -76,7 +77,7 @@ abstract class BaseMsgViewHolder(view: View,
         if (messageListItem is MessageListItem.MessageItem) {
 
             val message = (messageListItem as MessageListItem.MessageItem).message
-            if (message.incoming && message.deliveryStatus != DeliveryStatus.Read)
+            if (message.incoming && message.selfMarkers?.contains("displayed") != true)
                 displayedListener?.invoke(message)
         }
     }
@@ -112,6 +113,8 @@ abstract class BaseMsgViewHolder(view: View,
         if (viewStub.parent != null)
             SceytRecyclerReplayContainerBinding.bind(viewStub.inflate()).also {
                 replayMessageContainerBinding = it
+                it.tvName.setTextColor(context.getCompatColor(MessagesStyle.senderNameTextColor))
+                it.view.backgroundTintList= ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replayMessageLineColor))
             }
         with(replayMessageContainerBinding ?: return) {
             val parent = message.parent
@@ -147,7 +150,7 @@ abstract class BaseMsgViewHolder(view: View,
         if (message.canShowAvatarAndName) {
             val user = message.from
             val displayName = getSenderName(user)
-            avatarView.setNameAndImageUrl(displayName, user?.avatarURL, AvatarStyle.userDefaultAvatar)
+            avatarView.setNameAndImageUrl(displayName, user?.avatarURL, UserStyle.userDefaultAvatar)
             tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true

@@ -65,19 +65,19 @@ internal class PersistenceMessagesLogicImpl(
 
             val dbMessages = getMessagesDb(conversationId, lastMessageId, offset)
 
-            messagesCash.addAll(dbMessages)
+            messagesCash.addAll(dbMessages, false)
             trySend(PaginationResponse.DBResponse(dbMessages, offset, hasNext = dbMessages.size == MESSAGES_LOAD_SIZE))
 
             val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
             if (response is SceytResponse.Success) {
                 saveMessagesToDb(response.data ?: return@callbackFlow)
-                messagesCash.addAll(response.data)
+                val hasDiff = messagesCash.addAll(response.data, true)
 
                 val hasNext = response.data.size == MESSAGES_LOAD_SIZE
-                trySend(PaginationResponse.ServerResponse2(data = response, cashData = messagesCash.get(), offset = offset, hasNext = hasNext))
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = messagesCash.get(), offset = offset, hasDiff = hasDiff, hasNext = hasNext))
             } else
-                trySend(PaginationResponse.ServerResponse2(data = response, cashData = arrayListOf(), offset = offset, hasNext = false))
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = arrayListOf(), offset = offset, hasDiff = false, hasNext = false))
 
             awaitClose()
         }
@@ -206,6 +206,12 @@ internal class PersistenceMessagesLogicImpl(
             response.data?.let { messageListMarker ->
                 messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
                 messagesCash.updateMessage(*messageDao.getMessageByIds(ids.toList()).map { it.toSceytMessage() }.toTypedArray())
+
+                //todo need update marker count
+                ids.forEach {
+                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, "displayed")
+                }
+
                 channelDao.clearUnreadCount(channelId, 0)
             }
         }

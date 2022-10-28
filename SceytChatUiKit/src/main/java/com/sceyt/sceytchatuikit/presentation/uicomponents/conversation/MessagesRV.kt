@@ -172,7 +172,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun getViewHolderFactory() = viewHolderFactory
 
     fun hideLoadingItem() {
-        mAdapter.removeLoading()
+        if (::mAdapter.isInitialized)
+            mAdapter.removeLoading()
     }
 
     fun clearData() {
