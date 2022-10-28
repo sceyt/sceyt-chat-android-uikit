@@ -51,20 +51,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 is PaginationResponse.DBResponse -> {
                     if (response.offset == 0) {
                         messagesListView.setMessagesList(mapToMessageListItem(response.data, response.hasNext))
-                    } else {
-                        if (response.data.isNotEmpty() || !hasNext)
-                            messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
-                    }
+                    } else
+                        messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
                 }
                 is PaginationResponse.ServerResponse2 -> {
-                    if (response.data is SceytResponse.Success) {
-                        if (response.hasDiff) {
-                            val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
-                            messagesListView.setMessagesList(newMessages)
-                        } else {
-                            if (response.hasNext.not())
-                                messagesListView.hideLoadingMore()
+                    when (response.data) {
+                        is SceytResponse.Success -> {
+                            if (response.hasDiff) {
+                                val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
+                                messagesListView.setMessagesList(newMessages)
+                            } else
+                                if (response.hasNext.not())
+                                    messagesListView.hideLoadingMore()
                         }
+                        else -> if (!hasNextDb) messagesListView.hideLoadingMore()
                     }
                 }
                 else -> return@collect

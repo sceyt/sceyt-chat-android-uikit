@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.channeleventobserver
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.member.Member
@@ -63,6 +64,7 @@ object ChannelEventsObserver {
             override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
                 val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
                 onTotalUnreadChangedFlow_.tryEmit(data)
+                Log.i("totalUnreadCountUpdated", "${channel?.unreadMessageCount}  $totalUnreadChannelCount  $totalUnreadMessageCount")
             }
 
             override fun onClearedHistory(channel: Channel?) {
