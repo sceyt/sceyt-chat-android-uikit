@@ -8,7 +8,7 @@
     android:paddingEnd="5dp"
     android:paddingBottom="10dp">
 
-    <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/imageCont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,7 +27,7 @@
             tools:background="@color/sceyt_color_accent"
             tools:padding="15dp" />
 
-    </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+    </androidx.cardview.widget.CardView>
 
     <View
         android:id="@+id/viewBgClose"

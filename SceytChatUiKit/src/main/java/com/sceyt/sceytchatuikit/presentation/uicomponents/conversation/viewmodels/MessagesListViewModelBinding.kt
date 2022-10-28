@@ -55,8 +55,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
                 is PaginationResponse.ServerResponse2 -> {
                     if (response.data is SceytResponse.Success) {
-                        val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
-                        messagesListView.setMessagesList(newMessages)
+                        if (response.hasDiff) {
+                            val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
+                            messagesListView.setMessagesList(newMessages)
+                        } else {
+                            if (response.hasNext.not())
+                                messagesListView.hideLoadingMore()
+                        }
                     }
                 }
                 else -> return@collect

@@ -8,10 +8,3 @@ open class MessageDateSeparatorFormatter {
     open fun thisYear(context: Context) = DateFormatData(format = "MMMM dd")
     open fun olderThisYear(context: Context) = DateFormatData(format = "dd.MM.yy")
 }
-
-data class DateFormatData(
-        val format: String? = null,
-        val beginTittle: String = "",
-        val endTitle: String = ""
-)
-

@@ -1,15 +1,21 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diffContent
 
 class MessagesCash {
     private var cashedMessages = hashMapOf<Long, SceytMessage>()
     private val syncOb = Any()
 
-
-    fun addAll(list: List<SceytMessage>) {
+    /** Added messages like upsert, and check is differences between messages*/
+    fun addAll(list: List<SceytMessage>, checkDifference: Boolean): Boolean {
         synchronized(syncOb) {
-            cashedMessages.putAll(list.associateBy { it.tid })
+            return if (checkDifference)
+                putAndCheckHasDiff(list)
+            else {
+                cashedMessages.putAll(list.associateBy { it.tid })
+                false
+            }
         }
     }
 
@@ -37,5 +43,17 @@ class MessagesCash {
                 cashedMessages[it.tid] = it
             }
         }
+    }
+
+    private fun putAndCheckHasDiff(list: List<SceytMessage>): Boolean {
+        var detectedDiff = false
+        list.forEach {
+            if (!detectedDiff) {
+                val old = cashedMessages[it.tid]
+                detectedDiff = old?.diffContent(it)?.hasDifference() ?: true
+            }
+            cashedMessages[it.tid] = it
+        }
+        return detectedDiff
     }
 }

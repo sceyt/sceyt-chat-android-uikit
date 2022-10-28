@@ -10,6 +10,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
 import java.io.File
 
 fun SceytMessage.getShowBody(context: Context): String {
@@ -63,12 +65,31 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         edited = state != other.state,
         bodyChanged = body != other.body,
         statusChanged = deliveryStatus != other.deliveryStatus,
-        avatarChanged = from?.avatarURL != other.from?.avatarURL,
-        nameChanged = from?.fullName != other.from?.fullName,
+        avatarChanged = from?.avatarURL.equalsIgnoreNull(other.from?.avatarURL).not(),
+        nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
         replayCountChanged = replyCount != other.replyCount,
-        replayContainerChanged = parent != other.parent || parent?.from!= other.parent?.from,
-        reactionsChanged = messageReactions?.equals(other.messageReactions)?.not() ?: true,
+        replayContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
+        reactionsChanged = lastReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
+            other.lastReactions?.map { it.toReactionEntity(id) }
+        ).not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
-        filesChanged = !attachments.contentEquals(other.attachments)
+        filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
+    )
+}
+
+internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDiff {
+    return MessageItemPayloadDiff(
+        edited = state != other.state,
+        bodyChanged = body != other.body,
+        statusChanged = deliveryStatus != other.deliveryStatus,
+        avatarChanged = from?.avatarURL.equalsIgnoreNull(other.from?.avatarURL).not(),
+        nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
+        replayCountChanged = replyCount != other.replyCount,
+        replayContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
+        reactionsChanged = lastReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
+            other.lastReactions?.map { it.toReactionEntity(id) }
+        ).not(),
+        showAvatarAndNameChanged = false,
+        filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
     )
 }

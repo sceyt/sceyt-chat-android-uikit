@@ -27,11 +27,12 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.setLastActiveDateByTime
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.*
+import java.util.*
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
@@ -107,9 +108,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 if (member.user.presence?.state == PresenceState.Online) {
                     getString(R.string.sceyt_online)
                 } else {
-                    if (member.user.presence?.lastActiveAt != 0L)
-                        setLastActiveDateByTime(member.user.presence.lastActiveAt)
-                    else null
+                    member.user.presence?.lastActiveAt?.let {
+                        if (it != 0L)
+                            DateTimeUtil.getPresenceDateFormatData(context, Date(it))
+                        else null
+                    }
                 }
             } else getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
 
@@ -127,7 +130,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.avatar.isVisible = !replayInThread
         if (!replayInThread) {
             val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-            avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else AvatarStyle.userDefaultAvatar)
+            avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
         }
     }
 

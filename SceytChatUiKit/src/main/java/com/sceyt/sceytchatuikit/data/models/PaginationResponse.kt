@@ -29,6 +29,7 @@ sealed class PaginationResponse<T> {
             val data: SceytResponse<List<T>>,
             val cashData: List<T>,
             val offset: Int,
+            val hasDiff: Boolean,
             val hasNext: Boolean = false
     ) : PaginationResponse<T>()
 
