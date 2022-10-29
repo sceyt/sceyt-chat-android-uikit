@@ -6,7 +6,7 @@
     android:layout_height="wrap_content">
 
     <View
-        android:id="@+id/view"
+        android:id="@+id/horizontalView"
         android:layout_width="2dp"
         android:layout_height="0dp"
         android:layout_marginVertical="8dp"
@@ -24,8 +24,8 @@
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/extraSmallTextSize"
         app:layout_constraintEnd_toStartOf="@+id/icCancelReplay"
-        app:layout_constraintStart_toEndOf="@+id/view"
-        app:layout_constraintTop_toTopOf="@+id/view"
+        app:layout_constraintStart_toEndOf="@+id/horizontalView"
+        app:layout_constraintTop_toTopOf="@+id/horizontalView"
         tools:text="Henry Willian" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -36,9 +36,9 @@
         android:singleLine="true"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/smallTextSize"
-        app:layout_constraintBottom_toBottomOf="@+id/view"
+        app:layout_constraintBottom_toBottomOf="@+id/horizontalView"
         app:layout_constraintEnd_toStartOf="@+id/icCancelReplay"
-        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintStart_toEndOf="@+id/horizontalView"
         app:layout_constraintTop_toBottomOf="@+id/tvName"
         tools:text="Waiting for your answer." />
 
@@ -49,7 +49,7 @@
         android:layout_marginEnd="16dp"
         android:tint="#898B99"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/view"
+        app:layout_constraintTop_toTopOf="@+id/horizontalView"
         app:srcCompat="@drawable/sceyt_ic_cancel" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

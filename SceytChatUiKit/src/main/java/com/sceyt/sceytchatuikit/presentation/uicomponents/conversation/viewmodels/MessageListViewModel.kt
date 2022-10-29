@@ -5,7 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
-import com.sceyt.sceytchatuikit.data.*
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -17,9 +19,13 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.data.toFileListItem
+import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -29,6 +35,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class MessageListViewModel(private val conversationId: Long,
@@ -44,8 +51,8 @@ class MessageListViewModel(private val conversationId: Long,
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
-    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<MessageListItem>>(PaginationResponse.Nothing())
-    val loadMessagesFlow: StateFlow<PaginationResponse<MessageListItem>> = _loadMessagesFlow
+    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
+    val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
 
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
@@ -80,9 +87,9 @@ class MessageListViewModel(private val conversationId: Long,
 
     //Command events
     private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
+    internal val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
     private val _onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
+    internal val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
 
 
     init {
@@ -107,17 +114,17 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.first.id == channel.id && it.second.replyInThread }
             .mapNotNull { it.second }
 
-        onMessageStatusFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onMessageStatusFlow
+        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
             .filter { it.channelId == channel.id }
 
-        onChannelEventFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelEventFlow
+        onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
             .filter { it.channelId == channel.id }
 
-        onChannelTypingEventFlow = com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelTypingEventFlow
+        onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
             .filter { it.channel.id == channel.id }
 
         viewModelScope.launch {
-            com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver.onChannelMembersEventFlow
+            ChannelEventsObserver.onChannelMembersEventFlow
                 .filter { it.channel?.id == channel.id }
                 .collect(::onChannelMemberEvent)
         }
@@ -136,7 +143,9 @@ class MessageListViewModel(private val conversationId: Long,
 
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
-                initResponse(it)
+                withContext(Dispatchers.Main) {
+                    initResponse(it)
+                }
             }
         }
     }
@@ -147,29 +156,27 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun initResponse(it: PaginationResponse<SceytMessage>) {
-        when (it) {
+    private fun initResponse(response: PaginationResponse<SceytMessage>) {
+        when (response) {
             is PaginationResponse.DBResponse -> {
-                if (it.data.isNotEmpty()) {
-                    _loadMessagesFlow.value = PaginationResponse.DBResponse(mapToMessageListItem(it.data, it.hasNext), it.offset)
-                    notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
+                // Ignore the case, when db data is empty, but still not received server response.
+                if (response.data.isNotEmpty() || (!hasNext && loadingItems.get().not())) {
+                    _loadMessagesFlow.value = response
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
-            is PaginationResponse.ServerResponse -> {
-                if (it.data is SceytResponse.Success) {
-                    _loadMessagesFlow.value = PaginationResponse.ServerResponse(
-                        SceytResponse.Success(mapToMessageListItem(it.data.data, it.hasNext)), offset = it.offset, dbData = arrayListOf())
-                }
-                notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty())
+            is PaginationResponse.ServerResponse2 -> {
+                _loadMessagesFlow.value = response
+                notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
             }
-            is PaginationResponse.Nothing -> return
+            else -> return
         }
-        pagingResponseReceived(it)
+        pagingResponseReceived(response)
     }
 
-    private fun deleteMessage(messageId: Long, messageTid: Long) {
+    fun deleteMessage(messageId: Long, messageTid: Long, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid)
+            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid, onlyForMe)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -177,7 +184,15 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun addReaction(message: SceytMessage, scoreKey: String) {
+    fun prepareToEditMessage(message: SceytMessage) {
+        _onEditMessageCommandLiveData.postValue(message)
+    }
+
+    fun prepareToReplayMessage(message: SceytMessage) {
+        _onReplayMessageCommandLiveData.postValue(message)
+    }
+
+    fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
@@ -190,7 +205,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun deleteReaction(message: SceytMessage, scoreKey: String) {
+    fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
             _addDeleteReactionLiveData.postValue(response.apply {
@@ -200,31 +215,6 @@ class MessageListViewModel(private val conversationId: Long,
                     }
                 }
             })
-        }
-    }
-
-    private fun onChannelMemberEvent(eventData: com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData) {
-        val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
-        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
-
-        when (eventData.eventType) {
-            ChannelMembersEventEnum.Added -> {
-                channelMembers.addAll(sceytMembers ?: return)
-                (channel as SceytGroupChannel).apply {
-                    members = channelMembers
-                    memberCount += sceytMembers.size
-                }
-                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
-            }
-            ChannelMembersEventEnum.Kicked -> {
-                channelMembers.removeAll(sceytMembers ?: return)
-                (channel as SceytGroupChannel).apply {
-                    members = channelMembers
-                    memberCount -= sceytMembers.size
-                }
-                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
-            }
-            else -> return
         }
     }
 
@@ -241,7 +231,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun sendReplayMessage(message: Message, parent: Message?) {
+    fun sendReplayMessage(message: Message, parent: Message?) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
                 _onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
@@ -255,7 +245,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun editMessage(message: SceytMessage) {
+    fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
             _messageEditedDeletedLiveData.postValue(response)
@@ -265,26 +255,26 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun markMessageAsDisplayed(vararg id: Long) {
+    fun markMessageAsDisplayed(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.markAsRead(channel.id, *id)
         }
     }
 
-    internal fun sendTypingEvent(typing: Boolean) {
+    fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(channel.id, typing)
         }
     }
 
-    internal fun join() {
+    fun join() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.join(channel.id)
             _joinLiveData.postValue(response)
         }
     }
 
-    internal fun getChannel(channelId: Long) {
+    fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
             _channelLiveData.postValue(response)
@@ -341,13 +331,13 @@ class MessageListViewModel(private val conversationId: Long,
     internal fun onMessageCommandEvent(event: MessageCommandEvent) {
         when (event) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message.id, event.message.tid)
+                deleteMessage(event.message.id, event.message.tid, event.onlyForMe)
             }
             is MessageCommandEvent.EditMessage -> {
-                _onEditMessageCommandLiveData.postValue(event.message)
+                prepareToEditMessage(event.message)
             }
             is MessageCommandEvent.Replay -> {
-                _onReplayMessageCommandLiveData.postValue(event.message)
+                prepareToReplayMessage(event.message)
             }
         }
     }
@@ -360,6 +350,31 @@ class MessageListViewModel(private val conversationId: Long,
             is ReactionEvent.RemoveReaction -> {
                 deleteReaction(event.message, event.scoreKey)
             }
+        }
+    }
+
+    private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
+        val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
+        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
+
+        when (eventData.eventType) {
+            ChannelMembersEventEnum.Added -> {
+                channelMembers.addAll(sceytMembers ?: return)
+                (channel as SceytGroupChannel).apply {
+                    members = channelMembers
+                    memberCount += sceytMembers.size
+                }
+                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+            }
+            ChannelMembersEventEnum.Kicked -> {
+                channelMembers.removeAll(sceytMembers ?: return)
+                (channel as SceytGroupChannel).apply {
+                    members = channelMembers
+                    memberCount -= sceytMembers.size
+                }
+                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+            }
+            else -> return
         }
     }
 }

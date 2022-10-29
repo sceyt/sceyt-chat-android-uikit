@@ -23,7 +23,7 @@ import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.AvatarStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
@@ -155,7 +155,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
-        binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else AvatarStyle.userDefaultAvatar)
+        binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
     }
 
     open fun setLastMessageStatus(channel: SceytChannel, dateStatusView: SceytDateStatusView) {

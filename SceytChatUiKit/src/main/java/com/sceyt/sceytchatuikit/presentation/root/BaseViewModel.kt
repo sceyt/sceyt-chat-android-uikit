@@ -26,12 +26,12 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    fun setPagingLoadingStarted() {
+    protected fun setPagingLoadingStarted() {
         loadingItemsDb.set(true)
         loadingItems.set(true)
     }
 
-    fun pagingResponseReceived(response: PaginationResponse<*>) {
+    protected fun pagingResponseReceived(response: PaginationResponse<*>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
                 loadingItemsDb.set(false)
@@ -43,10 +43,15 @@ open class BaseViewModel : ViewModel() {
                     hasNext = response.hasNext
             }
             is PaginationResponse.Nothing -> return
+            is PaginationResponse.ServerResponse2 -> {
+                loadingItems.set(false)
+                if (response.data is SceytResponse.Success)
+                    hasNext = response.hasNext
+            }
         }
     }
 
-    fun notifyPageLoadingState(isLoadingMore: Boolean) {
+    protected fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {
             _pageStateLiveData.postValue(PageState.StateLoadingMore())
         } else

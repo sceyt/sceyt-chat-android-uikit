@@ -14,7 +14,7 @@ import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
@@ -68,7 +68,7 @@ open class ConversationActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch(Dispatchers.IO) {
-            ConnectionObserver.onChangedConnectStatusFlow.collect {
+            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                 if (it.first == Types.ConnectState.StateConnected)
                     viewModel.sendPendingMessages()
             }
@@ -176,11 +176,6 @@ open class ConversationActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.sendPendingMessages()
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {

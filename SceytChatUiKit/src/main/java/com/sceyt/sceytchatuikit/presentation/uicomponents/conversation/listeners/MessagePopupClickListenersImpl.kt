@@ -18,9 +18,9 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
         copyMessageListener?.onCopyMessageClick(message)
     }
 
-    override fun onDeleteMessageClick(message: SceytMessage) {
-        defaultListeners.onDeleteMessageClick(message)
-        deleteMessageListener?.onDeleteMessageClick(message)
+    override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
+        defaultListeners.onDeleteMessageClick(message, onlyForMe)
+        deleteMessageListener?.onDeleteMessageClick(message, onlyForMe)
     }
 
     override fun onEditMessageClick(message: SceytMessage) {
@@ -57,19 +57,19 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
                 copyMessageListener = listener
             }
             is MessagePopupClickListeners.DeleteMessage -> {
-               deleteMessageListener = listener
+                deleteMessageListener = listener
             }
             is MessagePopupClickListeners.EditMessage -> {
-               editMessageListener = listener
+                editMessageListener = listener
             }
             is MessagePopupClickListeners.ReactMessage -> {
-               reactMessageListener = listener
+                reactMessageListener = listener
             }
             is MessagePopupClickListeners.ReplayMessage -> {
-               replayMessageListener = listener
+                replayMessageListener = listener
             }
             is MessagePopupClickListeners.ReplayInThreadMessage -> {
-               replayInThreadMessageListener = listener
+                replayInThreadMessageListener = listener
             }
         }
     }

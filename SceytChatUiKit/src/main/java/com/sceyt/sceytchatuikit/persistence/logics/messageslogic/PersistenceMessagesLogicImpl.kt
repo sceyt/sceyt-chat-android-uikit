@@ -11,7 +11,6 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
-import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -32,42 +31,53 @@ internal class PersistenceMessagesLogicImpl(
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference
 ) : PersistenceMessagesLogic, SceytKoinComponent {
+    private val messagesCash by lazy { MessagesCash() }
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val message = data.second
-        //Message tid is message id
-        message.tid = message.id
         messageDao.insertMessage(message.toMessageDb())
+        messagesCash.add(message)
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         messageDao.updateMessageStatus(data.status, *data.messageIds.toLongArray())
+        messagesCash.updateMessage(*messageDao.getMessageByIds(data.messageIds).map { it.toSceytMessage() }.toTypedArray())
     }
 
-    override fun onMessageReactionUpdated(data: Message?) {
+    override suspend fun onMessageReactionUpdated(data: Message?) {
         data ?: return
         reactionDao.insertReactionsAndScores(
+            messageId = data.id,
             reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
             scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
+        messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
-    override fun onMessageEditedOrDeleted(data: Message?) {
+    override suspend fun onMessageEditedOrDeleted(data: Message?) {
         data ?: return
-        messageDao.updateMessageStateAndBody(data.id, data.state, data.body)
+        messageDao.updateMessage(data.toMessageEntity())
+        messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
-    override fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
+            if (offset == 0) messagesCash.clear()
+
             val dbMessages = getMessagesDb(conversationId, lastMessageId, offset)
+
+            messagesCash.addAll(dbMessages, false)
             trySend(PaginationResponse.DBResponse(dbMessages, offset, hasNext = dbMessages.size == MESSAGES_LOAD_SIZE))
 
             val response = messagesRepository.getMessages(conversationId, lastMessageId, replayInThread)
 
-            val hasNext = response is SceytResponse.Success && response.data?.size == MESSAGES_LOAD_SIZE
-            trySend(PaginationResponse.ServerResponse(data = response, offset = offset, dbData = arrayListOf(), hasNext = hasNext))
-
-            if (response is SceytResponse.Success)
+            if (response is SceytResponse.Success) {
                 saveMessagesToDb(response.data ?: return@callbackFlow)
+                val hasDiff = messagesCash.addAll(response.data, true)
+
+                val hasNext = response.data.size == MESSAGES_LOAD_SIZE
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = messagesCash.getSorted(), offset = offset, hasDiff = hasDiff, hasNext = hasNext))
+            } else
+                trySend(PaginationResponse.ServerResponse2(data = response, cashData = arrayListOf(), offset = offset, hasDiff = false, hasNext = false))
 
             awaitClose()
         }
@@ -92,7 +102,7 @@ internal class PersistenceMessagesLogicImpl(
         return messages
     }
 
-    private fun saveMessagesToDb(list: List<SceytMessage>) {
+    private suspend fun saveMessagesToDb(list: List<SceytMessage>) {
         if (list.isEmpty()) return
 
         messageDao.insertMessages(list.map {
@@ -126,6 +136,7 @@ internal class PersistenceMessagesLogicImpl(
             }
             messageDao.insertMessage(tmpMessageDb)
             channelDao.updateLastMessage(channelId, tmpMessage.tid, tmpMessage.createdAt.time)
+            messagesCash.add(tmpMessage.toSceytUiMessage())
             tmpMessageCb.invoke(tmpMessage)
             MessageEventsObserver.emitOutgoingMessage(tmpMessage.toSceytUiMessage())
         }
@@ -135,6 +146,7 @@ internal class PersistenceMessagesLogicImpl(
                     tid = responseMsg.tid, serverId = responseMsg.id,
                     date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
+                messagesCash.updateMessage(responseMsg)
                 MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
             }
         }
@@ -152,6 +164,7 @@ internal class PersistenceMessagesLogicImpl(
                             tid = responseMsg.tid, serverId = responseMsg.id,
                             date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
+                        messagesCash.updateMessage(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
                     }
                 }
@@ -159,13 +172,33 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long): SceytResponse<SceytMessage> {
-        val response = messagesRepository.deleteMessage(channelId, messageId)
+    override suspend fun sendAllPendingMessages() {
+        val pendingMessages = messageDao.getAllPendingMessages()
+        if (pendingMessages.isNotEmpty()) {
+            pendingMessages.forEach {
+                val response = messagesRepository.sendMessage(it.messageEntity.channelId, it.toMessage())
+                if (response is SceytResponse.Success) {
+                    response.data?.let { responseMsg ->
+                        messageDao.updateMessageByParams(
+                            tid = responseMsg.tid, serverId = responseMsg.id,
+                            date = responseMsg.createdAt, status = DeliveryStatus.Sent)
+
+                        messagesCash.updateMessage(responseMsg)
+                        MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteMessage(channelId, messageId, onlyForMe)
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
                 messageDao.deleteAttachments(listOf(messageTid))
                 reactionDao.deleteAllReactionsAndScores(messageId)
                 messageDao.updateMessage(message.toMessageEntity())
+                messagesCash.updateMessage(message)
             }
         }
         return response
@@ -176,6 +209,13 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
                 messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
+                messagesCash.updateMessage(*messageDao.getMessageByIds(ids.toList()).map { it.toSceytMessage() }.toTypedArray())
+
+                //todo need update marker count
+                ids.forEach {
+                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, "displayed")
+                }
+
                 channelDao.clearUnreadCount(channelId, 0)
             }
         }
@@ -187,6 +227,7 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
                 messageDao.updateMessage(updatedMsg.toMessageEntity())
+                messagesCash.updateMessage(updatedMsg)
             }
         }
         return response
@@ -202,6 +243,7 @@ internal class PersistenceMessagesLogicImpl(
                 message.reactionScores?.let {
                     messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
                 }
+                messagesCash.updateMessage(message)
             }
         }
         return response
@@ -216,6 +258,7 @@ internal class PersistenceMessagesLogicImpl(
                     if (fromId != null)
                         reactionDao.deleteReactionAndScore(messageId, scoreKey, fromId)
                 }
+                messagesCash.updateMessage(message)
             }
         }
         return response

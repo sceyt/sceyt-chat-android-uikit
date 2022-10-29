@@ -51,7 +51,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var pageStateView: PageStateView? = null
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
-    private var channelClickListeners: ChannelClickListeners.ClickListeners
     private var channelEventListener: ((ChannelEvent) -> Unit)? = null
 
     init {
@@ -91,8 +90,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
                 clickListeners.onAvatarClick(item)
             }
-        }.also {
-            channelClickListeners = it
         })
     }
 
@@ -140,12 +137,12 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.addNewChannels(channels)
     }
 
-    internal fun updateLastMessage(message: SceytMessage, edited: Boolean, unreadCount: Long? = null): Boolean {
+    internal fun updateLastMessage(message: SceytMessage, checkId: Boolean, unreadCount: Long? = null): Boolean {
         channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
             val channel = pair.second.channel
             if (message.channelId == channel.id) {
                 val oldChannel = channel.clone()
-                if (!edited || channel.lastMessage?.id == message.id)
+                if (!checkId || channel.lastMessage?.id == message.id)
                     channel.lastMessage = message
 
                 unreadCount?.let { count ->
@@ -346,6 +343,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
         clickListeners = listener
+        channelsRV.getViewHolderFactory().setChannelListener(listener)
     }
 
     /**
@@ -363,7 +361,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         channelsRV.setViewHolderFactory(factory.also {
-            it.setChannelListener(channelClickListeners)
+            it.setChannelListener(clickListeners)
         })
     }
 

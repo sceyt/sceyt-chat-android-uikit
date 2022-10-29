@@ -7,7 +7,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -32,12 +32,12 @@ object SceytKitClient : SceytKoinComponent {
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenExpired = onTokenExpired_.asSharedFlow()
 
     private val onTokenWillExpire_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
 
@@ -71,10 +71,11 @@ object SceytKitClient : SceytKoinComponent {
 
     private fun addListener(listener: ((success: Boolean, errorMessage: String?) -> Unit)?) {
         scope.launch {
-            ConnectionObserver.onChangedConnectStatusFlow.collect {
+            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                 val connectStatus = it.first
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     listener?.invoke(true, null)
+                    persistenceMessagesMiddleWare.sendAllPendingMessages()
                     val status = ClientWrapper.currentUser.presence.status
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {
@@ -90,13 +91,13 @@ object SceytKitClient : SceytKoinComponent {
         }
 
         scope.launch {
-            ConnectionObserver.onTokenExpired.collect {
+            ConnectionEventsObserver.onTokenExpired.collect {
                 onTokenExpired_.tryEmit(Unit)
             }
         }
 
         scope.launch {
-            ConnectionObserver.onTokenWillExpire.collect {
+            ConnectionEventsObserver.onTokenWillExpire.collect {
                 onTokenWillExpire_.tryEmit(Unit)
             }
         }

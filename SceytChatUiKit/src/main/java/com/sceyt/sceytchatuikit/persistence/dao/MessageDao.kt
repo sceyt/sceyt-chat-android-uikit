@@ -2,9 +2,10 @@ package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 abstract class MessageDao {
@@ -15,6 +16,11 @@ abstract class MessageDao {
 
         //Delete attachments before insert
         deleteAttachments(listOf(messageDb.messageEntity.tid))
+
+        //Delete reactions before insert
+        messageDb.messageEntity.id?.let {
+            deleteMessageReactionsAndScores(listOf(it))
+        }
 
         //Insert attachments
         messageDb.attachments?.let {
@@ -31,10 +37,13 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open fun insertMessages(messageDb: List<MessageDb>) {
+    open suspend fun insertMessages(messageDb: List<MessageDb>) {
         upsertMessageEntities(messageDb.map { it.messageEntity })
         //Delete attachments before insert
         deleteAttachments(messageDb.map { it.messageEntity.tid })
+
+        //Delete reactions before insert
+        deleteMessageReactionsAndScores(messageDb.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
         val attachments = messageDb.flatMap { it.attachments ?: arrayListOf() }
@@ -95,11 +104,18 @@ abstract class MessageDao {
             "order by createdAt")
     abstract suspend fun getPendingMessages(channelId: Long, status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
 
+    @Transaction
+    @Query("select * from messages where deliveryStatus =:status order by createdAt")
+    abstract suspend fun getAllPendingMessages(status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
+
     @Query("select * from messages where message_id =:id")
-    abstract fun getMessageById(id: Long): Flow<List<MessageEntity>>
+    abstract fun getMessageById(id: Long): MessageDb?
+
+    @Query("select * from messages where message_id in(:ids)")
+    abstract fun getMessageByIds(ids: List<Long>): List<MessageDb>
 
     @Query("select * from messages where tid =:tid")
-    abstract fun getMessageByTid(tid: Long): MessageEntity?
+    abstract fun getMessageByTid(tid: Long): MessageDb?
 
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
@@ -117,7 +133,33 @@ abstract class MessageDao {
     abstract fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
-    abstract fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
+    abstract suspend fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
+
+
+    @Query("update messages set selfMarkers =:markers where channelId =:channelId and message_id =:messageId")
+    abstract suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, markers: List<String>?)
+
+
+    @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
+    abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerCount>?)
+
+    open suspend fun updateMessageSelfMarkersAndMarkerCount(channelId: Long, messageId: Long, marker: String) {
+        getMessageById(messageId)?.let { messageDb ->
+            val markers: ArrayList<String> = ArrayList(messageDb.messageEntity.selfMarkers
+                    ?: arrayListOf())
+            markers.add(marker)
+            updateMessageSelfMarkers(channelId, messageId, markers.toSet().toList())
+
+            //todo
+            /* messageDb.messageEntity.markerCount?.findIndexed { count -> count.key == marker }?.let {
+                 val newCount = ArrayList(messageDb.messageEntity.markerCount!!)
+                 val markerCount = it.second
+                 val newMarkerCount = MarkerCount(markerCount.key, markerCount.count + 1)
+                 newCount[it.first] = newMarkerCount
+                 updateMessageMarkersCount(channelId, messageId, newCount)
+             }*/
+        }
+    }
 
     @Query("delete from messages where channelId =:channelId")
     abstract fun deleteAllMessages(channelId: Long)
@@ -127,8 +169,26 @@ abstract class MessageDao {
         messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsChunked)
     }
 
-    @Query("DELETE FROM AttachmentEntity WHERE messageTid in (:messageTides)")
+    @Transaction
+    open fun deleteMessageReactionsAndScores(messageIdes: List<Long>) {
+        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
+    }
+
+    @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
     abstract fun deleteAttachmentsChunked(messageTides: List<Long>)
+
+
+    @Transaction
+    open fun deleteAllReactionsAndScores(messageIds: List<Long>) {
+        deleteAllReactionScoresByMessageId(messageIds)
+        deleteAllReactionsByMessageId(messageIds)
+    }
+
+    @Query("delete from ReactionScoreEntity where messageId in (:messageId)")
+    abstract fun deleteAllReactionScoresByMessageId(messageId: List<Long>)
+
+    @Query("delete from ReactionEntity where messageId in (:messageId)")
+    protected abstract fun deleteAllReactionsByMessageId(messageId: List<Long>)
 
     private companion object {
         private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999

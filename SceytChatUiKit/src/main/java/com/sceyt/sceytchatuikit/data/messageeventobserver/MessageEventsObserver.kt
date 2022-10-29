@@ -9,39 +9,39 @@ import com.sceyt.chat.sceyt_listeners.MessageListener
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
-import com.sceyt.sceytchatuikit.data.toSceytUiMessage
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object MessageEventsObserver {
     private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 
 
     private val onMessageReactionUpdatedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
 
 
     private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
 
 
     private val onOutGoingMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
 
 
     private val onOutGoingMessageStatusFlow_: MutableSharedFlow<Pair<Long, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 

@@ -6,6 +6,7 @@ sealed class MessageCommandEvent {
 
     data class DeleteMessage(
             val message: SceytMessage,
+            val onlyForMe: Boolean
     ) : MessageCommandEvent()
 
     data class EditMessage(

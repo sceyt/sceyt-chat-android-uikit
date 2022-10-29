@@ -5,11 +5,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.emojiview.emojiview.AXEmojiManager
 import com.emojiview.emojiview.provider.AXGoogleEmojiProvider
 import com.sceyt.chat.ChatClient
-import com.sceyt.sceytchatuikit.di.MyKoinContext
-import com.sceyt.sceytchatuikit.di.appModules
-import com.sceyt.sceytchatuikit.di.databaseModule
-import com.sceyt.sceytchatuikit.di.repositoryModule
-import com.sceyt.sceytchatuikit.di.viewModels
+import com.sceyt.sceytchatuikit.di.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
@@ -20,15 +16,17 @@ import org.koin.dsl.koinApplication
 class SceytUIKitInitializer(private val application: Application) {
 
     fun initialize(clientId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
-        // val serverUrl = "https://us-ohio-api.sceyt.com/"
-        // val appId = "89p65954oj"
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         AXEmojiManager.install(application, AXGoogleEmojiProvider(application))
         initKoin(enableDatabase)
+        initTheme()
+        return ChatClient.setup(application, host, appId, clientId)
+    }
+
+    private fun initTheme() {
         if (SceytKitConfig.isDarkMode.not())
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        return ChatClient.setup(application, host, appId, clientId)
     }
 
     private fun initKoin(enableDatabase: Boolean) {

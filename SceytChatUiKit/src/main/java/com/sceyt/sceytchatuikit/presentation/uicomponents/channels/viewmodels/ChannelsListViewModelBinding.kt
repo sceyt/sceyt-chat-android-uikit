@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.channel.GroupChannel
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -30,6 +31,9 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                  }
          }
      }*/
+    SceytKitClient.getConnectionService().getOnAvailableLiveData().observe(lifecycleOwner) {
+        getChannels(0, query = searchQuery)
+    }
 
     lifecycleOwner.lifecycleScope.launch {
         loadChannelsFlow.collect {
@@ -49,6 +53,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                         customToastSnackBar(channelsListView, it.data.message ?: "")
                 }
                 is PaginationResponse.Nothing -> return@collect
+                else -> {}
             }
         }
     }
@@ -63,7 +68,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     lifecycleOwner.lifecycleScope.launch {
         onOutGoingMessageFlow.collect {
-            if (!channelsListView.updateLastMessage(it, edited = false)) {
+            if (!channelsListView.updateLastMessage(it, checkId = false)) {
                 getChannels(0, query = searchQuery)
             }
         }
@@ -71,7 +76,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     lifecycleOwner.lifecycleScope.launch {
         onMessageEditedOrDeletedFlow.collect {
-            if (!channelsListView.updateLastMessage(it, edited = true)) {
+            if (!channelsListView.updateLastMessage(it, checkId = true)) {
                 getChannels(0, query = searchQuery)
             }
         }
