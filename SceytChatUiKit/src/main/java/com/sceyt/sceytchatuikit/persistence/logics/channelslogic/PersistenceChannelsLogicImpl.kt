@@ -10,7 +10,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
@@ -41,7 +41,7 @@ internal class PersistenceChannelsLogicImpl(
         private val messageDao: MessageDao,
         private val preference: SceytSharedPreference) : PersistenceChannelsLogic {
 
-    override fun onChannelEvent(data: ChannelEventData) {
+    override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
             Created -> {
                 data.channel?.let { channel ->
@@ -88,11 +88,11 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
+    override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
         //todo
     }
 
-    override fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
+    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val lastMsg = data.second
         channelDao.updateLastMessage(data.first.id, lastMsg.tid, lastMsg.createdAt)
     }
@@ -131,13 +131,13 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun awaitToConnectSceyt(): Boolean {
-        if (ConnectionObserver.connectionState == Types.ConnectState.StateConnected)
+        if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected)
             return true
 
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         return suspendCancellableCoroutine { continuation ->
             scope.launch {
-                ConnectionObserver.onChangedConnectStatusFlow.collect {
+                ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                     if (it.first == Types.ConnectState.StateConnected) {
                         continuation.resume(true)
                         scope.cancel()

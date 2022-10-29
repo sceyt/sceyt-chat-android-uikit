@@ -12,9 +12,9 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
 internal interface PersistenceChannelsLogic {
-    fun onChannelEvent(data: ChannelEventData)
-    fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
-    fun onMessage(data: Pair<SceytChannel, SceytMessage>)
+    suspend fun onChannelEvent(data: ChannelEventData)
+    suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
+    suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>

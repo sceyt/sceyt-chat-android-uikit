@@ -16,7 +16,7 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
 import com.sceyt.chat.ui.presentation.newchannel.NewChannelActivity
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -72,10 +72,10 @@ class ChannelsFragment : Fragment() {
     }
 
     private fun initViews() {
-        setupConnectionStatus(ConnectionObserver.connectionState)
+        setupConnectionStatus(ConnectionEventsObserver.connectionState)
 
         lifecycleScope.launch {
-            ConnectionObserver.onChangedConnectStatusFlow.collect {
+            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                 setupConnectionStatus(it.first)
             }
         }

@@ -8,7 +8,7 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -56,23 +56,23 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
 
         // Connection events
-        launch { ConnectionObserver.onChangedConnectStatusFlow.collect(::onChangedConnectStatus) }
+        launch { ConnectionEventsObserver.onChangedConnectStatusFlow.collect(::onChangedConnectStatus) }
     }
 
 
-    private fun onChannelEvent(data: ChannelEventData) {
+    private suspend fun onChannelEvent(data: ChannelEventData) {
         channelLogic.onChannelEvent(data)
     }
 
-    private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
+    private suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
         channelLogic.onChannelUnreadCountUpdatedEvent(data)
     }
 
-    private fun onChannelMemberEvent(data: ChannelMembersEventData) {
+    private suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         membersLogic.onChannelMemberEvent(data)
     }
 
-    private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
+    private suspend fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
         membersLogic.onChannelOwnerChangedEvent(data)
     }
 
@@ -86,11 +86,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         channelLogic.onMessage(data)
     }
 
-    private fun onMessageReactionUpdated(data: Message?) {
+    private suspend fun onMessageReactionUpdated(data: Message?) {
         messagesLogic.onMessageReactionUpdated(data)
     }
 
-    private fun onMessageEditedOrDeleted(data: Message?) {
+    private suspend fun onMessageEditedOrDeleted(data: Message?) {
         messagesLogic.onMessageEditedOrDeleted(data)
     }
 

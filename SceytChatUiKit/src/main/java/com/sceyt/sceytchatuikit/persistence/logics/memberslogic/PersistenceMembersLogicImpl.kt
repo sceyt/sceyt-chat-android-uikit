@@ -30,7 +30,7 @@ internal class PersistenceMembersLogicImpl(
         private val channelDao: ChannelDao,
         private val usersDao: UserDao) : PersistenceMembersLogic {
 
-    override fun onChannelMemberEvent(data: ChannelMembersEventData) {
+    override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         if (data.channel == null || data.members == null) return
         val chatId = data.channel.id
         when (data.eventType) {
@@ -47,7 +47,7 @@ internal class PersistenceMembersLogicImpl(
         }
     }
 
-    override fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
+    override suspend fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
         channelDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
     }
 

@@ -20,7 +20,7 @@ import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,7 +48,7 @@ class SceytUiKitApp : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    if (ConnectionObserver.connectionState == Types.ConnectState.StateDisconnect)
+                    if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateDisconnect)
                         connect()
                 }
                 Lifecycle.Event.ON_DESTROY -> {
