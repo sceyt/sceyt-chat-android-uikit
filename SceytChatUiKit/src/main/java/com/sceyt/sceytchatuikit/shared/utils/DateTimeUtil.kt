@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.DateFormatData
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.absoluteValue
 
 object DateTimeUtil {
     const val SERVER_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss"
@@ -186,5 +189,68 @@ object DateTimeUtil {
             e.printStackTrace()
             ""
         }
+    }
+
+    fun getPresenceDateFormatData(context: Context, date: Date): String {
+        val now = Calendar.getInstance()
+        val sdf = SimpleDateFormat(SERVER_DATE_PATTERN, Locale.getDefault())
+        sdf.timeZone = TimeZone.getTimeZone("UTC")
+        val sdf1 = SimpleDateFormat(TIME_PATTERN_AM_PM, Locale.getDefault())
+        sdf1.timeZone = TimeZone.getDefault()
+
+        return try {
+            val date2: Calendar = Calendar.getInstance().apply {
+                time = date
+            }
+
+            val yearsDiff = (now.get(Calendar.YEAR) - date2.get(Calendar.YEAR)).absoluteValue
+            val weeksDiff = (now.get(Calendar.WEEK_OF_YEAR) - date2.get(Calendar.WEEK_OF_YEAR)).absoluteValue
+            val daysDiff = (now.get(Calendar.DAY_OF_YEAR) - date2.get(Calendar.DAY_OF_YEAR)).absoluteValue
+            val hoursDiff = TimeUnit.MILLISECONDS.toHours(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
+            val minDiff = TimeUnit.MILLISECONDS.toMinutes(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
+
+            return when {
+                yearsDiff > 0 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.olderThisYear(context, date))
+                }
+                weeksDiff > 0 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.thisYear(context, date))
+                }
+                weeksDiff == 0 && daysDiff > 1 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.currentWeek(context, date))
+                }
+                daysDiff == 1 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.yesterday(context, date))
+                }
+                hoursDiff > 1 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.today(context, date))
+                }
+                hoursDiff == 1 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.oneHourAgo(context, date))
+                }
+                minDiff > 1 -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.lessThenOneHour(context, minDiff, date))
+                }
+                else -> {
+                    getDateText(date, UserStyle.userPresenceDateFormat.oneMinAgo(context, date))
+                }
+            }
+        } catch (e: ParseException) {
+            e.printStackTrace()
+            ""
+        }
+    }
+
+    private fun getDateText(createdAt: Date, data: DateFormatData): String {
+        if (data.format == null)
+            return "${data.beginTittle}${data.endTitle}".trim()
+
+        val text = try {
+            val simpleDateFormat = SimpleDateFormat(data.format, Locale.getDefault())
+            "${data.beginTittle} ${simpleDateFormat.format(createdAt)} ${data.endTitle}"
+        } catch (ex: Exception) {
+            "${data.beginTittle} ${data.format} ${data.endTitle}"
+        }
+        return text.trim()
     }
 }

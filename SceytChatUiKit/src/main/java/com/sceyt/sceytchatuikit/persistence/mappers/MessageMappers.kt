@@ -2,8 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.toMessage
-import com.sceyt.sceytchatuikit.data.toSceytUiMessage
+import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
@@ -26,12 +25,14 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     deliveryStatus = deliveryStatus,
     state = state,
     fromId = from?.id,
+    markerCount = markerCount?.toList(),
+    selfMarkers = selfMarkers?.toList(),
     parentId = parent?.id,
     replyInThread = replyInThread,
     replyCount = replyCount
 )
 
-private fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
+fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
     return if (incoming)
         msgId
     else tid
@@ -54,6 +55,8 @@ fun Message.toMessageEntity() = MessageEntity(
     deliveryStatus = deliveryStatus,
     state = state,
     fromId = from?.id,
+    markerCount = markerCount?.toList(),
+    selfMarkers = selfMarkers?.toList(),
     parentId = parent?.id,
     replyInThread = replyInThread,
     replyCount = replyCount
@@ -106,6 +109,8 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
             lastReactions = lastReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionScores = reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
+            markerCount = markerCount?.toTypedArray(),
+            selfMarkers = selfMarkers?.toTypedArray(),
             parent = parent?.toSceytMessage(),
             replyInThread = replyInThread,
             replyCount = replyCount
@@ -124,32 +129,32 @@ fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
 }
 
 private fun MessageEntity.toSceytMessage() = SceytMessage(
-    id ?: 0,
-    tid,
-    channelId,
-    to,
-    body,
-    type,
-    metadata,
-    createdAt,
-    Date(updatedAt),
-    incoming,
-    receipt,
-    isTransient,
-    silent,
-    deliveryStatus,
-    state,
-    null,
-    emptyArray(),
-    emptyArray(),
-    emptyArray(),
-    emptyArray(),
-    emptyArray(),
-    emptyArray(),
-    emptyArray(),
-    null,
-    replyInThread,
-    replyCount
+    id = id ?: 0,
+    tid = tid,
+    channelId = channelId,
+    to = to,
+    body = body,
+    type = type,
+    metadata = metadata,
+    createdAt = createdAt,
+    updatedAt = Date(updatedAt),
+    incoming = incoming,
+    receipt = receipt,
+    isTransient = isTransient,
+    silent = silent,
+    deliveryStatus = deliveryStatus,
+    state = state,
+    from = null,
+    attachments = emptyArray(),
+    lastReactions = emptyArray(),
+    selfReactions = emptyArray(),
+    reactionScores = emptyArray(),
+    markerCount = markerCount?.toTypedArray(),
+    selfMarkers = selfMarkers?.toTypedArray(),
+    mentionedUsers = emptyArray(),
+    parent = null,
+    replyInThread = replyInThread,
+    replyCount = replyCount
 )
 
 fun MessageDb.toMessage(): Message {
@@ -172,10 +177,10 @@ fun MessageDb.toMessage(): Message {
             state,
             from?.toUser(),
             attachments?.map { it.toSdkAttachment() }?.toTypedArray(),
+            lastReactions?.map { it.toReaction() }?.toTypedArray(),
             emptyArray(),
-            emptyArray(),
-            emptyArray(),
-            emptyArray(),
+            reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
+            markerCount?.toTypedArray(),
             emptyArray(),
             emptyArray(),
             parent?.toSceytMessage()?.toMessage(),
@@ -183,4 +188,70 @@ fun MessageDb.toMessage(): Message {
             replyCount
         )
     }
+}
+
+
+fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
+    return SceytMessage(
+        id = id,
+        tid = getTid(id, tid, incoming),
+        channelId = channelId,
+        to = to,
+        body = body,
+        type = type,
+        metadata = metadata,
+        createdAt = createdAt.time,
+        updatedAt = updatedAt,
+        incoming = incoming,
+        receipt = receipt,
+        isTransient = isTransient,
+        silent = silent,
+        deliveryStatus = deliveryStatus,
+        state = state,
+        from = from,
+        attachments = attachments.map { it.toSceytAttachment() }.toTypedArray(),
+        lastReactions = lastReactions,
+        selfReactions = selfReactions,
+        reactionScores = reactionScores,
+        markerCount = markerCount,
+        selfMarkers = selfMarkers,
+        mentionedUsers = mentionedUsers,
+        parent = parent?.toSceytUiMessage(),
+        replyInThread = replyInThread,
+        replyCount = replyCount
+    ).apply {
+        isGroup?.let {
+            this.isGroup = it
+        }
+    }
+}
+
+fun SceytMessage.toMessage(): Message {
+    return Message(
+        id,
+        tid,
+        channelId,
+        to,
+        body,
+        type,
+        metadata,
+        createdAt,
+        updatedAt.time,
+        incoming,
+        receipt,
+        isTransient,
+        silent,
+        deliveryStatus,
+        state,
+        from,
+        attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
+        lastReactions,
+        selfReactions,
+        reactionScores,
+        markerCount,
+        selfMarkers,
+        mentionedUsers,
+        parent?.toMessage(),
+        replyInThread,
+        replyCount)
 }

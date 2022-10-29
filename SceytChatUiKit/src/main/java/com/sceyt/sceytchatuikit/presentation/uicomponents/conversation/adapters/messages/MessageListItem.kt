@@ -26,6 +26,14 @@ sealed class MessageListItem {
         }
     }
 
+    fun getMessageCreatedAt(): Long {
+        return when (this) {
+            is MessageItem -> message.createdAt
+            is DateSeparatorItem -> createdAt
+            is LoadingMoreItem -> 0
+        }
+    }
+
     override fun hashCode(): Int {
         return javaClass.hashCode()
     }

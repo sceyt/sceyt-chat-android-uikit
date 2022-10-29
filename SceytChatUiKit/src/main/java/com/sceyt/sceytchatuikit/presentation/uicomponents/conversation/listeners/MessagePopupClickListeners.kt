@@ -10,7 +10,7 @@ sealed interface MessagePopupClickListeners {
     }
 
     fun interface DeleteMessage : MessagePopupClickListeners {
-        fun onDeleteMessageClick(message: SceytMessage)
+        fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean)
     }
 
     fun interface EditMessage : MessagePopupClickListeners {

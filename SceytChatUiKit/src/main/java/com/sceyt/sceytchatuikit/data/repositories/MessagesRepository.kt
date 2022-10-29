@@ -9,7 +9,7 @@ interface MessagesRepository {
     suspend fun getMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit = {}): SceytResponse<SceytMessage?>
-    suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
+    suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>

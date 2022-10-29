@@ -8,7 +8,8 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
 abstract class ReactionDao {
 
     @Transaction
-    open fun insertReactionsAndScores(reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionScoreEntity>) {
+    open fun insertReactionsAndScores(messageId: Long, reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionScoreEntity>) {
+        deleteAllReactionsAndScores(messageId)
         insertReactions(reactionsDb)
         insertReactionScores(scoresDb)
     }
@@ -33,7 +34,6 @@ abstract class ReactionDao {
 
     @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")
     protected abstract fun deleteReaction(messageId: Long, key: String, fromId: String)
-
 
     @Query("delete from ReactionEntity where messageId =:messageId")
     protected abstract fun deleteAllReactionsByMessageId(messageId: Long)

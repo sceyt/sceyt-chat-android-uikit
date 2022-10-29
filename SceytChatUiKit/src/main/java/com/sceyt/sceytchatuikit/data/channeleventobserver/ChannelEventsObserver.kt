@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.channeleventobserver
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.member.Member
@@ -17,22 +18,29 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 object ChannelEventsObserver {
 
-    private val onChannelEventFlow_ = MutableSharedFlow<ChannelEventData>(
+    private val onTotalUnreadChangedFlow_ = MutableSharedFlow<ChannelUnreadCountUpdatedEventData>(
         extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onTotalUnreadChangedFlow: SharedFlow<ChannelUnreadCountUpdatedEventData> = onTotalUnreadChangedFlow_.asSharedFlow()
+
+
+    private val onChannelEventFlow_ = MutableSharedFlow<ChannelEventData>(
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val onChannelEventFlow: SharedFlow<ChannelEventData> = onChannelEventFlow_.asSharedFlow()
 
 
     private val onChannelMembersEventFlow_ = MutableSharedFlow<ChannelMembersEventData>(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val onChannelMembersEventFlow: SharedFlow<ChannelMembersEventData> = onChannelMembersEventFlow_.asSharedFlow()
 
 
     private val onChannelOwnerChangedEventFlow_ = MutableSharedFlow<ChannelOwnerChangedEventData>(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val onChannelOwnerChangedEventFlow: SharedFlow<ChannelOwnerChangedEventData> = onChannelOwnerChangedEventFlow_.asSharedFlow()
@@ -46,13 +54,18 @@ object ChannelEventsObserver {
 
 
     private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
 
 
     init {
         ChatClient.getClient().addChannelListener(TAG, object : ChannelListener() {
+            override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
+                val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
+                onTotalUnreadChangedFlow_.tryEmit(data)
+                Log.i("totalUnreadCountUpdated", "${channel?.unreadMessageCount}  $totalUnreadChannelCount  $totalUnreadMessageCount")
+            }
 
             override fun onClearedHistory(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))

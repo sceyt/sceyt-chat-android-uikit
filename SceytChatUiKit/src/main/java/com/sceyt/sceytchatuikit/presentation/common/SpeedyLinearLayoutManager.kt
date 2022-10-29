@@ -31,6 +31,13 @@ class SpeedyLinearLayoutManager : LinearLayoutManager {
         startSmoothScroll(linearSmoothScroller)
     }
 
+    override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
+        try {
+            super.onLayoutChildren(recycler, state)
+        } catch (_: IndexOutOfBoundsException) {
+        }
+    }
+
     fun smoothScrollToPositionWithDuration(recyclerView: RecyclerView, position: Int, millisecondsPerInch: Float) {
         customMillisecondsPerInch = millisecondsPerInch
         recyclerView.smoothScrollToPosition(position)

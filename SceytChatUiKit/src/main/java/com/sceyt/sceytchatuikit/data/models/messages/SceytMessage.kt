@@ -16,22 +16,22 @@ open class SceytMessage(var id: Long,
                         var to: String?,
                         var body: String,
                         var type: String,
-                        var metadata: String? = null,
+                        var metadata: String?,
                         var createdAt: Long,
                         var updatedAt: Date,
-                        var incoming: Boolean = false,
-                        var receipt: Boolean = false,
-                        var isTransient: Boolean = false,
-                        var silent: Boolean = false,
+                        var incoming: Boolean,
+                        var receipt: Boolean,
+                        var isTransient: Boolean,
+                        var silent: Boolean,
                         var deliveryStatus: DeliveryStatus,
                         var state: MessageState,
                         var from: User?,
-                        var attachments: Array<SceytAttachment>? = null,
-                        var lastReactions: Array<Reaction>? = null,
+                        var attachments: Array<SceytAttachment>?,
+                        var lastReactions: Array<Reaction>?,
                         var selfReactions: Array<Reaction>? = null,
-                        var reactionScores: Array<ReactionScore>? = null,
-                        var markerCount: Array<MarkerCount>? = null,
-                        var selfMarkers: Array<String>? = null,
+                        var reactionScores: Array<ReactionScore>?,
+                        var markerCount: Array<MarkerCount>?,
+                        var selfMarkers: Array<String>?,
                         var mentionedUsers: Array<User>? = null,
                         var parent: SceytMessage?,
                         var replyInThread: Boolean,
@@ -113,7 +113,11 @@ open class SceytMessage(var id: Long,
     }
 
     override fun equals(other: Any?): Boolean {
-        return (other as? SceytMessage)?.id == id
+        if (other == null || other !is SceytMessage) return false
+
+        return if (other.deliveryStatus != DeliveryStatus.Pending)
+            other.id == id
+        else other.tid == tid
     }
 
     override fun hashCode(): Int {

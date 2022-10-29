@@ -6,6 +6,7 @@
         <attr name="sceytUiMessageOutBubbleColor" format="reference" />
 
         <attr name="sceytUiMessageSenderNameTextColor" format="reference" />
+        <attr name="sceytUiReplayMessageLineColor" format="reference" />
 
         <!--Date separator item-->
         <attr name="sceytUiDateSeparatorItemTextColor" format="reference" />

@@ -7,8 +7,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -29,9 +27,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -151,7 +146,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
                 R.id.sceyt_replay_in_thread -> messagePopupClickListeners.onReplayMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message)
+                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message, false)
             }
             false
         }
@@ -179,71 +174,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private suspend fun addNewServerMessagesAndSort(newMessages: ArrayList<MessageListItem>,
-                                                    currentMessages: List<MessageListItem>, hasLoadingItem: Boolean,
-                                                    mappingCb: (List<MessageListItem>, Boolean) -> List<MessageListItem>) {
-        if (newMessages.isNotEmpty()) {
-            val messages2 = ArrayList(currentMessages)
-            messages2.addAll(newMessages)
-            messages2.sortBy {
-                when (it) {
-                    is MessageListItem.MessageItem -> it.message.createdAt
-                    is MessageListItem.DateSeparatorItem -> it.createdAt
-                    is MessageListItem.LoadingMoreItem -> 0
-                }
-            }
-            val initList = mappingCb.invoke(messages2, hasLoadingItem)
-
-            withContext(Dispatchers.Main) {
-                messagesRV.awaitAnimationEnd {
-                    if (messages2.isNotEmpty()) {
-                        val isLastItemDisplaying = messagesRV.isLastItemDisplaying()
-                        messagesRV.setData(initList)
-
-                        if (!hasLoadingItem)
-                            messagesRV.hideLoadingItem()
-
-                        if (isLastItemDisplaying)
-                            messagesRV.scrollToPosition(initList.size - 1)
-                    }
-                }
-            }
-        }
-    }
-
-    internal fun updateMessagesWithServerData(data: List<MessageListItem>, offset: Int, hasNext: Boolean, lifecycleOwner: LifecycleOwner,
-                                              mappingCb: (List<MessageListItem>, Boolean) -> List<MessageListItem>) {
-        val currentMessages = messagesRV.getData() ?: arrayListOf()
-        if (currentMessages.isEmpty() || data.isEmpty() && offset == 0) {
-            messagesRV.setData(data)
-            return
-        } else if (data.isEmpty() && offset > 0)
-            messagesRV.hideLoadingItem()
-
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            val newMessages: ArrayList<MessageListItem> = arrayListOf()
-            // Update UI messages if exist and have diff, or add new messages
-            data.forEach { dataItem ->
-                if (dataItem is MessageListItem.MessageItem) {
-                    currentMessages.findIndexed {
-                        it is MessageListItem.MessageItem && it.message.id == dataItem.message.id
-                    }?.let {
-                        val oldItem = currentMessages[it.first] as MessageListItem.MessageItem
-                        val diff = oldItem.message.diff(dataItem.message)
-
-                        if (diff.hasDifference()) {
-                            currentMessages[it.first] = dataItem
-                            messagesRV.notifyItemChangedSafety(it.first, diff)
-                        }
-                    } ?: run { newMessages.add(dataItem) }
-                } else if (!currentMessages.contains(dataItem))
-                    newMessages.add(dataItem)
-            }
-            // Add new messages and sort list
-            addNewServerMessagesAndSort(newMessages, currentMessages, hasNext, mappingCb)
-        }
-    }
-
     internal fun getLastMessage() = messagesRV.getLastMsg()
 
     internal fun setMessagesList(data: List<MessageListItem>) {
@@ -255,6 +185,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun addNewMessages(vararg data: MessageListItem) {
+        if (data.isEmpty()) return
         messagesRV.addNewMessages(*data)
     }
 
@@ -272,6 +203,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 break
             }
         }
+    }
+
+    internal fun sortMessages() {
+        messagesRV.sortMessages()
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
@@ -299,8 +234,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateViewState(state: PageState) {
-        pageStateView?.updateState(state, messagesRV.isEmpty())
+    internal fun updateViewState(state: PageState, enableErrorSnackBar: Boolean = true) {
+        pageStateView?.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
@@ -314,11 +249,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                             item.message.deliveryStatus = status
                         messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                         break
-                    } else {
-                        if (item.message.deliveryStatus < status && item.message.deliveryStatus != DeliveryStatus.Pending) {
-                            item.message.deliveryStatus = status
-                            messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
-                        }
                     }
                 }
             }
@@ -385,6 +315,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateViewState(PageState.StateEmpty())
     }
 
+    fun hideLoadingMore() {
+        messagesRV.hideLoadingItem()
+    }
+
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
             it.setMessageListener(clickListeners)
@@ -408,6 +342,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
         clickListeners = listener
+        messagesRV.getViewHolderFactory().setMessageListener(listener)
     }
 
     fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
@@ -461,9 +396,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.setClipboard(message.body)
     }
 
-    override fun onDeleteMessageClick(message: SceytMessage) {
+    override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
         DeleteMessageDialog(context, positiveClickListener = {
-            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(message))
+            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(message, onlyForMe))
         }).show()
     }
 

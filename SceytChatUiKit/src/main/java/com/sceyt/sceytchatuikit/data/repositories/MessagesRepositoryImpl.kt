@@ -11,8 +11,8 @@ import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.toMessage
-import com.sceyt.sceytchatuikit.data.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -22,6 +22,7 @@ class MessagesRepositoryImpl : MessagesRepository {
     private fun getQuery(conversationId: Long, replayInThread: Boolean) = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
         setLimit(MESSAGES_LOAD_SIZE)
+        setReversed(true)
     }.build()
 
     private fun getQueryByType(type: String, conversationId: Long) = MessagesListQueryByType.Builder(conversationId, type).apply {
@@ -87,9 +88,9 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).deleteMessage(messageId, true, object : MessageCallback {
+            ChannelOperator.build(channelId).deleteMessage(messageId, onlyForMe, object : MessageCallback {
                 override fun onResult(msg: Message) {
                     continuation.resume(SceytResponse.Success(msg.toSceytUiMessage()))
                 }

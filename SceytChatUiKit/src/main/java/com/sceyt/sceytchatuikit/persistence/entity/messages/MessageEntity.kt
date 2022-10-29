@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
 
 @Entity(tableName = "messages", indices = [Index(value = ["message_id"], unique = true)])
@@ -28,12 +29,10 @@ data class MessageEntity(
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
-
-     /*  var selfReactions: Array<Reaction>? = null,
-     var reactionScores: Array<ReactionScore>? = null,
-     var markerCount: Array<MarkerCount>? = null,
-     var selfMarkers: Array<String>? = null,
-     var mentionedUsers: Array<User>?,*/
+        var markerCount: List<MarkerCount>?,
+    /*  var selfReactions: Array<Reaction>? = null,
+    var mentionedUsers: Array<User>?,*/
+        var selfMarkers: List<String>?,
         var parentId: Long?,
         var replyInThread: Boolean,
         var replyCount: Long

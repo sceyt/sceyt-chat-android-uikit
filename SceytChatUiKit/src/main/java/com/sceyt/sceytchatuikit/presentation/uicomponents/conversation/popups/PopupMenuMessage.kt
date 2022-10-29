@@ -25,7 +25,7 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var i
         } else
             deleteMessageItem.apply {
                 title = setColoredTitle(title.toString())
-                icon.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                icon?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
                     ContextCompat.getColor(context, R.color.sceyt_color_red), BlendModeCompat.SRC_ATOP)
             }
         super.show()

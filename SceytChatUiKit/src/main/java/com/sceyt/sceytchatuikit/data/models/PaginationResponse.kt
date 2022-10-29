@@ -24,6 +24,16 @@ sealed class PaginationResponse<T> {
             val hasNext: Boolean = false
     ) : PaginationResponse<T>()
 
+
+    data class ServerResponse2<T>(
+            val data: SceytResponse<List<T>>,
+            val cashData: List<T>,
+            val offset: Int,
+            val hasDiff: Boolean,
+            val hasNext: Boolean = false
+    ) : PaginationResponse<T>()
+
+
     /** Default value */
     class Nothing<T> : PaginationResponse<T>()
 }

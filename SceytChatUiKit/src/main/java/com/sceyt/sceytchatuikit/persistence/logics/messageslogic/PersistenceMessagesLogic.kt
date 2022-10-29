@@ -12,14 +12,15 @@ import kotlinx.coroutines.flow.Flow
 internal interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
-    fun onMessageReactionUpdated(data: Message?)
-    fun onMessageEditedOrDeleted(data: Message?)
-    fun loadMessages(conversationId: Long, lastMessageId: Long,
-                     replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
+    suspend fun onMessageReactionUpdated(data: Message?)
+    suspend fun onMessageEditedOrDeleted(data: Message?)
+    suspend fun loadMessages(conversationId: Long, lastMessageId: Long,
+                             replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
     suspend fun sendPendingMessages(channelId: Long)
-    suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long): SceytResponse<SceytMessage>
+    suspend fun sendAllPendingMessages()
+    suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
     suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>

@@ -283,6 +283,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     updateMembersWithServerResponse(data, data.hasNext)
             }
             is PaginationResponse.Nothing -> return
+            is PaginationResponse.ServerResponse2 -> TODO()
         }
     }
 

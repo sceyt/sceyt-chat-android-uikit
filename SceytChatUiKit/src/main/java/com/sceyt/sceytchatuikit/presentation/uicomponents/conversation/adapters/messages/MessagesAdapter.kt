@@ -2,18 +2,29 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
         RecyclerView.Adapter<BaseMsgViewHolder>() {
     private val mLoadingItem by lazy { MessageListItem.LoadingMoreItem }
+    private var updateJob: Job? = null
+    private val debounceHelper by lazy { DebounceHelper(300) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -78,7 +89,6 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun addNextPageMessagesList(items: List<MessageListItem>) {
         removeLoading()
         if (items.isEmpty()) return
@@ -92,16 +102,30 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun addNewMessages(items: List<MessageListItem>) {
         if (items.isEmpty()) return
-        messages.addAll(items)
-        notifyItemRangeInserted(messages.lastIndex, items.size)
+        val filteredItems = items.minus(messages.toSet())
+
+        messages.addAll(filteredItems)
+        notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
     }
 
     fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
-        val myDiffUtil = MessagesDiffUtil(this.messages, messages)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        productDiffResult.dispatchUpdatesToSafety(recyclerView)
-        this.messages.clear()
-        this.messages.addAll(messages)
+        updateJob?.cancel()
+        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
+            val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
+            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+
+            withContext(Dispatchers.Main) {
+                val isLastItemVisible = recyclerView.isLastItemDisplaying()
+                productDiffResult.dispatchUpdatesToSafety(recyclerView)
+
+                this@MessagesAdapter.messages.clear()
+                this@MessagesAdapter.messages.addAll(messages)
+
+                if (isLastItemVisible)
+                    recyclerView.scrollToPosition(itemCount - 1)
+            }
+        }
+
     }
 
     fun getData() = messages
@@ -112,7 +136,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val currentItem = (messages.getOrNull(position) as? MessageListItem.MessageItem)
             if (prevItem != null && currentItem != null)
                 return prevItem.message.incoming != currentItem.message.incoming
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
         }
         return true
     }
@@ -121,5 +145,19 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     fun clearData() {
         messages.clear()
         notifyDataSetChanged()
+    }
+
+    fun sort(recyclerView: RecyclerView) {
+        debounceHelper.submit {
+            val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages.apply {
+                sortWith(MessageItemComparator())
+            })
+            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+
+            val isLastItemVisible = recyclerView.isLastItemDisplaying()
+            productDiffResult.dispatchUpdatesToSafety(recyclerView)
+            if (isLastItemVisible)
+                recyclerView.scrollToPosition(itemCount - 1)
+        }
     }
 }

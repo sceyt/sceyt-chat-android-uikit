@@ -3,11 +3,12 @@ package com.sceyt.sceytchatuikit.data
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
@@ -65,72 +66,6 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
         else -> throw RuntimeException("Channel is direct channel")
     }
 }
-
-fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
-    return SceytMessage(
-        id = id,
-        tid = tid,
-        channelId = channelId,
-        to = to,
-        body = body,
-        type = type,
-        metadata = metadata,
-        createdAt = createdAt.time,
-        updatedAt = updatedAt,
-        incoming = incoming,
-        receipt = receipt,
-        isTransient = isTransient,
-        silent = silent,
-        deliveryStatus = deliveryStatus,
-        state = state,
-        from = from,
-        attachments = attachments.map { it.toSceytAttachment() }.toTypedArray(),
-        lastReactions = lastReactions,
-        selfReactions = selfReactions,
-        reactionScores = reactionScores,
-        markerCount = markerCount,
-        selfMarkers = selfMarkers,
-        mentionedUsers = mentionedUsers,
-        parent = parent?.toSceytUiMessage(),
-        replyInThread = replyInThread,
-        replyCount = replyCount
-    ).apply {
-        isGroup?.let {
-            this.isGroup = it
-        }
-    }
-}
-
-fun SceytMessage.toMessage(): Message {
-    return Message(
-        id,
-        tid,
-        channelId,
-        to,
-        body,
-        type,
-        metadata,
-        createdAt,
-        updatedAt.time,
-        incoming,
-        receipt,
-        isTransient,
-        silent,
-        deliveryStatus,
-        state,
-        from,
-        attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
-        lastReactions,
-        selfReactions,
-        reactionScores,
-        markerCount,
-        selfMarkers,
-        mentionedUsers,
-        parent?.toMessage(),
-        replyInThread,
-        replyCount)
-}
-
 
 fun Member.toSceytMember() = SceytMember(
     role = role,
