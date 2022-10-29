@@ -18,7 +18,7 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
     private val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
 
     private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<PresenceUser>> = MutableSharedFlow(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onPresenceCheckUsersFlow = onPresenceCheckUsersFlow_.asSharedFlow()
 

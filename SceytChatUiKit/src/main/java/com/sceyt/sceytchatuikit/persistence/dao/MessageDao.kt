@@ -124,7 +124,7 @@ abstract class MessageDao {
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long, status: DeliveryStatus): Int
 
     @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
-    abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
+    abstract fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
     @Query("update messages set state =:state, body=:body where message_id =:messageId")
     abstract fun updateMessageStateAndBody(messageId: Long, state: MessageState, body: String)
@@ -151,13 +151,13 @@ abstract class MessageDao {
             updateMessageSelfMarkers(channelId, messageId, markers.toSet().toList())
 
             //todo
-           /* messageDb.messageEntity.markerCount?.findIndexed { count -> count.key == marker }?.let {
-                val newCount = ArrayList(messageDb.messageEntity.markerCount!!)
-                val markerCount = it.second
-                val newMarkerCount = MarkerCount(markerCount.key, markerCount.count + 1)
-                newCount[it.first] = newMarkerCount
-                updateMessageMarkersCount(channelId, messageId, newCount)
-            }*/
+            /* messageDb.messageEntity.markerCount?.findIndexed { count -> count.key == marker }?.let {
+                 val newCount = ArrayList(messageDb.messageEntity.markerCount!!)
+                 val markerCount = it.second
+                 val newMarkerCount = MarkerCount(markerCount.key, markerCount.count + 1)
+                 newCount[it.first] = newMarkerCount
+                 updateMessageMarkersCount(channelId, messageId, newCount)
+             }*/
         }
     }
 

@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.view.*
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -27,6 +28,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
@@ -51,6 +53,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var isGroup = false
     private var typingTextBuilder: ((SceytMember) -> String)? = null
     private var userNameBuilder: ((User) -> String)? = null
+    private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -198,20 +201,22 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun setTyping(data: ChannelTypingEventData) {
         if (data.member.id == ChatClient.getClient().user?.id) return
-        val typing = data.typing
-        isTyping = typing
+        debounceHelper.submit {
+            val typing = data.typing
+            isTyping = typing
 
-        if (isGroup) {
-            if (typing) {
-                typingUsers.add(data.member)
+            if (isGroup) {
+                if (typing) {
+                    typingUsers.add(data.member)
+                } else
+                    typingUsers.remove(data.member)
+
+                updateTypingText()
             } else
-                typingUsers.remove(data.member)
+                binding.tvTyping.text = initTypingTitle(data.member)
 
-            updateTypingText()
-        } else
-            binding.tvTyping.text = initTypingTitle(data.member)
-
-        setTypingState(typing)
+            setTypingState(typing)
+        }
     }
 
     private fun setTypingState(typing: Boolean) {
