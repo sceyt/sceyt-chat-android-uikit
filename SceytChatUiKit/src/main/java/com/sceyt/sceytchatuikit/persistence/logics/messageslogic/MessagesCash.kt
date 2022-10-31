@@ -46,6 +46,12 @@ class MessagesCash {
         }
     }
 
+    fun deleteMessage(tid: Long) {
+        synchronized(syncOb) {
+            cashedMessages.remove(tid)
+        }
+    }
+
     private fun putAndCheckHasDiff(list: List<SceytMessage>): Boolean {
         var detectedDiff = false
         list.forEach {
