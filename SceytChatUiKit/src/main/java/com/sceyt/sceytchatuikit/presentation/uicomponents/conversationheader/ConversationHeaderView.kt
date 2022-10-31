@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -29,8 +30,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.*
@@ -89,6 +90,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         icBack.setImageResource(ConversationHeaderViewStyle.backIcon)
         title.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.titleColor))
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
+        toolbarUnderline.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
     }
 
     private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage? = null, replayInThread: Boolean = false) {
