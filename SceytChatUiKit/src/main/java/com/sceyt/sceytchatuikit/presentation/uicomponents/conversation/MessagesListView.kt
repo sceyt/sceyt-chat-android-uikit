@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -73,17 +74,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
         messagesRV.setMessageListener(object : MessageClickListeners.ClickListeners {
-            override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
+            override fun onMessageLongClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onMessageLongClick(view, item)
             }
 
-            override fun onAvatarClick(view: View, item: MessageListItem.MessageItem) {
+            override fun onAvatarClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onAvatarClick(view, item)
             }
 
-            override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
+            override fun onReplayCountClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onReplayCountClick(view, item)
             }
@@ -113,7 +114,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     clickListeners.onAttachmentLongClick(view, item)
             }
 
-            override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
+            override fun onLinkClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onLinkClick(view, item)
             }
@@ -191,7 +192,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage) {
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
-            if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
+            if (item is MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
 
@@ -210,8 +211,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == updateMessage.id }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+        if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
+            messagesRV.deleteMessageByTid(updateMessage.tid)
+            return
+        }
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.updateMessage(updateMessage)
             if (message.state == MessageState.Deleted)
@@ -223,8 +228,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReaction(data: SceytMessage) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == data.id }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == data.id }?.let {
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.reactionScores = data.reactionScores
             message.lastReactions = data.lastReactions
@@ -242,7 +247,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         ids.forEach { id ->
             for ((index: Int, item: MessageListItem) in (messagesRV.getData()
                     ?: return).withIndex()) {
-                if (item is MessageListItem.MessageItem) {
+                if (item is MessageItem) {
                     val oldMessage = item.message.clone()
                     if (item.message.id == id) {
                         if (item.message.deliveryStatus < status)
@@ -256,8 +261,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.tid == tid }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.deliveryStatus = DeliveryStatus.Failed
             messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
@@ -266,9 +271,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateReplayCount(replayedMessage: SceytMessage?) {
         messagesRV.getData()?.findIndexed {
-            it is MessageListItem.MessageItem && it.message.id == replayedMessage?.parent?.id
+            it is MessageItem && it.message.id == replayedMessage?.parent?.id
         }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.replyCount++
             messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
@@ -277,9 +282,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun newReplayMessage(messageId: Long?) {
         messagesRV.getData()?.findIndexed {
-            it is MessageListItem.MessageItem && it.message.id == messageId
+            it is MessageItem && it.message.id == messageId
         }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.replyCount++
             messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
@@ -354,15 +359,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     // Click events
-    override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
+    override fun onMessageLongClick(view: View, item: MessageItem) {
         showMessageActionsPopup(view, item.message)
     }
 
-    override fun onAvatarClick(view: View, item: MessageListItem.MessageItem) {
+    override fun onAvatarClick(view: View, item: MessageItem) {
 
     }
 
-    override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
+    override fun onReplayCountClick(view: View, item: MessageItem) {
         onReplayMessageInThreadClick(item.message)
     }
 
@@ -386,7 +391,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         showMessageActionsPopup(view, item.sceytMessage)
     }
 
-    override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
+    override fun onLinkClick(view: View, item: MessageItem) {
         context.openLink(item.message.body)
     }
 

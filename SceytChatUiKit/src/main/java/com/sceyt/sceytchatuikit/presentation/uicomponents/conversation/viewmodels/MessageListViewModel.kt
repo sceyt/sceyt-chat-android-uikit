@@ -174,9 +174,9 @@ class MessageListViewModel(private val conversationId: Long,
         pagingResponseReceived(response)
     }
 
-    fun deleteMessage(messageId: Long, messageTid: Long, onlyForMe: Boolean) {
+    fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, messageId, messageTid, onlyForMe)
+            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
             _messageEditedDeletedLiveData.postValue(response)
             if (response is SceytResponse.Success)
                 MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
@@ -331,7 +331,7 @@ class MessageListViewModel(private val conversationId: Long,
     internal fun onMessageCommandEvent(event: MessageCommandEvent) {
         when (event) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message.id, event.message.tid, event.onlyForMe)
+                deleteMessage(event.message, event.onlyForMe)
             }
             is MessageCommandEvent.EditMessage -> {
                 prepareToEditMessage(event.message)

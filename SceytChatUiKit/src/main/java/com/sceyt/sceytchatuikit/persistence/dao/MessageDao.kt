@@ -4,7 +4,6 @@ import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 
 @Dao
@@ -108,12 +107,15 @@ abstract class MessageDao {
     @Query("select * from messages where deliveryStatus =:status order by createdAt")
     abstract suspend fun getAllPendingMessages(status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
 
+    @Transaction
     @Query("select * from messages where message_id =:id")
     abstract fun getMessageById(id: Long): MessageDb?
 
+    @Transaction
     @Query("select * from messages where message_id in(:ids)")
     abstract fun getMessageByIds(ids: List<Long>): List<MessageDb>
 
+    @Transaction
     @Query("select * from messages where tid =:tid")
     abstract fun getMessageByTid(tid: Long): MessageDb?
 
@@ -160,6 +162,9 @@ abstract class MessageDao {
              }*/
         }
     }
+
+    @Query("delete from messages where tid =:tid")
+    abstract fun deleteMessageByTid(tid: Long)
 
     @Query("delete from messages where channelId =:channelId")
     abstract fun deleteAllMessages(channelId: Long)

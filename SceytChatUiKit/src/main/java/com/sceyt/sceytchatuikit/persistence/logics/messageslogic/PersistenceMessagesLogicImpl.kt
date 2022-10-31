@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -191,14 +192,19 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long, messageTid: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
-        val response = messagesRepository.deleteMessage(channelId, messageId, onlyForMe)
+    override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+        if (message.deliveryStatus == DeliveryStatus.Pending) {
+            messageDao.deleteMessageByTid(message.tid)
+            messagesCash.deleteMessage(message.tid)
+            return SceytResponse.Success(message.apply { state = MessageState.Deleted })
+        }
+        val response = messagesRepository.deleteMessage(channelId, message.id, onlyForMe)
         if (response is SceytResponse.Success) {
-            response.data?.let { message ->
-                messageDao.deleteAttachments(listOf(messageTid))
-                reactionDao.deleteAllReactionsAndScores(messageId)
-                messageDao.updateMessage(message.toMessageEntity())
-                messagesCash.updateMessage(message)
+            response.data?.let { resultMessage ->
+                messageDao.deleteAttachments(listOf(message.tid))
+                reactionDao.deleteAllReactionsAndScores(message.id)
+                messageDao.updateMessage(resultMessage.toMessageEntity())
+                messagesCash.updateMessage(resultMessage)
             }
         }
         return response

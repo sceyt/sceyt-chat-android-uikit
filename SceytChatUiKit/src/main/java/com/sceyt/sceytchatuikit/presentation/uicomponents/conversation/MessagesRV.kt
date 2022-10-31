@@ -181,6 +181,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         mAdapter.sort(this)
     }
 
+    fun deleteMessageByTid(tid: Long) {
+        if (::mAdapter.isInitialized)
+            mAdapter.deleteMessageByTid(tid)
+    }
+
     fun hideLoadingItem() {
         if (::mAdapter.isInitialized)
             mAdapter.removeLoading()

@@ -33,7 +33,7 @@ class MessageConverter {
             return null
 
         val gson = Gson()
-        val type = object : TypeToken<List<MarkerCount>?>() {}.type
+        val type = object : TypeToken<List<MarkerCount>>() {}.type
         return gson.toJson(obj, type)
     }
 }

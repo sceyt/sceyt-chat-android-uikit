@@ -7,8 +7,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
@@ -58,11 +60,11 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         holder.onViewDetachedFromWindow()
     }
 
-    fun getSkip() = messages.filterIsInstance<MessageListItem.MessageItem>().size
+    fun getSkip() = messages.filterIsInstance<MessageItem>().size
 
-    fun getFirstMessageItem() = messages.find { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
+    fun getFirstMessageItem() = messages.find { it is MessageItem } as? MessageItem
 
-    fun getLastMessageItem() = messages.findLast { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
+    fun getLastMessageItem() = messages.findLast { it is MessageItem } as? MessageItem
 
     fun removeLoading() {
         if (messages.remove(mLoadingItem))
@@ -70,7 +72,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     }
 
     private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
-        if (newItem is MessageListItem.MessageItem && prevItem is MessageListItem.MessageItem) {
+        if (newItem is MessageItem && prevItem is MessageItem) {
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
@@ -132,8 +134,8 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun needTopOffset(position: Int): Boolean {
         try {
-            val prevItem = (messages.getOrNull(position - 1) as? MessageListItem.MessageItem)
-            val currentItem = (messages.getOrNull(position) as? MessageListItem.MessageItem)
+            val prevItem = (messages.getOrNull(position - 1) as? MessageItem)
+            val currentItem = (messages.getOrNull(position) as? MessageItem)
             if (prevItem != null && currentItem != null)
                 return prevItem.message.incoming != currentItem.message.incoming
         } catch (_: Exception) {
@@ -145,6 +147,13 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     fun clearData() {
         messages.clear()
         notifyDataSetChanged()
+    }
+
+    fun deleteMessageByTid(tid: Long) {
+        messages.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
+            messages.removeAt(it.first)
+            notifyItemRemoved(it.first)
+        }
     }
 
     fun sort(recyclerView: RecyclerView) {
