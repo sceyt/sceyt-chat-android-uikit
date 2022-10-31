@@ -13,7 +13,7 @@ import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ChatItemOffsetDecoration
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ItemOffsetDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
@@ -47,7 +47,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
 
-        addItemDecoration(ChatItemOffsetDecoration())
+        addItemDecoration(ItemOffsetDecoration())
         layoutManager = SpeedyLinearLayoutManager(context).apply {
             stackFromEnd = true
         }
