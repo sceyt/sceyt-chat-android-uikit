@@ -35,6 +35,7 @@ open class MessageViewHolderFactory(context: Context) {
             MessageTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
             MessageTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
             MessageTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
+            MessageTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
             MessageTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
@@ -93,6 +94,12 @@ open class MessageViewHolderFactory(context: Context) {
         )
     }
 
+    open fun createUnreadMessagesViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return UnreadMessagesSeparatorViewHolder(
+            SceytItemUnreadMessagesSeparatorBinding.inflate(layoutInflater, parent, false)
+        )
+    }
+
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return LoadingMoreMessagesViewHolder(
             SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
@@ -103,6 +110,7 @@ open class MessageViewHolderFactory(context: Context) {
         return when (item) {
             is MessageListItem.MessageItem -> getMessageType(item.message)
             is MessageListItem.DateSeparatorItem -> return MessageTypeEnum.DateSeparator.ordinal
+            is MessageListItem.UnreadMessagesSeparatorItem -> return MessageTypeEnum.UnreadMessagesSeparator.ordinal
             is MessageListItem.LoadingMoreItem -> return MessageTypeEnum.Loading.ordinal
         }
     }
@@ -148,6 +156,7 @@ open class MessageViewHolderFactory(context: Context) {
         IncFiles,
         OutFiles,
         DateSeparator,
+        UnreadMessagesSeparator,
         Loading
     }
 }

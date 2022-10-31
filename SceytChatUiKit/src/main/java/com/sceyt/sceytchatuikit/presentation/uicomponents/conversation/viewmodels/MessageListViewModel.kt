@@ -301,6 +301,9 @@ class MessageListViewModel(private val conversationId: Long,
                 messageReactions = initReactionsItems(this)
             })
             messageItems.add(messageItem)
+
+            if (sceytMessage.id == channel.lastReadMessageId && sceytMessage.id != channel.lastMessage?.id)
+                messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
         }
         if (hasNext)
             messageItems.add(0, MessageListItem.LoadingMoreItem)

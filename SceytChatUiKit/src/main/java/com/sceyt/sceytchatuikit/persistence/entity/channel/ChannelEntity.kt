@@ -26,5 +26,7 @@ data class ChannelEntity(
         var channelUrl: String?,
         var avatarUrl: String?,
         var memberCount: Long,
-        val myRole: RoleTypeEnum?
+        var lastDeliveredMessageId: Long,
+        var lastReadMessageId: Long,
+        var myRole: RoleTypeEnum?
 )

@@ -9,6 +9,7 @@ sealed class MessageListItem {
     }
 
     data class DateSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
+    data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
     object LoadingMoreItem : MessageListItem()
 
     override fun equals(other: Any?): Boolean {
@@ -30,6 +31,7 @@ sealed class MessageListItem {
         return when (this) {
             is MessageItem -> message.createdAt
             is DateSeparatorItem -> createdAt
+            is UnreadMessagesSeparatorItem -> createdAt
             is LoadingMoreItem -> 0
         }
     }
