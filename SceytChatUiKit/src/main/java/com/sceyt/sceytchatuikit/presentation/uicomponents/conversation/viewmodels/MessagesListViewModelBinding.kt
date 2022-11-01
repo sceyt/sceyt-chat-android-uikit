@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -32,7 +33,10 @@ import kotlinx.coroutines.launch
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
 
-    loadMessages(0, 0)
+    // channel.lastReadMessageId = 346768647005540352
+    if (channel.lastReadMessageId == 0L || channel.lastReadMessageId == channel.lastMessage?.id)
+        loadPrevMessages(0, 0)
+    else loadNearMessages(channel.lastReadMessageId, 0)
 
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -46,25 +50,78 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
 
     lifecycleOwner.lifecycleScope.launch {
-        loadMessagesFlow.collect { response ->
+        loadPrevMessagesFlow.collect { response ->
             when (response) {
                 is PaginationResponse.DBResponse -> {
                     if (response.offset == 0) {
-                        messagesListView.setMessagesList(mapToMessageListItem(response.data, response.hasNext))
-                    } else
-                        messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
+                        Log.i("sdfsdfsdfsdf","db->  ${response.data.map { it.body+"      ${it.id}" }}")
+
+                        messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev))
+                    } else {
+                        val lastMsg = messagesListView.getMessageById(response.loadKey)
+                        messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev,
+                            lastMessage = lastMsg))
+                    }
                 }
                 is PaginationResponse.ServerResponse2 -> {
                     when (response.data) {
                         is SceytResponse.Success -> {
                             if (response.hasDiff) {
-                                val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
+                                Log.i("sdfsdfsdfsdf","db->  ${response.cashData.map { it.body+"      ${it.id}" }}")
+
+                                val lastMsg = messagesListView.getMessageById(response.loadKey)
+                                val newMessages = mapToMessageListItem(data = response.cashData,
+                                    hasNext = response.hasNext,
+                                    hasPrev = response.hasPrev,
+                                    lastMessage = lastMsg)
                                 messagesListView.setMessagesList(newMessages)
                             } else
                                 if (response.hasNext.not())
-                                    messagesListView.hideLoadingMore()
+                                    messagesListView.hideLoadingPrev()
                         }
-                        else -> if (!hasNextDb) messagesListView.hideLoadingMore()
+                        else -> if (!hasPrevDb) messagesListView.hideLoadingPrev()
+                    }
+                }
+                else -> return@collect
+            }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        loadNextMessagesFlow.collect { response ->
+            when (response) {
+                is PaginationResponse.DBResponse -> {
+                    if (response.offset == 0) {
+                        messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev))
+                    } else {
+                        val lastMsg = messagesListView.getMessageById(response.loadKey)
+                        messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev,
+                            lastMessage = lastMsg))
+                    }
+                }
+                is PaginationResponse.ServerResponse2 -> {
+                    when (response.data) {
+                        is SceytResponse.Success -> {
+                            if (response.hasDiff) {
+                                val lastMsg = messagesListView.getMessageById(response.loadKey)
+                                val newMessages = mapToMessageListItem(data = response.cashData,
+                                    hasNext = response.hasNext,
+                                    hasPrev = response.hasPrev,
+                                    lastMessage = lastMsg)
+                                messagesListView.setMessagesList(newMessages)
+                            } else
+                                if (response.hasNext.not())
+                                    messagesListView.hideLoadingNext()
+                        }
+                        else -> if (!hasNextDb) messagesListView.hideLoadingNext()
                     }
                 }
                 else -> return@collect
@@ -104,6 +161,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         val initMessage = mapToMessageListItem(
             data = arrayListOf(it),
             hasNext = false,
+            hasPrev = false,
             lastMessage = messagesListView.getLastMessage())
 
         messagesListView.addNewMessages(*initMessage.toTypedArray())
@@ -125,6 +183,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             val initMessage = mapToMessageListItem(
                 data = arrayListOf(it),
                 hasNext = false,
+                hasPrev = false,
                 lastMessage = messagesListView.getLastMessage())
 
             messagesListView.addNewMessages(*initMessage.toTypedArray())
@@ -216,10 +275,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         onReactionEvent(it)
     }
 
-    messagesListView.setNeedLoadMoreMessagesListener { offset, message ->
-        if (canLoadMore()) {
-            val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
-            loadMessages(lastMessageId, offset)
+    messagesListView.setNeedLoadPrevMessagesListener { offset, message ->
+        if (canLoadPrev()) {
+            val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
+            loadPrevMessages(messageId, offset)
+        }
+    }
+
+    messagesListView.setNeedLoadNextMessagesListener { offset, message ->
+        if (canLoadNext()) {
+            val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
+            loadNextMessages(messageId, offset)
         }
     }
 

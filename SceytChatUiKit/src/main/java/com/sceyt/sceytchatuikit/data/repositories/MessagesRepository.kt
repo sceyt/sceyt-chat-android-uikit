@@ -6,7 +6,9 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 
 interface MessagesRepository {
-    suspend fun getMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit = {}): SceytResponse<SceytMessage?>
     suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage>

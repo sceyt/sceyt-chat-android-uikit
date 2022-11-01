@@ -109,9 +109,10 @@ open class MessageViewHolderFactory(context: Context) {
     open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
             is MessageListItem.MessageItem -> getMessageType(item.message)
-            is MessageListItem.DateSeparatorItem -> return MessageTypeEnum.DateSeparator.ordinal
-            is MessageListItem.UnreadMessagesSeparatorItem -> return MessageTypeEnum.UnreadMessagesSeparator.ordinal
-            is MessageListItem.LoadingMoreItem -> return MessageTypeEnum.Loading.ordinal
+            is MessageListItem.DateSeparatorItem -> MessageTypeEnum.DateSeparator.ordinal
+            is MessageListItem.UnreadMessagesSeparatorItem -> MessageTypeEnum.UnreadMessagesSeparator.ordinal
+            is MessageListItem.LoadingPrevItem -> MessageTypeEnum.Loading.ordinal
+            is MessageListItem.LoadingNextItem -> MessageTypeEnum.Loading.ordinal
         }
     }
 

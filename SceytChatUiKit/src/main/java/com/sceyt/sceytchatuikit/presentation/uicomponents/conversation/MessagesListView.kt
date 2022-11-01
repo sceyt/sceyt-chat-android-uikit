@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.view.get
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -185,6 +186,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addNextPageMessages(data)
     }
 
+    internal fun addPrevPageMessages(data: List<MessageListItem>) {
+        messagesRV.addPrevPageMessages(data)
+    }
+
     internal fun addNewMessages(vararg data: MessageListItem) {
         if (data.isEmpty()) return
         messagesRV.addNewMessages(*data)
@@ -203,6 +208,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                 break
             }
+        }
+    }
+
+    internal fun getMessageById(messageId: Long): MessageItem? {
+        return messagesRV.getData()?.find { it is MessageItem && it.message.id == messageId }?.let {
+            (it as MessageItem)
         }
     }
 
@@ -295,8 +306,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setMessageDisplayedListener(listener)
     }
 
-    internal fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setNeedLoadMoreMessagesListener(listener)
+    internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadNextMessagesListener(listener)
     }
 
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
@@ -304,7 +319,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToPrefetchDistanceListener(listener)
+        messagesRV.setRichToPrefetchDistanceToLoadPrevListener(listener)
     }
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
@@ -320,8 +335,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateViewState(PageState.StateEmpty())
     }
 
-    fun hideLoadingMore() {
-        messagesRV.hideLoadingItem()
+    fun hideLoadingPrev() {
+        messagesRV.hideLoadingPrevItem()
+    }
+
+    fun hideLoadingNext() {
+        messagesRV.hideLoadingNextItem()
     }
 
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {

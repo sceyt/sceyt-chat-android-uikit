@@ -38,10 +38,10 @@ class UsersViewModel : BaseViewModel() {
             var empty = false
             if (response is SceytResponse.Success) {
                 empty = response.data.isNullOrEmpty()
-                hasNext = response.data?.size == USERS_LOAD_SIZE
+                hasPrev = response.data?.size == USERS_LOAD_SIZE
                 if (isLoadMore)
-                    _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
-                else _usersLiveData.postValue(mapToUserItems(response.data, hasNext))
+                    _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasPrev))
+                else _usersLiveData.postValue(mapToUserItems(response.data, hasPrev))
             }
             notifyPageStateWithResponse(response, isLoadMore, empty, searchQuery = query)
             loadingItems.set(false)

@@ -7,10 +7,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
-import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ItemOffsetDecoration
@@ -19,19 +16,27 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
 
     private lateinit var mAdapter: MessagesAdapter
-    private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var richToPrefetchDistanceListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var needLoadMoreMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var viewHolderFactory = MessageViewHolderFactory(context)
-    private var richToStartInvoked = AtomicBoolean(false)
-    private var richToPrefetchDistanceInvoked = AtomicBoolean(false)
+    private var alreadyScrolledToUnreadMessages = false
+
+    // Loading prev properties
+    private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var richToStartInvoked = false
+    private var richToPrefetchDistanceToLoadPrevInvoked = false
+    private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var richToPrefetchDistanceToLoadPrevListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    // Loading next properties
+    private var needLoadNextMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var richToEndInvoked = false
+    private var richToPrefetchDistanceToLoadNextInvoked = false
+    private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var richToPrefetchDistanceToLoadNextListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     init {
         init()
@@ -57,31 +62,54 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun addOnScrollListener() {
         post {
             addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
-                checkNeedLoadMore(dy)
+                checkNeedLoadPrev(dy)
+                checkNeedLoadNext(dy)
             }
         }
     }
 
-    private fun checkNeedLoadMore(dy: Int) {
+    private fun checkNeedLoadPrev(dy: Int) {
         val firstVisiblePosition = getFirstVisibleItemPosition()
         if (firstVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
             val skip = mAdapter.getSkip()
             val firstItem = mAdapter.getFirstMessageItem()
             if (firstVisiblePosition == 0) {
-                if (!richToStartInvoked.get()) {
-                    richToStartInvoked.set(true)
-                    richToPrefetchDistanceInvoked.set(true)
+                if (!richToStartInvoked) {
+                    richToStartInvoked = true
+                    richToPrefetchDistanceToLoadPrevInvoked = true
                     richToStartListener?.invoke(skip, firstItem)
-                    needLoadMoreMessagesListener?.invoke(skip, firstItem)
+                    needLoadPrevMessagesListener?.invoke(skip, firstItem)
                 }
-            } else richToStartInvoked.set(false)
+            } else richToStartInvoked = false
 
-            if (!richToPrefetchDistanceInvoked.get()) {
-                richToPrefetchDistanceInvoked.set(true)
-                richToPrefetchDistanceListener?.invoke(skip, firstItem)
-                needLoadMoreMessagesListener?.invoke(skip, firstItem)
+            if (!richToPrefetchDistanceToLoadPrevInvoked) {
+                richToPrefetchDistanceToLoadPrevInvoked = true
+                richToPrefetchDistanceToLoadPrevListener?.invoke(skip, firstItem)
+                needLoadPrevMessagesListener?.invoke(skip, firstItem)
             }
-        } else richToPrefetchDistanceInvoked.set(false)
+        } else richToPrefetchDistanceToLoadPrevInvoked = false
+    }
+
+    private fun checkNeedLoadNext(dy: Int) {
+        val lastVisiblePosition = getLastVisibleItemPosition()
+        if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
+            val skip = mAdapter.getSkip()
+            val lastItem = mAdapter.getLastMessageItem()
+            if (lastVisiblePosition == mAdapter.itemCount) {
+                if (!richToEndInvoked) {
+                    richToEndInvoked = true
+                    richToPrefetchDistanceToLoadNextInvoked = true
+                    richToEndListener?.invoke(skip, lastItem)
+                    needLoadNextMessagesListener?.invoke(skip, lastItem)
+                }
+            } else richToEndInvoked = false
+
+            if (!richToPrefetchDistanceToLoadNextInvoked) {
+                richToPrefetchDistanceToLoadNextInvoked = true
+                richToPrefetchDistanceToLoadNextListener?.invoke(skip, lastItem)
+                needLoadNextMessagesListener?.invoke(skip, lastItem)
+            }
+        } else richToPrefetchDistanceToLoadNextInvoked = false
     }
 
     private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean, isLastItemVisible: Boolean): Boolean {
@@ -110,6 +138,14 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             scheduleLayoutAnimation()
         } else
             mAdapter.notifyUpdate(messages, this)
+
+        if (alreadyScrolledToUnreadMessages.not())
+            awaitAnimationEnd {
+                messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                    scrollToPosition(it.first)
+                    alreadyScrolledToUnreadMessages = true
+                }
+            }
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
@@ -130,7 +166,14 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (::mAdapter.isInitialized.not())
             setData(messages)
         else
-            mAdapter.addNextPageMessagesList(messages as MutableList<MessageListItem>)
+            mAdapter.addNextPageMessagesList(messages)
+    }
+
+    fun addPrevPageMessages(messages: List<MessageListItem>) {
+        if (::mAdapter.isInitialized.not())
+            setData(messages)
+        else
+            mAdapter.addPrevPageMessagesList(messages)
     }
 
     fun addNewMessages(vararg items: MessageListItem) {
@@ -147,16 +190,28 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
     }
 
-    fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        needLoadMoreMessagesListener = listener
+    fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        needLoadPrevMessagesListener = listener
+    }
+
+    fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        needLoadNextMessagesListener = listener
     }
 
     fun setRichToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         richToStartListener = listener
     }
 
-    fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        richToPrefetchDistanceListener = listener
+    fun setRichToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        richToEndListener = listener
+    }
+
+    fun setRichToPrefetchDistanceToLoadPrevListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        richToPrefetchDistanceToLoadPrevListener = listener
+    }
+
+    fun setRichToPrefetchDistanceToLoadNextListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        richToPrefetchDistanceToLoadNextListener = listener
     }
 
     fun setMessageListener(listener: MessageClickListeners) {
@@ -186,9 +241,14 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             mAdapter.deleteMessageByTid(tid)
     }
 
-    fun hideLoadingItem() {
+    fun hideLoadingPrevItem() {
         if (::mAdapter.isInitialized)
-            mAdapter.removeLoading()
+            mAdapter.removeLoadingPrev()
+    }
+
+    fun hideLoadingNextItem() {
+        if (::mAdapter.isInitialized)
+            mAdapter.removeLoadingNext()
     }
 
     fun clearData() {

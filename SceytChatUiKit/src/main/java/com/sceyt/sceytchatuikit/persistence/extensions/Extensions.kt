@@ -13,3 +13,11 @@ fun <T> List<T>?.equalsIgnoreNull(other: List<T>?): Boolean {
 inline fun <reified T> Array<T>?.equalsIgnoreNull(other: Array<T>?): Boolean {
     return (this ?: arrayOf()).contentEquals((other ?: arrayOf()))
 }
+
+fun <T> List<T>.toArrayList(): ArrayList<T> {
+    return try {
+        this as ArrayList
+    } catch (ex: Exception) {
+        ArrayList(this)
+    }
+}

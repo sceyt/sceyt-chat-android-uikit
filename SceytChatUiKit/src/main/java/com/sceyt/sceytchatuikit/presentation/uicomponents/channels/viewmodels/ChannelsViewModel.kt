@@ -91,7 +91,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
-        setPagingLoadingStarted()
+        setPagingLoadingNextStarted()
 
         notifyPageLoadingState(false)
 
@@ -106,7 +106,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         when (it) {
             is PaginationResponse.DBResponse -> {
                 if (it.data.isNotEmpty()) {
-                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), it.offset)
+                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), 0, it.offset)
                     notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty(), searchQuery)
                 }
             }
@@ -121,7 +121,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is PaginationResponse.ServerResponse2 -> TODO()
         }
 
-        pagingResponseReceived(it)
+        pagingLoadPrevResponseReceived(it)
     }
 
     private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {

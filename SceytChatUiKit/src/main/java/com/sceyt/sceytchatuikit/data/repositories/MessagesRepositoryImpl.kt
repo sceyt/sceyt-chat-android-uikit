@@ -19,10 +19,10 @@ import kotlin.coroutines.resume
 
 class MessagesRepositoryImpl : MessagesRepository {
 
-    private fun getQuery(conversationId: Long, replayInThread: Boolean) = MessagesListQuery.Builder(conversationId).apply {
+    private fun getQuery(conversationId: Long, replayInThread: Boolean, reversed: Boolean) = MessagesListQuery.Builder(conversationId).apply {
         setIsThread(replayInThread)
         setLimit(MESSAGES_LOAD_SIZE)
-        setReversed(true)
+        setReversed(reversed)
     }.build()
 
     private fun getQueryByType(type: String, conversationId: Long) = MessagesListQueryByType.Builder(conversationId, type).apply {
@@ -34,9 +34,9 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param conversationId id of current conversation, if is replay in thread, it is the replay message id, else channel id.
      * @param lastMessageId conversation last message id.
      * @param replayInThread replay message in thread mode. */
-    override suspend fun getMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>> {
+    override suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, replayInThread).loadPrev(lastMessageId, object : MessagesCallback {
+            getQuery(conversationId, replayInThread,true).loadPrev(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
                     continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
@@ -44,6 +44,50 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(e: SceytException?) {
                     if (replayInThread && lastMessageId == 0L)
+                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                    else
+                        continuation.resume(SceytResponse.Error(e))
+                }
+            })
+        }
+    }
+
+    /**
+     * @param conversationId id of current conversation, if is replay in thread, it is the replay message id, else channel id.
+     * @param lastMessageId conversation last message id.
+     * @param replayInThread replay message in thread mode. */
+    override suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>> {
+        return suspendCancellableCoroutine { continuation ->
+            getQuery(conversationId, replayInThread,false).loadNext(lastMessageId, object : MessagesCallback {
+                override fun onResult(messages: MutableList<Message>?) {
+                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                }
+
+                override fun onError(e: SceytException?) {
+                    if (replayInThread && lastMessageId == 0L)
+                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                    else
+                        continuation.resume(SceytResponse.Error(e))
+                }
+            })
+        }
+    }
+
+    /**
+     * @param conversationId id of current conversation, if is replay in thread, it is the replay message id, else channel id.
+     * @param messageId conversation last message id.
+     * @param replayInThread replay message in thread mode. */
+    override suspend fun getNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>> {
+        return suspendCancellableCoroutine { continuation ->
+            getQuery(conversationId, replayInThread,false).loadNear(messageId, object : MessagesCallback {
+                override fun onResult(messages: MutableList<Message>?) {
+                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                }
+
+                override fun onError(e: SceytException?) {
+                    if (replayInThread && messageId == 0L)
                         continuation.resume(SceytResponse.Success(arrayListOf()))
                     else
                         continuation.resume(SceytResponse.Error(e))

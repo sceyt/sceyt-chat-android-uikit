@@ -186,10 +186,22 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.deleteMember(channelId, memberId)
     }
 
-    override suspend fun loadMessages(conversationId: Long,
-                                      lastMessageId: Long,
-                                      replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadMessages(conversationId, lastMessageId, replayInThread, offset)
+    override suspend fun loadPrevMessages(conversationId: Long,
+                                          lastMessageId: Long,
+                                          replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset)
+    }
+
+    override suspend fun loadNextMessages(conversationId: Long,
+                                          lastMessageId: Long,
+                                          replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replayInThread, offset)
+    }
+
+    override suspend fun loadNearMessages(conversationId: Long,
+                                          messageId: Long,
+                                          replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNear(conversationId, messageId, replayInThread, offset)
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
