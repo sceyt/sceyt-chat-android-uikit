@@ -8,8 +8,10 @@ sealed class PaginationResponse<T> {
      * @param hasNext shows, are items in database or not, to load next page. */
     data class DBResponse<T>(
             val data: List<T>,
+            val loadKey: Long,
             val offset: Int,
-            val hasNext: Boolean = false
+            val hasNext: Boolean = false,
+            val hasPrev: Boolean = false
     ) : PaginationResponse<T>()
 
     /**
@@ -21,16 +23,18 @@ sealed class PaginationResponse<T> {
             val data: SceytResponse<List<T>>,
             val dbData: List<T>,
             val offset: Int,
-            val hasNext: Boolean = false
+            val hasNext: Boolean = false,
     ) : PaginationResponse<T>()
 
 
     data class ServerResponse2<T>(
             val data: SceytResponse<List<T>>,
             val cashData: List<T>,
+            val loadKey: Long,
             val offset: Int,
             val hasDiff: Boolean,
-            val hasNext: Boolean = false
+            val hasNext: Boolean,
+            val hasPrev: Boolean
     ) : PaginationResponse<T>()
 
 

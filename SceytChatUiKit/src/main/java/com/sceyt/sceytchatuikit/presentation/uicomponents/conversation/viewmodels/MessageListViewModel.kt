@@ -51,8 +51,11 @@ class MessageListViewModel(private val conversationId: Long,
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
-    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
-    val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
+    private val _loadPrevMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
+    val loadPrevMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadPrevMessagesFlow
+
+    private val _loadNextMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
+    val loadNextMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadNextMessagesFlow
 
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
@@ -135,16 +138,77 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channelId == channel.id && it.replyInThread }
     }
 
-    fun loadMessages(lastMessageId: Long, offset: Int) {
-        setPagingLoadingStarted()
+    fun loadPrevMessages(lastMessageId: Long, offset: Int) {
+        setPagingLoadingPrevStarted()
         val isLoadingMore = offset > 0
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset).collect {
                 withContext(Dispatchers.Main) {
-                    initResponse(it)
+                    initResponsePrevMessages(it)
+                }
+            }
+        }
+    }
+
+    fun loadNextMessages(lastMessageId: Long, offset: Int) {
+        setPagingLoadingNextStarted()
+        val isLoadingMore = offset > 0
+
+        notifyPageLoadingState(isLoadingMore)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replayInThread, offset).collect {
+                withContext(Dispatchers.Main) {
+                    initResponseNextMessages(it)
+                }
+            }
+        }
+    }
+
+    fun loadNearMessages(messageId: Long, offset: Int) {
+        setPagingLoadingNearStarted()
+        val isLoadingMore = offset > 0
+
+        notifyPageLoadingState(isLoadingMore)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replayInThread, offset).collect { response ->
+                withContext(Dispatchers.Main) {
+                    when (response) {
+                        is PaginationResponse.DBResponse -> {
+                            // Ignore the case, when db data is empty, but still not received server response.
+                            if (response.data.isNotEmpty() || (!hasPrev && loadingPrevItems.get().not())) {
+                                _loadPrevMessagesFlow.value = response
+                                notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                            }
+                        }
+                        is PaginationResponse.ServerResponse2 -> {
+                            _loadPrevMessagesFlow.value = response
+                            notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
+                        }
+                        else -> return@withContext
+                    }
+                    when (response) {
+                        is PaginationResponse.DBResponse -> {
+                            loadingPrevItemsDb.set(false)
+                            loadingNextItemsDb.set(false)
+                            hasPrevDb = response.hasPrev
+                            hasNextDb = response.hasNext
+                        }
+                        is PaginationResponse.ServerResponse2 -> {
+                            loadingItems.set(false)
+                            loadingPrevItems.set(false)
+                            loadingNextItems.set(false)
+                            if (response.data is SceytResponse.Success) {
+                                hasPrev = response.hasPrev
+                                hasNext = response.hasNext
+                            }
+                        }
+                        else -> {}
+                    }
                 }
             }
         }
@@ -156,22 +220,40 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun initResponse(response: PaginationResponse<SceytMessage>) {
+    private fun initResponsePrevMessages(response: PaginationResponse<SceytMessage>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
                 // Ignore the case, when db data is empty, but still not received server response.
-                if (response.data.isNotEmpty() || (!hasNext && loadingItems.get().not())) {
-                    _loadMessagesFlow.value = response
+                if (response.data.isNotEmpty() || (!hasPrev && loadingPrevItems.get().not())) {
+                    _loadPrevMessagesFlow.value = response
                     notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
             is PaginationResponse.ServerResponse2 -> {
-                _loadMessagesFlow.value = response
+                _loadPrevMessagesFlow.value = response
                 notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
             }
             else -> return
         }
-        pagingResponseReceived(response)
+        pagingLoadPrevResponseReceived(response)
+    }
+
+    private fun initResponseNextMessages(response: PaginationResponse<SceytMessage>) {
+        when (response) {
+            is PaginationResponse.DBResponse -> {
+                // Ignore the case, when db data is empty, but still not received server response.
+                if (response.data.isNotEmpty() || (!hasNext && loadingNextItems.get().not())) {
+                    _loadNextMessagesFlow.value = response
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                }
+            }
+            is PaginationResponse.ServerResponse2 -> {
+                _loadNextMessagesFlow.value = response
+                notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
+            }
+            else -> return
+        }
+        pagingLoadNextResponseReceived(response)
     }
 
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
@@ -281,11 +363,12 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean,
+    internal fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
                                       lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
         val messageItems = arrayListOf<MessageListItem>()
+        var unreadSeparatorItem: MessageListItem.UnreadMessagesSeparatorItem? = null
         data.forEachIndexed { index, sceytMessage ->
             var prevMessage = lastMessage?.message
             if (index > 0)
@@ -302,11 +385,21 @@ class MessageListViewModel(private val conversationId: Long,
             })
             messageItems.add(messageItem)
 
-            if (sceytMessage.id == channel.lastReadMessageId && sceytMessage.id != channel.lastMessage?.id)
-                messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
+            if (sceytMessage.incoming && sceytMessage.id == channel.lastReadMessageId && sceytMessage.id != channel.lastMessage?.id) {
+                unreadSeparatorItem = MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, sceytMessage.id)
+                messageItems.add(unreadSeparatorItem!!)
+            }
+
+            if (!sceytMessage.incoming && unreadSeparatorItem != null) {
+                messageItems.remove(unreadSeparatorItem!!)
+            }
         }
         if (hasNext)
-            messageItems.add(0, MessageListItem.LoadingMoreItem)
+            messageItems.add(MessageListItem.LoadingNextItem)
+
+        if (hasPrev)
+            messageItems.add(0, MessageListItem.LoadingPrevItem)
+
         return messageItems
     }
 

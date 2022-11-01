@@ -58,7 +58,7 @@ internal class PersistenceMembersLogicImpl(
             val dbMembers = getMembersDb(channelId, normalizedOffset, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
             if (dbMembers.isNotEmpty())
-                trySend(PaginationResponse.DBResponse(dbMembers, normalizedOffset, hasNextDb))
+                trySend(PaginationResponse.DBResponse(dbMembers,0, normalizedOffset, hasNextDb))
 
             val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset)
 

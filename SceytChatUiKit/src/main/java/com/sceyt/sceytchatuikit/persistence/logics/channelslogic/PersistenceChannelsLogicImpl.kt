@@ -113,7 +113,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             val dbChannels = getChannelsDb(offset, searchQuery)
-            trySend(PaginationResponse.DBResponse(dbChannels, offset, hasNext = dbChannels.size == CHANNELS_LOAD_SIZE))
+            trySend(PaginationResponse.DBResponse(dbChannels,0, offset, hasNext = dbChannels.size == CHANNELS_LOAD_SIZE,hasPrev = false))
 
             awaitToConnectSceyt()
 

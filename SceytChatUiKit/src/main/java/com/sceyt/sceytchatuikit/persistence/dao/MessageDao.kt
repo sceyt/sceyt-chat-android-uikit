@@ -4,7 +4,9 @@ import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.persistence.entity.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 @Dao
 abstract class MessageDao {
@@ -96,7 +98,31 @@ abstract class MessageDao {
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
             "order by createdAt desc limit :limit")
-    abstract suspend fun getMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
+    abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
+    @Query("select * from messages where channelId =:channelId and message_id >:messageId " +
+            "order by createdAt limit :limit")
+    abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
+    @Query("select * from messages where channelId =:channelId and message_id >=:messageId " +
+            "order by createdAt limit :limit")
+    abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
+    open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
+        val newest = getNewestThenMessageInclude(channelId, messageId, SceytKitConfig.MESSAGES_LOAD_SIZE / 2 + 1)
+        val newMessages = newest.take(SceytKitConfig.MESSAGES_LOAD_SIZE / 1)
+        /*if (newMessages.size == limit)
+            return LoadNearData(newMessages, hasNext = true, hasPrev = true)*/
+
+        val oldest = getOldestThenMessages(channelId, messageId, limit - newMessages.size)
+        val hasPrev = oldest.size == limit - newMessages.size
+        val hasNext = newest.size > SceytKitConfig.MESSAGES_LOAD_SIZE / 2
+        return LoadNearData(newMessages + oldest, hasNext = hasNext, hasPrev)
+    }
+
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and deliveryStatus =:status " +

@@ -10,7 +10,8 @@ sealed class MessageListItem {
 
     data class DateSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
     data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
-    object LoadingMoreItem : MessageListItem()
+    object LoadingPrevItem : MessageListItem()
+    object LoadingNextItem : MessageListItem()
 
     override fun equals(other: Any?): Boolean {
         return when {
@@ -22,7 +23,8 @@ sealed class MessageListItem {
             other is DateSeparatorItem && this is DateSeparatorItem -> {
                 other.createdAt == createdAt && other.msgId == msgId
             }
-            other is LoadingMoreItem && this is LoadingMoreItem -> true
+            other is LoadingPrevItem && this is LoadingPrevItem -> true
+            other is LoadingNextItem && this is LoadingNextItem -> true
             else -> false
         }
     }
@@ -32,7 +34,8 @@ sealed class MessageListItem {
             is MessageItem -> message.createdAt
             is DateSeparatorItem -> createdAt
             is UnreadMessagesSeparatorItem -> createdAt
-            is LoadingMoreItem -> 0
+            is LoadingPrevItem -> 0
+            is LoadingNextItem -> Long.MAX_VALUE
         }
     }
 
