@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listener
 import android.view.View
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -18,6 +19,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
+    private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
 
 
     internal constructor()
@@ -71,6 +73,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         linkClickListener?.onLinkClick(view, item)
     }
 
+    override fun onScrollToDownClick(view: ScrollToDownView) {
+        defaultListeners?.onScrollToDownClick(view)
+        scrollToDownClickListener?.onScrollToDownClick(view)
+    }
+
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
@@ -83,6 +90,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 attachmentClickListener = listener
                 attachmentLongClickListener = listener
                 linkClickListener = listener
+                scrollToDownClickListener = listener
             }
             is MessageClickListeners.MessageLongClickListener -> {
                 messageLongClickListener = listener
@@ -110,6 +118,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             }
             is MessageClickListeners.LinkClickListener -> {
                 linkClickListener = listener
+            }
+            is MessageClickListeners.ScrollToDownClickListener -> {
+                scrollToDownClickListener = listener
             }
         }
     }

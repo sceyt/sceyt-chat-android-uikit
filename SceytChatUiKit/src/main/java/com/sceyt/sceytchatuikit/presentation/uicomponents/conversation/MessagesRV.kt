@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -31,12 +33,15 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToPrefetchDistanceToLoadPrevInvoked = false
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToPrefetchDistanceToLoadPrevListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+
     // Loading next properties
     private var needLoadNextMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToEndInvoked = false
     private var richToPrefetchDistanceToLoadNextInvoked = false
     private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToPrefetchDistanceToLoadNextListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+
+    private var showHideDownScroller: ((Boolean) -> Unit)? = null
 
     init {
         init()
@@ -60,11 +65,19 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     private fun addOnScrollListener() {
-        post {
-            addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
-                checkNeedLoadPrev(dy)
-                checkNeedLoadNext(dy)
-            }
+        addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
+            checkNeedLoadPrev(dy)
+            checkNeedLoadNext(dy)
+        }
+
+        addOnLayoutChangeListener { _, _, top, _, _, _, oldTop, _, _ ->
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
+                val lastPos = getLastVisibleItemPosition()
+                showHideDownScroller?.invoke(mAdapter.itemCount - lastPos > 2)
+                checkNeedLoadPrev(oldTop-top)
+                checkNeedLoadNext(oldTop-top)
+            }, 50)
         }
     }
 
@@ -92,6 +105,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private fun checkNeedLoadNext(dy: Int) {
         val lastVisiblePosition = getLastVisibleItemPosition()
+        showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition > 2)
+
         if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
             val skip = mAdapter.getSkip()
             val lastItem = mAdapter.getLastMessageItem()
@@ -220,6 +235,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setMessageDisplayedListener(listener: (message: SceytMessage) -> Unit) {
         viewHolderFactory.setMessageDisplayedListener(listener)
+    }
+
+    fun setScrollDownControllerListener(listener: (Boolean) -> Unit) {
+        showHideDownScroller = listener
     }
 
     /** Call this function to customise MessageViewHolderFactory and set your own.

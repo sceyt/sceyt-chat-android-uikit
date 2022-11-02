@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.view.get
+import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -35,6 +35,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         MessagePopupClickListeners.PopupClickListeners, ReactionPopupClickListeners.PopupClickListeners {
 
     private var messagesRV: MessagesRV
+    private var scrollDownIcon: ScrollToDownView
     private var pageStateView: PageStateView? = null
     private lateinit var clickListeners: MessageClickListenersImpl
     private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
@@ -59,6 +60,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
+        addView(ScrollToDownView(context).also { toDownView ->
+            scrollDownIcon = toDownView
+            messagesRV.setScrollDownControllerListener { show ->
+                scrollDownIcon.isVisible = show
+            }
+        })
+
         if (!isInEditMode)
             addView(PageStateView(context).also {
                 pageStateView = it
@@ -74,7 +82,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = MessagePopupClickListenersImpl(this)
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
-        messagesRV.setMessageListener(object : MessageClickListeners.ClickListeners {
+        val clickListeners = object : MessageClickListeners.ClickListeners {
             override fun onMessageLongClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onMessageLongClick(view, item)
@@ -119,7 +127,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (enabledClickActions)
                     clickListeners.onLinkClick(view, item)
             }
-        })
+
+            override fun onScrollToDownClick(view: ScrollToDownView) {
+                clickListeners.onScrollToDownClick(view)
+            }
+        }
+        messagesRV.setMessageListener(clickListeners)
+
+        scrollDownIcon.setOnClickListener {
+            clickListeners.onScrollToDownClick(it as ScrollToDownView)
+        }
     }
 
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
@@ -377,6 +394,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         enabledClickActions = enabled
     }
 
+    fun setUnreadCount(unreadCount: Int) {
+        scrollDownIcon.setUnreadCount(unreadCount)
+    }
+
     // Click events
     override fun onMessageLongClick(view: View, item: MessageItem) {
         showMessageActionsPopup(view, item.message)
@@ -412,6 +433,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onLinkClick(view: View, item: MessageItem) {
         context.openLink(item.message.body)
+    }
+
+    override fun onScrollToDownClick(view: ScrollToDownView) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
+        val toPos = messagesRV.adapter?.itemCount?.minus(1) ?: return
+        messagesRV.scrollToPosition(toPos)
+
+        messagesRV.awaitAnimationEnd {
+            view.isVisible = false
+        }
     }
 
 
