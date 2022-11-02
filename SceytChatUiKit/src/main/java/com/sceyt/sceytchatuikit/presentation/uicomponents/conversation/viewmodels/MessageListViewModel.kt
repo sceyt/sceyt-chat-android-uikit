@@ -274,6 +274,10 @@ class MessageListViewModel(private val conversationId: Long,
         _onReplayMessageCommandLiveData.postValue(message)
     }
 
+    fun prepareToScrollToNewMessage() {
+
+    }
+
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
@@ -363,42 +367,45 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
-                                      lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
+    internal suspend fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
+                                              lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
         val messageItems = arrayListOf<MessageListItem>()
-        var unreadSeparatorItem: MessageListItem.UnreadMessagesSeparatorItem? = null
-        data.forEachIndexed { index, sceytMessage ->
-            var prevMessage = lastMessage?.message
-            if (index > 0)
-                prevMessage = data.getOrNull(index - 1)
 
-            if (shouldShowDate(sceytMessage, prevMessage))
-                messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
+        withContext(Dispatchers.Default) {
+            var unreadSeparatorItem: MessageListItem.UnreadMessagesSeparatorItem? = null
+            data.forEachIndexed { index, sceytMessage ->
+                var prevMessage = lastMessage?.message
+                if (index > 0)
+                    prevMessage = data.getOrNull(index - 1)
 
-            val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
-                isGroup = this@MessageListViewModel.isGroup
-                files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
-                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
-                messageReactions = initReactionsItems(this)
-            })
-            messageItems.add(messageItem)
+                if (shouldShowDate(sceytMessage, prevMessage))
+                    messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
 
-            if (sceytMessage.incoming && sceytMessage.id == channel.lastReadMessageId && sceytMessage.id != channel.lastMessage?.id) {
-                unreadSeparatorItem = MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, sceytMessage.id)
-                messageItems.add(unreadSeparatorItem!!)
+                val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
+                    isGroup = this@MessageListViewModel.isGroup
+                    files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
+                    canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+                    messageReactions = initReactionsItems(this)
+                })
+                messageItems.add(messageItem)
+
+                if (sceytMessage.incoming && sceytMessage.id == channel.lastReadMessageId && sceytMessage.id != channel.lastMessage?.id) {
+                    unreadSeparatorItem = MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, sceytMessage.id)
+                    messageItems.add(unreadSeparatorItem!!)
+                }
+
+                if (!sceytMessage.incoming && unreadSeparatorItem != null) {
+                    messageItems.remove(unreadSeparatorItem!!)
+                }
             }
+            if (hasNext)
+                messageItems.add(MessageListItem.LoadingNextItem)
 
-            if (!sceytMessage.incoming && unreadSeparatorItem != null) {
-                messageItems.remove(unreadSeparatorItem!!)
-            }
+            if (hasPrev)
+                messageItems.add(0, MessageListItem.LoadingPrevItem)
         }
-        if (hasNext)
-            messageItems.add(MessageListItem.LoadingNextItem)
-
-        if (hasPrev)
-            messageItems.add(0, MessageListItem.LoadingPrevItem)
 
         return messageItems
     }
@@ -434,6 +441,9 @@ class MessageListViewModel(private val conversationId: Long,
             }
             is MessageCommandEvent.Replay -> {
                 prepareToReplayMessage(event.message)
+            }
+            is MessageCommandEvent.ScrollToDown -> {
+                prepareToScrollToNewMessage()
             }
         }
     }

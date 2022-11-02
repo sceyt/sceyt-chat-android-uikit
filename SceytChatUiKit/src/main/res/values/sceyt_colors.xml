@@ -18,7 +18,7 @@
     <color name="sceyt_color_last_message_from">#060A26</color>
     <color name="sceyt_color_input">#F1F2F6</color>
     <color name="sceyt_color_dialog_bg_themed">#FFFFFF</color>
-
+    <color name="sceyt_color_light_themed">#FFFFFFFF</color>
 
     // Not themed colors
     <color name="sceyt_color_black">#FFFFFFFF</color>

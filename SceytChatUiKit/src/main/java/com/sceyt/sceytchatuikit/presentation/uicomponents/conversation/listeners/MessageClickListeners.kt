@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listener
 
 import android.view.View
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -44,6 +45,10 @@ sealed interface MessageClickListeners {
         fun onLinkClick(view: View, item: MessageListItem.MessageItem)
     }
 
+    fun interface ScrollToDownClickListener : MessageClickListeners {
+        fun onScrollToDownClick(view: ScrollToDownView)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             LinkClickListener,
@@ -54,5 +59,6 @@ sealed interface MessageClickListeners {
             ReactionClickListener,
             ReactionLongClickListener,
             AttachmentClickListener,
-            AttachmentLongClickListener
+            AttachmentLongClickListener,
+            ScrollToDownClickListener
 }
