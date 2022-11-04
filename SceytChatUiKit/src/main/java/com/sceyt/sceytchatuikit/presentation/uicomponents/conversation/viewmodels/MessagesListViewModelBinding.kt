@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -14,6 +13,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -30,9 +31,10 @@ import kotlinx.coroutines.launch
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
 
-    if (channel.lastMessage?.incoming != true || channel.lastReadMessageId == 0L || channel.lastReadMessageId == channel.lastMessage?.id)
-        loadPrevMessages(0, 0)
-    else loadNearMessages(channel.lastReadMessageId, 0)
+    if (channel.lastMessage?.incoming != true || channel.lastReadMessageId == 0L || channel.lastReadMessageId == channel.lastMessage?.id
+            || channel.unreadMessageCount == 0L)
+        loadPrevMessages(0, 0, false)
+    else loadNearMessages(channel.lastReadMessageId, SceytConstants.UNREAD_MESSAGE_SEPARATOR_ID)
 
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
 
@@ -48,12 +50,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
 
     lifecycleOwner.lifecycleScope.launch {
+        ChannelsCash.channelUpdatedFlow.collect {
+            channel = it
+            messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
         loadPrevMessagesFlow.collect { response ->
             when (response) {
                 is PaginationResponse.DBResponse -> {
                     if (response.offset == 0) {
-                        Log.i("sdfsdfsdfsdf", "db->  ${response.data.map { it.body + "      ${it.id}" }}")
-
                         messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
                             hasNext = response.hasNext,
                             hasPrev = response.hasPrev))
@@ -70,8 +77,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     when (response.data) {
                         is SceytResponse.Success -> {
                             if (response.hasDiff) {
-                                Log.i("sdfsdfsdfsdf", "db->  ${response.cashData.map { it.body + "      ${it.id}" }}")
-
                                 val lastMsg = if (response.hasPrev)
                                     messagesListView.getMessageById(response.loadKey) else null
                                 val newMessages = mapToMessageListItem(data = response.cashData,
@@ -79,6 +84,76 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                                     hasPrev = response.hasPrev,
                                     lastMessage = lastMsg)
                                 messagesListView.setMessagesList(newMessages)
+                            } else
+                                if (response.hasPrev.not())
+                                    messagesListView.hideLoadingPrev()
+                        }
+                        else -> if (!hasPrevDb) messagesListView.hideLoadingPrev()
+                    }
+                }
+                else -> return@collect
+            }
+        }
+    }
+
+    /*  suspend fun getMappedListWithDb(response: PaginationResponse.DBResponse<SceytMessage>) {
+          if (response.offset == 0) {
+              messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext, hasPrev = response.hasPrev))
+          } else {
+              val lastMsg = if (response.hasPrev)
+                  messagesListView.getMessageById(response.loadKey) else null
+              messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
+                  hasNext = response.hasNext,
+                  hasPrev = response.hasPrev,
+                  lastMessage = lastMsg))
+          }
+      }*/
+
+    lifecycleOwner.lifecycleScope.launch {
+        loadNearMessagesFlow.collect { response ->
+            when (response) {
+                is PaginationResponse.DBResponse -> {//todo ignored now
+                    /*if (response.offset == 0) {
+                        messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev))
+                    } else {*/
+
+
+                    val lastMsg = if (response.hasPrev)
+                        messagesListView.getMessageById(response.loadKey) else null
+
+                    val mappedData = mapToMessageListItem(data = response.data,
+                        hasNext = response.hasNext,
+                        hasPrev = response.hasPrev,
+                        lastMessage = lastMsg)
+                    messagesListView.setMessagesList(mappedData, true)
+
+                    if (response.loadKey == SceytConstants.UNREAD_MESSAGE_SEPARATOR_ID) {
+                        messagesListView.scrollToUnReadMessage()
+
+                    } else if (response.offset == -1) {
+                        messagesListView.scrollToMessage(response.loadKey)
+                    }
+                }
+                is PaginationResponse.ServerResponse2 -> {
+                    when (response.data) {
+                        is SceytResponse.Success -> {
+                            if (response.hasDiff) {
+                                val lastMsg = if (response.hasPrev)
+                                    messagesListView.getMessageById(response.loadKey) else null
+                                val newMessages = mapToMessageListItem(data = response.cashData,
+                                    hasNext = response.hasNext,
+                                    hasPrev = response.hasPrev,
+                                    lastMessage = lastMsg)
+                                messagesListView.setMessagesList(newMessages, true)
+
+                                if (response.loadKey == SceytConstants.UNREAD_MESSAGE_SEPARATOR_ID) {
+                                    messagesListView.scrollToUnReadMessage()
+
+                                } else if (response.offset == -1) {
+                                    messagesListView.scrollToMessage(response.loadKey)
+                                }
                             } else
                                 if (response.hasPrev.not())
                                     messagesListView.hideLoadingPrev()
@@ -100,7 +175,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             hasNext = response.hasNext,
                             hasPrev = response.hasPrev))
                     } else {
-                        val lastMsg = if (response.hasPrev)
+                        val lastMsg = if (response.hasNext)
                             messagesListView.getMessageById(response.loadKey) else null
                         messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
                             hasNext = response.hasNext,
@@ -130,6 +205,39 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }
     }
+
+
+    lifecycleOwner.lifecycleScope.launch {
+        loadNewMessagesFlow.collect { response ->
+            when (response) {
+                is PaginationResponse.ServerResponse2 -> {
+                    when (response.data) {
+                        is SceytResponse.Success -> {
+                            val newMessages = mapToMessageListItem(data = response.cashData,
+                                hasNext = response.hasNext,
+                                hasPrev = response.hasPrev)
+                            messagesListView.setMessagesList(newMessages, true)
+                        }
+                        else -> if (!hasNextDb) messagesListView.hideLoadingNext()
+                    }
+                }
+                else -> return@collect
+            }
+        }
+    }
+
+
+    onScrollToMessageLiveData.observe(lifecycleOwner, Observer {
+        channel.lastMessage?.id?.let { lastMsgId ->
+            messagesListView.getMessageIndexedById(lastMsgId)?.let {
+                messagesListView.scrollToLastMessage()
+            } ?: run {
+                loadNewMessages()
+                markChannelAsRead(channel.id)
+            }
+        }
+    })
+
 
     messageEditedDeletedLiveData.observe(lifecycleOwner, Observer {
         when (it) {
@@ -284,7 +392,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.setNeedLoadPrevMessagesListener { offset, message ->
         if (canLoadPrev()) {
             val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
-            loadPrevMessages(messageId, offset)
+            loadPrevMessages(messageId, offset, false)
         }
     }
 

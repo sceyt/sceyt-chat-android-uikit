@@ -15,12 +15,12 @@ internal interface PersistenceMessagesLogic {
     suspend fun onMessageReactionUpdated(data: Message?)
     suspend fun onMessageEditedOrDeleted(data: Message?)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                 replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
+                                 replayInThread: Boolean, offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long,
                                  replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNear(conversationId: Long, messageId: Long, replayInThread: Boolean, offset: Int): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>>
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()

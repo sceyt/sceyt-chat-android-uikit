@@ -195,8 +195,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getLastMessage() = messagesRV.getLastMsg()
 
-    internal fun setMessagesList(data: List<MessageListItem>) {
-        messagesRV.setData(data)
+    internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
+        messagesRV.setData(data, force)
     }
 
     internal fun addNextPageMessages(data: List<MessageListItem>) {
@@ -217,11 +217,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (item is MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
+                item.message.updateMessage(message)
 
-                item.message.apply {
-                    updateMessage(message)
-                    deliveryStatus = message.deliveryStatus
-                }
                 messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                 break
             }
@@ -232,6 +229,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return messagesRV.getData()?.find { it is MessageItem && it.message.id == messageId }?.let {
             (it as MessageItem)
         }
+    }
+
+    internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
+        return messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == messageId }
     }
 
     internal fun sortMessages() {
@@ -437,12 +438,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onScrollToDownClick(view: ScrollToDownView) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
-        val toPos = messagesRV.adapter?.itemCount?.minus(1) ?: return
-        messagesRV.scrollToPosition(toPos)
+        /* val toPos = messagesRV.adapter?.itemCount?.minus(1) ?: return
+         messagesRV.scrollToPosition(toPos)
 
-        messagesRV.awaitAnimationEnd {
-            view.isVisible = false
-        }
+         messagesRV.awaitAnimationEnd {
+             view.isVisible = false
+         }*/
     }
 
 
@@ -481,5 +482,31 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
         reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
+    }
+
+    fun scrollToPosition(position: Int) {
+        messagesRV.scrollToPosition(position)
+    }
+
+    fun scrollToMessage(loadKey: Long) {
+        messagesRV.awaitAnimationEnd {
+            messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == loadKey }?.let {
+                messagesRV.scrollToPosition(it.first)
+
+            }
+        }
+    }
+
+
+    fun scrollToUnReadMessage() {
+        messagesRV.awaitAnimationEnd {
+            messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                messagesRV.scrollToPosition(it.first)
+            }
+        }
+    }
+
+    fun scrollToLastMessage() {
+        messagesRV.scrollToPosition((messagesRV.getData() ?: return).size - 1)
     }
 }

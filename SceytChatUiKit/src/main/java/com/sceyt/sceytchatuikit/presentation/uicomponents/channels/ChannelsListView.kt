@@ -331,6 +331,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelEventListener = listener
     }
 
+    internal fun getData() = channelsRV.getData()
+
     /**
      * @param listener Channel click listeners, to listen click events.
      */
@@ -377,13 +379,13 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        val updateChannel = item.channel.clone().apply {
+        /*val updateChannel = item.channel.clone().apply {
             unreadMessageCount = 0
             markedUsUnread = false
         }
         Handler(Looper.getMainLooper()).postDelayed({
             channelUpdated(updateChannel)
-        }, 300)
+        }, 300)*/
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {

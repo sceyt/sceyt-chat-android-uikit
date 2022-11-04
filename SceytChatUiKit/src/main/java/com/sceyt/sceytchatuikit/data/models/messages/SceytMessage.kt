@@ -58,7 +58,7 @@ open class SceytMessage(var id: Long,
         body = message.body
         type = message.type
         metadata = message.metadata
-        createdAt = message.createdAt
+        //createdAt = message.createdAt
         updatedAt = message.updatedAt
         incoming = message.incoming
         receipt = message.receipt

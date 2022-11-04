@@ -120,7 +120,7 @@ abstract class MessageDao {
         val oldest = getOldestThenMessages(channelId, messageId, limit - newMessages.size)
         val hasPrev = oldest.size == limit - newMessages.size
         val hasNext = newest.size > SceytKitConfig.MESSAGES_LOAD_SIZE / 2
-        return LoadNearData(newMessages + oldest, hasNext = hasNext, hasPrev)
+        return LoadNearData((newMessages + oldest).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
     }
 
 

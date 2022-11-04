@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -80,8 +81,9 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param replayInThread replay message in thread mode. */
     override suspend fun getNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, replayInThread,false).loadNear(messageId, object : MessagesCallback {
+            getQuery(conversationId, replayInThread,true).loadNear(messageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
+                    Log.i("sdfsdfs",messages?.map { it.body }.toString())
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
                     continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
