@@ -65,8 +65,8 @@ internal class PersistenceMessagesLogicImpl(
         messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
-    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb)
+    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int, loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
@@ -75,7 +75,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb = true)
+        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, true)
+    }
+
+    override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, true)
     }
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
@@ -87,7 +91,8 @@ internal class PersistenceMessagesLogicImpl(
             if (!ignoreDb)
                 trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, loadKey))
             // Load from server
-            trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, replayInThread, loadKey))
+            trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, replayInThread,
+                loadKey, ignoreDb))
 
             awaitClose()
         }
@@ -114,6 +119,11 @@ internal class PersistenceMessagesLogicImpl(
                 hasPrev = data.hasPrev
                 hasNext = data.hasNext
             }
+            LoadNewest -> {
+                messages = getPrevMessagesDb(channelId, Long.MAX_VALUE, offset)
+                hasPrev = messages.size == MESSAGES_LOAD_SIZE
+                hasNext = false
+            }
         }
         messagesCash.addAll(messages, false)
 
@@ -121,7 +131,8 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
-                                                    offset: Int, replayInThread: Boolean, loadKey: Long = lastMessageId): PaginationResponse.ServerResponse2<SceytMessage> {
+                                                    offset: Int, replayInThread: Boolean, loadKey: Long = lastMessageId,
+                                                    ignoreDb: Boolean): PaginationResponse.ServerResponse2<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         val hasDiff: Boolean
@@ -156,6 +167,14 @@ internal class PersistenceMessagesLogicImpl(
                     hasPrev = (oldest?.size ?: 0) >= MESSAGES_LOAD_SIZE / 2
                 }
             }
+            LoadNewest -> {
+                response = messagesRepository.getPrevMessages(channelId, Long.MAX_VALUE, replayInThread)
+                if (response is SceytResponse.Success) {
+                    messages = response.data ?: arrayListOf()
+                    hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
+                    hasNext = false
+                }
+            }
         }
 
         saveMessagesToDb(messages)
@@ -164,7 +183,7 @@ internal class PersistenceMessagesLogicImpl(
         return PaginationResponse.ServerResponse2(
             data = response, cashData = messagesCash.getSorted(),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
-            hasPrev = hasPrev, loadType = loadType)
+            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }
 
     private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int): List<SceytMessage> {

@@ -507,6 +507,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun scrollToLastMessage() {
-        messagesRV.scrollToPosition((messagesRV.getData() ?: return).size - 1)
+        messagesRV.awaitAnimationEnd {
+            messagesRV.scrollToPosition((messagesRV.getData() ?: return@awaitAnimationEnd).size - 1)
+        }
     }
 }

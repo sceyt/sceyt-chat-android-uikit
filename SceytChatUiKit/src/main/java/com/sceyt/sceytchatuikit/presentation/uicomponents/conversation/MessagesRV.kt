@@ -25,7 +25,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
-    private var alreadyScrolledToUnreadMessages = false
 
     // Loading prev properties
     private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
@@ -74,7 +73,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             Handler(Looper.getMainLooper()).postDelayed({
                 if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
                 val lastPos = getLastVisibleItemPosition()
-                showHideDownScroller?.invoke(mAdapter.itemCount - lastPos > 2)
+                showHideDownScroller?.invoke(mAdapter.itemCount - lastPos >= 2)
                 checkNeedLoadPrev(oldTop - top)
                 checkNeedLoadNext(oldTop - top)
             }, 50)
@@ -105,7 +104,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private fun checkNeedLoadNext(dy: Int) {
         val lastVisiblePosition = getLastVisibleItemPosition()
-        showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition > 2)
+        showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition >= 2)
 
         if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
             val skip = mAdapter.getSkip()
@@ -153,14 +152,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             scheduleLayoutAnimation()
         } else
             mAdapter.notifyUpdate(messages, this)
-
-        /* if (alreadyScrolledToUnreadMessages.not())
-             awaitAnimationEnd {
-                 messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                     scrollToPosition(it.first)
-                     alreadyScrolledToUnreadMessages = true
-                 }
-             }*/
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0

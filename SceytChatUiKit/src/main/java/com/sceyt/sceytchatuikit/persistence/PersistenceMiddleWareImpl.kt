@@ -187,8 +187,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                          replayInThread: Boolean, offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, ignoreDb)
+                                          replayInThread: Boolean, offset: Int, loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long,
@@ -199,6 +199,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long,
                                           replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNearMessages(conversationId, messageId, replayInThread, loadKey)
+    }
+
+    override suspend fun loadNewestMessages(conversationId: Long,
+                                            replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNewestMessages(conversationId, replayInThread, loadKey)
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {

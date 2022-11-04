@@ -8,9 +8,9 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceMessagesMiddleWare {
-    suspend fun loadPrevMessages(conversationId: Long,
-                                 lastMessageId: Long,
-                                 replayInThread: Boolean, offset: Int, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
+                                 replayInThread: Boolean, offset: Int, loadKey: Long,
+                                 ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long,
                                  lastMessageId: Long,
@@ -18,6 +18,9 @@ interface PersistenceMessagesMiddleWare {
 
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
                                  loadKey: Long): Flow<PaginationResponse<SceytMessage>>
+
+    suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean,
+                                   loadKey: Long): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?>
     suspend fun sendPendingMessages(channelId: Long)
