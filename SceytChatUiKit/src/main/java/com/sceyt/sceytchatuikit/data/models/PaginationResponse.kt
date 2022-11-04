@@ -36,7 +36,8 @@ sealed class PaginationResponse<T> {
             val hasDiff: Boolean,
             val hasNext: Boolean,
             val hasPrev: Boolean,
-            val loadType: LoadType
+            val loadType: LoadType,
+            val ignoredDb: Boolean
     ) : PaginationResponse<T>()
 
 
@@ -44,6 +45,22 @@ sealed class PaginationResponse<T> {
     class Nothing<T> : PaginationResponse<T>()
 
     enum class LoadType {
-        LoadPrev, LoadNext, LoadNear
+        LoadPrev, LoadNext, LoadNear, LoadNewest
+    }
+}
+
+fun PaginationResponse<*>.getLoadKey(): Long {
+    return when (this) {
+        is PaginationResponse.DBResponse -> loadKey
+        is PaginationResponse.ServerResponse2 -> loadKey
+        else -> 0L
+    }
+}
+
+fun PaginationResponse<*>.getOffset(): Int {
+    return when (this) {
+        is PaginationResponse.DBResponse -> offset
+        is PaginationResponse.ServerResponse2 -> offset
+        else -> 0
     }
 }

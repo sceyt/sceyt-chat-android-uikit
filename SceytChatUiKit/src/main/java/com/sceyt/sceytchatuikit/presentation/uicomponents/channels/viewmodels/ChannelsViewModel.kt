@@ -91,7 +91,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
-        setPagingLoadingNextStarted()
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
@@ -121,7 +121,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is PaginationResponse.ServerResponse2 -> TODO()
         }
 
-        pagingLoadPrevResponseReceived(it)
+        pagingResponseReceived(it)
     }
 
     private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
