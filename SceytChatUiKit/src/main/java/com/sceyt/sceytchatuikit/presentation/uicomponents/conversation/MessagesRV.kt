@@ -75,8 +75,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
                 val lastPos = getLastVisibleItemPosition()
                 showHideDownScroller?.invoke(mAdapter.itemCount - lastPos > 2)
-                checkNeedLoadPrev(oldTop-top)
-                checkNeedLoadNext(oldTop-top)
+                checkNeedLoadPrev(oldTop - top)
+                checkNeedLoadNext(oldTop - top)
             }, 50)
         }
     }
@@ -146,21 +146,21 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return scrollToEnd
     }
 
-    fun setData(messages: List<MessageListItem>) {
-        if (::mAdapter.isInitialized.not()) {
+    fun setData(messages: List<MessageListItem>, force: Boolean = false) {
+        if (::mAdapter.isInitialized.not() || force) {
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
         } else
             mAdapter.notifyUpdate(messages, this)
 
-        if (alreadyScrolledToUnreadMessages.not())
-            awaitAnimationEnd {
-                messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                    scrollToPosition(it.first)
-                    alreadyScrolledToUnreadMessages = true
-                }
-            }
+        /* if (alreadyScrolledToUnreadMessages.not())
+             awaitAnimationEnd {
+                 messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                     scrollToPosition(it.first)
+                     alreadyScrolledToUnreadMessages = true
+                 }
+             }*/
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0

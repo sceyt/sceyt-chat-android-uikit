@@ -11,7 +11,8 @@ sealed class PaginationResponse<T> {
             val loadKey: Long,
             val offset: Int,
             val hasNext: Boolean = false,
-            val hasPrev: Boolean = false
+            val hasPrev: Boolean = false,
+            val loadType: LoadType = LoadType.LoadPrev
     ) : PaginationResponse<T>()
 
     /**
@@ -34,10 +35,15 @@ sealed class PaginationResponse<T> {
             val offset: Int,
             val hasDiff: Boolean,
             val hasNext: Boolean,
-            val hasPrev: Boolean
+            val hasPrev: Boolean,
+            val loadType: LoadType
     ) : PaginationResponse<T>()
 
 
     /** Default value */
     class Nothing<T> : PaginationResponse<T>()
+
+    enum class LoadType {
+        LoadPrev, LoadNext, LoadNear
+    }
 }

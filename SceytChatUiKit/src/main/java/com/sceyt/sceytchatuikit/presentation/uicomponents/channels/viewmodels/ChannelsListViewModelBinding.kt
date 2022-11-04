@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
@@ -110,6 +111,12 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 UnMuted -> channelsListView.updateMuteState(false, it.channelId)
                 else -> return@collect
             }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        ChannelsCash.channelUpdatedFlow.collect { sceytChannel ->
+            channelsListView.channelUpdated(sceytChannel)
         }
     }
 

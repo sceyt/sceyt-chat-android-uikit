@@ -49,7 +49,8 @@ class SceytUIKitInitializer(private val application: Application) {
             appModules,
             databaseModule(enableDatabase),
             repositoryModule,
-            viewModels))
+            cashModule,
+            viewModelModule))
     }
 }
 

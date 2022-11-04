@@ -108,6 +108,31 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
+  protected fun pagingLoadNearResponseReceived(response: PaginationResponse<*>) {
+      when (response) {
+          is PaginationResponse.DBResponse -> {
+              loadingPrevItemsDb.set(false)
+              loadingNextItemsDb.set(false)
+              hasPrevDb = response.hasPrev
+              hasNextDb = response.hasNext
+          }
+          is PaginationResponse.ServerResponse2 -> {
+              loadingPrevItemsDb.set(false)
+              loadingNextItemsDb.set(false)
+             /* hasPrevDb = response.hasPrev
+              hasNextDb = response.hasNext*/
+              loadingItems.set(false)
+              loadingPrevItems.set(false)
+              loadingNextItems.set(false)
+              if (response.data is SceytResponse.Success) {
+                  hasPrev = response.hasPrev
+                  hasNext = response.hasNext
+              }
+          }
+          else -> return
+      }
+    }
+
     protected fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {
             _pageStateLiveData.postValue(PageState.StateLoadingMore())
