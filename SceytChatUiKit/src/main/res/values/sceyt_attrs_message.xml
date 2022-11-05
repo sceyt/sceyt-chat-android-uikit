@@ -20,7 +20,7 @@
 
         <attr name="sceytUiSameMessageSenderDistance" format="dimension" />
         <attr name="sceytUiDifferentMessageSenderDistance" format="dimension" />
-        <attr name="sceytUiDownScrollerUnreadCountColor" format="dimension" />
+        <attr name="sceytUiDownScrollerUnreadCountColor" format="reference" />
 
     </declare-styleable>
 </resources>
