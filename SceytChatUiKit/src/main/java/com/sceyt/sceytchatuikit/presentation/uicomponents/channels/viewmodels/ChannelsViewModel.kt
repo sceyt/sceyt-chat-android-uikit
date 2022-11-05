@@ -134,14 +134,14 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         return channelItems
     }
 
-    fun markAsRead(channelId: Long) {
+    fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.markChannelAsRead(channelId)
             _markAsReadLiveData.postValue(response)
         }
     }
 
-    fun markAsUnRead(channelId: Long) {
+    fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.markChannelAsUnRead(channelId)
             _markAsUnReadLiveData.postValue(response)
@@ -206,8 +206,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     internal fun onChannelEvent(event: ChannelEvent) {
         when (event) {
-            is ChannelEvent.MarkAsRead -> markAsRead(event.channel.id)
-            is ChannelEvent.MarkAsUnRead -> markAsUnRead(event.channel.id)
+            is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
+            is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
             is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
             is ChannelEvent.ClearHistory -> clearHistory(event.channel.id)
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)

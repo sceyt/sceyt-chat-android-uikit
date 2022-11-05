@@ -333,7 +333,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun send() {
         GlobalScope.launch {
-            for (i in 1..50) {
+            for (i in 1..30) {
                sed(i)
             }
         }
@@ -341,7 +341,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     suspend fun sed(i:Int){
-        delay(250)
+        delay(200)
         withContext(Dispatchers.Main){
             binding.messageInput.setText(i.toString())
             sendMessage()

@@ -223,8 +223,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.deleteMessage(channelId, message, onlyForMe)
     }
 
-    override suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
-        return messagesLogic.markAsRead(channelId, *ids)
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+        return messagesLogic.markMessagesAsRead(channelId, *ids)
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {

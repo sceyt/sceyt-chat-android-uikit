@@ -32,6 +32,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -49,6 +50,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val preference: SceytSharedPreference by inject()
     internal val myId = preference.getUserId()
     internal val lastReadMessageId = channel.lastReadMessageId
+    internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
@@ -299,9 +301,9 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun markMessageAsDisplayed(vararg id: Long) {
+    fun markMessageAsRead(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.markAsRead(channel.id, *id)
+            persistenceMessageMiddleWare.markMessagesAsRead(channel.id, *id)
         }
     }
 

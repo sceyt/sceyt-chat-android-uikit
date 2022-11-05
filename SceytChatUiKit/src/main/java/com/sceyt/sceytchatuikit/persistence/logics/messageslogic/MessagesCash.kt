@@ -1,12 +1,24 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diffContent
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 class MessagesCash {
     private var cashedMessages = hashMapOf<Long, SceytMessage>()
     private val syncOb = Any()
+
+    companion object {
+        private val messageUpdatedFlow_ = MutableSharedFlow<List<SceytMessage>>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val messageUpdatedFlow: SharedFlow<List<SceytMessage>> = messageUpdatedFlow_
+    }
 
     /** Added messages like upsert, and check is differences between messages*/
     fun addAll(list: List<SceytMessage>, checkDifference: Boolean): Boolean {
@@ -23,6 +35,7 @@ class MessagesCash {
     fun add(message: SceytMessage) {
         synchronized(syncOb) {
             cashedMessages[message.tid] = message
+            emitMessageUpdated(message)
         }
     }
 
@@ -38,10 +51,22 @@ class MessagesCash {
         }
     }
 
-    fun updateMessage(vararg message: SceytMessage) {
+    fun messageUpdated(vararg message: SceytMessage) {
         synchronized(syncOb) {
             message.forEach {
                 cashedMessages[it.tid] = it
+            }
+            emitMessageUpdated(*message)
+        }
+    }
+
+    fun updateMessagesStatus(status: DeliveryStatus, vararg tIds: Long) {
+        synchronized(syncOb) {
+            tIds.forEach {
+                cashedMessages[it]?.let { message ->
+                    message.deliveryStatus = status
+                    emitMessageUpdated(message)
+                }
             }
         }
     }
@@ -50,6 +75,10 @@ class MessagesCash {
         synchronized(syncOb) {
             cashedMessages.remove(tid)
         }
+    }
+
+    private fun emitMessageUpdated(vararg message: SceytMessage) {
+        messageUpdatedFlow_.tryEmit(message.map { it.clone() })
     }
 
     private fun putAndCheckHasDiff(list: List<SceytMessage>): Boolean {

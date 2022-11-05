@@ -146,6 +146,9 @@ abstract class MessageDao {
     @Query("select * from messages where tid =:tid")
     abstract fun getMessageByTid(tid: Long): MessageDb?
 
+    @Query("select tid from  messages where message_id in (:ids)")
+    abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
+
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
 
@@ -162,12 +165,10 @@ abstract class MessageDao {
     abstract fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
-    abstract suspend fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
-
+    abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
     @Query("update messages set selfMarkers =:markers where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, markers: List<String>?)
-
 
     @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerCount>?)
