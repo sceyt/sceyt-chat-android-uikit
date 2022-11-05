@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -11,6 +12,8 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.ScrollToBottomViewBinding
 import com.sceyt.sceytchatuikit.extensions.animationListener
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
@@ -19,8 +22,14 @@ class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     init {
         binding = ScrollToBottomViewBinding.inflate(LayoutInflater.from(context), this, true)
-        isVisible = false
+        if (!isInEditMode)
+            isVisible = false
+        binding.initWithStyle()
         setGravity()
+    }
+
+    private fun ScrollToBottomViewBinding.initWithStyle() {
+        unreadCount.backgroundTintList = ColorStateList.valueOf(context.getCompatColorByTheme(MessagesStyle.downScrollerUnreadCountColor))
     }
 
     private fun setGravity() {

@@ -204,6 +204,20 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
+    override suspend fun markAsDelivered(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).markMessagesAsDelivered(id, object : MessageMarkCallback {
+                override fun onResult(result: MessageListMarker) {
+                    continuation.resume(SceytResponse.Success(result))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.resume(SceytResponse.Error(error))
+                }
+            })
+        }
+    }
+
     override suspend fun sendTypingState(channelId: Long, typing: Boolean) {
         if (typing)
             ChannelOperator.build(channelId).startTyping()

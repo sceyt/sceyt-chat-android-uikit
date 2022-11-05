@@ -253,7 +253,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
-        val response = channelsRepository.markAsRead(channelId)
+        val response = channelsRepository.markChannelAsRead(channelId)
 
         if (response is SceytResponse.Success) {
             response.data?.let {
@@ -267,7 +267,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel> {
-        val response = channelsRepository.markAsUnRead(channelId)
+        val response = channelsRepository.markChannelAsUnRead(channelId)
 
         if (response is SceytResponse.Success)
             response.data?.let {

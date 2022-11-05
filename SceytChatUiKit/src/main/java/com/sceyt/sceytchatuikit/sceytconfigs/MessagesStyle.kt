@@ -50,6 +50,9 @@ object MessagesStyle {
     @Dimension
     var differentSenderMsgDistance = dpToPx(8f)
 
+    @ColorRes
+    var downScrollerUnreadCountColor: Int = R.color.sceyt_color_accent
+
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
@@ -61,6 +64,7 @@ object MessagesStyle {
         differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentMessageSenderDistance, differentSenderMsgDistance)
         dateSeparatorTextFont = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, dateSeparatorTextFont)
         dateSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, dateSeparatorTextStyle)
+        downScrollerUnreadCountColor = typedArray.getInt(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor, downScrollerUnreadCountColor)
         return this
     }
 }

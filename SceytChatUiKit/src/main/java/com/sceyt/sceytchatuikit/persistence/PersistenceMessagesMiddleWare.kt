@@ -25,7 +25,7 @@ interface PersistenceMessagesMiddleWare {
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
-    suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
+    suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>

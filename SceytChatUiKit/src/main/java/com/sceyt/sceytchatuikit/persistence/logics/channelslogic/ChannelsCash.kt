@@ -39,7 +39,7 @@ class ChannelsCash {
     fun add(channel: SceytChannel) {
         synchronized(syncOb) {
             if (putAndCheckHasDiff(arrayListOf(channel))) {
-                channelUpdates(channel)
+                channelUpdated(channel)
             }
         }
     }
@@ -60,7 +60,7 @@ class ChannelsCash {
         synchronized(syncOb) {
             channels.forEach {
                 if (putAndCheckHasDiff(arrayListOf(it))) {
-                    channelUpdates(it)
+                    channelUpdated(it)
                 }
             }
         }
@@ -70,7 +70,7 @@ class ChannelsCash {
         synchronized(syncOb) {
             cashedData[channelId]?.let { channel ->
                 channel.lastMessage = lastMessage
-                channelUpdates(channel.clone())
+                channelUpdated(channel.clone())
             }
         }
     }
@@ -83,7 +83,7 @@ class ChannelsCash {
                     channel.muteExpireDate = Date(muteUntil)
                 } else channel.muted = false
 
-                channelUpdates(channel)
+                channelUpdated(channel)
             }
         }
     }
@@ -95,7 +95,7 @@ class ChannelsCash {
                     channel.subject = newSubject
                     channel.avatarUrl = newUrl
 
-                    channelUpdates(channel)
+                    channelUpdated(channel)
                 }
             }
         }
@@ -109,7 +109,7 @@ class ChannelsCash {
                         add(sceytMember)
                     }
 
-                    channelUpdates(channel)
+                    channelUpdated(channel)
                 }
             }
         }
@@ -120,7 +120,7 @@ class ChannelsCash {
             cashedData[channelId]?.let { channel ->
                 channel.unreadMessageCount = count.toLong()
                 channel.markedUsUnread = false
-                channelUpdates(channel)
+                channelUpdated(channel)
             }
         }
     }
@@ -131,7 +131,7 @@ class ChannelsCash {
         }
     }
 
-    private fun channelUpdates(channel: SceytChannel) {
+    private fun channelUpdated(channel: SceytChannel) {
         channelUpdatedFlow_.tryEmit(channel.clone())
     }
 

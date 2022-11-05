@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -47,7 +48,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         messageDao.updateMessageStatus(data.status, *data.messageIds.toLongArray())
-        messagesCash.updateMessage(*messageDao.getMessageByIds(data.messageIds).map { it.toSceytMessage() }.toTypedArray())
+        messagesCash.messageUpdated(*messageDao.getMessageByIds(data.messageIds).map { it.toSceytMessage() }.toTypedArray())
     }
 
     override suspend fun onMessageReactionUpdated(data: Message?) {
@@ -56,13 +57,13 @@ internal class PersistenceMessagesLogicImpl(
             messageId = data.id,
             reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
             scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
-        messagesCash.updateMessage(data.toSceytUiMessage())
+        messagesCash.messageUpdated(data.toSceytUiMessage())
     }
 
     override suspend fun onMessageEditedOrDeleted(data: Message?) {
         data ?: return
         messageDao.updateMessage(data.toMessageEntity())
-        messagesCash.updateMessage(data.toSceytUiMessage())
+        messagesCash.messageUpdated(data.toSceytUiMessage())
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
@@ -129,7 +130,11 @@ internal class PersistenceMessagesLogicImpl(
                 hasNext = false
             }
         }
+
         messagesCash.addAll(messages, false)
+
+        // Mark messages as received
+        markMessagesAsReceived(channelId, messages)
 
         return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -233,6 +238,14 @@ internal class PersistenceMessagesLogicImpl(
             list.addAll(pendingMessage)
     }
 
+    private suspend fun markMessagesAsReceived(channelId: Long, messages: List<SceytMessage>) {
+        val notDisplayedMessages = messages.filter {
+            it.incoming && it.selfMarkers?.contains(SelfMarkerTypeEnum.Received.toString()) != true
+        }
+        if (notDisplayedMessages.isNotEmpty())
+            markMessagesAsReceive(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
+    }
+
     private suspend fun saveMessagesToDb(list: List<SceytMessage>) {
         if (list.isEmpty()) return
 
@@ -277,7 +290,7 @@ internal class PersistenceMessagesLogicImpl(
                     tid = responseMsg.tid, serverId = responseMsg.id,
                     date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
-                messagesCash.updateMessage(responseMsg)
+                messagesCash.messageUpdated(responseMsg)
                 MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
             }
         }
@@ -295,7 +308,7 @@ internal class PersistenceMessagesLogicImpl(
                             tid = responseMsg.tid, serverId = responseMsg.id,
                             date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
-                        messagesCash.updateMessage(responseMsg)
+                        messagesCash.messageUpdated(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
                     }
                 }
@@ -314,7 +327,7 @@ internal class PersistenceMessagesLogicImpl(
                             tid = responseMsg.tid, serverId = responseMsg.id,
                             date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
-                        messagesCash.updateMessage(responseMsg)
+                        messagesCash.messageUpdated(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
                     }
                 }
@@ -334,25 +347,41 @@ internal class PersistenceMessagesLogicImpl(
                 messageDao.deleteAttachments(listOf(message.tid))
                 reactionDao.deleteAllReactionsAndScores(message.id)
                 messageDao.updateMessage(resultMessage.toMessageEntity())
-                messagesCash.updateMessage(resultMessage)
+                messagesCash.messageUpdated(resultMessage)
             }
         }
         return response
     }
 
-    override suspend fun markAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
         val response = messagesRepository.markAsRead(channelId, *ids)
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
-                messageDao.updateMessagesStatusAsRead(channelId, messageListMarker.messageIds)
-                messagesCash.updateMessage(*messageDao.getMessageByIds(ids.toList()).map { it.toSceytMessage() }.toTypedArray())
+                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, DeliveryStatus.Read)
+                val tIds = messageDao.getMessageTIdsByIds(*ids)
+                messagesCash.updateMessagesStatus(DeliveryStatus.Read, *tIds.toLongArray())
 
                 //todo need update marker count
                 ids.forEach {
-                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, "displayed")
+                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, SelfMarkerTypeEnum.Displayed.toString())
                 }
+            }
+        }
+        return response
+    }
 
-                persistenceChannelsLogic.setUnreadCount(channelId, 0)
+    override suspend fun markMessagesAsReceive(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+        val response = messagesRepository.markAsRead(channelId, *ids)
+        if (response is SceytResponse.Success) {
+            response.data?.let { messageListMarker ->
+                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, DeliveryStatus.Delivered)
+                val tIds = messageDao.getMessageTIdsByIds(*ids)
+                messagesCash.updateMessagesStatus(DeliveryStatus.Delivered, *tIds.toLongArray())
+
+                //todo need update marker count
+                ids.forEach {
+                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, SelfMarkerTypeEnum.Received.toString())
+                }
             }
         }
         return response
@@ -363,7 +392,7 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
                 messageDao.updateMessage(updatedMsg.toMessageEntity())
-                messagesCash.updateMessage(updatedMsg)
+                messagesCash.messageUpdated(updatedMsg)
             }
         }
         return response
@@ -379,7 +408,7 @@ internal class PersistenceMessagesLogicImpl(
                 message.reactionScores?.let {
                     messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
                 }
-                messagesCash.updateMessage(message)
+                messagesCash.messageUpdated(message)
             }
         }
         return response
@@ -394,7 +423,7 @@ internal class PersistenceMessagesLogicImpl(
                     if (fromId != null)
                         reactionDao.deleteReactionAndScore(messageId, scoreKey, fromId)
                 }
-                messagesCash.updateMessage(message)
+                messagesCash.messageUpdated(message)
             }
         }
         return response

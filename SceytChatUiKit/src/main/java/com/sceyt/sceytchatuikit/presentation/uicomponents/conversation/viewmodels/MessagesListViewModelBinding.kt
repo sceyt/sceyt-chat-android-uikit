@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
 
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
-    val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
+    val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
     if (lastReadMessageId == 0L || lastReadMessageId == channel.lastMessage?.id)
         loadPrevMessages(0, 0)
@@ -138,7 +138,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (pendingDisplayMsgIds.isNotEmpty()) {
-                markMessageAsDisplayed(*pendingDisplayMsgIds.toLongArray())
+                markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
                 pendingDisplayMsgIds.clear()
             }
         }
@@ -215,9 +215,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     fun checkStateAndMarkAsRead(message: SceytMessage) {
-        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED)
-            markMessageAsDisplayed(message.id)
-        else pendingDisplayMsgIds.add(message.id)
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            pendingDisplayMsgIds.add(message.id)
+            sendDisplayedHelper.submit {
+                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                pendingDisplayMsgIds.clear()
+            }
+        } else pendingDisplayMsgIds.add(message.id)
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -231,8 +235,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             messagesListView.addNewMessages(*initMessage.toTypedArray())
             messagesListView.updateViewState(PageState.Nothing)
-
-            checkStateAndMarkAsRead(it)
         }
     }
 
