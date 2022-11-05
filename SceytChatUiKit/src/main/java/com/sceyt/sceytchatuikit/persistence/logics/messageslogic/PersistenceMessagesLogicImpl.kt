@@ -65,25 +65,29 @@ internal class PersistenceMessagesLogicImpl(
         messagesCash.updateMessage(data.toSceytUiMessage())
     }
 
-    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int, loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
+                                          offset: Int, loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
-                                          offset: Int): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset)
+                                          offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb)
     }
 
-    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, true)
+    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
+                                          loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, true)
+    override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
+                                            ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, ignoreDb)
     }
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
-                             replayInThread: Boolean, offset: Int, loadKey: Long = messageId, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>> {
+                             replayInThread: Boolean, offset: Int, loadKey: Long = messageId,
+                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             if (offset == 0) messagesCash.clear()
 
@@ -178,6 +182,10 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
+
+        if (loadType == LoadNear)
+            messagesCash.clear()
+
         hasDiff = messagesCash.addAll(messages, true)
 
         return PaginationResponse.ServerResponse2(

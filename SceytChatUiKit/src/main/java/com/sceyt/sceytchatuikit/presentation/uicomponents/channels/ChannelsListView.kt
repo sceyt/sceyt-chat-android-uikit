@@ -1,8 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -158,7 +156,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
         context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val channelId = status.channelId ?: return@launch
+            val channelId = status.channel.id
             channelsRV.getChannelIndexed(channelId)?.let { pair ->
                 val channel = pair.second.channel
                 channel.lastMessage?.let {
@@ -213,17 +211,21 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun channelUpdated(channel: SceytChannel?) {
-        channelsRV.getChannelIndexed(channel?.id ?: return)?.let { pair ->
+    internal fun channelUpdated(channel: SceytChannel?): Boolean {
+        channelsRV.getChannelIndexed(channel?.id ?: return false)?.let { pair ->
             val channelItem = pair.second
             val oldChannel = channelItem.channel.clone()
             channelItem.channel = channel
             channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+            return true
         }
+        return false
     }
 
     internal fun deleteChannel(channelId: Long?) {
         channelsRV.deleteChannel(channelId ?: return)
+        if (channelsRV.getData().isNullOrEmpty())
+            pageStateView?.updateState(PageState.StateEmpty())
     }
 
     internal fun markedChannelAsRead(channelId: Long?) {
@@ -288,10 +290,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
-        channelsRV.sortBy(sortBy)
-    }
-
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
         val popup = PopupMenuChannel(ContextThemeWrapper(context, ChannelStyle.popupStyle), view, channel = item.channel)
         popup.setOnMenuItemClickListener { menuItem ->
@@ -332,6 +330,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun getData() = channelsRV.getData()
+
+    fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
+        channelsRV.sortBy(sortBy)
+    }
 
     /**
      * @param listener Channel click listeners, to listen click events.

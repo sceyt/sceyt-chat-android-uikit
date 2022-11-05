@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -192,6 +193,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }).show(it, null)
         }
     }
+
+    internal fun getFirstMessage() = messagesRV.getFirstMsg()
 
     internal fun getLastMessage() = messagesRV.getLastMsg()
 
@@ -484,31 +487,32 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
     }
 
-    fun scrollToPosition(position: Int) {
-        messagesRV.scrollToPosition(position)
-    }
-
     fun scrollToMessage(loadKey: Long) {
-        messagesRV.awaitAnimationEnd {
-            messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == loadKey }?.let {
-                messagesRV.scrollToPosition(it.first)
-
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == loadKey }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
             }
         }
     }
 
-
     fun scrollToUnReadMessage() {
-        messagesRV.awaitAnimationEnd {
-            messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                messagesRV.scrollToPosition(it.first)
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
             }
         }
     }
 
     fun scrollToLastMessage() {
-        messagesRV.awaitAnimationEnd {
-            messagesRV.scrollToPosition((messagesRV.getData() ?: return@awaitAnimationEnd).size - 1)
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition((messagesRV.getData()
+                        ?: return@awaitAnimationEnd).size - 1)
+            }
         }
     }
 }

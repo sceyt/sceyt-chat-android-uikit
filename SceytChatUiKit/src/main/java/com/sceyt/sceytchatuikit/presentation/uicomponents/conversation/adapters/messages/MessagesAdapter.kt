@@ -26,7 +26,6 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         RecyclerView.Adapter<BaseMsgViewHolder>() {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
-    private var updateJob: Job? = null
     private val debounceHelper by lazy { DebounceHelper(300) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
@@ -139,11 +138,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 this@MessagesAdapter.messages.clear()
                 this@MessagesAdapter.messages.addAll(messages)
 
-                if (isLastItemVisible)
-                    recyclerView.scrollToPosition(itemCount - 1)
+                /*if (isLastItemVisible)
+                    recyclerView.scrollToPosition(itemCount - 1)*/
             }
         }
-
     }
 
     fun getData() = messages
@@ -183,6 +181,18 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             productDiffResult.dispatchUpdatesToSafety(recyclerView)
             if (isLastItemVisible)
                 recyclerView.scrollToPosition(itemCount - 1)
+        }
+    }
+
+    companion object {
+        private var updateJob: Job? = null
+
+        fun awaitUpdating(cb: () -> Unit) {
+            if (updateJob == null || updateJob?.isCompleted == true || updateJob?.isCompleted == true)
+                cb.invoke()
+            else {
+                updateJob?.invokeOnCompletion { cb.invoke() }
+            }
         }
     }
 }

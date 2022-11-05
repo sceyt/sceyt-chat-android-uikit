@@ -3,10 +3,7 @@ package com.sceyt.sceytchatuikit.data.repositories
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.*
 
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>

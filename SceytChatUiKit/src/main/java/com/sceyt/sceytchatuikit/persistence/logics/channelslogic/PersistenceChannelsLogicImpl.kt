@@ -3,19 +3,19 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
+import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -48,7 +48,7 @@ internal class PersistenceChannelsLogicImpl(
                 data.channel?.let { channel ->
                     val members = if (channel is GroupChannel) channel.members else arrayListOf((channel as DirectChannel).peer)
                     val sceytChannel = channel.toSceytUiChannel()
-                    insertChannel(sceytChannel, *members.toTypedArray())
+                    insertChannel(sceytChannel, *members.map { it.toSceytMember() }.toTypedArray())
                     channelsCash.add(sceytChannel)
                 }
             }
@@ -104,13 +104,17 @@ internal class PersistenceChannelsLogicImpl(
         channelsCash.updateChannel(data.channel.toSceytUiChannel())
     }
 
-    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        val lastMsg = data.second
-        channelDao.updateLastMessage(data.first.id, lastMsg.tid, lastMsg.createdAt)
-        channelsCash.updateLastMessage(data.first.id, data.second)
+    override suspend fun onChannelMarkersUpdated(data: MessageStatusChangeData) {
+        channelDao.updateChannel(data.channel.toChannelEntity(preference.getUserId()))
+        channelsCash.updateChannel(data.channel)
     }
 
-    private fun insertChannel(channel: SceytChannel, vararg members: Member) {
+    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
+        channelDao.updateChannel(data.first.toChannelEntity(preference.getUserId()))
+        channelsCash.updateChannel(data.first)
+    }
+
+    private fun insertChannel(channel: SceytChannel, vararg members: SceytMember) {
         val users = members.map { it.toUserEntity() }
         channel.lastMessage?.let {
             it.lastReactions?.map { reaction -> reaction.user }?.let { it1 ->
@@ -227,7 +231,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let { channel ->
-                insertChannel(channel, Member(Role(RoleTypeEnum.Member.toString()), user))
+                insertChannel(channel, SceytMember(user))
                 channelsCash.add(channel)
             }
         }
@@ -240,7 +244,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let { channel ->
-                insertChannel(channel, *createChannelData.members.toTypedArray())
+                insertChannel(channel, *(channel as SceytGroupChannel).members.toTypedArray())
                 channelsCash.add(channel)
             }
         }
@@ -347,11 +351,11 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.getChannel(channelId)
 
-        /* if (response is SceytResponse.Success)
-             response.data?.toChannelEntity(preference.getUserId())?.let {
-                 channelDao.insertChannel(it)
-                 channelsCash.updateChannel(response.data)
-             }*/
+        if (response is SceytResponse.Success)
+            response.data?.toChannelEntity(preference.getUserId())?.let {
+                channelDao.insertChannel(it)
+                channelsCash.updateChannel(response.data)
+            }
 
         return SceytResponse.Error()
     }

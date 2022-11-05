@@ -129,9 +129,15 @@ open class BaseViewModel : ViewModel() {
         when (response.loadType) {
             LoadPrev -> initPrev()
             LoadNext -> initNext()
-            LoadNear, LoadNewest -> {
+            LoadNear -> {
                 initPrev()
                 initNext()
+            }
+            LoadNewest -> {
+                initPrev()
+                initNext()
+                hasNextDb = false
+                loadingNextItemsDb.set(false)
             }
         }
     }

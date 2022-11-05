@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -60,18 +61,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        onNewMessageFlow.collect {
-            if (!channelsListView.updateLastMessage(it.second, false, it.first.unreadMessageCount)) {
-                getChannels(0, query = searchQuery)
-            }
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onOutGoingMessageFlow.collect {
-            if (!channelsListView.updateLastMessage(it, checkId = false)) {
-                getChannels(0, query = searchQuery)
-            }
+        onOutGoingMessageStatusFlow.collect {
+            channelsListView.updateOutgoingLastMessageStatus(it.first, it.second)
         }
     }
 
@@ -80,18 +71,6 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             if (!channelsListView.updateLastMessage(it, checkId = true)) {
                 getChannels(0, query = searchQuery)
             }
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageStatusFlow.collect {
-            channelsListView.updateLastMessageStatus(it)
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onOutGoingMessageStatusFlow.collect {
-            channelsListView.updateOutgoingLastMessageStatus(it.first, it.second)
         }
     }
 
@@ -116,7 +95,10 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     lifecycleOwner.lifecycleScope.launch {
         ChannelsCash.channelUpdatedFlow.collect { sceytChannel ->
-            channelsListView.channelUpdated(sceytChannel)
+            if (channelsListView.channelUpdated(sceytChannel)) {
+                channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+            } else
+                getChannels(0, query = searchQuery)
         }
     }
 
@@ -126,37 +108,10 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    markAsReadLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                channelsListView.markedChannelAsRead(it.data?.id)
-            }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
-        }
-    }
-
-    markAsUnReadLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                channelsListView.markedChannelAsUnRead(it.data?.id)
-            }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
-        }
-    }
-
     blockChannelLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> {
                 channelsListView.deleteChannel(it.data)
-            }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
-        }
-    }
-
-    clearHistoryLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                channelsListView.channelCleared(it.data)
             }
             is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
@@ -184,17 +139,6 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         when (it) {
             is SceytResponse.Success -> {
                 channelsListView.userBlocked(it.data)
-            }
-            is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
-        }
-    }
-
-    muteUnMuteLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                it.data?.let { channel ->
-                    channelsListView.muteUnMuteChannel(channel.id, channel.muted)
-                }
             }
             is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }

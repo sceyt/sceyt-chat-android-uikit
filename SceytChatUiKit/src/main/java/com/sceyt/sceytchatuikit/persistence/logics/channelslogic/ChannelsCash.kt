@@ -39,7 +39,7 @@ class ChannelsCash {
     fun add(channel: SceytChannel) {
         synchronized(syncOb) {
             if (putAndCheckHasDiff(arrayListOf(channel))) {
-                channelUpdatedFlow_.tryEmit(channel)
+                channelUpdates(channel)
             }
         }
     }
@@ -60,7 +60,7 @@ class ChannelsCash {
         synchronized(syncOb) {
             channels.forEach {
                 if (putAndCheckHasDiff(arrayListOf(it))) {
-                    channelUpdatedFlow_.tryEmit(it)
+                    channelUpdates(it)
                 }
             }
         }
@@ -70,7 +70,7 @@ class ChannelsCash {
         synchronized(syncOb) {
             cashedData[channelId]?.let { channel ->
                 channel.lastMessage = lastMessage
-                channelUpdatedFlow_.tryEmit(channel)
+                channelUpdates(channel.clone())
             }
         }
     }
@@ -83,7 +83,7 @@ class ChannelsCash {
                     channel.muteExpireDate = Date(muteUntil)
                 } else channel.muted = false
 
-                channelUpdatedFlow_.tryEmit(channel)
+                channelUpdates(channel)
             }
         }
     }
@@ -95,7 +95,7 @@ class ChannelsCash {
                     channel.subject = newSubject
                     channel.avatarUrl = newUrl
 
-                    channelUpdatedFlow_.tryEmit(channel)
+                    channelUpdates(channel)
                 }
             }
         }
@@ -109,7 +109,7 @@ class ChannelsCash {
                         add(sceytMember)
                     }
 
-                    channelUpdatedFlow_.tryEmit(channel)
+                    channelUpdates(channel)
                 }
             }
         }
@@ -120,7 +120,7 @@ class ChannelsCash {
             cashedData[channelId]?.let { channel ->
                 channel.unreadMessageCount = count.toLong()
                 channel.markedUsUnread = false
-                channelUpdatedFlow_.tryEmit(channel)
+                channelUpdates(channel)
             }
         }
     }
@@ -129,6 +129,10 @@ class ChannelsCash {
         synchronized(syncOb) {
             cashedData.remove(id)
         }
+    }
+
+    private fun channelUpdates(channel: SceytChannel) {
+        channelUpdatedFlow_.tryEmit(channel.clone())
     }
 
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {

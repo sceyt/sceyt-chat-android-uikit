@@ -341,7 +341,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     suspend fun sed(i:Int){
-        delay(100)
+        delay(250)
         withContext(Dispatchers.Main){
             binding.messageInput.setText(i.toString())
             sendMessage()
