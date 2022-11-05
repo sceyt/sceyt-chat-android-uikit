@@ -40,7 +40,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToPrefetchDistanceToLoadNextListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
-    private var showHideDownScroller: ((Boolean) -> Unit)? = null
+    private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
 
     init {
         init()
@@ -73,14 +73,15 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             Handler(Looper.getMainLooper()).postDelayed({
                 if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
                 val lastPos = getLastVisibleItemPosition()
-                showHideDownScroller?.invoke(mAdapter.itemCount - lastPos >= 2)
-                checkNeedLoadPrev(oldTop - top)
-                checkNeedLoadNext(oldTop - top)
-            }, 50)
+                checkScrollDown(lastPos)
+                checkNeedLoadPrev(-1)
+                checkNeedLoadNext(1)
+            }, 80)
         }
     }
 
     private fun checkNeedLoadPrev(dy: Int) {
+        if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
         if (firstVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
             val skip = mAdapter.getSkip()
@@ -103,8 +104,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     private fun checkNeedLoadNext(dy: Int) {
+        if (mAdapter.itemCount == 0) return
         val lastVisiblePosition = getLastVisibleItemPosition()
-        showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition >= 2)
+        checkScrollDown(lastVisiblePosition)
 
         if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
             val skip = mAdapter.getSkip()
@@ -124,6 +126,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 needLoadNextMessagesListener?.invoke(skip, lastItem)
             }
         } else richToPrefetchDistanceToLoadNextInvoked = false
+    }
+
+    private fun checkScrollDown(lastVisiblePosition: Int) {
+        showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition >= 2 && canScrollVertically(0))
     }
 
     private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean, isLastItemVisible: Boolean): Boolean {
@@ -155,6 +161,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
+
+    fun getFirstMsg(): MessageListItem.MessageItem? {
+        return if (::mAdapter.isInitialized) {
+            mAdapter.getFirstMessageItem()
+        } else null
+    }
 
     fun getLastMsg(): MessageListItem.MessageItem? {
         return if (::mAdapter.isInitialized) {

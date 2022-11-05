@@ -113,9 +113,10 @@ abstract class MessageDao {
     @Transaction
     open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
         val newest = getNewestThenMessageInclude(channelId, messageId, SceytKitConfig.MESSAGES_LOAD_SIZE / 2 + 1)
+        if (newest.isEmpty())
+            return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
+
         val newMessages = newest.take(SceytKitConfig.MESSAGES_LOAD_SIZE / 1)
-        /*if (newMessages.size == limit)
-            return LoadNearData(newMessages, hasNext = true, hasPrev = true)*/
 
         val oldest = getOldestThenMessages(channelId, messageId, limit - newMessages.size)
         val hasPrev = oldest.size == limit - newMessages.size

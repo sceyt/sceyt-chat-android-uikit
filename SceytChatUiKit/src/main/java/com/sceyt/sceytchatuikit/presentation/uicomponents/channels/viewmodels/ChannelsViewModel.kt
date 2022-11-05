@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -66,7 +67,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
-    val onChannelEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>
+    val onChannelEventFlow: Flow<ChannelEventData>
 
     init {
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
