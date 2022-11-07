@@ -16,6 +16,8 @@ class SceytGroupChannel(
         override var muted: Boolean,
         override var muteExpireDate: Date?,
         override var markedUsUnread: Boolean,
+        override var lastDeliveredMessageId: Long,
+        override var lastReadMessageId: Long,
         override var channelType: ChannelTypeEnum,
         var subject: String?,
         var avatarUrl: String?,
@@ -32,6 +34,8 @@ class SceytGroupChannel(
     muted = muted,
     muteExpireDate = muteExpireDate,
     markedUsUnread = markedUsUnread,
+    lastDeliveredMessageId = lastDeliveredMessageId,
+    lastReadMessageId = lastReadMessageId,
     channelType = channelType) {
 
     override val channelSubject: String
@@ -59,7 +63,9 @@ class SceytGroupChannel(
             avatarUrl = avatarUrl,
             channelUrl = channelUrl,
             members = members.map { it.copy() },
-            memberCount = memberCount)
+            memberCount = memberCount,
+            lastDeliveredMessageId = lastDeliveredMessageId,
+            lastReadMessageId = lastReadMessageId)
     }
 }
 

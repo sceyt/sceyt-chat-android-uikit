@@ -4,7 +4,9 @@ import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.persistence.entity.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 @Dao
 abstract class MessageDao {
@@ -96,7 +98,32 @@ abstract class MessageDao {
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
             "order by createdAt desc limit :limit")
-    abstract suspend fun getMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
+    abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
+    @Query("select * from messages where channelId =:channelId and message_id >:messageId " +
+            "order by createdAt limit :limit")
+    abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
+    @Query("select * from messages where channelId =:channelId and message_id >=:messageId " +
+            "order by createdAt limit :limit")
+    abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
+    open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
+        val newest = getNewestThenMessageInclude(channelId, messageId, SceytKitConfig.MESSAGES_LOAD_SIZE / 2 + 1)
+        if (newest.isEmpty())
+            return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
+
+        val newMessages = newest.take(SceytKitConfig.MESSAGES_LOAD_SIZE / 1)
+
+        val oldest = getOldestThenMessages(channelId, messageId, limit - newMessages.size)
+        val hasPrev = oldest.size == limit - newMessages.size
+        val hasNext = newest.size > SceytKitConfig.MESSAGES_LOAD_SIZE / 2
+        return LoadNearData((newMessages + oldest).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
+    }
+
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and deliveryStatus =:status " +
@@ -119,6 +146,9 @@ abstract class MessageDao {
     @Query("select * from messages where tid =:tid")
     abstract fun getMessageByTid(tid: Long): MessageDb?
 
+    @Query("select tid from  messages where message_id in (:ids)")
+    abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
+
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
 
@@ -135,12 +165,10 @@ abstract class MessageDao {
     abstract fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
-    abstract suspend fun updateMessagesStatusAsRead(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
-
+    abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
     @Query("update messages set selfMarkers =:markers where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, markers: List<String>?)
-
 
     @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerCount>?)

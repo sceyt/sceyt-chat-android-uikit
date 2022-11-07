@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -19,6 +20,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -34,6 +36,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         MessagePopupClickListeners.PopupClickListeners, ReactionPopupClickListeners.PopupClickListeners {
 
     private var messagesRV: MessagesRV
+    private var scrollDownIcon: ScrollToDownView
     private var pageStateView: PageStateView? = null
     private lateinit var clickListeners: MessageClickListenersImpl
     private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
@@ -58,6 +61,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
+        addView(ScrollToDownView(context).also { toDownView ->
+            scrollDownIcon = toDownView
+            messagesRV.setScrollDownControllerListener { show ->
+                scrollDownIcon.isVisible = show
+            }
+        })
+
         if (!isInEditMode)
             addView(PageStateView(context).also {
                 pageStateView = it
@@ -73,7 +83,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = MessagePopupClickListenersImpl(this)
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
-        messagesRV.setMessageListener(object : MessageClickListeners.ClickListeners {
+        val clickListeners = object : MessageClickListeners.ClickListeners {
             override fun onMessageLongClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onMessageLongClick(view, item)
@@ -118,7 +128,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (enabledClickActions)
                     clickListeners.onLinkClick(view, item)
             }
-        })
+
+            override fun onScrollToDownClick(view: ScrollToDownView) {
+                clickListeners.onScrollToDownClick(view)
+            }
+        }
+        messagesRV.setMessageListener(clickListeners)
+
+        scrollDownIcon.setOnClickListener {
+            clickListeners.onScrollToDownClick(it as ScrollToDownView)
+        }
     }
 
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
@@ -175,14 +194,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun getFirstMessage() = messagesRV.getFirstMsg()
+
     internal fun getLastMessage() = messagesRV.getLastMsg()
 
-    internal fun setMessagesList(data: List<MessageListItem>) {
-        messagesRV.setData(data)
+    internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
+        messagesRV.setData(data, force)
     }
 
     internal fun addNextPageMessages(data: List<MessageListItem>) {
         messagesRV.addNextPageMessages(data)
+    }
+
+    internal fun addPrevPageMessages(data: List<MessageListItem>) {
+        messagesRV.addPrevPageMessages(data)
     }
 
     internal fun addNewMessages(vararg data: MessageListItem) {
@@ -195,15 +220,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (item is MessageItem && (item.message.id == message.id ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
+                item.message.updateMessage(message)
 
-                item.message.apply {
-                    updateMessage(message)
-                    deliveryStatus = message.deliveryStatus
-                }
                 messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
                 break
             }
         }
+    }
+
+    internal fun getMessageById(messageId: Long): MessageItem? {
+        return messagesRV.getData()?.find { it is MessageItem && it.message.id == messageId }?.let {
+            (it as MessageItem)
+        }
+    }
+
+    internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
+        return messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == messageId }
     }
 
     internal fun sortMessages() {
@@ -295,16 +327,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setMessageDisplayedListener(listener)
     }
 
-    internal fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setNeedLoadMoreMessagesListener(listener)
+    internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadNextMessagesListener(listener)
     }
 
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToStartListener(listener)
-    }
-
-    internal fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToPrefetchDistanceListener(listener)
     }
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
@@ -320,8 +352,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateViewState(PageState.StateEmpty())
     }
 
-    fun hideLoadingMore() {
-        messagesRV.hideLoadingItem()
+    internal fun setUnreadCount(unreadCount: Int) {
+        scrollDownIcon.setUnreadCount(unreadCount)
+    }
+
+    fun hideLoadingPrev() {
+        messagesRV.hideLoadingPrevItem()
+    }
+
+    fun hideLoadingNext() {
+        messagesRV.hideLoadingNextItem()
     }
 
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
@@ -332,6 +372,36 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setUserNameBuilder(builder: (User) -> String) {
         messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
+    }
+
+
+    fun scrollToMessage(msgId: Long) {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToUnReadMessage() {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToLastMessage() {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition((messagesRV.getData()
+                        ?: return@awaitAnimationEnd).size - 1)
+            }
+        }
     }
 
     fun getMessagesRecyclerView() = messagesRV
@@ -357,6 +427,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun enableDisableClickActions(enabled: Boolean) {
         enabledClickActions = enabled
     }
+
 
     // Click events
     override fun onMessageLongClick(view: View, item: MessageItem) {
@@ -393,6 +464,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onLinkClick(view: View, item: MessageItem) {
         context.openLink(item.message.body)
+    }
+
+    override fun onScrollToDownClick(view: ScrollToDownView) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
     }
 
 

@@ -34,8 +34,8 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
         if (it is SceytResponse.Success) {
-            hasNext = it.data?.size == SceytKitConfig.MESSAGES_LOAD_SIZE
-            emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
+            hasPrev = it.data?.size == SceytKitConfig.MESSAGES_LOAD_SIZE
+            emitMessagesListResponse(mapToFileListItem(it.data, hasPrev), loadingNext)
         }
         notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())
         loadingItems.set(false)

@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 object MessageEventsObserver {
     private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 

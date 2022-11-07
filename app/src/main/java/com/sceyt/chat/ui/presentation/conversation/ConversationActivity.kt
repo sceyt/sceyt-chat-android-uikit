@@ -93,7 +93,9 @@ open class ConversationActivity : AppCompatActivity() {
 
         setCustomClickListener(object : HeaderClickListenersImpl(this) {
             override fun onAvatarClick(view: View) {
-                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
+                ///CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
+
+                binding.messageInputView.send()
             }
 
             override fun onToolbarClick(view: View) {

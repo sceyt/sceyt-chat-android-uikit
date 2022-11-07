@@ -188,7 +188,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             binding?.rvMembers?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasPrev)
                         loadMoreMembers(membersAdapter?.getSkip() ?: return)
                 }
             })

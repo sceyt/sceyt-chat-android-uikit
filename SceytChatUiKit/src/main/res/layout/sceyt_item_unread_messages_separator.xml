@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="20dp"
+    android:background="#E8EBEF"
+    android:fontFamily="@font/roboto_medium"
+    android:gravity="center"
+    android:includeFontPadding="false"
+    android:text="@string/sceyt_new_messages"
+    android:textColor="#757D8B"
+    android:textSize="@dimen/extraSmallTextSize" />
+

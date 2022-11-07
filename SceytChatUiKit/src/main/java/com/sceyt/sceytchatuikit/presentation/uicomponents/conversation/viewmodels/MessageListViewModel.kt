@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnu
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -31,6 +32,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -47,7 +49,8 @@ class MessageListViewModel(private val conversationId: Long,
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
     internal val myId = preference.getUserId()
-
+    internal val lastReadMessageId = channel.lastReadMessageId
+    internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
@@ -90,6 +93,8 @@ class MessageListViewModel(private val conversationId: Long,
     internal val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
     private val _onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
+    private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
+    internal val onScrollToMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
 
 
     init {
@@ -115,7 +120,7 @@ class MessageListViewModel(private val conversationId: Long,
             .mapNotNull { it.second }
 
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
-            .filter { it.channelId == channel.id }
+            .filter { it.channel.id == channel.id }
 
         onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
             .filter { it.channelId == channel.id }
@@ -135,16 +140,56 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channelId == channel.id && it.replyInThread }
     }
 
-    fun loadMessages(lastMessageId: Long, offset: Int) {
-        setPagingLoadingStarted()
+    fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: Long = lastMessageId) {
+        setPagingLoadingStarted(LoadPrev)
         val isLoadingMore = offset > 0
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadMessages(conversationId, lastMessageId, replayInThread, offset).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread,
+                offset, loadKey, false).collect {
                 withContext(Dispatchers.Main) {
-                    initResponse(it)
+                    initPaginationResponse(it)
+                }
+            }
+        }
+    }
+
+    fun loadNextMessages(lastMessageId: Long, offset: Int) {
+        setPagingLoadingStarted(LoadNext)
+        val isLoadingMore = offset > 0
+
+        notifyPageLoadingState(isLoadingMore)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replayInThread, offset).collect {
+                withContext(Dispatchers.Main) {
+                    initPaginationResponse(it)
+                }
+            }
+        }
+    }
+
+    fun loadNearMessages(messageId: Long, loadKey: Long) {
+        setPagingLoadingStarted(LoadNear, true)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replayInThread, loadKey, false).collect { response ->
+                withContext(Dispatchers.Main) {
+                    initPaginationResponse(response)
+                }
+            }
+        }
+    }
+
+    fun loadNewestMessages(loadKey: Long) {
+        setPagingLoadingStarted(LoadNear, true)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replayInThread, loadKey, true).collect { response ->
+                withContext(Dispatchers.Main) {
+                    initPaginationResponse(response)
                 }
             }
         }
@@ -156,14 +201,11 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    private fun initResponse(response: PaginationResponse<SceytMessage>) {
+    private fun initPaginationResponse(response: PaginationResponse<SceytMessage>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
-                // Ignore the case, when db data is empty, but still not received server response.
-                if (response.data.isNotEmpty() || (!hasNext && loadingItems.get().not())) {
-                    _loadMessagesFlow.value = response
-                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
-                }
+                _loadMessagesFlow.value = response
+                notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
             }
             is PaginationResponse.ServerResponse2 -> {
                 _loadMessagesFlow.value = response
@@ -190,6 +232,10 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun prepareToReplayMessage(message: SceytMessage) {
         _onReplayMessageCommandLiveData.postValue(message)
+    }
+
+    fun prepareToScrollToNewMessage() {
+        _onScrollToMessageLiveData.postValue(channel.lastMessage)
     }
 
     fun addReaction(message: SceytMessage, scoreKey: String) {
@@ -255,9 +301,9 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun markMessageAsDisplayed(vararg id: Long) {
+    fun markMessageAsRead(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.markAsRead(channel.id, *id)
+            persistenceMessageMiddleWare.markMessagesAsRead(channel.id, *id)
         }
     }
 
@@ -281,29 +327,48 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean,
-                                      lastMessage: MessageListItem.MessageItem? = null): List<MessageListItem> {
+    fun markChannelAsRead(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = persistenceChanelMiddleWare.markChannelAsRead(channelId)
+            _channelLiveData.postValue(response)
+        }
+    }
+
+    internal suspend fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
+                                              compareMessage: SceytMessage? = null): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
         val messageItems = arrayListOf<MessageListItem>()
-        data.forEachIndexed { index, sceytMessage ->
-            var prevMessage = lastMessage?.message
-            if (index > 0)
-                prevMessage = data.getOrNull(index - 1)
 
-            if (shouldShowDate(sceytMessage, prevMessage))
-                messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
+        withContext(Dispatchers.Default) {
+            data.forEachIndexed { index, sceytMessage ->
+                var prevMessage = compareMessage
+                if (index > 0)
+                    prevMessage = data.getOrNull(index - 1)
 
-            val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
-                isGroup = this@MessageListViewModel.isGroup
-                files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
-                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
-                messageReactions = initReactionsItems(this)
-            })
-            messageItems.add(messageItem)
+
+                if (shouldShowDate(sceytMessage, prevMessage))
+                    messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
+
+                val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
+                    isGroup = this@MessageListViewModel.isGroup
+                    files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
+                    canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+                    messageReactions = initReactionsItems(this)
+                })
+                messageItems.add(messageItem)
+
+                if (lastReadMessageId != 0L && sceytMessage.id == lastReadMessageId && sceytMessage.id != channel.lastMessage?.id)
+                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, LoadKeyType.ScrollToUnreadMessage.longValue))
+            }
+
+            if (hasNext)
+                messageItems.add(MessageListItem.LoadingNextItem)
+
+            if (hasPrev)
+                messageItems.add(0, MessageListItem.LoadingPrevItem)
         }
-        if (hasNext)
-            messageItems.add(0, MessageListItem.LoadingMoreItem)
+
         return messageItems
     }
 
@@ -314,6 +379,16 @@ class MessageListViewModel(private val conversationId: Long,
                     reaction.key == it.key && reaction.user.id == myId
                 } != null), message)
         }?.sortedByDescending { it.reaction.score }
+    }
+
+    internal fun checkIgnoreDatabasePagingResponse(response: PaginationResponse.DBResponse<*>): Boolean {
+        if (response.data.isNotEmpty()) return false
+
+        return when (response.loadType) {
+            LoadPrev, LoadNewest -> hasPrev && loadingPrevItems.get()
+            LoadNext -> hasNext && loadingNextItems.get()
+            LoadNear -> hasPrev && loadingPrevItems.get() && !hasNext && loadingNextItems.get()
+        }
     }
 
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
@@ -338,6 +413,9 @@ class MessageListViewModel(private val conversationId: Long,
             }
             is MessageCommandEvent.Replay -> {
                 prepareToReplayMessage(event.message)
+            }
+            is MessageCommandEvent.ScrollToDown -> {
+                prepareToScrollToNewMessage()
             }
         }
     }

@@ -21,6 +21,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -77,7 +78,7 @@ abstract class BaseMsgViewHolder(view: View,
         if (messageListItem is MessageListItem.MessageItem) {
 
             val message = (messageListItem as MessageListItem.MessageItem).message
-            if (message.incoming && message.selfMarkers?.contains("displayed") != true)
+            if (message.incoming && message.selfMarkers?.contains(SelfMarkerTypeEnum.Displayed.toString()) != true)
                 displayedListener?.invoke(message)
         }
     }

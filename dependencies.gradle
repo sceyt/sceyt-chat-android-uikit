@@ -8,7 +8,7 @@ ext {
     app_version_name = "1.0.0"
 
     /** Dependency implementation versions*/
-    app_compat_version = '1.5.0'
+    app_compat_version = '1.5.1'
     activity_ktx_version = '1.4.0'
     async_layout_inflater_version = '1.0.0'
     ax_emoji_version = '1.5.2'
@@ -24,26 +24,26 @@ ext {
 
     jsoup_version = '1.15.3'
 
-    material_version = '1.7.0-rc01'
+    material_version = '1.8.0-alpha02'
     moshi_converter_version = '2.9.0'
 
-    fragment_ktx_version = '1.5.2'
+    fragment_ktx_version = '1.5.4'
     firebase_core_version = '20.0.2'
-    firebase_messaging_version = '23.0.7'
-    firebase_bom_version = '30.3.2'
+    firebase_messaging_version = '23.1.0'
+    firebase_bom_version = '31.0.2'
     firebase_crashlitics_version = '18.2.6'
     flex_box_version = "3.0.0"
 
     live_event_version = '1.2.0'
 
-    glide_version = '4.13.2'
+    glide_version = '4.14.2'
     glide_compiler_version = '4.12.0'
     gson_version = '2.8.9'
 
     ion_version = "3.1.0"
 
     kotlin_version = '1.6.10'
-    koin_version = '3.2.0'
+    koin_version = '3.3.0'
 
     legacy_version = '1.0.0'
     lifecycle_version = '2.5.1'
