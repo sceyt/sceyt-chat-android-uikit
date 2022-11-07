@@ -31,14 +31,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToStartInvoked = false
     private var richToPrefetchDistanceToLoadPrevInvoked = false
     private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var richToPrefetchDistanceToLoadPrevListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     // Loading next properties
     private var needLoadNextMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToEndInvoked = false
     private var richToPrefetchDistanceToLoadNextInvoked = false
     private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var richToPrefetchDistanceToLoadNextListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
 
@@ -69,7 +67,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             checkNeedLoadNext(dy)
         }
 
-        addOnLayoutChangeListener { _, _, top, _, _, _, oldTop, _, _ ->
+        addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             Handler(Looper.getMainLooper()).postDelayed({
                 if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
                 val lastPos = getLastVisibleItemPosition()
@@ -97,7 +95,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             if (!richToPrefetchDistanceToLoadPrevInvoked) {
                 richToPrefetchDistanceToLoadPrevInvoked = true
-                richToPrefetchDistanceToLoadPrevListener?.invoke(skip, firstItem)
                 needLoadPrevMessagesListener?.invoke(skip, firstItem)
             }
         } else richToPrefetchDistanceToLoadPrevInvoked = false
@@ -122,7 +119,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             if (!richToPrefetchDistanceToLoadNextInvoked) {
                 richToPrefetchDistanceToLoadNextInvoked = true
-                richToPrefetchDistanceToLoadNextListener?.invoke(skip, lastItem)
                 needLoadNextMessagesListener?.invoke(skip, lastItem)
             }
         } else richToPrefetchDistanceToLoadNextInvoked = false
@@ -222,14 +218,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setRichToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         richToEndListener = listener
-    }
-
-    fun setRichToPrefetchDistanceToLoadPrevListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        richToPrefetchDistanceToLoadPrevListener = listener
-    }
-
-    fun setRichToPrefetchDistanceToLoadNextListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        richToPrefetchDistanceToLoadNextListener = listener
     }
 
     fun setMessageListener(listener: MessageClickListeners) {

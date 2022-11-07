@@ -339,10 +339,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setRichToStartListener(listener)
     }
 
-    internal fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToPrefetchDistanceToLoadPrevListener(listener)
-    }
-
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
         reactionEventListener = listener
     }
@@ -354,6 +350,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun clearData() {
         messagesRV.clearData()
         updateViewState(PageState.StateEmpty())
+    }
+
+    internal fun setUnreadCount(unreadCount: Int) {
+        scrollDownIcon.setUnreadCount(unreadCount)
     }
 
     fun hideLoadingPrev() {
@@ -372,6 +372,36 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setUserNameBuilder(builder: (User) -> String) {
         messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
+    }
+
+
+    fun scrollToMessage(msgId: Long) {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToUnReadMessage() {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToLastMessage() {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition((messagesRV.getData()
+                        ?: return@awaitAnimationEnd).size - 1)
+            }
+        }
     }
 
     fun getMessagesRecyclerView() = messagesRV
@@ -398,9 +428,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         enabledClickActions = enabled
     }
 
-    fun setUnreadCount(unreadCount: Int) {
-        scrollDownIcon.setUnreadCount(unreadCount)
-    }
 
     // Click events
     override fun onMessageLongClick(view: View, item: MessageItem) {
@@ -441,12 +468,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onScrollToDownClick(view: ScrollToDownView) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
-        /* val toPos = messagesRV.adapter?.itemCount?.minus(1) ?: return
-         messagesRV.scrollToPosition(toPos)
-
-         messagesRV.awaitAnimationEnd {
-             view.isVisible = false
-         }*/
     }
 
 
@@ -485,34 +506,5 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
         reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
-    }
-
-    fun scrollToMessage(loadKey: Long) {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == loadKey }?.let {
-                    messagesRV.scrollToPosition(it.first)
-                }
-            }
-        }
-    }
-
-    fun scrollToUnReadMessage() {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                    messagesRV.scrollToPosition(it.first)
-                }
-            }
-        }
-    }
-
-    fun scrollToLastMessage() {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.scrollToPosition((messagesRV.getData()
-                        ?: return@awaitAnimationEnd).size - 1)
-            }
-        }
     }
 }

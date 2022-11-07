@@ -348,11 +348,6 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
 
-    /* pageStateLiveData.observe(lifecycleOwner) {
-         if (it is PageState.StateError)
-             customToastSnackBar(messageInputView, it.errorMessage.toString())
-     }*/
-
     channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             channel = it.data ?: return@Observer
