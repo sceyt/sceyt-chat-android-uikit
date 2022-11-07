@@ -103,6 +103,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.loadChannels(offset, searchQuery)
     }
 
+    override suspend fun loadAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
+        return channelLogic.loadAllChannels(limit)
+    }
+
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.markChannelAsRead(channelId)
     }

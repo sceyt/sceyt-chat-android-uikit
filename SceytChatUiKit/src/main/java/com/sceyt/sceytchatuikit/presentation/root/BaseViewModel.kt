@@ -85,6 +85,7 @@ open class BaseViewModel : ViewModel() {
             is PaginationResponse.ServerResponse2 -> initPaginationSeverResponse(response)
             is PaginationResponse.ServerResponse -> {
                 loadingItems.set(false)
+                loadingNextItems.set(false)
                 hasNext = response.hasNext
             }
             is PaginationResponse.Nothing -> return

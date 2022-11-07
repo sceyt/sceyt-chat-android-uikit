@@ -153,7 +153,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 
     channelsListView.setReachToEndListener { offset, _ ->
-        if (canLoadPrev())
+        if (canLoadNext())
             getChannels(offset, searchQuery)
     }
 
