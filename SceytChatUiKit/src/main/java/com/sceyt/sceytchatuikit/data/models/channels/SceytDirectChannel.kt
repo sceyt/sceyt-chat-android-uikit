@@ -15,6 +15,8 @@ class SceytDirectChannel(
         override var lastMessage: SceytMessage?,
         override var muted: Boolean,
         override var markedUsUnread: Boolean,
+        override var lastDeliveredMessageId: Long,
+        override var lastReadMessageId: Long,
         override var channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
         var peer: SceytMember?,
 ) : SceytChannel(id = id,
@@ -27,6 +29,8 @@ class SceytDirectChannel(
     muted = muted,
     muteExpireDate = null,
     markedUsUnread = markedUsUnread,
+    lastDeliveredMessageId = lastDeliveredMessageId,
+    lastReadMessageId = lastReadMessageId,
     channelType = channelType) {
 
     override val channelSubject: String
@@ -49,7 +53,9 @@ class SceytDirectChannel(
             markedUsUnread = markedUsUnread,
             muted = muted,
             channelType = channelType,
-            peer = peer?.copy())
+            peer = peer?.copy(),
+            lastDeliveredMessageId = lastDeliveredMessageId,
+            lastReadMessageId = lastReadMessageId)
     }
 }
 

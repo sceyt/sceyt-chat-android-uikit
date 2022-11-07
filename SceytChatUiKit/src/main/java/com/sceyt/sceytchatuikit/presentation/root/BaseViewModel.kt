@@ -5,16 +5,47 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseViewModel : ViewModel() {
     private val _pageStateLiveData = LiveEvent<PageState>()
     val pageStateLiveData: LiveData<PageState> = _pageStateLiveData
+    var hasPrevDb: Boolean = false
+    var hasPrev: Boolean = false
     var hasNextDb: Boolean = false
     var hasNext: Boolean = false
+
+    @Deprecated("loadingItemsDb will remove soon")
     var loadingItemsDb: AtomicBoolean = AtomicBoolean(false)
+
+    @Deprecated("loadingItems will remove soon")
     var loadingItems: AtomicBoolean = AtomicBoolean(false)
+    var loadingPrevItems: AtomicBoolean = AtomicBoolean(false)
+    var loadingPrevItemsDb: AtomicBoolean = AtomicBoolean(false)
+    var loadingNextItems: AtomicBoolean = AtomicBoolean(false)
+    var loadingNextItemsDb: AtomicBoolean = AtomicBoolean(false)
+
+    fun canLoadPrev(): Boolean {
+        return when {
+            loadingPrevItemsDb.get() -> false
+            loadingPrevItemsDb.get().not() && hasPrevDb -> true
+            loadingPrevItems.get() -> false
+            loadingPrevItems.get().not() && hasPrev -> true
+            else -> false
+        }
+    }
+
+    fun canLoadNext(): Boolean {
+        return when {
+            loadingNextItemsDb.get() -> false
+            loadingNextItemsDb.get().not() && hasNextDb -> true
+            loadingNextItems.get() -> false
+            loadingNextItems.get().not() && hasNext -> true
+            else -> false
+        }
+    }
 
     fun canLoadMore(): Boolean {
         return when {
@@ -26,27 +57,87 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    protected fun setPagingLoadingStarted() {
-        loadingItemsDb.set(true)
-        loadingItems.set(true)
+    protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType, ignoreDb: Boolean = false) {
+        fun initPrev() {
+            loadingPrevItemsDb.set(ignoreDb.not())
+            loadingPrevItems.set(true)
+        }
+
+        fun initNext() {
+            loadingNextItemsDb.set(ignoreDb.not())
+            loadingNextItems.set(true)
+        }
+
+        when (loadType) {
+            LoadPrev -> initPrev()
+            LoadNext -> initNext()
+            LoadNear -> {
+                initPrev()
+                initNext()
+            }
+            LoadNewest -> initPrev()
+        }
     }
 
     protected fun pagingResponseReceived(response: PaginationResponse<*>) {
         when (response) {
-            is PaginationResponse.DBResponse -> {
-                loadingItemsDb.set(false)
-                hasNextDb = response.hasNext
-            }
+            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
+            is PaginationResponse.ServerResponse2 -> initPaginationSeverResponse(response)
             is PaginationResponse.ServerResponse -> {
                 loadingItems.set(false)
-                if (response.data is SceytResponse.Success)
-                    hasNext = response.hasNext
+                hasNext = response.hasNext
             }
             is PaginationResponse.Nothing -> return
-            is PaginationResponse.ServerResponse2 -> {
-                loadingItems.set(false)
-                if (response.data is SceytResponse.Success)
-                    hasNext = response.hasNext
+        }
+    }
+
+    private fun initPaginationDbResponse(response: PaginationResponse.DBResponse<*>) {
+
+        fun initPrev() {
+            loadingPrevItemsDb.set(false)
+            hasPrevDb = response.hasPrev
+        }
+
+        fun initNext() {
+            loadingNextItemsDb.set(false)
+            hasNextDb = response.hasNext
+        }
+
+        when (response.loadType) {
+            LoadPrev -> initPrev()
+            LoadNext -> initNext()
+            LoadNear, LoadNewest -> {
+                initPrev()
+                initNext()
+            }
+        }
+    }
+
+    private fun initPaginationSeverResponse(response: PaginationResponse.ServerResponse2<*>) {
+        fun initPrev() {
+            loadingPrevItems.set(false)
+            if (response.data is SceytResponse.Success)
+                hasPrev = response.hasPrev
+        }
+
+        fun initNext() {
+            loadingNextItems.set(false)
+            if (response.data is SceytResponse.Success)
+                hasNext = response.hasNext
+        }
+
+        when (response.loadType) {
+            LoadPrev -> initPrev()
+            LoadNext -> initNext()
+            LoadNear -> {
+                initPrev()
+                initNext()
+            }
+            LoadNewest -> {
+                initPrev()
+                initNext()
+                hasNextDb = false
+                loadingNextItemsDb.set(false)
             }
         }
     }

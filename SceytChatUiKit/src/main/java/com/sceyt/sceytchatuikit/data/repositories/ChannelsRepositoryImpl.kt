@@ -185,7 +185,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return createChannelRequest
     }
 
-    override suspend fun markAsRead(channelId: Long): SceytResponse<SceytChannel> {
+    override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).markUsRead(object : ChannelCallback {
                 override fun onResult(data: Channel) {
@@ -199,7 +199,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun markAsUnRead(channelId: Long): SceytResponse<SceytChannel> {
+    override suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).markUsUnread(object : ChannelCallback {
                 override fun onResult(data: Channel) {

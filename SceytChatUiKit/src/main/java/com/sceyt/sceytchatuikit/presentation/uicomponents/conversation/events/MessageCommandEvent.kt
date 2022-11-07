@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events
 
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
 
 sealed class MessageCommandEvent {
 
@@ -15,5 +16,9 @@ sealed class MessageCommandEvent {
 
     data class Replay(
             val message: SceytMessage,
+    ) : MessageCommandEvent()
+
+    data class ScrollToDown(
+            val view: ScrollToDownView
     ) : MessageCommandEvent()
 }

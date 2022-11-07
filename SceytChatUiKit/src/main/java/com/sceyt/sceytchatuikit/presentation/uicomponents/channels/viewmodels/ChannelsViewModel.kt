@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -66,7 +67,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
-    val onChannelEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>
+    val onChannelEventFlow: Flow<ChannelEventData>
 
     init {
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
@@ -91,7 +92,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getChannels(offset: Int, query: String = searchQuery) {
         searchQuery = query
-        setPagingLoadingStarted()
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
@@ -106,7 +107,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         when (it) {
             is PaginationResponse.DBResponse -> {
                 if (it.data.isNotEmpty()) {
-                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), it.offset)
+                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), 0, it.offset)
                     notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty(), searchQuery)
                 }
             }
@@ -133,14 +134,14 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         return channelItems
     }
 
-    fun markAsRead(channelId: Long) {
+    fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.markChannelAsRead(channelId)
             _markAsReadLiveData.postValue(response)
         }
     }
 
-    fun markAsUnRead(channelId: Long) {
+    fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.markChannelAsUnRead(channelId)
             _markAsUnReadLiveData.postValue(response)
@@ -205,8 +206,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     internal fun onChannelEvent(event: ChannelEvent) {
         when (event) {
-            is ChannelEvent.MarkAsRead -> markAsRead(event.channel.id)
-            is ChannelEvent.MarkAsUnRead -> markAsUnRead(event.channel.id)
+            is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
+            is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
             is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
             is ChannelEvent.ClearHistory -> clearHistory(event.channel.id)
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)

@@ -85,7 +85,8 @@
     <string name="sceyt_minutes_ago">minutes ago</string>
     <string name="sceyt_yesterday_at">Yesterday at</string>
     <string name="sceyt_at">at</string>
-    <string name="sceyt_1_min_ago">1 min ago</string>
+    <string name="sceyt_1_min_ago">1 minute ago</string>
     <string name="sceyt_last_seen">Last seen</string>
+    <string name="sceyt_new_messages">New messages</string>
 
 </resources>

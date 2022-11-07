@@ -3,10 +3,7 @@ package com.sceyt.sceytchatuikit.data.repositories
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.*
 
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
@@ -17,8 +14,8 @@ interface ChannelsRepository {
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun clearHistory(channelId: Long): SceytResponse<Long>
-    suspend fun markAsRead(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun markAsUnRead(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun blockUser(userId: String): SceytResponse<List<User>>
     suspend fun unblockUser(userId: String): SceytResponse<List<User>>
     suspend fun blockChannel(channelId: Long): SceytResponse<Long>

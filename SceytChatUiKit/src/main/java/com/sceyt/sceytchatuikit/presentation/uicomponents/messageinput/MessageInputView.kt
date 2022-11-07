@@ -329,4 +329,22 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onJoinClick() {
         messageInputActionCallback?.join()
     }
+
+
+    fun send() {
+        GlobalScope.launch {
+            for (i in 1..30) {
+               sed(i)
+            }
+        }
+
+    }
+
+    suspend fun sed(i:Int){
+        delay(200)
+        withContext(Dispatchers.Main){
+            binding.messageInput.setText(i.toString())
+            sendMessage()
+        }
+    }
 }

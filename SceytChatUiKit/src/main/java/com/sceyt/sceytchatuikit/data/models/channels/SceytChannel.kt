@@ -18,6 +18,8 @@ open class SceytChannel(open var id: Long,
                         open var muted: Boolean,
                         open var muteExpireDate: Date?,
                         open var markedUsUnread: Boolean,
+                        open var lastDeliveredMessageId: Long,
+                        open var lastReadMessageId: Long,
                         open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
@@ -75,6 +77,8 @@ open class SceytChannel(open var id: Long,
             muted = muted,
             muteExpireDate = muteExpireDate,
             markedUsUnread = markedUsUnread,
+            lastDeliveredMessageId = lastDeliveredMessageId,
+            lastReadMessageId = lastReadMessageId,
             channelType = channelType)
     }
 }

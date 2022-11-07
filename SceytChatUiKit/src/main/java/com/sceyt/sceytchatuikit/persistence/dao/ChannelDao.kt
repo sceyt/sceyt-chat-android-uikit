@@ -61,7 +61,7 @@ interface ChannelDao {
     fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
 
     @Query("update channels set unreadMessageCount =:count, markedUsUnread = 0 where chat_id= :channelId")
-    fun clearUnreadCount(channelId: Long, count: Int)
+    fun updateUnreadCount(channelId: Long, count: Int)
 
     @Query("update channels set muted =:muted, muteExpireDate =:muteUntil where chat_id =:channelId")
     fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)

@@ -8,11 +8,12 @@ data class ChannelItemPayloadDiff(
         val unreadCountChanged: Boolean,
         val muteStateChanged: Boolean,
         val onlineStateChanged: Boolean,
-        val markedUsUnreadChanged: Boolean
+        val markedUsUnreadChanged: Boolean,
+        val lastReadMsdChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
-                unreadCountChanged || muteStateChanged || onlineStateChanged || markedUsUnreadChanged
+                unreadCountChanged || muteStateChanged || onlineStateChanged || markedUsUnreadChanged || lastReadMsdChanged
     }
 
     companion object {
@@ -24,7 +25,8 @@ data class ChannelItemPayloadDiff(
             unreadCountChanged = true,
             muteStateChanged = true,
             onlineStateChanged = true,
-            markedUsUnreadChanged = true
+            markedUsUnreadChanged = true,
+            lastReadMsdChanged = true
         )
     }
 }

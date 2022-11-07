@@ -24,8 +24,8 @@ import kotlinx.coroutines.withContext
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
         RecyclerView.Adapter<BaseMsgViewHolder>() {
-    private val mLoadingItem by lazy { MessageListItem.LoadingMoreItem }
-    private var updateJob: Job? = null
+    private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
+    private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
@@ -66,9 +66,16 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun getLastMessageItem() = messages.findLast { it is MessageItem } as? MessageItem
 
-    fun removeLoading() {
-        if (messages.remove(mLoadingItem))
+    fun removeLoadingPrev() {
+        if (messages.remove(loadingPrevItem))
             notifyItemRemoved(0)
+    }
+
+    fun removeLoadingNext() {
+        messages.findIndexed { it is MessageListItem.LoadingNextItem }?.let {
+            if (messages.remove(loadingNextItem))
+                notifyItemRemoved(it.first)
+        }
     }
 
     private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
@@ -91,8 +98,8 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         }
     }
 
-    fun addNextPageMessagesList(items: List<MessageListItem>) {
-        removeLoading()
+    fun addPrevPageMessagesList(items: List<MessageListItem>) {
+        removeLoadingPrev()
         if (items.isEmpty()) return
 
         val firstItem = getFirstMessageItem()
@@ -102,9 +109,17 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         updateDateAndState(items.last(), firstItem, dateItem)
     }
 
+    fun addNextPageMessagesList(items: List<MessageListItem>) {
+        if (items.isEmpty()) return
+        val filteredItems = items.minus(messages.toSet())
+        removeLoadingNext()
+        addNewMessages(filteredItems)
+    }
+
     fun addNewMessages(items: List<MessageListItem>) {
         if (items.isEmpty()) return
         val filteredItems = items.minus(messages.toSet())
+        if (filteredItems.isEmpty()) return
 
         messages.addAll(filteredItems)
         notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
@@ -123,11 +138,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 this@MessagesAdapter.messages.clear()
                 this@MessagesAdapter.messages.addAll(messages)
 
-                if (isLastItemVisible)
-                    recyclerView.scrollToPosition(itemCount - 1)
+                /*if (isLastItemVisible)
+                    recyclerView.scrollToPosition(itemCount - 1)*/
             }
         }
-
     }
 
     fun getData() = messages
@@ -167,6 +181,18 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             productDiffResult.dispatchUpdatesToSafety(recyclerView)
             if (isLastItemVisible)
                 recyclerView.scrollToPosition(itemCount - 1)
+        }
+    }
+
+    companion object {
+        private var updateJob: Job? = null
+
+        fun awaitUpdating(cb: () -> Unit) {
+            if (updateJob == null || updateJob?.isCompleted == true || updateJob?.isCompleted == true)
+                cb.invoke()
+            else {
+                updateJob?.invokeOnCompletion { cb.invoke() }
+            }
         }
     }
 }

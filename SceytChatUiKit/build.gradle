@@ -11,7 +11,7 @@ def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
 
 def getVersionName = { ->
-    return "1.3.76"
+    return "1.3.80"
 }
 
 def getArtifactId = { ->
@@ -64,8 +64,7 @@ android {
         minSdk min_sdk_version
         targetSdk target_sdk_version
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles "consumer-rules.pro"
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
