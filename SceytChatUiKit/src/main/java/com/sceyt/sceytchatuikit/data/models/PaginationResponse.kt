@@ -12,7 +12,7 @@ sealed class PaginationResponse<T> {
             val offset: Int,
             val hasNext: Boolean = false,
             val hasPrev: Boolean = false,
-            val loadType: LoadType = LoadType.LoadPrev
+            val loadType: LoadType = LoadType.LoadNext
     ) : PaginationResponse<T>()
 
     /**

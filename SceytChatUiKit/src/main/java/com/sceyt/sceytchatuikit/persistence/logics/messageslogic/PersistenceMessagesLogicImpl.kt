@@ -127,7 +127,6 @@ internal class PersistenceMessagesLogicImpl(
             LoadNewest -> {
                 messages = getPrevMessagesDb(channelId, Long.MAX_VALUE, offset)
                 hasPrev = messages.size == MESSAGES_LOAD_SIZE
-                hasNext = false
             }
         }
 

@@ -8,5 +8,5 @@
     <dimen name="largeTextSize">20sp</dimen>
     <dimen name="extraLargeTextSize">22sp</dimen>
     <dimen name="superLargeTextSize">24sp</dimen>
-    <dimen name="bodyMaxWidth">300dp</dimen>
+    <dimen name="bodyMaxWidth">280dp</dimen>
 </resources>

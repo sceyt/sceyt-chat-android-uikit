@@ -6,9 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -25,6 +23,7 @@ import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -85,8 +84,9 @@ class MessageListViewModel(private val conversationId: Long,
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
 
     // Chanel events
-    val onChannelEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>
-    val onChannelTypingEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData>
+    val onChannelEventFlow: Flow<ChannelEventData>
+    val onChannelTypingEventFlow: Flow<ChannelTypingEventData>
+    val onChannelUpdatedEventFlow: Flow<SceytChannel>
 
     //Command events
     private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
@@ -128,6 +128,9 @@ class MessageListViewModel(private val conversationId: Long,
         onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
             .filter { it.channel.id == channel.id }
 
+        onChannelUpdatedEventFlow = ChannelsCash.channelUpdatedFlow
+            .filter { it.id == channel.id }
+
         viewModelScope.launch {
             ChannelEventsObserver.onChannelMembersEventFlow
                 .filter { it.channel?.id == channel.id }
@@ -147,8 +150,7 @@ class MessageListViewModel(private val conversationId: Long,
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread,
-                offset, loadKey, false).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey, false).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }

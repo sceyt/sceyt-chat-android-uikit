@@ -151,6 +151,10 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
+    override suspend fun loadAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
+        return channelsRepository.getAllChannels(limit)
+    }
+
     private suspend fun awaitToConnectSceyt(): Boolean {
         if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected)
             return true

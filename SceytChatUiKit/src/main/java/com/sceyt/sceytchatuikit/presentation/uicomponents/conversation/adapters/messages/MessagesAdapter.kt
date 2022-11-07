@@ -132,14 +132,8 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
 
             withContext(Dispatchers.Main) {
-                val isLastItemVisible = recyclerView.isLastItemDisplaying()
                 productDiffResult.dispatchUpdatesToSafety(recyclerView)
-
-                this@MessagesAdapter.messages.clear()
-                this@MessagesAdapter.messages.addAll(messages)
-
-                /*if (isLastItemVisible)
-                    recyclerView.scrollToPosition(itemCount - 1)*/
+                this@MessagesAdapter.messages = SyncArrayList(messages)
             }
         }
     }
