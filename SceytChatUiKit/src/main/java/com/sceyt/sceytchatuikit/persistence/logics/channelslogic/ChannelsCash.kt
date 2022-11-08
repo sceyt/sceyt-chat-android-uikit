@@ -66,10 +66,30 @@ class ChannelsCash {
         }
     }
 
-    fun updateLastMessage(channelId: Long, lastMessage: SceytMessage?) {
+    fun updateLastMessage(channelId: Long, lastMessage: SceytMessage) {
         synchronized(lock) {
             cashedData[channelId]?.let { channel ->
                 channel.lastMessage = lastMessage
+                channelUpdated(channel.clone())
+            }
+        }
+    }
+
+    fun clearedHistory(channelId: Long) {
+        synchronized(lock) {
+            cashedData[channelId]?.let { channel ->
+                channel.lastMessage = null
+                channel.unreadMessageCount = 0
+                channelUpdated(channel.clone())
+            }
+        }
+    }
+
+    fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+        synchronized(lock) {
+            cashedData[channelId]?.let { channel ->
+                channel.lastMessage = message
+                channel.lastReadMessageId = message.id
                 channelUpdated(channel.clone())
             }
         }

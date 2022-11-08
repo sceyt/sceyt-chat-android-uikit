@@ -65,12 +65,6 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        onOutGoingMessageStatusFlow.collect {
-            channelsListView.updateOutgoingLastMessageStatus(it.first, it.second)
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
         onMessageEditedOrDeletedFlow.collect {
             if (!channelsListView.updateLastMessage(it, checkId = true)) {
                 getChannels(0, query = searchQuery)

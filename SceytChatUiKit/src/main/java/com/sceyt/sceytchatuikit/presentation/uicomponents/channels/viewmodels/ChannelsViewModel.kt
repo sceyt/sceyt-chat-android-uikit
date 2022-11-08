@@ -8,7 +8,6 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -38,17 +37,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<ChannelListItem>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<ChannelListItem>> = _loadChannelsFlow
 
-    private val _markAsReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val markAsReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsReadLiveData
-
-    private val _markAsUnReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val markAsUnReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsUnReadLiveData
-
     private val _blockChannelLiveData = MutableLiveData<SceytResponse<Long>>()
     val blockChannelLiveData: LiveData<SceytResponse<Long>> = _blockChannelLiveData
-
-    private val _clearHistoryLiveData = MutableLiveData<SceytResponse<Long>>()
-    val clearHistoryLiveData: LiveData<SceytResponse<Long>> = _clearHistoryLiveData
 
     private val _deleteChannelLiveData = MutableLiveData<SceytResponse<Long>>()
     val deleteChannelLiveData: LiveData<SceytResponse<Long>> = _deleteChannelLiveData
@@ -59,30 +49,11 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
-    private val _muteUnMuteLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val muteUnMuteLiveData: LiveData<SceytResponse<SceytChannel>> = _muteUnMuteLiveData
-
-    val onNewMessageFlow: Flow<Pair<SceytChannel, SceytMessage>>
-    val onOutGoingMessageFlow: Flow<SceytMessage>
-    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
-    val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onChannelEventFlow: Flow<ChannelEventData>
 
     init {
-        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
-
         onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
-
-        onNewMessageFlow = MessageEventsObserver.onMessageFlow.filter {
-            !it.second.replyInThread
-        }
-
-        onOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow.filter {
-            !it.replyInThread
-        }
-
-        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
 
         onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
             .filterNotNull()
@@ -136,15 +107,13 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsRead(channelId)
-            _markAsReadLiveData.postValue(response)
+            channelMiddleWare.markChannelAsRead(channelId)
         }
     }
 
     fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsUnRead(channelId)
-            _markAsUnReadLiveData.postValue(response)
+            channelMiddleWare.markChannelAsUnRead(channelId)
         }
     }
 
@@ -171,8 +140,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun clearHistory(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.clearHistory(channelId)
-            _clearHistoryLiveData.postValue(response)
+            channelMiddleWare.clearHistory(channelId)
         }
     }
 
@@ -192,15 +160,13 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun muteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.muteChannel(channelId, 0)
-            _muteUnMuteLiveData.postValue(response)
+            channelMiddleWare.muteChannel(channelId, 0)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.unMuteChannel(channelId)
-            _muteUnMuteLiveData.postValue(response)
+            channelMiddleWare.unMuteChannel(channelId)
         }
     }
 

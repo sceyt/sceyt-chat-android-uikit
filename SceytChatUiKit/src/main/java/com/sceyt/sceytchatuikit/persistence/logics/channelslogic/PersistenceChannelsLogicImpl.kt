@@ -72,7 +72,7 @@ internal class PersistenceChannelsLogicImpl(
             ClearedHistory -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateLastMessage(channelId, null, null)
-                    channelsCash.updateLastMessage(channelId, null)
+                    channelsCash.clearedHistory(channelId)
                 }
             }
             Updated -> {
@@ -131,7 +131,7 @@ internal class PersistenceChannelsLogicImpl(
         return callbackFlow {
             val dbChannels = getChannelsDb(offset, searchQuery)
 
-            channelsCash.addAll(dbChannels, false)
+            channelsCash.addAll(dbChannels.map { it.clone() }, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = 0, offset = offset, hasNext = dbChannels.size == CHANNELS_LOAD_SIZE, hasPrev = false))
 
             awaitToConnectSceyt()
@@ -144,7 +144,7 @@ internal class PersistenceChannelsLogicImpl(
 
             if (response is SceytResponse.Success) {
                 saveChannelsToDb(response.data ?: return@callbackFlow)
-                channelsCash.addAll(response.data, true)
+                channelsCash.addAll(response.data.map { it.clone() }, true)
             }
 
             awaitClose()
@@ -288,7 +288,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
-            channelsCash.updateLastMessage(channelId, null)
+            channelsCash.clearedHistory(channelId)
         }
 
         return response
@@ -410,6 +410,11 @@ internal class PersistenceChannelsLogicImpl(
     override fun updateLastMessage(channelId: Long, message: SceytMessage) {
         channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
         channelsCash.updateLastMessage(channelId, message)
+    }
+
+    override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+        channelDao.updateLastMessageWithLastRead(channelId, message.id, message.createdAt)
+        channelsCash.updateLastMessageWithLastRead(channelId, message)
     }
 
     override suspend fun setUnreadCount(channelId: Long, count: Int) {
