@@ -40,7 +40,7 @@ internal class PersistenceChannelsLogicImpl(
         private val usersDao: UserDao,
         private val messageDao: MessageDao,
         private val preference: SceytSharedPreference,
-        private val channelsCash:ChannelsCash) : PersistenceChannelsLogic {
+        private val channelsCash: ChannelsCash) : PersistenceChannelsLogic {
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
@@ -407,12 +407,7 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override fun updateLastMessage(channelId: Long, message: SceytMessage) {
-        channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
-        channelsCash.updateLastMessage(channelId, message)
-    }
-
-    override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+    override fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
         channelDao.updateLastMessageWithLastRead(channelId, message.id, message.createdAt)
         channelsCash.updateLastMessageWithLastRead(channelId, message)
     }

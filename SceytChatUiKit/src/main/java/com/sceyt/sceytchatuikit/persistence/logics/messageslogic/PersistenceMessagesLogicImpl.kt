@@ -203,19 +203,19 @@ internal class PersistenceMessagesLogicImpl(
         if (lastMessageId == 0L)
             lastMsgId = Long.MAX_VALUE
 
-        val messages = messageDao.getOldestThenMessages(channelId, lastMsgId, MESSAGES_LOAD_SIZE).reversed()
+        var messages = messageDao.getOldestThenMessages(channelId, lastMsgId, MESSAGES_LOAD_SIZE).reversed()
 
         if (offset == 0)
-            getPendingMessagesAndAddTList(channelId, messages.toArrayList())
+            messages = getPendingMessagesAndAddTList(channelId, messages.toArrayList())
 
         return messages.map { messageDb -> messageDb.toSceytMessage() }
     }
 
     private suspend fun getNextMessagesDb(channelId: Long, lastMessageId: Long, offset: Int): List<SceytMessage> {
-        val messages = messageDao.getNewestThenMessage(channelId, lastMessageId, MESSAGES_LOAD_SIZE)
+        var messages = messageDao.getNewestThenMessage(channelId, lastMessageId, MESSAGES_LOAD_SIZE)
 
         if (offset == 0)
-            getPendingMessagesAndAddTList(channelId, messages.toArrayList())
+            messages = getPendingMessagesAndAddTList(channelId, messages.toArrayList())
 
         return messages.map { messageDb -> messageDb.toSceytMessage() }
     }
@@ -225,16 +225,17 @@ internal class PersistenceMessagesLogicImpl(
         val messages = data.data
 
         if (offset == 0)
-            getPendingMessagesAndAddTList(channelId, messages.toArrayList())
+            data.data = getPendingMessagesAndAddTList(channelId, messages.toArrayList())
 
         return data
     }
 
-    private suspend fun getPendingMessagesAndAddTList(channelId: Long, list: ArrayList<MessageDb>) {
+    private suspend fun getPendingMessagesAndAddTList(channelId: Long, list: ArrayList<MessageDb>): ArrayList<MessageDb> {
         val pendingMessage = messageDao.getPendingMessages(channelId)
 
         if (pendingMessage.isNotEmpty())
             list.addAll(pendingMessage)
+        return list
     }
 
     private suspend fun markMessagesAsReceived(channelId: Long, messages: List<SceytMessage>) {
@@ -278,7 +279,7 @@ internal class PersistenceMessagesLogicImpl(
                     it.messageEntity.channelId = tmpMessage.parent.id
             }
             messageDao.insertMessage(tmpMessageDb)
-            persistenceChannelsLogic.updateLastMessage(channelId, tmpMessage.toSceytUiMessage())
+            persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, tmpMessage.toSceytUiMessage())
             messagesCash.add(tmpMessage.toSceytUiMessage())
             tmpMessageCb.invoke(tmpMessage)
             MessageEventsObserver.emitOutgoingMessage(tmpMessage.toSceytUiMessage())
