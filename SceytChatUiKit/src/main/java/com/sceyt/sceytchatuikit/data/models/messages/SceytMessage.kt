@@ -35,7 +35,8 @@ open class SceytMessage(var id: Long,
                         var mentionedUsers: Array<User>? = null,
                         var parent: SceytMessage?,
                         var replyInThread: Boolean,
-                        var replyCount: Long) : Parcelable, Cloneable {
+                        var replyCount: Long,
+                        val displayCount: Short) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -109,7 +110,8 @@ open class SceytMessage(var id: Long,
             mentionedUsers = mentionedUsers,
             parent = parent,
             replyInThread = replyInThread,
-            replyCount = replyCount)
+            replyCount = replyCount,
+            displayCount = displayCount)
     }
 
     override fun equals(other: Any?): Boolean {
