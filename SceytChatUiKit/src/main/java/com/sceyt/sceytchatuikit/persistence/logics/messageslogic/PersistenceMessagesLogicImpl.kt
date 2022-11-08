@@ -290,6 +290,7 @@ internal class PersistenceMessagesLogicImpl(
                     date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
                 messagesCash.messageUpdated(responseMsg)
+                persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                 MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
             }
         }
@@ -308,6 +309,7 @@ internal class PersistenceMessagesLogicImpl(
                             date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
                         messagesCash.messageUpdated(responseMsg)
+                        persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
                     }
                 }

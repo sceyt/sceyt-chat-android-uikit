@@ -34,5 +34,6 @@ internal interface PersistenceChannelsLogic {
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun setUnreadCount(channelId: Long, count: Int)
+    suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     fun updateLastMessage(channelId: Long, message: SceytMessage)
 }
