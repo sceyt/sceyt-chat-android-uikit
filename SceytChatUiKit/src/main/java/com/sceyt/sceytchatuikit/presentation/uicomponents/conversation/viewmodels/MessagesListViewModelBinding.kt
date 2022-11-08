@@ -33,9 +33,12 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
-    if (lastReadMessageId == 0L || lastReadMessageId == channel.lastMessage?.id)
+    if (channel.lastReadMessageId == 0L || channel.lastReadMessageId == channel.lastMessage?.id)
         loadPrevMessages(0, 0)
-    else loadNearMessages(channel.lastReadMessageId, LoadKeyType.ScrollToUnreadMessage.longValue)
+    else {
+        pinnedLastReadMessageId = channel.lastReadMessageId
+        loadNearMessages(pinnedLastReadMessageId, LoadKeyType.ScrollToUnreadMessage.longValue)
+    }
 
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
 
