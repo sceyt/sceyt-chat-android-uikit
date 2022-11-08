@@ -370,7 +370,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun markMessagesAsReceive(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
-        val response = messagesRepository.markAsRead(channelId, *ids)
+        val response = messagesRepository.markAsDelivered(channelId, *ids)
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
                 messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, DeliveryStatus.Delivered)
