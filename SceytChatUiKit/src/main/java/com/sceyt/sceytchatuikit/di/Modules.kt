@@ -57,7 +57,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceUsersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
-    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get()) }
+    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
@@ -73,7 +73,7 @@ internal val repositoryModule = module {
 
 internal val cashModule = module {
     factory { MessagesCash() }
-    factory { ChannelsCash() }
+    single { ChannelsCash() }
 }
 
 internal val viewModelModule = module {

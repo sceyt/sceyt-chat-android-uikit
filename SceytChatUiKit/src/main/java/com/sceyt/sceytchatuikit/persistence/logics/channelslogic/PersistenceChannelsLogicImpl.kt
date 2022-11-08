@@ -39,8 +39,8 @@ internal class PersistenceChannelsLogicImpl(
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
         private val messageDao: MessageDao,
-        private val preference: SceytSharedPreference) : PersistenceChannelsLogic {
-    private val channelsCash by lazy { ChannelsCash() }
+        private val preference: SceytSharedPreference,
+        private val channelsCash:ChannelsCash) : PersistenceChannelsLogic {
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {

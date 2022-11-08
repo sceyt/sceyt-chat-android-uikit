@@ -22,9 +22,10 @@ class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     init {
         binding = ScrollToBottomViewBinding.inflate(LayoutInflater.from(context), this, true)
-        if (!isInEditMode)
+        if (!isInEditMode) {
             isVisible = false
-        binding.initWithStyle()
+            binding.initWithStyle()
+        }
         setGravity()
     }
 
