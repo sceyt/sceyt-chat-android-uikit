@@ -48,7 +48,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
     internal val myId = preference.getUserId()
-    internal val lastReadMessageId = channel.lastReadMessageId
+    internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
@@ -360,7 +360,7 @@ class MessageListViewModel(private val conversationId: Long,
                 })
                 messageItems.add(messageItem)
 
-                if (lastReadMessageId != 0L && sceytMessage.id == lastReadMessageId && sceytMessage.id != channel.lastMessage?.id)
+                if (pinnedLastReadMessageId != 0L && sceytMessage.id == pinnedLastReadMessageId && sceytMessage.id != channel.lastMessage?.id)
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, LoadKeyType.ScrollToUnreadMessage.longValue))
             }
 
