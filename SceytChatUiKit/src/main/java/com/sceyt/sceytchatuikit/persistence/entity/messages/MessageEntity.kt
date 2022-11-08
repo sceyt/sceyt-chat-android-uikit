@@ -35,5 +35,6 @@ data class MessageEntity(
         var selfMarkers: List<String>?,
         var parentId: Long?,
         var replyInThread: Boolean,
-        var replyCount: Long
+        var replyCount: Long,
+        val displayCount: Short
 )
