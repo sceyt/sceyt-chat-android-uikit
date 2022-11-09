@@ -295,7 +295,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
             metadata = channel.metadata,
             label = channel.label,
             avatarUrl = avatarUrl,
-            channelUrl = (channel as SceytGroupChannel).channelUrl,
+            channelUrl = (channel as? SceytGroupChannel)?.channelUrl,
             channelType = channel.channelType,
             avatarEdited = channel.getChannelAvatarUrl() == avatarUrl
         )

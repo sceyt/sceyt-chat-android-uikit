@@ -5,6 +5,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -25,10 +26,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.onCompletion
 
 internal class PersistenceMessagesLogicImpl(
         private val messageDao: MessageDao,
@@ -67,44 +70,63 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
-                                          offset: Int, loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
+                                          offset: Int, loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb, ignoreCash)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
-                                          offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb)
+                                          offset: Int, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb, ignoreCash = ignoreCash)
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
-                                          loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb)
+                                          loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb, ignoreCash)
     }
 
     override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
-                                            ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, ignoreDb)
+                                            ignoreDb: Boolean,
+                                            ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, ignoreDb, ignoreCash)
+    }
+
+    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
+                                                    messageId: Long): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
+        ConnectionEventsObserver.awaitToConnectSceyt()
+        messagesRepository.loadAllMessagesAfter(conversationId, replayInThread, messageId)
+            .onCompletion { channel.close() }
+            .collect {
+                if (it is SceytResponse.Success) {
+                    it.data?.let { messages ->
+                        saveMessagesToDb(messages)
+                        markMessagesAsReceived(conversationId, messages)
+                    }
+                }
+                trySend(it)
+            }
+        awaitClose()
     }
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
                              replayInThread: Boolean, offset: Int, loadKey: Long = messageId,
-                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+                             ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
-            if (offset == 0) messagesCash.clear()
+            if (offset == 0 && !ignoreCash) messagesCash.clear()
 
             // Load from database
             if (!ignoreDb)
-                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, loadKey))
+                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, loadKey, ignoreCash))
             // Load from server
             trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, replayInThread,
                 loadKey, ignoreDb))
 
+            channel.close()
             awaitClose()
         }
     }
 
-    private suspend fun getMessagesDbByLoadType(loadType: LoadType, channelId: Long,
-                                                lastMessageId: Long, offset: Int, loadKey: Long): PaginationResponse.DBResponse<SceytMessage> {
+    private suspend fun getMessagesDbByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
+                                                offset: Int, loadKey: Long, ignoreCash: Boolean): PaginationResponse.DBResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         val messages: List<SceytMessage>
@@ -130,7 +152,8 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messagesCash.addAll(messages, false)
+        if (!ignoreCash)
+            messagesCash.addAll(messages, false)
 
         // Mark messages as received
         markMessagesAsReceived(channelId, messages)
@@ -180,17 +203,19 @@ internal class PersistenceMessagesLogicImpl(
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
-                    hasNext = false
                 }
             }
         }
 
         saveMessagesToDb(messages)
 
-        if (loadType == LoadNear)
+        if (loadType == LoadNear && loadKey == LoadKeyType.ScrollToMessageById.longValue)
             messagesCash.clear()
 
         hasDiff = messagesCash.addAll(messages, true)
+
+        // Mark messages as received
+        markMessagesAsReceived(channelId, messages)
 
         return PaginationResponse.ServerResponse2(
             data = response, cashData = messagesCash.getSorted(),

@@ -69,7 +69,7 @@ open class ConversationActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                if (it.first == Types.ConnectState.StateConnected)
+                if (it.state == Types.ConnectState.StateConnected)
                     viewModel.sendPendingMessages()
             }
         }

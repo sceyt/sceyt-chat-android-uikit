@@ -74,11 +74,12 @@ internal class PersistenceMembersLogicImpl(
             } else
                 trySend(PaginationResponse.ServerResponse(response, arrayListOf(), 0))
 
+            channel.close()
             awaitClose()
         }
     }
 
-    private fun getMembersDb(channelId: Long, offset: Int, limit: Int): List<SceytMember> {
+    private suspend fun getMembersDb(channelId: Long, offset: Int, limit: Int): List<SceytMember> {
         return channelDao.getChannelMembers(channelId, limit = limit, offset = offset)
             .map { memberEntity -> memberEntity.toSceytMember() }
     }
@@ -98,7 +99,7 @@ internal class PersistenceMembersLogicImpl(
         channelDao.insertUserChatLinks(links)
     }
 
-    private fun getRemovedItemsAndDeleteFromDb(channelId: Long, dbMembers: List<SceytMember>, serverResponse: List<SceytMember>?): List<SceytMember> {
+    private suspend fun getRemovedItemsAndDeleteFromDb(channelId: Long, dbMembers: List<SceytMember>, serverResponse: List<SceytMember>?): List<SceytMember> {
         serverResponse ?: return emptyList()
         val removedItems: List<SceytMember> = dbMembers.minus(serverResponse.toSet())
         if (removedItems.isNotEmpty()) {
