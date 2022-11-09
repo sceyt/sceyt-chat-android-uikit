@@ -22,6 +22,18 @@ class ChannelsCash {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<SceytChannel> = channelUpdatedFlow_
+
+        private val channelDeletedFlow_ = MutableSharedFlow<Long>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelDeletedFlow: SharedFlow<Long> = channelDeletedFlow_
+
+        private val channelAddedFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
     }
 
     /** Added channels like upsert, and check is differences between channels*/
@@ -39,7 +51,7 @@ class ChannelsCash {
     fun add(channel: SceytChannel) {
         synchronized(lock) {
             if (putAndCheckHasDiff(arrayListOf(channel))) {
-                channelUpdated(channel)
+                channelAdded(channel)
             }
         }
     }
@@ -56,7 +68,7 @@ class ChannelsCash {
         }
     }
 
-    fun updateChannel(vararg channels: SceytChannel) {
+    fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
                 if (putAndCheckHasDiff(arrayListOf(it))) {
@@ -66,11 +78,15 @@ class ChannelsCash {
         }
     }
 
-    fun updateLastMessage(channelId: Long, lastMessage: SceytMessage) {
+    fun updateChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
-                channel.lastMessage = lastMessage
-                channelUpdated(channel.clone())
+            channels.forEach { channel ->
+                cashedData[channel.id]?.let { cashChannel ->
+                    val diff = cashChannel.diff(channel)
+                    cashedData[cashChannel.id] = cashChannel
+                    if (diff.hasDifference())
+                        channelUpdated(channel)
+                }
             }
         }
     }
@@ -128,7 +144,6 @@ class ChannelsCash {
                     it.members = it.members.toArrayList().apply {
                         add(sceytMember)
                     }
-
                     channelUpdated(channel)
                 }
             }
@@ -148,11 +163,16 @@ class ChannelsCash {
     fun deleteChannel(id: Long) {
         synchronized(lock) {
             cashedData.remove(id)
+            channelDeletedFlow_.tryEmit(id)
         }
     }
 
     private fun channelUpdated(channel: SceytChannel) {
         channelUpdatedFlow_.tryEmit(channel.clone())
+    }
+
+    private fun channelAdded(channel: SceytChannel) {
+        channelAddedFlow_.tryEmit(channel.clone())
     }
 
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {

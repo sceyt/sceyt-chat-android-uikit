@@ -138,10 +138,17 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             else last == lastIndex || (lastIndex > 0 && last == lastIndex - addedItemsCount)
         }
         if (scrollToEnd) {
-            if (isLastItemVisible)
+            /*if (isLastItemVisible) {
+                var speed = 500
+                (layoutManager as? SpeedyLinearLayoutManager)?.let {
+                    findViewHolderForAdapterPosition(lastIndex)?.let {
+                        speed /= it.itemView.height
+                    }
+                }
+
                 (layoutManager as SpeedyLinearLayoutManager).smoothScrollToPositionWithDuration(
-                    this, lastIndex, 200f)
-            else
+                    this, lastIndex, speed.toFloat())
+            } else*/
                 scrollToPosition(lastIndex)
         }
         return scrollToEnd

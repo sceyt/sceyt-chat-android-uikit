@@ -135,6 +135,14 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.addNewChannels(channels)
     }
 
+    fun addNewChannelAndSort(channelItem: ChannelListItem.ChannelItem) {
+        channelsRV.getData()?.let {
+            if (it.contains(channelItem)) return
+            val newData = ArrayList(it).also { items -> items.add(channelItem) }
+            channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, newData)
+        }
+    }
+
     internal fun updateLastMessage(message: SceytMessage, checkId: Boolean, unreadCount: Long? = null): Boolean {
         channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
             val channel = pair.second.channel

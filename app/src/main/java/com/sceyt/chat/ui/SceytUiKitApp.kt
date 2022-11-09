@@ -21,6 +21,7 @@ import com.sceyt.chat.ui.di.viewModelModules
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.extensions.TAG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -119,11 +120,12 @@ class SceytUiKitApp : Application() {
 
         getTokenByUserName(userName, {
             (it.get("token") as? String)?.let { token ->
-                SceytKitClient.connect(token, userName) { success, errorMessage ->
+                SceytKitClient.addListener(TAG) { success, errorMessage ->
                     successLiveData.postValue(success)
                     if (!success)
                         Log.e("sceytConnectError", errorMessage.toString())
                 }
+                SceytKitClient.connect(token, userName)
             }
         }, {
             successLiveData.postValue(false)

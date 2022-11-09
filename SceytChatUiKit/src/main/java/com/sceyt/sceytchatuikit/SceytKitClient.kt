@@ -18,6 +18,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -30,6 +31,8 @@ object SceytKitClient : SceytKoinComponent {
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
+    private val syncManager by lazy { SceytSyncManager() }
+    private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
         extraBufferCapacity = 5,
@@ -41,12 +44,13 @@ object SceytKitClient : SceytKoinComponent {
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
 
-    fun connect(token: String, userName: String,
-                listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+    init {
+        setListener()
+    }
 
+    fun connect(token: String, userName: String) {
         preferences.setUserId(userName)
         getChatClient()?.connect(token)
-        addListener(listener)
     }
 
     fun updateToken(token: String, listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
@@ -69,23 +73,26 @@ object SceytKitClient : SceytKoinComponent {
         getChatClient()?.disconnect()
     }
 
-    private fun addListener(listener: ((success: Boolean, errorMessage: String?) -> Unit)?) {
+    private fun setListener() {
         scope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                val connectStatus = it.first
+            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged { old, new ->
+                return@distinctUntilChanged old.state == new.state
+            }.collect {
+                val connectStatus = it.state
                 if (connectStatus == Types.ConnectState.StateConnected) {
-                    listener?.invoke(true, null)
+                    notifyState(true, null)
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
                     val status = ClientWrapper.currentUser.presence.status
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {
                     }
+                    syncManager.startSync()
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
-                    listener?.invoke(false, it.second?.error?.message)
+                    notifyState(false, it.status?.error?.message)
                 } else if (connectStatus == Types.ConnectState.StateDisconnect) {
-                    if (it.second?.error?.code == 40102)
+                    if (it.status?.error?.code == 40102)
                         onTokenExpired_.tryEmit(Unit)
-                    else listener?.invoke(false, it.second?.error?.message)
+                    else notifyState(false, it.status?.error?.message)
                 }
             }
         }
@@ -103,6 +110,12 @@ object SceytKitClient : SceytKoinComponent {
         }
     }
 
+    private fun notifyState(success: Boolean, errorMessage: String?) {
+        listenersMap.values.forEach { listener ->
+            listener.invoke(success, errorMessage)
+        }
+    }
+
     private fun getChatClient(): ChatClient? = ChatClient.getClient()
 
     fun getConnectionService() = connectionStateService
@@ -114,6 +127,10 @@ object SceytKitClient : SceytKoinComponent {
     fun getMembersMiddleWare() = persistenceMembersMiddleWare
 
     fun getUserMiddleWare() = persistenceUsersMiddleWare
+
+    fun addListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
+        listenersMap[key] = listener
+    }
 
     fun clearData() {
         database.clearAllTables()

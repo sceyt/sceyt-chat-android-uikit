@@ -141,11 +141,13 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     trySend(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
                     if (channels.size == limit)
                         channelListQuery.loadNext(this)
+                    else channel.close()
                 }
             }
 
             override fun onError(e: SceytException?) {
                 trySend(SceytResponse.Error(e))
+                channel.close()
             }
         })
 

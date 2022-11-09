@@ -22,6 +22,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
@@ -284,7 +285,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     if (item.message.id == id) {
                         if (item.message.deliveryStatus < status)
                             item.message.deliveryStatus = status
-                        messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                        // messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                        // (messagesRV.layoutManager as LinearLayoutManager).viewhol
+                        (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(item, oldMessage.diff(item.message))
+                                ?: run {
+                                    messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                                }
                         break
                     }
                 }
