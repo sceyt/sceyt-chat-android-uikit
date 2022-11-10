@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class NewChannelActivity : AppCompatActivity() {
@@ -43,6 +44,14 @@ class NewChannelActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() {
+        viewModel.pageStateLiveData.observe(this) {
+            if (it is PageState.StateError) {
+                //@param creatingChannel need change when error is connected with create channel
+                creatingChannel = false
+                customToastSnackBar(it.errorMessage)
+            }
+        }
+
         viewModel.usersLiveData.observe(this) {
             setupUsersList(it)
         }

@@ -358,10 +358,12 @@ class MessageListViewModel(private val conversationId: Long,
                     canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
                     messageReactions = initReactionsItems(this)
                 })
-                messageItems.add(messageItem)
 
-                if (pinnedLastReadMessageId != 0L && sceytMessage.id == pinnedLastReadMessageId && sceytMessage.id != channel.lastMessage?.id)
+
+                if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId)
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, LoadKeyType.ScrollToUnreadMessage.longValue))
+
+                messageItems.add(messageItem)
             }
 
             if (hasNext)

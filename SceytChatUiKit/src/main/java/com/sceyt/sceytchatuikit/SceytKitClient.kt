@@ -81,12 +81,13 @@ object SceytKitClient : SceytKoinComponent {
                 val connectStatus = it.state
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     notifyState(true, null)
-                    persistenceMessagesMiddleWare.sendAllPendingMessages()
+
                     val status = ClientWrapper.currentUser.presence.status
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {
                     }
                     syncManager.startSync()
+                    persistenceMessagesMiddleWare.sendAllPendingMessages()
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
                     notifyState(false, it.status?.error?.message)
                 } else if (connectStatus == Types.ConnectState.StateDisconnect) {

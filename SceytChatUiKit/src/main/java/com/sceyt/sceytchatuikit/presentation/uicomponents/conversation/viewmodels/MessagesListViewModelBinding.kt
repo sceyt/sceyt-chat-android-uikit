@@ -4,6 +4,7 @@ import androidx.lifecycle.*
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
@@ -15,6 +16,7 @@ import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -26,6 +28,7 @@ import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -137,6 +140,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
+    /** Send pending markers when lifecycle come back onResume state*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (pendingDisplayMsgIds.isNotEmpty()) {
@@ -154,6 +158,23 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
         }
     }
+
+    SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner, Observer {
+        if (it.first.id == channel.id) {
+            channel = it.first
+
+            if (pinnedLastReadMessageId == 0L && channel.lastReadMessageId != 0L && channel.lastReadMessageId != channel.lastMessage?.id)
+                pinnedLastReadMessageId = channel.lastReadMessageId
+
+            lifecycleOwner.lifecycleScope.launch {
+                val isLastDisplaying = messagesListView.isLastItemDisplaying()
+                messagesListView.addNextPageMessages(mapToMessageListItem(data = it.second,
+                    hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
+                if (isLastDisplaying)
+                    messagesListView.scrollToLastMessage()
+            }
+        }
+    })
 
     onScrollToMessageLiveData.observe(lifecycleOwner, Observer {
         viewModelScope.launch(Dispatchers.Default) {
@@ -283,6 +304,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 else -> return@collect
             }
         }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        ChannelsCash.channelDeletedFlow
+            .filter { it == channel.id }
+            .collect {
+                messagesListView.context.asActivity().finish()
+            }
     }
 
     lifecycleOwner.lifecycleScope.launch {
