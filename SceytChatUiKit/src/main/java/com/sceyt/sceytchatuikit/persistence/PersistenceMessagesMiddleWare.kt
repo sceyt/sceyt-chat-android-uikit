@@ -16,7 +16,7 @@ interface PersistenceMessagesMiddleWare {
                                  offset: Int, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
-                                 loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+                                 loadKey: Long, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean,
                                    loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>

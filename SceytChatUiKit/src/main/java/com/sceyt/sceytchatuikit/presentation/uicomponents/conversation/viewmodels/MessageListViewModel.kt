@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
@@ -150,7 +151,7 @@ class MessageListViewModel(private val conversationId: Long,
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey, false).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -177,7 +178,7 @@ class MessageListViewModel(private val conversationId: Long,
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replayInThread, loadKey, false).collect { response ->
+            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replayInThread, loadKey).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
@@ -359,7 +360,6 @@ class MessageListViewModel(private val conversationId: Long,
                     messageReactions = initReactionsItems(this)
                 })
 
-
                 if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId)
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, LoadKeyType.ScrollToUnreadMessage.longValue))
 
@@ -404,7 +404,11 @@ class MessageListViewModel(private val conversationId: Long,
     internal fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
         return if (prevMessage == null)
             isGroup
-        else isGroup && (prevMessage.from?.id != sceytMessage.from?.id || shouldShowDate(sceytMessage, prevMessage))
+        else {
+            val sameSender = prevMessage.from?.id == sceytMessage.from?.id
+            isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
+                    || prevMessage.type == MessageTypeEnum.System.value())
+        }
     }
 
     internal fun onMessageCommandEvent(event: MessageCommandEvent) {

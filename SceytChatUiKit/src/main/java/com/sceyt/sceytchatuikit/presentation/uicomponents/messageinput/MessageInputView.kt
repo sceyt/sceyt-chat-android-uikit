@@ -18,6 +18,8 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
@@ -182,10 +184,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun getMessageType(attachments: List<Attachment>, body: String?): String {
         if (attachments.isNotEmpty() && attachments.size == 1) {
             return if (attachments[0].type.isEqualsVideoOrImage())
-                "media"
-            else "file"
+                MessageTypeEnum.Media.value()
+            else MessageTypeEnum.File.value()
         }
-        return if (body.isLink()) "link" else "text"
+        return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
     }
 
     private fun reset() {
@@ -235,8 +237,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun getAttachmentType(path: String?): String {
         return when (val type = getMimeTypeTakeFirstPart(path)) {
-            "image", "video" -> type
-            else -> "file"
+            AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> type
+            else -> AttachmentTypeEnum.File.value()
         }
     }
 
@@ -334,15 +336,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun send() {
         GlobalScope.launch {
             for (i in 1..30) {
-               sed(i)
+                sed(i)
             }
         }
 
     }
 
-    suspend fun sed(i:Int){
+    suspend fun sed(i: Int) {
         delay(200)
-        withContext(Dispatchers.Main){
+        withContext(Dispatchers.Main) {
             binding.messageInput.setText(i.toString())
             sendMessage()
         }
