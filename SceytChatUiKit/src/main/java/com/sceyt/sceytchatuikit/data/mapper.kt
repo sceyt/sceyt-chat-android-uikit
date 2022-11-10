@@ -5,6 +5,7 @@ import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
@@ -108,8 +109,8 @@ fun SceytAttachment.toSceytAttachment() = Attachment.Builder(url, type)
 
 fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
     return when (type) {
-        "image" -> FileListItem.Image(this, message)
-        "video" -> FileListItem.Video(this, message)
+        AttachmentTypeEnum.Image.value() -> FileListItem.Image(this, message)
+        AttachmentTypeEnum.Video.value() -> FileListItem.Video(this, message)
         else -> FileListItem.File(this, message)
     }
 }

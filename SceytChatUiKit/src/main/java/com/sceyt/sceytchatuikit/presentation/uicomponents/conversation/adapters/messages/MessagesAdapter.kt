@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.sceytchatuikit.extensions.findIndexed
@@ -142,10 +143,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun needTopOffset(position: Int): Boolean {
         try {
-            val prevItem = (messages.getOrNull(position - 1) as? MessageItem)
-            val currentItem = (messages.getOrNull(position) as? MessageItem)
-            if (prevItem != null && currentItem != null)
-                return prevItem.message.incoming != currentItem.message.incoming
+            val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
+            val current = (messages.getOrNull(position) as? MessageItem)?.message
+            if (prev != null && current != null)
+                return prev.incoming != current.incoming || prev.type == MessageTypeEnum.System.value()
         } catch (_: Exception) {
         }
         return true
