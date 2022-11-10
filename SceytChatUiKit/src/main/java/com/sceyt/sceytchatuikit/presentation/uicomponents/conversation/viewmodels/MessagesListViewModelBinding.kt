@@ -135,9 +135,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        loadMessagesFlow.collect { response ->
-            initMessagesResponse(response)
-        }
+        loadMessagesFlow.collect(::initMessagesResponse)
     }
 
     /** Send pending markers when lifecycle come back onResume state*/
@@ -500,7 +498,7 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     })
 }
 
-
+@Suppress("unused")
 fun bindViewFromJava(viewModel: MessageListViewModel, messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     viewModel.bind(messagesListView, lifecycleOwner)
 }

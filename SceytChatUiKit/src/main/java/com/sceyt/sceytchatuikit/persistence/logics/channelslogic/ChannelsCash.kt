@@ -68,6 +68,12 @@ class ChannelsCash {
         }
     }
 
+    fun get(channelId: Long): SceytChannel? {
+        synchronized(lock) {
+            return cashedData[channelId]
+        }
+    }
+
     fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
@@ -87,6 +93,15 @@ class ChannelsCash {
                     if (diff.hasDifference())
                         channelUpdated(channel)
                 }
+            }
+        }
+    }
+
+    fun updateLastMessage(channelId: Long, message: SceytMessage) {
+        synchronized(lock) {
+            cashedData[channelId]?.let { channel ->
+                channel.lastMessage = message
+                channelUpdated(channel.clone())
             }
         }
     }

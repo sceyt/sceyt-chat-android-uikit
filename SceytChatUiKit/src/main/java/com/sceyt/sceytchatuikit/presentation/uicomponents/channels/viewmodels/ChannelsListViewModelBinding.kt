@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
@@ -20,45 +21,43 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     getChannels(0, query = searchQuery)
 
-    /** Load channels after reconnection **/
-    /*  lifecycleOwner.lifecycleScope.launch {
-          ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-              if (it.first == Types.ConnectState.StateConnected)
-                  channelsListView.getChannelsRv().awaitAnimationEnd {
-                      getChannels(0, query = searchQuery)
-                  }
-          }
-      }*/
+    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>): Boolean {
+        if (checkIgnoreDatabasePagingResponse(response))
+            return true
 
-    lifecycleOwner.lifecycleScope.launch {
-        loadChannelsFlow.collect {
-            when (it) {
-                is PaginationResponse.DBResponse -> {
-                    if (it.offset == 0) {
-                        channelsListView.setChannelsList(it.data)
-                    } else
-                        channelsListView.addNewChannels(it.data)
+        if (response.offset == 0) {
+            channelsListView.setChannelsList(mapToChannelItem(data = response.data, hasNext = response.hasNext))
+        } else {
+            channelsListView.addNewChannels(mapToChannelItem(data = response.data, hasNext = response.hasNext))
+        }
+        notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+        return false
+    }
+
+    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse2<SceytChannel>) {
+        when (response.data) {
+            is SceytResponse.Success -> {
+                if (response.hasDiff) {
+                    val newChannels = mapToChannelItem(data = response.cashData, hasNext = response.hasNext)
+                    channelsListView.setChannelsList(newChannels)
+                } else {
+                    if (!hasNextDb) channelsListView.hideLoadingMore()
                 }
-                is PaginationResponse.ServerResponse -> {
-                    if (it.data is SceytResponse.Success) {
-                        it.data.data?.let { data ->
-                            channelsListView.updateChannelsWithServerData(data, it.offset, it.hasNext, lifecycleOwner)
-                        }
-                    } else if (it.data is SceytResponse.Error)
-                        customToastSnackBar(channelsListView, it.data.message ?: "")
-                }
-                is PaginationResponse.Nothing -> return@collect
-                else -> {}
             }
+            is SceytResponse.Error -> if (!hasNextDb) channelsListView.hideLoadingMore()
+        }
+    }
+
+    suspend fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
+        when (response) {
+            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
+            is PaginationResponse.ServerResponse2 -> initPaginationServerResponse(response)
+            else -> return
         }
     }
 
     lifecycleOwner.lifecycleScope.launch {
-        onMessageEditedOrDeletedFlow.collect {
-            if (!channelsListView.updateLastMessage(it, checkId = true)) {
-                getChannels(0, query = searchQuery)
-            }
-        }
+        loadChannelsFlow.collect(::initChannelsResponse)
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -105,9 +104,9 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         onChannelEvent(it)
     }
 
-    channelsListView.setReachToEndListener { offset, _ ->
+    channelsListView.setReachToEndListener { offset, lastChannel ->
         if (canLoadNext())
-            getChannels(offset, searchQuery)
+            getChannels(offset, searchQuery, lastChannel?.id ?: 0)
     }
 
     channelsListView.setChannelAttachDetachListener { item, attached ->
@@ -132,11 +131,12 @@ fun ChannelsViewModel.bind(searchView: SearchInputView) {
     }
 }
 
-
+@Suppress("unused")
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
     viewModel.bind(channelsListView, lifecycleOwner)
 }
 
+@Suppress("unused")
 fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchInputView) {
     viewModel.bind(searchView)
 }

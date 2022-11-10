@@ -54,8 +54,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCash.messageUpdated(*messageDao.getMessageByIds(data.messageIds).map { it.toSceytMessage() }.toTypedArray())
     }
 
-    override suspend fun onMessageReactionUpdated(data: Message?) {
-        data ?: return
+    override suspend fun onMessageReactionUpdated(data: Message) {
         reactionDao.insertReactionsAndScores(
             messageId = data.id,
             reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
@@ -63,8 +62,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCash.messageUpdated(data.toSceytUiMessage())
     }
 
-    override suspend fun onMessageEditedOrDeleted(data: Message?) {
-        data ?: return
+    override suspend fun onMessageEditedOrDeleted(data: Message) {
         messageDao.updateMessage(data.toMessageEntity())
         messagesCash.messageUpdated(data.toSceytUiMessage())
     }
