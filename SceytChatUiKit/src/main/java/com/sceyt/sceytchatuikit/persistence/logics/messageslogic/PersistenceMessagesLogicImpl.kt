@@ -71,23 +71,23 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
                                           offset: Int, loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb, ignoreCash)
+        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
                                           offset: Int, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb, ignoreCash = ignoreCash)
+        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb)
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
                                           loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb, ignoreCash)
+        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb)
     }
 
     override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
                                             ignoreDb: Boolean,
                                             ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, ignoreDb, ignoreCash)
+        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, ignoreDb)
     }
 
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
@@ -99,6 +99,7 @@ internal class PersistenceMessagesLogicImpl(
                 if (it is SceytResponse.Success) {
                     it.data?.let { messages ->
                         saveMessagesToDb(messages)
+                        messagesCash.addAll(messages, false)
                         markMessagesAsReceived(conversationId, messages)
                     }
                 }
@@ -109,13 +110,13 @@ internal class PersistenceMessagesLogicImpl(
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
                              replayInThread: Boolean, offset: Int, loadKey: Long = messageId,
-                             ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
-            if (offset == 0 && !ignoreCash) messagesCash.clear()
+            if (offset == 0) messagesCash.clear()
 
             // Load from database
             if (!ignoreDb)
-                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, loadKey, ignoreCash))
+                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, loadKey))
             // Load from server
             trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, replayInThread,
                 loadKey, ignoreDb))
@@ -126,7 +127,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getMessagesDbByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
-                                                offset: Int, loadKey: Long, ignoreCash: Boolean): PaginationResponse.DBResponse<SceytMessage> {
+                                                offset: Int, loadKey: Long): PaginationResponse.DBResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         val messages: List<SceytMessage>
@@ -152,8 +153,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        if (!ignoreCash)
-            messagesCash.addAll(messages, false)
+        messagesCash.addAll(messages, false)
 
         // Mark messages as received
         markMessagesAsReceived(channelId, messages)

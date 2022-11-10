@@ -141,6 +141,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val newData = ArrayList(it).also { items -> items.add(channelItem) }
             channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, newData)
         }
+        pageStateView?.updateState(PageState.Nothing)
     }
 
     internal fun updateLastMessage(message: SceytMessage, checkId: Boolean, unreadCount: Long? = null): Boolean {
