@@ -9,7 +9,9 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceChanelMiddleWare {
-    suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>>
+    suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: Long,
+                             ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>

@@ -88,19 +88,23 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private suspend fun onMessageReactionUpdated(data: Message?) {
+        data ?: return
         messagesLogic.onMessageReactionUpdated(data)
     }
 
     private suspend fun onMessageEditedOrDeleted(data: Message?) {
+        data ?: return
         messagesLogic.onMessageEditedOrDeleted(data)
+        channelLogic.onMessageEditedOrDeleted(data)
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
         connectionLogic.onChangedConnectStatus(data)
     }
 
-    override suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.loadChannels(offset, searchQuery)
+    override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: Long,
+                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
     }
 
     override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {

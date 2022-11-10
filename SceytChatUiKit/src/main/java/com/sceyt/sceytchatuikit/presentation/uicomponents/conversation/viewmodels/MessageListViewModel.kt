@@ -385,16 +385,6 @@ class MessageListViewModel(private val conversationId: Long,
         }?.sortedByDescending { it.reaction.score }
     }
 
-    internal fun checkIgnoreDatabasePagingResponse(response: PaginationResponse.DBResponse<*>): Boolean {
-        if (response.data.isNotEmpty()) return false
-
-        return when (response.loadType) {
-            LoadPrev, LoadNewest -> hasPrev && loadingPrevItems.get()
-            LoadNext -> hasNext && loadingNextItems.get()
-            LoadNear -> hasPrev && loadingPrevItems.get() && !hasNext && loadingNextItems.get()
-        }
-    }
-
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
         return if (prevMessage == null)
             true

@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
@@ -17,7 +18,10 @@ internal interface PersistenceChannelsLogic {
     suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
     suspend fun onChannelMarkersUpdated(data: MessageStatusChangeData)
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
-    suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>>
+    suspend fun onMessageEditedOrDeleted(data: Message)
+    suspend fun loadChannels(offset: Int, searchQuery: String,
+                             loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>

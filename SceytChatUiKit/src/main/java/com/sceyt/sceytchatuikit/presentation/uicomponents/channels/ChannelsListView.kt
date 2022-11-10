@@ -7,20 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.hasDiff
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -38,7 +32,6 @@ import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -95,129 +88,17 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelsRV.setData(channels)
     }
 
-    internal fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, hasNext: Boolean, lifecycleOwner: LifecycleOwner) {
-        val channels = ArrayList(channelsRV.getData() as? ArrayList ?: arrayListOf())
-        if (data.isEmpty() && offset == 0) {
-            channelsRV.setData(data)
-            return
-        }
-        if (channels.isEmpty()) {
-            channels.addAll(data)
-            channelsRV.setData(channels)
-        } else {
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                // Update UI channels if exist, or add new channels
-                data.forEach { dataItem ->
-
-                    channels.findIndexed {
-                        it is ChannelListItem.ChannelItem &&
-                                dataItem is ChannelListItem.ChannelItem &&
-                                it.channel.id == dataItem.channel.id
-                                || it is ChannelListItem.LoadingMoreItem
-                    }?.let {
-                        channels[it.first] = dataItem
-                    } ?: run {
-                        channels.add(dataItem)
-                    }
-                }
-
-                if (!hasNext)
-                    channels.remove(ChannelListItem.LoadingMoreItem)
-
-                withContext(Dispatchers.Main) {
-                    channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, channels)
-                }
-            }
-        }
-    }
-
     internal fun addNewChannels(channels: List<ChannelListItem>) {
         channelsRV.addNewChannels(channels)
     }
 
-    fun addNewChannelAndSort(channelItem: ChannelListItem.ChannelItem) {
+    internal fun addNewChannelAndSort(channelItem: ChannelListItem.ChannelItem) {
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
             val newData = ArrayList(it).also { items -> items.add(channelItem) }
             channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, newData)
         }
         pageStateView?.updateState(PageState.Nothing)
-    }
-
-    internal fun updateLastMessage(message: SceytMessage, checkId: Boolean, unreadCount: Long? = null): Boolean {
-        channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
-            val channel = pair.second.channel
-            if (message.channelId == channel.id) {
-                val oldChannel = channel.clone()
-                if (!checkId || channel.lastMessage?.id == message.id)
-                    channel.lastMessage = message
-
-                unreadCount?.let { count ->
-                    channel.unreadMessageCount = count
-                }
-                channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                sortChannelsBy(SceytKitConfig.sortChannelsBy)
-                return true
-            }
-        }
-        return false
-    }
-
-    internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
-        context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val channelId = status.channel.id
-            channelsRV.getChannelIndexed(channelId)?.let { pair ->
-                val channel = pair.second.channel
-                channel.lastMessage?.let {
-                    if (status.messageIds.contains(it.id)) {
-                        val oldChannel = channel.clone()
-                        if (it.deliveryStatus < status.status) {
-                            it.deliveryStatus = status.status
-                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    internal fun updateOutgoingLastMessageStatus(channelId: Long, sceytMessage: SceytMessage) {
-        context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            channelsRV.getChannelIndexed(channelId)?.let { pair ->
-                val channel = pair.second.channel
-                val oldChannel = channel.clone()
-
-                channel.lastMessage?.let {
-                    if (sceytMessage.tid == it.tid) {
-                        channel.lastMessage = sceytMessage
-                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                    }
-                } ?: run {
-                    channel.lastMessage = sceytMessage
-                    channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                }
-            }
-        }
-    }
-
-    internal fun channelCleared(channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.lastMessage = null
-            channel.unreadMessageCount = 0
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-            sortChannelsBy(SceytKitConfig.sortChannelsBy)
-        }
-    }
-
-    internal fun updateMuteState(muted: Boolean, channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.muted = muted
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
     }
 
     internal fun channelUpdated(channel: SceytChannel?): Boolean {
@@ -237,25 +118,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             pageStateView?.updateState(PageState.StateEmpty())
     }
 
-    internal fun markedChannelAsRead(channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.unreadMessageCount = 0
-            channel.markedUsUnread = false
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
-    }
-
-    internal fun markedChannelAsUnRead(channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.markedUsUnread = true
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
-    }
-
     internal fun userBlocked(data: List<User>?) {
         data?.forEach { user ->
             channelsRV.getChannels()?.find {
@@ -263,15 +125,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }?.let {
                 (it.channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
             }
-        }
-    }
-
-    internal fun muteUnMuteChannel(channelId: Long, muted: Boolean) {
-        channelsRV.getChannelIndexed(channelId)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.muted = muted
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
         }
     }
 
@@ -340,6 +193,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getData() = channelsRV.getData()
 
+    internal fun hideLoadingMore() {
+        channelsRV.hideLoadingMore()
+    }
+
     fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
         channelsRV.sortBy(sortBy)
     }
@@ -390,13 +247,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        /*val updateChannel = item.channel.clone().apply {
-            unreadMessageCount = 0
-            markedUsUnread = false
-        }
-        Handler(Looper.getMainLooper()).postDelayed({
-            channelUpdated(updateChannel)
-        }, 300)*/
+        // Need open your conversation page
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {

@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
 internal interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
-    suspend fun onMessageReactionUpdated(data: Message?)
-    suspend fun onMessageEditedOrDeleted(data: Message?)
+    suspend fun onMessageReactionUpdated(data: Message)
+    suspend fun onMessageEditedOrDeleted(data: Message)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int,
                                  loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 

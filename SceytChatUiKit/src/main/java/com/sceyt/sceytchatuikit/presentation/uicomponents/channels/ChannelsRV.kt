@@ -141,6 +141,10 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         sortAndUpdate(sortChannelsBy, data)
     }
 
+    fun hideLoadingMore() {
+        if (::mAdapter.isInitialized) mAdapter.removeLoading()
+    }
+
     fun getViewHolderFactory() = viewHolderFactory
 
     private fun sortAndUpdate(sortChannelsBy: SceytKitConfig.ChannelSortType, data: List<ChannelListItem>) {
@@ -161,4 +165,6 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         super.onDetachedFromWindow()
         ChannelViewHolderFactory.clearCash()
     }
+
+
 }
