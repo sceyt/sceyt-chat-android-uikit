@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
-import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 
 @Dao

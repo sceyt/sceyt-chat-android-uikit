@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.entity
+package com.sceyt.sceytchatuikit.data.models
 
 data class LoadNearData<T>(
         var data: List<T>,

@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.persistence.entity.ChanelMember
+import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
@@ -49,7 +49,7 @@ interface ChannelDao {
     @Transaction
     @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id where chat_id =:channelId " +
             "order by user_id limit :limit offset :offset")
-    suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMember>
+    suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
 
     @Query("select chat_id from channels where chat_id not in (:ids)")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>

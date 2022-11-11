@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -103,8 +104,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun logout() {
         ChatClient.getClient().disconnect()
-        preference.clear()
-        sceytDatabase.clearAllTables()
+        SceytKitClient.clearData()
         //todo unregister push token
     }
 }

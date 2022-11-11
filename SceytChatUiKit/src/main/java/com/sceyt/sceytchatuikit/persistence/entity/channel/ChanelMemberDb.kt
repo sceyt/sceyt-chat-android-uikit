@@ -1,10 +1,10 @@
-package com.sceyt.sceytchatuikit.persistence.entity
+package com.sceyt.sceytchatuikit.persistence.entity.channel
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
+import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 
-data class MemberEntity(
+data class ChanelMemberDb(
         @Embedded
         val link: UserChatLink,
 

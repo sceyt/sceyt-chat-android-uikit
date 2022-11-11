@@ -4,7 +4,7 @@ import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.sceytchatuikit.persistence.entity.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
