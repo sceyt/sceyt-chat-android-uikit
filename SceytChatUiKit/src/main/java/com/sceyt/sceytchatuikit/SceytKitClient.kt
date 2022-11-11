@@ -37,12 +37,12 @@ object SceytKitClient : SceytKoinComponent {
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenExpired = onTokenExpired_.asSharedFlow()
 
     private val onTokenWillExpire_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
 
