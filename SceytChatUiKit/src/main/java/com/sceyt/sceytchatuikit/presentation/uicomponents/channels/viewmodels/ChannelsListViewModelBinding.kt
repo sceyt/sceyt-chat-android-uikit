@@ -21,20 +21,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     getChannels(0, query = searchQuery)
 
-    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>): Boolean {
-        if (checkIgnoreDatabasePagingResponse(response))
-            return true
-
+    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         if (response.offset == 0) {
             channelsListView.setChannelsList(mapToChannelItem(data = response.data, hasNext = response.hasNext))
-        } else {
+        } else
             channelsListView.addNewChannels(mapToChannelItem(data = response.data, hasNext = response.hasNext))
-        }
-        notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
-        return false
     }
 
-    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse2<SceytChannel>) {
+    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytChannel>) {
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
@@ -51,7 +45,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     suspend fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
         when (response) {
             is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-            is PaginationResponse.ServerResponse2 -> initPaginationServerResponse(response)
+            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
             else -> return
         }
     }

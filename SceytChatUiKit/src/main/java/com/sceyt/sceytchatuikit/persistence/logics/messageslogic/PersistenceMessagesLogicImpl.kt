@@ -161,7 +161,7 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
                                                     offset: Int, replayInThread: Boolean, loadKey: Long = lastMessageId,
-                                                    ignoreDb: Boolean): PaginationResponse.ServerResponse2<SceytMessage> {
+                                                    ignoreDb: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         val hasDiff: Boolean
@@ -215,7 +215,7 @@ internal class PersistenceMessagesLogicImpl(
         // Mark messages as received
         markMessagesAsReceived(channelId, messages)
 
-        return PaginationResponse.ServerResponse2(
+        return PaginationResponse.ServerResponse(
             data = response, cashData = messagesCash.getSorted(),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)

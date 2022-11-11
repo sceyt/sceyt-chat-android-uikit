@@ -22,7 +22,7 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
     val loadMoreFilesFlow: StateFlow<List<FileListItem>> = _loadMoreFilesFlow
 
     fun loadMessages(channelId: Long, lastMessageId: Long, isLoadingMore: Boolean, type: String) {
-        loadingItems.set(true)
+        loadingNextItems.set(true)
 
         notifyPageLoadingState(isLoadingMore)
 
@@ -34,11 +34,11 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
 
     private fun initResponse(it: SceytResponse<List<SceytMessage>>, loadingNext: Boolean) {
         if (it is SceytResponse.Success) {
-            hasPrev = it.data?.size == SceytKitConfig.MESSAGES_LOAD_SIZE
-            emitMessagesListResponse(mapToFileListItem(it.data, hasPrev), loadingNext)
+            hasNext = it.data?.size == SceytKitConfig.MESSAGES_LOAD_SIZE
+            emitMessagesListResponse(mapToFileListItem(it.data, hasNext), loadingNext)
         }
         notifyPageStateWithResponse(it, loadingNext, it.data.isNullOrEmpty())
-        loadingItems.set(false)
+        loadingNextItems.set(false)
     }
 
     private fun emitMessagesListResponse(response: List<FileListItem>, loadingNext: Boolean) {

@@ -79,10 +79,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
-        if (checkIgnoreDatabasePagingResponse(response))
-            return true
-
+    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
         if (response.offset == 0) {
             messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
                 hasNext = response.hasNext, hasPrev = response.hasPrev))
@@ -104,12 +101,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }
         checkToScrollAfterResponse(response)
-
-        notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
-        return false
     }
 
-    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse2<SceytMessage>) {
+    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytMessage>) {
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
@@ -129,7 +123,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     suspend fun initMessagesResponse(response: PaginationResponse<SceytMessage>) {
         when (response) {
             is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-            is PaginationResponse.ServerResponse2 -> initPaginationServerResponse(response)
+            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
             else -> return
         }
     }
