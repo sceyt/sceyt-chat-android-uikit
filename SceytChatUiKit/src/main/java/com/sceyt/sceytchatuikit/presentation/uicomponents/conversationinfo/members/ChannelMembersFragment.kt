@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.memb
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -188,7 +189,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             binding?.rvMembers?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasPrev)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
                         loadMoreMembers(membersAdapter?.getSkip() ?: return)
                 }
             })
@@ -200,7 +201,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
-        val itemsDb = data.dbData as ArrayList
+        val itemsDb = data.cashData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
             val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
 
@@ -215,6 +216,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                         itemsDb.add(MemberItem.LoadingMore)
                 } else itemsDb.remove(MemberItem.LoadingMore)
 
+            Log.i("sdfsdf","final "+itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
             setOrUpdateMembersAdapter(itemsDb)
         }
     }
@@ -275,15 +277,22 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             is PaginationResponse.DBResponse -> {
                 if (data.offset == 0) {
                     setOrUpdateMembersAdapter(data.data)
+                    Log.i("sdfsdf","db =0 "+data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
                 } else
+                {
+                    Log.i("sdfsdf","db >0 "+data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+
                     membersAdapter?.addNewItems(data.data)
+                }
             }
             is PaginationResponse.ServerResponse -> {
                 if (data.data is SceytResponse.Success)
+                {
+                    Log.i("sdfsdf","server "+data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
                     updateMembersWithServerResponse(data, data.hasNext)
+                }
             }
-            is PaginationResponse.Nothing -> return
-            is PaginationResponse.ServerResponse2 -> TODO()
+            else -> return
         }
     }
 

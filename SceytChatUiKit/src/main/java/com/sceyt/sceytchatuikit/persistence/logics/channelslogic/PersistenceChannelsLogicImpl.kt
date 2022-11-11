@@ -163,7 +163,7 @@ internal class PersistenceChannelsLogicImpl(
                 val hasDiff = channelsCash.addAll(channels.map { it.clone() }, true)
                 hasNext = response.data?.size == CHANNELS_LOAD_SIZE
 
-                trySend(PaginationResponse.ServerResponse2(data = response, cashData = channelsCash.getSorted(),
+                trySend(PaginationResponse.ServerResponse(data = response, cashData = channelsCash.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb))
             }

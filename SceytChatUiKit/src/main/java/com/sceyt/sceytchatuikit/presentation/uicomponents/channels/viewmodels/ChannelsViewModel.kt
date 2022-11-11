@@ -53,10 +53,12 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private fun initPaginationResponse(response: PaginationResponse<SceytChannel>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
-                _loadChannelsFlow.value = response
-                notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                if (!checkIgnoreDatabasePagingResponse(response)) {
+                    _loadChannelsFlow.value = response
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                }
             }
-            is PaginationResponse.ServerResponse2 -> {
+            is PaginationResponse.ServerResponse -> {
                 _loadChannelsFlow.value = response
                 notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
             }

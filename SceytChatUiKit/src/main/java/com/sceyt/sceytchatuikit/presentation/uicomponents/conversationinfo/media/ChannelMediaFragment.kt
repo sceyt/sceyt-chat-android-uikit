@@ -106,7 +106,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasPrev)
+                    if (isLastItemDisplaying() && viewModel.canLoadNext())
                         loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.sceytMessage?.id ?: 0)
                 }
             })
