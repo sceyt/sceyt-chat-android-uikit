@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,7 @@ object SceytKitClient : SceytKoinComponent {
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
+    private val channelsCash: ChannelsCash by inject()
     private val scope by lazy { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
     private val persistenceChannelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
@@ -75,9 +77,7 @@ object SceytKitClient : SceytKoinComponent {
 
     private fun setListener() {
         scope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged { old, new ->
-                return@distinctUntilChanged old.state == new.state
-            }.collect {
+            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect {
                 val connectStatus = it.state
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     notifyState(true, null)
@@ -136,5 +136,6 @@ object SceytKitClient : SceytKoinComponent {
     fun clearData() {
         database.clearAllTables()
         preferences.clear()
+        channelsCash.clear()
     }
 }

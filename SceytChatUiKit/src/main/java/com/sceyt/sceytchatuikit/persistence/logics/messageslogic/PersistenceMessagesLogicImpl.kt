@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
-import com.sceyt.sceytchatuikit.persistence.entity.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -370,26 +370,9 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 messageDao.deleteAttachments(listOf(message.tid))
-                reactionDao.deleteAllReactionsAndScores(message.id)
                 messageDao.updateMessage(resultMessage.toMessageEntity())
+                reactionDao.deleteAllReactionsAndScores(message.id)
                 messagesCash.messageUpdated(resultMessage)
-            }
-        }
-        return response
-    }
-
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
-        val response = messagesRepository.markAsRead(channelId, *ids)
-        if (response is SceytResponse.Success) {
-            response.data?.let { messageListMarker ->
-                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, DeliveryStatus.Read)
-                val tIds = messageDao.getMessageTIdsByIds(*ids)
-                messagesCash.updateMessagesStatus(DeliveryStatus.Read, *tIds.toLongArray())
-
-                //todo need update marker count
-                ids.forEach {
-                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, SelfMarkerTypeEnum.Displayed.toString())
-                }
             }
         }
         return response
@@ -397,19 +380,35 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun markMessagesAsReceive(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
         val response = messagesRepository.markAsDelivered(channelId, *ids)
+        onReadReceiveResponse(channelId, response, DeliveryStatus.Delivered, *ids)
+        return response
+    }
+
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+        val response = messagesRepository.markAsRead(channelId, *ids)
+        onReadReceiveResponse(channelId, response, DeliveryStatus.Read, *ids)
+        return response
+    }
+
+    private suspend fun onReadReceiveResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: DeliveryStatus, vararg ids: Long) {
         if (response is SceytResponse.Success) {
             response.data?.let { messageListMarker ->
-                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, DeliveryStatus.Delivered)
+                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, status)
                 val tIds = messageDao.getMessageTIdsByIds(*ids)
-                messagesCash.updateMessagesStatus(DeliveryStatus.Delivered, *tIds.toLongArray())
+                messagesCash.updateMessagesStatus(status, *tIds.toLongArray())
 
+
+                val marker = when (status) {
+                    DeliveryStatus.Delivered -> SelfMarkerTypeEnum.Received.toString()
+                    DeliveryStatus.Read -> SelfMarkerTypeEnum.Displayed.toString()
+                    else -> return
+                }
                 //todo need update marker count
                 ids.forEach {
-                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, SelfMarkerTypeEnum.Received.toString())
+                    messageDao.updateMessageSelfMarkersAndMarkerCount(channelId, it, marker)
                 }
             }
         }
-        return response
     }
 
     override suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage> {
