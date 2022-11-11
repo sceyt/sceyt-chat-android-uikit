@@ -100,7 +100,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasPrev) {
+                    if (isLastItemDisplaying() && viewModel.canLoadNext()) {
                         loadMoreLinksList(linksAdapter?.getLastMediaItem()?.message?.id ?: 0)
                     }
                 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toGroupChannel
@@ -54,7 +55,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
     }
 
     fun getChannelMembers(channelId: Long, offset: Int) {
-        loadingItems.set(true)
+        setPagingLoadingStarted(LoadNext)
         notifyPageLoadingState(offset > 0)
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -68,30 +69,27 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
         when (it) {
             is PaginationResponse.DBResponse -> {
                 if (it.data.isNotEmpty()) {
-                    hasPrev = it.hasNext
                     withContext(Dispatchers.Main) {
                         _membersLiveData.value = PaginationResponse.DBResponse(
-                            mapToMemberItem(it.data, it.hasNext),0, it.offset)
+                            mapToMemberItem(it.data, it.hasNext), 0, it.offset)
                         notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
                     }
                 }
             }
             is PaginationResponse.ServerResponse -> {
                 if (it.data is SceytResponse.Success) {
-                    hasPrev = it.hasNext
                     withContext(Dispatchers.Main) {
                         _membersLiveData.value = PaginationResponse.ServerResponse(
-                            SceytResponse.Success(mapToMemberItem(it.data.data, hasPrev)),
-                            it.dbData.map { MemberItem.Member(it) },
-                            it.offset, it.hasNext)
+                            SceytResponse.Success(mapToMemberItem(it.data.data, it.hasNext)),
+                            it.cashData.map { MemberItem.Member(it) }, it.loadKey,
+                            it.offset, it.hasDiff, it.hasNext, it.hasPrev, it.loadType, it.ignoredDb)
                     }
                 }
                 notifyPageStateWithResponse(it.data, it.offset > 0)
             }
             is PaginationResponse.Nothing -> return
-            else -> {}
         }
-        loadingItems.set(false)
+        pagingResponseReceived(it)
     }
 
     private fun mapToMemberItem(list: List<SceytMember>?, hasNest: Boolean): MutableList<MemberItem> {

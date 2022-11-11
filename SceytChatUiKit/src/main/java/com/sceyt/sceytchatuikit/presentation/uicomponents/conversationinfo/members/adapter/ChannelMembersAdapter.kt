@@ -50,6 +50,8 @@ class ChannelMembersAdapter(
         if (items.isEmpty()) return
 
         val filteredItems = items.minus(ArrayList(members).toSet())
+        if (filteredItems.isEmpty()) return
+
         members.addAll(filteredItems)
 
         if (members.size == items.size)

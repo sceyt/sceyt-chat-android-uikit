@@ -6,14 +6,16 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.models.Status
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.sceytchatuikit.extensions.TAG
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlin.coroutines.resume
 
 object ConnectionEventsObserver {
     val connectionState get() = ClientWrapper.connectState ?: Types.ConnectState.StateDisconnect
 
-    private val onChangedConnectStatusFlow_: MutableSharedFlow<Pair<Types.ConnectState, Status?>> = MutableSharedFlow(
+    private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onChangedConnectStatusFlow = onChangedConnectStatusFlow_.asSharedFlow()
@@ -31,7 +33,7 @@ object ConnectionEventsObserver {
     init {
         ChatClient.getClient().addClientListener(TAG, object : ClientListener {
             override fun onChangedConnectStatus(connectStatus: Types.ConnectState, status: Status?) {
-                onChangedConnectStatusFlow_.tryEmit(Pair(connectStatus, status))
+                onChangedConnectStatusFlow_.tryEmit(ConnectionStateData(connectStatus, status))
             }
 
             override fun onTokenWillExpire(expireTime: Long) {
@@ -45,4 +47,22 @@ object ConnectionEventsObserver {
     }
 
     internal fun init() {}
+
+
+    suspend fun awaitToConnectSceyt(): Boolean {
+        if (connectionState == Types.ConnectState.StateConnected)
+            return true
+
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        return suspendCancellableCoroutine { continuation ->
+            scope.launch {
+                onChangedConnectStatusFlow.collect {
+                    if (it.state == Types.ConnectState.StateConnected) {
+                        continuation.resume(true)
+                        scope.cancel()
+                    }
+                }
+            }
+        }
+    }
 }

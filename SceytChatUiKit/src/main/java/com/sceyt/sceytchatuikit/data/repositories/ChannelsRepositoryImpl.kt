@@ -18,6 +18,9 @@ import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -121,6 +124,34 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
             })
         }
+    }
+
+    override suspend fun getAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> = callbackFlow {
+        val channelListQuery = ChannelListQuery.Builder()
+            .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
+            .order(getOrder())
+            .limit(limit)
+            .build()
+
+        channelListQuery.loadNext(object : ChannelsCallback {
+            override fun onResult(channels: MutableList<Channel>?) {
+                if (channels.isNullOrEmpty())
+                    trySend(SceytResponse.Success(emptyList()))
+                else {
+                    trySend(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                    if (channels.size == limit)
+                        channelListQuery.loadNext(this)
+                    else channel.close()
+                }
+            }
+
+            override fun onError(e: SceytException?) {
+                trySend(SceytResponse.Error(e))
+                channel.close()
+            }
+        })
+
+        awaitClose()
     }
 
     override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {

@@ -9,8 +9,8 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
-    id = id,
     tid = getTid(id, tid, incoming),
+    id = id,
     channelId = channelId,
     to = to,
     body = body,
@@ -29,7 +29,8 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     selfMarkers = selfMarkers?.toList(),
     parentId = parent?.id,
     replyInThread = replyInThread,
-    replyCount = replyCount
+    replyCount = replyCount,
+    displayCount = displayCount
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -39,8 +40,8 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
 }
 
 fun Message.toMessageEntity() = MessageEntity(
-    id = id,
     tid = getTid(id, tid, incoming),
+    id = id,
     channelId = channelId,
     to = to,
     body = body,
@@ -59,7 +60,8 @@ fun Message.toMessageEntity() = MessageEntity(
     selfMarkers = selfMarkers?.toList(),
     parentId = parent?.id,
     replyInThread = replyInThread,
-    replyCount = replyCount
+    replyCount = replyCount,
+    displayCount = displayCount.toShort()
 )
 
 
@@ -113,7 +115,8 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             selfMarkers = selfMarkers?.toTypedArray(),
             parent = parent?.toSceytMessage(),
             replyInThread = replyInThread,
-            replyCount = replyCount
+            replyCount = replyCount,
+            displayCount = displayCount
         )
     }
 }
@@ -154,7 +157,8 @@ private fun MessageEntity.toSceytMessage() = SceytMessage(
     mentionedUsers = emptyArray(),
     parent = null,
     replyInThread = replyInThread,
-    replyCount = replyCount
+    replyCount = replyCount,
+    displayCount = displayCount
 )
 
 fun MessageDb.toMessage(): Message {
@@ -185,7 +189,8 @@ fun MessageDb.toMessage(): Message {
             emptyArray(),
             parent?.toSceytMessage()?.toMessage(),
             replyInThread,
-            replyCount
+            replyCount,
+            messageEntity.displayCount
         )
     }
 }
@@ -218,7 +223,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         mentionedUsers = mentionedUsers,
         parent = parent?.toSceytUiMessage(),
         replyInThread = replyInThread,
-        replyCount = replyCount
+        replyCount = replyCount,
+        displayCount = displayCount.toShort()
     ).apply {
         isGroup?.let {
             this.isGroup = it
@@ -253,5 +259,6 @@ fun SceytMessage.toMessage(): Message {
         mentionedUsers,
         parent?.toMessage(),
         replyInThread,
-        replyCount)
+        replyCount,
+        displayCount)
 }

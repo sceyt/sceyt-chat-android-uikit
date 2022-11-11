@@ -17,11 +17,6 @@ open class BaseViewModel : ViewModel() {
     var hasNextDb: Boolean = false
     var hasNext: Boolean = false
 
-    @Deprecated("loadingItemsDb will remove soon")
-    var loadingItemsDb: AtomicBoolean = AtomicBoolean(false)
-
-    @Deprecated("loadingItems will remove soon")
-    var loadingItems: AtomicBoolean = AtomicBoolean(false)
     var loadingPrevItems: AtomicBoolean = AtomicBoolean(false)
     var loadingPrevItemsDb: AtomicBoolean = AtomicBoolean(false)
     var loadingNextItems: AtomicBoolean = AtomicBoolean(false)
@@ -43,16 +38,6 @@ open class BaseViewModel : ViewModel() {
             loadingNextItemsDb.get().not() && hasNextDb -> true
             loadingNextItems.get() -> false
             loadingNextItems.get().not() && hasNext -> true
-            else -> false
-        }
-    }
-
-    fun canLoadMore(): Boolean {
-        return when {
-            loadingItemsDb.get() -> false
-            loadingItemsDb.get().not() && hasNextDb -> true
-            loadingItems.get() -> false
-            loadingItems.get().not() && hasNext -> true
             else -> false
         }
     }
@@ -81,17 +66,13 @@ open class BaseViewModel : ViewModel() {
 
     protected fun pagingResponseReceived(response: PaginationResponse<*>) {
         when (response) {
-            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-            is PaginationResponse.ServerResponse2 -> initPaginationSeverResponse(response)
-            is PaginationResponse.ServerResponse -> {
-                loadingItems.set(false)
-                hasNext = response.hasNext
-            }
+            is PaginationResponse.DBResponse -> onPaginationDbResponse(response)
+            is PaginationResponse.ServerResponse -> onPaginationSeverResponse(response)
             is PaginationResponse.Nothing -> return
         }
     }
 
-    private fun initPaginationDbResponse(response: PaginationResponse.DBResponse<*>) {
+    private fun onPaginationDbResponse(response: PaginationResponse.DBResponse<*>) {
 
         fun initPrev() {
             loadingPrevItemsDb.set(false)
@@ -113,7 +94,7 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    private fun initPaginationSeverResponse(response: PaginationResponse.ServerResponse2<*>) {
+    private fun onPaginationSeverResponse(response: PaginationResponse.ServerResponse<*>) {
         fun initPrev() {
             loadingPrevItems.set(false)
             if (response.data is SceytResponse.Success)
@@ -139,6 +120,16 @@ open class BaseViewModel : ViewModel() {
                 hasNextDb = false
                 loadingNextItemsDb.set(false)
             }
+        }
+    }
+
+    internal fun checkIgnoreDatabasePagingResponse(response: PaginationResponse.DBResponse<*>): Boolean {
+        if (response.data.isNotEmpty()) return false
+
+        return when (response.loadType) {
+            LoadPrev, LoadNewest -> hasPrev || loadingPrevItems.get()
+            LoadNext -> hasNext || loadingNextItems.get()
+            LoadNear -> (hasPrev || loadingPrevItems.get()) && (hasNext || loadingNextItems.get())
         }
     }
 

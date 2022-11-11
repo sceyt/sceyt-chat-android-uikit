@@ -46,7 +46,7 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
         holder.onViewDetachedFromWindow()
     }
 
-    private fun removeLoading() {
+    fun removeLoading() {
         if (channels.remove(mLoadingItem))
             notifyItemRemoved(channels.lastIndex + 1)
     }

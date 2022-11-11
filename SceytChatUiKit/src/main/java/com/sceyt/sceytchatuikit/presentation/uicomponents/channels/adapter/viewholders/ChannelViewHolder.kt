@@ -23,8 +23,8 @@ import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
@@ -112,6 +112,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         if (message.state == MessageState.Deleted) {
             textView.text = context.getString(R.string.sceyt_message_was_deleted)
             textView.setTypeface(null, Typeface.ITALIC)
+            binding.dateStatus.setStatusIcon(null)
         } else {
             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
                 context.getString(R.string.sceyt_attachment) else message.body

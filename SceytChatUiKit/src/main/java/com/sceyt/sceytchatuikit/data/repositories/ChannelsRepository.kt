@@ -4,11 +4,13 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
+import kotlinx.coroutines.flow.Flow
 
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>>
     suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>>
+    suspend fun getAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>

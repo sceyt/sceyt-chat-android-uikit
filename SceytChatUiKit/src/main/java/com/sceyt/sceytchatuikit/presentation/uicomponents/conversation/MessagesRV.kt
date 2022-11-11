@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
+import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
+import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
+import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ItemOffsetDecoration
@@ -49,7 +52,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         itemAnimator = DefaultItemAnimator().apply {
             addDuration = 0
             removeDuration = 100
-            moveDuration = 100
+            moveDuration = 150
         }
 
         layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
@@ -128,7 +131,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition >= 2 && canScrollVertically(0))
     }
 
-    private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean, isLastItemVisible: Boolean): Boolean {
+    private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean): Boolean {
         var scrollToEnd: Boolean = isMySendMessage
         val lastIndex = mAdapter.itemCount - 1
         if (!isMySendMessage) {
@@ -137,13 +140,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 true
             else last == lastIndex || (lastIndex > 0 && last == lastIndex - addedItemsCount)
         }
-        if (scrollToEnd) {
-            if (isLastItemVisible)
-                (layoutManager as SpeedyLinearLayoutManager).smoothScrollToPositionWithDuration(
-                    this, lastIndex, 200f)
-            else
-                scrollToPosition(lastIndex)
-        }
+        if (scrollToEnd)
+            scrollToPosition(lastIndex)
         return scrollToEnd
     }
 
@@ -194,13 +192,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (::mAdapter.isInitialized.not())
             setData(items.toList())
         else {
-            val isLastItemVisible = isLastItemDisplaying()
             mAdapter.addNewMessages(items.toList())
             var outGoing = true
             items.find { it is MessageListItem.MessageItem }?.let {
                 outGoing = (it as MessageListItem.MessageItem).message.incoming.not()
             }
-            checkScrollToEnd(items.size, outGoing, isLastItemVisible)
+            checkScrollToEnd(items.size, outGoing)
         }
     }
 

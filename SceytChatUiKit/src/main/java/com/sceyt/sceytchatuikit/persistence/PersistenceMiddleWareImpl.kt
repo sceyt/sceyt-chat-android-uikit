@@ -1,7 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence
 
-import com.sceyt.chat.Types
-import com.sceyt.chat.models.Status
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -9,6 +7,7 @@ import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionStateData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -28,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
@@ -56,7 +56,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
 
         // Connection events
-        launch { ConnectionEventsObserver.onChangedConnectStatusFlow.collect(::onChangedConnectStatus) }
+        launch { ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect(::onChangedConnectStatus) }
     }
 
 
@@ -88,19 +88,27 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private suspend fun onMessageReactionUpdated(data: Message?) {
+        data ?: return
         messagesLogic.onMessageReactionUpdated(data)
     }
 
     private suspend fun onMessageEditedOrDeleted(data: Message?) {
+        data ?: return
         messagesLogic.onMessageEditedOrDeleted(data)
+        channelLogic.onMessageEditedOrDeleted(data)
     }
 
-    private fun onChangedConnectStatus(data: Pair<Types.ConnectState, Status?>) {
-        connectionLogic.onChangedConnectStatus(data.first, data.second)
+    private fun onChangedConnectStatus(data: ConnectionStateData) {
+        connectionLogic.onChangedConnectStatus(data)
     }
 
-    override suspend fun loadChannels(offset: Int, searchQuery: String): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.loadChannels(offset, searchQuery)
+    override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: Long,
+                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
+    }
+
+    override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
+        return channelLogic.syncChannels(limit)
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
@@ -205,6 +213,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
                                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(conversationId, replayInThread, loadKey, ignoreDb)
+    }
+
+    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
+                                                    messageId: Long): Flow<SceytResponse<List<SceytMessage>>> {
+        return messagesLogic.syncMessagesAfterMessageId(conversationId, replayInThread, messageId)
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {

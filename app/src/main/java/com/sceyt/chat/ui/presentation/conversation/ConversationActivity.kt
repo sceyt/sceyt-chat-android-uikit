@@ -8,13 +8,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.Types
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
@@ -35,8 +32,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -65,14 +60,6 @@ open class ConversationActivity : AppCompatActivity() {
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
         viewModel.bind(binding.messageInputView, replayMessage, lifecycleOwner = this)
         viewModel.bind(binding.headerView, replayMessage, lifecycleOwner = this)
-
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                if (it.first == Types.ConnectState.StateConnected)
-                    viewModel.sendPendingMessages()
-            }
-        }
     }
 
     private fun ConversationHeaderView.initHeaderView() {
@@ -150,6 +137,11 @@ open class ConversationActivity : AppCompatActivity() {
         channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
         isReplayInThread = intent.getBooleanExtra(REPLAY_IN_THREAD, false)
         replayMessage = intent.getParcelableExtra(REPLAY_IN_THREAD_MESSAGE)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.sendPendingMessages()
     }
 
     companion object {

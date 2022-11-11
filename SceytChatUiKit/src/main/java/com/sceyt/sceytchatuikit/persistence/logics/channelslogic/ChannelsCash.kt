@@ -14,7 +14,7 @@ import java.util.*
 
 class ChannelsCash {
     private var cashedData = hashMapOf<Long, SceytChannel>()
-    private val syncOb = Any()
+    private val lock = Any()
 
     companion object {
         private val channelUpdatedFlow_ = MutableSharedFlow<SceytChannel>(
@@ -22,11 +22,23 @@ class ChannelsCash {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<SceytChannel> = channelUpdatedFlow_
+
+        private val channelDeletedFlow_ = MutableSharedFlow<Long>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelDeletedFlow: SharedFlow<Long> = channelDeletedFlow_
+
+        private val channelAddedFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
     }
 
     /** Added channels like upsert, and check is differences between channels*/
     fun addAll(list: List<SceytChannel>, checkDifference: Boolean): Boolean {
-        synchronized(syncOb) {
+        synchronized(lock) {
             return if (checkDifference)
                 putAndCheckHasDiff(list)
             else {
@@ -37,27 +49,33 @@ class ChannelsCash {
     }
 
     fun add(channel: SceytChannel) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             if (putAndCheckHasDiff(arrayListOf(channel))) {
-                channelUpdated(channel)
+                channelAdded(channel)
             }
         }
     }
 
     fun clear() {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedData.clear()
         }
     }
 
     fun getSorted(): List<SceytChannel> {
-        synchronized(syncOb) {
+        synchronized(lock) {
             return cashedData.values.sortedWith(ChannelsComparatorBy()).map { it.clone() }
         }
     }
 
-    fun updateChannel(vararg channels: SceytChannel) {
-        synchronized(syncOb) {
+    fun get(channelId: Long): SceytChannel? {
+        synchronized(lock) {
+            return cashedData[channelId]
+        }
+    }
+
+    fun upsertChannel(vararg channels: SceytChannel) {
+        synchronized(lock) {
             channels.forEach {
                 if (putAndCheckHasDiff(arrayListOf(it))) {
                     channelUpdated(it)
@@ -66,17 +84,50 @@ class ChannelsCash {
         }
     }
 
-    fun updateLastMessage(channelId: Long, lastMessage: SceytMessage?) {
-        synchronized(syncOb) {
+    fun updateChannel(vararg channels: SceytChannel) {
+        synchronized(lock) {
+            channels.forEach { channel ->
+                cashedData[channel.id]?.let { cashChannel ->
+                    val diff = cashChannel.diff(channel)
+                    cashedData[cashChannel.id] = cashChannel
+                    if (diff.hasDifference())
+                        channelUpdated(channel)
+                }
+            }
+        }
+    }
+
+    fun updateLastMessage(channelId: Long, message: SceytMessage) {
+        synchronized(lock) {
             cashedData[channelId]?.let { channel ->
-                channel.lastMessage = lastMessage
+                channel.lastMessage = message
+                channelUpdated(channel.clone())
+            }
+        }
+    }
+
+    fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+        synchronized(lock) {
+            cashedData[channelId]?.let { channel ->
+                channel.lastMessage = message
+                channel.lastReadMessageId = message.id
+                channelUpdated(channel.clone())
+            }
+        }
+    }
+
+    fun clearedHistory(channelId: Long) {
+        synchronized(lock) {
+            cashedData[channelId]?.let { channel ->
+                channel.lastMessage = null
+                channel.unreadMessageCount = 0
                 channelUpdated(channel.clone())
             }
         }
     }
 
     fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long = 0) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedData[channelId]?.let { channel ->
                 if (muted) {
                     channel.muted = true
@@ -89,7 +140,7 @@ class ChannelsCash {
     }
 
     fun updateChannelSubjectAndAvatarUrl(channelId: Long, newSubject: String?, newUrl: String?) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedData[channelId]?.let { channel ->
                 (channel as? SceytGroupChannel)?.let {
                     channel.subject = newSubject
@@ -102,13 +153,12 @@ class ChannelsCash {
     }
 
     fun addedMembers(channelId: Long, sceytMember: SceytMember) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedData[channelId]?.let { channel ->
                 (channel as? SceytGroupChannel)?.let {
                     it.members = it.members.toArrayList().apply {
                         add(sceytMember)
                     }
-
                     channelUpdated(channel)
                 }
             }
@@ -116,7 +166,7 @@ class ChannelsCash {
     }
 
     fun updateUnreadCount(channelId: Long, count: Int) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedData[channelId]?.let { channel ->
                 channel.unreadMessageCount = count.toLong()
                 channel.markedUsUnread = false
@@ -126,13 +176,18 @@ class ChannelsCash {
     }
 
     fun deleteChannel(id: Long) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedData.remove(id)
+            channelDeletedFlow_.tryEmit(id)
         }
     }
 
     private fun channelUpdated(channel: SceytChannel) {
         channelUpdatedFlow_.tryEmit(channel.clone())
+    }
+
+    private fun channelAdded(channel: SceytChannel) {
+        channelAddedFlow_.tryEmit(channel.clone())
     }
 
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {
