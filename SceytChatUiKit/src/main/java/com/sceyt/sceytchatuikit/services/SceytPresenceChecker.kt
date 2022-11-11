@@ -22,7 +22,7 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onPresenceCheckUsersFlow = onPresenceCheckUsersFlow_.asSharedFlow()
 
-    private const val presenceCheckCapacity = 8
+    private const val presenceCheckCapacity = 12
     private var workJob: Job? = null
     private var presenceCheckTimer: Timer? = null
     private val presenceCheckUsers = Collections.synchronizedMap(object : LinkedHashMap<String, User>(presenceCheckCapacity) {

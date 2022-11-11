@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelFilesBinding
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -32,7 +33,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
     private var binding: FragmentChannelFilesBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
-    private val mediaType = "file"
+    private val mediaType = AttachmentTypeEnum.File.value()
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -78,7 +79,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasPrev)
+                    if (isLastItemDisplaying() && viewModel.canLoadNext())
                         loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.sceytMessage?.id ?: 0)
                 }
             })

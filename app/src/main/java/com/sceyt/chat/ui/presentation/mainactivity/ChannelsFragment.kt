@@ -29,6 +29,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.bind
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 
@@ -75,8 +76,8 @@ class ChannelsFragment : Fragment() {
         setupConnectionStatus(ConnectionEventsObserver.connectionState)
 
         lifecycleScope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                setupConnectionStatus(it.first)
+            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect {
+                setupConnectionStatus(it.state)
             }
         }
 

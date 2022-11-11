@@ -26,17 +26,17 @@ open class MessageViewHolderFactory(context: Context) {
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return when (viewType) {
-            MessageTypeEnum.IncText.ordinal -> createIncTextMsgViewHolder(parent)
-            MessageTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(parent)
-            MessageTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(parent)
-            MessageTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
-            MessageTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
-            MessageTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
-            MessageTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
-            MessageTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
-            MessageTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
-            MessageTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
-            MessageTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
+            MessageViewTypeEnum.IncText.ordinal -> createIncTextMsgViewHolder(parent)
+            MessageViewTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(parent)
+            MessageViewTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(parent)
+            MessageViewTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
+            MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
+            MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
+            MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
+            MessageViewTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
+            MessageViewTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
+            MessageViewTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
+            MessageViewTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
     }
@@ -80,7 +80,7 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncDeletedMsgViewHolder(
             SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
-            userNameBuilder)
+            userNameBuilder, displayedListener)
     }
 
     open fun createOutDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -109,24 +109,24 @@ open class MessageViewHolderFactory(context: Context) {
     open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
             is MessageListItem.MessageItem -> getMessageType(item.message)
-            is MessageListItem.DateSeparatorItem -> MessageTypeEnum.DateSeparator.ordinal
-            is MessageListItem.UnreadMessagesSeparatorItem -> MessageTypeEnum.UnreadMessagesSeparator.ordinal
-            is MessageListItem.LoadingPrevItem -> MessageTypeEnum.Loading.ordinal
-            is MessageListItem.LoadingNextItem -> MessageTypeEnum.Loading.ordinal
+            is MessageListItem.DateSeparatorItem -> MessageViewTypeEnum.DateSeparator.ordinal
+            is MessageListItem.UnreadMessagesSeparatorItem -> MessageViewTypeEnum.UnreadMessagesSeparator.ordinal
+            is MessageListItem.LoadingPrevItem -> MessageViewTypeEnum.Loading.ordinal
+            is MessageListItem.LoadingNextItem -> MessageViewTypeEnum.Loading.ordinal
         }
     }
 
     open fun getMessageType(message: SceytMessage): Int {
         val inc = message.incoming
         val type = when {
-            message.state == MessageState.Deleted -> if (inc) MessageTypeEnum.IncDeleted else MessageTypeEnum.OutDeleted
+            message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             message.attachments.isNullOrEmpty() -> {
                 if (message.body.isLink())
-                    if (inc) MessageTypeEnum.IncLink else MessageTypeEnum.OutLink
+                    if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                 else
-                    if (inc) MessageTypeEnum.IncText else MessageTypeEnum.OutText
+                    if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
             }
-            else -> if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
+            else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
         }
         return type.ordinal
     }
@@ -147,7 +147,7 @@ open class MessageViewHolderFactory(context: Context) {
 
     protected fun getDisplayedListener() = displayedListener
 
-    enum class MessageTypeEnum {
+    enum class MessageViewTypeEnum {
         IncText,
         OutText,
         IncLink,

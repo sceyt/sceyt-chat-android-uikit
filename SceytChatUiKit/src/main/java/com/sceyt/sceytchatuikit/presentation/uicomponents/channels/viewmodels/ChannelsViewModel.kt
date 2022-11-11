@@ -5,26 +5,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
@@ -35,123 +31,71 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     internal var searchQuery = ""
 
-    private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<ChannelListItem>>(PaginationResponse.Nothing())
-    val loadChannelsFlow: StateFlow<PaginationResponse<ChannelListItem>> = _loadChannelsFlow
-
-    private val _markAsReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val markAsReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsReadLiveData
-
-    private val _markAsUnReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val markAsUnReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsUnReadLiveData
-
-    private val _blockChannelLiveData = MutableLiveData<SceytResponse<Long>>()
-    val blockChannelLiveData: LiveData<SceytResponse<Long>> = _blockChannelLiveData
-
-    private val _clearHistoryLiveData = MutableLiveData<SceytResponse<Long>>()
-    val clearHistoryLiveData: LiveData<SceytResponse<Long>> = _clearHistoryLiveData
-
-    private val _deleteChannelLiveData = MutableLiveData<SceytResponse<Long>>()
-    val deleteChannelLiveData: LiveData<SceytResponse<Long>> = _deleteChannelLiveData
-
-    private val _leaveChannelLiveData = MutableLiveData<SceytResponse<Long>>()
-    val leaveChannelLiveData: LiveData<SceytResponse<Long>> = _leaveChannelLiveData
+    private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
+    val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
 
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
-    private val _muteUnMuteLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val muteUnMuteLiveData: LiveData<SceytResponse<SceytChannel>> = _muteUnMuteLiveData
-
-    val onNewMessageFlow: Flow<Pair<SceytChannel, SceytMessage>>
-    val onOutGoingMessageFlow: Flow<SceytMessage>
-    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
-    val onMessageStatusFlow: Flow<MessageStatusChangeData>
-    val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
-    val onChannelEventFlow: Flow<ChannelEventData>
-
-    init {
-        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
-
-        onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
-
-        onNewMessageFlow = MessageEventsObserver.onMessageFlow.filter {
-            !it.second.replyInThread
-        }
-
-        onOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow.filter {
-            !it.replyInThread
-        }
-
-        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
-
-        onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
-            .filterNotNull()
-            .map { it.toSceytUiMessage() }
-    }
-
-
-    fun getChannels(offset: Int, query: String = searchQuery) {
+    fun getChannels(offset: Int, query: String = searchQuery, loadKey: Long = 0) {
         searchQuery = query
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.loadChannels(offset, query).collect {
-                initResponse(it)
+            channelMiddleWare.loadChannels(offset, query, loadKey, false).collect {
+                initPaginationResponse(it)
             }
         }
     }
 
-    private fun initResponse(it: PaginationResponse<SceytChannel>) {
-        when (it) {
+    private fun initPaginationResponse(response: PaginationResponse<SceytChannel>) {
+        when (response) {
             is PaginationResponse.DBResponse -> {
-                if (it.data.isNotEmpty()) {
-                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), 0, it.offset)
-                    notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty(), searchQuery)
+                if (!checkIgnoreDatabasePagingResponse(response)) {
+                    _loadChannelsFlow.value = response
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                if (it.data is SceytResponse.Success) {
-                    _loadChannelsFlow.value = PaginationResponse.ServerResponse(
-                        SceytResponse.Success(mapToChannelItem(it.data.data, it.hasNext)), offset = it.offset, dbData = arrayListOf())
-                }
-                notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty(), searchQuery)
+                _loadChannelsFlow.value = response
+                notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
             }
-            is PaginationResponse.Nothing -> return
-            is PaginationResponse.ServerResponse2 -> TODO()
+            else -> return
         }
-
-        pagingResponseReceived(it)
+        pagingResponseReceived(response)
     }
 
-    private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
-        if (data.isNullOrEmpty()) return arrayListOf()
 
-        val channelItems: List<ChannelListItem> = data.map { item -> ChannelListItem.ChannelItem(item) }
-        if (hasNext)
-            (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+    internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
+        if (data.isNullOrEmpty()) return arrayListOf()
+        val channelItems: List<ChannelListItem>
+
+        withContext(Dispatchers.Default) {
+            channelItems = data.map { item -> ChannelListItem.ChannelItem(item) }
+
+            if (hasNext)
+                (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+        }
         return channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsRead(channelId)
-            _markAsReadLiveData.postValue(response)
+            channelMiddleWare.markChannelAsRead(channelId)
         }
     }
 
     fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsUnRead(channelId)
-            _markAsUnReadLiveData.postValue(response)
+            channelMiddleWare.markChannelAsUnRead(channelId)
         }
     }
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.blockAndLeaveChannel(channelId)
-            _blockChannelLiveData.postValue(response)
+            channelMiddleWare.blockAndLeaveChannel(channelId)
         }
     }
 
@@ -171,36 +115,31 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun clearHistory(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.clearHistory(channelId)
-            _clearHistoryLiveData.postValue(response)
+            channelMiddleWare.clearHistory(channelId)
         }
     }
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.deleteChannel(channelId)
-            _deleteChannelLiveData.postValue(response)
+            channelMiddleWare.deleteChannel(channelId)
         }
     }
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.leaveChannel(channelId)
-            _leaveChannelLiveData.postValue(response)
+            channelMiddleWare.leaveChannel(channelId)
         }
     }
 
     fun muteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.muteChannel(channelId, 0)
-            _muteUnMuteLiveData.postValue(response)
+            channelMiddleWare.muteChannel(channelId, 0)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.unMuteChannel(channelId)
-            _muteUnMuteLiveData.postValue(response)
+            channelMiddleWare.unMuteChannel(channelId)
         }
     }
 

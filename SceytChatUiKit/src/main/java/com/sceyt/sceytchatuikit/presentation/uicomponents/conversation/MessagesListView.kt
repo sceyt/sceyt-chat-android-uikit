@@ -18,10 +18,12 @@ import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
@@ -194,6 +196,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
+        (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(message, diff)
+                ?: run {
+                    messagesRV.adapter?.notifyItemChanged(index, diff)
+                }
+    }
+
     internal fun getFirstMessage() = messagesRV.getFirstMsg()
 
     internal fun getLastMessage() = messagesRV.getLastMsg()
@@ -221,8 +230,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
                 item.message.updateMessage(message)
-
-                messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                updateItem(index, item, oldMessage.diff(item.message))
                 break
             }
         }
@@ -253,9 +261,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             message.updateMessage(updateMessage)
             if (message.state == MessageState.Deleted)
                 messagesRV.adapter?.notifyItemChanged(it.first)
-            else {
-                messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
-            }
+            else
+                updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
@@ -267,7 +274,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             message.lastReactions = data.lastReactions
             message.selfReactions = data.selfReactions
             message.messageReactions = data.messageReactions
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
@@ -284,7 +291,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     if (item.message.id == id) {
                         if (item.message.deliveryStatus < status)
                             item.message.deliveryStatus = status
-                        messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                        updateItem(index, item, oldMessage.diff(item.message))
                         break
                     }
                 }
@@ -297,7 +304,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.deliveryStatus = DeliveryStatus.Failed
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
@@ -308,7 +315,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.replyCount++
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
@@ -319,7 +326,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.replyCount++
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
@@ -405,6 +412,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun getMessagesRecyclerView() = messagesRV
+
+    fun isLastItemDisplaying() = messagesRV.isLastItemDisplaying()
 
     // Click listeners
     fun setMessageClickListener(listener: MessageClickListeners) {

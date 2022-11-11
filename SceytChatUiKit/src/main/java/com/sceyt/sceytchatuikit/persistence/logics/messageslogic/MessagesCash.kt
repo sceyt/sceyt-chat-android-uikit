@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.SharedFlow
 
 class MessagesCash {
     private var cashedMessages = hashMapOf<Long, SceytMessage>()
-    private val syncOb = Any()
+    private val lock = Any()
 
     companion object {
         private val messageUpdatedFlow_ = MutableSharedFlow<List<SceytMessage>>(
@@ -22,7 +22,7 @@ class MessagesCash {
 
     /** Added messages like upsert, and check is differences between messages*/
     fun addAll(list: List<SceytMessage>, checkDifference: Boolean): Boolean {
-        synchronized(syncOb) {
+        synchronized(lock) {
             return if (checkDifference)
                 putAndCheckHasDiff(list)
             else {
@@ -33,26 +33,26 @@ class MessagesCash {
     }
 
     fun add(message: SceytMessage) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedMessages[message.tid] = message
             emitMessageUpdated(message)
         }
     }
 
     fun clear() {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedMessages.clear()
         }
     }
 
     fun getSorted(): List<SceytMessage> {
-        synchronized(syncOb) {
+        synchronized(lock) {
             return cashedMessages.values.sortedWith(MessageComparator()).map { it.clone() }
         }
     }
 
     fun messageUpdated(vararg message: SceytMessage) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             message.forEach {
                 cashedMessages[it.tid] = it
             }
@@ -61,7 +61,7 @@ class MessagesCash {
     }
 
     fun updateMessagesStatus(status: DeliveryStatus, vararg tIds: Long) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             tIds.forEach {
                 cashedMessages[it]?.let { message ->
                     message.deliveryStatus = status
@@ -72,7 +72,7 @@ class MessagesCash {
     }
 
     fun deleteMessage(tid: Long) {
-        synchronized(syncOb) {
+        synchronized(lock) {
             cashedMessages.remove(tid)
         }
     }

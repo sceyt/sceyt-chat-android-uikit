@@ -95,7 +95,7 @@ class AddMembersActivity : AppCompatActivity() {
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasPrev)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
                         viewModel.loadUsers(binding.toolbar.getQuery(), true)
                 }
             })
