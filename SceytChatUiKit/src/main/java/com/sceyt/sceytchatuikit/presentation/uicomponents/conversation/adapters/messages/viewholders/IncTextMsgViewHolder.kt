@@ -5,12 +5,11 @@ import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.databinding.SceytItemIncTextMessageBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.databinding.SceytItemIncTextMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.INC_DEFAULT_SPACE
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.INC_EDITED_SPACE
@@ -19,7 +18,7 @@ class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl?,
-        displayedListener: ((SceytMessage) -> Unit)?,
+        displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?
 ) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
 

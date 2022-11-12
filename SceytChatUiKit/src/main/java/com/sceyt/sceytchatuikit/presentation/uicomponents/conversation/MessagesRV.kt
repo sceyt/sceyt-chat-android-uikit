@@ -8,7 +8,6 @@ import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
@@ -221,7 +220,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         viewHolderFactory.setMessageListener(listener)
     }
 
-    fun setMessageDisplayedListener(listener: (message: SceytMessage) -> Unit) {
+    fun setMessageDisplayedListener(listener: (message: MessageListItem) -> Unit) {
         viewHolderFactory.setMessageDisplayedListener(listener)
     }
 
