@@ -5,7 +5,6 @@ import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -19,7 +18,7 @@ class IncLinkMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListenersImpl?,
-        displayedListener: ((SceytMessage) -> Unit)?,
+        displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
 ) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, senderNameBuilder) {
 

@@ -27,7 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
@@ -56,7 +56,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
 
         // Connection events
-        launch { ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect(::onChangedConnectStatus) }
+        launch { ConnectionEventsObserver.onChangedConnectStatusFlow.collect(::onChangedConnectStatus) }
     }
 
 
@@ -232,12 +232,20 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.sendAllPendingMessages()
     }
 
+    override suspend fun sendAllPendingMarkers() {
+        return messagesLogic.sendAllPendingMarkers()
+    }
+
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         return messagesLogic.deleteMessage(channelId, message, onlyForMe)
     }
 
     override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
         return messagesLogic.markMessagesAsRead(channelId, *ids)
+    }
+
+    override suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+        return messagesLogic.markMessageAsDelivered(channelId, *ids)
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
@@ -251,6 +259,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
         return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
     }
+
+    override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
 
     override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
         return usersLogic.getSceytUsers(ids)

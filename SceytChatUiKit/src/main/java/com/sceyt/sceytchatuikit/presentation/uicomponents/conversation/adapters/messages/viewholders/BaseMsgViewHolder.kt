@@ -21,7 +21,6 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -47,7 +46,7 @@ import kotlin.math.min
 
 abstract class BaseMsgViewHolder(view: View,
                                  private val messageListeners: MessageClickListenersImpl? = null,
-                                 private val displayedListener: ((SceytMessage) -> Unit)? = null,
+                                 private val displayedListener: ((MessageListItem) -> Unit)? = null,
                                  private val senderNameBuilder: ((User) -> String)? = null)
     : RecyclerView.ViewHolder(view) {
 
@@ -75,12 +74,8 @@ abstract class BaseMsgViewHolder(view: View,
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-        if (messageListItem is MessageListItem.MessageItem) {
-
-            val message = (messageListItem as MessageListItem.MessageItem).message
-            if (message.incoming && message.selfMarkers?.contains(SelfMarkerTypeEnum.Displayed.toString()) != true)
-                displayedListener?.invoke(message)
-        }
+        if (::messageListItem.isInitialized)
+            displayedListener?.invoke(messageListItem)
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null
@@ -115,7 +110,7 @@ abstract class BaseMsgViewHolder(view: View,
             SceytRecyclerReplayContainerBinding.bind(viewStub.inflate()).also {
                 replayMessageContainerBinding = it
                 it.tvName.setTextColor(context.getCompatColor(MessagesStyle.senderNameTextColor))
-                it.view.backgroundTintList= ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replayMessageLineColor))
+                it.view.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replayMessageLineColor))
             }
         with(replayMessageContainerBinding ?: return) {
             val parent = message.parent

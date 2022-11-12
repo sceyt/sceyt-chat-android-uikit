@@ -21,7 +21,7 @@ class IncFilesMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl?,
-        displayedListener: ((SceytMessage) -> Unit)?,
+        displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
 ) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
 

@@ -77,7 +77,7 @@ object SceytKitClient : SceytKoinComponent {
 
     private fun setListener() {
         scope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect {
+            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                 val connectStatus = it.state
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     notifyState(true, null)
@@ -86,6 +86,7 @@ object SceytKitClient : SceytKoinComponent {
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {
                     }
+                    persistenceMessagesMiddleWare.sendAllPendingMarkers()
                     syncManager.startSync()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
                 } else if (connectStatus == Types.ConnectState.StateFailed) {

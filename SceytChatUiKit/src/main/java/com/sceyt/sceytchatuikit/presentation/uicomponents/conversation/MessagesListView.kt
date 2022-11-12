@@ -330,7 +330,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
+    internal fun setMessageDisplayedListener(listener: (MessageListItem) -> Unit) {
         messagesRV.setMessageDisplayedListener(listener)
     }
 
@@ -410,6 +410,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
         }
     }
+
+    fun getData() = messagesRV.getData()
 
     fun getMessagesRecyclerView() = messagesRV
 

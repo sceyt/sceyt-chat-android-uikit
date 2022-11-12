@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 @Dao
@@ -69,7 +70,7 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
+    open suspend fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
         val rowIds = insertMany(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
@@ -136,7 +137,7 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where message_id =:id")
-    abstract fun getMessageById(id: Long): MessageDb?
+    abstract suspend fun getMessageById(id: Long): MessageDb?
 
     @Transaction
     @Query("select * from messages where message_id in(:ids)")
@@ -173,21 +174,12 @@ abstract class MessageDao {
     @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerCount>?)
 
-    open suspend fun updateMessageSelfMarkersAndMarkerCount(channelId: Long, messageId: Long, marker: String) {
+    @Transaction
+    open suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, marker: String) {
         getMessageById(messageId)?.let { messageDb ->
-            val markers: ArrayList<String> = ArrayList(messageDb.messageEntity.selfMarkers
-                    ?: arrayListOf())
-            markers.add(marker)
-            updateMessageSelfMarkers(channelId, messageId, markers.toSet().toList())
-
-            //todo
-            /* messageDb.messageEntity.markerCount?.findIndexed { count -> count.key == marker }?.let {
-                 val newCount = ArrayList(messageDb.messageEntity.markerCount!!)
-                 val markerCount = it.second
-                 val newMarkerCount = MarkerCount(markerCount.key, markerCount.count + 1)
-                 newCount[it.first] = newMarkerCount
-                 updateMessageMarkersCount(channelId, messageId, newCount)
-             }*/
+            val selfMarkers = messageDb.messageEntity.selfMarkers?.toArrayList()
+            selfMarkers?.add(marker)
+            updateMessageSelfMarkers(channelId, messageId, selfMarkers?.toSet()?.toList())
         }
     }
 
