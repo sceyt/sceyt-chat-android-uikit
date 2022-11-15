@@ -66,8 +66,9 @@ interface ChannelDao {
     @Query("update channels set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt where chat_id= :channelId")
     suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
 
-    @Query("update channels set lastMessageAt =:lastMessageAt, lastReadMessageId =:lastMessageId where chat_id= :channelId")
-    fun updateLastMessageWithLastRead(channelId: Long, lastMessageId: Long?, lastMessageAt: Long?)
+    @Query("update channels set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
+            "lastReadMessageId =:lastMessageId where chat_id= :channelId")
+    suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
 
     @Query("update channels set unreadMessageCount =:count, markedUsUnread = 0 where chat_id= :channelId")
     suspend fun updateUnreadCount(channelId: Long, count: Int)

@@ -13,7 +13,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 abstract class MessageDao {
 
     @Transaction
-    open fun insertMessage(messageDb: MessageDb) {
+    open suspend fun insertMessage(messageDb: MessageDb) {
         upsertMessageEntity(messageDb.messageEntity)
 
         //Delete attachments before insert
@@ -62,7 +62,7 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open fun upsertMessageEntity(messageEntity: MessageEntity) {
+    open suspend fun upsertMessageEntity(messageEntity: MessageEntity) {
         val rowId = insert(messageEntity)
         if (rowId == -1L) {
             updateMessage(messageEntity)
@@ -79,22 +79,22 @@ abstract class MessageDao {
     }
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    protected abstract fun insert(messages: MessageEntity): Long
+    protected abstract suspend fun insert(messages: MessageEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    protected abstract fun insertMany(messages: List<MessageEntity>): List<Long>
+    protected abstract suspend fun insertMany(messages: List<MessageEntity>): List<Long>
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun updateMessage(messageEntity: MessageEntity)
+    abstract suspend fun updateMessage(messageEntity: MessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertAttachments(attachments: List<AttachmentEntity>)
+    abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertReactions(reactions: List<ReactionEntity>)
+    abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
+    abstract suspend fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
@@ -141,11 +141,11 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where message_id in(:ids)")
-    abstract fun getMessageByIds(ids: List<Long>): List<MessageDb>
+    abstract suspend fun getMessageByIds(ids: List<Long>): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where tid =:tid")
-    abstract fun getMessageByTid(tid: Long): MessageDb?
+    abstract suspend fun getMessageByTid(tid: Long): MessageDb?
 
     @Query("select tid from  messages where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
@@ -157,13 +157,13 @@ abstract class MessageDao {
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long, status: DeliveryStatus): Int
 
     @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
-    abstract fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
+    abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
     @Query("update messages set state =:state, body=:body where message_id =:messageId")
-    abstract fun updateMessageStateAndBody(messageId: Long, state: MessageState, body: String)
+    abstract suspend fun updateMessageStateAndBody(messageId: Long, state: MessageState, body: String)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId")
-    abstract fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
+    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
@@ -187,21 +187,20 @@ abstract class MessageDao {
     abstract fun deleteMessageByTid(tid: Long)
 
     @Query("delete from messages where channelId =:channelId")
-    abstract fun deleteAllMessages(channelId: Long)
+    abstract suspend fun deleteAllMessages(channelId: Long)
 
     @Transaction
-    open fun deleteAttachments(messageTides: List<Long>) {
+    open suspend fun deleteAttachments(messageTides: List<Long>) {
         messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsChunked)
     }
 
     @Transaction
-    open fun deleteMessageReactionsAndScores(messageIdes: List<Long>) {
+    open suspend fun deleteMessageReactionsAndScores(messageIdes: List<Long>) {
         messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
     }
 
     @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
     abstract fun deleteAttachmentsChunked(messageTides: List<Long>)
-
 
     @Transaction
     open fun deleteAllReactionsAndScores(messageIds: List<Long>) {

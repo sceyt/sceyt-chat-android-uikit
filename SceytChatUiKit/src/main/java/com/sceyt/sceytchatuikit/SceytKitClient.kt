@@ -19,7 +19,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -87,8 +86,8 @@ object SceytKitClient : SceytKoinComponent {
                         SceytKitConfig.presenceStatusText else status) {
                     }
                     persistenceMessagesMiddleWare.sendAllPendingMarkers()
-                    syncManager.startSync()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
+                    syncManager.startSync()
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
                     notifyState(false, it.status?.error?.message)
                 } else if (connectStatus == Types.ConnectState.StateDisconnect) {

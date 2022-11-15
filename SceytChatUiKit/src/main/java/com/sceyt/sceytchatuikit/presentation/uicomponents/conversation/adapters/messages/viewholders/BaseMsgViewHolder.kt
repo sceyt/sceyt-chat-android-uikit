@@ -25,7 +25,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplayContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
+import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplayLineView
@@ -98,7 +98,7 @@ abstract class BaseMsgViewHolder(view: View,
     protected fun setMessageStatusAndDateText(message: SceytMessage, messageDate: SceytDateStatusView) {
         val isEdited = message.state == MessageState.Edited
         val dateText = getDateTimeString(message.createdAt)
-        message.setMessageDateAndStatusIcon(messageDate, dateText, isEdited)
+        message.setConversationMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
     protected fun setReplayedMessageContainer(message: SceytMessage, viewStub: ViewStub) {

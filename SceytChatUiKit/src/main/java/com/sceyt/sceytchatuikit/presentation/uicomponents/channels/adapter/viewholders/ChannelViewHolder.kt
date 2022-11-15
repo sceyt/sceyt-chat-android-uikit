@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
-import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
+import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
@@ -160,7 +160,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setLastMessageStatus(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
-        channel.lastMessage.setMessageDateAndStatusIcon(dateStatusView, getDateTxt(channel), false)
+        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, getDateTxt(channel), false)
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
