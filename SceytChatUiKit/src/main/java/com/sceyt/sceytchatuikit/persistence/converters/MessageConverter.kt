@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
 
 class MessageConverter {
@@ -20,6 +21,12 @@ class MessageConverter {
 
     @TypeConverter
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
+
+    @TypeConverter
+    fun selfMarkerTypeEnumToTnt(value: SelfMarkerTypeEnum) = value.ordinal
+
+    @TypeConverter
+    fun intToSelfMarkerTypeEnum(value: Int) = value.toEnum<SelfMarkerTypeEnum>()
 
     @TypeConverter
     fun stringToMarkerCount(json: String?): List<MarkerCount>? {

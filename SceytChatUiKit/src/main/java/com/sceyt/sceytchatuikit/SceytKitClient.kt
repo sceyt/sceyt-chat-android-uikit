@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +19,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -26,6 +26,7 @@ object SceytKitClient : SceytKoinComponent {
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
+    private val channelsCash: ChannelsCash by inject()
     private val scope by lazy { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
     private val persistenceChannelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
@@ -35,12 +36,12 @@ object SceytKitClient : SceytKoinComponent {
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenExpired = onTokenExpired_.asSharedFlow()
 
     private val onTokenWillExpire_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
 
@@ -75,9 +76,7 @@ object SceytKitClient : SceytKoinComponent {
 
     private fun setListener() {
         scope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged { old, new ->
-                return@distinctUntilChanged old.state == new.state
-            }.collect {
+            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                 val connectStatus = it.state
                 if (connectStatus == Types.ConnectState.StateConnected) {
                     notifyState(true, null)
@@ -86,8 +85,9 @@ object SceytKitClient : SceytKoinComponent {
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {
                     }
-                    syncManager.startSync()
+                    persistenceMessagesMiddleWare.sendAllPendingMarkers()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
+                    syncManager.startSync()
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
                     notifyState(false, it.status?.error?.message)
                 } else if (connectStatus == Types.ConnectState.StateDisconnect) {
@@ -136,5 +136,6 @@ object SceytKitClient : SceytKoinComponent {
     fun clearData() {
         database.clearAllTables()
         preferences.clear()
+        channelsCash.clear()
     }
 }

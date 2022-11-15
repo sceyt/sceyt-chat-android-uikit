@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
@@ -36,7 +37,8 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
-    if (channel.lastReadMessageId == 0L || channel.lastReadMessageId == channel.lastMessage?.id)
+    if (channel.lastReadMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
+            || channel.lastReadMessageId == channel.lastMessage?.id)
         loadPrevMessages(0, 0)
     else {
         pinnedLastReadMessageId = channel.lastReadMessageId
@@ -183,6 +185,23 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
+    markAsReadLiveData.observe(lifecycleOwner, Observer {
+        if (it is SceytResponse.Success) {
+            val data = it.data ?: return@Observer
+            viewModelScope.launch(Dispatchers.Default) {
+                messagesListView.getData()?.forEach { listItem ->
+                    (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
+                        if (data.messageIds.contains(message.id)) {
+                            message.selfMarkers = message.selfMarkers?.toMutableSet()?.apply {
+                                add(SelfMarkerTypeEnum.Displayed.value())
+                            }?.toTypedArray()
+                        }
+                    }
+                }
+            }
+        }
+    })
+
     messageEditedDeletedLiveData.observe(lifecycleOwner, Observer {
         when (it) {
             is SceytResponse.Success -> {
@@ -229,14 +248,19 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel(myId))
     })
 
-    fun checkStateAndMarkAsRead(message: SceytMessage) {
-        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-            pendingDisplayMsgIds.add(message.id)
-            sendDisplayedHelper.submit {
-                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
-                pendingDisplayMsgIds.clear()
-            }
-        } else pendingDisplayMsgIds.add(message.id)
+    fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
+        (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
+            if (!message.incoming || message.selfMarkers?.contains(SelfMarkerTypeEnum.Displayed.value()) == true)
+                return
+
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                pendingDisplayMsgIds.add(message.id)
+                sendDisplayedHelper.submit {
+                    markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                    pendingDisplayMsgIds.clear()
+                }
+            } else pendingDisplayMsgIds.add(message.id)
+        }
     }
 
     lifecycleOwner.lifecycleScope.launch {
@@ -430,7 +454,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
         override fun sendReplayMessage(message: Message, parent: Message?) {
             messageInputView.cancelReplay {
-                this@bind.sendReplayMessage(message, parent)
+                this@bind.sendMessage(message, parent)
             }
         }
 

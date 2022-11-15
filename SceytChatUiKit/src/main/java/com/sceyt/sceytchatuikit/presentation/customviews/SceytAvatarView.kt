@@ -94,7 +94,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
                 .override(width)
                 .transition(DrawableTransitionOptions.withCrossFade(100))
                 .error(R.drawable.sceyt_bg_circle_gray)
-                .placeholder(drawable ?: context.getCompatDrawable(R.drawable.sceyt_bg_circle_gray))
+                .placeholder(context.getCompatDrawable(R.drawable.sceyt_bg_circle_gray))
                 .listener(com.sceyt.sceytchatuikit.extensions.glideRequestListener {
                     avatarLoadCb?.invoke(false)
                 })
