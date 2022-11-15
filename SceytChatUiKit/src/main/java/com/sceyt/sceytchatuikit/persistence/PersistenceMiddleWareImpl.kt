@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -220,8 +221,12 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replayInThread, messageId)
     }
 
-    override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
-        return messagesLogic.sendMessage(channelId, message, tmpMessageCb)
+    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {
+        return messagesLogic.sendMessageAsFlow(channelId, message)
+    }
+
+    override suspend fun sendMessage(channelId: Long, message: Message) {
+        return messagesLogic.sendMessage(channelId, message)
     }
 
     override suspend fun sendPendingMessages(channelId: Long) {

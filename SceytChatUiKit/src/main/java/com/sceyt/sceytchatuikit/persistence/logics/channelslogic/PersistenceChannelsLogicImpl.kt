@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
@@ -445,9 +446,14 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
-        channelDao.updateLastMessageWithLastRead(channelId, message.id, message.createdAt)
-        channelsCash.updateLastMessageWithLastRead(channelId, message)
+    override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+        if (message.deliveryStatus == DeliveryStatus.Pending) {
+            channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
+            channelsCash.updateLastMessage(channelId, message)
+        } else {
+            channelDao.updateLastMessageWithLastRead(channelId, message.tid, message.id, message.createdAt)
+            channelsCash.updateLastMessageWithLastRead(channelId, message)
+        }
     }
 
     override suspend fun setUnreadCount(channelId: Long, count: Int) {

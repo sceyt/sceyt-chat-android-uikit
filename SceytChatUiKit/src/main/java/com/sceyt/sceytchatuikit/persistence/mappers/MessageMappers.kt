@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
@@ -27,7 +28,7 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     fromId = from?.id,
     markerCount = markerCount?.toList(),
     selfMarkers = selfMarkers?.toList(),
-    parentId = parent?.id,
+    parentId = if (parent?.id == 0L) null else parent?.id,
     replyInThread = replyInThread,
     replyCount = replyCount,
     displayCount = displayCount
@@ -58,7 +59,7 @@ fun Message.toMessageEntity() = MessageEntity(
     fromId = from?.id,
     markerCount = markerCount?.toList(),
     selfMarkers = selfMarkers?.toList(),
-    parentId = parent?.id,
+    parentId = if (parent?.id == 0L) null else parent?.id,
     replyInThread = replyInThread,
     replyCount = replyCount,
     displayCount = displayCount.toShort()
@@ -77,12 +78,12 @@ fun SceytMessage.toMessageDb(): MessageDb {
     )
 }
 
-fun Message.toMessageDb(): MessageDb {
+fun SceytMessage.toMessageDbWithAttachments(attachments: Array<Attachment>?): MessageDb {
     val tid = getTid(id, tid, incoming)
     return MessageDb(
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
-        parent = parent?.toSceytUiMessage()?.toParentMessageEntity(),
+        parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
@@ -214,7 +215,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         deliveryStatus = deliveryStatus,
         state = state,
         from = from,
-        attachments = attachments.map { it.toSceytAttachment() }.toTypedArray(),
+        attachments = attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
         lastReactions = lastReactions,
         selfReactions = selfReactions,
         reactionScores = reactionScores,

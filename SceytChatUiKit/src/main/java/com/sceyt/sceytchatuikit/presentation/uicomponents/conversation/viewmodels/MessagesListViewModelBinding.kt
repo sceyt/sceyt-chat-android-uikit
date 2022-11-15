@@ -37,7 +37,8 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
-    if (channel.lastReadMessageId == 0L || channel.lastReadMessageId == channel.lastMessage?.id)
+    if (channel.lastReadMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
+            || channel.lastReadMessageId == channel.lastMessage?.id)
         loadPrevMessages(0, 0)
     else {
         pinnedLastReadMessageId = channel.lastReadMessageId
@@ -453,7 +454,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
         override fun sendReplayMessage(message: Message, parent: Message?) {
             messageInputView.cancelReplay {
-                this@bind.sendReplayMessage(message, parent)
+                this@bind.sendMessage(message, parent)
             }
         }
 

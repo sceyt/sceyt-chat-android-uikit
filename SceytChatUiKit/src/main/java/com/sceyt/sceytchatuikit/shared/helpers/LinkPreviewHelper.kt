@@ -32,12 +32,12 @@ class LinkPreviewHelper {
                    successListener: PreviewCallback.Success? = null,
                    errorListener: PreviewCallback.Error? = null) {
 
-        val url = URLUtil.guessUrl(link)
+        val url = URLUtil.guessUrl(link).replace("http://", "https://")
         scope.launch(Dispatchers.IO) {
             val doc: Document
             val previewMetaData = PreviewMetaData(messageId = loadId)
             try {
-                doc = Jsoup.connect(URLUtil.guessUrl(url))
+                doc = Jsoup.connect(url)
                     .timeout(10 * 1000)
                     .get()
 

@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
@@ -273,29 +274,24 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun sendMessage(message: Message) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
-                val outMessage = tmpMessage.toSceytUiMessage(isGroup)
-                _onNewOutgoingMessageLiveData.postValue(outMessage)
-            }
-            if (response is SceytResponse.Error) {
-                // Implement logic if you want to show failed status
-                Log.e("sendMessage", "send message error-> ${response.message}")
-            }
-        }
-    }
 
-    fun sendReplayMessage(message: Message, parent: Message?) {
+    fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
-                _onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
-                    this.parent = parent?.toSceytUiMessage()
-                })
-            }
-            if (response is SceytResponse.Error) {
-                // Implement logic if you want to show failed status
-                Log.e("sendMessage", "send message error-> ${response.message}")
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
+                when (result) {
+                    is SendMessageResult.TempMessage -> {
+                        val outMessage = result.message.apply {
+                            this.parent = parent?.toSceytUiMessage()
+                        }
+                        _onNewOutgoingMessageLiveData.postValue(outMessage)
+                    }
+                    is SendMessageResult.Response -> {
+                        if (result.response is SceytResponse.Error) {
+                            // Implement logic if you want to show failed status
+                            Log.e("sendMessage", "send message error-> ${result.response.message}")
+                        }
+                    }
+                }
             }
         }
     }
