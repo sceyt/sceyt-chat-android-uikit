@@ -21,7 +21,7 @@ open class MessageViewHolderFactory(context: Context) {
     private val viewPoolFiles = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
-    private var displayedListener: ((SceytMessage) -> Unit)? = null
+    private var displayedListener: ((MessageListItem) -> Unit)? = null
     private var userNameBuilder: ((User) -> String)? = null
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
@@ -135,7 +135,7 @@ open class MessageViewHolderFactory(context: Context) {
         clickListeners.setListener(listener)
     }
 
-    fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
+    fun setMessageDisplayedListener(listener: (MessageListItem) -> Unit) {
         displayedListener = listener
     }
 

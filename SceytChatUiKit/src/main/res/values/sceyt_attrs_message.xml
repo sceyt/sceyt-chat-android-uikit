@@ -5,6 +5,15 @@
         <attr name="sceytUiMessageIncBubbleColor" format="reference" />
         <attr name="sceytUiMessageOutBubbleColor" format="reference" />
 
+        <!-- Drawable of the message sent state indicator -->
+        <attr name="sceytUiMessageSentIcon" format="reference" />
+        <!-- Drawable of the message read state indicator -->
+        <attr name="sceytUiMessageReadIcon" format="reference" />
+        <!-- Drawable of the message delivery indicator -->
+        <attr name="sceytUiMessageDeliveredIcon" format="reference" />
+        <!-- Drawable of the message pending indicator -->
+        <attr name="sceytUiMessagePendingIcon" format="reference" />
+
         <attr name="sceytUiMessageSenderNameTextColor" format="reference" />
         <attr name="sceytUiReplayMessageLineColor" format="reference" />
 

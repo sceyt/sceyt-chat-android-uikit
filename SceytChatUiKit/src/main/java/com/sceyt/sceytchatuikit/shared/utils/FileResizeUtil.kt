@@ -1,0 +1,119 @@
+package com.sceyt.sceytchatuikit.shared.utils
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
+import android.util.Log
+import android.util.Size
+import androidx.exifinterface.media.ExifInterface
+import com.sceyt.sceytchatuikit.extensions.TAG
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import kotlin.math.roundToInt
+
+object FileResizeUtil {
+
+    fun resizeAndCompressImage(application: Context, filePath: String, fileName: String,
+                               reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File {
+        val initialSize = getImageSize(Uri.parse(filePath))
+        var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
+            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+        })
+
+        try {
+            bmpPic = getResizedBitmap(bitmap = bmpPic, filePath)
+            val bmpFile = FileOutputStream(application.cacheDir.toString() + fileName)
+            bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            bmpFile.flush()
+            bmpFile.close()
+        } catch (e: java.lang.Exception) {
+            Log.i(TAG, e.message.toString())
+        }
+        return File(application.cacheDir.toString() + fileName)
+    }
+
+    private fun getImageSize(image: Uri): Size {
+        val input = FileInputStream(image.path)
+        val options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        BitmapFactory.decodeStream(input, null, options)
+        return Size(options.outWidth, options.outHeight)
+    }
+
+    fun scaleDownFileByUrl(url: String, maxImageSize: Float): Bitmap {
+        val bitmap = BitmapFactory.decodeFile(url)
+        return scaleDownBitmap(bitmap, maxImageSize)
+    }
+
+    fun scaleDownBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
+        val ratio = (maxImageSize / realImage.width).coerceAtMost(maxImageSize / realImage.height)
+        val width = (ratio * realImage.width).roundToInt()
+        val height = (ratio * realImage.height).roundToInt()
+        return Bitmap.createScaledBitmap(realImage, width, height, true)
+    }
+
+    private fun getResizedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
+        val matrix = Matrix()
+        val rotationAngle = getFileOrientation(imagePath = filePath)
+        if (rotationAngle != 0)
+            matrix.setRotate(rotationAngle.toFloat())
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
+    fun createFileFromBitmap(context: Context, bitmap: Bitmap, fileName: String): File {
+        try {
+            val bmpFile = FileOutputStream(context.cacheDir.toString() + fileName)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            bmpFile.flush()
+            bmpFile.close()
+        } catch (e: java.lang.Exception) {
+        }
+        return File(context.cacheDir.toString() + fileName)
+    }
+
+    private fun calculateInSampleSize(size: Size, reqWidth: Int, reqHeight: Int): Int {
+        val (height: Int, width: Int) = size.run { height to width }
+        var inSampleSize = 1
+
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+            while (halfHeight / inSampleSize >= reqHeight || halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
+    private fun getFileOrientation(imagePath: String): Int {
+        var rotate = 0
+        try {
+            val exif = ExifInterface(imagePath)
+            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
+                ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
+                ExifInterface.ORIENTATION_ROTATE_90 -> rotate = 90
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return rotate
+    }
+
+    fun checkIfImagePathIsLocale(path: String?): Boolean {
+        if (path != null) {
+            val file = File(path)
+            return file.exists()
+        }
+        return false
+    }
+
+    fun getFileSizeMb(context: Context, uri: Uri): Double {
+        return ImageUriPathUtil.getPath(context, uri)?.let {
+            File(it).length() / 1024.0 / 1024.0
+        } ?: 0.0
+    }
+}

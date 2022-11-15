@@ -17,10 +17,10 @@ open class BaseViewModel : ViewModel() {
     var hasNextDb: Boolean = false
     var hasNext: Boolean = false
 
-    var loadingPrevItems: AtomicBoolean = AtomicBoolean(false)
-    var loadingPrevItemsDb: AtomicBoolean = AtomicBoolean(false)
-    var loadingNextItems: AtomicBoolean = AtomicBoolean(false)
-    var loadingNextItemsDb: AtomicBoolean = AtomicBoolean(false)
+    var loadingPrevItems = AtomicBoolean(false)
+    var loadingPrevItemsDb = AtomicBoolean(false)
+    var loadingNextItems = AtomicBoolean(false)
+    var loadingNextItemsDb = AtomicBoolean(false)
 
     fun canLoadPrev(): Boolean {
         return when {

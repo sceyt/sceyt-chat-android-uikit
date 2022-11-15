@@ -6,10 +6,8 @@ import androidx.room.TypeConverters
 import com.sceyt.sceytchatuikit.persistence.converters.ChannelConverter
 import com.sceyt.sceytchatuikit.persistence.converters.ListStringConverter
 import com.sceyt.sceytchatuikit.persistence.converters.MessageConverter
-import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
-import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
-import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
-import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.dao.*
+import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
@@ -25,8 +23,9 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
     MessageEntity::class,
     AttachmentEntity::class,
     ReactionEntity::class,
-    ReactionScoreEntity::class
-], version = 3, exportSchema = false)
+    ReactionScoreEntity::class,
+    PendingMarkersEntity::class
+], version = 5, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
@@ -34,4 +33,5 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun messageDao(): MessageDao
     abstract fun reactionDao(): ReactionDao
+    abstract fun pendingMarkersDao(): PendingMarkersDao
 }

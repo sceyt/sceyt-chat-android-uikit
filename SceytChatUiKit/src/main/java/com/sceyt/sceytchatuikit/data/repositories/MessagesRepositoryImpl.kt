@@ -10,6 +10,7 @@ import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -141,19 +142,34 @@ class MessagesRepositoryImpl : MessagesRepository {
         awaitClose()
     }
 
-    override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: (Message) -> Unit): SceytResponse<SceytMessage?> {
+    override suspend fun sendMessageAsFlow(channelId: Long, message: Message) = callbackFlow {
+        var tmpMessage: Message? = null
+        tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
+            override fun onResult(message: Message) {
+                trySend(SendMessageResult.Response(SceytResponse.Success(message.toSceytUiMessage())))
+                channel.close()
+            }
+
+            override fun onError(error: SceytException?) {
+                trySend(SendMessageResult.Response(SceytResponse.Error(error, data = tmpMessage?.toSceytUiMessage())))
+                channel.close()
+            }
+        })
+        trySend(SendMessageResult.TempMessage(tmpMessage.toSceytUiMessage()))
+        awaitClose()
+    }
+
+    override suspend fun sendMessage(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            var tmpMessage: Message? = null
-            tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
+            ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error, data = tmpMessage?.toSceytUiMessage()))
+                    continuation.resume(SceytResponse.Error(error))
                 }
             })
-            tmpMessageCb.invoke(tmpMessage)
         }
     }
 

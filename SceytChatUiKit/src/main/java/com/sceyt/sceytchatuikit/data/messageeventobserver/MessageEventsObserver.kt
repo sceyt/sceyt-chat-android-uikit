@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
@@ -51,9 +50,6 @@ object MessageEventsObserver {
 
             override fun onMessage(channel: Channel, message: Message) {
                 onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
-
-                ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
-                }
             }
 
             override fun onMessageDeleted(message: Message?) {

@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
@@ -12,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
@@ -69,6 +71,9 @@ class MessageListViewModel(private val conversationId: Long,
     private val _channelLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val channelLiveData: LiveData<SceytResponse<SceytChannel>> = _channelLiveData
 
+    private val _markAsReadLiveData = MutableLiveData<SceytResponse<MessageListMarker>>()
+    val markAsReadLiveData: LiveData<SceytResponse<MessageListMarker>> = _markAsReadLiveData
+
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
 
@@ -112,7 +117,7 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
             .map { it.toSceytUiMessage(isGroup) }
 
-        onNewMessageFlow = MessageEventsObserver.onMessageFlow
+        onNewMessageFlow = persistenceMessageMiddleWare.getOnMessageFlow()
             .filter { it.first.id == channel.id && it.second.replyInThread == replayInThread }
             .mapNotNull { it.second }
 
@@ -269,29 +274,24 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun sendMessage(message: Message) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
-                val outMessage = tmpMessage.toSceytUiMessage(isGroup)
-                _onNewOutgoingMessageLiveData.postValue(outMessage)
-            }
-            if (response is SceytResponse.Error) {
-                // Implement logic if you want to show failed status
-                Log.e("sendMessage", "send message error-> ${response.message}")
-            }
-        }
-    }
 
-    fun sendReplayMessage(message: Message, parent: Message?) {
+    fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.sendMessage(channel.id, message) { tmpMessage ->
-                _onNewOutgoingMessageLiveData.postValue(tmpMessage.toSceytUiMessage(isGroup).apply {
-                    this.parent = parent?.toSceytUiMessage()
-                })
-            }
-            if (response is SceytResponse.Error) {
-                // Implement logic if you want to show failed status
-                Log.e("sendMessage", "send message error-> ${response.message}")
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
+                when (result) {
+                    is SendMessageResult.TempMessage -> {
+                        val outMessage = result.message.apply {
+                            this.parent = parent?.toSceytUiMessage()
+                        }
+                        _onNewOutgoingMessageLiveData.postValue(outMessage)
+                    }
+                    is SendMessageResult.Response -> {
+                        if (result.response is SceytResponse.Error) {
+                            // Implement logic if you want to show failed status
+                            Log.e("sendMessage", "send message error-> ${result.response.message}")
+                        }
+                    }
+                }
             }
         }
     }
@@ -308,7 +308,8 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun markMessageAsRead(vararg id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.markMessagesAsRead(channel.id, *id)
+            val response = persistenceMessageMiddleWare.markMessagesAsRead(channel.id, *id)
+            _markAsReadLiveData.postValue(response)
         }
     }
 

@@ -19,6 +19,18 @@ object MessagesStyle {
     @ColorRes
     var outBubbleColor: Int = R.color.sceyt_color_bg_out_message
 
+    @DrawableRes
+    var messageStatusPendingIcon: Int = R.drawable.sceyt_ic_status_not_sent
+
+    @DrawableRes
+    var messageStatusSentIcon: Int = R.drawable.sceyt_ic_status_on_server
+
+    @DrawableRes
+    var messageStatusDeliveredIcon: Int = R.drawable.sceyt_ic_status_delivered
+
+    @DrawableRes
+    var messageStatusReadIcon: Int = R.drawable.sceyt_ic_status_read
+
     @ColorRes
     var senderNameTextColor: Int = R.color.sceyt_color_accent
 
@@ -56,6 +68,10 @@ object MessagesStyle {
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
+        messageStatusPendingIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessagePendingIcon, messageStatusPendingIcon)
+        messageStatusSentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageSentIcon, messageStatusSentIcon)
+        messageStatusDeliveredIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageDeliveredIcon, messageStatusDeliveredIcon)
+        messageStatusReadIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageReadIcon, messageStatusReadIcon)
         senderNameTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageSenderNameTextColor, senderNameTextColor)
         replayMessageLineColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiReplayMessageLineColor, replayMessageLineColor)
         dateSeparatorItemBackground = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackground, dateSeparatorItemBackground)
