@@ -7,7 +7,7 @@
 
         <variable
             name="data"
-            type="com.sceyt.sceytchatuikit.imagepicker.BottomSheetGalleryMediaPicker.MediaModel" />
+            type="com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker.MediaModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -27,7 +27,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivSelect"
-            setCheckedState="@{data.selected}"
+            setMediaCheckedState="@{data.selected}"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:layout_margin="9dp"

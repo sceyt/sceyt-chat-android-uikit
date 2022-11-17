@@ -25,7 +25,7 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.imagepicker.BottomSheetGalleryMediaPicker
+import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
@@ -33,6 +33,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.A
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.SelectFileTypePopupClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.SelectFileTypePopupClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
@@ -42,12 +44,15 @@ import org.koin.core.component.inject
 import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners, SceytKoinComponent {
+    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
+        SelectFileTypePopupClickListeners.ClickListeners, SceytKoinComponent {
+
     private val preferences by inject<SceytSharedPreference>()
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var clickListeners = MessageInputClickListenersImpl(this)
+    private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = null
@@ -152,19 +157,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         ChooseFileTypeDialog(context) { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> {
-                    BottomSheetGalleryMediaPicker.createInstance().apply {
-                        BottomSheetGalleryMediaPicker.pickerListener = getPickerListener()
-                    }.show(context.asFragmentActivity().supportFragmentManager, BottomSheetGalleryMediaPicker.TAG)
+                    selectFileTypePopupClickListeners.onGalleryClick()
                 }
                 AttachmentChooseType.Camera -> {
-                    chooseAttachmentHelper?.takePicture {
-                        addAttachmentFile(it)
-                    }
+                    selectFileTypePopupClickListeners.onTakePhotoClick()
                 }
                 AttachmentChooseType.File -> {
-                    chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
-                        addAttachmentFile(*it.toTypedArray())
-                    }
+                    selectFileTypePopupClickListeners.onFileClick()
                 }
             }
         }.show()
@@ -219,21 +218,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         binding.rvAttachments.adapter = attachmentsAdapter
-    }
-
-    fun addAttachmentFile(vararg filePath: String) {
-        val attachments = mutableListOf<Attachment>()
-
-        filePath.forEach { item ->
-            val attachment = Attachment.Builder(item, getAttachmentType(item))
-                .setName(File(item).name)
-                .setMetadata(Gson().toJson(AttachmentMetadata(item)))
-                .setUpload(true)
-                .build()
-
-            attachments.add(attachment)
-        }
-        addAttachments(attachments)
     }
 
     private fun getAttachmentType(path: String?): String {
@@ -291,6 +275,21 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         showHideJoinButton(true)
     }
 
+    fun addAttachmentFile(vararg filePath: String) {
+        val attachments = mutableListOf<Attachment>()
+
+        filePath.forEach { item ->
+            val attachment = Attachment.Builder(item, getAttachmentType(item))
+                .setName(File(item).name)
+                .setMetadata(Gson().toJson(AttachmentMetadata(item)))
+                .setUpload(true)
+                .build()
+
+            attachments.add(attachment)
+        }
+        addAttachments(attachments)
+    }
+
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)
         fun sendReplayMessage(message: Message, parent: Message?)
@@ -309,6 +308,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
         clickListeners = listener
+    }
+
+    fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
+        selectFileTypePopupClickListeners = listener
     }
 
     override fun onSendMsgClick(view: View) {
@@ -351,16 +354,35 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun getPickerListener(): BottomSheetGalleryMediaPicker.PickerListener {
-        return BottomSheetGalleryMediaPicker.PickerListener {
+    private fun getPickerListener(): GalleryMediaPicker.PickerListener {
+        return GalleryMediaPicker.PickerListener {
             addAttachmentFile(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
         }
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        BottomSheetGalleryMediaPicker.pickerListener?.let {
-            BottomSheetGalleryMediaPicker.pickerListener = getPickerListener()
+        GalleryMediaPicker.pickerListener?.let {
+            GalleryMediaPicker.pickerListener = getPickerListener()
+        }
+    }
+
+    // Choose file type popup listeners
+    override fun onGalleryClick() {
+        GalleryMediaPicker().apply {
+            GalleryMediaPicker.pickerListener = getPickerListener()
+        }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
+    }
+
+    override fun onTakePhotoClick() {
+        chooseAttachmentHelper?.takePicture {
+            addAttachmentFile(it)
+        }
+    }
+
+    override fun onFileClick() {
+        chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
+            addAttachmentFile(*it.toTypedArray())
         }
     }
 }

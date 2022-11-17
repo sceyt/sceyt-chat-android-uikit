@@ -258,12 +258,6 @@ open class ConversationInfoActivity : AppCompatActivity() {
         progressSave.isVisible = loading
     }
 
-    private fun clearTaskAndOpenMainActivity() {
-        /* val newIntent = Intent(this, MainActivity::class.java)
-         newIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-         startActivity(newIntent)*/
-    }
-
     private fun setChannelDetails(channel: SceytChannel) {
         avatarUrl = channel.iconUrl
         with(binding ?: return) {
@@ -272,13 +266,13 @@ open class ConversationInfoActivity : AppCompatActivity() {
             switchNotifications.isChecked = channel.muted
             switchNotifications.jumpDrawablesToCurrentState()
 
-            val isDirec = channel.channelType == ChannelTypeEnum.Direct
-            tvEditOrSave.isVisible = !isDirec
-            deleteChannel.isVisible = isDirec
-            leaveChannel.isVisible = !isDirec
-            blockAndLeaveChannel.isVisible = !isDirec
-            blockUnblockUser.isVisible = isDirec
-            if (isDirec)
+            val isDirect = channel.channelType == ChannelTypeEnum.Direct
+            tvEditOrSave.isVisible = !isDirect
+            deleteChannel.isVisible = isDirect
+            leaveChannel.isVisible = !isDirect
+            blockAndLeaveChannel.isVisible = !isDirect
+            blockUnblockUser.isVisible = isDirect
+            if (isDirect)
                 blockUnblockUser.text = getBlockText((channel as SceytDirectChannel).peer?.user?.blocked == true)
         }
     }
@@ -367,11 +361,11 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     open fun onLeaveChannel(channelId: Long) {
-        clearTaskAndOpenMainActivity()
+        onBackPressed()
     }
 
     open fun onDeleteChannel(channelId: Long) {
-        clearTaskAndOpenMainActivity()
+        onBackPressed()
     }
 
     open fun onClearHistory(channelId: Long) {
