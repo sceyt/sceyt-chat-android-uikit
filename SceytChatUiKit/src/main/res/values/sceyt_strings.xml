@@ -88,5 +88,6 @@
     <string name="sceyt_1_min_ago">1 minute ago</string>
     <string name="sceyt_last_seen">Last seen</string>
     <string name="sceyt_new_messages">New messages</string>
+    <string name="sceyt_gallery">Gallery</string>
 
 </resources>

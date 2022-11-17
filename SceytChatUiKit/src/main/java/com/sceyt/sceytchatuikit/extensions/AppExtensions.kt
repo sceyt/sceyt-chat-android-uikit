@@ -37,6 +37,10 @@ fun Application.isAppOnForeground(): Boolean {
     return false
 }
 
+fun Context.getOrientation(): Int {
+    return resources.configuration.orientation
+}
+
 fun Activity.isFinishingOrDestroyed() = isFinishing || isDestroyed
 
 fun Activity.isNotFinishingOrDestroyed() = !isFinishing && !isDestroyed

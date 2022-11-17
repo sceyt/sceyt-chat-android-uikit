@@ -49,7 +49,7 @@ class MessageVideoViewHolder(
             initializePlayer(mediaPath)
 
             with(binding) {
-                Glide.with(itemView.context)
+                Glide.with(itemView.context.applicationContext)
                     .load(file)
                     .override(videoView.width, videoView.height)
                     .into(glideCustomTarget {

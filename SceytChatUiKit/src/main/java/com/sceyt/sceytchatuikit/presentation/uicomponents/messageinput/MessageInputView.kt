@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.imagepicker.BottomSheetGalleryMediaPicker
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
@@ -151,9 +152,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         ChooseFileTypeDialog(context) { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> {
-                    chooseAttachmentHelper?.chooseFromGallery(allowMultiple = true, onlyImages = false) {
-                        addAttachmentFile(*it.toTypedArray())
-                    }
+                    BottomSheetGalleryMediaPicker.createInstance().apply {
+                        BottomSheetGalleryMediaPicker.pickerListener = getPickerListener()
+                    }.show(context.asFragmentActivity().supportFragmentManager, BottomSheetGalleryMediaPicker.TAG)
                 }
                 AttachmentChooseType.Camera -> {
                     chooseAttachmentHelper?.takePicture {
@@ -220,7 +221,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.rvAttachments.adapter = attachmentsAdapter
     }
 
-    private fun addAttachmentFile(vararg filePath: String) {
+    fun addAttachmentFile(vararg filePath: String) {
         val attachments = mutableListOf<Attachment>()
 
         filePath.forEach { item ->
@@ -347,6 +348,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         withContext(Dispatchers.Main) {
             binding.messageInput.setText(i.toString())
             sendMessage()
+        }
+    }
+
+    private fun getPickerListener(): BottomSheetGalleryMediaPicker.PickerListener {
+        return BottomSheetGalleryMediaPicker.PickerListener {
+            addAttachmentFile(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        BottomSheetGalleryMediaPicker.pickerListener?.let {
+            BottomSheetGalleryMediaPicker.pickerListener = getPickerListener()
         }
     }
 }
