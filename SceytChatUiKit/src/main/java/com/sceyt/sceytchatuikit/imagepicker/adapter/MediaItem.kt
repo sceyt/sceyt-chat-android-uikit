@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.imagepicker.adapter
 
-import com.sceyt.sceytchatuikit.imagepicker.BottomSheetGalleryMediaPicker.MediaModel
+import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker.MediaModel
 
 sealed class MediaItem(val media: MediaModel) {
     data class Image(private val data: MediaModel) : MediaItem(data)

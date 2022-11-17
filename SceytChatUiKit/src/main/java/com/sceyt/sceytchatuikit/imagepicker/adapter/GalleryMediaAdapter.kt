@@ -8,10 +8,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.sceyt.sceytchatuikit.databinding.ItemGalleryImageBinding
 import com.sceyt.sceytchatuikit.databinding.ItemGalleryVideoBinding
-import com.sceyt.sceytchatuikit.imagepicker.BottomSheetGalleryMediaPicker.Companion.pickerStyle
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.BaseGalleryViewHolder
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryImageViewHolder
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryVideoViewHolder
+import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 
 class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListAdapter<MediaItem, BaseGalleryViewHolder>(DIFF_UTIL) {
 
@@ -26,13 +26,13 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListA
             }
         }
 
-        @BindingAdapter("setCheckedState")
+        @BindingAdapter("setMediaCheckedState")
         @JvmStatic
-        fun setCheckedState(image: ImageView, isChecked: Boolean) {
+        fun setMediaCheckedState(image: ImageView, isChecked: Boolean) {
             if (isChecked) {
-                image.setImageResource(pickerStyle.checkedStateIcon)
+                image.setImageResource(GalleryPickerStyle.checkedStateIcon)
             } else {
-                image.setImageResource(pickerStyle.unCheckedStateIcon)
+                image.setImageResource(GalleryPickerStyle.unCheckedStateIcon)
             }
         }
     }

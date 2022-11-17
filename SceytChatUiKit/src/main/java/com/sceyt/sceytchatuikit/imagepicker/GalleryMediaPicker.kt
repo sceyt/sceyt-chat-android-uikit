@@ -9,14 +9,10 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
@@ -28,16 +24,16 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.sceytchatuikit.BR
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.databinding.SceytBottomSheetGaleryPickerBinding
+import com.sceyt.sceytchatuikit.databinding.SceytGaleryMediaPickerBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
-import kotlinx.parcelize.Parcelize
+import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 import java.io.File
 
 
-class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCallbacks<Cursor> {
-    private lateinit var binding: SceytBottomSheetGaleryPickerBinding
+class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCallbacks<Cursor> {
+    private lateinit var binding: SceytGaleryMediaPickerBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
     private val selectedMedia = mutableSetOf<MediaModel>()
     private var selectedMediaPaths = mutableSetOf<String>()
@@ -49,7 +45,6 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        loadArguments()
         if (requireContext().hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
         } else {
@@ -66,7 +61,7 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytBottomSheetGaleryPickerBinding.inflate(inflater, container, false)
+        return SceytGaleryMediaPickerBinding.inflate(inflater, container, false)
             .also {
                 binding = it
                 binding.initStyle()
@@ -100,29 +95,25 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
                 }
             }
 
-    private fun SceytBottomSheetGaleryPickerBinding.initViews() {
+    private fun SceytGaleryMediaPickerBinding.initViews() {
         btnNext.setOnClickListener {
             pickerListener?.onSelect(selectedMedia.map {
                 SelectedMediaData(it.contentUri, it.realPath)
             })
+            pickerListener = null
             dismissSafety()
         }
     }
 
-    private fun SceytBottomSheetGaleryPickerBinding.initStyle() {
-        val color = requireContext().getCompatColor(pickerStyle.nextButtonColor)
+    private fun SceytGaleryMediaPickerBinding.initStyle() {
+        val color = requireContext().getCompatColor(GalleryPickerStyle.nextButtonColor)
         btnNext.backgroundTintList = ColorStateList.valueOf(color)
         counter.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadii = floatArrayOf(30f, 30f, 30f, 30f, 30f, 30f, 30f, 30f)
-            setColor(requireContext().getCompatColor(pickerStyle.counterColor))
+            setColor(requireContext().getCompatColor(GalleryPickerStyle.counterColor))
             setStroke(5, Color.WHITE)
         }
-    }
-
-    private fun loadArguments() {
-        val args = arguments ?: return
-        pickerStyle = args.getParcelable(KEY_MEDIA_PICKER_STYLE) ?: pickerStyle
     }
 
     private fun onMediaClick(mediaItem: MediaItem) {
@@ -180,25 +171,24 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
         return CursorLoader(requireContext(), queryUri, projection, selection, null, sortOrder)
     }
 
-    override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
-        data ?: return
+    override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
+        cursor ?: return
         val items = ArrayList<MediaItem>()
 
-        val columnIndex = data.getColumnIndex(MediaStore.Files.FileColumns._ID)
-        val columnMediaTypeIndex = data.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
-        val columnDataIndex = data.getColumnIndex(MediaStore.Files.FileColumns.DATA)
-
-        while (data.moveToNext()) {
-            val id = data.getLong(columnIndex)
-            val type = data.getInt(columnMediaTypeIndex)
+        val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
+        val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
+        val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(columnIndex)
+            val type = cursor.getInt(columnMediaTypeIndex)
             var isImage: Boolean
             var videoDuration = 0.0
 
             val contentUri: Uri = if (type == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
                 isImage = false
 
-                val durationIndex = data.getColumnIndex(MediaStore.Video.Media.DURATION)
-                videoDuration = data.getDouble(durationIndex)
+                val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                videoDuration = cursor.getDouble(durationIndex)
                 ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
             } else {
@@ -206,7 +196,7 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
                 ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
             }
 
-            val realPath = data.getString(columnDataIndex)
+            val realPath = cursor.getString(columnDataIndex)
             val isWrongImage = !File(realPath).exists()
 
             val model = MediaModel(contentUri, realPath, isWrongImage)
@@ -214,7 +204,7 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
             mediaItem.media.selected = checkSelectedItems(mediaItem)
             items.add(if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration))
         }
-        data.moveToFirst()
+        cursor.moveToPosition(-1)
         imagesAdapter.submitList(items.sortedBy { it.media.isWrongImage })
     }
 
@@ -248,18 +238,6 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
     data class SelectedMediaData(val contentUri: Uri,
                                  val realPath: String)
 
-    @Parcelize
-    data class MediaPickerStyle(
-            @ColorRes
-            val nextButtonColor: Int = R.color.sceyt_color_accent,
-            @ColorRes
-            val counterColor: Int = R.color.sceyt_color_accent,
-            @DrawableRes
-            val checkedStateIcon: Int = R.drawable.ic_gallery_checked_state,
-            @DrawableRes
-            val unCheckedStateIcon: Int = R.drawable.ic_gallery_unchecked_state,
-    ) : Parcelable
-
     fun interface PickerListener {
         fun onSelect(items: List<SelectedMediaData>)
     }
@@ -271,14 +249,6 @@ class BottomSheetGalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager
     companion object {
         private const val LOADER_ID = 0x1337
         private const val STATE_SELECTION = "stateSelection"
-        private const val KEY_MEDIA_PICKER_STYLE = "mediaPickerStyle"
-        var pickerStyle: MediaPickerStyle = MediaPickerStyle()
-
-        fun createInstance(style: MediaPickerStyle = pickerStyle): BottomSheetGalleryMediaPicker {
-            return BottomSheetGalleryMediaPicker().apply {
-                arguments = bundleOf(KEY_MEDIA_PICKER_STYLE to style)
-            }
-        }
 
         var pickerListener: PickerListener? = null
     }

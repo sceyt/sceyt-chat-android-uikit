@@ -20,7 +20,7 @@ class GalleryVideoViewHolder(val binding: ItemGalleryVideoBinding,
             binding.ivImage.setImageResource(R.drawable.ic_broken_image)
         } else {
             Glide.with(context)
-                .load(item.media.realPath)
+                .load(item.media.contentUri)
                 .error(R.drawable.ic_broken_image)
                 .into(binding.ivImage)
 
