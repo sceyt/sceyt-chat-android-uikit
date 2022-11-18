@@ -13,14 +13,12 @@ class GalleryImageViewHolder(val binding: ItemGalleryImageBinding,
         val data = item.media
         binding.data = data
 
-        if (data.isWrongImage) {
-            binding.ivImage.setImageResource(R.drawable.ic_broken_image)
-        } else {
-            Glide.with(context)
-                .load(item.media.contentUri)
-                .error(R.drawable.ic_broken_image)
-                .into(binding.ivImage)
-        }
+        Glide.with(itemView.context)
+            .load(item.media.realPath)
+            .override(itemView.width)
+            .placeholder(R.color.sceyt_gallery_item_default_color)
+            .error(R.drawable.ic_broken_image)
+            .into(binding.ivImage)
 
         itemView.setOnClickListener {
             onItemClick(item)

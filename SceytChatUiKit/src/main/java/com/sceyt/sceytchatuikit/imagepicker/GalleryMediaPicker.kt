@@ -75,6 +75,8 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         with(binding.rvMedia) {
             val spanCount = if (requireContext().getOrientation() == Configuration.ORIENTATION_LANDSCAPE)
                 5 else 3
+
+            setHasFixedSize(true)
             layoutManager = GridLayoutManager(requireContext(), spanCount)
             adapter = imagesAdapter
         }

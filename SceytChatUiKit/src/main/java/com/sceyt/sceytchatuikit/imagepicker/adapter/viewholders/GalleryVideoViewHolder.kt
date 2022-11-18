@@ -16,16 +16,14 @@ class GalleryVideoViewHolder(val binding: ItemGalleryVideoBinding,
 
         binding.tvDuration.isVisible = data.isWrongImage.not()
 
-        if (data.isWrongImage) {
-            binding.ivImage.setImageResource(R.drawable.ic_broken_image)
-        } else {
-            Glide.with(context)
-                .load(item.media.contentUri)
-                .error(R.drawable.ic_broken_image)
-                .into(binding.ivImage)
+        Glide.with(itemView.context)
+            .load(item.media.realPath)
+            .override(itemView.width)
+            .placeholder(R.color.sceyt_gallery_item_default_color)
+            .error(R.drawable.ic_broken_image)
+            .into(binding.ivImage)
 
-            binding.tvDuration.text = millisecondsToTime((item as MediaItem.Video).duration.toLong())
-        }
+        binding.tvDuration.text = millisecondsToTime((item as MediaItem.Video).duration.toLong())
 
         itemView.setOnClickListener {
             onItemClick(item)

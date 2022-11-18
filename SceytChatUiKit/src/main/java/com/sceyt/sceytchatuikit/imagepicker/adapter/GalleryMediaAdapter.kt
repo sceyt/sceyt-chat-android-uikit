@@ -8,12 +8,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.sceyt.sceytchatuikit.databinding.ItemGalleryImageBinding
 import com.sceyt.sceytchatuikit.databinding.ItemGalleryVideoBinding
-import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.BaseGalleryViewHolder
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryImageViewHolder
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryVideoViewHolder
+import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 
-class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListAdapter<MediaItem, BaseGalleryViewHolder>(DIFF_UTIL) {
+class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListAdapter<MediaItem, BaseViewHolder<MediaItem>>(DIFF_UTIL) {
 
     companion object {
         val DIFF_UTIL = object : DiffUtil.ItemCallback<MediaItem>() {
@@ -37,7 +37,7 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListA
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseGalleryViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MediaItem> {
         return when (viewType) {
             ViewType.Image.ordinal -> GalleryImageViewHolder(ItemGalleryImageBinding.inflate(
                 LayoutInflater.from(parent.context), parent, false), clickListener)
@@ -60,12 +60,22 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListA
         }
     }
 
-    override fun onBindViewHolder(holder: BaseGalleryViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BaseViewHolder<MediaItem>, position: Int) {
         holder.bind(currentList[position])
     }
 
     fun interface MediaClickListener {
         fun onClick(item: MediaItem)
+    }
+
+    override fun onViewAttachedToWindow(holder: BaseViewHolder<MediaItem>) {
+        super.onViewAttachedToWindow(holder)
+        holder.onViewAttachedToWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: BaseViewHolder<MediaItem>) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
     }
 
     enum class ViewType {

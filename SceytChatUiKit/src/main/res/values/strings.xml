@@ -89,5 +89,6 @@
     <string name="sceyt_last_seen">Last seen</string>
     <string name="sceyt_new_messages">New messages</string>
     <string name="sceyt_gallery">Gallery</string>
+    <string name="unsupported_file_format">This file format is not supported</string>
 
 </resources>
