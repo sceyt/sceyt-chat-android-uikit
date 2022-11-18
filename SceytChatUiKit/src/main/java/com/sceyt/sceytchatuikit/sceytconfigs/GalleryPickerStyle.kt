@@ -16,4 +16,6 @@ object GalleryPickerStyle {
 
     @DrawableRes
     var unCheckedStateIcon: Int = R.drawable.ic_gallery_unchecked_state
+
+    var maxSelectCount: Int = 20
 }

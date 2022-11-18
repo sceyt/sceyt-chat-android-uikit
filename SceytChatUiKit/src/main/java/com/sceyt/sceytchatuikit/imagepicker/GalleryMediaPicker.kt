@@ -13,6 +13,7 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
@@ -120,6 +121,13 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     private fun onMediaClick(mediaItem: MediaItem) {
         val item = mediaItem.media
+        if (selectedMedia.size == GalleryPickerStyle.maxSelectCount && item.selected.not()) {
+            Toast.makeText(requireContext(), "${context?.getString(R.string.sceyt_max_select_count_should_be)} " +
+                    "${GalleryPickerStyle.maxSelectCount}", Toast.LENGTH_SHORT).show()
+            return
+        }
+        item.selected = !item.selected
+
         if (item.selected) {
             selectedMedia.add(item)
             selectedMediaPaths.add(item.realPath)
