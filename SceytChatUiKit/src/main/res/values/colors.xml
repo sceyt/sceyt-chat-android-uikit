@@ -33,5 +33,6 @@
     <color name="sceyt_color_gray_300">#9B9DA8</color>
     <color name="sceyt_color_gray_400">#7C7E8E</color>
     <color name="sceyt_color_gray_500">#676A7C</color>
+    <color name="sceyt_gallery_item_default_color">#F3F5F7</color>
 
 </resources>
