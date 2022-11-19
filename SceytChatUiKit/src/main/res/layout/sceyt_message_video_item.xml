@@ -28,22 +28,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.CircularProgressView
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layerType="hardware"
         android:padding="3dp"
         android:visibility="gone"
-        app:backgroundColor="#4D000000"
+        app:backgroundColor="#26191C33"
         app:indicatorColor="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:progressColor="@color/sceyt_color_accent"
-        app:trackColor="@android:color/transparent"
-        app:progress="10" />
+        app:trackColor="@android:color/transparent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

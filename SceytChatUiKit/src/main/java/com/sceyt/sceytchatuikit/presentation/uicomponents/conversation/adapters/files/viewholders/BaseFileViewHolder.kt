@@ -7,6 +7,7 @@ import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
@@ -36,7 +37,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             updateUploadingState(item.fileLoadData.apply { loading = true })
             item.setUploadListener { loadData ->
                 if (checkLoadDataIsForCurrent(data = loadData))
-                    com.sceyt.sceytchatuikit.extensions.runOnMainThread { updateUploadingState(loadData) }
+                    runOnMainThread { updateUploadingState(loadData) }
             }
         }
     }
@@ -56,7 +57,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
             item.setDownloadProgressListener { loadData, outFile ->
                 if (checkLoadDataIsForCurrent(data = loadData))
-                    com.sceyt.sceytchatuikit.extensions.runOnMainThread { updateDownloadingState(loadData, outFile) }
+                    runOnMainThread { updateDownloadingState(loadData, outFile) }
             }
 
             if (item.fileLoadData.loading) {

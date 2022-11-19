@@ -6,10 +6,10 @@ import com.sceyt.sceytchatuikit.R
 
 object GalleryPickerStyle {
     @ColorRes
-    var nextButtonColor: Int = R.color.sceyt_color_accent
+    var nextButtonColor: Int = SceytKitConfig.sceytColorAccent
 
     @ColorRes
-    var counterColor: Int = R.color.sceyt_color_accent
+    var counterColor: Int = SceytKitConfig.sceytColorAccent
 
     @DrawableRes
     var checkedStateIcon: Int = R.drawable.ic_gallery_checked_state

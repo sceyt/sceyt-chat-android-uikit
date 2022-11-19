@@ -20,7 +20,7 @@ object ChannelStyle {
     var lastMessageTextColor: Int = R.color.sceyt_color_gray_400
 
     @ColorRes
-    var unreadCountColor: Int = R.color.sceyt_color_accent
+    var unreadCountColor: Int = SceytKitConfig.sceytColorAccent
 
     @ColorRes
     var onlineStatusColor: Int = R.color.sceyt_color_green

@@ -31,6 +31,9 @@
         <attr name="sceytUiDifferentMessageSenderDistance" format="dimension" />
         <attr name="sceytUiDownScrollerUnreadCountColor" format="reference" />
         <attr name="sceytUiMediaLoaderColor" format="reference" />
+        <attr name="sceytUiFileAttachmentIcon" format="reference" />
+        <attr name="sceytUiFileAttachmentIconBackgroundColor" format="reference" />
+
 
     </declare-styleable>
 </resources>

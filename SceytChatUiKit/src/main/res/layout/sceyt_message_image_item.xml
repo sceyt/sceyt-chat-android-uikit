@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -17,20 +18,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize18" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.CircularProgressView
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layerType="hardware"
         android:padding="3dp"
-        app:backgroundColor="#4D000000"
+        app:backgroundColor="#17191C33"
         app:indicatorColor="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:progress="10"
         app:progressColor="@color/sceyt_color_accent"
-        app:trackColor="@android:color/transparent" />
+        app:trackColor="@android:color/transparent"
+        tools:progress="20" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

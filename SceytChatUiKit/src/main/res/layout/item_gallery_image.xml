@@ -31,7 +31,7 @@
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:layout_margin="9dp"
-            android:scaleType="centerCrop"
+            android:scaleType="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_gallery_unchecked_state" />
