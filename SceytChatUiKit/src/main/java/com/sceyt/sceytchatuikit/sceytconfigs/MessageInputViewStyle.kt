@@ -20,10 +20,10 @@ object MessageInputViewStyle {
     var inputHintTextColor: Int = R.color.sceyt_color_hint
 
     @ColorRes
-    var horizontalLineColor: Int = R.color.sceyt_color_accent
+    var horizontalLineColor: Int = SceytKitConfig.sceytColorAccent
 
     @ColorRes
-    var userNameTextColor: Int = R.color.sceyt_color_accent
+    var userNameTextColor: Int = SceytKitConfig.sceytColorAccent
 
     lateinit var inputHintText: String
 

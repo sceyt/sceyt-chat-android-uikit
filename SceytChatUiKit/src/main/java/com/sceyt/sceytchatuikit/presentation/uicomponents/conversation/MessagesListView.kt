@@ -160,7 +160,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = PopupMenuMessage(ContextThemeWrapper(context.applicationContext, R.style.SceytPopupMenuStyle), view, message.incoming)
+        val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message.incoming)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)

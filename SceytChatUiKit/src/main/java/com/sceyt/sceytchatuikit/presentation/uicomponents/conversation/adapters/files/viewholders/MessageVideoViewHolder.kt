@@ -33,6 +33,7 @@ class MessageVideoViewHolder(
 
     override fun bind(item: FileListItem) {
         with(binding) {
+            loadProgress.release(item.fileLoadData.progressPercent)
             videoViewController.setImageThumb(null)
             parentLayout.clipToOutline = true
             videoView.isVisible = false

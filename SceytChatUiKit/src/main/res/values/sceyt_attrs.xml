@@ -59,7 +59,7 @@
 
     </declare-styleable>
 
-    <declare-styleable name="CircularProgressView">
+    <declare-styleable name="SceytCircularProgressView">
         <attr name="progressColor" format="color"/>
         <attr name="trackColor" format="color"/>
         <attr name="progress" format="float"/>

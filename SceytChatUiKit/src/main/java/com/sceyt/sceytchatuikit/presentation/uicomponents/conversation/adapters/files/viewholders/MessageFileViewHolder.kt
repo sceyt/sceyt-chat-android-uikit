@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
+import android.content.res.ColorStateList
 import androidx.core.view.isVisible
-import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -36,6 +36,7 @@ class MessageFileViewHolder(
 
         with(binding) {
             tvFileName.text = file.name
+            loadProgress.release(item.fileLoadData.progressPercent)
 
             if (item.message.incoming) {
                 tvFileSize.text = file.fileSize.toPrettySize()
@@ -51,7 +52,7 @@ class MessageFileViewHolder(
 
     private fun SceytMessageFileItemBinding.updateLoadState(data: FileLoadData) {
         loadProgress.isVisible = data.loading
-        icFile.setImageResource(if (data.loading) 0 else R.drawable.sceyt_ic_file)
+        icFile.setImageResource(if (data.loading) 0 else MessagesStyle.fileAttachmentIcon)
         loadProgress.setProgress(data.progressPercent)
     }
 
@@ -63,7 +64,8 @@ class MessageFileViewHolder(
         binding.updateLoadState(data)
     }
 
-    private fun SceytMessageFileItemBinding.setupStyle(){
-        loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))
+    private fun SceytMessageFileItemBinding.setupStyle() {
+        icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+        icFile.backgroundTintList= ColorStateList.valueOf(context.getCompatColor(MessagesStyle.fileAttachmentIconBackgroundColor))
     }
 }

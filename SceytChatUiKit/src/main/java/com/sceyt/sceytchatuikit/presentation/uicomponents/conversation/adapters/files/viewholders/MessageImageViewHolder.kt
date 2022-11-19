@@ -31,6 +31,7 @@ class MessageImageViewHolder(
 
     override fun bind(item: FileListItem) {
         binding.fileImage.setImageBitmap(null)
+        binding.loadProgress.release(item.fileLoadData.progressPercent)
         super.bind(item)
     }
 
