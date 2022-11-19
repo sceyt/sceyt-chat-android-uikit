@@ -18,20 +18,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/sceyt_ic_file" />
 
-    <com.google.android.material.progressindicator.CircularProgressIndicator
+    <com.sceyt.sceytchatuikit.presentation.customviews.CircularProgressView
         android:id="@+id/loadProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layerType="hardware"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="3dp"
         android:visibility="gone"
-        app:indicatorColor="@color/sceyt_color_white"
-        app:indicatorSize="32dp"
         app:layout_constraintBottom_toBottomOf="@+id/icFile"
         app:layout_constraintEnd_toEndOf="@id/icFile"
         app:layout_constraintStart_toStartOf="@+id/icFile"
         app:layout_constraintTop_toTopOf="@+id/icFile"
-        app:trackCornerRadius="5dp"
-        app:trackThickness="2.5dp" />
+        app:progress="10"
+        app:progressColor="@color/sceyt_color_white"
+        app:trackColor="@android:color/transparent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"

@@ -4,10 +4,12 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import java.io.File
 
 class MessageFileViewHolder(
@@ -16,6 +18,8 @@ class MessageFileViewHolder(
 ) : BaseFileViewHolder(binding.root) {
 
     init {
+        binding.setupStyle()
+
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
         }
@@ -48,7 +52,7 @@ class MessageFileViewHolder(
     private fun SceytMessageFileItemBinding.updateLoadState(data: FileLoadData) {
         loadProgress.isVisible = data.loading
         icFile.setImageResource(if (data.loading) 0 else R.drawable.sceyt_ic_file)
-        loadProgress.progress = data.progressPercent.toInt()
+        loadProgress.setProgress(data.progressPercent)
     }
 
     override fun updateUploadingState(data: FileLoadData) {
@@ -57,5 +61,9 @@ class MessageFileViewHolder(
 
     override fun updateDownloadingState(data: FileLoadData, file: File?) {
         binding.updateLoadState(data)
+    }
+
+    private fun SceytMessageFileItemBinding.setupStyle(){
+        loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))
     }
 }

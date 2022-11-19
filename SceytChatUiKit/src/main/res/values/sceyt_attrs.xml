@@ -58,4 +58,17 @@
         <attr name="sceytVideoControllerPauseIcon" format="reference" />
 
     </declare-styleable>
+
+    <declare-styleable name="CircularProgressView">
+        <attr name="progressColor" format="color"/>
+        <attr name="trackColor" format="color"/>
+        <attr name="progress" format="float"/>
+        <attr name="roundedProgress" format="boolean"/>
+        <attr name="trackThickness" format="dimension"/>
+        <attr name="centerIcon" format="reference"/>
+        <attr name="iconTint" format="color"/>
+        <attr name="rotateAnimEnabled" format="boolean"/>
+        <attr name="backgroundColor" format="color"/>
+
+    </declare-styleable>
 </resources>

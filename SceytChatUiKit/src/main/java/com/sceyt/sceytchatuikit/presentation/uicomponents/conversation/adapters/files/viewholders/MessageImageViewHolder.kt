@@ -5,8 +5,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import java.io.File
 
 
@@ -15,6 +17,8 @@ class MessageImageViewHolder(
         private val messageListeners: MessageClickListenersImpl?) : BaseFileViewHolder(binding.root) {
 
     init {
+        binding.setupStyle()
+
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
         }
@@ -31,8 +35,8 @@ class MessageImageViewHolder(
     }
 
     private fun SceytMessageImageItemBinding.updateDownloadState(data: FileLoadData, file: File?) {
-        groupLoading.isVisible = data.loading
-        loadProgress.progress = data.progressPercent.toInt()
+        loadProgress.isVisible = data.loading
+        loadProgress.setProgress(data.progressPercent)
         if (file != null) {
             Glide.with(itemView.context)
                 .load(file)
@@ -43,9 +47,9 @@ class MessageImageViewHolder(
     }
 
     private fun SceytMessageImageItemBinding.updateUploadState(data: FileLoadData) {
-        groupLoading.isVisible = data.loading
+        loadProgress.isVisible = data.loading
         if (data.loading)
-            loadProgress.progress = data.progressPercent.toInt()
+            loadProgress.setProgress(data.progressPercent)
     }
 
     override fun updateUploadingState(data: FileLoadData) {
@@ -54,5 +58,9 @@ class MessageImageViewHolder(
 
     override fun updateDownloadingState(data: FileLoadData, file: File?) {
         binding.updateDownloadState(data, file)
+    }
+
+    private fun SceytMessageImageItemBinding.setupStyle(){
+        loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))
     }
 }
