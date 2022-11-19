@@ -31,12 +31,12 @@ class MessageFileViewHolder(
     }
 
     override fun bind(item: FileListItem) {
+        binding.loadProgress.release(item.fileLoadData.progressPercent)
         super.bind(item)
         val file = (item as? FileListItem.File)?.file ?: return
 
         with(binding) {
             tvFileName.text = file.name
-            loadProgress.release(item.fileLoadData.progressPercent)
 
             if (item.message.incoming) {
                 tvFileSize.text = file.fileSize.toPrettySize()
@@ -66,6 +66,6 @@ class MessageFileViewHolder(
 
     private fun SceytMessageFileItemBinding.setupStyle() {
         icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
-        icFile.backgroundTintList= ColorStateList.valueOf(context.getCompatColor(MessagesStyle.fileAttachmentIconBackgroundColor))
+        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.fileAttachmentIconBackgroundColor))
     }
 }
