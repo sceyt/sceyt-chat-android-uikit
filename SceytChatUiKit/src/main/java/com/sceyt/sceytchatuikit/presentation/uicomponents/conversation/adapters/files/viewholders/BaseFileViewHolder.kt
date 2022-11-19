@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
+import android.content.Context
 import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.koushikdutta.ion.Ion
@@ -16,6 +17,7 @@ import java.io.File
 
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
     protected lateinit var fileItem: FileListItem
+    protected val context: Context by lazy { itemView.context }
 
     override fun bind(item: FileListItem) {
         fileItem = item
@@ -77,7 +79,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
                     .setCallback { e, result ->
                         if (result == null && e != null) {
                             loadedFile.delete()
-                            item.downloadFinish(result, false)
+                            item.downloadFinish(null, false)
                         } else {
                             item.downloadFinish(result, true)
                         }
