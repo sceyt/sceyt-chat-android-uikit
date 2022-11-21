@@ -10,6 +10,7 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
+import androidx.lifecycle.lifecycleScope
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
@@ -30,6 +32,9 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
 import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 
@@ -183,39 +188,47 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
         cursor ?: return
-        val items = ArrayList<MediaItem>()
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val items = ArrayList<MediaItem>()
+            try {
+                val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
+                val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
+                val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(columnIndex)
+                    val type = cursor.getInt(columnMediaTypeIndex)
+                    var isImage: Boolean
+                    var videoDuration = 0.0
 
-        val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
-        val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
-        val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
-        while (cursor.moveToNext()) {
-            val id = cursor.getLong(columnIndex)
-            val type = cursor.getInt(columnMediaTypeIndex)
-            var isImage: Boolean
-            var videoDuration = 0.0
+                    val contentUri: Uri = if (type == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
+                        isImage = false
 
-            val contentUri: Uri = if (type == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
-                isImage = false
+                        val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                        videoDuration = cursor.getDouble(durationIndex)
+                        ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
-                val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
-                videoDuration = cursor.getDouble(durationIndex)
-                ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                    } else {
+                        isImage = true
+                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                    }
 
-            } else {
-                isImage = true
-                ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                    val realPath = cursor.getString(columnDataIndex)
+                    val isWrongImage = !File(realPath).exists()
+
+                    val model = MediaModel(contentUri, realPath, isWrongImage)
+                    val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
+                    mediaItem.media.selected = checkSelectedItems(mediaItem)
+                    items.add(if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration))
+                }
+                cursor.moveToPosition(-1)
+            } catch (ex: Exception) {
+                Log.i(TAG, ex.message.toString())
             }
 
-            val realPath = cursor.getString(columnDataIndex)
-            val isWrongImage = !File(realPath).exists()
-
-            val model = MediaModel(contentUri, realPath, isWrongImage)
-            val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
-            mediaItem.media.selected = checkSelectedItems(mediaItem)
-            items.add(if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration))
+            withContext(Dispatchers.Main) {
+                imagesAdapter.submitList(items.sortedBy { it.media.isWrongImage })
+            }
         }
-        cursor.moveToPosition(-1)
-        imagesAdapter.submitList(items.sortedBy { it.media.isWrongImage })
     }
 
     override fun onLoaderReset(loader: Loader<Cursor>) {

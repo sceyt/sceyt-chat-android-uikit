@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBinding,
                                private val callbacks: Callbacks) : BaseViewHolder<AttachmentItem>(binding.root) {
@@ -23,7 +24,7 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBind
                 setBackgroundColor(Color.TRANSPARENT)
             } else {
                 setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.sceyt_ic_file))
-                setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.sceyt_color_accent))
+                setBackgroundColor(ContextCompat.getColor(itemView.context, SceytKitConfig.sceytColorAccent))
                 setPadding(40)
             }
         }
