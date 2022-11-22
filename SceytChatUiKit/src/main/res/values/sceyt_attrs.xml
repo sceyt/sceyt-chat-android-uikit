@@ -10,11 +10,11 @@
         <attr name="sceytAvatarDefaultIcon" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="SceytToReplayLineView">
-        <attr name="sceytToReplayLineViewToLeft" format="boolean" />
-        <attr name="sceytToReplayLineViewStrokeColor" format="reference|color" />
-        <attr name="sceytToReplayLineViewConnectedViewTop" format="reference" />
-        <attr name="sceytToReplayLineViewConnectedViewBottom" format="reference" />
+    <declare-styleable name="SceytToReplyLineView">
+        <attr name="sceytToReplyLineViewToLeft" format="boolean" />
+        <attr name="sceytToReplyLineViewStrokeColor" format="reference|color" />
+        <attr name="sceytToReplyLineViewConnectedViewTop" format="reference" />
+        <attr name="sceytToReplyLineViewConnectedViewBottom" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="SceytDateStatusView">

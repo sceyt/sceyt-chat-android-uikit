@@ -14,7 +14,7 @@ sealed class MessageCommandEvent {
             val message: SceytMessage,
     ) : MessageCommandEvent()
 
-    data class Replay(
+    data class Reply(
             val message: SceytMessage,
     ) : MessageCommandEvent()
 

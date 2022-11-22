@@ -30,10 +30,10 @@
     <string name="sceyt_react">React</string>
     <string name="sceyt_add">Add</string>
     <string name="sceyt_remove">Remove</string>
-    <string name="sceyt_replay">Replay</string>
-    <string name="sceyt_replay_in_thread">Replay in thread</string>
-    <string name="sceyt_replays">Replays</string>
-    <string name="sceyt_thread_replay">Thread replay</string>
+    <string name="sceyt_reply">Reply</string>
+    <string name="sceyt_reply_in_thread">Reply in thread</string>
+    <string name="sceyt_replies">Replies</string>
+    <string name="sceyt_thread_reply">Thread reply</string>
     <string name="sceyt_with">with %s</string>
     <string name="sceyt_ui_channel_list_empty">No results found</string>
     <string name="sceyt_messages_list_empty">No messages yet</string>
