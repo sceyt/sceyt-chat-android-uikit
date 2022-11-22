@@ -11,13 +11,10 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="center"
-        android:background="@drawable/sceyt_bg_circle"
-        android:padding="12dp"
-        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_file" />
+        app:srcCompat="@drawable/sceyt_ic_file_with_bg" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"

@@ -1,10 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -66,6 +64,5 @@ class MessageFileViewHolder(
 
     private fun SceytMessageFileItemBinding.setupStyle() {
         icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.fileAttachmentIconBackgroundColor))
     }
 }

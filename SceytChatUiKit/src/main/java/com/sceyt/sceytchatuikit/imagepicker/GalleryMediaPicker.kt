@@ -219,14 +219,13 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     private fun loadWithFlow(cursor: Cursor) = callbackFlow<List<MediaItem>> {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val items = ArrayList<MediaItem>()
-            val wrongImages = ArrayList<MediaItem>()
-
-            val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
-            val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
-            val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
-            while (cursor.moveToNext()) {
-                try {
+            try {
+                val items = ArrayList<MediaItem>()
+                val wrongImages = ArrayList<MediaItem>()
+                val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
+                val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
+                val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+                while (cursor.moveToNext()) {
                     val id = cursor.getLong(columnIndex)
                     val type = cursor.getInt(columnMediaTypeIndex)
                     var isImage: Boolean
@@ -260,18 +259,18 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                         trySend(ArrayList(items))
                         items.clear()
                     }
-                } catch (ex: Exception) {
-                    Log.i(this@GalleryMediaPicker.TAG, ex.message.toString())
                 }
+                cursor.moveToPosition(-1)
+
+                val data = items + wrongImages
+                if (data.isNotEmpty())
+                    trySend(data)
+
+                channel.close()
+            } catch (ex: Exception) {
+                Log.i(this@GalleryMediaPicker.TAG, ex.message.toString())
+                channel.close()
             }
-
-            cursor.moveToPosition(-1)
-
-            val data = items + wrongImages
-            if (data.isNotEmpty())
-                trySend(data)
-
-            channel.close()
         }
         awaitClose()
     }

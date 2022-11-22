@@ -113,8 +113,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = from?.avatarURL.equalsIgnoreNull(other.from?.avatarURL).not(),
         nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
-        replayCountChanged = replyCount != other.replyCount,
-        replayContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
+        replyCountChanged = replyCount != other.replyCount,
+        replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
         reactionsChanged = lastReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
             other.lastReactions?.map { it.toReactionEntity(id) }
         ).not(),
@@ -130,8 +130,8 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = from?.avatarURL.equalsIgnoreNull(other.from?.avatarURL).not(),
         nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
-        replayCountChanged = replyCount != other.replyCount,
-        replayContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
+        replyCountChanged = replyCount != other.replyCount,
+        replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
         reactionsChanged = lastReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
             other.lastReactions?.map { it.toReactionEntity(id) }
         ).not(),

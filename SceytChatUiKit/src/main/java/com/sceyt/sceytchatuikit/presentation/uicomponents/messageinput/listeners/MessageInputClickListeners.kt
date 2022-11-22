@@ -13,8 +13,8 @@ sealed interface MessageInputClickListeners {
         fun onSendAttachmentClick(view: View)
     }
 
-    fun interface CloseReplayMessageViewClickListener : MessageInputClickListeners {
-        fun onCancelReplayMessageViewClick(view: View)
+    fun interface CloseReplyMessageViewClickListener : MessageInputClickListeners {
+        fun onCancelReplyMessageViewClick(view: View)
     }
 
     fun interface RemoveAttachmentClickListener : MessageInputClickListeners {
@@ -29,7 +29,7 @@ sealed interface MessageInputClickListeners {
     interface ClickListeners :
             SendMsgClickListener,
             SendAttachmentClickListener,
-            CloseReplayMessageViewClickListener,
+            CloseReplyMessageViewClickListener,
             RemoveAttachmentClickListener,
             JoinClickListener
 }
