@@ -1,31 +1,23 @@
 package com.sceyt.sceytchatuikit.imagepicker.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.databinding.ItemGalleryImageBinding
 import com.sceyt.sceytchatuikit.databinding.ItemGalleryVideoBinding
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryImageViewHolder
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryVideoViewHolder
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 
-class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListAdapter<MediaItem, BaseViewHolder<MediaItem>>(DIFF_UTIL) {
+class GalleryMediaAdapter(private var clickListener: MediaClickListener) : RecyclerView.Adapter<BaseViewHolder<MediaItem>>() {
+    private var currentList = arrayListOf<MediaItem>()
 
     companion object {
-        val DIFF_UTIL = object : DiffUtil.ItemCallback<MediaItem>() {
-            override fun areItemsTheSame(oldItem: MediaItem, newItem: MediaItem): Boolean {
-                return oldItem == newItem
-            }
-
-            override fun areContentsTheSame(oldItem: MediaItem, newItem: MediaItem): Boolean {
-                return oldItem == newItem
-            }
-        }
-
         @BindingAdapter("setMediaCheckedState")
         @JvmStatic
         fun setMediaCheckedState(image: ImageView, isChecked: Boolean) {
@@ -51,6 +43,17 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : ListA
 
     override fun getItemCount(): Int {
         return currentList.size
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun setData(data: List<MediaItem>) {
+        currentList = data.toArrayList()
+        notifyDataSetChanged()
+    }
+
+    fun addNewData(data: List<MediaItem>) {
+        currentList.addAll(data)
+        notifyItemRangeInserted(currentList.size - data.size, data.size)
     }
 
     override fun getItemViewType(position: Int): Int {
