@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
@@ -279,13 +280,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         val attachments = mutableListOf<Attachment>()
 
         filePath.forEach { item ->
-            val attachment = Attachment.Builder(item, getAttachmentType(item))
-                .setName(File(item).name)
-                .setMetadata(Gson().toJson(AttachmentMetadata(item)))
-                .setUpload(true)
-                .build()
+            val file = File(item)
+            if (file.exists()) {
+                val attachment = Attachment.Builder(item, getAttachmentType(item))
+                    .setName(File(item).name)
+                    .setMetadata(Gson().toJson(AttachmentMetadata(item)))
+                    .setUpload(true)
+                    .build()
 
-            attachments.add(attachment)
+                attachments.add(attachment)
+            } else
+                Toast.makeText(context, "\"${File(item).name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         addAttachments(attachments)
     }
