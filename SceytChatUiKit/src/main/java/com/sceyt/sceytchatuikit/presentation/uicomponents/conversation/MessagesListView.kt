@@ -470,7 +470,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
-        showMessageActionsPopup(view, item.sceytMessage)
+        clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {

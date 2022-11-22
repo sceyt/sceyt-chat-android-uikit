@@ -15,7 +15,7 @@ abstract class BaseGalleryViewHolder(view: View,
 
     protected fun onItemClick(item: MediaItem) {
         if (item.media.isWrongImage) {
-            Toast.makeText(context, context.getString(R.string.sceyt_unsupported_file_format), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.sceyt_this_unsupported_file_format), Toast.LENGTH_SHORT).show()
             return
         }
         clickListener.onClick(item)
