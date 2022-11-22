@@ -33,8 +33,9 @@ import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
 import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 
@@ -188,13 +189,39 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
         cursor ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadWithFlow(cursor).collect {
+                imagesAdapter.addNewData(it)
+            }
+        }
+    }
+
+    override fun onLoaderReset(loader: Loader<Cursor>) {
+        imagesAdapter.setData(emptyList())
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArray(STATE_SELECTION, selectedMediaPaths.toTypedArray())
+    }
+
+    private fun checkSelectedItems(mediaItem: MediaItem): Boolean {
+        val contains = selectedMediaPaths.contains(mediaItem.media.realPath)
+        if (contains) selectedMedia.add(mediaItem.media)
+        return contains
+    }
+
+    private fun loadWithFlow(cursor: Cursor) = callbackFlow<List<MediaItem>> {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val items = ArrayList<MediaItem>()
-            try {
-                val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
-                val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
-                val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
-                while (cursor.moveToNext()) {
+            val wrongImages = ArrayList<MediaItem>()
+
+            val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
+            val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
+            val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+            while (cursor.moveToNext()) {
+                try {
                     val id = cursor.getLong(columnIndex)
                     val type = cursor.getInt(columnMediaTypeIndex)
                     var isImage: Boolean
@@ -218,32 +245,30 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                     val model = MediaModel(contentUri, realPath, isWrongImage)
                     val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
                     mediaItem.media.selected = checkSelectedItems(mediaItem)
-                    items.add(if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration))
+
+                    if (isWrongImage)
+                        wrongImages.add(mediaItem)
+                    else
+                        items.add(mediaItem)
+
+                    if (items.size == CHUNK_SIZE) {
+                        trySend(ArrayList(items))
+                        items.clear()
+                    }
+                } catch (ex: Exception) {
+                    Log.i(this@GalleryMediaPicker.TAG, ex.message.toString())
                 }
-                cursor.moveToPosition(-1)
-            } catch (ex: Exception) {
-                Log.i(TAG, ex.message.toString())
             }
 
-            withContext(Dispatchers.Main) {
-                imagesAdapter.submitList(items.sortedBy { it.media.isWrongImage })
-            }
+            cursor.moveToPosition(-1)
+
+            val data = items + wrongImages
+            if (data.isNotEmpty())
+                trySend(data)
+
+            channel.close()
         }
-    }
-
-    override fun onLoaderReset(loader: Loader<Cursor>) {
-        imagesAdapter.submitList(emptyList())
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putStringArray(STATE_SELECTION, selectedMediaPaths.toTypedArray())
-    }
-
-    private fun checkSelectedItems(mediaItem: MediaItem): Boolean {
-        val contains = selectedMediaPaths.contains(mediaItem.media.realPath)
-        if (contains) selectedMedia.add(mediaItem.media)
-        return contains
+        awaitClose()
     }
 
     data class MediaModel(val contentUri: Uri,
@@ -271,6 +296,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     companion object {
         private const val LOADER_ID = 0x1337
+        private const val CHUNK_SIZE = 150
         private const val STATE_SELECTION = "stateSelection"
 
         var pickerListener: PickerListener? = null
