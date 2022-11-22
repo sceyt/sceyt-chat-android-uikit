@@ -88,7 +88,7 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    private fun onChanelCreatedOrJoined(channel: Channel?) {
+    private suspend fun onChanelCreatedOrJoined(channel: Channel?) {
         channel?.let {
             val members = if (it is GroupChannel) it.members else arrayListOf((it as DirectChannel).peer)
             val sceytChannel = channel.toSceytUiChannel()
@@ -128,7 +128,7 @@ internal class PersistenceChannelsLogicImpl(
         channelsCash.upsertChannel(channel)
     }
 
-    private fun insertChannel(channel: SceytChannel, vararg members: SceytMember) {
+    private suspend fun insertChannel(channel: SceytChannel, vararg members: SceytMember) {
         val users = members.map { it.toUserEntity() }
         channel.lastMessage?.let {
             it.lastReactions?.map { reaction -> reaction.user }?.let { it1 ->
@@ -157,7 +157,6 @@ internal class PersistenceChannelsLogicImpl(
 
             val response = if (offset == 0) channelsRepository.getChannels(searchQuery)
             else channelsRepository.loadMoreChannels()
-
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
@@ -235,6 +234,11 @@ internal class PersistenceChannelsLogicImpl(
 
             lastMessage?.let {
                 lastMessages.add(it.toMessageDb())
+                lastMessage.parent?.let { parent ->
+                    lastMessages.add(parent.toMessageDb())
+                    if (lastMessage.incoming)
+                        parent.from?.let { user -> users.add(user.toUserEntity()) }
+                }
 
                 //Add user from last message
                 it.from?.let { user ->

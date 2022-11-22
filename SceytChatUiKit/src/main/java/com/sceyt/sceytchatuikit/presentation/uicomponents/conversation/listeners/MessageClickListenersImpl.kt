@@ -12,7 +12,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
     private var messageLongClickListener: MessageClickListeners.MessageLongClickListener? = null
     private var avatarClickListener: MessageClickListeners.AvatarClickListener? = null
-    private var replayCountClickListener: MessageClickListeners.ReplayCountClickListener? = null
+    private var replyCountClickListener: MessageClickListeners.ReplyCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
     private var reactionLongClickListener: MessageClickListeners.ReactionLongClickListener? = null
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
@@ -38,9 +38,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         avatarClickListener?.onAvatarClick(view, item)
     }
 
-    override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-        defaultListeners?.onReplayCountClick(view, item)
-        replayCountClickListener?.onReplayCountClick(view, item)
+    override fun onReplyCountClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onReplyCountClick(view, item)
+        replyCountClickListener?.onReplyCountClick(view, item)
     }
 
     override fun onAddReactionClick(view: View, message: SceytMessage) {
@@ -83,7 +83,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             is MessageClickListeners.ClickListeners -> {
                 messageLongClickListener = listener
                 avatarClickListener = listener
-                replayCountClickListener = listener
+                replyCountClickListener = listener
                 addReactionClickListener = listener
                 reactionClickListener = listener
                 reactionLongClickListener = listener
@@ -98,8 +98,8 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             is MessageClickListeners.AvatarClickListener -> {
                 avatarClickListener = listener
             }
-            is MessageClickListeners.ReplayCountClickListener -> {
-                replayCountClickListener = listener
+            is MessageClickListeners.ReplyCountClickListener -> {
+                replyCountClickListener = listener
             }
             is MessageClickListeners.AddReactionClickListener -> {
                 addReactionClickListener = listener

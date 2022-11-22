@@ -196,29 +196,29 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.deleteMember(channelId, memberId)
     }
 
-    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int,
+    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
                                           loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
+        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
+    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
                                           offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replayInThread, offset, ignoreDb)
+        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replyInThread, offset, ignoreDb)
     }
 
-    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
+    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
                                           loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNearMessages(conversationId, messageId, replayInThread, loadKey, ignoreDb)
+        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
+    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: Long,
                                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNewestMessages(conversationId, replayInThread, loadKey, ignoreDb)
+        return messagesLogic.loadNewestMessages(conversationId, replyInThread, loadKey, ignoreDb)
     }
 
-    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
+    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> {
-        return messagesLogic.syncMessagesAfterMessageId(conversationId, replayInThread, messageId)
+        return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {

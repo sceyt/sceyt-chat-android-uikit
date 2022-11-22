@@ -88,7 +88,7 @@ internal class PersistenceMembersLogicImpl(
             .map { memberEntity -> memberEntity.toSceytMember() }
     }
 
-    private fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {
+    private suspend fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {
         if (list.isNullOrEmpty()) return
 
         val links = arrayListOf<UserChatLink>()

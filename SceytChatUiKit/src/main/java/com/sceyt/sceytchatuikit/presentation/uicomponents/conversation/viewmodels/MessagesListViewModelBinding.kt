@@ -144,7 +144,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
+    messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
 
     lifecycleOwner.lifecycleScope.launch {
         onChannelUpdatedEventFlow.collect {
@@ -161,7 +161,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 pinnedLastReadMessageId = channel.lastReadMessageId
 
             lifecycleOwner.lifecycleScope.launch {
-                val isLastDisplaying = messagesListView.isLastItemDisplaying()
+                val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
                 messagesListView.addNextPageMessages(mapToMessageListItem(data = it.second,
                     hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
                 if (isLastDisplaying)
@@ -245,7 +245,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
-        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel(myId))
+        messagesListView.enableDisableClickActions(!replyInThread && it.checkIsMemberInChannel(myId))
     })
 
     fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
@@ -279,13 +279,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     lifecycleOwner.lifecycleScope.launch {
         onNewThreadMessageFlow.collect {
-            messagesListView.updateReplayCount(it)
+            messagesListView.updateReplyCount(it)
         }
     }
 
     lifecycleOwner.lifecycleScope.launch {
         onOutGoingThreadMessageFlow.collect {
-            messagesListView.newReplayMessage(it.parent?.id)
+            messagesListView.newReplyMessage(it.parent?.id)
         }
     }
 
@@ -342,7 +342,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     joinLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
+                messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
             }
         }
     })
@@ -350,7 +350,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
+                messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
                 messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
             }
         }
@@ -388,10 +388,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 }
 
 fun MessageListViewModel.bind(messageInputView: MessageInputView,
-                              replayInThreadMessage: SceytMessage?,
+                              replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
 
-    messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
+    messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
 
@@ -412,11 +412,11 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     })
 
     onEditMessageCommandLiveData.observe(lifecycleOwner, Observer {
-        messageInputView.message = it.toMessage()
+        messageInputView.editMessage(it.toMessage())
     })
 
-    onReplayMessageCommandLiveData.observe(lifecycleOwner, Observer {
-        messageInputView.replayMessage(it.toMessage())
+    onReplyMessageCommandLiveData.observe(lifecycleOwner, Observer {
+        messageInputView.replyMessage(it.toMessage())
     })
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
@@ -447,20 +447,15 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
-            messageInputView.cancelReplay {
-                this@bind.sendMessage(message)
-            }
+            this@bind.sendMessage(message)
         }
 
-        override fun sendReplayMessage(message: Message, parent: Message?) {
-            messageInputView.cancelReplay {
-                this@bind.sendMessage(message, parent)
-            }
+        override fun sendReplyMessage(message: Message, parent: Message?) {
+            this@bind.sendMessage(message, parent)
         }
 
         override fun sendEditMessage(message: SceytMessage) {
             this@bind.editMessage(message)
-            messageInputView.cancelReplay()
         }
 
         override fun typing(typing: Boolean) {
@@ -474,11 +469,11 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 }
 
 fun MessageListViewModel.bind(headerView: ConversationHeaderView,
-                              replayInThreadMessage: SceytMessage?,
+                              replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
 
-    if (replayInThread)
-        headerView.setReplayMessage(channel, replayInThreadMessage)
+    if (replyInThread)
+        headerView.setReplyMessage(channel, replyInThreadMessage)
     else
         headerView.setChannel(channel)
 
@@ -498,19 +493,19 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     }
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
-        if (!replayInThread)
+        if (!replyInThread)
             headerView.setChannel(channel)
     })
 
     joinLiveData.observe(lifecycleOwner, Observer {
-        if (!replayInThread)
+        if (!replyInThread)
             getChannel(channel.id)
     })
 
     channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             channel = it.data ?: return@Observer
-            if (!replayInThread)
+            if (!replyInThread)
                 headerView.setChannel(it.data)
         }
     })

@@ -32,10 +32,10 @@ object MessagesStyle {
     var messageStatusReadIcon: Int = R.drawable.sceyt_ic_status_read
 
     @ColorRes
-    var senderNameTextColor: Int = R.color.sceyt_color_accent
+    var senderNameTextColor: Int = SceytKitConfig.sceytColorAccent
 
     @ColorRes
-    var replayMessageLineColor: Int = R.color.sceyt_color_accent
+    var replyMessageLineColor: Int = SceytKitConfig.sceytColorAccent
 
     @DrawableRes
     var dateSeparatorItemBackground = R.drawable.sceyt_bg_message_day
@@ -63,7 +63,13 @@ object MessagesStyle {
     var differentSenderMsgDistance = dpToPx(8f)
 
     @ColorRes
-    var downScrollerUnreadCountColor: Int = R.color.sceyt_color_accent
+    var downScrollerUnreadCountColor: Int = SceytKitConfig.sceytColorAccent
+
+    @ColorRes
+    var mediaLoaderColor: Int = SceytKitConfig.sceytColorAccent
+
+    @DrawableRes
+    var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_with_bg
 
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
@@ -73,14 +79,16 @@ object MessagesStyle {
         messageStatusDeliveredIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageDeliveredIcon, messageStatusDeliveredIcon)
         messageStatusReadIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageReadIcon, messageStatusReadIcon)
         senderNameTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageSenderNameTextColor, senderNameTextColor)
-        replayMessageLineColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiReplayMessageLineColor, replayMessageLineColor)
+        replyMessageLineColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiReplyMessageLineColor, replyMessageLineColor)
         dateSeparatorItemBackground = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackground, dateSeparatorItemBackground)
         dateSeparatorItemTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor, dateSeparatorItemTextColor)
-        sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameMessageSenderDistance, sameSenderMsgDistance)
-        differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentMessageSenderDistance, differentSenderMsgDistance)
+        sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameSenderMessageDistance, sameSenderMsgDistance)
+        differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentSenderMessageDistance, differentSenderMsgDistance)
         dateSeparatorTextFont = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, dateSeparatorTextFont)
         dateSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, dateSeparatorTextStyle)
         downScrollerUnreadCountColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor, downScrollerUnreadCountColor)
+        mediaLoaderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMediaLoaderColor, mediaLoaderColor)
+        fileAttachmentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiFileAttachmentIcon, fileAttachmentIcon)
         return this
     }
 }

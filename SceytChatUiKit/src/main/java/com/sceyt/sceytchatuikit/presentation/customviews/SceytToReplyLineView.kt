@@ -10,7 +10,7 @@ import android.widget.TextView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 
-class SceytToReplayLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+class SceytToReplyLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
     private var path = Path()
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -23,11 +23,11 @@ class SceytToReplayLineView @JvmOverloads constructor(context: Context, attrs: A
     private var connectedViewBottomHalfHeight = 0f
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.SceytToReplayLineView)
-        isToLeft = a.getBoolean(R.styleable.SceytToReplayLineView_sceytToReplayLineViewToLeft, false)
-        strokeColor = a.getColor(R.styleable.SceytToReplayLineView_sceytToReplayLineViewStrokeColor, strokeColor)
-        connectedViewTopId = a.getResourceId(R.styleable.SceytToReplayLineView_sceytToReplayLineViewConnectedViewTop, 0)
-        connectedViewBottomId = a.getResourceId(R.styleable.SceytToReplayLineView_sceytToReplayLineViewConnectedViewBottom, 0)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.SceytToReplyLineView)
+        isToLeft = a.getBoolean(R.styleable.SceytToReplyLineView_sceytToReplyLineViewToLeft, false)
+        strokeColor = a.getColor(R.styleable.SceytToReplyLineView_sceytToReplyLineViewStrokeColor, strokeColor)
+        connectedViewTopId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytToReplyLineViewConnectedViewTop, 0)
+        connectedViewBottomId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytToReplyLineViewConnectedViewBottom, 0)
         a.recycle()
     }
 

@@ -49,14 +49,14 @@ class OutLinkMsgViewHolder(
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
-                if (diff.replayCountChanged)
-                    setReplayCount(tvReplayCount, toReplayLine, item)
+                if (diff.replyCountChanged)
+                    setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPool)
 
-                if (diff.replayContainerChanged)
-                    setReplayedMessageContainer(message, viewReplay)
+                if (diff.replyContainerChanged)
+                    setReplyMessageContainer(message, viewReply)
 
                 loadLinkPreview(item, layoutLinkPreview, messageBody)
             }
