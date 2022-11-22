@@ -233,6 +233,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.layoutInput.isVisible = show.not()
     }
 
+    private fun checkIsExistAttachment(path: String?): Boolean {
+        return allAttachments.map { it.url }.contains(path)
+    }
+
     internal fun replayMessage(message: Message) {
         replayMessage = message
         with(binding.layoutReplayMessage) {
@@ -274,10 +278,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun onChannelLeft() {
         showHideJoinButton(true)
-    }
-
-    internal fun checkIsExistAttachment(path: String?): Boolean {
-        return allAttachments.map { it.url }.contains(path)
     }
 
     fun addAttachmentFile(vararg filePath: String) {
