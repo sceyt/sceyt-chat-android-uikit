@@ -10,4 +10,7 @@ data class ParentMessageDb(
 
         @Relation(parentColumn = "fromId", entityColumn = "user_id")
         val from: UserEntity?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid")
+        val attachments: List<AttachmentEntity>?,
 )

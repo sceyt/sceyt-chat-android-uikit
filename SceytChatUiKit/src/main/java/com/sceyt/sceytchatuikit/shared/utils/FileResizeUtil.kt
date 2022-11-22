@@ -16,7 +16,7 @@ import kotlin.math.roundToInt
 
 object FileResizeUtil {
 
-    fun resizeAndCompressImage(application: Context, filePath: String, fileName: String,
+    fun resizeAndCompressImage(context: Context, filePath: String, fileName: String,
                                reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File {
         val initialSize = getImageSize(Uri.parse(filePath))
         var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
@@ -25,14 +25,14 @@ object FileResizeUtil {
 
         try {
             bmpPic = getResizedBitmap(bitmap = bmpPic, filePath)
-            val bmpFile = FileOutputStream(application.cacheDir.toString() + fileName)
-            bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            val bmpFile = FileOutputStream(context.cacheDir.toString() + fileName)
+            bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
             bmpFile.close()
         } catch (e: java.lang.Exception) {
             Log.i(TAG, e.message.toString())
         }
-        return File(application.cacheDir.toString() + fileName)
+        return File(context.cacheDir.toString() + fileName)
     }
 
     private fun getImageSize(image: Uri): Size {

@@ -86,31 +86,31 @@ internal class PersistenceMessagesLogicImpl(
         messagesCash.messageUpdated(data.toSceytUiMessage())
     }
 
-    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
+    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
                                           offset: Int, loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadPrev, conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
+        return loadMessages(LoadPrev, conversationId, lastMessageId, replyInThread, offset, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
+    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
                                           offset: Int, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNext, conversationId, lastMessageId, replayInThread, offset, ignoreDb = ignoreDb)
+        return loadMessages(LoadNext, conversationId, lastMessageId, replyInThread, offset, ignoreDb = ignoreDb)
     }
 
-    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
+    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
                                           loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replayInThread, 0, loadKey, ignoreDb)
+        return loadMessages(LoadNear, conversationId, messageId, replyInThread, 0, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
+    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: Long,
                                             ignoreDb: Boolean,
                                             ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNewest, conversationId, 0, replayInThread, 0, loadKey, ignoreDb)
+        return loadMessages(LoadNewest, conversationId, 0, replyInThread, 0, loadKey, ignoreDb)
     }
 
-    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
+    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
         ConnectionEventsObserver.awaitToConnectSceyt()
-        messagesRepository.loadAllMessagesAfter(conversationId, replayInThread, messageId)
+        messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId)
             .onCompletion { channel.close() }
             .collect {
                 if (it is SceytResponse.Success) {
@@ -259,8 +259,10 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.editMessage(id, message)
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
-                messageDao.updateMessage(updatedMsg.toMessageEntity())
-                messagesCash.messageUpdated(updatedMsg)
+                //todo should return updatedMsg
+
+                messageDao.updateMessage(message.toMessageEntity())
+                messagesCash.messageUpdated(message)
             }
         }
         return response
@@ -301,7 +303,7 @@ internal class PersistenceMessagesLogicImpl(
 
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
-                             replayInThread: Boolean, offset: Int, loadKey: Long = messageId,
+                             replyInThread: Boolean, offset: Int, loadKey: Long = messageId,
                              ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             if (offset == 0) messagesCash.clear()
@@ -310,7 +312,7 @@ internal class PersistenceMessagesLogicImpl(
             if (!ignoreDb)
                 trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, loadKey))
             // Load from server
-            trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, replayInThread,
+            trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, replyInThread,
                 loadKey, ignoreDb))
 
             channel.close()
@@ -354,7 +356,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
-                                                    offset: Int, replayInThread: Boolean, loadKey: Long = lastMessageId,
+                                                    offset: Int, replyInThread: Boolean, loadKey: Long = lastMessageId,
                                                     ignoreDb: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
@@ -364,21 +366,21 @@ internal class PersistenceMessagesLogicImpl(
 
         when (loadType) {
             LoadPrev -> {
-                response = messagesRepository.getPrevMessages(channelId, lastMessageId, replayInThread)
+                response = messagesRepository.getPrevMessages(channelId, lastMessageId, replyInThread)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
                 }
             }
             LoadNext -> {
-                response = messagesRepository.getNextMessages(channelId, lastMessageId, replayInThread)
+                response = messagesRepository.getNextMessages(channelId, lastMessageId, replyInThread)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasNext = response.data?.size == MESSAGES_LOAD_SIZE
                 }
             }
             LoadNear -> {
-                response = messagesRepository.getNearMessages(channelId, lastMessageId, replayInThread)
+                response = messagesRepository.getNearMessages(channelId, lastMessageId, replyInThread)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     val groupOldAndNewData = messages.groupBy { it.id > lastMessageId }
@@ -391,7 +393,7 @@ internal class PersistenceMessagesLogicImpl(
                 }
             }
             LoadNewest -> {
-                response = messagesRepository.getPrevMessages(channelId, Long.MAX_VALUE, replayInThread)
+                response = messagesRepository.getPrevMessages(channelId, Long.MAX_VALUE, replyInThread)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
@@ -458,12 +460,20 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun saveMessagesToDb(list: List<SceytMessage>) {
         if (list.isEmpty()) return
 
-        messageDao.insertMessages(list.map {
-            it.toMessageDb()
-        })
+        val usersDb = arrayListOf<UserEntity>()
+
+        val messagesDb = arrayListOf<MessageDb>()
+        for (message in list) {
+            messagesDb.add(message.toMessageDb())
+            message.parent?.let { parent ->
+                messagesDb.add(parent.toMessageDb())
+                if (parent.incoming)
+                    parent.from?.let { user -> usersDb.add(user.toUserEntity()) }
+            }
+        }
+        messageDao.insertMessages(messagesDb)
 
         // Update users
-        val usersDb = arrayListOf<UserEntity>()
         list.filter { it.incoming && it.from != null }.map { it.from!! }.toSet().let { users ->
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })

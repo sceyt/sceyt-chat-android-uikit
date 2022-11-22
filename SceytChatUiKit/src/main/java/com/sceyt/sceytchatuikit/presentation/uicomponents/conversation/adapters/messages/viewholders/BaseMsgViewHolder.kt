@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.view.ViewStub
 import android.widget.TextView
 import androidx.annotation.CallSuper
-import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
@@ -21,19 +20,19 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplayContainerBinding
+import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.presentation.common.getAttachmentUrl
+import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
-import com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplayLineView
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.getAttachmentUrl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.getShowBody
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
@@ -51,7 +50,7 @@ abstract class BaseMsgViewHolder(view: View,
     : RecyclerView.ViewHolder(view) {
 
     protected val context: Context by lazy { view.context }
-    private var replayMessageContainerBinding: SceytRecyclerReplayContainerBinding? = null
+    private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
     protected lateinit var messageListItem: MessageListItem
 
@@ -81,17 +80,17 @@ abstract class BaseMsgViewHolder(view: View,
     private var reactionsAdapter: ReactionsAdapter? = null
 
     @SuppressLint("SetTextI18n")
-    protected fun setReplayCount(tvReplayCount: TextView, toReplayLine: SceytToReplayLineView, item: MessageListItem.MessageItem) {
-        val replayCount = item.message.replyCount
-        if (replayCount > 0) {
-            tvReplayCount.text = "$replayCount ${itemView.context.getString(R.string.sceyt_replays)}"
-            tvReplayCount.isVisible = true
-            toReplayLine.isVisible = true
+    protected fun setReplyCount(tvReplyCount: TextView, toReplyLine: SceytToReplyLineView, item: MessageListItem.MessageItem) {
+        val replyCount = item.message.replyCount
+        if (replyCount > 0) {
+            tvReplyCount.text = "$replyCount ${itemView.context.getString(R.string.sceyt_replies)}"
+            tvReplyCount.isVisible = true
+            toReplyLine.isVisible = true
 
-            tvReplayCount.setOnClickListener { messageListeners?.onReplayCountClick(it, item) }
+            tvReplyCount.setOnClickListener { messageListeners?.onReplyCountClick(it, item) }
         } else {
-            tvReplayCount.isVisible = false
-            toReplayLine.isVisible = false
+            tvReplyCount.isVisible = false
+            toReplyLine.isVisible = false
         }
     }
 
@@ -101,18 +100,18 @@ abstract class BaseMsgViewHolder(view: View,
         message.setConversationMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
-    protected fun setReplayedMessageContainer(message: SceytMessage, viewStub: ViewStub) {
+    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub) {
         if (message.parent == null || message.replyInThread || message.parent?.id == 0L) {
             viewStub.isVisible = false
             return
         }
         if (viewStub.parent != null)
-            SceytRecyclerReplayContainerBinding.bind(viewStub.inflate()).also {
-                replayMessageContainerBinding = it
+            SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
+                replyMessageContainerBinding = it
                 it.tvName.setTextColor(context.getCompatColor(MessagesStyle.senderNameTextColor))
-                it.view.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replayMessageLineColor))
+                it.view.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replyMessageLineColor))
             }
-        with(replayMessageContainerBinding ?: return) {
+        with(replyMessageContainerBinding ?: return) {
             val parent = message.parent
             tvName.text = getSenderName(parent?.from)
             if (parent?.state == MessageState.Deleted) {
@@ -133,7 +132,8 @@ abstract class BaseMsgViewHolder(view: View,
                         .load(url)
                         .override(imageAttachment.width, imageAttachment.height)
                         .into(imageAttachment)
-                } else imageAttachment.setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.sceyt_ic_file_with_bg))
+                } else
+                    imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
                 true
             }
             root.isVisible = true

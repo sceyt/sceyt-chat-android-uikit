@@ -8,7 +8,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import java.io.File
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBinding,
                                private val callbacks: Callbacks) : BaseViewHolder<AttachmentItem>(binding.root) {
@@ -16,15 +16,15 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBind
     override fun bind(item: AttachmentItem) {
         with(binding.fileImage) {
             if (item.attachment.type.isEqualsVideoOrImage()) {
-                Glide.with(this)
-                    .load(File(item.attachment.url))
-                    .override(400)
+                Glide.with(context)
+                    .load(item.attachment.url)
+                    .override(itemView.width)
                     .into(this)
                 setPadding(0)
                 setBackgroundColor(Color.TRANSPARENT)
             } else {
                 setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.sceyt_ic_file))
-                setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.sceyt_color_accent))
+                setBackgroundColor(ContextCompat.getColor(itemView.context, SceytKitConfig.sceytColorAccent))
                 setPadding(40)
             }
         }

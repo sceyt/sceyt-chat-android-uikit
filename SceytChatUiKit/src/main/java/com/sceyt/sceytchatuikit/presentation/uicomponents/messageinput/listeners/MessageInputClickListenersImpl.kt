@@ -8,7 +8,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
     private var defaultListeners: MessageInputClickListeners.ClickListeners = view
     private var sendMsgClickListener: MessageInputClickListeners.SendMsgClickListener? = null
     private var sendAttachmentClickListener: MessageInputClickListeners.SendAttachmentClickListener? = null
-    private var closeReplayMessageViewClickListener: MessageInputClickListeners.CloseReplayMessageViewClickListener? = null
+    private var closeReplyMessageViewClickListener: MessageInputClickListeners.CloseReplyMessageViewClickListener? = null
     private var removeAttachmentClickListener: MessageInputClickListeners.RemoveAttachmentClickListener? = null
     private var joinClickListener: MessageInputClickListeners.JoinClickListener? = null
 
@@ -22,9 +22,9 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
         sendAttachmentClickListener?.onSendAttachmentClick(view)
     }
 
-    override fun onCancelReplayMessageViewClick(view: View) {
-        defaultListeners.onCancelReplayMessageViewClick(view)
-        closeReplayMessageViewClickListener?.onCancelReplayMessageViewClick(view)
+    override fun onCancelReplyMessageViewClick(view: View) {
+        defaultListeners.onCancelReplyMessageViewClick(view)
+        closeReplyMessageViewClickListener?.onCancelReplyMessageViewClick(view)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
@@ -42,7 +42,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
             is MessageInputClickListeners.ClickListeners -> {
                 sendMsgClickListener = listener
                 sendAttachmentClickListener = listener
-                closeReplayMessageViewClickListener = listener
+                closeReplyMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
             }
@@ -52,8 +52,8 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
             is MessageInputClickListeners.SendAttachmentClickListener -> {
                 sendAttachmentClickListener = listener
             }
-            is MessageInputClickListeners.CloseReplayMessageViewClickListener -> {
-                closeReplayMessageViewClickListener = listener
+            is MessageInputClickListeners.CloseReplyMessageViewClickListener -> {
+                closeReplyMessageViewClickListener = listener
             }
             is MessageInputClickListeners.RemoveAttachmentClickListener -> {
                 removeAttachmentClickListener = listener

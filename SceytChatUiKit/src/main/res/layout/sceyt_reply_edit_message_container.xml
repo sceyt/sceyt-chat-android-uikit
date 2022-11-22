@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/view3"
+        android:layout_width="match_parent"
+        android:layout_height=".5dp"
+        android:background="@color/sceyt_color_divider"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icReplyOrEdit"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/tvName"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="@id/guidBegin"
+        app:layout_constraintTop_toTopOf="@id/tvName"
+        app:srcCompat="@drawable/sceyt_ic_input_reply" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="13dp"
+        android:layout_marginEnd="10dp"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toStartOf="@+id/icCancelReply"
+        app:layout_constraintStart_toEndOf="@+id/icReplyOrEdit"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Henry Willian" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvMessageBody"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="13dp"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_gray_800"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/icCancelReply"
+        app:layout_constraintStart_toStartOf="@id/guidBegin"
+        app:layout_constraintTop_toBottomOf="@+id/tvName"
+        tools:text="Waiting for your answer." />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icCancelReply"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:padding="6dp"
+        android:scaleType="center"
+        android:tint="#898B99"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guidEnd"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_cancel" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidBegin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="16dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="16dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

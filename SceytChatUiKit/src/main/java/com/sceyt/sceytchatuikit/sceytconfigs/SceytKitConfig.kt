@@ -1,8 +1,10 @@
 package com.sceyt.sceytchatuikit.sceytconfigs
 
+import androidx.annotation.ColorRes
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import androidx.databinding.library.baseAdapters.BR
+import com.sceyt.sceytchatuikit.R
 
 object SceytKitConfig {
     val SceytUITheme = ThemeConfig()
@@ -16,6 +18,9 @@ object SceytKitConfig {
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
     var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
     var presenceStatusText = ""
+
+    @ColorRes
+    var sceytColorAccent = R.color.sceyt_color_accent
 
     class ThemeConfig : BaseObservable() {
         @Bindable
