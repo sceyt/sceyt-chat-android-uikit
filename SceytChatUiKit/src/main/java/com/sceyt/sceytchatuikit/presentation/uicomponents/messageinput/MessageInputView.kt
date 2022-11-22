@@ -276,21 +276,27 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         showHideJoinButton(true)
     }
 
+    internal fun checkIsExistAttachment(path: String?): Boolean {
+        return allAttachments.map { it.url }.contains(path)
+    }
+
     fun addAttachmentFile(vararg filePath: String) {
         val attachments = mutableListOf<Attachment>()
+        for (path in filePath) {
+            if (checkIsExistAttachment(path))
+                continue
 
-        filePath.forEach { item ->
-            val file = File(item)
+            val file = File(path)
             if (file.exists()) {
-                val attachment = Attachment.Builder(item, getAttachmentType(item))
-                    .setName(File(item).name)
-                    .setMetadata(Gson().toJson(AttachmentMetadata(item)))
+                val attachment = Attachment.Builder(path, getAttachmentType(path))
+                    .setName(File(path).name)
+                    .setMetadata(Gson().toJson(AttachmentMetadata(path)))
                     .setUpload(true)
                     .build()
 
                 attachments.add(attachment)
             } else
-                Toast.makeText(context, "\"${File(item).name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         addAttachments(attachments)
     }
@@ -374,7 +380,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Choose file type popup listeners
     override fun onGalleryClick() {
-        GalleryMediaPicker().apply {
+        GalleryMediaPicker.instance(*allAttachments.map { it.url }.toTypedArray()).apply {
             GalleryMediaPicker.pickerListener = getPickerListener()
         }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
     }

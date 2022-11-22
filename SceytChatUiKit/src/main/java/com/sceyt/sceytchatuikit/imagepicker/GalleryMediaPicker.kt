@@ -15,6 +15,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
@@ -64,6 +65,10 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
         savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
             selectedMediaPaths = it.toMutableSet()
+        } ?: run {
+            arguments?.getStringArray(STATE_SELECTION)?.let {
+                selectedMediaPaths = it.toMutableSet()
+            }
         }
     }
 
@@ -300,5 +305,11 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         private const val STATE_SELECTION = "stateSelection"
 
         var pickerListener: PickerListener? = null
+
+        fun instance(vararg selections: String): GalleryMediaPicker {
+            return GalleryMediaPicker().apply {
+                arguments = bundleOf(STATE_SELECTION to selections)
+            }
+        }
     }
 }
