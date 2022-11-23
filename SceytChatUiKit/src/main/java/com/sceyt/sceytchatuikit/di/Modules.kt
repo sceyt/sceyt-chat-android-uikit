@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.di
 
 import android.content.Context
 import androidx.room.Room
+import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl
 import com.sceyt.sceytchatuikit.data.repositories.*
@@ -31,6 +32,7 @@ import org.koin.dsl.module
 internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
     single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
+    single { SceytSyncManager(get(), get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {

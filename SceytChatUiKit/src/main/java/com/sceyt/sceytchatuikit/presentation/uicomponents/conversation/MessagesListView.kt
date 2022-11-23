@@ -198,14 +198,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
         (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(message, diff)
-                ?: run {
-                    messagesRV.adapter?.notifyItemChanged(index, diff)
-                }
+                ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
     }
-
-    internal fun getFirstMessage() = messagesRV.getFirstMsg()
-
-    internal fun getLastMessage() = messagesRV.getLastMsg()
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
         messagesRV.setData(data, force)
@@ -226,7 +220,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage) {
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
-            if (item is MessageItem && (item.message.id == message.id ||
+            if (item is MessageItem && ((message.id != 0L && item.message.id == message.id) ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
                 item.message.updateMessage(message)
@@ -412,6 +406,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun getData() = messagesRV.getData()
+
+
+    fun getFirstMessage() = messagesRV.getFirstMsg()
+
+    fun getLastMessage() = messagesRV.getLastMsg()
+
+    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getFirstMessageBy(predicate)
+
+    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getLastMessageBy(predicate)
 
     fun getMessagesRecyclerView() = messagesRV
 

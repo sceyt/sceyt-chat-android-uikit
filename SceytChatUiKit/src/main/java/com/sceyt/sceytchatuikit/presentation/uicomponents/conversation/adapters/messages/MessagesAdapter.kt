@@ -67,6 +67,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun getLastMessageItem() = messages.findLast { it is MessageItem } as? MessageItem
 
+    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean) = messages.find(predicate)
+
+    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean) = messages.findLast(predicate)
+
     fun removeLoadingPrev() {
         if (messages.remove(loadingPrevItem))
             notifyItemRemoved(0)

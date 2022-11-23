@@ -404,7 +404,7 @@ internal class PersistenceChannelsLogicImpl(
                 channelsCash.upsertChannel(response.data)
             }
 
-        return SceytResponse.Error()
+        return response
     }
 
     override suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>> {

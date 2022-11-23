@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import android.app.Application
+import android.util.Log
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -116,7 +117,7 @@ internal class PersistenceMessagesLogicImpl(
                 if (it is SceytResponse.Success) {
                     it.data?.let { messages ->
                         saveMessagesToDb(messages)
-                        messagesCash.addAll(messages, false)
+                        messagesCash.upsertMessages(*messages.toTypedArray())
                         markChannelMessagesAsDelivered(conversationId, messages)
                     }
                 }
@@ -230,7 +231,7 @@ internal class PersistenceMessagesLogicImpl(
                         messagesCash.messageUpdated(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
                     }
-                }
+                } else Log.e("sendMessage", "send pending message error-> ${response.message}")
             }
         }
     }
