@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInpu
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -60,8 +61,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    lifecycleOwner.lifecycleScope.launch {
-        ChannelsCash.channelUpdatedFlow.collect { sceytChannel ->
+    lifecycleOwner.lifecycleScope.launchWhenResumed {
+        ChannelsCash.channelUpdatedFlow.collectLatest { sceytChannel ->
             if (channelsListView.channelUpdated(sceytChannel)) {
                 channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
             } else

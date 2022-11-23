@@ -139,11 +139,6 @@ open class ConversationActivity : AppCompatActivity() {
         replyMessage = intent.getParcelableExtra(REPLY_IN_THREAD_MESSAGE)
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.sendPendingMessages()
-    }
-
     companion object {
         private const val CHANNEL = "CHANNEL"
         private const val REPLY_IN_THREAD = "REPLY_IN_THREAD"

@@ -18,7 +18,7 @@ class ChannelsCash {
 
     companion object {
         private val channelUpdatedFlow_ = MutableSharedFlow<SceytChannel>(
-            extraBufferCapacity = 5,
+            extraBufferCapacity = 1,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<SceytChannel> = channelUpdatedFlow_

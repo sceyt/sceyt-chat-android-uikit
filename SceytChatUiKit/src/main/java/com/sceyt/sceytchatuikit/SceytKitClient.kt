@@ -32,7 +32,7 @@ object SceytKitClient : SceytKoinComponent {
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
-    private val syncManager by lazy { SceytSyncManager() }
+    private val syncManager by inject<SceytSyncManager>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(

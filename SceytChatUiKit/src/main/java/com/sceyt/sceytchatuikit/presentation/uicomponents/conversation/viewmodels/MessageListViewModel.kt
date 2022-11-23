@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
@@ -50,6 +51,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
+    private val syncManager: SceytSyncManager by inject()
     internal val myId = preference.getUserId()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
@@ -226,6 +228,12 @@ class MessageListViewModel(private val conversationId: Long,
         pagingResponseReceived(response)
     }
 
+    fun syncConversationMessagesAfter(messageId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            syncManager.syncConversationMessagesAfter(conversationId, messageId)
+        }
+    }
+
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
@@ -347,6 +355,7 @@ class MessageListViewModel(private val conversationId: Long,
         val messageItems = arrayListOf<MessageListItem>()
 
         withContext(Dispatchers.Default) {
+            var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
             data.forEachIndexed { index, sceytMessage ->
                 var prevMessage = compareMessage
                 if (index > 0)
@@ -363,8 +372,11 @@ class MessageListViewModel(private val conversationId: Long,
                     messageReactions = initReactionsItems(this)
                 })
 
-                if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId)
-                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, LoadKeyType.ScrollToUnreadMessage.longValue))
+                if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
+                        unreadLineMessage = it
+                    })
+                }
 
                 messageItems.add(messageItem)
             }

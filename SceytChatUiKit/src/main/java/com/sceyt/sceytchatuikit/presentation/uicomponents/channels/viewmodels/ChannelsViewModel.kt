@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -27,7 +26,6 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val channelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
-    internal val preference: SceytSharedPreference by inject()
 
     internal var searchQuery = ""
 
