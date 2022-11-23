@@ -28,7 +28,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
     suspend fun syncConversationMessagesAfter(channelId: Long, fromMessageId: Long) {
         val response = channelsMiddleWare.getChannelFromServer(channelId)
         if (response is SceytResponse.Success && response.data != null)
-            syncMessagesAfter(response.data, fromMessageId)
+            syncMessagesAfter(response.data, fromMessageId, true)
     }
 
     private suspend fun getChannels() {
@@ -56,14 +56,15 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
         if (channel.lastReadMessageId == channel.lastMessage?.id)
             return
 
-        syncMessagesAfter(channel, channel.lastReadMessageId)
+        syncMessagesAfter(channel, channel.lastReadMessageId, false)
     }
 
-    private suspend fun syncMessagesAfter(channel: SceytChannel, fromMessageId: Long) {
+    private suspend fun syncMessagesAfter(channel: SceytChannel, fromMessageId: Long, syncConversation: Boolean) {
         messagesMiddleWare.syncMessagesAfterMessageId(channel.id, false, fromMessageId).collect {
             if (it is SceytResponse.Success)
                 it.data?.let { messages ->
-                    syncChannelMessagesFinished_.postValue(Pair(channel, messages))
+                    if (syncConversation)
+                        syncChannelMessagesFinished_.postValue(Pair(channel, messages))
                 }
         }
     }

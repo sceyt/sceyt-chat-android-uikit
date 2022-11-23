@@ -285,7 +285,10 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
+            val sceytMessage = message.toSceytUiMessage(isGroup).apply {
+                this.parent = parent?.toSceytUiMessage(isGroup)
+            }
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, sceytMessage).collect { result ->
                 when (result) {
                     is SendMessageResult.TempMessage -> {
                         val outMessage = result.message.apply {
