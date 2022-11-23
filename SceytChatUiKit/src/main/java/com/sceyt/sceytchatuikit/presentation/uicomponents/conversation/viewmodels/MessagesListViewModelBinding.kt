@@ -200,6 +200,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
                 if (isLastDisplaying)
                     messagesListView.scrollToLastMessage()
+
+                messagesListView.sortMessages()
             }
         }
     })
