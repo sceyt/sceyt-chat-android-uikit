@@ -221,11 +221,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
-    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {
+    override suspend fun sendMessageAsFlow(channelId: Long, message: SceytMessage): Flow<SendMessageResult> {
         return messagesLogic.sendMessageAsFlow(channelId, message)
     }
 
-    override suspend fun sendMessage(channelId: Long, message: Message) {
+    override suspend fun sendMessage(channelId: Long, message: SceytMessage) {
         return messagesLogic.sendMessage(channelId, message)
     }
 

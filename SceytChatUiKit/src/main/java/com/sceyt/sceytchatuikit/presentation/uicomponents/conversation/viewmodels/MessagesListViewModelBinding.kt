@@ -1,11 +1,13 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
 import androidx.lifecycle.*
+import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -18,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -130,16 +133,47 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
+    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        ConnectionEventsObserver.onChangedConnectStatusFlow.collect { stateData ->
+            if (stateData.state == Types.ConnectState.StateConnected) {
+                val message = messagesListView.getLastMessageBy {
+                    // First tying to get last read message
+                    it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
+                } ?: messagesListView.getFirstMessageBy {
+                    // Next tying to get fist sent message
+                    it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
+                } ?: messagesListView.getFirstMessageBy {
+                    // Next tying to get fist delivered message
+                    it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
+                }
+                (message as? MessageListItem.MessageItem)?.let {
+                    syncConversationMessagesAfter(it.message.id)
+                }
+            }
+        }
+    }
+
+    lifecycleOwner.lifecycleScope.launch {
+        MessagesCash.messageUpdatedFlow.collect { messages ->
+            messages.forEach {
+                messagesListView.updateMessage(it)
+            }
+        }
+    }
+
     lifecycleOwner.lifecycleScope.launch {
         loadMessagesFlow.collect(::initMessagesResponse)
     }
 
-    /** Send pending markers when lifecycle come back onResume state*/
+    /** Send pending markers and pending messages when lifecycle come back onResume state*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (pendingDisplayMsgIds.isNotEmpty()) {
-                markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
-                pendingDisplayMsgIds.clear()
+            if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected) {
+                if (pendingDisplayMsgIds.isNotEmpty()) {
+                    markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
+                    pendingDisplayMsgIds.clear()
+                }
+                sendPendingMessages()
             }
         }
     }
@@ -166,6 +200,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
                 if (isLastDisplaying)
                     messagesListView.scrollToLastMessage()
+
+                messagesListView.sortMessages()
             }
         }
     })

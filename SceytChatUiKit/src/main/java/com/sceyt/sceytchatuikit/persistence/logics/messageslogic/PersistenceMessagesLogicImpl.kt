@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import android.app.Application
+import android.util.Log
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -60,8 +61,13 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         val message = data.second
-        messageDao.insertMessage(message.toMessageDb())
+
+        message.parent?.let { parent ->
+            saveMessagesToDb(arrayListOf(message, parent))
+        } ?: run { saveMessagesToDb(arrayListOf(message)) }
+
         messagesCash.add(message)
+
         if (message.incoming)
             markMessagesAs(data.first.id, Received, message.id)
 
@@ -116,7 +122,7 @@ internal class PersistenceMessagesLogicImpl(
                 if (it is SceytResponse.Success) {
                     it.data?.let { messages ->
                         saveMessagesToDb(messages)
-                        messagesCash.addAll(messages, false)
+                        messagesCash.upsertMessages(*messages.toTypedArray())
                         markChannelMessagesAsDelivered(conversationId, messages)
                     }
                 }
@@ -125,33 +131,37 @@ internal class PersistenceMessagesLogicImpl(
         awaitClose()
     }
 
-    override suspend fun sendMessage(channelId: Long, message: Message) {
+    override suspend fun sendMessage(channelId: Long, message: SceytMessage) {
         sendMessageAsFlow(channelId, message).collect()
     }
 
-    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> = callbackFlow {
-        trySend(SendMessageResult.TempMessage(message.toSceytUiMessage().apply {
+    override suspend fun sendMessageAsFlow(channelId: Long, message: SceytMessage): Flow<SendMessageResult> = callbackFlow {
+        val tmpMessage = message.apply {
             createdAt = System.currentTimeMillis()
             from = ClientWrapper.currentUser
             this.channelId = channelId
-        }))
-        MessageEventsObserver.emitOutgoingMessage(message.toSceytUiMessage())
+        }
 
-        checkAndResizeMessageAttachments(message)
-        messagesRepository.sendMessageAsFlow(channelId, message)
+        trySend(SendMessageResult.TempMessage(tmpMessage))
+        messagesCash.add(tmpMessage)
+
+        MessageEventsObserver.emitOutgoingMessage(message)
+
+        val sdkMessage = message.toMessage()
+        checkAndResizeMessageAttachments(sdkMessage)
+        messagesRepository.sendMessageAsFlow(channelId, sdkMessage)
             .onCompletion { channel.close() }
             .collect { result ->
                 when (result) {
                     is SendMessageResult.TempMessage -> {
-                        val tmpMessage = result.message
-                        val tmpMessageDb = tmpMessage.toMessageDbWithAttachments(message.attachments).also {
+                        val resultTmpMessage = result.message
+                        val tmpMessageDb = resultTmpMessage.toMessageDbWithAttachments(sdkMessage.attachments).also {
                             it.messageEntity.id = null
-                            if (tmpMessage.replyInThread)
-                                it.messageEntity.channelId = tmpMessage.parent?.id ?: 0
+                            if (resultTmpMessage.replyInThread)
+                                it.messageEntity.channelId = resultTmpMessage.parent?.id ?: 0
                         }
                         messageDao.insertMessage(tmpMessageDb)
-                        persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, tmpMessage)
-                        messagesCash.add(tmpMessage)
+                        persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, resultTmpMessage)
                     }
                     is SendMessageResult.Response -> {
                         val response = result.response
@@ -230,7 +240,7 @@ internal class PersistenceMessagesLogicImpl(
                         messagesCash.messageUpdated(responseMsg)
                         MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
                     }
-                }
+                } else Log.e("sendMessage", "send pending message error-> ${response.message}")
             }
         }
     }

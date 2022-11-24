@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
@@ -109,19 +110,21 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
             val skip = mAdapter.getSkip()
-            val lastItem = mAdapter.getLastMessageItem()
+            val lastSentItem = mAdapter.getLastMessageBy {
+                it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
+            }
             if (lastVisiblePosition == mAdapter.itemCount) {
                 if (!richToEndInvoked) {
                     richToEndInvoked = true
                     richToPrefetchDistanceToLoadNextInvoked = true
-                    richToEndListener?.invoke(skip, lastItem)
-                    needLoadNextMessagesListener?.invoke(skip, lastItem)
+                    richToEndListener?.invoke(skip, lastSentItem)
+                    needLoadNextMessagesListener?.invoke(skip, lastSentItem)
                 }
             } else richToEndInvoked = false
 
             if (!richToPrefetchDistanceToLoadNextInvoked) {
                 richToPrefetchDistanceToLoadNextInvoked = true
-                needLoadNextMessagesListener?.invoke(skip, lastItem)
+                needLoadNextMessagesListener?.invoke(skip, lastSentItem)
             }
         } else richToPrefetchDistanceToLoadNextInvoked = false
     }
@@ -164,6 +167,18 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun getLastMsg(): MessageListItem.MessageItem? {
         return if (::mAdapter.isInitialized) {
             mAdapter.getLastMessageItem()
+        } else null
+    }
+
+    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean): MessageListItem? {
+        return if (::mAdapter.isInitialized) {
+            mAdapter.getFirstMessageBy(predicate)
+        } else null
+    }
+
+    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean): MessageListItem? {
+        return if (::mAdapter.isInitialized) {
+            mAdapter.getLastMessageBy(predicate)
         } else null
     }
 

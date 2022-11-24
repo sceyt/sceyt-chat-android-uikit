@@ -203,11 +203,13 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setProgressColor(color: Int) {
         progressPaint.color = color
+        progressColor = color
         invalidate()
     }
 
     fun setTrackColor(color: Int) {
         trackPaint.color = color
+        trackColor = color
         invalidate()
     }
 
@@ -230,6 +232,12 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setIcon(drawable: Drawable?) {
         centerIcon = drawable
+        invalidate()
+    }
+
+    override fun setBackgroundColor(color: Int) {
+        bgColor = color
+        backgroundPaint.color = color
         invalidate()
     }
 

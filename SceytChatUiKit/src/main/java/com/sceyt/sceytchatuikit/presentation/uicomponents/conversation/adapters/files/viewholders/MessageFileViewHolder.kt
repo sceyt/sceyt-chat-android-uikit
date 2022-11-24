@@ -3,11 +3,13 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
 
 class MessageFileViewHolder(
@@ -64,5 +66,6 @@ class MessageFileViewHolder(
 
     private fun SceytMessageFileItemBinding.setupStyle() {
         icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+        loadProgress.setBackgroundColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

@@ -23,6 +23,9 @@ sealed class MessageListItem {
             other is DateSeparatorItem && this is DateSeparatorItem -> {
                 other.createdAt == createdAt && other.msgId == msgId
             }
+            other is UnreadMessagesSeparatorItem && this is UnreadMessagesSeparatorItem -> {
+                other.msgId == msgId
+            }
             other is LoadingPrevItem && this is LoadingPrevItem -> true
             other is LoadingNextItem && this is LoadingNextItem -> true
             else -> false
