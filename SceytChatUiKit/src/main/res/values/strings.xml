@@ -92,5 +92,7 @@
     <string name="sceyt_this_unsupported_file_format">This file format is not supported</string>
     <string name="sceyt_unsupported_file_format">file format is not supported</string>
     <string name="sceyt_max_select_count_should_be">Max select count should be lover than</string>
+    <string name="sceyt_video">Video</string>
+    <string name="sceyt_image">Image</string>
 
 </resources>

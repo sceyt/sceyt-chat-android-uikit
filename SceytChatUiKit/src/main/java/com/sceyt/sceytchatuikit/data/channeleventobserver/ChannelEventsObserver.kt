@@ -54,7 +54,7 @@ object ChannelEventsObserver {
 
 
     private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
-        extraBufferCapacity = 10,
+        extraBufferCapacity = 30,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
 

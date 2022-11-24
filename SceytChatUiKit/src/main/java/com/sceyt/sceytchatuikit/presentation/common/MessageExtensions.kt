@@ -64,7 +64,17 @@ fun SceytMessage.getShowBody(context: Context): String {
     return when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() -> body.trim()
+        attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context)
         else -> context.getString(R.string.sceyt_attachment)
+    }
+}
+
+fun SceytAttachment?.getShowName(context: Context): String {
+    this ?: return ""
+    return when (type) {
+        "video" -> context.getString(R.string.sceyt_video)
+        "image" -> context.getString(R.string.sceyt_image)
+        else -> name
     }
 }
 
