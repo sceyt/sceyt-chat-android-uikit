@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 object MessageEventsObserver {
     private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 30,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 
@@ -40,7 +41,7 @@ object MessageEventsObserver {
 
 
     private val onOutGoingMessageStatusFlow_: MutableSharedFlow<Pair<Long, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 30,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
@@ -49,6 +50,7 @@ object MessageEventsObserver {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
+                Log.i("onMessage",message.body.toString())
                 onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
             }
 
