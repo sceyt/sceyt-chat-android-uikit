@@ -25,6 +25,7 @@
         <attr name="sceytDateStatusViewDateTextColor" format="reference|color" />
         <attr name="sceytDateStatusViewDateText" format="string" />
         <attr name="sceytDateStatusViewFirstStatus" format="boolean" />
+        <attr name="sceytDateStatusViewHighlighted" format="boolean" />
         <attr name="android:paddingStart" format="dimension" />
         <attr name="android:paddingEnd" format="dimension" />
         <attr name="android:paddingBottom" format="dimension" />
@@ -69,6 +70,7 @@
         <attr name="iconTint" format="color"/>
         <attr name="rotateAnimEnabled" format="boolean"/>
         <attr name="backgroundColor" format="color"/>
+        <attr name="iconSizeInPercent" format="float"/>
 
     </declare-styleable>
 </resources>

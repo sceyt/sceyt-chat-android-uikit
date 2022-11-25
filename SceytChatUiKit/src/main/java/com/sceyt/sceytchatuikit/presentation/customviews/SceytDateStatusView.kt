@@ -50,6 +50,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
             statusIconMargin = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIconMargin, statusIconMargin)
             statusIconSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIconSize, 0)
             firstStatusIcon = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewFirstStatus, firstStatusIcon)
+            isHighlighted = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewHighlighted, isHighlighted)
             getPaddingsFromAttr(a)
             a.recycle()
         }

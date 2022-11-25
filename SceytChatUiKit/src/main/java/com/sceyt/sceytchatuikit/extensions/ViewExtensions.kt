@@ -2,6 +2,8 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.annotation.SuppressLint
 import android.content.res.Resources
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.view.MotionEvent
 import android.view.View
@@ -13,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
 import kotlinx.coroutines.*
 import kotlin.math.roundToInt
 
@@ -85,5 +88,30 @@ fun SwitchCompat.setOnlyClickable() {
         if (event.action == MotionEvent.ACTION_UP)
             callOnClick()
         return@setOnTouchListener true
+    }
+}
+
+fun View.setOnClickListenerAvailable(clockAvailableData: ClickAvailableData, disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+    setOnClickListener {
+        if (clockAvailableData.isAvailable) {
+            clockAvailableData.isAvailable = false
+            onClickCallBack.invoke(it)
+            Handler(Looper.getMainLooper()).postDelayed({
+                clockAvailableData.isAvailable = true
+            }, disableDuration)
+        }
+    }
+}
+
+fun View.setOnLongClickListenerAvailable(clockAvailableData: ClickAvailableData, disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+    setOnLongClickListener {
+        if (clockAvailableData.isAvailable) {
+            clockAvailableData.isAvailable = false
+            onClickCallBack.invoke(it)
+            Handler(Looper.getMainLooper()).postDelayed({
+                clockAvailableData.isAvailable = true
+            }, disableDuration)
+        }
+        return@setOnLongClickListener true
     }
 }
