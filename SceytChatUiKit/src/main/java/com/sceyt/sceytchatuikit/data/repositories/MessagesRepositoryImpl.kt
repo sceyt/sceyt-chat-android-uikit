@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -231,12 +232,15 @@ class MessagesRepositoryImpl : MessagesRepository {
 
     override suspend fun markAsRead(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
+            Log.i("messageMarker","sending read marker from msgs -> ${id.toList()}")
             ChannelOperator.build(channelId).markMessagesAsRead(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
+                    Log.i("messageMarker","send read marker success from msgs -> ${result.messageIds}")
                     continuation.resume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {
+                    Log.e("messageMarker","send read marker error from msgs -> ${id.toList()}")
                     continuation.resume(SceytResponse.Error(error))
                 }
             })
@@ -245,12 +249,15 @@ class MessagesRepositoryImpl : MessagesRepository {
 
     override suspend fun markAsDelivered(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
+            Log.i("messageMarker","sending delivery marker from msgs -> ${id.toList()}")
             ChannelOperator.build(channelId).markMessagesAsDelivered(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
+                    Log.i("messageMarker","send delivery marker success from msgs -> ${result.messageIds}")
                     continuation.resume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {
+                    Log.e("messageMarker","send delivery marker error from msgs -> ${id.toList()}")
                     continuation.resume(SceytResponse.Error(error))
                 }
             })
