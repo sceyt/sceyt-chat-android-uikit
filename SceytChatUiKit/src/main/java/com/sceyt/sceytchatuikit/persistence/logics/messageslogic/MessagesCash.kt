@@ -78,9 +78,11 @@ class MessagesCash {
     }
 
     fun upsertMessages(vararg message: SceytMessage) {
-        message.forEach {
-            if (putAndCheckHasDiff(false, it))
-                emitMessageUpdated(it)
+        synchronized(lock) {
+            message.forEach {
+                if (putAndCheckHasDiff(false, it))
+                    emitMessageUpdated(it)
+            }
         }
     }
 
