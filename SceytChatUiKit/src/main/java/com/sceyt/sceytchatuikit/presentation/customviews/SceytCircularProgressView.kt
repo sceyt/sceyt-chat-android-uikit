@@ -45,6 +45,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var bgColor: Int = 0
     private var iconHeight: Int = 0
     private var iconWidth: Int = 0
+    private var iconSizeInPercent: Float = 50f
 
     init {
         attrs?.let {
@@ -58,6 +59,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             rotateAnimEnabled = a.getBoolean(R.styleable.SceytCircularProgressView_rotateAnimEnabled, rotateAnimEnabled)
             iconTintColor = a.getColor(R.styleable.SceytCircularProgressView_iconTint, 0)
             bgColor = a.getColor(R.styleable.SceytCircularProgressView_backgroundColor, 0)
+            iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.SceytCircularProgressView_iconSizeInPercent, iconSizeInPercent))
             a.recycle()
         }
 
@@ -170,6 +172,11 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     private fun calculateAngle(progress: Float) = maxAngle / maxProgress * progress
 
+    private fun getNormalizedPercent(percent: Float): Float {
+        return if (percent <= 0 || percent > 100)
+            20f else percent
+    }
+
     private fun initCenterIcon() {
         val icon = centerIcon ?: return
         initIconSize()
@@ -187,7 +194,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     private fun initIconSize() {
         if (iconSize == 0)
-            iconSize = width / 2 - paddingStart - paddingEnd
+            iconSize = (width * iconSizeInPercent / 100 - paddingStart - paddingEnd).toInt()
     }
 
     fun release(progress: Float) {
