@@ -117,7 +117,7 @@ internal class PersistenceChannelsLogicImpl(
                 }
             } ?: run {
                 channel.lastMessage = data.toSceytUiMessage(channel.isGroup)
-                channelsCash.updateChannel(channel)
+                channelsCash.upsertChannel(channel)
             }
         }
     }
@@ -188,7 +188,7 @@ internal class PersistenceChannelsLogicImpl(
                         val addedChannelsIds = syncedIds.minus(oldChannelsIds)
 
                         deletedChannels.forEach { deleteChannelDb(channelId = it) }
-                        addChannelsToCash(syncedChannels.filter { addedChannelsIds.contains(it.id) })
+                        upsertChannelsToCash(syncedChannels.filter { addedChannelsIds.contains(it.id) })
                     }
                     channel.close()
                 }
@@ -196,7 +196,7 @@ internal class PersistenceChannelsLogicImpl(
                     if (response is SceytResponse.Success) {
                         response.data?.let {
                             saveChannelsToDb(it)
-                            channelsCash.updateChannel(*it.toTypedArray())
+                            channelsCash.upsertChannel(*it.toTypedArray())
                             syncedChannels.addAll(it)
                         }
                     }
@@ -366,11 +366,9 @@ internal class PersistenceChannelsLogicImpl(
         channelsCash.deleteChannel(channelId)
     }
 
-    private fun addChannelsToCash(channels: List<SceytChannel>) {
+    private fun upsertChannelsToCash(channels: List<SceytChannel>) {
         if (channels.isEmpty()) return
-        channels.forEach {
-            channelsCash.add(it)
-        }
+        channelsCash.upsertChannel(*channels.toTypedArray())
     }
 
     override suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel> {
