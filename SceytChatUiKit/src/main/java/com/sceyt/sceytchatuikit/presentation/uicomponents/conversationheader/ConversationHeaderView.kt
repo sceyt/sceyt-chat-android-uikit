@@ -46,10 +46,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var eventListeners = HeaderEventsListenerImpl(this)
     private var uiElementsListeners = HeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
-    private var replayMessage: SceytMessage? = null
+    private var replyMessage: SceytMessage? = null
     private val typingUsers by lazy { mutableSetOf<SceytMember>() }
     private var isTyping: Boolean = false
-    private var isReplayInThread: Boolean = false
+    private var isReplyInThread: Boolean = false
     private var updateTypingJob: Job? = null
     private var isGroup = false
     private var typingTextBuilder: ((SceytMember) -> String)? = null
@@ -93,10 +93,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         toolbarUnderline.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
     }
 
-    private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage? = null, replayInThread: Boolean = false) {
-        if (replayInThread) {
+    private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
+        if (replyInThread) {
             with(titleTextView) {
-                text = getString(R.string.sceyt_thread_replay)
+                text = getString(R.string.sceyt_thread_reply)
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
         } else
@@ -106,8 +106,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
     }
 
-    private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage? = null, replayInThread: Boolean = false) {
-        if (!replayInThread) {
+    private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
+        if (!replyInThread) {
             val title = if (channel is SceytDirectChannel) {
                 val member = channel.peer ?: return
                 if (member.user.presence?.state == PresenceState.Online) {
@@ -124,16 +124,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             subjectTextView.text = title
             subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping
         } else {
-            val fullName = replayMessage?.from?.fullName
+            val fullName = replyMessage?.from?.fullName
             val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
             subjectTextView.text = subTitleText
             subjectTextView.isVisible = !fullName.isNullOrBlank() && !isTyping
         }
     }
 
-    private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replayInThread: Boolean = false) {
-        binding.avatar.isVisible = !replayInThread
-        if (!replayInThread) {
+    private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
+        binding.avatar.isVisible = !replyInThread
+        if (!replyInThread) {
             val subjAndSUrl = channel.getSubjectAndAvatarUrl()
             avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
         }
@@ -150,11 +150,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    internal fun setReplayMessage(channel: SceytChannel, message: SceytMessage?) {
+    internal fun setReplyMessage(channel: SceytChannel, message: SceytMessage?) {
         this.channel = channel
-        replayMessage = message
+        replyMessage = message
         isGroup = channel.isGroup
-        isReplayInThread = true
+        isReplyInThread = true
 
         with(binding) {
             uiElementsListeners.onTitle(title, channel, message, true)
@@ -239,7 +239,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 users.find { user -> user.id == peer?.id }?.let {
                     directChannel.peer?.user = it
                     if (!isTyping)
-                        uiElementsListeners.onSubject(binding.subTitle, channel, replayMessage, isReplayInThread)
+                        uiElementsListeners.onSubject(binding.subTitle, channel, replyMessage, isReplyInThread)
                 }
             }
         }
@@ -257,11 +257,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     fun isGroup() = isGroup
 
-    fun isReplayInThread() = isReplayInThread
+    fun isReplyInThread() = isReplyInThread
 
     fun getChannel() = if (::channel.isInitialized) channel else null
 
-    fun getReplayMessage() = replayMessage
+    fun getReplyMessage() = replyMessage
 
     fun setCustomClickListener(headerClickListenersImpl: HeaderClickListenersImpl) {
         clickListeners = headerClickListenersImpl
@@ -297,9 +297,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     fun invalidateUi() {
         with(binding) {
-            uiElementsListeners.onTitle(title, channel, replayMessage, isReplayInThread)
-            uiElementsListeners.onSubject(subTitle, channel, replayMessage, isReplayInThread)
-            uiElementsListeners.onAvatar(avatar, channel, isReplayInThread)
+            uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
+            uiElementsListeners.onSubject(subTitle, channel, replyMessage, isReplyInThread)
+            uiElementsListeners.onAvatar(avatar, channel, isReplyInThread)
         }
     }
 
@@ -313,16 +313,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     //Ui elements listeners
-    override fun onTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
-        setChannelTitle(titleTextView, channel, replayMessage, replayInThread)
+    override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+        setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
-        post { setChannelSubTitle(subjectTextView, channel, replayMessage, replayInThread) }
+    override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+        post { setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread) }
     }
 
-    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replayInThread: Boolean) {
-        setAvatar(avatar, channel, replayInThread)
+    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean) {
+        setAvatar(avatar, channel, replyInThread)
     }
 
     //Click listeners

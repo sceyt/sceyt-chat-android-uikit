@@ -55,8 +55,8 @@ class IncFilesMsgViewHolder(
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
-                if (diff.replayCountChanged)
-                    setReplayCount(tvReplayCount, toReplayLine, item)
+                if (diff.replyCountChanged)
+                    setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
@@ -64,8 +64,8 @@ class IncFilesMsgViewHolder(
                 if (diff.filesChanged)
                     setFilesAdapter(message)
 
-                if (diff.replayContainerChanged)
-                    setReplayedMessageContainer(message, binding.viewReplay)
+                if (diff.replyContainerChanged)
+                    setReplyMessageContainer(message, binding.viewReply)
 
                 if (item.message.canShowAvatarAndName)
                     avatar.setOnClickListener {

@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence
 
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -12,23 +11,23 @@ import kotlinx.coroutines.flow.SharedFlow
 
 interface PersistenceMessagesMiddleWare {
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                 replayInThread: Boolean, offset: Int, loadKey: Long,
+                                 replyInThread: Boolean, offset: Int, loadKey: Long,
                                  ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
+    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
                                  offset: Int, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
+    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
                                  loadKey: Long, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean,
+    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean,
                                    loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
+    suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
-    suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
-    suspend fun sendMessage(channelId: Long, message: Message)
+    suspend fun sendMessageAsFlow(channelId: Long, message: SceytMessage): Flow<SendMessageResult>
+    suspend fun sendMessage(channelId: Long, message: SceytMessage)
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()

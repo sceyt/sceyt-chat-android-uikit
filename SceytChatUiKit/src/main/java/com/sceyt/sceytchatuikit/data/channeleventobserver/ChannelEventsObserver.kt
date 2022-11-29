@@ -54,7 +54,7 @@ object ChannelEventsObserver {
 
 
     private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
-        extraBufferCapacity = 10,
+        extraBufferCapacity = 30,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
 
@@ -162,10 +162,12 @@ object ChannelEventsObserver {
             }
 
             override fun onDeliveryReceiptReceived(channel: Channel, from: User?, messageIds: MutableList<Long>) {
+                Log.i("messageMarker","onDeliveryEvent from msgs -> $messageIds")
                 onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Delivered, messageIds))
             }
 
             override fun onReadReceiptReceived(channel: Channel, from: User?, messageIds: MutableList<Long>) {
+                Log.i("messageMarker","onReadEvent from msgs -> $messageIds")
                 onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Read, messageIds))
             }
         })

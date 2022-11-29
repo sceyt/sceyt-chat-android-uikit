@@ -3,7 +3,6 @@
     //Themed colors
     <color name="sceyt_color_primary_dark">#ffffff</color>
     <color name="sceyt_color_primary">#4F6AFF</color>
-    <color name="sceyt_color_accent">#4F6AFF</color>
 
     <color name="sceyt_color_status_bar">#33000000</color>
     <color name="sceyt_color_bottom_nav">#ffffff</color>
@@ -21,6 +20,7 @@
     <color name="sceyt_color_light_themed">#FFFFFFFF</color>
 
     // Not themed colors
+    <color name="sceyt_color_accent">#4F6AFF</color>
     <color name="sceyt_color_black">#FFFFFFFF</color>
     <color name="sceyt_color_white">#FFFFFFFF</color>
     <color name="sceyt_color_hint">#9B9DA8</color>
@@ -33,5 +33,8 @@
     <color name="sceyt_color_gray_300">#9B9DA8</color>
     <color name="sceyt_color_gray_400">#7C7E8E</color>
     <color name="sceyt_color_gray_500">#676A7C</color>
+    <color name="sceyt_color_gray_800">#757D8B</color>
+    <color name="sceyt_gallery_item_default_color">#F3F5F7</color>
+    <color name="sceyt_progress_bg_color">#6617191C</color>
 
 </resources>

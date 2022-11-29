@@ -18,7 +18,7 @@ class ChannelsCash {
 
     companion object {
         private val channelUpdatedFlow_ = MutableSharedFlow<SceytChannel>(
-            extraBufferCapacity = 5,
+            extraBufferCapacity = 1,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<SceytChannel> = channelUpdatedFlow_
@@ -40,7 +40,7 @@ class ChannelsCash {
     fun addAll(list: List<SceytChannel>, checkDifference: Boolean): Boolean {
         synchronized(lock) {
             return if (checkDifference)
-                putAndCheckHasDiff(list)
+                putAndCheckHasDiff(true, list)
             else {
                 cashedData.putAll(list.associateBy { it.id })
                 false
@@ -50,7 +50,7 @@ class ChannelsCash {
 
     fun add(channel: SceytChannel) {
         synchronized(lock) {
-            if (putAndCheckHasDiff(arrayListOf(channel))) {
+            if (putAndCheckHasDiff(true, arrayListOf(channel))) {
                 channelAdded(channel)
             }
         }
@@ -77,22 +77,12 @@ class ChannelsCash {
     fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
-                if (putAndCheckHasDiff(arrayListOf(it))) {
-                    channelUpdated(it)
-                }
-            }
-        }
-    }
-
-    fun updateChannel(vararg channels: SceytChannel) {
-        synchronized(lock) {
-            channels.forEach { channel ->
-                cashedData[channel.id]?.let { cashChannel ->
-                    val diff = cashChannel.diff(channel)
-                    cashedData[cashChannel.id] = cashChannel
-                    if (diff.hasDifference())
-                        channelUpdated(channel)
-                }
+                if (cashedData[it.id] == null) {
+                    cashedData[it.id] = it
+                    channelAdded(it)
+                } else
+                    if (putAndCheckHasDiff(false, arrayListOf(it)))
+                        channelUpdated(it)
             }
         }
     }
@@ -190,12 +180,12 @@ class ChannelsCash {
         channelAddedFlow_.tryEmit(channel.clone())
     }
 
-    private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {
+    private fun putAndCheckHasDiff(includeNotExistToDiff: Boolean, list: List<SceytChannel>): Boolean {
         var detectedDiff = false
         list.forEach {
             if (!detectedDiff) {
                 val old = cashedData[it.id]
-                detectedDiff = old?.diff(it)?.hasDifference() ?: true
+                detectedDiff = old?.diff(it)?.hasDifference() ?: includeNotExistToDiff
             }
             cashedData[it.id] = it
         }

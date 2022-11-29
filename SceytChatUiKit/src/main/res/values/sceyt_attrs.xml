@@ -10,11 +10,11 @@
         <attr name="sceytAvatarDefaultIcon" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="SceytToReplayLineView">
-        <attr name="sceytToReplayLineViewToLeft" format="boolean" />
-        <attr name="sceytToReplayLineViewStrokeColor" format="reference|color" />
-        <attr name="sceytToReplayLineViewConnectedViewTop" format="reference" />
-        <attr name="sceytToReplayLineViewConnectedViewBottom" format="reference" />
+    <declare-styleable name="SceytToReplyLineView">
+        <attr name="sceytToReplyLineViewToLeft" format="boolean" />
+        <attr name="sceytToReplyLineViewStrokeColor" format="reference|color" />
+        <attr name="sceytToReplyLineViewConnectedViewTop" format="reference" />
+        <attr name="sceytToReplyLineViewConnectedViewBottom" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="SceytDateStatusView">
@@ -25,6 +25,7 @@
         <attr name="sceytDateStatusViewDateTextColor" format="reference|color" />
         <attr name="sceytDateStatusViewDateText" format="string" />
         <attr name="sceytDateStatusViewFirstStatus" format="boolean" />
+        <attr name="sceytDateStatusViewHighlighted" format="boolean" />
         <attr name="android:paddingStart" format="dimension" />
         <attr name="android:paddingEnd" format="dimension" />
         <attr name="android:paddingBottom" format="dimension" />
@@ -56,6 +57,20 @@
         <attr name="sceytVideoControllerPlayPauseSize" format="integer|dimension" />
         <attr name="sceytVideoControllerPlayIcon" format="reference" />
         <attr name="sceytVideoControllerPauseIcon" format="reference" />
+
+    </declare-styleable>
+
+    <declare-styleable name="SceytCircularProgressView">
+        <attr name="progressColor" format="color"/>
+        <attr name="trackColor" format="color"/>
+        <attr name="progress" format="float"/>
+        <attr name="roundedProgress" format="boolean"/>
+        <attr name="trackThickness" format="dimension"/>
+        <attr name="centerIcon" format="reference"/>
+        <attr name="iconTint" format="color"/>
+        <attr name="rotateAnimEnabled" format="boolean"/>
+        <attr name="backgroundColor" format="color"/>
+        <attr name="iconSizeInPercent" format="float"/>
 
     </declare-styleable>
 </resources>

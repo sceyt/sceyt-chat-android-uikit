@@ -39,8 +39,8 @@ open class ConversationActivity : AppCompatActivity() {
         MyViewModelFactory()
     }
     private lateinit var channel: SceytChannel
-    private var isReplayInThread = false
-    private var replayMessage: SceytMessage? = null
+    private var isReplyInThread = false
+    private var replyMessage: SceytMessage? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,15 +58,15 @@ open class ConversationActivity : AppCompatActivity() {
         binding.messageInputView.initMessageInputView()
 
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
-        viewModel.bind(binding.messageInputView, replayMessage, lifecycleOwner = this)
-        viewModel.bind(binding.headerView, replayMessage, lifecycleOwner = this)
+        viewModel.bind(binding.messageInputView, replyMessage, lifecycleOwner = this)
+        viewModel.bind(binding.headerView, replyMessage, lifecycleOwner = this)
     }
 
     private fun ConversationHeaderView.initHeaderView() {
         //Example
         setCustomUiElementsListener(object : HeaderUIElementsListenerImpl(this) {
-            override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
-                super.onSubject(subjectTextView, channel, replayMessage, replayInThread)
+            override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+                super.onSubject(subjectTextView, channel, replyMessage, replyInThread)
                 println("onSubject")
             }
         })
@@ -93,7 +93,7 @@ open class ConversationActivity : AppCompatActivity() {
 
     private fun MessagesListView.initConversationView() {
         //This listener will not work if you have added custom click listener
-        setMessageClickListener(MessageClickListeners.ReplayCountClickListener { _, item ->
+        setMessageClickListener(MessageClickListeners.ReplyCountClickListener { _, item ->
             newInstance(this@ConversationActivity, channel, item.message)
         })
 
@@ -104,8 +104,8 @@ open class ConversationActivity : AppCompatActivity() {
                 println("AttachmentClick")
             }
 
-            override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-                super.onReplayCountClick(view, item)
+            override fun onReplyCountClick(view: View, item: MessageListItem.MessageItem) {
+                super.onReplyCountClick(view, item)
                 newInstance(this@ConversationActivity, channel, item.message)
             }
         })
@@ -116,8 +116,8 @@ open class ConversationActivity : AppCompatActivity() {
                 println("React")
             }
 
-            override fun onReplayMessageInThreadClick(message: SceytMessage) {
-                super.onReplayMessageInThreadClick(message)
+            override fun onReplyMessageInThreadClick(message: SceytMessage) {
+                super.onReplyMessageInThreadClick(message)
                 newInstance(this@ConversationActivity, channel, message)
             }
         })
@@ -135,19 +135,14 @@ open class ConversationActivity : AppCompatActivity() {
 
     private fun getDataFromIntent() {
         channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
-        isReplayInThread = intent.getBooleanExtra(REPLAY_IN_THREAD, false)
-        replayMessage = intent.getParcelableExtra(REPLAY_IN_THREAD_MESSAGE)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.sendPendingMessages()
+        isReplyInThread = intent.getBooleanExtra(REPLY_IN_THREAD, false)
+        replyMessage = intent.getParcelableExtra(REPLY_IN_THREAD_MESSAGE)
     }
 
     companion object {
         private const val CHANNEL = "CHANNEL"
-        private const val REPLAY_IN_THREAD = "REPLAY_IN_THREAD"
-        private const val REPLAY_IN_THREAD_MESSAGE = "REPLAY_IN_THREAD_MESSAGE"
+        private const val REPLY_IN_THREAD = "REPLY_IN_THREAD"
+        private const val REPLY_IN_THREAD_MESSAGE = "REPLY_IN_THREAD_MESSAGE"
 
         fun newInstance(context: Context, channel: SceytChannel) {
             context.launchActivity<ConversationActivity> {
@@ -159,8 +154,8 @@ open class ConversationActivity : AppCompatActivity() {
         fun newInstance(context: Context, channel: SceytChannel, message: SceytMessage) {
             context.launchActivity<ConversationActivity> {
                 putExtra(CHANNEL, channel)
-                putExtra(REPLAY_IN_THREAD, true)
-                putExtra(REPLAY_IN_THREAD_MESSAGE, message)
+                putExtra(REPLY_IN_THREAD, true)
+                putExtra(REPLY_IN_THREAD_MESSAGE, message)
             }
             context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }
@@ -175,10 +170,10 @@ open class ConversationActivity : AppCompatActivity() {
     inner class MyViewModelFactory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))
-            val conversationId = if (isReplayInThread) replayMessage?.id ?: 0 else channel.id
+            val conversationId = if (isReplyInThread) replyMessage?.id ?: 0 else channel.id
 
             @Suppress("UNCHECKED_CAST")
-            return MessageListViewModel(conversationId, isReplayInThread, channel) as T
+            return MessageListViewModel(conversationId, isReplyInThread, channel) as T
         }
     }
 }

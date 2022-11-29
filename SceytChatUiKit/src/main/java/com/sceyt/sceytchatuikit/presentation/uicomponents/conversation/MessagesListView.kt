@@ -14,6 +14,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -22,7 +23,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -96,9 +96,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     clickListeners.onAvatarClick(view, item)
             }
 
-            override fun onReplayCountClick(view: View, item: MessageItem) {
+            override fun onReplyCountClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
-                    clickListeners.onReplayCountClick(view, item)
+                    clickListeners.onReplyCountClick(view, item)
             }
 
             override fun onAddReactionClick(view: View, message: SceytMessage) {
@@ -165,8 +165,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
                 R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
-                R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
-                R.id.sceyt_replay_in_thread -> messagePopupClickListeners.onReplayMessageInThreadClick(message)
+                R.id.sceyt_reply -> messagePopupClickListeners.onReplyMessageClick(message)
+                R.id.sceyt_reply_in_thread -> messagePopupClickListeners.onReplyMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
                 R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message, false)
             }
@@ -198,14 +198,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
         (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(message, diff)
-                ?: run {
-                    messagesRV.adapter?.notifyItemChanged(index, diff)
-                }
+                ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
     }
-
-    internal fun getFirstMessage() = messagesRV.getFirstMsg()
-
-    internal fun getLastMessage() = messagesRV.getLastMsg()
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
         messagesRV.setData(data, force)
@@ -226,7 +220,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage) {
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
-            if (item is MessageItem && (item.message.id == message.id ||
+            if (item is MessageItem && ((message.id != 0L && item.message.id == message.id) ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
                 item.message.updateMessage(message)
@@ -308,9 +302,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateReplayCount(replayedMessage: SceytMessage?) {
+    internal fun updateReplyCount(replyMessage: SceytMessage?) {
         messagesRV.getData()?.findIndexed {
-            it is MessageItem && it.message.id == replayedMessage?.parent?.id
+            it is MessageItem && it.message.id == replyMessage?.parent?.id
         }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
@@ -319,7 +313,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun newReplayMessage(messageId: Long?) {
+    internal fun newReplyMessage(messageId: Long?) {
         messagesRV.getData()?.findIndexed {
             it is MessageItem && it.message.id == messageId
         }?.let {
@@ -413,9 +407,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun getData() = messagesRV.getData()
 
+
+    fun getFirstMessage() = messagesRV.getFirstMsg()
+
+    fun getLastMessage() = messagesRV.getLastMsg()
+
+    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getFirstMessageBy(predicate)
+
+    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getLastMessageBy(predicate)
+
     fun getMessagesRecyclerView() = messagesRV
 
-    fun isLastItemDisplaying() = messagesRV.isLastItemDisplaying()
+    fun isLastCompletelyItemDisplaying() = messagesRV.isLastCompletelyItemDisplaying()
 
     // Click listeners
     fun setMessageClickListener(listener: MessageClickListeners) {
@@ -449,8 +452,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     }
 
-    override fun onReplayCountClick(view: View, item: MessageItem) {
-        onReplayMessageInThreadClick(item.message)
+    override fun onReplyCountClick(view: View, item: MessageItem) {
+        onReplyMessageInThreadClick(item.message)
     }
 
     override fun onAddReactionClick(view: View, message: SceytMessage) {
@@ -470,7 +473,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
-        showMessageActionsPopup(view, item.sceytMessage)
+        clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {
@@ -501,11 +504,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         onAddReactionClick(view, message)
     }
 
-    override fun onReplayMessageClick(message: SceytMessage) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.Replay(message))
+    override fun onReplyMessageClick(message: SceytMessage) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
     }
 
-    override fun onReplayMessageInThreadClick(message: SceytMessage) {
+    override fun onReplyMessageInThreadClick(message: SceytMessage) {
         // Override and add your logic if you
     }
 

@@ -17,13 +17,13 @@
         tools:sceytAvatarViewFullName="Ar"
         tools:visibility="visible" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplayLineView
-        android:id="@+id/toReplayLine"
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
+        android:id="@+id/toReplyLine"
         android:layout_width="10dp"
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/layoutDetails"
         android:layout_alignTop="@+id/layoutDetails"
-        android:layout_alignBottom="@+id/tvReplayCount"
+        android:layout_alignBottom="@+id/tvReplyCount"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="9dp"
         android:visibility="gone" />
@@ -54,12 +54,12 @@
             tools:text="Henry Willian" />
 
         <ViewStub
-            android:id="@+id/viewReplay"
+            android:id="@+id/viewReply"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
-            android:layout="@layout/sceyt_recycler_replay_container"
+            android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -79,7 +79,7 @@
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-            app:layout_constraintTop_toBottomOf="@+id/viewReplay"
+            app:layout_constraintTop_toBottomOf="@+id/viewReply"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Lore ipsum  is the correct text which" />
 
@@ -114,12 +114,12 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvReplayCount"
+        android:id="@+id/tvReplyCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/rvReactions"
         android:layout_marginStart="2dp"
-        android:layout_toEndOf="@+id/toReplayLine"
+        android:layout_toEndOf="@+id/toReplyLine"
         android:includeFontPadding="false"
         android:paddingVertical="4dp"
         android:textColor="@color/sceyt_color_accent"
