@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.pushes.FirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
@@ -85,6 +86,7 @@ object SceytKitClient : SceytKoinComponent {
                     ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
                         SceytKitConfig.presenceStatusText else status) {
                     }
+                    FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
                     persistenceMessagesMiddleWare.sendAllPendingMarkers()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
                     syncManager.startSync()

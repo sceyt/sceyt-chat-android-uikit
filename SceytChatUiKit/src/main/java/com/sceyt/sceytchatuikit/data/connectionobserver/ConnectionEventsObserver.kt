@@ -14,6 +14,7 @@ import kotlin.coroutines.resume
 
 object ConnectionEventsObserver {
     val connectionState get() = ClientWrapper.connectState ?: Types.ConnectState.StateDisconnect
+    val isConnected = connectionState == Types.ConnectState.StateConnected
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
         extraBufferCapacity = 1,

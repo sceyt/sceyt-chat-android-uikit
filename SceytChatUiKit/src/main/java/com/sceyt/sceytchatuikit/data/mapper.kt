@@ -47,7 +47,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             metadata = metadata,
             muted = muted(),
             markedUsUnread = markedAsUnread(),
-            peer = peer.toSceytMember(),
+            peer = peer?.toSceytMember(),
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
             channelType = getChannelType(this),
