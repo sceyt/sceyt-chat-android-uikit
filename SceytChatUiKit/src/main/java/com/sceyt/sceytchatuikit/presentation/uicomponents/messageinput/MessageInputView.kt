@@ -1,11 +1,11 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
@@ -25,14 +25,19 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.isTextMessage
+import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.SelectFileTypePopupClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.SelectFileTypePopupClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
@@ -41,29 +46,32 @@ import org.koin.core.component.inject
 import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners, SceytKoinComponent {
+    : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
+        SelectFileTypePopupClickListeners.ClickListeners, SceytKoinComponent {
+
     private val preferences by inject<SceytSharedPreference>()
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var clickListeners = MessageInputClickListenersImpl(this)
+    private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = null
 
     var messageInputActionCallback: MessageInputActionCallback? = null
-    var message: Message? = null
+    private var editMessage: Message? = null
         set(value) {
             field = value
             if (value != null) {
-                binding.messageInput.setText(message?.body)
+                binding.messageInput.setText(editMessage?.body)
                 binding.messageInput.text?.let { text -> binding.messageInput.setSelection(text.length) }
                 context.showSoftInput(binding.messageInput)
             }
         }
 
-    private var replayMessage: Message? = null
-    private var replayThreadMessageId: Long? = null
+    private var replyMessage: Message? = null
+    private var replyThreadMessageId: Long? = null
 
     init {
         if (!isInEditMode)
@@ -104,8 +112,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onSendAttachmentClick(it)
             }
 
-            layoutReplayMessage.icCancelReplay.setOnClickListener {
-                clickListeners.onCancelReplayMessageViewClick(it)
+            layoutReplyOrEditMessage.icCancelReply.setOnClickListener {
+                clickListeners.onCancelReplyMessageViewClick(it)
             }
 
             btnJoin.setOnClickListener {
@@ -118,10 +126,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         val messageBody = binding.messageInput.text.toString().trim()
 
         if (messageBody != "" || allAttachments.isNotEmpty()) {
-            if (message != null) {
-                message?.body = messageBody
-                message?.let {
-                    messageInputActionCallback?.sendEditMessage(it.toSceytUiMessage())
+            if (editMessage != null) {
+                editMessage?.body = messageBody
+                editMessage?.let {
+                    cancelReply {
+                        messageInputActionCallback?.sendEditMessage(it.toSceytUiMessage())
+                        reset()
+                    }
                 }
             } else {
                 val messageToSend: Message? = Message.MessageBuilder()
@@ -129,21 +140,24 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     .setType(getMessageType(allAttachments, messageBody))
                     .setBody(binding.messageInput.text.toString())
                     .apply {
-                        replayMessage?.let {
+                        replyMessage?.let {
                             setParentMessageId(it.id)
-                            setReplyInThread(replayThreadMessageId != null)
-                        } ?: replayThreadMessageId?.let {
+                            setReplyInThread(replyThreadMessageId != null)
+                        } ?: replyThreadMessageId?.let {
                             setParentMessageId(it)
                             setReplyInThread(true)
                         }
                     }.build()
 
-                if (replayMessage != null)
-                    messageToSend?.let { msg -> messageInputActionCallback?.sendReplayMessage(msg, replayMessage) }
-                else
-                    messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+                cancelReply {
+                    if (replyMessage != null)
+                        messageToSend?.let { msg -> messageInputActionCallback?.sendReplyMessage(msg, replyMessage) }
+                    else
+                        messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+
+                    reset()
+                }
             }
-            reset()
         }
     }
 
@@ -151,19 +165,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         ChooseFileTypeDialog(context) { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> {
-                    chooseAttachmentHelper?.chooseFromGallery(allowMultiple = true, onlyImages = false) {
-                        addAttachmentFile(*it.toTypedArray())
-                    }
+                    selectFileTypePopupClickListeners.onGalleryClick()
                 }
                 AttachmentChooseType.Camera -> {
-                    chooseAttachmentHelper?.takePicture {
-                        addAttachmentFile(it)
-                    }
+                    selectFileTypePopupClickListeners.onTakePhotoClick()
                 }
                 AttachmentChooseType.File -> {
-                    chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
-                        addAttachmentFile(*it.toTypedArray())
-                    }
+                    selectFileTypePopupClickListeners.onFileClick()
                 }
             }
         }.show()
@@ -175,8 +183,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
-        with(layoutReplayMessage) {
-            horizontalView.backgroundTintList = ColorStateList.valueOf(context.getCompatColorByTheme(MessageInputViewStyle.horizontalLineColor))
+        with(layoutReplyOrEditMessage) {
+            icReplyOrEdit.setColorFilter(context.getCompatColorByTheme(SceytKitConfig.sceytColorAccent))
             tvName.setTextColor(context.getCompatColorByTheme(MessageInputViewStyle.userNameTextColor))
         }
     }
@@ -191,8 +199,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun reset() {
-        message = null
-        replayMessage = null
+        editMessage = null
+        replyMessage = null
         allAttachments.clear()
         attachmentsAdapter.clear()
         binding.messageInput.text = null
@@ -220,21 +228,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.rvAttachments.adapter = attachmentsAdapter
     }
 
-    private fun addAttachmentFile(vararg filePath: String) {
-        val attachments = mutableListOf<Attachment>()
-
-        filePath.forEach { item ->
-            val attachment = Attachment.Builder(item, getAttachmentType(item))
-                .setName(File(item).name)
-                .setMetadata(Gson().toJson(AttachmentMetadata(item)))
-                .setUpload(true)
-                .build()
-
-            attachments.add(attachment)
-        }
-        addAttachments(attachments)
-    }
-
     private fun getAttachmentType(path: String?): String {
         return when (val type = getMimeTypeTakeFirstPart(path)) {
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> type
@@ -247,31 +240,54 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.layoutInput.isVisible = show.not()
     }
 
-    internal fun replayMessage(message: Message) {
-        replayMessage = message
-        with(binding.layoutReplayMessage) {
-            isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
-            tvName.text = userNameBuilder?.invoke(message.from) ?: message.from.getPresentableName()
-            tvMessageBody.text = if (message.isTextMessage())
-                message.body.trim() else context.getString(R.string.sceyt_attachment)
-        }
+    private fun checkIsExistAttachment(path: String?): Boolean {
+        return allAttachments.map { it.url }.contains(path)
     }
 
-    internal fun cancelReplay(readyCb: (() -> Unit?)? = null) {
-        if (replayMessage == null)
+    private fun cancelReply(readyCb: (() -> Unit?)? = null) {
+        if (replyMessage == null && editMessage == null)
             readyCb?.invoke()
         else {
-            replayMessage = null
-            ViewUtil.collapseHeight(binding.layoutReplayMessage.root, to = 1, duration = 200) {
-                binding.layoutReplayMessage.root.isVisible = false
+            ViewUtil.collapseHeight(binding.layoutReplyOrEditMessage.root, to = 1, duration = 200) {
+                binding.layoutReplyOrEditMessage.root.isVisible = false
                 context.asComponentActivity().lifecycleScope.launchWhenResumed { readyCb?.invoke() }
             }
         }
     }
 
-    internal fun setReplayInThreadMessageId(messageId: Long?) {
-        replayThreadMessageId = messageId
+    internal fun replyMessage(message: Message) {
+        replyMessage = message
+        with(binding.layoutReplyOrEditMessage) {
+            isVisible = true
+            ViewUtil.expandHeight(root, 1, 200)
+            val name = userNameBuilder?.invoke(message.from) ?: message.from.getPresentableName()
+            val text = "${getString(R.string.sceyt_reply)} $name".run {
+                setBoldSpan(length - name.length, length)
+            }
+            tvName.text = text
+            icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
+            tvMessageBody.text = if (message.isTextMessage())
+                message.body.trim()
+            else message.toSceytUiMessage().getShowBody(context)
+        }
+    }
+
+
+    internal fun editMessage(message: Message) {
+        editMessage = message
+        with(binding.layoutReplyOrEditMessage) {
+            isVisible = true
+            ViewUtil.expandHeight(root, 1, 200)
+            icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
+            tvName.text = getString(R.string.sceyt_edit_message)
+            tvMessageBody.text = if (message.isTextMessage())
+                message.body.trim()
+            else message.toSceytUiMessage().getShowBody(context)
+        }
+    }
+
+    internal fun setReplyInThreadMessageId(messageId: Long?) {
+        replyThreadMessageId = messageId
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -290,9 +306,30 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         showHideJoinButton(true)
     }
 
+    fun addAttachmentFile(vararg filePath: String) {
+        val attachments = mutableListOf<Attachment>()
+        for (path in filePath) {
+            if (checkIsExistAttachment(path))
+                continue
+
+            val file = File(path)
+            if (file.exists()) {
+                val attachment = Attachment.Builder(path, getAttachmentType(path))
+                    .setName(File(path).name)
+                    .setMetadata(Gson().toJson(AttachmentMetadata(path)))
+                    .setUpload(true)
+                    .build()
+
+                attachments.add(attachment)
+            } else
+                Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
+        }
+        addAttachments(attachments)
+    }
+
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)
-        fun sendReplayMessage(message: Message, parent: Message?)
+        fun sendReplyMessage(message: Message, parent: Message?)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
         fun join()
@@ -310,6 +347,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners = listener
     }
 
+    fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
+        selectFileTypePopupClickListeners = listener
+    }
+
     override fun onSendMsgClick(view: View) {
         sendMessage()
     }
@@ -318,8 +359,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         handleAttachmentClick()
     }
 
-    override fun onCancelReplayMessageViewClick(view: View) {
-        cancelReplay()
+    override fun onCancelReplyMessageViewClick(view: View) {
+        cancelReply()
+        replyMessage = null
+        editMessage = null
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
@@ -347,6 +390,38 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         withContext(Dispatchers.Main) {
             binding.messageInput.setText(i.toString())
             sendMessage()
+        }
+    }
+
+    private fun getPickerListener(): GalleryMediaPicker.PickerListener {
+        return GalleryMediaPicker.PickerListener {
+            addAttachmentFile(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        GalleryMediaPicker.pickerListener?.let {
+            GalleryMediaPicker.pickerListener = getPickerListener()
+        }
+    }
+
+    // Choose file type popup listeners
+    override fun onGalleryClick() {
+        GalleryMediaPicker.instance(*allAttachments.map { it.url }.toTypedArray()).apply {
+            GalleryMediaPicker.pickerListener = getPickerListener()
+        }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
+    }
+
+    override fun onTakePhotoClick() {
+        chooseAttachmentHelper?.takePicture {
+            addAttachmentFile(it)
+        }
+    }
+
+    override fun onFileClick() {
+        chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
+            addAttachmentFile(*it.toTypedArray())
         }
     }
 }

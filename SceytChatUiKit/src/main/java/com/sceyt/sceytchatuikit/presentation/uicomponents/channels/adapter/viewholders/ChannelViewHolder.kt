@@ -16,12 +16,15 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
+import com.sceyt.sceytchatuikit.extensions.setOnClickListenerAvailable
+import com.sceyt.sceytchatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -37,16 +40,15 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         with(binding) {
             setChannelItemStyle()
 
-            root.setOnClickListener {
+            root.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
                 listeners.onChannelClick(channelItem as ChannelListItem.ChannelItem)
             }
 
-            parentLayout.setOnLongClickListener {
+            parentLayout.setOnLongClickListenerAvailable(ChannelsAdapter.longClickAvailableData) {
                 listeners.onChannelLongClick(it, (channelItem as ChannelListItem.ChannelItem))
-                return@setOnLongClickListener true
             }
 
-            avatar.setOnClickListener {
+            avatar.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
                 listeners.onAvatarClick((channelItem as ChannelListItem.ChannelItem))
             }
         }

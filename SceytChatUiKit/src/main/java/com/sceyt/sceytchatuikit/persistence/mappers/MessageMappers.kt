@@ -125,11 +125,14 @@ fun MessageDb.toSceytMessage(): SceytMessage {
 fun ParentMessageDb.toSceytMessage(): SceytMessage {
     return messageEntity.toSceytMessage().apply {
         this.from = this@toSceytMessage.from?.toUser()
+        this.attachments = this@toSceytMessage.attachments?.map { it.toAttachment() }?.toTypedArray()
     }
 }
 
 fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
-    return ParentMessageDb(toMessageEntity(), from?.toUserEntity())
+    return ParentMessageDb(toMessageEntity(), from?.toUserEntity(), attachments?.map {
+        it.toAttachmentEntity(id, getTid(id, tid, incoming))
+    })
 }
 
 private fun MessageEntity.toSceytMessage() = SceytMessage(

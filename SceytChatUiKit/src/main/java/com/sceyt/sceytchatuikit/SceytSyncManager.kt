@@ -10,11 +10,9 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.flow.onCompletion
-import org.koin.core.component.inject
 
-class SceytSyncManager : SceytKoinComponent {
-    private val channelsMiddleWare: PersistenceChanelMiddleWare by inject()
-    private val messagesMiddleWare: PersistenceMessagesMiddleWare by inject()
+class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWare,
+                       private val messagesMiddleWare: PersistenceMessagesMiddleWare) : SceytKoinComponent {
 
     companion object {
         private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
@@ -25,6 +23,12 @@ class SceytSyncManager : SceytKoinComponent {
 
     suspend fun startSync() {
         getChannels()
+    }
+
+    suspend fun syncConversationMessagesAfter(channelId: Long, fromMessageId: Long) {
+        val response = channelsMiddleWare.getChannelFromServer(channelId)
+        if (response is SceytResponse.Success && response.data != null)
+            syncMessagesAfter(response.data, fromMessageId, true)
     }
 
     private suspend fun getChannels() {
@@ -49,14 +53,18 @@ class SceytSyncManager : SceytKoinComponent {
     }
 
     private suspend fun loadMessages(channel: SceytChannel) {
-        if (channel.lastReadMessageId == channel.lastMessage?.id) {
+        if (channel.lastReadMessageId == channel.lastMessage?.id)
             return
-        }
 
-        messagesMiddleWare.syncMessagesAfterMessageId(channel.id, false, channel.lastReadMessageId).collect {
+        syncMessagesAfter(channel, channel.lastReadMessageId, false)
+    }
+
+    private suspend fun syncMessagesAfter(channel: SceytChannel, fromMessageId: Long, syncConversation: Boolean) {
+        messagesMiddleWare.syncMessagesAfterMessageId(channel.id, false, fromMessageId).collect {
             if (it is SceytResponse.Success)
                 it.data?.let { messages ->
-                    syncChannelMessagesFinished_.postValue(Pair(channel, messages))
+                    if (syncConversation)
+                        syncChannelMessagesFinished_.postValue(Pair(channel, messages))
                 }
         }
     }

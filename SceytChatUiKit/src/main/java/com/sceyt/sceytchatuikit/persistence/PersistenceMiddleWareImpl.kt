@@ -29,6 +29,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
@@ -46,61 +48,66 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     init {
         // Channel events
-        launch { ChannelEventsObserver.onChannelEventFlow.collect(::onChannelEvent) }
-        launch { ChannelEventsObserver.onTotalUnreadChangedFlow.collect(::onChannelUnreadCountUpdatedEvent) }
-        launch { ChannelEventsObserver.onChannelMembersEventFlow.collect(::onChannelMemberEvent) }
-        launch { ChannelEventsObserver.onChannelOwnerChangedEventFlow.collect(::onChannelOwnerChangedEvent) }
+        ChannelEventsObserver.onChannelEventFlow.onEach(::onChannelEvent).launchIn(this)
+        ChannelEventsObserver.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(this)
+        ChannelEventsObserver.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(this)
+        ChannelEventsObserver.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(this)
         // Message events
-        launch { ChannelEventsObserver.onMessageStatusFlow.collect(::onMessageStatusChangeEvent) }
-        launch { MessageEventsObserver.onMessageFlow.collect(::onMessage) }
-        launch { MessageEventsObserver.onMessageReactionUpdatedFlow.collect(::onMessageReactionUpdated) }
-        launch { MessageEventsObserver.onMessageEditedOrDeletedFlow.collect(::onMessageEditedOrDeleted) }
+        ChannelEventsObserver.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(this)
+        MessageEventsObserver.onMessageFlow.onEach(::onMessage).launchIn(this)
+        MessageEventsObserver.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(this)
+        MessageEventsObserver.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(this)
 
         // Connection events
-        launch { ConnectionEventsObserver.onChangedConnectStatusFlow.collect(::onChangedConnectStatus) }
+        ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(this)
     }
 
 
-    private suspend fun onChannelEvent(data: ChannelEventData) {
-        channelLogic.onChannelEvent(data)
+    private fun onChannelEvent(data: ChannelEventData) {
+        launch { channelLogic.onChannelEvent(data) }
     }
 
-    private suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        channelLogic.onChannelUnreadCountUpdatedEvent(data)
+    private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
+        launch { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
     }
 
-    private suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        membersLogic.onChannelMemberEvent(data)
+    private fun onChannelMemberEvent(data: ChannelMembersEventData) {
+        launch { membersLogic.onChannelMemberEvent(data) }
     }
 
-    private suspend fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
-        membersLogic.onChannelOwnerChangedEvent(data)
+    private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
+        launch { membersLogic.onChannelOwnerChangedEvent(data) }
     }
 
-
-    private suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        messagesLogic.onMessageStatusChangeEvent(data)
-        channelLogic.onChannelMarkersUpdated(data)
+    private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
+        launch {
+            messagesLogic.onMessageStatusChangeEvent(data)
+            channelLogic.onChannelMarkersUpdated(data)
+        }
     }
 
-    private suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        messagesLogic.onMessage(data)
-        channelLogic.onMessage(data)
+    private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
+        launch {
+            messagesLogic.onMessage(data)
+            channelLogic.onMessage(data)
+        }
     }
 
-    private suspend fun onMessageReactionUpdated(data: Message?) {
+    private fun onMessageReactionUpdated(data: Message?) {
         data ?: return
-        messagesLogic.onMessageReactionUpdated(data)
+        launch { messagesLogic.onMessageReactionUpdated(data) }
     }
 
-    private suspend fun onMessageEditedOrDeleted(data: Message?) {
+    private fun onMessageEditedOrDeleted(data: Message?) {
         data ?: return
-        messagesLogic.onMessageEditedOrDeleted(data)
-        channelLogic.onMessageEditedOrDeleted(data)
+        launch {
+            messagesLogic.onMessageEditedOrDeleted(data)
+            channelLogic.onMessageEditedOrDeleted(data)
+        }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
-        connectionLogic.onChangedConnectStatus(data)
+        launch { connectionLogic.onChangedConnectStatus(data) }
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: Long,
@@ -196,36 +203,36 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.deleteMember(channelId, memberId)
     }
 
-    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean, offset: Int,
+    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
                                           loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey, ignoreDb)
+        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean,
+    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
                                           offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replayInThread, offset, ignoreDb)
+        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replyInThread, offset, ignoreDb)
     }
 
-    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean,
+    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
                                           loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNearMessages(conversationId, messageId, replayInThread, loadKey, ignoreDb)
+        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replayInThread: Boolean, loadKey: Long,
+    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: Long,
                                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNewestMessages(conversationId, replayInThread, loadKey, ignoreDb)
+        return messagesLogic.loadNewestMessages(conversationId, replyInThread, loadKey, ignoreDb)
     }
 
-    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replayInThread: Boolean,
+    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> {
-        return messagesLogic.syncMessagesAfterMessageId(conversationId, replayInThread, messageId)
+        return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
-    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {
+    override suspend fun sendMessageAsFlow(channelId: Long, message: SceytMessage): Flow<SendMessageResult> {
         return messagesLogic.sendMessageAsFlow(channelId, message)
     }
 
-    override suspend fun sendMessage(channelId: Long, message: Message) {
+    override suspend fun sendMessage(channelId: Long, message: SceytMessage) {
         return messagesLogic.sendMessage(channelId, message)
     }
 

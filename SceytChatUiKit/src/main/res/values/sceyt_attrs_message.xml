@@ -15,7 +15,7 @@
         <attr name="sceytUiMessagePendingIcon" format="reference" />
 
         <attr name="sceytUiMessageSenderNameTextColor" format="reference" />
-        <attr name="sceytUiReplayMessageLineColor" format="reference" />
+        <attr name="sceytUiReplyMessageLineColor" format="reference" />
 
         <!--Date separator item-->
         <attr name="sceytUiDateSeparatorItemTextColor" format="reference" />
@@ -27,9 +27,12 @@
             <flag name="italic" value="2" />
         </attr>
 
-        <attr name="sceytUiSameMessageSenderDistance" format="dimension" />
-        <attr name="sceytUiDifferentMessageSenderDistance" format="dimension" />
+        <attr name="sceytUiSameSenderMessageDistance" format="dimension" />
+        <attr name="sceytUiDifferentSenderMessageDistance" format="dimension" />
         <attr name="sceytUiDownScrollerUnreadCountColor" format="reference" />
+        <attr name="sceytUiMediaLoaderColor" format="reference" />
+        <attr name="sceytUiFileAttachmentIcon" format="reference" />
+
 
     </declare-styleable>
 </resources>

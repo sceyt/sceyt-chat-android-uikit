@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
@@ -43,13 +44,14 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class MessageListViewModel(private val conversationId: Long,
-                           internal val replayInThread: Boolean = false,
+                           internal val replyInThread: Boolean = false,
                            internal var channel: SceytChannel) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
+    private val syncManager: SceytSyncManager by inject()
     internal val myId = preference.getUserId()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
@@ -97,8 +99,8 @@ class MessageListViewModel(private val conversationId: Long,
     //Command events
     private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
-    private val _onReplayMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    internal val onReplayMessageCommandLiveData: LiveData<SceytMessage> = _onReplayMessageCommandLiveData
+    private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
+    internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
     private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
     internal val onScrollToMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
 
@@ -106,7 +108,7 @@ class MessageListViewModel(private val conversationId: Long,
     init {
         onMessageReactionUpdatedFlow = MessageEventsObserver.onMessageReactionUpdatedFlow
             .filterNotNull()
-            .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
+            .filter { it.channelId == channel.id || it.replyInThread != replyInThread }
             .map {
                 it.toSceytUiMessage(isGroup).apply {
                     messageReactions = initReactionsItems(this)
@@ -114,11 +116,11 @@ class MessageListViewModel(private val conversationId: Long,
             }
         onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
             .filterNotNull()
-            .filter { it.channelId == channel.id || it.replyInThread != replayInThread }
+            .filter { it.channelId == channel.id || it.replyInThread != replyInThread }
             .map { it.toSceytUiMessage(isGroup) }
 
         onNewMessageFlow = persistenceMessageMiddleWare.getOnMessageFlow()
-            .filter { it.first.id == channel.id && it.second.replyInThread == replayInThread }
+            .filter { it.first.id == channel.id && it.second.replyInThread == replyInThread }
             .mapNotNull { it.second }
 
         onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
@@ -156,7 +158,7 @@ class MessageListViewModel(private val conversationId: Long,
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replayInThread, offset, loadKey).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -171,7 +173,7 @@ class MessageListViewModel(private val conversationId: Long,
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replayInThread, offset).collect {
+            persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replyInThread, offset).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -183,7 +185,7 @@ class MessageListViewModel(private val conversationId: Long,
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replayInThread, loadKey).collect { response ->
+            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread, loadKey).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
@@ -195,7 +197,7 @@ class MessageListViewModel(private val conversationId: Long,
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replayInThread, loadKey, true).collect { response ->
+            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread, loadKey, true).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
@@ -226,6 +228,12 @@ class MessageListViewModel(private val conversationId: Long,
         pagingResponseReceived(response)
     }
 
+    fun syncConversationMessagesAfter(messageId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            syncManager.syncConversationMessagesAfter(conversationId, messageId)
+        }
+    }
+
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
@@ -240,8 +248,8 @@ class MessageListViewModel(private val conversationId: Long,
         _onEditMessageCommandLiveData.postValue(message)
     }
 
-    fun prepareToReplayMessage(message: SceytMessage) {
-        _onReplayMessageCommandLiveData.postValue(message)
+    fun prepareToReplyMessage(message: SceytMessage) {
+        _onReplyMessageCommandLiveData.postValue(message)
     }
 
     fun prepareToScrollToNewMessage() {
@@ -277,7 +285,10 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
+            val sceytMessage = message.toSceytUiMessage(isGroup).apply {
+                this.parent = parent?.toSceytUiMessage(isGroup)
+            }
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, sceytMessage).collect { result ->
                 when (result) {
                     is SendMessageResult.TempMessage -> {
                         val outMessage = result.message.apply {
@@ -347,6 +358,7 @@ class MessageListViewModel(private val conversationId: Long,
         val messageItems = arrayListOf<MessageListItem>()
 
         withContext(Dispatchers.Default) {
+            var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
             data.forEachIndexed { index, sceytMessage ->
                 var prevMessage = compareMessage
                 if (index > 0)
@@ -363,8 +375,11 @@ class MessageListViewModel(private val conversationId: Long,
                     messageReactions = initReactionsItems(this)
                 })
 
-                if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId)
-                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, LoadKeyType.ScrollToUnreadMessage.longValue))
+                if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
+                        unreadLineMessage = it
+                    })
+                }
 
                 messageItems.add(messageItem)
             }
@@ -412,8 +427,8 @@ class MessageListViewModel(private val conversationId: Long,
             is MessageCommandEvent.EditMessage -> {
                 prepareToEditMessage(event.message)
             }
-            is MessageCommandEvent.Replay -> {
-                prepareToReplayMessage(event.message)
+            is MessageCommandEvent.Reply -> {
+                prepareToReplyMessage(event.message)
             }
             is MessageCommandEvent.ScrollToDown -> {
                 prepareToScrollToNewMessage()

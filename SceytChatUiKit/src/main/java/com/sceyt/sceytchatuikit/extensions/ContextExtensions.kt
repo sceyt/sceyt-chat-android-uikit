@@ -25,6 +25,7 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
@@ -81,6 +82,18 @@ fun Context.asActivity(): Activity {
             else throw RuntimeException("Context should be Activity but was $this")
         }
         else -> throw RuntimeException("Context should be Activity but was $this")
+    }
+}
+
+fun Context.asFragmentActivity(): FragmentActivity {
+    return when (this) {
+        is FragmentActivity -> return this
+        is ContextWrapper -> {
+            if (baseContext is FragmentActivity)
+                baseContext as FragmentActivity
+            else throw RuntimeException("Context should be FragmentActivity but was $this")
+        }
+        else -> throw RuntimeException("Context should be FragmentActivity but was $this")
     }
 }
 

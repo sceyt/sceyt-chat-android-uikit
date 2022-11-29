@@ -48,6 +48,7 @@ ext {
     legacy_version = '1.0.0'
     lifecycle_version = '2.5.1'
     lottie_version = '5.2.0'
+    light_compressor_version = '1.0.1'
 
     voley_version = '1.2.1'
 
@@ -86,6 +87,7 @@ ext {
             lifecycleViewModel  : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",
             lottie              : "com.airbnb.android:lottie:$lottie_version",
             liveEvent           : "com.github.hadilq.liveevent:liveevent:$live_event_version",
+            lightCompressor     : "com.github.AbedElazizShe:LightCompressor:$light_compressor_version",
             voley               : "com.android.volley:volley:$voley_version",
             material            : "com.google.android.material:material:$material_version",
             moshiConverter      : "com.squareup.retrofit2:converter-moshi:$moshi_converter_version",

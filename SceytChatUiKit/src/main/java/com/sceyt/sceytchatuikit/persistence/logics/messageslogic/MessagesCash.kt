@@ -2,8 +2,8 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diffContent
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -14,7 +14,7 @@ class MessagesCash {
 
     companion object {
         private val messageUpdatedFlow_ = MutableSharedFlow<List<SceytMessage>>(
-            extraBufferCapacity = 5,
+            extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val messageUpdatedFlow: SharedFlow<List<SceytMessage>> = messageUpdatedFlow_
@@ -24,7 +24,7 @@ class MessagesCash {
     fun addAll(list: List<SceytMessage>, checkDifference: Boolean): Boolean {
         synchronized(lock) {
             return if (checkDifference)
-                putAndCheckHasDiff(list)
+                putAndCheckHasDiff(true, *list.toTypedArray())
             else {
                 cashedMessages.putAll(list.associateBy { it.tid })
                 false
@@ -77,16 +77,26 @@ class MessagesCash {
         }
     }
 
+    fun upsertMessages(vararg message: SceytMessage) {
+        synchronized(lock) {
+            message.forEach {
+                if (putAndCheckHasDiff(false, it))
+                    emitMessageUpdated(it)
+            }
+        }
+    }
+
     private fun emitMessageUpdated(vararg message: SceytMessage) {
         messageUpdatedFlow_.tryEmit(message.map { it.clone() })
     }
 
-    private fun putAndCheckHasDiff(list: List<SceytMessage>): Boolean {
+
+    private fun putAndCheckHasDiff(includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
-        list.forEach {
+        messages.forEach {
             if (!detectedDiff) {
                 val old = cashedMessages[it.tid]
-                detectedDiff = old?.diffContent(it)?.hasDifference() ?: true
+                detectedDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
             }
             cashedMessages[it.tid] = it
         }

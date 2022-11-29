@@ -1,6 +1,10 @@
 package com.sceyt.sceytchatuikit.extensions
 
+import android.graphics.Typeface
 import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.StyleSpan
 import androidx.core.text.isDigitsOnly
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -45,4 +49,10 @@ fun String?.isLink(): Boolean {
 
 fun CharSequence?.isNotNullOrBlank(): Boolean {
     return isNullOrBlank().not()
+}
+
+fun CharSequence?.setBoldSpan(from: Int, to: Int): SpannableStringBuilder {
+    val str = SpannableStringBuilder(this)
+    str.setSpan(StyleSpan(Typeface.BOLD), from, to, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    return str
 }

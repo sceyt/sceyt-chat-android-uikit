@@ -8,11 +8,11 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
 interface MessagesRepository {
-    suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
-    suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
-    suspend fun getNearMessages(conversationId: Long, messageId: Long, replayInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>>
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
-    suspend fun loadAllMessagesAfter(conversationId: Long, replayInThread: Boolean, messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
+    suspend fun loadAllMessagesAfter(conversationId: Long, replyInThread: Boolean, messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendMessage(channelId: Long, message: Message): SceytResponse<SceytMessage>
     suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage>

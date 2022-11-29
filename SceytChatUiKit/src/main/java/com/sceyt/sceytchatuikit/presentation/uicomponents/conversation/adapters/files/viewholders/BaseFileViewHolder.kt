@@ -1,14 +1,16 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
+import android.content.Context
 import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.getLocaleFileByNameOrMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -16,6 +18,7 @@ import java.io.File
 
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
     protected lateinit var fileItem: FileListItem
+    protected val context: Context by lazy { itemView.context }
 
     override fun bind(item: FileListItem) {
         fileItem = item
@@ -34,7 +37,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             updateUploadingState(item.fileLoadData.apply { loading = true })
             item.setUploadListener { loadData ->
                 if (checkLoadDataIsForCurrent(data = loadData))
-                    com.sceyt.sceytchatuikit.extensions.runOnMainThread { updateUploadingState(loadData) }
+                    runOnMainThread { updateUploadingState(loadData) }
             }
         }
     }
@@ -54,7 +57,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
             item.setDownloadProgressListener { loadData, outFile ->
                 if (checkLoadDataIsForCurrent(data = loadData))
-                    com.sceyt.sceytchatuikit.extensions.runOnMainThread { updateDownloadingState(loadData, outFile) }
+                    runOnMainThread { updateDownloadingState(loadData, outFile) }
             }
 
             if (item.fileLoadData.loading) {
@@ -77,7 +80,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
                     .setCallback { e, result ->
                         if (result == null && e != null) {
                             loadedFile.delete()
-                            item.downloadFinish(result, false)
+                            item.downloadFinish(null, false)
                         } else {
                             item.downloadFinish(result, true)
                         }

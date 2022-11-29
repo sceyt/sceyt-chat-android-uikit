@@ -30,10 +30,10 @@
     <string name="sceyt_react">React</string>
     <string name="sceyt_add">Add</string>
     <string name="sceyt_remove">Remove</string>
-    <string name="sceyt_replay">Replay</string>
-    <string name="sceyt_replay_in_thread">Replay in thread</string>
-    <string name="sceyt_replays">Replays</string>
-    <string name="sceyt_thread_replay">Thread replay</string>
+    <string name="sceyt_reply">Reply</string>
+    <string name="sceyt_reply_in_thread">Reply in thread</string>
+    <string name="sceyt_replies">Replies</string>
+    <string name="sceyt_thread_reply">Thread reply</string>
     <string name="sceyt_with">with %s</string>
     <string name="sceyt_ui_channel_list_empty">No results found</string>
     <string name="sceyt_messages_list_empty">No messages yet</string>
@@ -88,5 +88,11 @@
     <string name="sceyt_1_min_ago">1 minute ago</string>
     <string name="sceyt_last_seen">Last seen</string>
     <string name="sceyt_new_messages">New messages</string>
+    <string name="sceyt_gallery">Gallery</string>
+    <string name="sceyt_this_unsupported_file_format">This file format is not supported</string>
+    <string name="sceyt_unsupported_file_format">file format is not supported</string>
+    <string name="sceyt_max_select_count_should_be">Max select count should be lover than</string>
+    <string name="sceyt_video">Video</string>
+    <string name="sceyt_image">Image</string>
 
 </resources>
