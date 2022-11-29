@@ -159,6 +159,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.unMuteChannel(channelId)
     }
 
+    override suspend fun getChannelFromDb(channelId: Long): SceytChannel? {
+        return channelLogic.getChannelFromDb(channelId)
+    }
+
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.getChannelFromServer(channelId)
     }
@@ -270,6 +274,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
         return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
+    }
+
+    override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? {
+        return messagesLogic.getMessageFromDbById(messageId)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

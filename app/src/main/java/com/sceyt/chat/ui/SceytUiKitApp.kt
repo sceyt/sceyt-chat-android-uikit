@@ -52,7 +52,7 @@ class SceytUiKitApp : Application() {
                     if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateDisconnect)
                         connect()
                 }
-                Lifecycle.Event.ON_DESTROY -> {
+                Lifecycle.Event.ON_DESTROY, Lifecycle.Event.ON_PAUSE -> {
                     SceytKitClient.disconnect()
                 }
                 else -> {}

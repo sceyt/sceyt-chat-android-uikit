@@ -39,9 +39,14 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChan
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
         private val application: Application,
@@ -53,7 +58,10 @@ internal class PersistenceMessagesLogicImpl(
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference,
         private val messagesCash: MessagesCash
-) : PersistenceMessagesLogic, SceytKoinComponent {
+) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,
@@ -66,12 +74,17 @@ internal class PersistenceMessagesLogicImpl(
             saveMessagesToDb(arrayListOf(message, parent))
         } ?: run { saveMessagesToDb(arrayListOf(message)) }
 
-        messagesCash.add(message)
+        onMessageFlow.tryEmit(data)
 
         if (message.incoming)
             markMessagesAs(data.first.id, Received, message.id)
+    }
 
-        onMessageFlow.tryEmit(data)
+    override fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
+        launch {
+            onMessage(data)
+            persistenceChannelsLogic.onFcmMessage(data)
+        }
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
@@ -309,6 +322,10 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
+    override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? {
+        return messageDao.getMessageById(messageId)?.toSceytMessage()
+    }
+
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
 
@@ -476,9 +493,11 @@ internal class PersistenceMessagesLogicImpl(
         for (message in list) {
             messagesDb.add(message.toMessageDb())
             message.parent?.let { parent ->
-                messagesDb.add(parent.toMessageDb())
-                if (parent.incoming)
-                    parent.from?.let { user -> usersDb.add(user.toUserEntity()) }
+                if (parent.id != 0L) {
+                    messagesDb.add(parent.toMessageDb())
+                    if (parent.incoming)
+                        parent.from?.let { user -> usersDb.add(user.toUserEntity()) }
+                }
             }
         }
         messageDao.insertMessages(messagesDb)
@@ -523,6 +542,7 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): SceytResponse<MessageListMarker> {
         addPendingMarkerToDb(channelId, status, *ids)
+
         val response = if (status == Displayed)
             messagesRepository.markAsRead(channelId, *ids)
         else messagesRepository.markAsDelivered(channelId, *ids)

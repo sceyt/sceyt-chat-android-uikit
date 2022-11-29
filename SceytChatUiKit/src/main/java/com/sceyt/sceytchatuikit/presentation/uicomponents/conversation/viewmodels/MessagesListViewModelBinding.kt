@@ -40,6 +40,8 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
+    ChannelsCash.currentChannelId = channel.id
+
     if (channel.lastReadMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
             || channel.lastReadMessageId == channel.lastMessage?.id)
         loadPrevMessages(0, 0)
