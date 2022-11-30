@@ -18,6 +18,7 @@ internal interface PersistenceChannelsLogic {
     suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
     suspend fun onChannelMarkersUpdated(data: MessageStatusChangeData)
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
+    suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageEditedOrDeleted(data: Message)
     suspend fun loadChannels(offset: Int, searchQuery: String,
                              loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
@@ -33,6 +34,7 @@ internal interface PersistenceChannelsLogic {
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun getChannelFromDb(channelId: Long): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>

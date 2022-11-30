@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 internal interface PersistenceMessagesLogic {
-    suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
+    suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
+    fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageReactionUpdated(data: Message)
     suspend fun onMessageEditedOrDeleted(data: Message)
@@ -42,5 +43,6 @@ internal interface PersistenceMessagesLogic {
     suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
+    suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

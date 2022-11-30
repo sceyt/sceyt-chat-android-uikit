@@ -2,8 +2,8 @@ package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.DeliveryStatus.*
 import com.sceyt.chat.models.message.MarkerCount
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -125,15 +125,14 @@ abstract class MessageDao {
         return LoadNearData((newMessages + oldest).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
     }
 
-
     @Transaction
     @Query("select * from messages where channelId =:channelId and deliveryStatus =:status " +
             "order by createdAt")
-    abstract suspend fun getPendingMessages(channelId: Long, status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
+    abstract suspend fun getPendingMessages(channelId: Long, status: DeliveryStatus = Pending): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where deliveryStatus =:status order by createdAt")
-    abstract suspend fun getAllPendingMessages(status: DeliveryStatus = DeliveryStatus.Pending): List<MessageDb>
+    abstract suspend fun getAllPendingMessages(status: DeliveryStatus = Pending): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where message_id =:id")
@@ -150,6 +149,10 @@ abstract class MessageDao {
     @Query("select tid from  messages where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 
+
+    @Query("select message_id as id, tid from messages where message_id <= :id and deliveryStatus in (:status)")
+    abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
+
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
 
@@ -159,11 +162,21 @@ abstract class MessageDao {
     @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
-    @Query("update messages set state =:state, body=:body where message_id =:messageId")
-    abstract suspend fun updateMessageStateAndBody(messageId: Long, state: MessageState, body: String)
+    @Transaction
+    open suspend fun updateMessageStatusWithBefore(status: DeliveryStatus, id: Long): List<MessageIdAndTid> {
+        val ids = when (status) {
+            Read -> getMessagesTidAndIdLoverThanByStatus(id, Sent, Delivered)
+            else -> getMessagesTidAndIdLoverThanByStatus(id, Sent)
+        }.filter { it.id != 0L }
+
+        if (ids.isNotEmpty())
+            updateMessageStatus(status, *ids.mapNotNull { it.id }.toLongArray())
+
+        return ids
+    }
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId")
-    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Read)
+    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = Read)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)

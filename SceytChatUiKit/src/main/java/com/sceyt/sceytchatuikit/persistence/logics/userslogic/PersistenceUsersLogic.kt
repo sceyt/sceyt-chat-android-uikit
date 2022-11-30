@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 
 interface PersistenceUsersLogic {
     suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<User>>
+    suspend fun getUserDbById(id: String): User?
     suspend fun getCurrentUser(): User?
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
     suspend fun updateProfile(firstName: String?, lastName: String?, avatarUri: String?): SceytResponse<User>
