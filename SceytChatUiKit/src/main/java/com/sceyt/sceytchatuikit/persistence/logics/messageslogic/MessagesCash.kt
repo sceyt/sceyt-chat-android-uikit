@@ -62,12 +62,14 @@ class MessagesCash {
 
     fun updateMessagesStatus(status: DeliveryStatus, vararg tIds: Long) {
         synchronized(lock) {
+            val updatesMessages = mutableListOf<SceytMessage>()
             tIds.forEach {
                 cashedMessages[it]?.let { message ->
                     message.deliveryStatus = status
-                    emitMessageUpdated(message)
+                    updatesMessages.add(message)
                 }
             }
+            emitMessageUpdated(*updatesMessages.toTypedArray())
         }
     }
 

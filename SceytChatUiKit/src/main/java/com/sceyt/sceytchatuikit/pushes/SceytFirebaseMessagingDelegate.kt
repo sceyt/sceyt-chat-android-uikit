@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.pushes
 
+import android.app.Application
 import android.util.Log
+import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
@@ -20,7 +22,8 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMess
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import org.koin.core.component.inject
 
-object FirebaseMessagingDelegate : SceytKoinComponent {
+object SceytFirebaseMessagingDelegate : SceytKoinComponent {
+    private val application: Application by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val preferences: SceytSharedPreference by inject()
     private val firebaseMessaging: FirebaseMessaging by lazy { FirebaseMessaging.getInstance() }
@@ -42,24 +45,27 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     private fun asyncGetDeviceToken(onToken: (token: String?) -> Unit) {
-        firebaseMessaging.token.addOnCompleteListener {
-            if (it.isSuccessful) {
-                onToken(it.result)
-            } else
-                Log.e(this@FirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
-        }
+        if (FirebaseApp.getApps(application).size > 0) {
+            firebaseMessaging.token.addOnCompleteListener {
+                if (it.isSuccessful) {
+                    onToken(it.result)
+                } else
+                    Log.e(this@SceytFirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
+            }
+        } else onToken(null)
     }
 
     private fun registerClientPushToken(fcmToken: String?) {
         fcmToken ?: return
         ChatClient.getClient().registerPushToken(fcmToken, object : ActionCallback {
             override fun onSuccess() {
+                preferences.setString(KEY_FCM_TOKEN, fcmToken)
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
-                Log.i(this@FirebaseMessagingDelegate.TAG, "push token successfully registered")
+                Log.i(this@SceytFirebaseMessagingDelegate.TAG, "push token successfully registered")
             }
 
             override fun onError(e: SceytException) {
-                Log.e(this@FirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
+                Log.e(this@SceytFirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
             }
         })
     }
@@ -71,13 +77,12 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
             return false
         }
 
+        val triple = getDataFromJson(remoteMessage)
+        val channel = triple.second
+        val message = triple.third
 
-        val u = getUserFromPushJson(remoteMessage.data["user"])
-        val c = getChannelFromPushJson(remoteMessage.data["channel"])
-        val m = getMessageBodyFromPushJson(remoteMessage.data["message"], c?.id)
-
-        if (c != null && m != null)
-            messagesLogic.onFcmMessage(Pair(c.toSceytUiChannel(), m.toSceytUiMessage(c is GroupChannel)))
+        if (channel != null && message != null)
+            messagesLogic.onFcmMessage(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage(channel is GroupChannel)))
         return true
     }
 
@@ -88,15 +93,19 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
             return null
         }
 
+        val triple = getDataFromJson(remoteMessage)
+        val channel = triple.second
+        val message = triple.third
+        if (channel != null && message != null)
+            messagesLogic.onFcmMessage(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage(channel is GroupChannel)))
+        return triple
+    }
 
+    private fun getDataFromJson(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?> {
         val u = getUserFromPushJson(remoteMessage.data["user"])
         val c = getChannelFromPushJson(remoteMessage.data["channel"])
-        val m = getMessageBodyFromPushJson(remoteMessage.data["message"], c?.id)
-
-        val triple = Triple(u, c, m)
-        if (c != null && m != null)
-            messagesLogic.onFcmMessage(Pair(c.toSceytUiChannel(), m.toSceytUiMessage(c is GroupChannel)))
-        return triple
+        val m = getMessageBodyFromPushJson(remoteMessage.data["message"], c?.id, u)
+        return Triple(u, c, m)
     }
 
     @Throws(IllegalStateException::class)

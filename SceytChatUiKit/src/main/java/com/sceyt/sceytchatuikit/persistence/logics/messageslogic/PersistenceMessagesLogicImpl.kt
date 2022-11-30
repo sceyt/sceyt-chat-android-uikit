@@ -67,7 +67,7 @@ internal class PersistenceMessagesLogicImpl(
         extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
+    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean) {
         val message = data.second
 
         message.parent?.let { parent ->
@@ -76,20 +76,20 @@ internal class PersistenceMessagesLogicImpl(
 
         onMessageFlow.tryEmit(data)
 
-        if (message.incoming)
+        if (message.incoming && sendDeliveryMarker)
             markMessagesAs(data.first.id, Received, message.id)
     }
 
     override fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
         launch {
-            onMessage(data)
+            onMessage(data, false)
             persistenceChannelsLogic.onFcmMessage(data)
         }
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        messageDao.updateMessageStatus(data.status, *data.messageIds.toLongArray())
-        messagesCash.messageUpdated(*messageDao.getMessageByIds(data.messageIds).map { it.toSceytMessage() }.toTypedArray())
+        val updatedMessages = messageDao.updateMessageStatusWithBefore(data.status, data.messageIds.maxOf { it })
+        messagesCash.updateMessagesStatus(data.status, *updatedMessages.map { it.tid }.toLongArray())
     }
 
     override suspend fun onMessageReactionUpdated(data: Message) {

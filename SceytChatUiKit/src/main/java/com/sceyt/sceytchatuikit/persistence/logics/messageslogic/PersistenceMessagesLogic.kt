@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 internal interface PersistenceMessagesLogic {
-    suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
+    suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
     fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageReactionUpdated(data: Message)
