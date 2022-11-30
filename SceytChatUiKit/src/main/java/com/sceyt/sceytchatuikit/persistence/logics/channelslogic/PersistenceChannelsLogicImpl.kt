@@ -109,6 +109,18 @@ internal class PersistenceChannelsLogicImpl(
         updateChannelDbAndCash(data.first)
     }
 
+    override suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
+        val dataChannel = data.first
+        val dataMessage = data.second
+        //Update channel last message if channel exist
+        channelDao.getChannelById(dataChannel.id)?.let {
+            channelDao.updateLastMessage(it.channelEntity.id, dataMessage.id, dataMessage.createdAt)
+        } ?: run {
+            // Insert channel from push data
+            channelDao.insertChannel(dataChannel.toChannelEntity(preference.getUserId()))
+        }
+    }
+
     override suspend fun onMessageEditedOrDeleted(data: Message) {
         channelsCash.get(data.channelId)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
@@ -391,6 +403,10 @@ internal class PersistenceChannelsLogicImpl(
         }
 
         return response
+    }
+
+    override suspend fun getChannelFromDb(channelId: Long): SceytChannel? {
+        return channelDao.getChannelById(channelId)?.toChannel()
     }
 
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {

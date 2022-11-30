@@ -34,6 +34,8 @@ class ChannelsCash {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
+
+        var currentChannelId: Long? = null
     }
 
     /** Added channels like upsert, and check is differences between channels*/

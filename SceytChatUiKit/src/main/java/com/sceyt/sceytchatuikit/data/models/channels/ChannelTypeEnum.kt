@@ -18,5 +18,14 @@ fun getChannelType(channel: Channel): ChannelTypeEnum {
     }
 }
 
+fun stringToEnum(type: String): ChannelTypeEnum {
+    return when (type) {
+        "direct" -> ChannelTypeEnum.Direct
+        "private" -> ChannelTypeEnum.Private
+        "public" -> ChannelTypeEnum.Public
+        else -> throw Exception("Unknown channel type $type")
+    }
+}
+
 fun ChannelTypeEnum?.isGroup() = this == ChannelTypeEnum.Private || this == ChannelTypeEnum.Public
 
