@@ -1,5 +1,7 @@
 package com.sceyt.sceytchatuikit
 
+import android.app.Application
+import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
@@ -9,9 +11,10 @@ import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.isAppOnForeground
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
-import com.sceyt.sceytchatuikit.pushes.FirebaseMessagingDelegate
+import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +27,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 object SceytKitClient : SceytKoinComponent {
+    private val application: Application by inject()
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
@@ -47,6 +51,7 @@ object SceytKitClient : SceytKoinComponent {
     val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
 
     init {
+        FirebaseApp.initializeApp(application)
         setListener()
     }
 
@@ -83,10 +88,12 @@ object SceytKitClient : SceytKoinComponent {
                     notifyState(true, null)
 
                     val status = ClientWrapper.currentUser.presence.status
-                    ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
-                        SceytKitConfig.presenceStatusText else status) {
+                    if (application.isAppOnForeground()) {
+                        ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
+                            SceytKitConfig.presenceStatusText else status) {
+                        }
                     }
-                    FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                    SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
                     persistenceMessagesMiddleWare.sendAllPendingMarkers()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
                     syncManager.startSync()

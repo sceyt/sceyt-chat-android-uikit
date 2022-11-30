@@ -286,6 +286,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.getSceytUsers(ids)
     }
 
+    override suspend fun getUserDbById(id: String): User? {
+        return usersLogic.getUserDbById(id)
+    }
+
     override suspend fun getCurrentUser(): User? {
         return usersLogic.getCurrentUser()
     }

@@ -36,6 +36,10 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
+    override suspend fun getUserDbById(id: String): User? {
+        return userDao.getUserById(id)?.toUser()
+    }
+
     override suspend fun getCurrentUser(): User? {
         var clientUser = ClientWrapper.currentUser
         if (clientUser?.id.isNullOrBlank())
