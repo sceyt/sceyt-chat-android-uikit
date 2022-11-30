@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
@@ -32,6 +31,12 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val _editProfileErrorLiveData = MutableLiveData<String?>()
     val editProfileErrorLiveData: LiveData<String?> = _editProfileErrorLiveData
+
+    private val _logOutLiveData = MutableLiveData<Boolean>()
+    val logOutLiveData: LiveData<Boolean> = _logOutLiveData
+
+    private val _logOutErrorLiveData = MutableLiveData<String>()
+    val logOutErrorLiveData: LiveData<String> = _logOutErrorLiveData
 
     fun getCurrentUser() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -99,8 +104,12 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     fun logout() {
-        ChatClient.getClient().disconnect()
-        SceytKitClient.clearData()
-        //todo unregister push token
+        viewModelScope.launch(Dispatchers.IO) {
+            SceytKitClient.logOut { success, errorMessage ->
+                if (success)
+                    _logOutLiveData.postValue(true)
+                else _logOutErrorLiveData.postValue(errorMessage)
+            }
+        }
     }
 }
