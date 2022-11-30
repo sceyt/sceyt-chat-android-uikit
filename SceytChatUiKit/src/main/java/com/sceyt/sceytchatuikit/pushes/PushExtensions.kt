@@ -30,7 +30,7 @@ fun getMessageBodyFromPushJson(messageJson: String?, channelId: Long?, from: Use
 
     return Message(messageId, messageId, channelId
             ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
-        0L, true, true, transient, false, DeliveryStatus.Sent, MessageState.None,
+        0L, true, true, transient, false, false, DeliveryStatus.Sent, MessageState.None,
         from, null, null, null, null, null, null,
         null, null, false, 0, 0)
 }

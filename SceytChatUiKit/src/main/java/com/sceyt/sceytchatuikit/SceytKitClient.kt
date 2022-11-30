@@ -147,4 +147,18 @@ object SceytKitClient : SceytKoinComponent {
         preferences.clear()
         channelsCash.clear()
     }
+
+    fun logOut(listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+        ChatClient.getClient().unregisterPushToken(object : ActionCallback {
+            override fun onSuccess() {
+                clearData()
+                ChatClient.getClient().disconnect()
+                listener?.invoke(true, null)
+            }
+
+            override fun onError(exception: SceytException?) {
+                listener?.invoke(false, exception?.message)
+            }
+        })
+    }
 }

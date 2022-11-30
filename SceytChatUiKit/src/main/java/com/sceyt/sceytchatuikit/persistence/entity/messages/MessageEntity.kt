@@ -26,6 +26,7 @@ data class MessageEntity(
         var receipt: Boolean,
         var isTransient: Boolean,
         var silent: Boolean,
+        var direct: Boolean,
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,

@@ -86,6 +86,17 @@ class ProfileFragment : Fragment() {
             muted = it
             binding.switchNotifications.isChecked = it
         }
+
+        viewModel.logOutLiveData.observe(viewLifecycleOwner){
+            preference.setToken(null)
+            preference.setUserName(null)
+            LoginActivity.launch(requireContext())
+            requireActivity().finish()
+        }
+
+        viewModel.logOutErrorLiveData.observe(viewLifecycleOwner){
+            customToastSnackBar(requireView(), it.toString())
+        }
     }
 
     private fun FragmentProfileBinding.initViews() {
@@ -154,10 +165,6 @@ class ProfileFragment : Fragment() {
         signOut.setOnClickListener {
             SceytDialog(requireContext(), positiveClickListener = {
                 viewModel.logout()
-                preference.setToken(null)
-                preference.setUserName(null)
-                LoginActivity.launch(requireContext())
-                requireActivity().finish()
             }).setTitle(getString(R.string.sign_out_title))
                 .setDescription(getString(R.string.sign_out_desc))
                 .setPositiveButtonTitle(getString(R.string.sign_out))
