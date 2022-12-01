@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit
 
 import android.app.Application
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
@@ -11,7 +13,6 @@ import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.isAppOnForeground
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
+import kotlin.collections.set
 
 object SceytKitClient : SceytKoinComponent {
     private val application: Application by inject()
@@ -88,10 +90,11 @@ object SceytKitClient : SceytKoinComponent {
                     notifyState(true, null)
 
                     val status = ClientWrapper.currentUser.presence.status
-                    if (application.isAppOnForeground()) {
-                        ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
-                            SceytKitConfig.presenceStatusText else status) {
-                        }
+                    ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
+                        if (ConnectionEventsObserver.isConnected)
+                            ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
+                                SceytKitConfig.presenceStatusText else status) {
+                            }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
                     persistenceMessagesMiddleWare.sendAllPendingMarkers()

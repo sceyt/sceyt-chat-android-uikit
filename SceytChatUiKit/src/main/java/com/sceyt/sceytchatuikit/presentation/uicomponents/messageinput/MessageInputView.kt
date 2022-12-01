@@ -127,6 +127,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         if (messageBody != "" || allAttachments.isNotEmpty()) {
             if (editMessage != null) {
+                if (editMessage?.body?.trim() == messageBody.trim()) {
+                    cancelReply()
+                    reset()
+                    return
+                }
                 editMessage?.body = messageBody
                 editMessage?.let {
                     cancelReply {
