@@ -82,7 +82,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         launch {
             messagesLogic.onMessageStatusChangeEvent(data)
-            channelLogic.onChannelMarkersUpdated(data)
+            channelLogic.onMessageStatusChangeEvent(data)
         }
     }
 
