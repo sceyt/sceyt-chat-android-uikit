@@ -30,8 +30,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -154,17 +155,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    lifecycleOwner.lifecycleScope.launch {
-        MessagesCash.messageUpdatedFlow.collect { messages ->
-            messages.forEach {
-                messagesListView.updateMessage(it)
-            }
+    MessagesCash.messageUpdatedFlow.onEach { messages ->
+        messages.forEach {
+            messagesListView.updateMessage(it)
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        loadMessagesFlow.collect(::initMessagesResponse)
-    }
+    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(lifecycleOwner.lifecycleScope)
 
     /** Send pending markers and pending messages when lifecycle come back onResume state*/
     lifecycleOwner.lifecycleScope.launch {
@@ -181,12 +178,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
 
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelUpdatedEventFlow.collect {
-            channel = it
-            messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
-        }
-    }
+    onChannelUpdatedEventFlow.onEach {
+        channel = it
+        messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner, Observer {
         if (it.first.id == channel.id) {
@@ -300,81 +295,63 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    lifecycleOwner.lifecycleScope.launch {
-        onNewMessageFlow.collect {
-            if (hasNext || hasNextDb) return@collect
-            val initMessage = mapToMessageListItem(
-                data = arrayListOf(it),
-                hasNext = false,
-                hasPrev = false,
-                compareMessage = messagesListView.getLastMessage()?.message)
+    onNewMessageFlow.onEach {
+        if (hasNext || hasNextDb) return@onEach
+        val initMessage = mapToMessageListItem(
+            data = arrayListOf(it),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = messagesListView.getLastMessage()?.message)
 
-            messagesListView.addNewMessages(*initMessage.toTypedArray())
-            messagesListView.updateViewState(PageState.Nothing)
-        }
-    }
+        messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.updateViewState(PageState.Nothing)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onNewThreadMessageFlow.collect {
-            messagesListView.updateReplyCount(it)
-        }
-    }
+    onNewThreadMessageFlow.onEach {
+        messagesListView.updateReplyCount(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onOutGoingThreadMessageFlow.collect {
-            messagesListView.newReplyMessage(it.parent?.id)
-        }
-    }
+    onOutGoingThreadMessageFlow.onEach {
+        messagesListView.newReplyMessage(it.parent?.id)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageStatusFlow.collect {
-            messagesListView.updateMessagesStatus(it.status, it.messageIds)
-        }
-    }
+    onMessageStatusFlow.onEach {
+        messagesListView.updateMessagesStatus(it.status, it.messageIds)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageReactionUpdatedFlow.collect {
-            messagesListView.updateReaction(it)
-        }
-    }
+    onMessageReactionUpdatedFlow.onEach {
+        messagesListView.updateReaction(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageEditedOrDeletedFlow.collect {
-            messagesListView.messageEditedOrDeleted(it)
-        }
-    }
+    onMessageEditedOrDeletedFlow.onEach {
+        messagesListView.messageEditedOrDeleted(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelEventFlow.collect {
-            when (it.eventType) {
-                ClearedHistory -> messagesListView.clearData()
-                Left -> {
-                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                    if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
-                        messagesListView.context.asActivity().finish()
-                }
-                Deleted -> messagesListView.context.asActivity().finish()
-                else -> return@collect
+    onChannelEventFlow.onEach {
+        when (it.eventType) {
+            ClearedHistory -> messagesListView.clearData()
+            Left -> {
+                val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
+                    messagesListView.context.asActivity().finish()
             }
+            Deleted -> messagesListView.context.asActivity().finish()
+            else -> return@onEach
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        ChannelsCash.channelDeletedFlow
-            .filter { it == channel.id }
-            .collect {
-                messagesListView.context.asActivity().finish()
-            }
-    }
+    ChannelsCash.channelDeletedFlow
+        .filter { it == channel.id }
+        .onEach {
+            messagesListView.context.asActivity().finish()
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onOutGoingMessageStatusFlow.collect {
-            val sceytUiMessage = it.second
-            sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
-            messagesListView.updateMessage(sceytUiMessage)
-            messagesListView.sortMessages()
-        }
-    }
+    onOutGoingMessageStatusFlow.onEach {
+        val sceytUiMessage = it.second
+        sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
+        messagesListView.updateMessage(sceytUiMessage)
+        messagesListView.sortMessages()
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     joinLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
@@ -460,27 +437,25 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         messageInputView.checkIsParticipant(channel)
     })
 
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelEventFlow.collect {
-            when (it.eventType) {
-                Left -> {
-                    if (channel.channelType == ChannelTypeEnum.Public) {
-                        val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                        if (leftUser == myId)
-                            messageInputView.onChannelLeft()
-                    }
+    onChannelEventFlow.onEach {
+        when (it.eventType) {
+            Left -> {
+                if (channel.channelType == ChannelTypeEnum.Public) {
+                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                    if (leftUser == myId)
+                        messageInputView.onChannelLeft()
                 }
-                Joined -> {
-                    if (channel.channelType == ChannelTypeEnum.Public) {
-                        val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                        if (leftUser == myId)
-                            messageInputView.joinSuccess()
-                    }
-                }
-                else -> return@collect
             }
+            Joined -> {
+                if (channel.channelType == ChannelTypeEnum.Public) {
+                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                    if (leftUser == myId)
+                        messageInputView.joinSuccess()
+                }
+            }
+            else -> return@onEach
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
@@ -517,17 +492,13 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     if (channel is SceytDirectChannel)
         SceytPresenceChecker.addNewUserToPresenceCheck((channel as SceytDirectChannel).peer?.id)
 
-    lifecycleOwner.lifecycleScope.launch {
-        SceytPresenceChecker.onPresenceCheckUsersFlow.collect {
-            headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
-        }
-    }
+    SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
+        headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelTypingEventFlow.collectLatest {
-            headerView.onTyping(it)
-        }
-    }
+    onChannelTypingEventFlow.onEach {
+        headerView.onTyping(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
         if (!replyInThread)
