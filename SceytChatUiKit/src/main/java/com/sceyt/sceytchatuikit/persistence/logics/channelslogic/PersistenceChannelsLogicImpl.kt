@@ -101,8 +101,16 @@ internal class PersistenceChannelsLogicImpl(
         updateChannelDbAndCash((data.channel ?: return).toSceytUiChannel())
     }
 
-    override suspend fun onChannelMarkersUpdated(data: MessageStatusChangeData) {
-        updateChannelDbAndCash(data.channel)
+    override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
+        channelsCash.get(data.channel.id)?.let { channel ->
+            channel.lastMessage?.let { lastMessage ->
+                if (data.messageIds.contains(lastMessage.id)) {
+                    data.channel.lastMessage?.let {
+                        channelsCash.updateLastMessage(channel.id, it)
+                    }
+                }
+            }
+        }
     }
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
