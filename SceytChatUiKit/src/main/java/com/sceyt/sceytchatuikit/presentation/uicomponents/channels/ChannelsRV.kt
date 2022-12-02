@@ -84,7 +84,8 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     fun deleteChannel(id: Long) {
-        mAdapter.deleteChannel(id)
+        if (::mAdapter.isInitialized)
+            mAdapter.deleteChannel(id)
     }
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
