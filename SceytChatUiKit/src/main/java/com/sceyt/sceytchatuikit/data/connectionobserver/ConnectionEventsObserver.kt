@@ -14,7 +14,7 @@ import kotlin.coroutines.resume
 
 object ConnectionEventsObserver {
     val connectionState get() = ClientWrapper.connectState ?: Types.ConnectState.StateDisconnect
-    val isConnected = connectionState == Types.ConnectState.StateConnected
+    val isConnected get() = connectionState == Types.ConnectState.StateConnected
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
         extraBufferCapacity = 1,
@@ -51,7 +51,7 @@ object ConnectionEventsObserver {
 
 
     suspend fun awaitToConnectSceyt(): Boolean {
-        if (connectionState == Types.ConnectState.StateConnected)
+        if (isConnected)
             return true
 
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())

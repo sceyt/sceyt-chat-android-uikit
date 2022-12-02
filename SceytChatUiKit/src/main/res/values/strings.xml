@@ -9,8 +9,8 @@
     <string name="sceyt_members_count">%1$d members</string>
     <string name="sceyt_hint_channel_subject">Subject</string>
     <string name="sceyt_add_members">Add members</string>
-    <string name="sceyt_edited">Edited</string>
-    <string name="sceyt_message_was_deleted">Message was deleted</string>
+    <string name="sceyt_edited">edited</string>
+    <string name="sceyt_message_was_deleted">Message was deleted.</string>
     <string name="sceyt_today">Today</string>
     <string name="sceyt_clear_history">Clear history</string>
     <string name="sceyt_members">Members</string>
