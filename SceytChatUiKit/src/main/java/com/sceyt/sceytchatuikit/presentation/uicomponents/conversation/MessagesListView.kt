@@ -394,6 +394,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    fun scrollToPosition(position: Int) {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition(position)
+            }
+        }
+    }
+
     fun scrollToUnReadMessage() {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
