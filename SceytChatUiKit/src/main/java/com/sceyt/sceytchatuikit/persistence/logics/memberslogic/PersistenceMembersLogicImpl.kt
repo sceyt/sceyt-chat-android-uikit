@@ -59,7 +59,7 @@ internal class PersistenceMembersLogicImpl(
             val dbMembers = getMembersDb(channelId, normalizedOffset, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
             if (dbMembers.isNotEmpty())
-                trySend(PaginationResponse.DBResponse(dbMembers, 0, normalizedOffset, hasNextDb))
+                trySend(PaginationResponse.DBResponse(dbMembers, null, normalizedOffset, hasNextDb))
 
             val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset)
 
@@ -71,11 +71,11 @@ internal class PersistenceMembersLogicImpl(
                 // Get new updated items from DB
                 val updatedMembers = getMembersDb(channelId, 0, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
                 val hasNextServer = response.data?.size == CHANNELS_MEMBERS_LOAD_SIZE
-                trySend(PaginationResponse.ServerResponse(data = response, cashData = updatedMembers, loadKey = 0,
+                trySend(PaginationResponse.ServerResponse(data = response, cashData = updatedMembers, loadKey = null,
                     normalizedOffset, hasDiff = true, hasNext = hasNextServer, hasPrev = false,
                     LoadNext, false))
             } else
-                trySend(PaginationResponse.ServerResponse(response, arrayListOf(), 0, 0,
+                trySend(PaginationResponse.ServerResponse(response, arrayListOf(), null, 0,
                     hasDiff = false, hasNext = false, hasPrev = false, loadType = LoadNext, ignoredDb = false))
 
             channel.close()

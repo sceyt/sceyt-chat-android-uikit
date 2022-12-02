@@ -71,7 +71,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                 if (it.data.isNotEmpty()) {
                     withContext(Dispatchers.Main) {
                         _membersLiveData.value = PaginationResponse.DBResponse(
-                            mapToMemberItem(it.data, it.hasNext), 0, it.offset)
+                            mapToMemberItem(it.data, it.hasNext), null, it.offset)
                         notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
                     }
                 }

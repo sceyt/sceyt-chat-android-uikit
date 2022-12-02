@@ -200,7 +200,7 @@ fun RecyclerView.runWhenReady(action: () -> Unit) {
 }
 
 fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
-    recyclerView.adapter?.let { adapter->
+    recyclerView.adapter?.let { adapter ->
         recyclerView.runWhenReady {
             dispatchUpdatesTo(adapter)
         }

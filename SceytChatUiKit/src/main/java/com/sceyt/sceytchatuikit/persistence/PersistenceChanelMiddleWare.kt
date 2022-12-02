@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence
 
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
@@ -9,7 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceChanelMiddleWare {
-    suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: Long,
+    suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
                              ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
