@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
@@ -99,19 +100,21 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (it.contains(channelItem)) return
             val newData = ArrayList(it).also { items -> items.add(channelItem) }
             channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, newData)
-        }
+        } ?: channelsRV.setData(arrayListOf(channelItem))
+
         pageStateView?.updateState(PageState.Nothing)
     }
 
-    internal fun channelUpdated(channel: SceytChannel?): Boolean {
-        channelsRV.getChannelIndexed(channel?.id ?: return false)?.let { pair ->
+    internal fun channelUpdated(channel: SceytChannel?): ChannelItemPayloadDiff? {
+        channelsRV.getChannelIndexed(channel?.id ?: return null)?.let { pair ->
             val channelItem = pair.second
             val oldChannel = channelItem.channel.clone()
             channelItem.channel = channel
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-            return true
+            val diff = oldChannel.diff(channel)
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+            return diff
         }
-        return false
+        return null
     }
 
     internal fun deleteChannel(channelId: Long?) {
