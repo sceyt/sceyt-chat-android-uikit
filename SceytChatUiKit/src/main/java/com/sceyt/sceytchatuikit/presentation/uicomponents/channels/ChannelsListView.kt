@@ -28,6 +28,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
@@ -43,6 +44,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelEventListener: ((ChannelEvent) -> Unit)? = null
+    private val debounceHelper by lazy { DebounceHelper(300) }
 
     init {
 
@@ -198,7 +200,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
-        channelsRV.sortBy(sortBy)
+        debounceHelper.submit { channelsRV.sortBy(sortBy) }
     }
 
     /**

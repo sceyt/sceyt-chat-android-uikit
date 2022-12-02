@@ -2,11 +2,11 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.content.res.TypedArray
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.os.Build
+import android.text.*
+import android.text.style.StyleSpan
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
@@ -14,15 +14,17 @@ import androidx.annotation.ColorRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
-import kotlin.math.abs
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
+
 class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private lateinit var textBoundsRect: Rect
     private lateinit var iconBoundsRect: Rect
+    private lateinit var stringBuilder: SpannableStringBuilder
     private var dateText = ""
     private var textSize = 30
     private var statusIconSize = 0
@@ -101,7 +103,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
     private fun measureViewsFirstText() {
         val dateTitle = initText(dateText)
-        textPaint.getTextBounds(dateTitle, 0, dateTitle.length, textBoundsRect)
+        textPaint.getTextBounds(stringBuilder.toString(), 0, dateTitle.length, textBoundsRect)
 
         if (statusDrawable != null) {
             initStatsIconSize(statusDrawable!!)
@@ -174,22 +176,36 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
                 it.draw(canvas)
             }
             //Draw text
-            canvas.drawText(initText(dateText),
-                -textBoundsRect.left.toFloat() + Integer.max(iconBoundsRect.right, mIconSize) + mMargin,
-                (abs(textBoundsRect.top) + getTopFormText() + paddingTop).toFloat(),
-                textPaint)
+            initText(dateText)
+            val staticLayout = getStaticLayout()
+            canvas.translate((Integer.max(iconBoundsRect.right, mIconSize) + mMargin).toFloat(),
+                (height - staticLayout.height) / 2f)
+            staticLayout.draw(canvas)
         } else {
             //Draw text
-            canvas.drawText(initText(dateText),
-                -textBoundsRect.left.toFloat() + paddingStart,
-                (abs(textBoundsRect.top) + getTopFormText() + paddingTop).toFloat(),
-                textPaint)
-
+            initText(dateText)
+            val staticLayout = getStaticLayout()
+            canvas.save()
+            canvas.translate(paddingStart.toFloat(), (height - staticLayout.height) / 2f)
+            staticLayout.draw(canvas)
+            canvas.restore()
             //Draw status icon
             statusDrawable?.let {
                 it.bounds = iconBoundsRect
                 it.draw(canvas)
             }
+        }
+    }
+
+    private fun getStaticLayout(): StaticLayout {
+        val textWidth = textPaint.measureText(stringBuilder.toString()).toInt()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            StaticLayout.Builder.obtain(stringBuilder, 0, stringBuilder.length, textPaint, textWidth)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setLineSpacing(0f, 1f)
+                .setIncludePad(false).build()
+        } else {
+            StaticLayout(stringBuilder, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
         }
     }
 
@@ -222,7 +238,16 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     private fun initText(text: String): String {
-        return if (isEdited) "${context.getString(R.string.sceyt_edited)} $text" else text
+        return if (isEdited) {
+            val editedText = context.getString(MessagesStyle.messageEditedText)
+            val str = SpannableStringBuilder("$editedText  $text")
+            str.setSpan(StyleSpan(Typeface.ITALIC), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            stringBuilder = str
+            str.toString()
+        } else {
+            stringBuilder = SpannableStringBuilder(text)
+            text
+        }
     }
 
     fun setStatusIcon(drawable: Drawable?) {
@@ -299,7 +324,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     fun buildStyle() = BuildStyle()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val width = textBoundsRect.width() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd
+        val width = textPaint.measureText(stringBuilder.toString()).toInt() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd
         val height = textBoundsRect.height().coerceAtLeast(Integer.max(iconBoundsRect.height(), mMinHeightSize)) + paddingTop + paddingBottom
         setMeasuredDimension(width, height)
     }

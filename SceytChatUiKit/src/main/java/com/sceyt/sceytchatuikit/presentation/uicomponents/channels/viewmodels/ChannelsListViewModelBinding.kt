@@ -13,10 +13,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.*
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
@@ -51,36 +48,26 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    lifecycleOwner.lifecycleScope.launch {
-        loadChannelsFlow.collect(::initChannelsResponse)
-    }
+    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        ChannelsCash.channelDeletedFlow.collect {
-            channelsListView.deleteChannel(it)
-        }
-    }
+    ChannelsCash.channelDeletedFlow.onEach {
+        channelsListView.deleteChannel(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launchWhenResumed {
-        ChannelsCash.channelUpdatedFlow.collectLatest { sceytChannel ->
-            if (channelsListView.channelUpdated(sceytChannel)) {
-                channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-            } else
-                getChannels(0, query = searchQuery)
-        }
-    }
+    ChannelsCash.channelUpdatedFlow.onEach { sceytChannel ->
+        if (channelsListView.channelUpdated(sceytChannel)) {
+            channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+        } else
+            getChannels(0, query = searchQuery)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        ChannelsCash.channelAddedFlow.collect { sceytChannel ->
-            channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
-        }
-    }
+    ChannelsCash.channelAddedFlow.onEach { sceytChannel ->
+        channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().collect {
-            channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
-        }
-    }
+    SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
+        channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     blockUserLiveData.observe(lifecycleOwner) {
         when (it) {
