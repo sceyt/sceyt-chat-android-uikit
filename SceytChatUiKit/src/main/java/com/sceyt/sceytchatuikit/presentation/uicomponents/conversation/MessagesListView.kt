@@ -384,10 +384,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
 
-    fun scrollToMessage(msgId: Long) {
+    fun scrollToMessage(msgId: Long, highlight: Boolean) {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
                 messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                    if (highlight)
+                        it.second.highlighted = highlight
                     messagesRV.scrollToPosition(it.first)
                 }
             }

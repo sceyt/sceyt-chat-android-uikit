@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence
 
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
@@ -11,17 +12,17 @@ import kotlinx.coroutines.flow.SharedFlow
 
 interface PersistenceMessagesMiddleWare {
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                 replyInThread: Boolean, offset: Int, loadKey: Long,
+                                 replyInThread: Boolean, offset: Int, loadKey: LoadKeyData,
                                  ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
                                  offset: Int, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                 loadKey: Long, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+                                 loadKey: LoadKeyData, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean,
-                                   loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+                                   loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>

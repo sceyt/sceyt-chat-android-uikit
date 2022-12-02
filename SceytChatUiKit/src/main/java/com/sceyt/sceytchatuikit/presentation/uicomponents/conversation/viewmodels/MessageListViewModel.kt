@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -154,7 +155,7 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channelId == channel.id && it.replyInThread }
     }
 
-    fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: Long = lastMessageId) {
+    fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
         setPagingLoadingStarted(LoadPrev)
         val isLoadingMore = offset > 0
 
@@ -184,7 +185,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun loadNearMessages(messageId: Long, loadKey: Long) {
+    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -196,7 +197,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun loadNewestMessages(loadKey: Long) {
+    fun loadNewestMessages(loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -259,7 +260,7 @@ class MessageListViewModel(private val conversationId: Long,
         _onScrollToMessageLiveData.postValue(channel.lastMessage)
     }
 
-    fun prepareToScrollToReplyMessage(message: SceytMessage){
+    fun prepareToScrollToReplyMessage(message: SceytMessage) {
         _onScrollToReplyMessageLiveData.postValue(message)
     }
 
@@ -441,7 +442,7 @@ class MessageListViewModel(private val conversationId: Long,
                 prepareToScrollToNewMessage()
             }
             is MessageCommandEvent.ScrollToReplyMessage -> {
-               prepareToScrollToReplyMessage(event.message)
+                prepareToScrollToReplyMessage(event.message)
             }
         }
     }
