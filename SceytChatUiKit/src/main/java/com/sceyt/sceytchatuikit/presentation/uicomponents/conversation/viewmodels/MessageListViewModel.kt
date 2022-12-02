@@ -103,6 +103,8 @@ class MessageListViewModel(private val conversationId: Long,
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
     private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
     internal val onScrollToMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
+    private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
+    internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
 
 
     init {
@@ -254,6 +256,10 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun prepareToScrollToNewMessage() {
         _onScrollToMessageLiveData.postValue(channel.lastMessage)
+    }
+
+    fun prepareToScrollToReplyMessage(message: SceytMessage){
+        _onScrollToReplyMessageLiveData.postValue(message)
     }
 
     fun addReaction(message: SceytMessage, scoreKey: String) {
@@ -432,6 +438,9 @@ class MessageListViewModel(private val conversationId: Long,
             }
             is MessageCommandEvent.ScrollToDown -> {
                 prepareToScrollToNewMessage()
+            }
+            is MessageCommandEvent.ScrollToReplyMessage -> {
+               prepareToScrollToReplyMessage(event.message)
             }
         }
     }

@@ -96,6 +96,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     clickListeners.onAvatarClick(view, item)
             }
 
+            override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
+                clickListeners.onReplyMessageContainerClick(view, item)
+            }
+
             override fun onReplyCountClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onReplyCountClick(view, item)
@@ -177,6 +181,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun addReaction(message: SceytMessage, key: String) {
         reactionEventListener?.invoke(ReactionEvent.AddReaction(message, key))
+    }
+
+    private fun onReplyMessageContainerClick(item: MessageItem) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToReplyMessage(item.message))
     }
 
     private fun onReactionClick(reaction: ReactionItem.Reaction) {
@@ -450,6 +458,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onAvatarClick(view: View, item: MessageItem) {
 
+    }
+
+    override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
+        onReplyMessageContainerClick(item)
     }
 
     override fun onReplyCountClick(view: View, item: MessageItem) {
