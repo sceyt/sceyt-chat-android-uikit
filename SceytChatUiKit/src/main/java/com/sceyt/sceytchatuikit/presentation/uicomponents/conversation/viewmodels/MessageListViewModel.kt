@@ -139,7 +139,8 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channel.id == channel.id }
 
         onChannelUpdatedEventFlow = ChannelsCash.channelUpdatedFlow
-            .filter { it.id == channel.id }
+            .filter { it.channel.id == channel.id }
+            .map { it.channel }
 
         viewModelScope.launch {
             ChannelEventsObserver.onChannelMembersEventFlow
