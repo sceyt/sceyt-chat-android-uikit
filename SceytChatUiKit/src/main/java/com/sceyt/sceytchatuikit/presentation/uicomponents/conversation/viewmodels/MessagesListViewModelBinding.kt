@@ -217,6 +217,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
+    onScrollToReplyMessageLiveData.observe(lifecycleOwner, Observer {
+        viewModelScope.launch(Dispatchers.Default) {
+            messagesListView.getMessageIndexedById(it.id)?.let {
+                withContext(Dispatchers.Main) {
+                    messagesListView.scrollToLastMessage()
+                }
+            } ?: run {
+                loadNearMessages(it.id, LoadKeyType.ScrollToMessageById.longValue)
+            }
+        }
+    })
+
     markAsReadLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             val data = it.data ?: return@Observer

@@ -137,6 +137,12 @@ abstract class BaseMsgViewHolder(view: View,
                 true
             }
             root.isVisible = true
+
+            root.setOnClickListener {
+                (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                    messageListeners?.onReplyMessageContainerClick(it, item)
+                }
+            }
         }
     }
 
