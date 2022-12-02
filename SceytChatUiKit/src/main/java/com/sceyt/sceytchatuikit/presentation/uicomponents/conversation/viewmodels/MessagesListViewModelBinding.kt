@@ -218,13 +218,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     onScrollToReplyMessageLiveData.observe(lifecycleOwner, Observer {
-        viewModelScope.launch(Dispatchers.Default) {
-            messagesListView.getMessageIndexedById(it.id)?.let {
-                withContext(Dispatchers.Main) {
-                    messagesListView.scrollToLastMessage()
+        it.parent?.id?.let { parentId->
+            viewModelScope.launch(Dispatchers.Default) {
+                messagesListView.getMessageIndexedById(parentId)?.let {
+                    withContext(Dispatchers.Main) {
+                        messagesListView.scrollToPosition(it.first)
+                    }
+                } ?: run {
+                    loadNearMessages(parentId, LoadKeyType.ScrollToMessageById.longValue)
                 }
-            } ?: run {
-                loadNearMessages(it.id, LoadKeyType.ScrollToMessageById.longValue)
             }
         }
     })
