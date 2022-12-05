@@ -229,7 +229,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.getMessageIndexedById(parentId)?.let {
                     withContext(Dispatchers.Main) {
                         it.second.highlighted = true
-                        messagesListView.scrollToPosition(it.first)
+                        messagesListView.scrollToPositionAndHighlight(it.first, true)
                     }
                 } /*?: run {
                     loadNearMessages(parentId, LoadKeyData(
