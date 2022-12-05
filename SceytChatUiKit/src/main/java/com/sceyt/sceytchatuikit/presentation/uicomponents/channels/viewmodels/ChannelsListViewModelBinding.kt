@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -69,7 +70,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
+    SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
         channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
     }.launchIn(lifecycleOwner.lifecycleScope)
 
@@ -92,7 +93,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     channelsListView.setReachToEndListener { offset, lastChannel ->
         if (canLoadNext())
-            getChannels(offset, searchQuery, lastChannel?.id ?: 0)
+            getChannels(offset, searchQuery, LoadKeyData(value = lastChannel?.id ?: 0))
     }
 
     channelsListView.setChannelAttachDetachListener { item, attached ->

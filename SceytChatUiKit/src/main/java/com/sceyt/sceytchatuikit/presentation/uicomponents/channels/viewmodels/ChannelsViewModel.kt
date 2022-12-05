@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -35,7 +36,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
-    fun getChannels(offset: Int, query: String = searchQuery, loadKey: Long = 0) {
+    fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null) {
         searchQuery = query
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 

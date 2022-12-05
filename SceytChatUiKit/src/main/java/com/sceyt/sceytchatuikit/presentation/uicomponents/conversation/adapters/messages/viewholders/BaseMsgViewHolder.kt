@@ -1,14 +1,19 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
+import android.animation.ArgbEvaluator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Typeface
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.core.animation.doOnEnd
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
@@ -38,12 +43,14 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import kotlin.math.min
 
-abstract class BaseMsgViewHolder(view: View,
+
+abstract class BaseMsgViewHolder(private val view: View,
                                  private val messageListeners: MessageClickListenersImpl? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
                                  private val senderNameBuilder: ((User) -> String)? = null)
@@ -53,10 +60,13 @@ abstract class BaseMsgViewHolder(view: View,
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
     protected lateinit var messageListItem: MessageListItem
+    private var highlightAnim: ValueAnimator? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
+        if (messageListItem.highlighted)
+            highlight()
     }
 
     fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
@@ -69,6 +79,11 @@ abstract class BaseMsgViewHolder(view: View,
     @CallSuper
     open fun onViewDetachedFromWindow() {
         reactionsAdapter = null
+        if (messageListItem is MessageListItem.MessageItem) {
+            highlightAnim?.cancel()
+            view.setBackgroundColor(Color.TRANSPARENT)
+            messageListItem.highlighted = false
+        }
     }
 
     @CallSuper
@@ -137,6 +152,12 @@ abstract class BaseMsgViewHolder(view: View,
                 true
             }
             root.isVisible = true
+
+            root.setOnClickListener {
+                (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                    messageListeners?.onReplyMessageContainerClick(it, item)
+                }
+            }
         }
     }
 
@@ -232,5 +253,22 @@ abstract class BaseMsgViewHolder(view: View,
     private fun getSenderName(user: User?): String {
         user ?: return ""
         return senderNameBuilder?.invoke(user) ?: user.getPresentableName()
+    }
+
+    fun getMessageItem(): MessageListItem? {
+        return if (::messageListItem.isInitialized) messageListItem else null
+    }
+
+    fun highlight() {
+        highlightAnim?.cancel()
+        val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
+        view.setBackgroundColor(colorFrom)
+        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.7 * 255).toInt())
+        val colorTo: Int = Color.TRANSPARENT
+        highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFro, colorTo)
+        highlightAnim?.duration = 2000
+        highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
+        highlightAnim?.start()
+        highlightAnim?.doOnEnd { messageListItem.highlighted = false }
     }
 }

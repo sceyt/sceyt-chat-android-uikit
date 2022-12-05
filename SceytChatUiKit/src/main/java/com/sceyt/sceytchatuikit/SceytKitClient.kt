@@ -39,7 +39,7 @@ object SceytKitClient : SceytKoinComponent {
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
-    private val syncManager by inject<SceytSyncManager>()
+    private val sceytSyncManager by inject<SceytSyncManager>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
@@ -99,7 +99,7 @@ object SceytKitClient : SceytKoinComponent {
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
                     persistenceMessagesMiddleWare.sendAllPendingMarkers()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
-                    syncManager.startSync()
+                    sceytSyncManager.startSync()
                 } else if (connectStatus == Types.ConnectState.StateFailed) {
                     notifyState(false, it.status?.error?.message)
                 } else if (connectStatus == Types.ConnectState.StateDisconnect) {
@@ -140,6 +140,8 @@ object SceytKitClient : SceytKoinComponent {
     fun getMembersMiddleWare() = persistenceMembersMiddleWare
 
     fun getUserMiddleWare() = persistenceUsersMiddleWare
+
+    fun getSyncManager() = sceytSyncManager
 
     fun addListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
         listenersMap[key] = listener

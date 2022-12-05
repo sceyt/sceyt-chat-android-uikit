@@ -17,6 +17,10 @@ sealed interface MessageClickListeners {
         fun onAvatarClick(view: View, item: MessageListItem.MessageItem)
     }
 
+    fun interface ReplyMessageContainerClickListener : MessageClickListeners {
+        fun onReplyMessageContainerClick(view: View, item: MessageListItem.MessageItem)
+    }
+
     fun interface ReplyCountClickListener : MessageClickListeners {
         fun onReplyCountClick(view: View, item: MessageListItem.MessageItem)
     }
@@ -54,6 +58,7 @@ sealed interface MessageClickListeners {
             LinkClickListener,
             MessageLongClickListener,
             AvatarClickListener,
+            ReplyMessageContainerClickListener,
             ReplyCountClickListener,
             AddReactionClickListener,
             ReactionClickListener,
