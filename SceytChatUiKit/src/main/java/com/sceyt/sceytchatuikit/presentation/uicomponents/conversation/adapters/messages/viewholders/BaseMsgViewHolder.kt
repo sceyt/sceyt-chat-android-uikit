@@ -253,10 +253,15 @@ abstract class BaseMsgViewHolder(private val view: View,
         return senderNameBuilder?.invoke(user) ?: user.getPresentableName()
     }
 
-    private fun highlight() {
+    fun getMessageItem(): MessageListItem? {
+        return if (::messageListItem.isInitialized) messageListItem else null
+    }
+
+    fun highlight() {
+        highlightAnim?.cancel()
         val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         view.setBackgroundColor(colorFrom)
-        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.8 * 255).toInt())
+        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.7 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT
         highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFro, colorTo)
         highlightAnim?.duration = 2000

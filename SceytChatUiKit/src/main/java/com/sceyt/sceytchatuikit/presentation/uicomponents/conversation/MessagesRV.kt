@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -147,12 +148,15 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return scrollToEnd
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
-        if (::mAdapter.isInitialized.not() || force) {
+        if (::mAdapter.isInitialized.not()) {
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
-        } else
+        } else if (force)
+            mAdapter.notifyDataSetChanged()
+        else
             mAdapter.notifyUpdate(messages, this)
     }
 

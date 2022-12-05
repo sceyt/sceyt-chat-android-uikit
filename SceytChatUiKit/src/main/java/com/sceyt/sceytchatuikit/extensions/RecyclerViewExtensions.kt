@@ -128,10 +128,10 @@ fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, call
         else callback.invoke(scrollState)
     } else {
         addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    callback.invoke(newState)
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                    callback.invoke(scrollState)
                     removeOnScrollListener(this)
                 }
             }

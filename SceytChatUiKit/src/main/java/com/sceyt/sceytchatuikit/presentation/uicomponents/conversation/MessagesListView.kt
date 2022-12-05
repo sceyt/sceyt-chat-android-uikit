@@ -389,17 +389,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messagesRV.awaitAnimationEnd {
                 messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
                     if (highlight)
-                        it.second.highlighted = highlight
+                        it.second.highlighted = true
                     messagesRV.scrollToPosition(it.first)
                 }
             }
         }
     }
 
-    fun scrollToPosition(position: Int) {
+    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
                 messagesRV.scrollToPosition(position)
+                if (highlight) {
+                    messagesRV.awaitToScrollFinish(position, callback = {
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    })
+                }
             }
         }
     }
