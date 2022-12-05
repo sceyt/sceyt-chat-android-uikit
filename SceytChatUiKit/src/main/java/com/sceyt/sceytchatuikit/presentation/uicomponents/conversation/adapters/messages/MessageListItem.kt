@@ -42,6 +42,8 @@ sealed class MessageListItem {
         }
     }
 
+    var highlighted = false
+
     override fun hashCode(): Int {
         return javaClass.hashCode()
     }

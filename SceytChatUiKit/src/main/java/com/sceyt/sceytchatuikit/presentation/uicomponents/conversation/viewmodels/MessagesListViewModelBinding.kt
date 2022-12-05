@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -51,7 +52,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         loadPrevMessages(0, 0)
     else {
         pinnedLastReadMessageId = channel.lastReadMessageId
-        loadNearMessages(pinnedLastReadMessageId, LoadKeyType.ScrollToUnreadMessage.longValue)
+        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue))
     }
 
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
@@ -77,7 +78,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun checkToScrollAfterResponse(response: PaginationResponse<SceytMessage>) {
-        when (val loadKey = response.getLoadKey()) {
+        val loadKey = response.getLoadKey() ?: return
+        when (loadKey.key) {
             LoadKeyType.ScrollToUnreadMessage.longValue -> {
                 messagesListView.scrollToUnReadMessage()
             }
@@ -85,7 +87,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.scrollToLastMessage()
             }
             LoadKeyType.ScrollToMessageById.longValue -> {
-                messagesListView.scrollToMessage(loadKey)
+                messagesListView.scrollToMessage(loadKey.value, true)
             }
         }
     }
@@ -121,7 +123,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val newMessages = mapToMessageListItem(data = response.cashData,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev)
-                    messagesListView.setMessagesList(newMessages, response.loadKey == LoadKeyType.ScrollToLastMessage.longValue)
+                    messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
@@ -214,9 +216,26 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         messagesListView.scrollToLastMessage()
                     }
                 } ?: run {
-                    loadNewestMessages(LoadKeyType.ScrollToLastMessage.longValue)
+                    loadNewestMessages(LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
                     markChannelAsRead(channel.id)
                 }
+            }
+        }
+    })
+
+    onScrollToReplyMessageLiveData.observe(lifecycleOwner, Observer {
+        it.parent?.id?.let { parentId ->
+            viewModelScope.launch(Dispatchers.Default) {
+                messagesListView.getMessageIndexedById(parentId)?.let {
+                    withContext(Dispatchers.Main) {
+                        it.second.highlighted = true
+                        messagesListView.scrollToPositionAndHighlight(it.first, true)
+                    }
+                } /*?: run {
+                    loadNearMessages(parentId, LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageById.longValue,
+                        value = parentId))
+                }*/
             }
         }
     })

@@ -9,10 +9,17 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onCompletion
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.resume
 
 class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWare,
-                       private val messagesMiddleWare: PersistenceMessagesMiddleWare) : SceytKoinComponent {
+                       private val messagesMiddleWare: PersistenceMessagesMiddleWare) : SceytKoinComponent, CoroutineScope {
+
+    private lateinit var syncResultData: SyncResultData
+    private var syncIsInProcess: Boolean = false
+    private val syncResultCallbacks = mutableListOf<(SyncResultData) -> Unit>()
 
     companion object {
         private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
@@ -21,8 +28,21 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
         val syncChannelMessagesFinished: LiveData<Pair<SceytChannel, List<SceytMessage>>> = syncChannelMessagesFinished_
     }
 
-    suspend fun startSync() {
-        getChannels()
+    fun startSync(resultCallback: ((SyncResultData) -> Unit)? = null) {
+        resultCallback?.let { syncResultCallbacks.add(it) }
+        if (syncIsInProcess)
+            return
+
+        launch {
+            syncIsInProcess = true
+            syncResultData = SyncResultData()
+            val result = getChannels()
+            syncResultCallbacks.forEach {
+                it(result)
+            }
+            syncResultCallbacks.clear()
+            syncIsInProcess = false
+        }
     }
 
     suspend fun syncConversationMessagesAfter(channelId: Long, fromMessageId: Long) {
@@ -31,25 +51,39 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             syncMessagesAfter(response.data, fromMessageId, true)
     }
 
-    private suspend fun getChannels() {
-        val syncChannelData = SyncChannelData(mutableSetOf(), false)
-        channelsMiddleWare.syncChannels(CHANNELS_LOAD_SIZE)
-            .onCompletion {
-                syncChannelsFinished_.postValue(syncChannelData)
-            }.collect {
-                if (it is SceytResponse.Success) {
-                    it.data?.let { channels ->
-                        syncChannelsMessages(channels)
-                        syncChannelData.channels.addAll(channels)
-                    }
-                } else syncChannelData.withError = true
+    private suspend fun getChannels(): SyncResultData {
+        return coroutineScope {
+            suspendCancellableCoroutine { cont ->
+                launch {
+                    val syncChannelData = SyncChannelData(mutableSetOf(), false)
+                    channelsMiddleWare.syncChannels(CHANNELS_LOAD_SIZE)
+                        .onCompletion {
+                            syncChannelsFinished_.postValue(syncChannelData)
+                            cont.resume(syncResultData)
+                        }.collect {
+                            if (it is SceytResponse.Success) {
+                                it.data?.let { channels ->
+                                    syncChannelsMessages(channels)
+                                    syncChannelData.channels.addAll(channels)
+                                }
+                            } else syncChannelData.withError = true
+                        }
+                }
             }
+        }
     }
 
     private suspend fun syncChannelsMessages(list: List<SceytChannel>) {
         list.forEach {
+            if (it.unreadMessageCount > 0) {
+                syncResultData.apply {
+                    unreadMessagesCount += it.unreadMessageCount.toInt()
+                    unreadChannelsCount++
+                }
+            }
             loadMessages(it)
         }
+        syncResultData.syncedChannelsCount += list.size
     }
 
     private suspend fun loadMessages(channel: SceytChannel) {
@@ -65,6 +99,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
                 it.data?.let { messages ->
                     if (syncConversation)
                         syncChannelMessagesFinished_.postValue(Pair(channel, messages))
+                    syncResultData.syncedMessagesCount += messages.size
                 }
         }
     }
@@ -73,4 +108,19 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             val channels: MutableSet<SceytChannel>,
             var withError: Boolean
     )
+
+    data class SyncResultData(
+            var unreadChannelsCount: Int = 0,
+            var unreadMessagesCount: Int = 0,
+            var syncedChannelsCount: Int = 0,
+            var syncedMessagesCount: Int = 0
+    ) {
+        override fun toString(): String {
+            return "unreadChannelsCount-> $unreadChannelsCount, unreadMessagesCount-> $unreadMessagesCount," +
+                    "syncedChannelsCount-> $syncedChannelsCount, syncedMessagesCount-> $syncedMessagesCount"
+        }
+    }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 }

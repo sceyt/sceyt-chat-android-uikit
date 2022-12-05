@@ -21,4 +21,8 @@ sealed class MessageCommandEvent {
     data class ScrollToDown(
             val view: ScrollToDownView
     ) : MessageCommandEvent()
+
+    data class ScrollToReplyMessage(
+            val message: SceytMessage
+    ) : MessageCommandEvent()
 }
