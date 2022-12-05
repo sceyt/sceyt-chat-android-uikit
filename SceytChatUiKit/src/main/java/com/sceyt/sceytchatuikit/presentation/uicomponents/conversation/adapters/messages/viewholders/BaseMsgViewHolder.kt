@@ -79,9 +79,11 @@ abstract class BaseMsgViewHolder(private val view: View,
     @CallSuper
     open fun onViewDetachedFromWindow() {
         reactionsAdapter = null
-        highlightAnim?.cancel()
-        view.setBackgroundColor(Color.TRANSPARENT)
-        messageListItem.highlighted = false
+        if (messageListItem is MessageListItem.MessageItem) {
+            highlightAnim?.cancel()
+            view.setBackgroundColor(Color.TRANSPARENT)
+            messageListItem.highlighted = false
+        }
     }
 
     @CallSuper
