@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.content.Context
-import android.content.res.ColorStateList
+import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -90,7 +90,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         icBack.setImageResource(ConversationHeaderViewStyle.backIcon)
         title.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.titleColor))
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
-        toolbarUnderline.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
+        toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
     }
 
     private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
