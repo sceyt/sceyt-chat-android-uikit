@@ -195,8 +195,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     onChannelUpdatedEventFlow.onEach {
         channel = it
         messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
-        if (channel is SceytDirectChannel && (channel as SceytDirectChannel).peer?.user?.blocked == true)
-            messagesListView.enableDisableClickActions(false)
+        checkEnableDisableActions(channel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner, Observer {

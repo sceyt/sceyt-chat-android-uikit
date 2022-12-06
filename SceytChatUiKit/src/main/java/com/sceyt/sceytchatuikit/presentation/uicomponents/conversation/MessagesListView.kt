@@ -40,6 +40,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messagesRV: MessagesRV
     private var scrollDownIcon: ScrollToDownView
     private var pageStateView: PageStateView? = null
+    private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
     private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
@@ -85,7 +86,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = MessagePopupClickListenersImpl(this)
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
-        val clickListeners = object : MessageClickListeners.ClickListeners {
+        defaultClickListeners = object : MessageClickListenersImpl() {
             override fun onMessageLongClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onMessageLongClick(view, item)
@@ -139,7 +140,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onScrollToDownClick(view)
             }
         }
-        messagesRV.setMessageListener(clickListeners)
+        messagesRV.setMessageListener(defaultClickListeners)
 
         scrollDownIcon.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
@@ -375,7 +376,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
-            it.setMessageListener(clickListeners)
+            it.setMessageListener(defaultClickListeners)
         })
     }
 
@@ -454,7 +455,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
         clickListeners = listener
-        messagesRV.getViewHolderFactory().setMessageListener(listener)
     }
 
     fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
