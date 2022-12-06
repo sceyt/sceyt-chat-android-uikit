@@ -263,8 +263,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     fun getReplyMessage() = replyMessage
 
-    fun setCustomClickListener(headerClickListenersImpl: HeaderClickListenersImpl) {
-        clickListeners = headerClickListenersImpl
+    fun setCustomClickListener(listeners: HeaderClickListenersImpl) {
+        clickListeners = listeners
     }
 
     fun setClickListener(listeners: HeaderClickListeners) {
