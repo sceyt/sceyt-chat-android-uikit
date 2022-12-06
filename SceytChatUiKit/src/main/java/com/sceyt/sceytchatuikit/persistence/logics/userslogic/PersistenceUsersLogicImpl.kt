@@ -28,7 +28,7 @@ internal class PersistenceUsersLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let {
                 it.forEach { user ->
-                    userDao.updateUser(user.toUserEntity())
+                   /// userDao.updateUser(user.toUserEntity())
                 }
             }
         }
