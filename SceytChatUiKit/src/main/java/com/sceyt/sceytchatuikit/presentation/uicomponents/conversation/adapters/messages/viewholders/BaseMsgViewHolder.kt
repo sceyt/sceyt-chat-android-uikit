@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.BidiFormatter
+import android.text.TextDirectionHeuristics
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -14,6 +16,7 @@ import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
+import androidx.core.text.HtmlCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
@@ -93,6 +96,13 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null
+
+    protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
+        val space = getBodyStringSpase(message)
+        val textWithSpase = message.body + HtmlCompat.fromHtml(space, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        val text = BidiFormatter.getInstance().unicodeWrap(textWithSpase, TextDirectionHeuristics.LOCALE)
+        messageBody.text = text
+    }
 
     @SuppressLint("SetTextI18n")
     protected fun setReplyCount(tvReplyCount: TextView, toReplyLine: SceytToReplyLineView, item: MessageListItem.MessageItem) {
@@ -243,6 +253,12 @@ abstract class BaseMsgViewHolder(private val view: View,
                 marginEnd = marginEndBottom.first
             }
         }
+    }
+
+    private fun getBodyStringSpase(message: SceytMessage): String {
+        return if (message.incoming)
+            if (message.state == MessageState.Edited) MessagesStyle.INC_EDITED_SPACE else MessagesStyle.INC_DEFAULT_SPACE
+        else if (message.state == MessageState.Edited) MessagesStyle.OUT_EDITED_SPACE else MessagesStyle.OUT_DEFAULT_SPACE
     }
 
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {

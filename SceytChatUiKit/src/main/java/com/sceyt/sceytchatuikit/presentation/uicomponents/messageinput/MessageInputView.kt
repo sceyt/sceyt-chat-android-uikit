@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
@@ -220,6 +221,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun addAttachments(attachments: List<Attachment>) {
+        binding.rvAttachments.isVisible = true
         allAttachments.addAll(attachments)
         attachmentsAdapter.addItems(attachments.map { AttachmentItem(it) })
         determineState()
@@ -296,10 +298,24 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
-        if (channel.channelType == ChannelTypeEnum.Public) {
-            if (channel.toGroupChannel().members.find { it.id == preferences.getUserId() } == null) {
-                showHideJoinButton(true)
-            } else showHideJoinButton(false)
+        when (channel.channelType) {
+            ChannelTypeEnum.Public -> {
+                if (channel.toGroupChannel().members.find { it.id == preferences.getUserId() } == null) {
+                    showHideJoinButton(true)
+                } else showHideJoinButton(false)
+            }
+            ChannelTypeEnum.Direct -> {
+                val isBlockedPeer = (channel as? SceytDirectChannel)?.peer?.user?.blocked == true
+                with(binding) {
+                    if (isBlockedPeer) {
+                        rvAttachments.isVisible = false
+                        layoutReplyOrEditMessage.root.isVisible = false
+                    }
+                    layoutInput.isVisible = !isBlockedPeer
+                    layoutUserBlocked.root.isVisible = (channel as? SceytDirectChannel)?.peer?.user?.blocked == true
+                }
+            }
+            else -> {}
         }
     }
 

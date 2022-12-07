@@ -9,6 +9,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 
 internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
+    val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
+            && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
     return ChannelItemPayloadDiff(
         subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
         avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
@@ -19,7 +21,8 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         onlineStateChanged = channelType == ChannelTypeEnum.Direct
                 && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state,
         markedUsUnreadChanged = markedUsUnread != other.markedUsUnread,
-        lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId
+        lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
+        peerBlockedChanged = peerBlockedChanged
     )
 }
 

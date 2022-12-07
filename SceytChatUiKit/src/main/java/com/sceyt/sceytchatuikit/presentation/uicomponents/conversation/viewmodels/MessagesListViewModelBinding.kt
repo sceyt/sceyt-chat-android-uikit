@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
@@ -56,6 +57,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
+
+
+    fun checkEnableDisableActions(channel: SceytChannel){
+        messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId)
+                && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true))
+    }
+
+    checkEnableDisableActions(channel)
 
     fun getCompareMessage(loadType: PaginationResponse.LoadType, offset: Int): SceytMessage? {
         if (offset == 0) return null
@@ -182,11 +191,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
 
     onChannelUpdatedEventFlow.onEach {
         channel = it
         messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
+        checkEnableDisableActions(channel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner, Observer {
@@ -300,7 +309,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
-        messagesListView.enableDisableClickActions(!replyInThread && it.checkIsMemberInChannel(myId))
+        checkEnableDisableActions(it)
     })
 
     fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
@@ -379,7 +388,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     joinLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
+                checkEnableDisableActions(channel)
             }
         }
     })
@@ -387,7 +396,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId))
+                checkEnableDisableActions(channel)
                 messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
             }
         }
@@ -431,6 +440,10 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
+
+    onChannelUpdatedEventFlow.onEach {
+        messageInputView.checkIsParticipant(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {

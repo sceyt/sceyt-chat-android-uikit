@@ -5,7 +5,7 @@
     <string name="sceyt_copy">Copy</string>
     <string name="sceyt_no_channels">No Channels</string>
     <string name="sceyt_message">Message</string>
-    <string name="sceyt_online">Online</string>
+    <string name="sceyt_online">online</string>
     <string name="sceyt_members_count">%1$d members</string>
     <string name="sceyt_hint_channel_subject">Subject</string>
     <string name="sceyt_add_members">Add members</string>
@@ -94,5 +94,6 @@
     <string name="sceyt_max_select_count_should_be">Max select count should be lover than</string>
     <string name="sceyt_video">Video</string>
     <string name="sceyt_image">Image</string>
+    <string name="you_blocked_this_user">You blocked this user</string>
 
 </resources>

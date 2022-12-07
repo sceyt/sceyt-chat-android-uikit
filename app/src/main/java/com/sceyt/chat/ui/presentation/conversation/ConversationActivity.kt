@@ -8,11 +8,14 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
@@ -32,6 +35,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -82,7 +87,13 @@ open class ConversationActivity : AppCompatActivity() {
             override fun onAvatarClick(view: View) {
                 ///CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
 
-                binding.messageInputView.send()
+                //binding.messageInputView.send()
+
+                (channel as? SceytDirectChannel)?.peer?.let { peer ->
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        SceytKitClient.getMembersMiddleWare().blockUnBlockUser(peer.id, true)
+                    }
+                }
             }
 
             override fun onToolbarClick(view: View) {
