@@ -124,7 +124,7 @@
     <View
         android:id="@+id/toolbarUnderline"
         android:layout_width="match_parent"
-        android:layout_height=".5dp"
+        android:layout_height="1dp"
         android:background="@color/sceyt_color_divider"
         app:layout_constraintBottom_toBottomOf="parent" />
 
