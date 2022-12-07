@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.BidiFormatter
+import android.text.TextDirectionHeuristics
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -97,7 +99,9 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
         val space = getBodyStringSpase(message)
-        messageBody.text = HtmlCompat.fromHtml("${message.body.replace("\n", "<br>")} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
+        val textWithSpase = message.body + HtmlCompat.fromHtml(space, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        val text = BidiFormatter.getInstance().unicodeWrap(textWithSpase, TextDirectionHeuristics.LOCALE)
+        messageBody.text = text
     }
 
     @SuppressLint("SetTextI18n")
