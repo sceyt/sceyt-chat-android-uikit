@@ -19,7 +19,7 @@
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -102,6 +102,16 @@
         android:text="@string/sceyt_join"
         android:textColor="@color/sceyt_color_white"
         android:textSize="@dimen/smallTextSize"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <include
+        android:id="@+id/layoutUserBlocked"
+        layout="@layout/sceyt_user_blocked"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

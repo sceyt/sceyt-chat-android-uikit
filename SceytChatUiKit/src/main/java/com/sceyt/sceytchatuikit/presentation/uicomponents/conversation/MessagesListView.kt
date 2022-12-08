@@ -40,6 +40,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messagesRV: MessagesRV
     private var scrollDownIcon: ScrollToDownView
     private var pageStateView: PageStateView? = null
+    private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
     private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
@@ -85,7 +86,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = MessagePopupClickListenersImpl(this)
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
-        val clickListeners = object : MessageClickListeners.ClickListeners {
+        defaultClickListeners = object : MessageClickListenersImpl() {
             override fun onMessageLongClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onMessageLongClick(view, item)
@@ -94,6 +95,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAvatarClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onAvatarClick(view, item)
+            }
+
+            override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
+                clickListeners.onReplyMessageContainerClick(view, item)
             }
 
             override fun onReplyCountClick(view: View, item: MessageItem) {
@@ -135,7 +140,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onScrollToDownClick(view)
             }
         }
-        messagesRV.setMessageListener(clickListeners)
+        messagesRV.setMessageListener(defaultClickListeners)
 
         scrollDownIcon.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
@@ -177,6 +182,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun addReaction(message: SceytMessage, key: String) {
         reactionEventListener?.invoke(ReactionEvent.AddReaction(message, key))
+    }
+
+    private fun onReplyMessageContainerClick(item: MessageItem) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToReplyMessage(item.message))
     }
 
     private fun onReactionClick(reaction: ReactionItem.Reaction) {
@@ -367,7 +376,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
-            it.setMessageListener(clickListeners)
+            it.setMessageListener(defaultClickListeners)
         })
     }
 
@@ -376,11 +385,26 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
 
-    fun scrollToMessage(msgId: Long) {
+    fun scrollToMessage(msgId: Long, highlight: Boolean) {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
                 messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                    if (highlight)
+                        it.second.highlighted = true
                     messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition(position)
+                if (highlight) {
+                    messagesRV.awaitToScrollFinish(position, callback = {
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    })
                 }
             }
         }
@@ -431,7 +455,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
         clickListeners = listener
-        messagesRV.getViewHolderFactory().setMessageListener(listener)
     }
 
     fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
@@ -450,6 +473,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onAvatarClick(view: View, item: MessageItem) {
 
+    }
+
+    override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
+        onReplyMessageContainerClick(item)
     }
 
     override fun onReplyCountClick(view: View, item: MessageItem) {

@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -54,18 +55,22 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.deleteChannel(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCash.channelUpdatedFlow.onEach { sceytChannel ->
-        if (channelsListView.channelUpdated(sceytChannel)) {
-            channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-        } else
-            getChannels(0, query = searchQuery)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    lifecycleOwner.lifecycleScope.launchWhenResumed {
+        ChannelsCash.channelUpdatedFlow.collect { data ->
+            val diff = channelsListView.channelUpdated(data.channel)
+            if (diff != null) {
+                if (diff.lastMessageChanged || data.needSorting)
+                    channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+            } else
+                getChannels(0, query = searchQuery)
+        }
+    }
 
     ChannelsCash.channelAddedFlow.onEach { sceytChannel ->
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
+    SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
         channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
     }.launchIn(lifecycleOwner.lifecycleScope)
 
@@ -88,7 +93,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     channelsListView.setReachToEndListener { offset, lastChannel ->
         if (canLoadNext())
-            getChannels(offset, searchQuery, lastChannel?.id ?: 0)
+            getChannels(offset, searchQuery, LoadKeyData(value = lastChannel?.id ?: 0))
     }
 
     channelsListView.setChannelAttachDetachListener { item, attached ->

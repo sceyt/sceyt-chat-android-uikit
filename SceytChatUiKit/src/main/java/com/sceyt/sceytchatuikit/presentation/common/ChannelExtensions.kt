@@ -8,32 +8,21 @@ import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 
 internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
+    val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
+    val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
+            && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
     return ChannelItemPayloadDiff(
         subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
         avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
-        lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not(),
-        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
+        lastMessageChanged = lastMessageChanged,
+        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus || lastMessageChanged,
         unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
         muteStateChanged = muted != other.muted,
         onlineStateChanged = channelType == ChannelTypeEnum.Direct
                 && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state,
         markedUsUnreadChanged = markedUsUnread != other.markedUsUnread,
-        lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId
-    )
-}
-
-internal fun SceytChannel.diffContent(other: SceytChannel): ChannelItemPayloadDiff {
-    return ChannelItemPayloadDiff(
-        subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
-        avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
-        lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not(),
-        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
-        unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
-        muteStateChanged = muted != other.muted,
-        onlineStateChanged = channelType == ChannelTypeEnum.Direct
-                && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state,
-        markedUsUnreadChanged = markedUsUnread != other.markedUsUnread,
-        lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId
+        lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
+        peerBlockedChanged = peerBlockedChanged
     )
 }
 

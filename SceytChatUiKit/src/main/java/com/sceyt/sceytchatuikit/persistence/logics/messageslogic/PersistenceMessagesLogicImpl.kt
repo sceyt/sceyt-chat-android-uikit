@@ -11,12 +11,9 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
-import com.sceyt.sceytchatuikit.data.models.LoadNearData
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -106,7 +103,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                          offset: Int, loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+                                          offset: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return loadMessages(LoadPrev, conversationId, lastMessageId, replyInThread, offset, loadKey, ignoreDb)
     }
 
@@ -116,11 +113,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
+                                          loadKey: LoadKeyData, ignoreDb: Boolean, ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return loadMessages(LoadNear, conversationId, messageId, replyInThread, 0, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: Long,
+    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
                                             ignoreDb: Boolean,
                                             ignoreCash: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return loadMessages(LoadNewest, conversationId, 0, replyInThread, 0, loadKey, ignoreDb)
@@ -330,7 +327,7 @@ internal class PersistenceMessagesLogicImpl(
 
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
-                             replyInThread: Boolean, offset: Int, loadKey: Long = messageId,
+                             replyInThread: Boolean, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = messageId),
                              ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             if (offset == 0) messagesCash.clear()
@@ -348,7 +345,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getMessagesDbByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
-                                                offset: Int, loadKey: Long): PaginationResponse.DBResponse<SceytMessage> {
+                                                offset: Int, loadKey: LoadKeyData): PaginationResponse.DBResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         val messages: List<SceytMessage>
@@ -383,7 +380,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
-                                                    offset: Int, replyInThread: Boolean, loadKey: Long = lastMessageId,
+                                                    offset: Int, replyInThread: Boolean, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId),
                                                     ignoreDb: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
@@ -430,7 +427,7 @@ internal class PersistenceMessagesLogicImpl(
 
         saveMessagesToDb(messages)
 
-        if (loadType == LoadNear && loadKey == LoadKeyType.ScrollToMessageById.longValue)
+        if (loadType == LoadNear && loadKey.key == LoadKeyType.ScrollToMessageById.longValue)
             messagesCash.clear()
 
         hasDiff = messagesCash.addAll(messages, true)

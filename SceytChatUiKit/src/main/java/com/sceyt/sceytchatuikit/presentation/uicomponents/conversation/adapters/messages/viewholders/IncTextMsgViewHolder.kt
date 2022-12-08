@@ -1,9 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -11,8 +9,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.INC_DEFAULT_SPACE
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle.INC_EDITED_SPACE
 
 class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
@@ -40,10 +36,8 @@ class IncTextMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited || diff.bodyChanged) {
-                    val space = if (message.state == MessageState.Edited) INC_EDITED_SPACE else INC_DEFAULT_SPACE
-                    messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
-                }
+                if (diff.edited || diff.bodyChanged)
+                    setMessageBody(messageBody, message)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)

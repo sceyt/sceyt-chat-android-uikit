@@ -5,6 +5,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
@@ -21,7 +22,7 @@ internal interface PersistenceChannelsLogic {
     suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageEditedOrDeleted(data: Message)
     suspend fun loadChannels(offset: Int, searchQuery: String,
-                             loadKey: Long, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+                             loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
@@ -41,4 +42,5 @@ internal interface PersistenceChannelsLogic {
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
+    suspend fun blockUnBlockUser(userId: String, block: Boolean)
 }

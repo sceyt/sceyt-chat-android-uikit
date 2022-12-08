@@ -19,6 +19,8 @@ import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogicImpl
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
@@ -29,7 +31,8 @@ import kotlinx.coroutines.flow.callbackFlow
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
-        private val usersDao: UserDao) : PersistenceMembersLogic {
+        private val usersDao: UserDao,
+        private val persistenceChannelsLogic: PersistenceChannelsLogic) : PersistenceMembersLogic {
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         if (data.channel == null || data.members == null) return
@@ -59,7 +62,7 @@ internal class PersistenceMembersLogicImpl(
             val dbMembers = getMembersDb(channelId, normalizedOffset, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
             if (dbMembers.isNotEmpty())
-                trySend(PaginationResponse.DBResponse(dbMembers, 0, normalizedOffset, hasNextDb))
+                trySend(PaginationResponse.DBResponse(dbMembers, null, normalizedOffset, hasNextDb))
 
             val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset)
 
@@ -71,11 +74,11 @@ internal class PersistenceMembersLogicImpl(
                 // Get new updated items from DB
                 val updatedMembers = getMembersDb(channelId, 0, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
                 val hasNextServer = response.data?.size == CHANNELS_MEMBERS_LOAD_SIZE
-                trySend(PaginationResponse.ServerResponse(data = response, cashData = updatedMembers, loadKey = 0,
+                trySend(PaginationResponse.ServerResponse(data = response, cashData = updatedMembers, loadKey = null,
                     normalizedOffset, hasDiff = true, hasNext = hasNextServer, hasPrev = false,
                     LoadNext, false))
             } else
-                trySend(PaginationResponse.ServerResponse(response, arrayListOf(), 0, 0,
+                trySend(PaginationResponse.ServerResponse(response, arrayListOf(), null, 0,
                     hasDiff = false, hasNext = false, hasPrev = false, loadType = LoadNext, ignoredDb = false))
 
             channel.close()
@@ -178,8 +181,10 @@ internal class PersistenceMembersLogicImpl(
         } else
             channelsRepository.unblockUser(userId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
             usersDao.blockUnBlockUser(userId, block)
+            persistenceChannelsLogic.blockUnBlockUser(userId, block)
+        }
 
         return response
     }
