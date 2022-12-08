@@ -43,6 +43,19 @@ interface ChannelDao {
     @Query("select * from channels where chat_id =:id")
     suspend fun getChannelById(id: Long): ChannelDb?
 
+    @Transaction
+    @Query("select * from channels where chat_id in (:ids)")
+    suspend fun getChannelsById(ids: List<Long>): List<ChannelDb>
+
+    @Query("select * from UserChatLink where user_id =:userId")
+    suspend fun getUserChannelLinksByPeerId(userId: String): List<UserChatLink>
+
+    @Transaction
+    suspend fun getChannelByPeerId(peerId: String): List<ChannelDb> {
+        val links = getUserChannelLinksByPeerId(peerId)
+        return getChannelsById(links.map { it.chatId })
+    }
+
     @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
 

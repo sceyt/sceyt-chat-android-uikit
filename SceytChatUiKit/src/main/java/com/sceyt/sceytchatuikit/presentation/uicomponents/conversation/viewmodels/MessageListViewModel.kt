@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -103,6 +104,8 @@ class MessageListViewModel(private val conversationId: Long,
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
     private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
     internal val onScrollToMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
+    private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
+    internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
 
 
     init {
@@ -137,7 +140,8 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channel.id == channel.id }
 
         onChannelUpdatedEventFlow = ChannelsCash.channelUpdatedFlow
-            .filter { it.id == channel.id }
+            .filter { it.channel.id == channel.id }
+            .map { it.channel }
 
         viewModelScope.launch {
             ChannelEventsObserver.onChannelMembersEventFlow
@@ -151,7 +155,7 @@ class MessageListViewModel(private val conversationId: Long,
             .filter { it.channelId == channel.id && it.replyInThread }
     }
 
-    fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: Long = lastMessageId) {
+    fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
         setPagingLoadingStarted(LoadPrev)
         val isLoadingMore = offset > 0
 
@@ -181,7 +185,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun loadNearMessages(messageId: Long, loadKey: Long) {
+    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -193,7 +197,7 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    fun loadNewestMessages(loadKey: Long) {
+    fun loadNewestMessages(loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNear, true)
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -254,6 +258,10 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun prepareToScrollToNewMessage() {
         _onScrollToMessageLiveData.postValue(channel.lastMessage)
+    }
+
+    fun prepareToScrollToReplyMessage(message: SceytMessage) {
+        _onScrollToReplyMessageLiveData.postValue(message)
     }
 
     fun addReaction(message: SceytMessage, scoreKey: String) {
@@ -432,6 +440,9 @@ class MessageListViewModel(private val conversationId: Long,
             }
             is MessageCommandEvent.ScrollToDown -> {
                 prepareToScrollToNewMessage()
+            }
+            is MessageCommandEvent.ScrollToReplyMessage -> {
+                prepareToScrollToReplyMessage(event.message)
             }
         }
     }

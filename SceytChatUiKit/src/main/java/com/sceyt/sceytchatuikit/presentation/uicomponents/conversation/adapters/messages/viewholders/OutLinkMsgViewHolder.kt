@@ -1,9 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -41,10 +39,8 @@ class OutLinkMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited || diff.bodyChanged) {
-                    val space = if (message.state == MessageState.Edited) MessagesStyle.OUT_EDITED_SPACE else MessagesStyle.OUT_DEFAULT_SPACE
-                    messageBody.text = HtmlCompat.fromHtml("${message.body} $space", HtmlCompat.FROM_HTML_MODE_LEGACY)
-                }
+                if (diff.edited || diff.bodyChanged)
+                    setMessageBody(messageBody, message)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)

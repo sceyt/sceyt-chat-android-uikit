@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver.awaitToConnectSceyt
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -81,7 +82,8 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
             MarkedUsUnread -> updateChannelDbAndCash(data.channel?.toSceytUiChannel())
-            Blocked, UnBlocked -> deleteChannelDb(data.channelId ?: return)
+            Blocked -> deleteChannelDb(data.channelId ?: return)
+            UnBlocked -> TODO()
             Invited -> TODO()
             Hidden -> TODO()
             UnHidden -> TODO()
@@ -161,7 +163,7 @@ internal class PersistenceChannelsLogicImpl(
         })
     }
 
-    override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: Long,
+    override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
                                       ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCash.clear()
@@ -182,7 +184,7 @@ internal class PersistenceChannelsLogicImpl(
                 val channels = response.data ?: arrayListOf()
 
                 saveChannelsToDb(channels)
-                val hasDiff = channelsCash.addAll(channels.map { it.clone() }, true)
+                val hasDiff = channelsCash.addAll(channels.map { it.clone() }, offset != 0) || offset == 0
                 hasNext = response.data?.size == CHANNELS_LOAD_SIZE
 
                 trySend(PaginationResponse.ServerResponse(data = response, cashData = channelsCash.getSorted(),
@@ -485,5 +487,10 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun setUnreadCount(channelId: Long, count: Int) {
         channelDao.updateUnreadCount(channelId, count)
         channelsCash.updateUnreadCount(channelId, count)
+    }
+
+    override suspend fun blockUnBlockUser(userId: String, block: Boolean) {
+        val channels = channelDao.getChannelByPeerId(userId)
+        channelsCash.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
     }
 }

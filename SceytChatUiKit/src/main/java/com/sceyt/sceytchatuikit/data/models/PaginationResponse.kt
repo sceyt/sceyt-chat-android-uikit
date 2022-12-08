@@ -9,7 +9,7 @@ sealed class PaginationResponse<T> {
      * */
     data class DBResponse<T>(
             val data: List<T>,
-            val loadKey: Long,
+            val loadKey: LoadKeyData?,
             val offset: Int,
             val hasNext: Boolean = false,
             val hasPrev: Boolean = false,
@@ -30,7 +30,7 @@ sealed class PaginationResponse<T> {
     data class ServerResponse<T>(
             val data: SceytResponse<List<T>>,
             val cashData: List<T>,
-            val loadKey: Long,
+            val loadKey: LoadKeyData?,
             val offset: Int,
             val hasDiff: Boolean,
             val hasNext: Boolean,
@@ -48,11 +48,16 @@ sealed class PaginationResponse<T> {
     }
 }
 
-fun PaginationResponse<*>.getLoadKey(): Long {
+data class LoadKeyData(
+        val key: Long = -1,
+        val value: Long = -1
+)
+
+fun PaginationResponse<*>.getLoadKey(): LoadKeyData? {
     return when (this) {
         is PaginationResponse.DBResponse -> loadKey
         is PaginationResponse.ServerResponse -> loadKey
-        else -> 0L
+        else -> null
     }
 }
 

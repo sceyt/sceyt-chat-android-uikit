@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
@@ -18,15 +19,15 @@ internal interface PersistenceMessagesLogic {
     suspend fun onMessageReactionUpdated(data: Message)
     suspend fun onMessageEditedOrDeleted(data: Message)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                 loadKey: Long, ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+                                 loadKey: LoadKeyData, ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
                                  ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean, loadKey: Long,
+    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
                                  ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: Long,
+    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
                                    ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,

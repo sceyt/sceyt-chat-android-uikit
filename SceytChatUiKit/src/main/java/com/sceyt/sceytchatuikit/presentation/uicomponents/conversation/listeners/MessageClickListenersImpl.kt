@@ -12,6 +12,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
     private var messageLongClickListener: MessageClickListeners.MessageLongClickListener? = null
     private var avatarClickListener: MessageClickListeners.AvatarClickListener? = null
+    private var replyMessageContainerClickListener: MessageClickListeners.ReplyMessageContainerClickListener? = null
     private var replyCountClickListener: MessageClickListeners.ReplyCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
     private var reactionLongClickListener: MessageClickListeners.ReactionLongClickListener? = null
@@ -36,6 +37,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     override fun onAvatarClick(view: View, item: MessageListItem.MessageItem) {
         defaultListeners?.onAvatarClick(view, item)
         avatarClickListener?.onAvatarClick(view, item)
+    }
+
+    override fun onReplyMessageContainerClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onReplyMessageContainerClick(view, item)
+        replyMessageContainerClickListener?.onReplyMessageContainerClick(view, item)
     }
 
     override fun onReplyCountClick(view: View, item: MessageListItem.MessageItem) {
@@ -83,6 +89,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             is MessageClickListeners.ClickListeners -> {
                 messageLongClickListener = listener
                 avatarClickListener = listener
+                replyMessageContainerClickListener = listener
                 replyCountClickListener = listener
                 addReactionClickListener = listener
                 reactionClickListener = listener
@@ -97,6 +104,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             }
             is MessageClickListeners.AvatarClickListener -> {
                 avatarClickListener = listener
+            }
+            is MessageClickListeners.ReplyMessageContainerClickListener -> {
+                replyMessageContainerClickListener = listener
             }
             is MessageClickListeners.ReplyCountClickListener -> {
                 replyCountClickListener = listener
