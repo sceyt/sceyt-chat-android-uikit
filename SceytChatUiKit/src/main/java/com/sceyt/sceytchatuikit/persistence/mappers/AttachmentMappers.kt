@@ -32,6 +32,7 @@ fun SceytAttachment.toAttachmentEntity(messageId: Long, messageTid: Long) = Atta
 
 fun AttachmentEntity.toAttachment() = SceytAttachment(
     tid = tid,
+    messageTid = messageTid,
     name = name,
     type = type,
     metadata = metadata,

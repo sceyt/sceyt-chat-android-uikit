@@ -31,7 +31,7 @@ class MessageFileViewHolder(
     }
 
     override fun bind(item: FileListItem) {
-        binding.loadProgress.release(item.fileLoadData.progressPercent)
+        //binding.loadProgress.release(item.fileLoadData.progressPercent)
         super.bind(item)
         val file = (item as? FileListItem.File)?.file ?: return
 

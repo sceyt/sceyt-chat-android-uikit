@@ -24,6 +24,7 @@ class IncFilesMsgViewHolder(
         displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
 ) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
+    private var filedAdapter: MessageFilesAdapter? = null
 
     init {
         binding.setMessageItemStyle()
@@ -85,8 +86,15 @@ class IncFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners))
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners)).also {
+                filedAdapter = it
+            }
         }
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        filedAdapter?.onItemDetached()
     }
 
     private fun SceytItemIncFilesMessageBinding.setMessageItemStyle() {

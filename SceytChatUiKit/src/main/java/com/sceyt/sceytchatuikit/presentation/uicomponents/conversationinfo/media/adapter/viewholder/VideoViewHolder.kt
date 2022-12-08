@@ -25,7 +25,7 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
             videoViewController.setImageThumb(null)
             parentLayout.clipToOutline = true
             videoView.isVisible = false
-            binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
+           // binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
         }
         super.bind(item)
     }

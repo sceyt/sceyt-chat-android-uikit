@@ -32,4 +32,6 @@ class MessageFilesAdapter(private val files: ArrayList<FileListItem>,
         videoControllersList.forEach { it.release() }
         videoControllersList.clear()
     }
+
+    fun getData() = files
 }

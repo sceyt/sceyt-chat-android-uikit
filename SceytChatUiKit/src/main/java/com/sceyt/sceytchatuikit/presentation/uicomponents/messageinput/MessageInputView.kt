@@ -338,7 +338,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val attachment = Attachment.Builder(path, getAttachmentType(path))
                     .setName(File(path).name)
                     .setMetadata(Gson().toJson(AttachmentMetadata(path)))
-                    .setUpload(true)
+                    .setUpload(false)
                     .build()
 
                 attachments.add(attachment)

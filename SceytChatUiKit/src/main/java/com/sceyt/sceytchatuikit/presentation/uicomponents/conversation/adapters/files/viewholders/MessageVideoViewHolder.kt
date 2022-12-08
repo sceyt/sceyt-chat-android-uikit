@@ -33,11 +33,11 @@ class MessageVideoViewHolder(
 
     override fun bind(item: FileListItem) {
         with(binding) {
-            loadProgress.release(item.fileLoadData.progressPercent)
+          //  loadProgress.release(item.fileLoadData.progressPercent)
             videoViewController.setImageThumb(null)
             parentLayout.clipToOutline = true
             videoView.isVisible = false
-            binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
+           // binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
         }
         super.bind(item)
     }
