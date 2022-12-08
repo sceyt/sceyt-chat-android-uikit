@@ -90,8 +90,9 @@ fun GroupChannel.getChannelUrl(): String {
     else ""
 }
 
-fun Attachment.toSceytAttachment() = SceytAttachment(
+fun Attachment.toSceytAttachment(messageTid: Long) = SceytAttachment(
     tid = tid,
+    messageTid = messageTid,
     name = name,
     type = type,
     metadata = metadata,

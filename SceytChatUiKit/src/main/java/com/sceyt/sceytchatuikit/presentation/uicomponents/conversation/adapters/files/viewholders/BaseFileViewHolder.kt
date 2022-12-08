@@ -2,17 +2,9 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.content.Context
 import android.view.View
-import androidx.lifecycle.lifecycleScope
-import com.koushikdutta.ion.Ion
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.extensions.runOnMainThread
-import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -22,16 +14,17 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     override fun bind(item: FileListItem) {
         fileItem = item
-        fileItem.fileLoadData.position = bindingAdapterPosition
 
-        setUploadListenerIfNeeded(item)
-        downloadIfNeeded(item)
+        //fileItem.fileLoadData.position = bindingAdapterPosition
+
+        /*setUploadListenerIfNeeded(item)
+        downloadIfNeeded(item)*/
     }
 
     open fun updateUploadingState(data: FileLoadData) {}
     open fun updateDownloadingState(data: FileLoadData, file: File? = null) {}
 
-    private fun setUploadListenerIfNeeded(item: FileListItem) {
+   /* private fun setUploadListenerIfNeeded(item: FileListItem) {
         val message = item.sceytMessage
         if (message.deliveryStatus == DeliveryStatus.Pending && item.fileLoadData.progressPercent != 100f) {
             updateUploadingState(item.fileLoadData.apply { loading = true })
@@ -41,9 +34,10 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             }
         }
     }
-
-    private fun downloadIfNeeded(item: FileListItem) {
+*/
+  /*  private fun downloadIfNeeded(item: FileListItem) {
         val attachment = item.file
+
 
         val loadedFile = File(itemView.context.filesDir, attachment.name)
         val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
@@ -87,10 +81,10 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
                     }
             }
         }
-    }
-
+    }*/
+/*
     private fun checkLoadDataIsForCurrent(data: FileLoadData): Boolean {
         return (::fileItem.isInitialized && fileItem.fileLoadData.loadId == data.loadId
                 && fileItem.fileLoadData.position == data.position)
-    }
+    }*/
 }

@@ -206,9 +206,10 @@ fun MessageDb.toMessage(): Message {
 
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
+    val tid = getTid(id, tid, incoming)
     return SceytMessage(
         id = id,
-        tid = getTid(id, tid, incoming),
+        tid = tid,
         channelId = channelId,
         to = to,
         body = body,
@@ -224,7 +225,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         deliveryStatus = deliveryStatus,
         state = state,
         from = from,
-        attachments = attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
+        attachments = attachments?.map { it.toSceytAttachment(tid) }?.toTypedArray(),
         lastReactions = lastReactions,
         selfReactions = selfReactions,
         reactionScores = reactionScores,

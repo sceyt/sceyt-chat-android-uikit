@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -15,10 +14,10 @@ import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
@@ -28,6 +27,9 @@ import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -39,6 +41,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,6 +56,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
     private val syncManager: SceytSyncManager by inject()
+    internal val fileTransferService: FileTransferService by inject()
     internal val myId = preference.getUserId()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
@@ -82,6 +86,13 @@ class MessageListViewModel(private val conversationId: Long,
 
     private val _onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
     val onNewOutgoingMessageLiveData: LiveData<SceytMessage> = _onNewOutgoingMessageLiveData
+
+    private val _transferUpdatedFlow = MutableSharedFlow<TransferData>(
+        extraBufferCapacity = 30,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val progressUpdatedFlow: SharedFlow<TransferData> = _transferUpdatedFlow
+
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -296,22 +307,35 @@ class MessageListViewModel(private val conversationId: Long,
             val sceytMessage = message.toSceytUiMessage(isGroup).apply {
                 this.parent = parent?.toSceytUiMessage(isGroup)
             }
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, sceytMessage).collect { result ->
-                when (result) {
-                    is SendMessageResult.TempMessage -> {
-                        val outMessage = result.message.apply {
-                            this.parent = parent?.toSceytUiMessage()
-                        }
-                        _onNewOutgoingMessageLiveData.postValue(outMessage)
-                    }
-                    is SendMessageResult.Response -> {
-                        if (result.response is SceytResponse.Error) {
-                            // Implement logic if you want to show failed status
-                            Log.e("sendMessage", "send message error-> ${result.response.message}")
-                        }
-                    }
+
+            if (message.attachments.isNotEmpty()) {
+                message.attachments.forEach {
+                    fileTransferService.upload(sceytMessage.tid, it.tid, it.url, AttachmentTypeEnum.Image, { updateDate ->
+                        _transferUpdatedFlow.tryEmit(updateDate)
+                    }, { result ->
+                        if (result is SceytResponse.Success)
+                            _transferUpdatedFlow.tryEmit(TransferData(sceytMessage.tid, it.tid, 100f, ProgressState.Uploaded, result.data))
+                        else _transferUpdatedFlow.tryEmit(TransferData(sceytMessage.tid, it.tid, 0f, ProgressState.Error, result.data))
+                    })
                 }
             }
+            _onNewOutgoingMessageLiveData.postValue(sceytMessage)
+            /*  persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, sceytMessage).collect { result ->
+                  when (result) {
+                      is SendMessageResult.TempMessage -> {
+                          val outMessage = result.message.apply {
+                              this.parent = parent?.toSceytUiMessage()
+                          }
+                          _onNewOutgoingMessageLiveData.postValue(outMessage)
+                      }
+                      is SendMessageResult.Response -> {
+                          if (result.response is SceytResponse.Error) {
+                              // Implement logic if you want to show failed status
+                              Log.e("sendMessage", "send message error-> ${result.response.message}")
+                          }
+                      }
+                  }
+              }*/
         }
     }
 

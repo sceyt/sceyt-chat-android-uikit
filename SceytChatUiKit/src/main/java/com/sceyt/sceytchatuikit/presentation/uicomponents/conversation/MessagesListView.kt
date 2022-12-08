@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -14,6 +15,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -25,6 +27,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutFilesMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -299,6 +302,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     }
                 }
             }
+        }
+    }
+
+    internal fun updateProgress(data: TransferData) {
+        Log.i("sdfsdf",data.state.toString())
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == data.messageTid }?.let {
+            (messagesRV.findViewHolderForAdapterPosition(it.first) as? OutFilesMsgViewHolder)?.updateTransfer(data)
+        }
+
+
+    }
+
+    internal fun attachmentUploaded(data: TransferData) {
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == data.messageTid }?.let {
+            (messagesRV.findViewHolderForAdapterPosition(it.first) as? OutFilesMsgViewHolder)?.updateTransfer(data)
         }
     }
 
