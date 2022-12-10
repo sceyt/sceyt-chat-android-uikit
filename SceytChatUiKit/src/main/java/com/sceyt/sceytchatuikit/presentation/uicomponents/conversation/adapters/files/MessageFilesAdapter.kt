@@ -28,6 +28,16 @@ class MessageFilesAdapter(private val files: ArrayList<FileListItem>,
         return files.size
     }
 
+    override fun onViewAttachedToWindow(holder: BaseViewHolder<FileListItem>) {
+        super.onViewAttachedToWindow(holder)
+        holder.onViewAttachedToWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: BaseViewHolder<FileListItem>) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
+    }
+
     fun onItemDetached() {
         videoControllersList.forEach { it.release() }
         videoControllersList.clear()

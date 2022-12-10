@@ -35,7 +35,7 @@ internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
     single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
     single { SceytSyncManager(get(), get()) }
-    single<FileTransferService> { FileTransferServiceImpl() }
+    single<FileTransferService> { FileTransferServiceImpl(get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {

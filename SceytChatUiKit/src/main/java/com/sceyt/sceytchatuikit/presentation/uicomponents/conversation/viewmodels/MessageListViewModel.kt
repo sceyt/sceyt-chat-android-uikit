@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -14,14 +15,15 @@ import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -34,6 +36,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -41,7 +44,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -87,12 +89,6 @@ class MessageListViewModel(private val conversationId: Long,
     private val _onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
     val onNewOutgoingMessageLiveData: LiveData<SceytMessage> = _onNewOutgoingMessageLiveData
 
-    private val _transferUpdatedFlow = MutableSharedFlow<TransferData>(
-        extraBufferCapacity = 30,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-    val progressUpdatedFlow: SharedFlow<TransferData> = _transferUpdatedFlow
-
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -102,6 +98,8 @@ class MessageListViewModel(private val conversationId: Long,
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
+    val onTransferUpdatedFlow: SharedFlow<TransferData>
+
 
     // Chanel events
     val onChannelEventFlow: Flow<ChannelEventData>
@@ -164,6 +162,8 @@ class MessageListViewModel(private val conversationId: Long,
 
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
+
+        onTransferUpdatedFlow = MessageEventsObserver.onTransferUpdatedFlow
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
@@ -304,11 +304,12 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            val sceytMessage = message.toSceytUiMessage(isGroup).apply {
-                this.parent = parent?.toSceytUiMessage(isGroup)
-            }
+            /* val sceytMessage = message.toSceytUiMessage(isGroup).apply {
+                 this.parent = parent?.toSceytUiMessage(isGroup)
+             }*/
 
-            if (message.attachments.isNotEmpty()) {
+            // _onNewOutgoingMessageLiveData.postValue(sceytMessage)
+            /*  if (message.attachments.isNotEmpty()) {
                 message.attachments.forEach {
                     fileTransferService.upload(sceytMessage.tid, it.tid, it.url, AttachmentTypeEnum.Image, { updateDate ->
                         _transferUpdatedFlow.tryEmit(updateDate)
@@ -318,24 +319,23 @@ class MessageListViewModel(private val conversationId: Long,
                         else _transferUpdatedFlow.tryEmit(TransferData(sceytMessage.tid, it.tid, 0f, ProgressState.Error, result.data))
                     })
                 }
+            }*/
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
+                when (result) {
+                    is SendMessageResult.TempMessage -> {
+                        val outMessage = result.message.apply {
+                            this.parent = parent?.toSceytUiMessage()
+                        }
+                        _onNewOutgoingMessageLiveData.postValue(outMessage)
+                    }
+                    is SendMessageResult.Response -> {
+                        if (result.response is SceytResponse.Error) {
+                            // Implement logic if you want to show failed status
+                            Log.e("sendMessage", "send message error-> ${result.response.message}")
+                        }
+                    }
+                }
             }
-            _onNewOutgoingMessageLiveData.postValue(sceytMessage)
-            /*  persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, sceytMessage).collect { result ->
-                  when (result) {
-                      is SendMessageResult.TempMessage -> {
-                          val outMessage = result.message.apply {
-                              this.parent = parent?.toSceytUiMessage()
-                          }
-                          _onNewOutgoingMessageLiveData.postValue(outMessage)
-                      }
-                      is SendMessageResult.Response -> {
-                          if (result.response is SceytResponse.Error) {
-                              // Implement logic if you want to show failed status
-                              Log.e("sendMessage", "send message error-> ${result.response.message}")
-                          }
-                      }
-                  }
-              }*/
         }
     }
 
@@ -480,6 +480,23 @@ class MessageListViewModel(private val conversationId: Long,
                 deleteReaction(event.message, event.scoreKey)
             }
         }
+    }
+
+    internal fun needDownload(fileListItem: FileListItem) {
+        fileTransferService.download(fileListItem.sceytMessage.tid, fileListItem.file.toAttachment(), progressCallback = {
+            fileListItem.file.fileTransferData = it
+            MessageEventsObserver.emitAttachmentTransferUpdate(it)
+        }, resultCallback = {
+            when (it) {
+                is SceytResponse.Success -> {
+                    fileListItem.file.fileTransferData?.filePath = it.data
+                    MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(
+                        fileListItem.file.messageTid, fileListItem.file.tid, 100f, ProgressState.Downloaded, it.data, fileListItem.file.url))
+                }
+                is SceytResponse.Error -> MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(
+                    fileListItem.file.messageTid, fileListItem.file.tid, 0f, ProgressState.Error, null, fileListItem.file.url))
+            }
+        })
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {

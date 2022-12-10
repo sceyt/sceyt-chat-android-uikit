@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.shared.utils
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
@@ -54,11 +55,11 @@ object VideoTranscodeHelper {
         }
     }
 
-    suspend fun transcodeAsResult(application: Application, destination: File, uri: String): VideoTranscodeData {
+    suspend fun transcodeAsResult(context: Context, destination: File, uri: String): VideoTranscodeData {
         return suspendCancellableCoroutine {
             try {
                 VideoCompressor.start(
-                    context = application,
+                    context = context,
                     srcUri = Uri.parse(uri),
                     destPath = destination.absolutePath,
                     configureWith = Configuration(

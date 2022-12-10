@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -40,6 +41,7 @@ object SceytKitClient : SceytKoinComponent {
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
     private val sceytSyncManager by inject<SceytSyncManager>()
+    private val filesTransferService by inject<FileTransferService>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
@@ -142,6 +144,8 @@ object SceytKitClient : SceytKoinComponent {
     fun getUserMiddleWare() = persistenceUsersMiddleWare
 
     fun getSyncManager() = sceytSyncManager
+
+    fun getFileTransferService() = filesTransferService
 
     fun addListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
         listenersMap[key] = listener

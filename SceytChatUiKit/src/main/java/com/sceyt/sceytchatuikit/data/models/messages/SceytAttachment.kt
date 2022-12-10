@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -14,13 +13,33 @@ data class SceytAttachment(
         val type: String,
         val metadata: String?,
         val fileSize: Long,
-        val url: String
+        var url: String?,
+        var filePath: String?
 ) : Parcelable, Cloneable {
 
     public override fun clone(): SceytAttachment {
-        return SceytAttachment(tid, messageTid, name, type, metadata, fileSize, url)
+        return SceytAttachment(tid, messageTid, name, type, metadata, fileSize, url, filePath)
     }
 
     @IgnoredOnParcel
-    var transferData: TransferData = TransferData(messageTid, tid, 0.02f, ProgressState.Pending,url)
+    var fileTransferData: TransferData? = null
+
+    @IgnoredOnParcel
+    private var uploadProgressListener: ((TransferData) -> Unit)? = null
+
+
+    internal fun setListener(listener: (TransferData) -> Unit) {
+        uploadProgressListener = null
+        uploadProgressListener = listener
+        fileTransferData?.let { uploadProgressListener?.invoke(it) }
+    }
+
+    internal fun removeListener() {
+        uploadProgressListener = null
+    }
+
+    fun update(data: TransferData) {
+        fileTransferData = data
+        uploadProgressListener?.invoke(data)
+    }
 }

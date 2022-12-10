@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
 
 class MessageConverter {
     @TypeConverter

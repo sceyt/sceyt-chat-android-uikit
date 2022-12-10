@@ -9,7 +9,8 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
-class FilesViewHolderFactory(context: Context, private val messageListeners: MessageClickListenersImpl?) {
+class FilesViewHolderFactory(context: Context, private val messageListeners: MessageClickListenersImpl?,
+                             private val needDownloadCallback: (FileListItem) -> Unit) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
@@ -21,7 +22,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
             }
             FileViewType.Image.ordinal -> {
                 MessageImageViewHolder(SceytMessageImageItemBinding.inflate(layoutInflater, parent, false),
-                    messageListeners)
+                    messageListeners, needDownloadCallback)
             }
             FileViewType.Video.ordinal -> {
                 MessageVideoViewHolder(SceytMessageVideoItemBinding.inflate(layoutInflater, parent, false),
