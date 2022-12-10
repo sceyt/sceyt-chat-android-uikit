@@ -64,6 +64,7 @@
         <attr name="progressColor" format="color"/>
         <attr name="trackColor" format="color"/>
         <attr name="progress" format="float"/>
+        <attr name="minProgress" format="float"/>
         <attr name="roundedProgress" format="boolean"/>
         <attr name="trackThickness" format="dimension"/>
         <attr name="centerIcon" format="reference"/>

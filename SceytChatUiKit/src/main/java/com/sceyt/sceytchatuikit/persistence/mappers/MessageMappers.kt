@@ -4,6 +4,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
+import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
@@ -262,7 +263,7 @@ fun SceytMessage.toMessage(): Message {
         deliveryStatus,
         state,
         from,
-        attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
+        attachments?.map { it.toAttachment() }?.toTypedArray(),
         lastReactions,
         selfReactions,
         reactionScores,

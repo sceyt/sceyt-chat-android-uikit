@@ -34,6 +34,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var diameter = 0f
     private var angle = 0f
     private var progress = 0f
+    private var minProgress = 0f
     private var centerIcon: Drawable? = null
     private var enableTrack = true
     private var rotateAnimEnabled = true
@@ -52,7 +53,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytCircularProgressView)
             progressColor = a.getColor(R.styleable.SceytCircularProgressView_progressColor, progressColor)
             trackColor = a.getColor(R.styleable.SceytCircularProgressView_trackColor, trackColor)
-            progress = a.getFloat(R.styleable.SceytCircularProgressView_progress, progress)
+            minProgress = a.getFloat(R.styleable.SceytCircularProgressView_minProgress, minProgress)
+            progress = a.getFloat(R.styleable.SceytCircularProgressView_progress, minProgress)
             roundedProgress = a.getBoolean(R.styleable.SceytCircularProgressView_roundedProgress, roundedProgress)
             trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_trackThickness, trackThickness.toInt()).toFloat()
             centerIcon = a.getDrawable(R.styleable.SceytCircularProgressView_centerIcon)
@@ -197,8 +199,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             iconSize = (width * iconSizeInPercent / 100 - paddingStart - paddingEnd).toInt()
     }
 
-    fun release(progress: Float) {
-        this.progress = progress
+    fun release() {
+        this.progress = minProgress
         startAngle = if (rotateAnimEnabled) 0f else -90f
         angle = calculateAngle(progress)
     }

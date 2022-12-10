@@ -1,52 +1,51 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
+import android.app.Application
 import android.util.Log
+import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlin.coroutines.CoroutineContext
+import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
+import java.io.File
 
-class FileTransferServiceImpl : FileTransferService, CoroutineScope {
-    var listeners: FileTransferListeners.Listeners = object : FileTransferListenersImpl() {
+class FileTransferServiceImpl(private var application: Application) : FileTransferService {
 
-        override fun upload(messageTid: Long, attachmentTid: Long, path: String, type: AttachmentTypeEnum, progressCallback: ProgressUpdateCallback, resultCallback: UploadResult) {
+    private var listeners: FileTransferListeners.Listeners = object : FileTransferListeners.Listeners {
+        override fun upload(messageTid: Long, attachment: Attachment,
+                            progressCallback: ProgressUpdateCallback, resultCallback: TransferResult) {
+            uploadFile(messageTid, attachment, resultCallback, progressCallback)
+        }
 
-            uploadFile(messageTid, attachmentTid, path, type, resultCallback, progressCallback)
+        override fun download(messageTid: Long, attachment: Attachment,
+                              progressCallback: ProgressUpdateCallback, resultCallback: TransferResult) {
+            downloadFile(messageTid, attachment, progressCallback, resultCallback)
         }
     }
 
+    override fun upload(messageTid: Long, attachment: Attachment,
+                        progressCallback: ProgressUpdateCallback,
+                        resultCallback: TransferResult) {
+        listeners.upload(messageTid, attachment, progressCallback, resultCallback)
+    }
+
+    override fun download(messageTid: Long, attachment: Attachment, progressCallback: ProgressUpdateCallback,
+                          resultCallback: TransferResult) {
+        listeners.download(messageTid, attachment, progressCallback, resultCallback)
+    }
 
     override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) {
         listeners = fileTransferListeners
     }
 
-    override fun upload(messageTid: Long,
-                        attachmentTid: Long,
-                        path: String,
-                        type: AttachmentTypeEnum,
-                        progressCallback: ProgressUpdateCallback,
-                        resultCallback: UploadResult) {
-
-        listeners.upload(messageTid, attachmentTid, path, type, progressCallback, resultCallback)
-    }
-
-    override fun download(tid: Long, path: String) {
-        listeners.download(tid, path)
-    }
-
-    private fun uploadFile(messageTid: Long, tid: Long, path: String, type: AttachmentTypeEnum, resultCallback: UploadResult, progressCallback: ProgressUpdateCallback) {
-        progressCallback.onProgress(TransferData(messageTid, tid, 0.02f, ProgressState.Pending, path))
-        ChatClient.getClient().upload(path, object : ProgressCallback {
+    // Default logic
+    private fun uploadFile(messageTid: Long, attachment: Attachment, resultCallback: TransferResult, progressCallback: ProgressUpdateCallback) {
+        ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
             override fun onResult(progress: Float) {
-                if (progress==1f) return
-                Log.i("sdfsdsfdf", "push$progress")
-                progressCallback.onProgress(TransferData(messageTid, tid, progress, ProgressState.Uploading, path))
+                progressCallback.onProgress(TransferData(messageTid, attachment.tid, progress * 100, ProgressState.Uploading, attachment.filePath, ""))
             }
 
             override fun onError(exception: SceytException?) {
@@ -54,7 +53,6 @@ class FileTransferServiceImpl : FileTransferService, CoroutineScope {
             }
         }, object : UrlCallback {
             override fun onResult(p0: String?) {
-                Log.i("sdfsdsfdf", "push finish $p0")
                 resultCallback.onResult(SceytResponse.Success(p0))
             }
 
@@ -64,11 +62,38 @@ class FileTransferServiceImpl : FileTransferService, CoroutineScope {
         })
     }
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    private fun downloadFile(messageTid: Long, attachment: Attachment, progressCallback: ProgressUpdateCallback, resultCallback: TransferResult) {
+        val loadedFile = File(application.filesDir, attachment.name)
+        val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
+
+        if (file != null) {
+            resultCallback.onResult(SceytResponse.Success(file.path))
+        } else {
+            loadedFile.deleteOnExit()
+            loadedFile.createNewFile()
+
+            Ion.with(application)
+                .load(attachment.url)
+                .progress { downloaded, total ->
+                    val progress = ((downloaded / total.toFloat())) * 100f
+                    Log.i("sdfsf", progress.toString())
+
+                    progressCallback.onProgress(TransferData(
+                        messageTid, attachment.tid, progress, ProgressState.Downloading, null, attachment.url))
+                }
+                .write(loadedFile)
+                .setCallback { e, result ->
+                    if (result == null && e != null) {
+                        loadedFile.delete()
+                        resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
+                    } else
+                        resultCallback.onResult(SceytResponse.Success(result.path))
+                }
+        }
+    }
 }
 
-fun interface UploadResult {
+fun interface TransferResult {
     fun onResult(sceytResponse: SceytResponse<String>)
 }
 
@@ -76,19 +101,3 @@ fun interface ProgressUpdateCallback {
     fun onProgress(date: TransferData)
 }
 
-data class TransferData(
-        val messageTid: Long,
-        val attachmentTid: Long,
-        val progressPercent: Float,
-        val state: ProgressState,
-        val path: String?
-)
-
-enum class ProgressState {
-    Pending,
-    Uploading,
-    Uploaded,
-    Downloading,
-    Downloaded,
-    Error
-}

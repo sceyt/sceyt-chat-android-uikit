@@ -28,5 +28,6 @@ data class AttachmentEntity(
         val type: String,
         val metadata: String?,
         val fileSize: Long,
-        val url: String
+        val url: String?,
+        val filePath: String?
 )

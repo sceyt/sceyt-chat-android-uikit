@@ -1,20 +1,22 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chat.models.attachment.Attachment
 
 
 sealed interface FileTransferListeners {
 
     fun interface UploadListener : FileTransferListeners {
         fun upload(messageTid: Long,
-                   attachmentTid: Long, path: String,
-                   type: AttachmentTypeEnum,
+                   attachment: Attachment,
                    progressCallback: ProgressUpdateCallback,
-                   resultCallback: UploadResult)
+                   resultCallback: TransferResult)
     }
 
     fun interface DownloadListener : FileTransferListeners {
-        fun download(tid: Long, path: String)
+        fun download(messageTid: Long,
+                     attachment: Attachment,
+                     progressCallback: ProgressUpdateCallback,
+                     resultCallback: TransferResult)
     }
 
     /** Use this if you want to implement all callbacks */

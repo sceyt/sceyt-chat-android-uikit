@@ -26,6 +26,7 @@
         app:layout_constraintEnd_toEndOf="@id/icFile"
         app:layout_constraintStart_toStartOf="@+id/icFile"
         app:layout_constraintTop_toTopOf="@+id/icFile"
+        app:minProgress="2"
         app:progressColor="@color/sceyt_color_white"
         app:trackColor="@android:color/transparent" />
 

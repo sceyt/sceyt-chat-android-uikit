@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence
 
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -27,8 +28,8 @@ interface PersistenceMessagesMiddleWare {
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
-    suspend fun sendMessageAsFlow(channelId: Long, message: SceytMessage): Flow<SendMessageResult>
-    suspend fun sendMessage(channelId: Long, message: SceytMessage)
+    suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
+    suspend fun sendMessage(channelId: Long, message: Message)
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()

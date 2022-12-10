@@ -13,8 +13,10 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -27,7 +29,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutFilesMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -306,19 +307,25 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData) {
-        Log.i("sdfsdf",data.state.toString())
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == data.messageTid }?.let {
-            (messagesRV.findViewHolderForAdapterPosition(it.first) as? OutFilesMsgViewHolder)?.updateTransfer(data)
+        Log.i("ssdfsddfsdf", data.toString())
+        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+            val predicate: (SceytAttachment) -> Boolean = if (data.state == ProgressState.Uploading || data.state == ProgressState.PendingUpload
+                    || data.state == ProgressState.Uploaded) {
+                { it.tid == data.attachmentTid }
+            } else {
+                { it.url == data.url }
+            }
+            (it.second as MessageItem).message.attachments?.find(predicate)?.let {
+
+                it.update(data)
+                //it.fileTransferData = data
+            }
+            /*  messagesRV.post {
+                  (messagesRV.findViewHolderForAdapterPosition(it.first) as? BaseMsgViewHolder)?.updateTransfer(data)
+              }*/
         }
-
-
     }
 
-    internal fun attachmentUploaded(data: TransferData) {
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == data.messageTid }?.let {
-            (messagesRV.findViewHolderForAdapterPosition(it.first) as? OutFilesMsgViewHolder)?.updateTransfer(data)
-        }
-    }
 
     internal fun messageSendFailed(tid: Long) {
         messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
@@ -402,6 +409,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
     }
 
+    fun setNeedDownloadListener(callBack: (FileListItem) -> Unit) {
+        messagesRV.getViewHolderFactory().setNeedDownloadCallback(callBack)
+    }
 
     fun scrollToMessage(msgId: Long, highlight: Boolean) {
         MessagesAdapter.awaitUpdating {

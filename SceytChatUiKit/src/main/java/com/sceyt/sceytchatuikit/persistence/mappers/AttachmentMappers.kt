@@ -14,7 +14,8 @@ fun Attachment.toAttachmentEntity(messageId: Long, messageTid: Long) = Attachmen
     type = type,
     metadata = metadata,
     fileSize = uploadedFileSize,
-    url = url
+    url = url,
+    filePath = filePath
 )
 
 
@@ -26,7 +27,8 @@ fun SceytAttachment.toAttachmentEntity(messageId: Long, messageTid: Long) = Atta
     type = type,
     metadata = metadata,
     fileSize = fileSize,
-    url = url
+    url = url,
+    filePath = filePath
 )
 
 
@@ -37,13 +39,14 @@ fun AttachmentEntity.toAttachment() = SceytAttachment(
     type = type,
     metadata = metadata,
     fileSize = fileSize,
-    url = url
+    url = url,
+    filePath = filePath
 )
 
 
 fun AttachmentEntity.toSdkAttachment(upload: Boolean = true): Attachment {
     val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
-    return Attachment.Builder(data.localPath, type)
+    return Attachment.Builder(data.localPath, url, type)
         .setMetadata(metadata)
         .setName(name)
         .withTid(tid)

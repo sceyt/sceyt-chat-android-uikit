@@ -30,8 +30,11 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
+import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentUrl
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
@@ -93,6 +96,10 @@ abstract class BaseMsgViewHolder(private val view: View,
     open fun onViewAttachedToWindow() {
         if (::messageListItem.isInitialized)
             displayedListener?.invoke(messageListItem)
+    }
+
+    open fun updateTransfer(data: TransferData) {
+
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null

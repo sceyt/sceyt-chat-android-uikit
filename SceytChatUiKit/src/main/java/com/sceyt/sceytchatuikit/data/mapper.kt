@@ -97,11 +97,12 @@ fun Attachment.toSceytAttachment(messageTid: Long) = SceytAttachment(
     type = type,
     metadata = metadata,
     fileSize = uploadedFileSize,
-    url = url
+    url = url,
+    filePath = filePath
 )
 
 
-fun SceytAttachment.toSceytAttachment() = Attachment.Builder(url, type)
+fun SceytAttachment.toAttachment(): Attachment = Attachment.Builder(filePath, url, type)
     .setMetadata(metadata)
     .setName(name)
     .withTid(tid)

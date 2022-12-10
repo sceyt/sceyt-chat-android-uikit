@@ -8,13 +8,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
@@ -35,8 +33,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -97,9 +93,9 @@ open class ConversationActivity : AppCompatActivity() {
             }
         })
 
-        FileTransferServiceImpl().setCustomListener(object : FileTransferListeners.Listeners {
+      /*  FileTransferServiceImpl().setCustomListener(object : FileTransferListeners.Listeners {
 
-            /*  override fun upload(tid: Long, path: String): String? {
+            *//*  override fun upload(tid: Long, path: String): String? {
 
                 lifecycleScope.launch {
                     for (i in 0..10) {
@@ -108,15 +104,15 @@ open class ConversationActivity : AppCompatActivity() {
                     }
                 }
                 return "custom"
-            }*/
-            override fun upload(messageTid: Long, attachmentTid: Long, path: String, type: AttachmentTypeEnum, progressCallback: ProgressUpdateCallback, resultCallback: UploadResult) {
+            }*//*
+            override fun upload(messageTid: Long, attachmentTid: Long, path: String, type: String, progressCallback: ProgressUpdateCallback, resultCallback: UploadResult) {
                 TODO("Not yet implemented")
             }
 
             override fun download(tid: Long, path: String) {
                 TODO("Not yet implemented")
             }
-        })
+        })*/
     }
 
     private fun MessagesListView.initConversationView() {

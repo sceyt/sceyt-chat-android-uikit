@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.GroupChannel
@@ -68,6 +67,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
 
+    messagesListView.setNeedDownloadListener {
+        needDownload(it)
+    }
 
     fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId)
@@ -351,11 +353,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    progressUpdatedFlow.onEach {
-        Log.i("sdfsdsfdf","obs"+it.progressPercent.toString()+"  "+ it.state.toString())
-        lifecycleOwner.lifecycleScope.launch {
-            messagesListView.updateProgress(it)
-        }
+    onTransferUpdatedFlow.onEach {
+        messagesListView.updateProgress(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
 

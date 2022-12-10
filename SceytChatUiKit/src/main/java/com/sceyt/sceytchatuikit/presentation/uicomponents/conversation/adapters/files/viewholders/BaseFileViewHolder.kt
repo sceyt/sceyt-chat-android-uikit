@@ -10,6 +10,7 @@ import java.io.File
 
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
     protected lateinit var fileItem: FileListItem
+    val isFileItemInitialized get() = this::fileItem.isInitialized
     protected val context: Context by lazy { itemView.context }
 
     override fun bind(item: FileListItem) {
@@ -24,64 +25,64 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     open fun updateUploadingState(data: FileLoadData) {}
     open fun updateDownloadingState(data: FileLoadData, file: File? = null) {}
 
-   /* private fun setUploadListenerIfNeeded(item: FileListItem) {
-        val message = item.sceytMessage
-        if (message.deliveryStatus == DeliveryStatus.Pending && item.fileLoadData.progressPercent != 100f) {
-            updateUploadingState(item.fileLoadData.apply { loading = true })
-            item.setUploadListener { loadData ->
-                if (checkLoadDataIsForCurrent(data = loadData))
-                    runOnMainThread { updateUploadingState(loadData) }
-            }
-        }
-    }
-*/
-  /*  private fun downloadIfNeeded(item: FileListItem) {
-        val attachment = item.file
+    /* private fun setUploadListenerIfNeeded(item: FileListItem) {
+         val message = item.sceytMessage
+         if (message.deliveryStatus == DeliveryStatus.Pending && item.fileLoadData.progressPercent != 100f) {
+             updateUploadingState(item.fileLoadData.apply { loading = true })
+             item.setUploadListener { loadData ->
+                 if (checkLoadDataIsForCurrent(data = loadData))
+                     runOnMainThread { updateUploadingState(loadData) }
+             }
+         }
+     }
+ */
+    /*  private fun downloadIfNeeded(item: FileListItem) {
+          val attachment = item.file
 
 
-        val loadedFile = File(itemView.context.filesDir, attachment.name)
-        val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
+          val loadedFile = File(itemView.context.filesDir, attachment.name)
+          val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
 
-        if (file != null) {
-            val loadData = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
-                item.fileLoadData else item.fileLoadData.loadedState()
-            updateDownloadingState(loadData, file)
-            item.setDownloadProgressListener(null)
-        } else {
+          if (file != null) {
+              val loadData = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
+                  item.fileLoadData else item.fileLoadData.loadedState()
+              updateDownloadingState(loadData, file)
+              item.setDownloadProgressListener(null)
+          } else {
 
-            item.setDownloadProgressListener { loadData, outFile ->
-                if (checkLoadDataIsForCurrent(data = loadData))
-                    runOnMainThread { updateDownloadingState(loadData, outFile) }
-            }
+              item.setDownloadProgressListener { loadData, outFile ->
+                  if (checkLoadDataIsForCurrent(data = loadData))
+                      runOnMainThread { updateDownloadingState(loadData, outFile) }
+              }
 
-            if (item.fileLoadData.loading) {
-                updateDownloadingState(item.fileLoadData)
-                return
-            }
+              if (item.fileLoadData.loading) {
+                  updateDownloadingState(item.fileLoadData)
+                  return
+              }
 
-            loadedFile.deleteOnExit()
-            loadedFile.createNewFile()
-            item.updateDownloadState(1f, loading = true)
+              loadedFile.deleteOnExit()
+              loadedFile.createNewFile()
+              item.updateDownloadState(1f, loading = true)
 
-            itemView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.IO) {
-                Ion.with(itemView.context)
-                    .load(attachment.url)
-                    .progress { downloaded, total ->
-                        val progress = ((downloaded / total.toFloat())) * 100f
-                        item.updateDownloadState(progress, loading = true)
-                    }
-                    .write(loadedFile)
-                    .setCallback { e, result ->
-                        if (result == null && e != null) {
-                            loadedFile.delete()
-                            item.downloadFinish(null, false)
-                        } else {
-                            item.downloadFinish(result, true)
-                        }
-                    }
-            }
-        }
-    }*/
+              itemView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.IO) {
+                  Ion.with(itemView.context)
+                      .load(attachment.url)
+                      .progress { downloaded, total ->
+                          val progress = ((downloaded / total.toFloat())) * 100f
+                          item.updateDownloadState(progress, loading = true)
+                      }
+                      .write(loadedFile)
+                      .setCallback { e, result ->
+                          if (result == null && e != null) {
+                              loadedFile.delete()
+                              item.downloadFinish(null, false)
+                          } else {
+                              item.downloadFinish(result, true)
+                          }
+                      }
+              }
+          }
+      }*/
 /*
     private fun checkLoadDataIsForCurrent(data: FileLoadData): Boolean {
         return (::fileItem.isInitialized && fileItem.fileLoadData.loadId == data.loadId

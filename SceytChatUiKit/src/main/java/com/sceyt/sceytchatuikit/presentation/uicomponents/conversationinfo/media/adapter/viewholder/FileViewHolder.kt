@@ -33,7 +33,7 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
                 file.fileSize.toPrettySize()
             } else {
                 val size = if (file.fileSize == 0L) {
-                    getFileSize(file.url)
+                    file.url?.let { getFileSize(it) } ?: 0L
                 } else file.fileSize
 
                 size.toPrettySize()

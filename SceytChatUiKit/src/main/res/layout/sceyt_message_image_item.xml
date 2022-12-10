@@ -29,8 +29,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:minProgress="2"
         app:progressColor="@color/sceyt_color_accent"
-        app:trackColor="@android:color/transparent"
-        tools:progress="20" />
+        app:trackColor="@android:color/transparent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
