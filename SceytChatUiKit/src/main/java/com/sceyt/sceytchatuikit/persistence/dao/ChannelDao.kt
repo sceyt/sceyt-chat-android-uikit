@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChannelDao {
@@ -69,6 +70,10 @@ interface ChannelDao {
 
     @Query("select chat_id from channels")
     suspend fun getAllChannelsIds(): List<Long>
+
+    @Transaction
+    @Query("select sum(unreadMessageCount) from channels")
+    fun getTotalUnreadCountAsFlow(): Flow<Int>
 
     @Update
     suspend fun updateChannel(channelEntity: ChannelEntity)

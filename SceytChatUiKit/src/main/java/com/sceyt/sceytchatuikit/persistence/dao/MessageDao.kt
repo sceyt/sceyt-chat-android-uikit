@@ -170,8 +170,11 @@ abstract class MessageDao {
             else -> getMessagesTidAndIdLoverThanByStatus(id, Sent)
         }.filter { it.id != 0L }
 
-        if (ids.isNotEmpty())
-            updateMessageStatus(status, *ids.mapNotNull { it.id }.toLongArray())
+        if (ids.isNotEmpty()) {
+            ids.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach { chunkedIds ->
+                updateMessageStatus(status, *chunkedIds.mapNotNull { it.id }.toLongArray())
+            }
+        }
 
         return ids
     }
