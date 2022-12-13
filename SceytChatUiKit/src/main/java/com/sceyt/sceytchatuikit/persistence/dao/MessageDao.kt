@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 @Dao
@@ -195,6 +196,20 @@ abstract class MessageDao {
             updateMessageSelfMarkers(channelId, messageId, selfMarkers?.toSet()?.toList())
         }
     }
+
+    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state where tid =:tid")
+    abstract suspend fun updateAttachmentTransferDataWithTid(tid: Long, progress: Float, state: TransferState)
+
+    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state where url =:url")
+    abstract suspend fun updateAttachmentTransferDataWithUrl(url: String?, progress: Float, state: TransferState)
+
+    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state," +
+            "filePath =:filePath, url= :url where tid =:tid")
+    abstract fun updateAttachmentTransferData(tid: Long, progress: Float, state: TransferState, filePath: String?, url: String?)
+
+    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state," +
+            "filePath =:filePath where url =:url")
+    abstract fun updateAttachmentTransferDataWithUrl( url: String?, progress: Float, state: TransferState, filePath: String?)
 
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)

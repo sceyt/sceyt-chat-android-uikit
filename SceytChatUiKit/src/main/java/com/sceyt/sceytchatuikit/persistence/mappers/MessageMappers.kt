@@ -81,7 +81,7 @@ fun SceytMessage.toMessageDb(): MessageDb {
     )
 }
 
-fun SceytMessage.toMessageDbWithAttachments(attachments: Array<Attachment>?): MessageDb {
+/*fun SceytMessage.toMessageDbWithAttachments(attachments: Array<Attachment>?): MessageDb {
     val tid = getTid(id, tid, incoming)
     return MessageDb(
         messageEntity = toMessageEntity(),
@@ -91,7 +91,7 @@ fun SceytMessage.toMessageDbWithAttachments(attachments: Array<Attachment>?): Me
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
     )
-}
+}*/
 
 fun MessageDb.toSceytMessage(): SceytMessage {
     with(messageEntity) {

@@ -1,20 +1,23 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import androidx.core.view.isVisible
-import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getFileSize
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import java.io.File
 
 class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
-        private val messageListeners: MessageClickListenersImpl?
+        private val messageListeners: MessageClickListenersImpl?,
+        private val needDownloadCallback: (FileListItem) -> Unit
 ) : BaseFileViewHolder(binding.root) {
 
     init {
@@ -31,8 +34,8 @@ class MessageFileViewHolder(
     }
 
     override fun bind(item: FileListItem) {
-        //binding.loadProgress.release(item.fileLoadData.progressPercent)
         super.bind(item)
+        listenerKey = getKey()
         val file = (item as? FileListItem.File)?.file ?: return
 
         with(binding) {
@@ -42,26 +45,84 @@ class MessageFileViewHolder(
                 tvFileSize.text = file.fileSize.toPrettySize()
             } else {
                 val size = if (file.fileSize == 0L) {
-                    file.url?.let { getFileSize(it) } ?: 0L
+                    file.filePath?.let {
+                        getFileSize(it).also { size -> file.fileSize = size }
+                    } ?: 0L
                 } else file.fileSize
 
                 tvFileSize.text = size.toPrettySize()
             }
         }
+
+        setListener()
+        val transferData = item.file.fileTransferData
+
+        if (transferData == null) {
+            //  Log.i("sdfsdf", "filePath ${item.file.filePath}  url ${item.file.url}")
+            if (item.file.filePath.isNullOrBlank() && item.file.url.isNotNullOrBlank()) {
+                //  Log.i("sdfsdf", "needDownloadCallback")
+
+                binding.loadProgress.isVisible = true
+                needDownloadCallback.invoke(item)
+            }
+            return
+        }
+        updateState(transferData)
     }
 
-    private fun SceytMessageFileItemBinding.updateLoadState(data: FileLoadData) {
-        loadProgress.isVisible = data.loading
-        icFile.setImageResource(if (data.loading) 0 else MessagesStyle.fileAttachmentIcon)
-        loadProgress.setProgress(data.progressPercent)
+    override fun onViewAttachedToWindow() {
+        super.onViewAttachedToWindow()
+        if (isFileItemInitialized)
+            setListener()
     }
 
-    override fun updateUploadingState(data: FileLoadData) {
-        binding.updateLoadState(data)
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        if (isFileItemInitialized)
+            fileItem.file.removeListener()
     }
 
-    override fun updateDownloadingState(data: FileLoadData, file: File?) {
-        binding.updateLoadState(data)
+
+    private fun updateState(transferData: TransferData) {
+        //Log.i("sdfsdf22", "$transferData  $isFileItemInitialized")
+
+        if (isFileItemInitialized.not()) return
+        fileItem.file.fileTransferData = transferData
+        when (transferData.state) {
+            TransferState.PendingUpload -> {
+                binding.loadProgress.release()
+                binding.icFile.setImageResource(0)
+                binding.loadProgress.isVisible = true
+            }
+            TransferState.PendingDownload -> {
+                needDownloadCallback.invoke(fileItem)
+            }
+            TransferState.Downloading -> {
+                binding.icFile.setImageResource(0)
+                binding.loadProgress.isVisible = true
+                binding.loadProgress.setProgress(transferData.progressPercent)
+            }
+            TransferState.Uploading -> {
+                binding.icFile.setImageResource(0)
+                binding.loadProgress.isVisible = true
+                binding.loadProgress.setProgress(transferData.progressPercent)
+            }
+            TransferState.Uploaded -> {
+                binding.loadProgress.isVisible = false
+                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+            }
+            TransferState.Downloaded -> {
+                binding.loadProgress.isVisible = false
+                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+            }
+            TransferState.Error -> {
+
+            }
+        }
+    }
+
+    private fun setListener() {
+        MessageFilesAdapter.setListener(listenerKey, ::updateState)
     }
 
     private fun SceytMessageFileItemBinding.setupStyle() {

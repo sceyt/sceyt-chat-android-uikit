@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.content.Context
 import android.view.View
 import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
+import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import java.io.File
@@ -12,6 +13,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     protected lateinit var fileItem: FileListItem
     val isFileItemInitialized get() = this::fileItem.isInitialized
     protected val context: Context by lazy { itemView.context }
+    protected var listenerKey: String = ""
 
     override fun bind(item: FileListItem) {
         fileItem = item
@@ -24,6 +26,17 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     open fun updateUploadingState(data: FileLoadData) {}
     open fun updateDownloadingState(data: FileLoadData, file: File? = null) {}
+
+    protected fun getKey(): String {
+        if (isFileItemInitialized.not()) return ""
+        val data = fileItem.file
+        val key: String = if (data.tid.isNull() || data.tid == 0L) {
+            data.url.toString()
+        } else {
+            data.tid.toString()
+        }
+        return key
+    }
 
     /* private fun setUploadListenerIfNeeded(item: FileListItem) {
          val message = item.sceytMessage
