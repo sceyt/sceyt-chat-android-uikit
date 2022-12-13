@@ -493,4 +493,8 @@ internal class PersistenceChannelsLogicImpl(
         val channels = channelDao.getChannelByPeerId(userId)
         channelsCash.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
     }
+
+    override fun getTotalUnreadCount(): Flow<Int> {
+        return channelDao.getTotalUnreadCountAsFlow()
+    }
 }

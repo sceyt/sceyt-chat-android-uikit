@@ -55,16 +55,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.deleteChannel(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launchWhenResumed {
-        ChannelsCash.channelUpdatedFlow.collect { data ->
-            val diff = channelsListView.channelUpdated(data.channel)
-            if (diff != null) {
-                if (diff.lastMessageChanged || data.needSorting)
-                    channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-            } else
-                getChannels(0, query = searchQuery)
-        }
-    }
+    ChannelsCash.channelUpdatedFlow.onEach { data ->
+        val diff = channelsListView.channelUpdated(data.channel)
+        if (diff != null) {
+            if (diff.lastMessageChanged || data.needSorting)
+                channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+        } else
+            getChannels(0, query = searchQuery)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCash.channelAddedFlow.onEach { sceytChannel ->
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
