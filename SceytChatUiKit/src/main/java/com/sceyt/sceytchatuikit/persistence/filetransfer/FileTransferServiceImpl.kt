@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
 import android.app.Application
-import android.util.Log
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -45,7 +44,8 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
     private fun uploadFile(messageTid: Long, attachment: Attachment, resultCallback: TransferResult, progressCallback: ProgressUpdateCallback) {
         ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
             override fun onResult(progress: Float) {
-                progressCallback.onProgress(TransferData(messageTid, attachment.tid, progress * 100, ProgressState.Uploading, attachment.filePath, ""))
+                progressCallback.onProgress(TransferData(messageTid, attachment.tid,
+                    progress * 100, TransferState.Uploading, attachment.filePath, null))
             }
 
             override fun onError(exception: SceytException?) {
@@ -75,11 +75,10 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
             Ion.with(application)
                 .load(attachment.url)
                 .progress { downloaded, total ->
-                    val progress = ((downloaded / total.toFloat())) * 100f
-                    Log.i("sdfsf", progress.toString())
+                    val progress = ((downloaded / total.toFloat())) * 100
 
                     progressCallback.onProgress(TransferData(
-                        messageTid, attachment.tid, progress, ProgressState.Downloading, null, attachment.url))
+                        messageTid, attachment.tid, progress, TransferState.Downloading, null, attachment.url))
                 }
                 .write(loadedFile)
                 .setCallback { e, result ->

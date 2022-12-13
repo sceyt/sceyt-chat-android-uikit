@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 
+/*
 fun Attachment.toAttachmentEntity(messageId: Long, messageTid: Long) = AttachmentEntity(
     messageId = messageId,
     messageTid = messageTid,
@@ -17,6 +18,7 @@ fun Attachment.toAttachmentEntity(messageId: Long, messageTid: Long) = Attachmen
     url = url,
     filePath = filePath
 )
+*/
 
 
 fun SceytAttachment.toAttachmentEntity(messageId: Long, messageTid: Long) = AttachmentEntity(
@@ -28,7 +30,9 @@ fun SceytAttachment.toAttachmentEntity(messageId: Long, messageTid: Long) = Atta
     metadata = metadata,
     fileSize = fileSize,
     url = url,
-    filePath = filePath
+    filePath = filePath,
+    transferState = fileTransferData?.state,
+    progressPercent = fileTransferData?.progressPercent
 )
 
 

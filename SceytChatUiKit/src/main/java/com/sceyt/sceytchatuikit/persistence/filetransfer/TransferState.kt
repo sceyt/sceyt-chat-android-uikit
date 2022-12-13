@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
-enum class ProgressState {
+enum class TransferState {
     PendingUpload,
     Uploading,
     Uploaded,

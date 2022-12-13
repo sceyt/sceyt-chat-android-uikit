@@ -13,10 +13,11 @@ import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
-import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.coroutines.resume
@@ -41,6 +42,7 @@ object SendAttachmentWorkManager {
 class SendAttachmentWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val messageDao: MessageDao by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val debounceHelper by lazy { DebounceHelper(200) }
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
         checkAndResizeMessageAttachments(context, tmpMessage)
@@ -54,22 +56,30 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                     fileTransferService.upload(tmpMessage.tid,
                         it.toAttachment(),
                         progressCallback = { updateDate ->
-                            if (it.fileTransferData?.state != ProgressState.Uploaded) {
+                            if (it.fileTransferData?.state != TransferState.Uploaded) {
                                 MessageEventsObserver.emitAttachmentTransferUpdate(updateDate)
                                 it.fileTransferData = updateDate
+                                debounceHelper.submitSuspendable {
+                                    messageDao.updateAttachmentTransferDataWithTid(updateDate.attachmentTid, updateDate.progressPercent, updateDate.state)
+                                }
                             }
                         },
                         resultCallback = { result ->
+                            debounceHelper.cancelLastDebounce()
                             if (result is SceytResponse.Success) {
                                 val transferData = TransferData(tmpMessage.tid,
-                                    it.tid, 100f, ProgressState.Uploaded, it.filePath, result.data.toString())
+                                    it.tid, 100f, TransferState.Uploaded, it.filePath, result.data.toString())
                                 it.fileTransferData = transferData
                                 it.url = transferData.url
                                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                                 successUploadedAttachments.add(it.tid)
+                                messageDao.updateAttachmentTransferData(it.tid, 100f, TransferState.Uploaded, it.filePath, result.data)
                             } else {
+                                val percent = it.fileTransferData?.progressPercent ?: 0f
                                 MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(tmpMessage.tid,
-                                    it.tid, 0f, ProgressState.Error, it.filePath, null))
+                                    it.tid, percent, TransferState.Error, it.filePath, null))
+                                messageDao.updateAttachmentTransferData(it.tid, percent,
+                                    TransferState.Error, it.filePath, null)
                             }
                             processedCount++
                             if (processedCount == size)
@@ -101,7 +111,7 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                 ?: return Result.success()
 
         if (checkToUploadAttachmentsBeforeSend(tmpMessage)) {
-            SceytKitClient.getMessagesMiddleWare().sendMessage(tmpMessage.channelId, tmpMessage.toMessage())
+            SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
         }
         return Result.success()
     }

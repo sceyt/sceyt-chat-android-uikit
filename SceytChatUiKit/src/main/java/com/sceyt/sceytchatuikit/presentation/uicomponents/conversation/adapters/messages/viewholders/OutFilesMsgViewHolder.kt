@@ -95,8 +95,8 @@ class OutFilesMsgViewHolder(
                   it.second.file.filePath = data.filePath
               if (data.state==ProgressState.Uploaded)
                   it.second.file.url = data.url*/
-            (binding.rvFiles.findViewHolderForAdapterPosition(it.first) as? BaseFileViewHolder)?.bind(it.second)
-                    ?: filedAdapter?.notifyItemChanged(it.first)
+           /* (binding.rvFiles.findViewHolderForAdapterPosition(it.first) as? BaseFileViewHolder)?.bind(it.second)
+                    ?: filedAdapter?.notifyItemChanged(it.first)*/
         }
     }
 

@@ -18,7 +18,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
         return when (viewType) {
             FileViewType.File.ordinal -> {
                 MessageFileViewHolder(SceytMessageFileItemBinding.inflate(layoutInflater, parent, false),
-                    messageListeners)
+                    messageListeners, needDownloadCallback)
             }
             FileViewType.Image.ordinal -> {
                 MessageImageViewHolder(SceytMessageImageItemBinding.inflate(layoutInflater, parent, false),
@@ -26,7 +26,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
             }
             FileViewType.Video.ordinal -> {
                 MessageVideoViewHolder(SceytMessageVideoItemBinding.inflate(layoutInflater, parent, false),
-                    messageListeners)
+                    messageListeners, needDownloadCallback)
             }
             else -> throw RuntimeException("Not supported view type")
         }

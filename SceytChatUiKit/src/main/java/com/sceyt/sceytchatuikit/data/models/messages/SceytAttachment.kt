@@ -12,7 +12,7 @@ data class SceytAttachment(
         val name: String,
         val type: String,
         val metadata: String?,
-        val fileSize: Long,
+        var fileSize: Long,
         var url: String?,
         var filePath: String?
 ) : Parcelable, Cloneable {

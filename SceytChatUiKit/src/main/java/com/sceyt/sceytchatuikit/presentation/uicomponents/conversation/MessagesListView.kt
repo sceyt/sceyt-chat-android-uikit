@@ -16,12 +16,13 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.persistence.filetransfer.ProgressState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -309,17 +310,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun updateProgress(data: TransferData) {
         Log.i("ssdfsddfsdf", data.toString())
         messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
-            val predicate: (SceytAttachment) -> Boolean = if (data.state == ProgressState.Uploading || data.state == ProgressState.PendingUpload
-                    || data.state == ProgressState.Uploaded) {
+            val predicate: (SceytAttachment) -> Boolean = if (data.state == TransferState.Uploading || data.state == TransferState.PendingUpload
+                    || data.state == TransferState.Uploaded) {
                 { it.tid == data.attachmentTid }
             } else {
                 { it.url == data.url }
             }
-            (it.second as MessageItem).message.attachments?.find(predicate)?.let {
 
-                it.update(data)
-                //it.fileTransferData = data
-            }
+            /*val foundAttachmnet= (it.second as MessageItem).message.attachments?.find(predicate)
+            Log.i("ssdfdfsdfsdfdsf","foundAttachmnet "+foundAttachmnet?.fileTransferData.toString())
+            foundAttachmnet?.update(data)*/
+
+            MessageFilesAdapter.update(data)
             /*  messagesRV.post {
                   (messagesRV.findViewHolderForAdapterPosition(it.first) as? BaseMsgViewHolder)?.updateTransfer(data)
               }*/

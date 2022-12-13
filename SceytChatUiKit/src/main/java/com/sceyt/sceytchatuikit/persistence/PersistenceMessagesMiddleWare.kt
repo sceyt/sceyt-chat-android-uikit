@@ -30,6 +30,7 @@ interface PersistenceMessagesMiddleWare {
 
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendMessage(channelId: Long, message: Message)
+    suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message)
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()
