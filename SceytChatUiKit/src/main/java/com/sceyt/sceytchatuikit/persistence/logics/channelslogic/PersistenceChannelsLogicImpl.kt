@@ -32,6 +32,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.onCompletion
 
 internal class PersistenceChannelsLogicImpl(
@@ -495,6 +496,6 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override fun getTotalUnreadCount(): Flow<Int> {
-        return channelDao.getTotalUnreadCountAsFlow()
+        return channelDao.getTotalUnreadCountAsFlow().filterNotNull()
     }
 }
