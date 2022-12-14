@@ -6,8 +6,9 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.glideCustomTarget
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
@@ -41,9 +42,9 @@ class MessageVideoViewHolder(
     }
 
     override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
+        super.onViewDetachedFromWindow()/*
         if (isFileItemInitialized)
-            fileItem.file.removeListener()
+            fileItem.file.removeListener()*/
     }
 
     override fun bind(item: FileListItem) {
@@ -51,10 +52,8 @@ class MessageVideoViewHolder(
         listenerKey = getKey()
         binding.parentLayout.clipToOutline = true
         binding.videoView.isVisible = false
-        binding.loadProgress.isVisible = true
 
         setListener()
-        val transferData = item.file.fileTransferData
 
         if (transferData == null) {
             //  Log.i("sdfsdf", "filePath ${item.file.filePath}  url ${item.file.url}")
@@ -67,54 +66,75 @@ class MessageVideoViewHolder(
             }
             return
         }
-        updateState(transferData)
+        transferData?.let {
+            updateState(it)
+        }
     }
 
-    private fun updateState(transferData: TransferData) {
+    private fun updateState(data: TransferData) {
         //Log.i("sdfsdf22", "$transferData  $isFileItemInitialized")
 
         if (isFileItemInitialized.not()) return
-        fileItem.file.fileTransferData = transferData
-        when (transferData.state) {
-            TransferState.PendingUpload -> {
-                binding.loadProgress.release()
+        // fileItem.file.fileTransferData = transferData
+        transferData = data
+        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        when (data.state) {
+            PendingUpload -> {
+                // binding.loadProgress.release()
                 loadImage(fileItem.file.filePath)
-                binding.loadProgress.isVisible = true
+                // binding.loadProgress.isVisible = true
                 binding.videoViewController.showPlayPauseButtons(false)
             }
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 needDownloadCallback.invoke(fileItem)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
-            TransferState.Downloading -> {
+            Downloading -> {
                 binding.videoViewController.setImageThumb(null)
                 binding.videoViewController.showPlayPauseButtons(false)
-                binding.loadProgress.isVisible = true
-                binding.loadProgress.setProgress(transferData.progressPercent)
+                /*binding.loadProgress.apply {
+                    isVisible = true
+                    setTransferring(true)
+                    setProgress(transferData.progressPercent)
+                }*/
                 binding.videoViewController.showPlayPauseButtons(false)
             }
-            TransferState.Uploading -> {
+            Uploading -> {
                 loadImage(fileItem.file.filePath)
-                binding.loadProgress.isVisible = true
-                binding.loadProgress.setProgress(transferData.progressPercent)
+                /*  binding.loadProgress.apply {
+                      isVisible = true
+                      setTransferring(true)
+                  }
+                  binding.loadProgress.setProgress(transferData.progressPercent)*/
                 binding.videoViewController.showPlayPauseButtons(false)
             }
-            TransferState.Uploaded -> {
-                binding.loadProgress.isVisible = false
-                val path = fileItem.file.fileTransferData?.filePath
+            Uploaded -> {
+                // binding.loadProgress.isVisible = false
+                val path = fileItem.file.filePath
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(path)
 
                 loadImage(path)
             }
-            TransferState.Downloaded -> {
-                binding.loadProgress.isVisible = false
+            Downloaded -> {
+                //binding.loadProgress.isVisible = false
                 binding.videoViewController.showPlayPauseButtons(true)
-                initializePlayer(fileItem.file.fileTransferData?.filePath)
-                loadImage(fileItem.file.fileTransferData?.filePath)
+                initializePlayer(fileItem.file.filePath)
+                loadImage(fileItem.file.filePath)
             }
-            TransferState.Error -> {
-
+            ErrorDownload -> {
+                //binding.videoViewController.showPlayPauseButtons(false)
+                /* binding.loadProgress.apply {
+                     isVisible = true
+                     setTransferring(false)
+                 }*/
+            }
+            ErrorUpload -> {
+                /*  binding.loadProgress.apply {
+                      isVisible = true
+                      setTransferring(false)
+                  }*/
+                binding.videoViewController.showPlayPauseButtons(false)
             }
         }
     }

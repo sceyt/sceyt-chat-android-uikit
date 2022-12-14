@@ -22,6 +22,7 @@
         android:layout_height="0dp"
         android:padding="3dp"
         android:visibility="gone"
+        app:iconSizeInPercent="70"
         app:layout_constraintBottom_toBottomOf="@+id/icFile"
         app:layout_constraintEnd_toEndOf="@id/icFile"
         app:layout_constraintStart_toStartOf="@+id/icFile"

@@ -4,36 +4,58 @@ import android.app.Application
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.io.File
+import kotlin.coroutines.CoroutineContext
 
-class FileTransferServiceImpl(private var application: Application) : FileTransferService {
+class FileTransferServiceImpl(private var application: Application) : FileTransferService, CoroutineScope {
+    private var tasksMap = hashMapOf<String, TransferTask>()
+    private var downloadingUrlMap = hashMapOf<String, String>()
 
     private var listeners: FileTransferListeners.Listeners = object : FileTransferListeners.Listeners {
-        override fun upload(messageTid: Long, attachment: Attachment,
-                            progressCallback: ProgressUpdateCallback, resultCallback: TransferResult) {
-            uploadFile(messageTid, attachment, resultCallback, progressCallback)
+        override fun upload(attachment: SceytAttachment,
+                            transferTask: TransferTask) {
+            uploadFile(attachment, transferTask)
         }
 
-        override fun download(messageTid: Long, attachment: Attachment,
-                              progressCallback: ProgressUpdateCallback, resultCallback: TransferResult) {
-            downloadFile(messageTid, attachment, progressCallback, resultCallback)
+        override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
+            downloadFile(attachment, transferTask)
+        }
+
+        override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
+            pauseLoad(attachment, state)
+        }
+
+        override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
+            resumeLoad(attachment)
         }
     }
 
-    override fun upload(messageTid: Long, attachment: Attachment,
-                        progressCallback: ProgressUpdateCallback,
-                        resultCallback: TransferResult) {
-        listeners.upload(messageTid, attachment, progressCallback, resultCallback)
+
+    override fun upload(attachment: SceytAttachment,
+                        transferTask: TransferTask) {
+        tasksMap[attachment.tid.toString()] = transferTask
+        listeners.upload(attachment, transferTask)
     }
 
-    override fun download(messageTid: Long, attachment: Attachment, progressCallback: ProgressUpdateCallback,
-                          resultCallback: TransferResult) {
-        listeners.download(messageTid, attachment, progressCallback, resultCallback)
+    override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
+        tasksMap[attachment.url.toString()] = transferTask
+        listeners.download(attachment, transferTask)
+    }
+
+    override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
+        listeners.pause(messageTid, attachment, state)
+    }
+
+    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
+        listeners.resume(messageTid, attachment, state)
     }
 
     override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) {
@@ -41,58 +63,94 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
     }
 
     // Default logic
-    private fun uploadFile(messageTid: Long, attachment: Attachment, resultCallback: TransferResult, progressCallback: ProgressUpdateCallback) {
+    private fun uploadFile(attachment: SceytAttachment, payLoad: TransferTask) {
         ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
             override fun onResult(progress: Float) {
-                progressCallback.onProgress(TransferData(messageTid, attachment.tid,
-                    progress * 100, TransferState.Uploading, attachment.filePath, null))
+                if (progress == 1f) return
+                payLoad.progressCallback.onProgress(TransferData(payLoad.messageTid, attachment.tid,
+                    progress * 100, Uploading, attachment.filePath, null))
             }
 
             override fun onError(exception: SceytException?) {
-                resultCallback.onResult(SceytResponse.Error(exception))
+                payLoad.resultCallback.onResult(SceytResponse.Error(exception))
             }
         }, object : UrlCallback {
             override fun onResult(p0: String?) {
-                resultCallback.onResult(SceytResponse.Success(p0))
+                payLoad.resultCallback.onResult(SceytResponse.Success(p0))
             }
 
             override fun onError(exception: SceytException?) {
-                resultCallback.onResult(SceytResponse.Error(exception))
+                payLoad.resultCallback.onResult(SceytResponse.Error(exception))
             }
         })
     }
 
-    private fun downloadFile(messageTid: Long, attachment: Attachment, progressCallback: ProgressUpdateCallback, resultCallback: TransferResult) {
+    private fun downloadFile(attachment: SceytAttachment, payLoad: TransferTask) {
         val loadedFile = File(application.filesDir, attachment.name)
         val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
 
         if (file != null) {
-            resultCallback.onResult(SceytResponse.Success(file.path))
+            payLoad.resultCallback.onResult(SceytResponse.Success(file.path))
         } else {
+            if (downloadingUrlMap[attachment.url] != null) return
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
+            attachment.url?.let { url ->
+                downloadingUrlMap[url] = url
+                Ion.with(application)
+                    .load(attachment.url)
+                    .progress { downloaded, total ->
+                        val progress = ((downloaded / total.toFloat())) * 100
 
-            Ion.with(application)
-                .load(attachment.url)
-                .progress { downloaded, total ->
-                    val progress = ((downloaded / total.toFloat())) * 100
+                        payLoad.progressCallback.onProgress(TransferData(
+                            payLoad.messageTid, attachment.tid, progress, Downloading, null, attachment.url))
+                    }
+                    .write(loadedFile)
+                    .setCallback { e, result ->
+                        if (result == null && e != null) {
+                            loadedFile.delete()
+                            payLoad.resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
+                            downloadingUrlMap.remove(attachment.url)
+                        } else
+                            payLoad.resultCallback.onResult(SceytResponse.Success(result.path))
+                    }
+            }
 
-                    progressCallback.onProgress(TransferData(
-                        messageTid, attachment.tid, progress, TransferState.Downloading, null, attachment.url))
-                }
-                .write(loadedFile)
-                .setCallback { e, result ->
-                    if (result == null && e != null) {
-                        loadedFile.delete()
-                        resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
-                    } else
-                        resultCallback.onResult(SceytResponse.Success(result.path))
-                }
         }
     }
+
+    private fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
+        when (state) {
+            PendingUpload, Uploading -> {
+                //todo
+            }
+            PendingDownload, Downloading -> {
+                //todo
+            }
+            else -> {}
+        }
+    }
+
+    private fun resumeLoad(attachment: SceytAttachment) {
+        tasksMap[attachment.tid.toString()]?.let { uploadFile(attachment, it) }
+    }
+
+
+    /*  fun uploadMessageAttachments(message: SceytMessage) {
+          message.attachments?.forEach {
+              upload(it.toAttachment())
+          }
+      }*/
+
+    fun setUploadListener() {
+
+    }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO
 }
 
-fun interface TransferResult {
+fun interface TransferResultCallback {
     fun onResult(sceytResponse: SceytResponse<String>)
 }
 

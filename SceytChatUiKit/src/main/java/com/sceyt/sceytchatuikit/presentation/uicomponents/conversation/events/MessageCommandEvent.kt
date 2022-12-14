@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events
 
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 sealed class MessageCommandEvent {
 
@@ -24,5 +25,9 @@ sealed class MessageCommandEvent {
 
     data class ScrollToReplyMessage(
             val message: SceytMessage
+    ) : MessageCommandEvent()
+
+    data class AttachmentLoaderClick(
+            val item: FileListItem
     ) : MessageCommandEvent()
 }

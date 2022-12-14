@@ -11,10 +11,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 
 @Database(entities = [
     ChannelEntity::class,
@@ -24,8 +21,9 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
     AttachmentEntity::class,
     ReactionEntity::class,
     ReactionScoreEntity::class,
-    PendingMarkersEntity::class
-], version = 11, exportSchema = false)
+    PendingMarkersEntity::class,
+    AttachmentPayLoadEntity::class
+], version = 8, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {

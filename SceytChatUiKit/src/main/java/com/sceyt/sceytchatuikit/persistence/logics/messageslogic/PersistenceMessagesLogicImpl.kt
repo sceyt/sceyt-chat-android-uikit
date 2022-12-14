@@ -34,7 +34,6 @@ import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
@@ -198,8 +197,8 @@ internal class PersistenceMessagesLogicImpl(
             from = ClientWrapper.currentUser ?: User(preference.getUserId())
             this.channelId = channelId
             attachments?.map {
-                it.fileTransferData = TransferData(message.tid, it.tid, 0f,
-                    TransferState.PendingUpload, it.url, null)
+                it.transferState = TransferState.Uploading
+                it.progressPercent = 0f
             }
         }
         return tmpMessage
@@ -238,7 +237,8 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.deleteMessage(channelId, message.id, onlyForMe)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
-                messageDao.deleteAttachments(listOf(message.tid))
+                messageDao.deleteAttachmentsChunked(listOf(message.tid))
+                messageDao.deleteAttachmentsPayloadsChunked(listOf(message.tid))
                 messageDao.updateMessage(resultMessage.toMessageEntity())
                 reactionDao.deleteAllReactionsAndScores(message.id)
                 messagesCash.messageUpdated(resultMessage)
@@ -457,6 +457,17 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
+        val payloads = messageDao.getAllPayLoadsByMsgTid(messages.map { it.tid })
+        messages.forEach {
+            payloads.find { payLoad -> payLoad.messageTid == it.tid }?.let { entity ->
+                it.attachments?.forEach { attachment ->
+                    attachment.transferState = entity.transferState
+                    attachment.progressPercent = entity.progressPercent
+                    attachment.filePath = entity.filePath
+                    attachment.url = entity.url
+                }
+            }
+        }
 
         if (loadType == LoadNear && loadKey.key == LoadKeyType.ScrollToMessageById.longValue)
             messagesCash.clear()

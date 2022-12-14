@@ -19,6 +19,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
+    private var attachmentLoaderClickListener: MessageClickListeners.AttachmentLoaderClickListener? = null
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
 
@@ -74,6 +75,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         attachmentLongClickListener?.onAttachmentLongClick(view, item)
     }
 
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+        defaultListeners?.onAttachmentLoaderClick(view, item)
+        attachmentLoaderClickListener?.onAttachmentLoaderClick(view, item)
+    }
+
     override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
         defaultListeners?.onLinkClick(view, item)
         linkClickListener?.onLinkClick(view, item)
@@ -98,6 +104,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 attachmentLongClickListener = listener
                 linkClickListener = listener
                 scrollToDownClickListener = listener
+                attachmentLoaderClickListener = listener
             }
             is MessageClickListeners.MessageLongClickListener -> {
                 messageLongClickListener = listener
@@ -125,6 +132,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             }
             is MessageClickListeners.AttachmentLongClickListener -> {
                 attachmentLongClickListener = listener
+            }
+            is MessageClickListeners.AttachmentLoaderClickListener -> {
+                attachmentLoaderClickListener = listener
             }
             is MessageClickListeners.LinkClickListener -> {
                 linkClickListener = listener

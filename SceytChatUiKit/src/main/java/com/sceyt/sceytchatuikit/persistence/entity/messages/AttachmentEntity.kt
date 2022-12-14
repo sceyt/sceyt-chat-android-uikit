@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
 import androidx.room.*
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 
 @Entity(
     foreignKeys = [
@@ -28,7 +27,5 @@ data class AttachmentEntity(
         val fileSize: Long,
         @ColumnInfo(index = true)
         val url: String?,
-        val filePath: String?,
-        val transferState: TransferState?,
-        val progressPercent: Float?
+        val filePath: String?
 )

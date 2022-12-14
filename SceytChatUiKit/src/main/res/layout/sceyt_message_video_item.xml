@@ -35,13 +35,13 @@
         android:padding="3dp"
         android:visibility="gone"
         app:backgroundColor="#33191C33"
-        app:indicatorColor="@color/sceyt_color_accent"
+        app:iconSizeInPercent="70"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:minProgress="2"
-        app:progressColor="@color/sceyt_color_accent"
+        app:progressColor="@color/sceyt_color_white"
         app:trackColor="@android:color/transparent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

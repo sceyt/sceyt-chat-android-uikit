@@ -98,7 +98,9 @@ fun Attachment.toSceytAttachment(messageTid: Long) = SceytAttachment(
     metadata = metadata,
     fileSize = uploadedFileSize,
     url = url,
-    filePath = filePath
+    filePath = filePath,
+    transferState = null,
+    progressPercent = null,
 )
 
 

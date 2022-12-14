@@ -1,13 +1,13 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
+import android.util.Log
 import androidx.work.*
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
@@ -42,10 +43,9 @@ object SendAttachmentWorkManager {
 class SendAttachmentWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val messageDao: MessageDao by inject()
     private val fileTransferService: FileTransferService by inject()
-    private val debounceHelper by lazy { DebounceHelper(200) }
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
-        checkAndResizeMessageAttachments(context, tmpMessage)
+        // checkAndResizeMessageAttachments(context, tmpMessage)
 
         return suspendCancellableCoroutine { continuation ->
             if (tmpMessage.attachments.isNullOrEmpty().not()) {
@@ -53,15 +53,18 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                 var processedCount = 0
                 val successUploadedAttachments = mutableSetOf<Long>()
                 tmpMessage.attachments?.forEach {
-                    fileTransferService.upload(tmpMessage.tid,
-                        it.toAttachment(),
+                    val debounceHelper = DebounceHelper(200)
+
+                    fileTransferService.upload(it, TransferTask(
+                        tmpMessage.tid,
+                        state = it.transferState,
                         progressCallback = { updateDate ->
-                            if (it.fileTransferData?.state != TransferState.Uploaded) {
-                                MessageEventsObserver.emitAttachmentTransferUpdate(updateDate)
-                                it.fileTransferData = updateDate
-                                debounceHelper.submitSuspendable {
-                                    messageDao.updateAttachmentTransferDataWithTid(updateDate.attachmentTid, updateDate.progressPercent, updateDate.state)
-                                }
+                            MessageEventsObserver.emitAttachmentTransferUpdate(updateDate)
+                            it.transferState = updateDate.state
+                            it.progressPercent = updateDate.progressPercent
+                            debounceHelper.submitSuspendable {
+                                Log.i("sfddsfsdsdf",updateDate.toString())
+                                messageDao.updateAttachmentTransferProgressAndStateWithMsgTid(updateDate.attachmentTid, updateDate.progressPercent, updateDate.state)
                             }
                         },
                         resultCallback = { result ->
@@ -69,22 +72,24 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                             if (result is SceytResponse.Success) {
                                 val transferData = TransferData(tmpMessage.tid,
                                     it.tid, 100f, TransferState.Uploaded, it.filePath, result.data.toString())
-                                it.fileTransferData = transferData
-                                it.url = transferData.url
+                                it.transferState = TransferState.Uploaded
+                                it.progressPercent = 100f
+                                it.url = result.data
                                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                                 successUploadedAttachments.add(it.tid)
-                                messageDao.updateAttachmentTransferData(it.tid, 100f, TransferState.Uploaded, it.filePath, result.data)
+                                messageDao.updateAttachmentAndPayLoad(transferData)
                             } else {
-                                val percent = it.fileTransferData?.progressPercent ?: 0f
-                                MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(tmpMessage.tid,
-                                    it.tid, percent, TransferState.Error, it.filePath, null))
-                                messageDao.updateAttachmentTransferData(it.tid, percent,
-                                    TransferState.Error, it.filePath, null)
+                                val transferData = TransferData(tmpMessage.tid,
+                                    it.tid, it.progressPercent
+                                            ?: 0f, TransferState.ErrorUpload, it.filePath, null)
+
+                                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                                messageDao.updateAttachmentAndPayLoad(transferData)
                             }
                             processedCount++
                             if (processedCount == size)
                                 continuation.resume(successUploadedAttachments.size == size)
-                        })
+                        }))
                 }
             } else continuation.resume(false)
         }
