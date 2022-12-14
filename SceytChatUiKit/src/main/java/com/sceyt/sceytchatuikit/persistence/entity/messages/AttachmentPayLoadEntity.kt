@@ -1,8 +1,12 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
-import androidx.room.*
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 
-@Entity(
+@Entity(tableName = "AttachmentPayLoad",
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,
@@ -12,20 +16,13 @@ import androidx.room.*
             deferred = true
         )
     ],
-    indices = [
-        Index(value = ["messageTid"]),
-        Index(value = ["messageTid", "url"], unique = true)])
-data class AttachmentEntity(
+    indices = [Index("messageTid", unique = true)])
+data class AttachmentPayLoadEntity(
         @PrimaryKey(autoGenerate = true)
         val id: Int = 0,
-        val messageId: Long,
         val messageTid: Long,
-        val tid: Long,
-        val name: String,
-        val type: String,
-        val metadata: String?,
-        val fileSize: Long,
-        @ColumnInfo(index = true)
+        val transferState: TransferState?,
+        val progressPercent: Float?,
         val url: String?,
         val filePath: String?
 )

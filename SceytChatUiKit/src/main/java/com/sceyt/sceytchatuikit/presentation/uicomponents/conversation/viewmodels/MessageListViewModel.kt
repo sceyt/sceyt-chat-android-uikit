@@ -29,7 +29,7 @@ import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -59,12 +59,10 @@ class MessageListViewModel(private val conversationId: Long,
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
     private val syncManager: SceytSyncManager by inject()
-    private val messageDao: MessageDao by inject()
     private val fileTransferService: FileTransferService by inject()
     internal val myId = preference.getUserId()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
-    private val transferUpdateHelper by lazy { DebounceHelper(200L, viewModelScope) }
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
@@ -278,6 +276,28 @@ class MessageListViewModel(private val conversationId: Long,
         _onScrollToReplyMessageLiveData.postValue(message)
     }
 
+    fun prepareToPauseOrResumeUpload(item: FileListItem) {
+        when (val state = item.file.transferState) {
+            TransferState.Downloading, TransferState.Uploading -> {
+                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                MessageEventsObserver.emitAttachmentTransferUpdate(
+                    TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
+                            ?: 0f,
+                        TransferState.PendingUpload, item.file.filePath, item.file.url)
+                )
+            }
+            TransferState.PendingDownload, TransferState.PendingUpload -> {
+                fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                MessageEventsObserver.emitAttachmentTransferUpdate(
+                    TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
+                            ?: 0f,
+                        TransferState.PendingDownload, item.file.filePath, item.file.url)
+                )
+            }
+            else -> {}
+        }
+    }
+
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
@@ -471,6 +491,9 @@ class MessageListViewModel(private val conversationId: Long,
             is MessageCommandEvent.ScrollToReplyMessage -> {
                 prepareToScrollToReplyMessage(event.message)
             }
+            is MessageCommandEvent.AttachmentLoaderClick -> {
+                prepareToPauseOrResumeUpload(event.item)
+            }
         }
     }
 
@@ -486,37 +509,7 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
     internal fun needDownload(fileListItem: FileListItem) {
-        fileTransferService.download(fileListItem.sceytMessage.tid, fileListItem.file.toAttachment(), progressCallback = {
-            fileListItem.file.fileTransferData = it
-            MessageEventsObserver.emitAttachmentTransferUpdate(it)
-            viewModelScope.launch(Dispatchers.IO) {
-                transferUpdateHelper.submitSuspendable {
-                    messageDao.updateAttachmentTransferDataWithUrl(it.url, it.progressPercent, it.state)
-                }
-            }
-        }, resultCallback = {
-            transferUpdateHelper.cancelLastDebounce()
-            val attachment = fileListItem.file
-            when (it) {
-                is SceytResponse.Success -> {
-                    fileListItem.file.fileTransferData?.filePath = it.data
-                    MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(
-                        fileListItem.file.messageTid, fileListItem.file.tid, 100f, TransferState.Downloaded, it.data, fileListItem.file.url))
-                    viewModelScope.launch(Dispatchers.IO) {
-                        messageDao.updateAttachmentTransferDataWithUrl(attachment.url, 100f, TransferState.Downloaded, it.data)
-                    }
-                }
-                is SceytResponse.Error -> {
-                    val lastPercent = fileListItem.file.fileTransferData?.progressPercent ?: 0f
-                    MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(
-                        fileListItem.file.messageTid, fileListItem.file.tid, lastPercent, TransferState.Error, null, fileListItem.file.url))
-
-                    viewModelScope.launch(Dispatchers.IO) {
-                        messageDao.updateAttachmentTransferDataWithUrl(attachment.url, lastPercent, TransferState.Error, null)
-                    }
-                }
-            }
-        })
+        FileTransferHelper.download(viewModelScope, fileListItem)
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {

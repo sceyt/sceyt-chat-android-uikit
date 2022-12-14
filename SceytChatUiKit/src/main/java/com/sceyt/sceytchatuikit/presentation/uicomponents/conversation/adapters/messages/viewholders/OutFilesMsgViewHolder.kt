@@ -90,7 +90,7 @@ class OutFilesMsgViewHolder(
 
     override fun updateTransfer(data: TransferData) {
         filedAdapter?.getData()?.findIndexed { it.file.tid == data.attachmentTid }?.let {
-            it.second.file.fileTransferData = data
+            //it.second.file.fileTransferData = data
             /*  if (data.state == ProgressState.Downloaded)
                   it.second.file.filePath = data.filePath
               if (data.state==ProgressState.Uploaded)

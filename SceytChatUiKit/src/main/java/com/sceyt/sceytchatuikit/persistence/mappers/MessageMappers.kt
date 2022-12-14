@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.data.toAttachment
+import com.sceyt.sceytchatuikit.data.toSceytAttachment
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
@@ -75,23 +75,24 @@ fun SceytMessage.toMessageDb(): MessageDb {
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
+        attachments = attachments?.map { it.toAttachmentDb(id, tid) },
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
+        attachmentPayLoadEntity = toAttachmentPayLoad()
     )
 }
 
-/*fun SceytMessage.toMessageDbWithAttachments(attachments: Array<Attachment>?): MessageDb {
+fun SceytMessage.toAttachmentPayLoad(): AttachmentPayLoadEntity? {
     val tid = getTid(id, tid, incoming)
-    return MessageDb(
-        messageEntity = toMessageEntity(),
-        from = from?.toUserEntity(),
-        parent = parent?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
-        lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+    val attachment = attachments?.getOrNull(0) ?: return null
+    return AttachmentPayLoadEntity(
+        messageTid = tid,
+        transferState = attachment.transferState,
+        progressPercent = attachment.progressPercent,
+        url = attachment.url,
+        filePath = attachment.filePath
     )
-}*/
+}
 
 fun MessageDb.toSceytMessage(): SceytMessage {
     with(messageEntity) {
@@ -135,7 +136,7 @@ fun ParentMessageDb.toSceytMessage(): SceytMessage {
 
 fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     return ParentMessageDb(toMessageEntity(), from?.toUserEntity(), attachments?.map {
-        it.toAttachmentEntity(id, getTid(id, tid, incoming))
+        it.toAttachmentDb(id, getTid(id, tid, incoming))
     })
 }
 

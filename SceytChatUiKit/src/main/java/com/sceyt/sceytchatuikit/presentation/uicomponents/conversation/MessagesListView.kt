@@ -16,8 +16,8 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -136,6 +136,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     clickListeners.onAttachmentLongClick(view, item)
             }
 
+            override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+                if (enabledClickActions)
+                    clickListeners.onAttachmentLoaderClick(view, item)
+            }
+
             override fun onLinkClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onLinkClick(view, item)
@@ -200,6 +205,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         else
             reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
 
+    }
+
+    private fun onAttachmentLoaderClick(item: FileListItem){
+        messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(item))
     }
 
     private fun showAddEmojiDialog(message: SceytMessage) {
@@ -317,9 +326,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 { it.url == data.url }
             }
 
-            /*val foundAttachmnet= (it.second as MessageItem).message.attachments?.find(predicate)
-            Log.i("ssdfdfsdfsdfdsf","foundAttachmnet "+foundAttachmnet?.fileTransferData.toString())
-            foundAttachmnet?.update(data)*/
+            val foundAttachmnet = (it.second as MessageItem).message.attachments?.find(predicate)
+            Log.i("ssdfdfsdfsdfdsf", "foundAttachmnet " + foundAttachmnet?.tid.toString())
+            foundAttachmnet?.let { attachment ->
+                attachment.filePath = data.filePath
+                attachment.url = data.url
+                attachment.transferState = data.state
+                attachment.progressPercent = data.progressPercent
+            }
 
             MessageFilesAdapter.update(data)
             /*  messagesRV.post {
@@ -531,6 +545,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
         clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
+    }
+
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+        onAttachmentLoaderClick(item)
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {

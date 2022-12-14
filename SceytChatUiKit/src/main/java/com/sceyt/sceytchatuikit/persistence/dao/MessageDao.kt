@@ -7,7 +7,9 @@ import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 @Dao
@@ -18,7 +20,7 @@ abstract class MessageDao {
         upsertMessageEntity(messageDb.messageEntity)
 
         //Delete attachments before insert
-        deleteAttachments(listOf(messageDb.messageEntity.tid))
+        deleteAttachmentsChunked(listOf(messageDb.messageEntity.tid))
 
         //Delete reactions before insert
         messageDb.messageEntity.id?.let {
@@ -26,13 +28,18 @@ abstract class MessageDao {
         }
 
         //Insert attachments
-        messageDb.attachments?.let {
-            insertAttachments(it)
+        messageDb.attachments?.let { entities ->
+            insertAttachments(entities.map { it.attachmentEntity })
+            insertAttachmentPayLoads(entities.map {
+                it.toAttachmentPayLoad(messageDb.messageEntity.deliveryStatus)
+            })
         }
+
         //Insert reactions
         messageDb.lastReactions?.let {
             insertReactions(it.map { reactionDb -> reactionDb.reaction })
         }
+
         //Insert reaction scores
         messageDb.reactionsScores?.let {
             insertReactionScores(it)
@@ -40,24 +47,30 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun insertMessages(messageDb: List<MessageDb>) {
-        upsertMessageEntities(messageDb.map { it.messageEntity })
+    open suspend fun insertMessages(messagesDb: List<MessageDb>) {
+        upsertMessageEntities(messagesDb.map { it.messageEntity })
         //Delete attachments before insert
-        deleteAttachments(messageDb.map { it.messageEntity.tid })
+        deleteAttachmentsChunked(messagesDb.map { it.messageEntity.tid })
 
         //Delete reactions before insert
-        deleteMessageReactionsAndScores(messageDb.mapNotNull { it.messageEntity.id })
+        deleteMessageReactionsAndScores(messagesDb.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
-        val attachments = messageDb.flatMap { it.attachments ?: arrayListOf() }
-        if (attachments.isNotEmpty())
-            insertAttachments(attachments)
+        val attachmentPairs = messagesDb.map { Pair(it.attachments ?: arrayListOf(), it) }
+        if (attachmentPairs.isNotEmpty()) {
+            insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
+            insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
+                pair.first.map { it.toAttachmentPayLoad(pair.second.messageEntity.deliveryStatus) }
+            })
+        }
+
         //Insert reactions
-        val reactions = messageDb.flatMap { it.lastReactions ?: arrayListOf() }
+        val reactions = messagesDb.flatMap { it.lastReactions ?: arrayListOf() }
         if (reactions.isNotEmpty())
             insertReactions(reactions.map { it.reaction })
+
         //Insert reaction scores
-        val reactionScores = messageDb.flatMap { it.reactionsScores ?: arrayListOf() }
+        val reactionScores = messagesDb.flatMap { it.reactionsScores ?: arrayListOf() }
         if (reactionScores.isNotEmpty())
             insertReactionScores(reactionScores)
     }
@@ -90,6 +103,9 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
@@ -150,9 +166,11 @@ abstract class MessageDao {
     @Query("select tid from  messages where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 
-
     @Query("select message_id as id, tid from messages where message_id <= :id and deliveryStatus in (:status)")
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
+
+    @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
+    abstract suspend fun getAllPayLoadsByMsgTid(tid: List<Long>): List<AttachmentPayLoadEntity>
 
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
@@ -200,19 +218,22 @@ abstract class MessageDao {
         }
     }
 
-    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state where tid =:tid")
-    abstract suspend fun updateAttachmentTransferDataWithTid(tid: Long, progress: Float, state: TransferState)
+    @Query("update AttachmentPayLoad set progressPercent =:progress, transferState =:state where messageTid =:tid")
+    abstract suspend fun updateAttachmentTransferProgressAndStateWithMsgTid(tid: Long, progress: Float, state: TransferState)
 
-    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state where url =:url")
-    abstract suspend fun updateAttachmentTransferDataWithUrl(url: String?, progress: Float, state: TransferState)
+    @Transaction
+    open fun updateAttachmentAndPayLoad(transferData: TransferData) {
+        updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
+        updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
+            transferData.progressPercent, transferData.state)
+    }
 
-    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state," +
-            "filePath =:filePath, url= :url where tid =:tid")
-    abstract fun updateAttachmentTransferData(tid: Long, progress: Float, state: TransferState, filePath: String?, url: String?)
+    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:tid")
+    abstract fun updateAttachmentByMsgTid(tid: Long, filePath: String?, url: String?)
 
-    @Query("update AttachmentEntity set progressPercent =:progress, transferState =:state," +
-            "filePath =:filePath where url =:url")
-    abstract fun updateAttachmentTransferDataWithUrl( url: String?, progress: Float, state: TransferState, filePath: String?)
+    @Query("update AttachmentPayLoad set filePath =:filePath, url =:url," +
+            "progressPercent= :progress, transferState =:state  where messageTid =:tid")
+    abstract fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
 
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
@@ -221,8 +242,13 @@ abstract class MessageDao {
     abstract suspend fun deleteAllMessages(channelId: Long)
 
     @Transaction
-    open suspend fun deleteAttachments(messageTides: List<Long>) {
-        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsChunked)
+    open suspend fun deleteAttachmentsChunked(messageTides: List<Long>) {
+        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(this::deleteAttachments)
+    }
+
+    @Transaction
+    open suspend fun deleteAttachmentsPayloadsChunked(messageTides: List<Long>) {
+        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsPayLoad)
     }
 
     @Transaction
@@ -231,7 +257,10 @@ abstract class MessageDao {
     }
 
     @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
-    abstract fun deleteAttachmentsChunked(messageTides: List<Long>)
+    abstract fun deleteAttachments(messageTides: List<Long>)
+
+    @Query("delete from AttachmentPayLoad where messageTid in (:messageTides)")
+    abstract fun deleteAttachmentsPayLoad(messageTides: List<Long>)
 
     @Transaction
     open fun deleteAllReactionsAndScores(messageIds: List<Long>) {
