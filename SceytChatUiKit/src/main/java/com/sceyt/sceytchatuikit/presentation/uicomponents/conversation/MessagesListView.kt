@@ -332,17 +332,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
-            Log.i(TAG, "foundAttachment " + foundAttachment?.tid.toString() + " $data")
+            val foundAttachmentFiles = (it.second as MessageItem).message.files?.map { item -> item.file }?.find(predicate)
 
             foundAttachment?.let { attachment ->
-              /*  (it.second as MessageItem).message.files?.find { fileItem ->
-                    fileItem.file == attachment
-                }*/
-
-                attachment.filePath = data.filePath
-                attachment.url = data.url
-                attachment.transferState = data.state
-                attachment.progressPercent = data.progressPercent
+                attachment.updateWithTransferData(data)
+                foundAttachmentFiles?.updateWithTransferData(data)
 
                 withContext(Dispatchers.Main) {
                     MessageFilesAdapter.update(data)
