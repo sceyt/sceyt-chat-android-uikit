@@ -54,7 +54,7 @@ class MessageImageViewHolder(
     private fun updateState(data: TransferData) {
         Log.i(TAG, "$data  $isFileItemInitialized")
 
-        if (isFileItemInitialized.not()) return
+        if (isFileItemInitialized.not() || (data.messageTid  != fileItem.sceytMessage.tid)) return
         transferData = data
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)

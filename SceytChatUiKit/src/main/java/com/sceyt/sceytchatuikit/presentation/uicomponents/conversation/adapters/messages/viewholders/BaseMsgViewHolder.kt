@@ -96,10 +96,6 @@ abstract class BaseMsgViewHolder(private val view: View,
             displayedListener?.invoke(messageListItem)
     }
 
-    open fun updateTransfer(data: TransferData) {
-
-    }
-
     private var reactionsAdapter: ReactionsAdapter? = null
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {

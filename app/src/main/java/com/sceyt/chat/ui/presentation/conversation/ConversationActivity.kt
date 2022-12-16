@@ -84,35 +84,12 @@ open class ConversationActivity : AppCompatActivity() {
                 ///CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
 
                 //binding.messageInputView.send()
-
-                //  (FileTransferServiceImpl() as FileTransferService).upload(0, "dsf")
             }
 
             override fun onToolbarClick(view: View) {
                 CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
             }
         })
-
-      /*  FileTransferServiceImpl().setCustomListener(object : FileTransferListeners.Listeners {
-
-            *//*  override fun upload(tid: Long, path: String): String? {
-
-                lifecycleScope.launch {
-                    for (i in 0..10) {
-                        delay(500)
-                        FileTransferServiceImpl.updateProgress(ProgressUpdateDate(0, i.toLong(), ProgressType.Uploading))
-                    }
-                }
-                return "custom"
-            }*//*
-            override fun upload(messageTid: Long, attachmentTid: Long, path: String, type: String, progressCallback: ProgressUpdateCallback, resultCallback: UploadResult) {
-                TODO("Not yet implemented")
-            }
-
-            override fun download(tid: Long, path: String) {
-                TODO("Not yet implemented")
-            }
-        })*/
     }
 
     private fun MessagesListView.initConversationView() {

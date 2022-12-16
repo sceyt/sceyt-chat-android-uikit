@@ -353,11 +353,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-        onTransferUpdatedFlow.collect {
+    onTransferUpdatedFlow.onEach {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             messagesListView.updateProgress(it)
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onMessageReactionUpdatedFlow.onEach {
         messagesListView.updateReaction(it)

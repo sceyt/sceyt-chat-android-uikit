@@ -78,7 +78,7 @@ internal val repositoryModule = module {
 }
 
 internal val cashModule = module {
-    factory { MessagesCash() }
+    single { MessagesCash() }
     single { ChannelsCash() }
 }
 

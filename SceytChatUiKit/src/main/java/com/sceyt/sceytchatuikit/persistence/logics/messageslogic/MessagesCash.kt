@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
@@ -37,8 +38,15 @@ class MessagesCash {
 
     fun add(message: SceytMessage) {
         synchronized(lock) {
+            val payLoad = getPayLoads(message)
             cashedMessages[message.tid] = message
-            emitMessageUpdated(message)
+            emitMessageUpdated(payLoad?.toList(), message)
+        }
+    }
+
+    fun get(tid: Long): SceytMessage? {
+        synchronized(lock) {
+            return cashedMessages[tid]
         }
     }
 
@@ -56,10 +64,11 @@ class MessagesCash {
 
     fun messageUpdated(vararg message: SceytMessage) {
         synchronized(lock) {
+            val payLoad = getPayLoads(*message)
             message.forEach {
                 cashedMessages[it.tid] = it
             }
-            emitMessageUpdated(*message)
+            emitMessageUpdated(payLoad, *message)
         }
     }
 
@@ -72,7 +81,8 @@ class MessagesCash {
                     updatesMessages.add(message)
                 }
             }
-            emitMessageUpdated(*updatesMessages.toTypedArray())
+            val payLoad = getPayLoads(*updatesMessages.toTypedArray())
+            emitMessageUpdated(payLoad, *updatesMessages.toTypedArray())
         }
     }
 
@@ -85,16 +95,47 @@ class MessagesCash {
     fun upsertMessages(vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
+                val payLoad = getPayLoads(it)
                 if (putAndCheckHasDiff(false, it))
-                    emitMessageUpdated(it)
+                    emitMessageUpdated(payLoad, it)
             }
         }
     }
 
-    private fun emitMessageUpdated(vararg message: SceytMessage) {
+    private fun emitMessageUpdated(payLoads: List<AttachmentPayLoadEntity>?, vararg message: SceytMessage) {
+        setPayloads(payLoads, message.toList())
         messageUpdatedFlow_.tryEmit(message.map { it.clone() })
     }
 
+    private fun setPayloads(payloads: List<AttachmentPayLoadEntity>?, messages: List<SceytMessage>) {
+        payloads ?: return
+        messages.forEach {
+            payloads.find { payLoad -> payLoad.messageTid == it.tid }?.let { entity ->
+                it.attachments?.forEach { attachment ->
+                    attachment.transferState = entity.transferState
+                    attachment.progressPercent = entity.progressPercent
+                    attachment.filePath = entity.filePath
+                    attachment.url = entity.url
+                }
+            }
+        }
+    }
+
+    private fun getPayLoads(vararg messages: SceytMessage): List<AttachmentPayLoadEntity>? {
+        var payloads: List<AttachmentPayLoadEntity>? = null
+        messages.forEach {
+            payloads = cashedMessages[it.tid]?.attachments?.map { attachment ->
+                AttachmentPayLoadEntity(
+                    messageTid = it.tid,
+                    transferState = attachment.transferState,
+                    progressPercent = attachment.progressPercent,
+                    url = attachment.url,
+                    filePath = attachment.filePath
+                )
+            }
+        }
+        return payloads
+    }
 
     private fun putAndCheckHasDiff(includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
         var detectedDiff = false

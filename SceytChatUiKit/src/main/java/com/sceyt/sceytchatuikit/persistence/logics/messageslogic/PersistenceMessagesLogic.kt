@@ -9,6 +9,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
