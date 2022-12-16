@@ -219,7 +219,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         checkEnableDisableActions(channel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onScrollToMessageLiveData.observe(lifecycleOwner, Observer {
+    onScrollToLastMessageLiveData.observe(lifecycleOwner, Observer {
         viewModelScope.launch(Dispatchers.Default) {
             channel.lastMessage?.id?.let { lastMsgId ->
                 messagesListView.getMessageIndexedById(lastMsgId)?.let {

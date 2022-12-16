@@ -17,7 +17,7 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBind
         with(binding.fileImage) {
             if (item.attachment.type.isEqualsVideoOrImage()) {
                 Glide.with(context)
-                    .load(item.attachment.url)
+                    .load(item.attachment.filePath)
                     .override(itemView.width)
                     .into(this)
                 setPadding(0)

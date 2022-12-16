@@ -1,13 +1,13 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import android.content.Context
+import android.util.Log
 import android.view.View
-import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import java.io.File
 
 
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
@@ -19,8 +19,11 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     override fun bind(item: FileListItem) {
         fileItem = item
+        if (transferData != null && transferData!!.messageTid == item.sceytMessage.tid) return
+
         item.file.transferState?.let {
             val attachment = item.file
+            Log.i(TAG, "${attachment.transferState}  ${attachment.progressPercent}")
             transferData = TransferData(
                 messageTid = item.sceytMessage.tid,
                 attachmentTid = attachment.tid,
@@ -28,16 +31,8 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
                 state = it,
                 filePath = attachment.filePath,
                 url = attachment.url)
-        } ?: kotlin.run { transferData = null }
-
-        //fileItem.fileLoadData.position = bindingAdapterPosition
-
-        /*setUploadListenerIfNeeded(item)
-        downloadIfNeeded(item)*/
+        } ?: run { transferData = null }
     }
-
-    open fun updateUploadingState(data: FileLoadData) {}
-    open fun updateDownloadingState(data: FileLoadData, file: File? = null) {}
 
     protected fun getKey(): String {
         if (isFileItemInitialized.not()) return ""
@@ -49,68 +44,4 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         }
         return key
     }
-
-    /* private fun setUploadListenerIfNeeded(item: FileListItem) {
-         val message = item.sceytMessage
-         if (message.deliveryStatus == DeliveryStatus.Pending && item.fileLoadData.progressPercent != 100f) {
-             updateUploadingState(item.fileLoadData.apply { loading = true })
-             item.setUploadListener { loadData ->
-                 if (checkLoadDataIsForCurrent(data = loadData))
-                     runOnMainThread { updateUploadingState(loadData) }
-             }
-         }
-     }
- */
-    /*  private fun downloadIfNeeded(item: FileListItem) {
-          val attachment = item.file
-
-
-          val loadedFile = File(itemView.context.filesDir, attachment.name)
-          val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
-
-          if (file != null) {
-              val loadData = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
-                  item.fileLoadData else item.fileLoadData.loadedState()
-              updateDownloadingState(loadData, file)
-              item.setDownloadProgressListener(null)
-          } else {
-
-              item.setDownloadProgressListener { loadData, outFile ->
-                  if (checkLoadDataIsForCurrent(data = loadData))
-                      runOnMainThread { updateDownloadingState(loadData, outFile) }
-              }
-
-              if (item.fileLoadData.loading) {
-                  updateDownloadingState(item.fileLoadData)
-                  return
-              }
-
-              loadedFile.deleteOnExit()
-              loadedFile.createNewFile()
-              item.updateDownloadState(1f, loading = true)
-
-              itemView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.IO) {
-                  Ion.with(itemView.context)
-                      .load(attachment.url)
-                      .progress { downloaded, total ->
-                          val progress = ((downloaded / total.toFloat())) * 100f
-                          item.updateDownloadState(progress, loading = true)
-                      }
-                      .write(loadedFile)
-                      .setCallback { e, result ->
-                          if (result == null && e != null) {
-                              loadedFile.delete()
-                              item.downloadFinish(null, false)
-                          } else {
-                              item.downloadFinish(result, true)
-                          }
-                      }
-              }
-          }
-      }*/
-/*
-    private fun checkLoadDataIsForCurrent(data: FileLoadData): Boolean {
-        return (::fileItem.isInitialized && fileItem.fileLoadData.loadId == data.loadId
-                && fileItem.fileLoadData.position == data.position)
-    }*/
 }

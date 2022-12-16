@@ -10,12 +10,9 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import java.io.File
-import kotlin.coroutines.CoroutineContext
 
-class FileTransferServiceImpl(private var application: Application) : FileTransferService, CoroutineScope {
+class FileTransferServiceImpl(private var application: Application) : FileTransferService {
     private var tasksMap = hashMapOf<String, TransferTask>()
     private var downloadingUrlMap = hashMapOf<String, String>()
 
@@ -95,13 +92,14 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
             if (downloadingUrlMap[attachment.url] != null) return
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
+            payLoad.progressCallback.onProgress(TransferData(
+                payLoad.messageTid, attachment.tid, 0f, Downloading, null, attachment.url))
             attachment.url?.let { url ->
                 downloadingUrlMap[url] = url
                 Ion.with(application)
                     .load(attachment.url)
                     .progress { downloaded, total ->
                         val progress = ((downloaded / total.toFloat())) * 100
-
                         payLoad.progressCallback.onProgress(TransferData(
                             payLoad.messageTid, attachment.tid, progress, Downloading, null, attachment.url))
                     }
@@ -115,7 +113,6 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
                             payLoad.resultCallback.onResult(SceytResponse.Success(result.path))
                     }
             }
-
         }
     }
 
@@ -132,22 +129,21 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
     }
 
     private fun resumeLoad(attachment: SceytAttachment) {
-        tasksMap[attachment.tid.toString()]?.let { uploadFile(attachment, it) }
+        when (attachment.transferState) {
+            PendingDownload -> {
+                tasksMap[attachment.url.toString()]?.let {
+                    downloadingUrlMap.remove(attachment.url)
+                    downloadFile(attachment, it)
+                }
+            }
+            PendingUpload -> {
+                tasksMap[attachment.tid.toString()]?.let {
+                    uploadFile(attachment, it)
+                }
+            }
+            else -> {}
+        }
     }
-
-
-    /*  fun uploadMessageAttachments(message: SceytMessage) {
-          message.attachments?.forEach {
-              upload(it.toAttachment())
-          }
-      }*/
-
-    fun setUploadListener() {
-
-    }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO
 }
 
 fun interface TransferResultCallback {

@@ -207,7 +207,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     }
 
-    private fun onAttachmentLoaderClick(item: FileListItem){
+    private fun onAttachmentLoaderClick(item: FileListItem) {
         messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(item))
     }
 
@@ -317,31 +317,30 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData) {
-        Log.i("ssdfsddfsdf", data.toString())
+        Log.i(TAG, data.toString())
         messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
-            val predicate: (SceytAttachment) -> Boolean = if (data.state == TransferState.Uploading || data.state == TransferState.PendingUpload
-                    || data.state == TransferState.Uploaded) {
-                { it.tid == data.attachmentTid }
-            } else {
-                { it.url == data.url }
+            val predicate: (SceytAttachment) -> Boolean = when (data.state) {
+                TransferState.Uploading, TransferState.PendingUpload, TransferState.Uploaded -> { attachment ->
+                    attachment.tid == data.attachmentTid
+                }
+                else -> { attachment ->
+                    attachment.url == data.url
+                }
             }
 
-            val foundAttachmnet = (it.second as MessageItem).message.attachments?.find(predicate)
-            Log.i("ssdfdfsdfsdfdsf", "foundAttachmnet " + foundAttachmnet?.tid.toString())
-            foundAttachmnet?.let { attachment ->
+            val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
+            Log.i(TAG, "foundAttachment " + foundAttachment?.tid.toString() + " $data")
+
+            foundAttachment?.let { attachment ->
                 attachment.filePath = data.filePath
                 attachment.url = data.url
                 attachment.transferState = data.state
                 attachment.progressPercent = data.progressPercent
-            }
 
-            MessageFilesAdapter.update(data)
-            /*  messagesRV.post {
-                  (messagesRV.findViewHolderForAdapterPosition(it.first) as? BaseMsgViewHolder)?.updateTransfer(data)
-              }*/
+                MessageFilesAdapter.update(data)
+            }
         }
     }
-
 
     internal fun messageSendFailed(tid: Long) {
         messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {

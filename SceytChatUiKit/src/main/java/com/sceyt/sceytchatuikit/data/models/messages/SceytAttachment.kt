@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.data.models.messages
 import android.os.Parcelable
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -25,9 +24,10 @@ data class SceytAttachment(
             filePath, transferState, progressPercent)
     }
 
-    /*@IgnoredOnParcel
-    var fileTransferData: TransferData? = transferState?.let {
-        TransferData(messageTid, tid, progressPercent
-                ?: 0f, it, filePath, url)
-    }*/
+    fun updateWithTransferData(data: TransferData) {
+        transferState = data.state
+        progressPercent = data.progressPercent
+        url = data.url
+        filePath = data.filePath
+    }
 }

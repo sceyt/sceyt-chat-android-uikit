@@ -16,7 +16,6 @@ import com.sceyt.sceytchatuikit.data.models.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Displayed
@@ -30,9 +29,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
-import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
@@ -103,6 +100,8 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessageEditedOrDeleted(data: Message) {
         messageDao.updateMessage(data.toMessageEntity())
         messagesCash.messageUpdated(data.toSceytUiMessage())
+        if (data.state == MessageState.Deleted)
+            deletedPayloads(data.id, data.tid)
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
@@ -151,16 +150,12 @@ internal class PersistenceMessagesLogicImpl(
         insertTmpMessageToDb(tmpMessage)
         messagesCash.add(tmpMessage)
 
-        if (message.attachments.isNotEmpty()) {
+        if (message.attachments.isNullOrEmpty().not()) {
             SendAttachmentWorkManager.schedule(application, tmpMessage.tid)
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
             onMessageSentResponse(channelId, response)
         }
-
-        /* //  sendMessageAsFlow(channelId, message).collect()
-         val response = messagesRepository.sendMessage(channelId, message)
-         onMessageSentResponse(channelId, response)*/
     }
 
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> = callbackFlow {
@@ -171,7 +166,7 @@ internal class PersistenceMessagesLogicImpl(
 
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
 
-        if (message.attachments.isNotEmpty()) {
+        if (message.attachments.isNullOrEmpty().not()) {
             SendAttachmentWorkManager.schedule(application, tmpMessage.tid)
         } else {
             messagesRepository.sendMessageAsFlow(channelId, message)
@@ -237,10 +232,8 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.deleteMessage(channelId, message.id, onlyForMe)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
-                messageDao.deleteAttachmentsChunked(listOf(message.tid))
-                messageDao.deleteAttachmentsPayloadsChunked(listOf(message.tid))
+                deletedPayloads(message.id, message.tid)
                 messageDao.updateMessage(resultMessage.toMessageEntity())
-                reactionDao.deleteAllReactionsAndScores(message.id)
                 messagesCash.messageUpdated(resultMessage)
             }
         }
@@ -252,7 +245,7 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMessages.isNotEmpty()) {
             pendingMessages.forEach {
                 val message = it.toMessage()
-                if (message.attachments.isNotEmpty()) {
+                if (message.attachments.isNullOrEmpty().not()) {
                     SendAttachmentWorkManager.schedule(application, message.tid)
                 } else {
                     val response = messagesRepository.sendMessage(channelId, message)
@@ -267,7 +260,7 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMessages.isNotEmpty()) {
             pendingMessages.forEach {
                 val message = it.toMessage()
-                if (message.attachments.isNotEmpty()) {
+                if (message.attachments.isNullOrEmpty().not()) {
                     SendAttachmentWorkManager.schedule(application, message.tid)
                 } else {
                     val response = messagesRepository.sendMessage(it.messageEntity.channelId, message)
@@ -352,6 +345,10 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? {
         return messageDao.getMessageById(messageId)?.toSceytMessage()
+    }
+
+    override suspend fun getMessageFromDbByTid(tid: Long): SceytMessage? {
+        return messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
@@ -558,17 +555,10 @@ internal class PersistenceMessagesLogicImpl(
         userDao.insertUsers(usersDb)
     }
 
-    private suspend fun checkAndResizeMessageAttachments(message: Message) {
-        message.attachments?.forEachIndexed { index, attachment ->
-            when (attachment.type) {
-                AttachmentTypeEnum.Image.value() -> {
-                    message.attachments[index] = attachment.resizeImage(application)
-                }
-                AttachmentTypeEnum.Video.value() -> {
-                    message.attachments[index] = attachment.transcodeVideo(application)
-                }
-            }
-        }
+    private suspend fun deletedPayloads(id: Long, tid: Long) {
+        messageDao.deleteAttachmentsChunked(listOf(tid))
+        messageDao.deleteAttachmentsPayloadsChunked(listOf(tid))
+        reactionDao.deleteAllReactionsAndScores(id)
     }
 
     private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {

@@ -47,8 +47,8 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             type = type,
             metadata = metadata,
             fileSize = fileSize,
-            url = url,
-            filePath = filePath,
+            url = payLoad?.url ?: url,
+            filePath =  payLoad?.filePath ?: filePath,
             transferState = payLoad?.transferState,
             progressPercent = payLoad?.progressPercent)
     }
