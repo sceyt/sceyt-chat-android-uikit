@@ -23,7 +23,6 @@ import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
-import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -113,7 +112,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
     private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
-    internal val onScrollToMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
+    internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
     private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
     internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
 
@@ -280,18 +279,23 @@ class MessageListViewModel(private val conversationId: Long,
         when (val state = item.file.transferState) {
             TransferState.Downloading, TransferState.Uploading -> {
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                val newState = if (item.sceytMessage.incoming || state == TransferState.Downloading)
+                    TransferState.PendingDownload
+                else TransferState.PendingUpload
+
                 MessageEventsObserver.emitAttachmentTransferUpdate(
                     TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
-                            ?: 0f,
-                        TransferState.PendingUpload, item.file.filePath, item.file.url)
+                            ?: 0f, newState, item.file.filePath, item.file.url)
                 )
             }
             TransferState.PendingDownload, TransferState.PendingUpload -> {
                 fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                val newState = if (item.sceytMessage.incoming) TransferState.Downloading
+                else TransferState.Uploading
                 MessageEventsObserver.emitAttachmentTransferUpdate(
                     TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
                             ?: 0f,
-                        TransferState.PendingDownload, item.file.filePath, item.file.url)
+                        newState, item.file.filePath, item.file.url)
                 )
             }
             else -> {}
@@ -349,7 +353,9 @@ class MessageListViewModel(private val conversationId: Long,
                         val outMessage = result.message.apply {
                             this.parent = parent?.toSceytUiMessage()
                         }
-                        _onNewOutgoingMessageLiveData.postValue(outMessage)
+                        withContext(Dispatchers.Main) {
+                            _onNewOutgoingMessageLiveData.value = outMessage
+                        }
                     }
                     is SendMessageResult.Response -> {
                         if (result.response is SceytResponse.Error) {
@@ -509,7 +515,9 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
     internal fun needDownload(fileListItem: FileListItem) {
-        FileTransferHelper.download(viewModelScope, fileListItem)
+        viewModelScope.launch(Dispatchers.IO) {
+            FileTransferHelper.download(fileListItem)
+        }
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {

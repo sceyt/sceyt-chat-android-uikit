@@ -156,10 +156,6 @@ abstract class MessageDao {
     abstract suspend fun getMessageById(id: Long): MessageDb?
 
     @Transaction
-    @Query("select * from messages where message_id in(:ids)")
-    abstract suspend fun getMessageByIds(ids: List<Long>): List<MessageDb>
-
-    @Transaction
     @Query("select * from messages where tid =:tid")
     abstract suspend fun getMessageByTid(tid: Long): MessageDb?
 
@@ -219,7 +215,7 @@ abstract class MessageDao {
     }
 
     @Query("update AttachmentPayLoad set progressPercent =:progress, transferState =:state where messageTid =:tid")
-    abstract suspend fun updateAttachmentTransferProgressAndStateWithMsgTid(tid: Long, progress: Float, state: TransferState)
+    abstract fun updateAttachmentTransferProgressAndStateWithMsgTid(tid: Long, progress: Float, state: TransferState)
 
     @Transaction
     open fun updateAttachmentAndPayLoad(transferData: TransferData) {

@@ -48,10 +48,10 @@ object MessageEventsObserver {
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
 
-    private val _onTransferUpdatedFlow = MutableSharedFlow<TransferData>(
+    private val onTransferUpdatedFlow_ = MutableSharedFlow<TransferData>(
         extraBufferCapacity = 30,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onTransferUpdatedFlow: SharedFlow<TransferData> = _onTransferUpdatedFlow
+    val onTransferUpdatedFlow: SharedFlow<TransferData> = onTransferUpdatedFlow_
 
 
     init {
@@ -94,6 +94,6 @@ object MessageEventsObserver {
     }
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
-        _onTransferUpdatedFlow.tryEmit(data)
+        onTransferUpdatedFlow_.tryEmit(data)
     }
 }

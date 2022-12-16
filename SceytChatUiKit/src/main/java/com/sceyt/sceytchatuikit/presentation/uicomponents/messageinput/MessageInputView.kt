@@ -141,26 +141,51 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     }
                 }
             } else {
-                val messageToSend: Message? = Message.MessageBuilder()
-                    .setAttachments(allAttachments.toTypedArray())
-                    .setType(getMessageType(allAttachments, messageBody))
-                    .setBody(binding.messageInput.text.toString())
-                    .apply {
-                        replyMessage?.let {
-                            setParentMessageId(it.id)
-                            setReplyInThread(replyThreadMessageId != null)
-                        } ?: replyThreadMessageId?.let {
-                            setParentMessageId(it)
-                            setReplyInThread(true)
-                        }
-                    }.build()
-
                 cancelReply {
-                    if (replyMessage != null)
-                        messageToSend?.let { msg -> messageInputActionCallback?.sendReplyMessage(msg, replyMessage) }
-                    else
-                        messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+                    if (allAttachments.isNotEmpty()) {
+                        allAttachments.forEachIndexed { index, attachment ->
+                            val messageToSend: Message? = Message.MessageBuilder()
+                                .setAttachments(arrayOf(attachment))
+                                .setType(getMessageType(if (index == 0) messageBody else null, attachment))
+                                .apply {
+                                    if (index == 0) {
+                                        setBody(binding.messageInput.text.toString())
+                                        replyMessage?.let {
+                                            setParentMessageId(it.id)
+                                            setReplyInThread(replyThreadMessageId != null)
+                                        } ?: replyThreadMessageId?.let {
+                                            setParentMessageId(it)
+                                            setReplyInThread(true)
+                                        }
+                                    }
+                                }.build()
 
+                            if (index == 0 && replyMessage != null) {
+                                messageToSend?.let { msg -> messageInputActionCallback?.sendReplyMessage(msg, replyMessage) }
+                            } else {
+                                messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+                            }
+                        }
+                    } else {
+                        val messageToSend: Message? = Message.MessageBuilder()
+                            .setAttachments(allAttachments.toTypedArray())
+                            .setType(getMessageType(messageBody))
+                            .setBody(binding.messageInput.text.toString())
+                            .apply {
+                                replyMessage?.let {
+                                    setParentMessageId(it.id)
+                                    setReplyInThread(replyThreadMessageId != null)
+                                } ?: replyThreadMessageId?.let {
+                                    setParentMessageId(it)
+                                    setReplyInThread(true)
+                                }
+                            }.build()
+
+                        if (replyMessage != null)
+                            messageToSend?.let { msg -> messageInputActionCallback?.sendReplyMessage(msg, replyMessage) }
+                        else
+                            messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+                    }
                     reset()
                 }
             }
@@ -195,7 +220,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun getMessageType(attachments: List<Attachment>, body: String?): String {
+    private fun getMessageType(body: String?, vararg attachments: Attachment): String {
         if (attachments.isNotEmpty() && attachments.size == 1) {
             return if (attachments[0].type.isEqualsVideoOrImage())
                 MessageTypeEnum.Media.value()

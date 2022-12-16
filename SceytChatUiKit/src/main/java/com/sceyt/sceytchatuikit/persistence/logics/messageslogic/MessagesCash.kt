@@ -1,7 +1,10 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
@@ -103,5 +106,29 @@ class MessagesCash {
             cashedMessages[it.tid] = it
         }
         return detectedDiff
+    }
+
+    fun updateAttachmentTransferData(updateDate: TransferData) {
+        fun update(attachment: SceytAttachment) {
+            attachment.transferState = updateDate.state
+            attachment.progressPercent = updateDate.progressPercent
+            attachment.filePath = updateDate.filePath
+            attachment.url = updateDate.url
+        }
+        cashedMessages[updateDate.messageTid]?.let {
+            it.attachments?.forEach { attachment ->
+                when (updateDate.state) {
+                    PendingUpload, Uploading, Uploaded -> {
+                        if (attachment.tid == updateDate.attachmentTid)
+                            update(attachment)
+
+                    }
+                    Downloading, Downloaded, PendingDownload -> {
+                        if (attachment.url == updateDate.url)
+                            update(attachment)
+                    }
+                }
+            }
+        }
     }
 }

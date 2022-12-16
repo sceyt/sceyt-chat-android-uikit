@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.presentation.common
 import android.content.Context
 import androidx.core.view.isVisible
 import com.google.gson.Gson
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
@@ -110,22 +109,9 @@ fun SceytAttachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
     if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)
         return loadedFile
 
-    val fileFromMetadata = metadata.getFileFromMetadata()
+    /*val fileFromMetadata = metadata.getFileFromMetadata()
     if (fileFromMetadata != null && fileFromMetadata.exists())
-        return fileFromMetadata
-
-    return null
-}
-
-fun Attachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
-    if (this == null) return null
-
-    if (loadedFile.exists() /*&& getFileSize(loadedFile.path) == uploadedFileSize*/)
-        return loadedFile
-
-    val fileFromMetadata = metadata.getFileFromMetadata()
-    if (fileFromMetadata != null && fileFromMetadata.exists())
-        return fileFromMetadata
+        return fileFromMetadata*/
 
     return null
 }

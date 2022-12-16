@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEnt
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
@@ -227,7 +228,9 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         deliveryStatus = deliveryStatus,
         state = state,
         from = from,
-        attachments = attachments?.map { it.toSceytAttachment(tid) }?.toTypedArray(),
+        attachments = attachments?.map {
+            it.toSceytAttachment(tid, TransferState.PendingDownload, 0f)
+        }?.toTypedArray(),
         lastReactions = lastReactions,
         selfReactions = selfReactions,
         reactionScores = reactionScores,

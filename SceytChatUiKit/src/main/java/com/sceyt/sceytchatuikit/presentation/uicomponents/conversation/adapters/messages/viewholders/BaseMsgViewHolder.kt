@@ -159,7 +159,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 val url = parent?.getAttachmentUrl(itemView.context)
                 if (!url.isNullOrBlank()) {
                     Glide.with(itemView.context)
-                        .load(url)
+                        .load(parent.attachments?.getOrNull(0)?.filePath)
                         .override(imageAttachment.width, imageAttachment.height)
                         .into(imageAttachment)
                 } else
