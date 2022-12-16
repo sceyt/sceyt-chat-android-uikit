@@ -62,6 +62,15 @@ object MessageEventsObserver {
                 onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
             }
 
+            override fun onDirectMessage(p0: Message?) {
+            }
+
+            override fun onMessageComposing(p0: String?, p1: String?) {
+            }
+
+            override fun onMessagePaused(p0: String?, p1: String?) {
+            }
+
             override fun onMessageDeleted(message: Message?) {
                 onMessageEditedOrDeletedFlow_.tryEmit(message)
             }
