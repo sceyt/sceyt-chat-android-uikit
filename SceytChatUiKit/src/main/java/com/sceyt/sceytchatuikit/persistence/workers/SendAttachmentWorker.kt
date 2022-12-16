@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -41,6 +42,7 @@ object SendAttachmentWorkManager {
 class SendAttachmentWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val messageDao: MessageDao by inject()
+    private val messagesCash: MessagesCash by inject()
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
         // checkAndResizeMessageAttachments(context, tmpMessage)
@@ -54,6 +56,7 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                             attachment.transferState = updateDate.state
                             attachment.progressPercent = updateDate.progressPercent
                             messageDao.updateAttachmentTransferProgressAndStateWithMsgTid(updateDate.attachmentTid, updateDate.progressPercent, updateDate.state)
+                            messagesCash.updateAttachmentTransferData(updateDate)
                         },
                         resultCallback = { result ->
                             if (result is SceytResponse.Success) {
@@ -62,6 +65,7 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                                 attachment.updateWithTransferData(transferData)
                                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                                 messageDao.updateAttachmentAndPayLoad(transferData)
+                                messagesCash.updateAttachmentTransferData(transferData)
                             } else {
                                 val transferData = TransferData(tmpMessage.tid,
                                     attachment.tid, attachment.progressPercent
@@ -69,6 +73,7 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
 
                                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                                 messageDao.updateAttachmentAndPayLoad(transferData)
+                                messagesCash.updateAttachmentTransferData(transferData)
                             }
                             continuation.resume(result is SceytResponse.Success)
                         }))

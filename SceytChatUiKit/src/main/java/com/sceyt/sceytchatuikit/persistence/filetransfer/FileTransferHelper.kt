@@ -4,12 +4,14 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import org.koin.core.component.inject
 
 object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
     private val messageDao by inject<MessageDao>()
+    private val messagesCash by inject<MessagesCash>()
 
     fun download(fileListItem: FileListItem) {
         val message = fileListItem.sceytMessage
@@ -20,6 +22,7 @@ object FileTransferHelper : SceytKoinComponent {
                 fileListItem.file.progressPercent = it.progressPercent
                 MessageEventsObserver.emitAttachmentTransferUpdate(it)
                 messageDao.updateAttachmentTransferProgressAndStateWithMsgTid(it.messageTid, it.progressPercent, it.state)
+                messagesCash.updateAttachmentTransferData(it)
             }, resultCallback = {
                 val attachment = fileListItem.file
                 when (it) {
@@ -29,6 +32,7 @@ object FileTransferHelper : SceytKoinComponent {
                         attachment.updateWithTransferData(transferData)
                         MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                         messageDao.updateAttachmentAndPayLoad(transferData)
+                        messagesCash.updateAttachmentTransferData(transferData)
                     }
                     is SceytResponse.Error -> {
                         val transferData = TransferData(
@@ -38,6 +42,7 @@ object FileTransferHelper : SceytKoinComponent {
                         attachment.updateWithTransferData(transferData)
                         MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                         messageDao.updateAttachmentAndPayLoad(transferData)
+                        messagesCash.updateAttachmentTransferData(transferData)
                     }
                 }
             }))

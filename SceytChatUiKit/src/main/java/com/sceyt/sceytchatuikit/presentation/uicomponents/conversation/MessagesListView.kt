@@ -37,6 +37,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -54,6 +56,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var enabledClickActions = true
 
     init {
+        MessageFilesAdapter.clearListeners()
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
 
         if (attrs != null) {
@@ -316,7 +319,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateProgress(data: TransferData) {
+    internal suspend fun updateProgress(data: TransferData) {
         Log.i(TAG, data.toString())
         messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
@@ -332,12 +335,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             Log.i(TAG, "foundAttachment " + foundAttachment?.tid.toString() + " $data")
 
             foundAttachment?.let { attachment ->
+              /*  (it.second as MessageItem).message.files?.find { fileItem ->
+                    fileItem.file == attachment
+                }*/
+
                 attachment.filePath = data.filePath
                 attachment.url = data.url
                 attachment.transferState = data.state
                 attachment.progressPercent = data.progressPercent
 
-                MessageFilesAdapter.update(data)
+                withContext(Dispatchers.Main) {
+                    MessageFilesAdapter.update(data)
+                }
             }
         }
     }

@@ -7,12 +7,9 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
-import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -85,18 +82,6 @@ class OutFilesMsgViewHolder(
                 messageListeners = messageListeners, needDownloadCallback)).also {
                 filedAdapter = it
             }
-        }
-    }
-
-    override fun updateTransfer(data: TransferData) {
-        filedAdapter?.getData()?.findIndexed { it.file.tid == data.attachmentTid }?.let {
-            //it.second.file.fileTransferData = data
-            /*  if (data.state == ProgressState.Downloaded)
-                  it.second.file.filePath = data.filePath
-              if (data.state==ProgressState.Uploaded)
-                  it.second.file.url = data.url*/
-           /* (binding.rvFiles.findViewHolderForAdapterPosition(it.first) as? BaseFileViewHolder)?.bind(it.second)
-                    ?: filedAdapter?.notifyItemChanged(it.first)*/
         }
     }
 

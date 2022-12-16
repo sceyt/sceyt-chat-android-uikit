@@ -218,7 +218,6 @@ internal class PersistenceMessagesLogicImpl(
 
                 messagesCash.messageUpdated(responseMsg)
                 persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
-                MessageEventsObserver.emitOutgoingMessageSent(channelId, response.data)
             }
         }
     }
@@ -271,7 +270,6 @@ internal class PersistenceMessagesLogicImpl(
                                 date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
                             messagesCash.messageUpdated(responseMsg)
-                            MessageEventsObserver.emitOutgoingMessageSent(it.messageEntity.channelId, response.data)
                         }
                     } else Log.e("sendMessage", "send pending message error-> ${response.message}")
                 }

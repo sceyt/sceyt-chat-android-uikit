@@ -331,22 +331,6 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            /* val sceytMessage = message.toSceytUiMessage(isGroup).apply {
-                 this.parent = parent?.toSceytUiMessage(isGroup)
-             }*/
-
-            // _onNewOutgoingMessageLiveData.postValue(sceytMessage)
-            /*  if (message.attachments.isNotEmpty()) {
-                message.attachments.forEach {
-                    fileTransferService.upload(sceytMessage.tid, it.tid, it.url, AttachmentTypeEnum.Image, { updateDate ->
-                        _transferUpdatedFlow.tryEmit(updateDate)
-                    }, { result ->
-                        if (result is SceytResponse.Success)
-                            _transferUpdatedFlow.tryEmit(TransferData(sceytMessage.tid, it.tid, 100f, ProgressState.Uploaded, result.data))
-                        else _transferUpdatedFlow.tryEmit(TransferData(sceytMessage.tid, it.tid, 0f, ProgressState.Error, result.data))
-                    })
-                }
-            }*/
             persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
                 when (result) {
                     is SendMessageResult.TempMessage -> {
