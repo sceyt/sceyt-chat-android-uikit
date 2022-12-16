@@ -42,9 +42,18 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
+    /** Send pending markers and pending messages when lifecycle come back onResume state,
+     * Also set update current chat Id in ChannelsCash*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             ChannelsCash.currentChannelId = channel.id
+            if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected) {
+                if (pendingDisplayMsgIds.isNotEmpty()) {
+                    markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
+                    pendingDisplayMsgIds.clear()
+                }
+                sendPendingMessages()
+            }
         }
     }
 
@@ -58,8 +67,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
 
+    messagesListView.setNeedDownloadListener {
+        needDownload(it)
+    }
 
-    fun checkEnableDisableActions(channel: SceytChannel){
+    fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId)
                 && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true))
     }
@@ -150,53 +162,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-        ConnectionEventsObserver.onChangedConnectStatusFlow.collect { stateData ->
-            if (stateData.state == Types.ConnectState.StateConnected) {
-                val message = messagesListView.getLastMessageBy {
-                    // First tying to get last read message
-                    it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
-                } ?: messagesListView.getFirstMessageBy {
-                    // Next tying to get fist sent message
-                    it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
-                } ?: messagesListView.getFirstMessageBy {
-                    // Next tying to get fist delivered message
-                    it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
-                }
-                (message as? MessageListItem.MessageItem)?.let {
-                    syncConversationMessagesAfter(it.message.id)
-                }
-            }
-        }
-    }
-
-    MessagesCash.messageUpdatedFlow.onEach { messages ->
-        messages.forEach {
-            messagesListView.updateMessage(it)
-        }
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
-    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(lifecycleOwner.lifecycleScope)
-
-    /** Send pending markers and pending messages when lifecycle come back onResume state*/
-    lifecycleOwner.lifecycleScope.launch {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected) {
-                if (pendingDisplayMsgIds.isNotEmpty()) {
-                    markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
-                    pendingDisplayMsgIds.clear()
-                }
-                sendPendingMessages()
-            }
-        }
-    }
-
-
-    onChannelUpdatedEventFlow.onEach {
-        channel = it
-        messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
-        checkEnableDisableActions(channel)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    ChannelsCash.channelDeletedFlow
+        .filter { it == channel.id }
+        .onEach {
+            messagesListView.context.asActivity().finish()
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner, Observer {
         if (it.first.id == channel.id) {
@@ -217,7 +187,39 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
-    onScrollToMessageLiveData.observe(lifecycleOwner, Observer {
+    ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
+        if (stateData.state == Types.ConnectState.StateConnected) {
+            val message = messagesListView.getLastMessageBy {
+                // First tying to get last read message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
+            } ?: messagesListView.getFirstMessageBy {
+                // Next tying to get fist sent message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
+            } ?: messagesListView.getFirstMessageBy {
+                // Next tying to get fist delivered message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
+            }
+            (message as? MessageListItem.MessageItem)?.let {
+                syncConversationMessagesAfter(it.message.id)
+            }
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    MessagesCash.messageUpdatedFlow.onEach { messages ->
+        messages.forEach {
+            messagesListView.updateMessage(it)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(lifecycleOwner.lifecycleScope)
+
+    onChannelUpdatedEventFlow.onEach {
+        channel = it
+        messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
+        checkEnableDisableActions(channel)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onScrollToLastMessageLiveData.observe(lifecycleOwner, Observer {
         viewModelScope.launch(Dispatchers.Default) {
             channel.lastMessage?.id?.let { lastMsgId ->
                 messagesListView.getMessageIndexedById(lastMsgId)?.let {
@@ -351,6 +353,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
+    onTransferUpdatedFlow.onEach {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            messagesListView.updateProgress(it)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
     onMessageReactionUpdatedFlow.onEach {
         messagesListView.updateReaction(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
@@ -371,12 +379,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             else -> return@onEach
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
-
-    ChannelsCash.channelDeletedFlow
-        .filter { it == channel.id }
-        .onEach {
-            messagesListView.context.asActivity().finish()
-        }.launchIn(lifecycleOwner.lifecycleScope)
 
     onOutGoingMessageStatusFlow.onEach {
         val sceytUiMessage = it.second

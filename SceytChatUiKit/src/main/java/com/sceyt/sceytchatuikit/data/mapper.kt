@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -90,17 +91,21 @@ fun GroupChannel.getChannelUrl(): String {
     else ""
 }
 
-fun Attachment.toSceytAttachment() = SceytAttachment(
+fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float) = SceytAttachment(
     tid = tid,
+    messageTid = messageTid,
     name = name,
     type = type,
     metadata = metadata,
     fileSize = uploadedFileSize,
-    url = url
+    url = url,
+    filePath = filePath,
+    transferState = transferState,
+    progressPercent = progress,
 )
 
 
-fun SceytAttachment.toSceytAttachment() = Attachment.Builder(url, type)
+fun SceytAttachment.toAttachment(): Attachment = Attachment.Builder(filePath, url, type)
     .setMetadata(metadata)
     .setName(name)
     .withTid(tid)

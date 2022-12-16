@@ -1,13 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files
 
-import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.sceyt_callbacks.ActionCallback
-import com.sceyt.chat.sceyt_callbacks.ProgressCallback
-import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import kotlin.math.max
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 
 sealed class FileListItem() {
     lateinit var file: SceytAttachment
@@ -29,15 +24,14 @@ sealed class FileListItem() {
 
     object LoadingMoreItem : FileListItem()
 
-    val fileLoadData by lazy { FileLoadData(file.url) }
 
-    private var uploadProgressListener: ((FileLoadData) -> Unit)? = null
+    /*private var uploadProgressListener: ((FileLoadData) -> Unit)? = null
     private var downloadProgressListener: ((FileLoadData, java.io.File?) -> Unit)? = null
 
     internal fun setUploadListener(listener: ((FileLoadData) -> Unit)? = null) {
         uploadProgressListener = listener
         uploadProgressListener?.invoke(fileLoadData.apply { loading = true })
-        file.setUploaderProgress(object : ProgressCallback {
+      *//*  file.setUploaderProgress(object : ProgressCallback {
             override fun onResult(progress: Float) {
                 val intValuePercent = progress * 100
                 if (intValuePercent < 100) {
@@ -50,9 +44,9 @@ sealed class FileListItem() {
                 fileLoadData.update(progress = null, loading = false, success = false)
                 uploadProgressListener?.invoke(fileLoadData)
             }
-        })
+        })*//*
 
-        file.setUploaderCompletion(object : ActionCallback {
+        *//*file.setUploaderCompletion(object : ActionCallback {
             override fun onSuccess() {
                 fileLoadData.update(progress = 100f, loading = false, success = true)
                 uploadProgressListener?.invoke(fileLoadData)
@@ -62,7 +56,7 @@ sealed class FileListItem() {
                 fileLoadData.update(progress = null, loading = false, success = false)
                 uploadProgressListener?.invoke(fileLoadData)
             }
-        })
+        })*//*
     }
 
     internal fun setDownloadProgressListener(listener: ((FileLoadData, java.io.File?) -> Unit)? = null) {
@@ -80,22 +74,8 @@ sealed class FileListItem() {
         val progress = if (success) 100f else 0f
         fileLoadData.update(progress, loading = false, success = success)
         downloadProgressListener?.invoke(fileLoadData, result)
-    }
-}
+    }*/
 
-private fun SceytAttachment.setUploaderProgress(progressCallback: ProgressCallback) {
-    Attachment.Builder(url, type)
-        .setName(name)
-        .setMetadata(metadata)
-        .withTid(tid)
-        .build().setUploaderProgress(progressCallback)
-}
 
-private fun SceytAttachment.setUploaderCompletion(progressCallback: ActionCallback) {
-    Attachment.Builder(url, type)
-        .setName(name)
-        .setMetadata(metadata)
-        .withTid(tid)
-        .build().setUploaderCompletion(progressCallback)
 }
 

@@ -71,7 +71,7 @@ object MessagesStyle {
     var downScrollerUnreadCountColor: Int = SceytKitConfig.sceytColorAccent
 
     @ColorRes
-    var mediaLoaderColor: Int = SceytKitConfig.sceytColorAccent
+    var mediaLoaderColor: Int = R.color.sceyt_color_white
 
     @DrawableRes
     var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_with_bg

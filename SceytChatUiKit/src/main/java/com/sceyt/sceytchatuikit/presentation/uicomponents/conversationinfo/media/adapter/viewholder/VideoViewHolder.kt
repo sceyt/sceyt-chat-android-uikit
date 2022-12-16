@@ -25,7 +25,7 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
             videoViewController.setImageThumb(null)
             parentLayout.clipToOutline = true
             videoView.isVisible = false
-            binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
+           // binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
         }
         super.bind(item)
     }
@@ -54,23 +54,8 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
         }
     }
 
-    private fun ItemChannelVideoBinding.updateUploadState(data: FileLoadData) {
-        groupLoading.isVisible = data.loading
-        binding.videoViewController.showPlayPauseButtons(!data.loading)
-        if (data.loading)
-            loadProgress.progress = data.progressPercent.toInt()
-    }
-
     private fun initializePlayer(mediaPath: String) {
         binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
         (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
-    }
-
-    override fun updateUploadingState(data: FileLoadData) {
-        binding.updateUploadState(data)
-    }
-
-    override fun updateDownloadingState(data: FileLoadData, file: File?) {
-        binding.updateDownloadState(data, file)
     }
 }

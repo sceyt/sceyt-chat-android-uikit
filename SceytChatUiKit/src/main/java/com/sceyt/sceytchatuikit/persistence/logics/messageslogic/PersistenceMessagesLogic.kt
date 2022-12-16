@@ -9,6 +9,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -33,8 +34,9 @@ internal interface PersistenceMessagesLogic {
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
-    suspend fun sendMessage(channelId: Long, message: SceytMessage)
-    suspend fun sendMessageAsFlow(channelId: Long, message: SceytMessage): Flow<SendMessageResult>
+    suspend fun sendMessage(channelId: Long, message: Message)
+    suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
+    suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message)
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()
@@ -45,5 +47,6 @@ internal interface PersistenceMessagesLogic {
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
+    suspend fun getMessageFromDbByTid(tid: Long): SceytMessage?
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

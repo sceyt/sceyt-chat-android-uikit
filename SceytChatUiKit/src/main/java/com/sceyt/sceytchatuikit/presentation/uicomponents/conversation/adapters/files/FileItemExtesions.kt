@@ -22,7 +22,7 @@ fun FileListItem.getFileFromMetadata(): File? {
 }
 
 fun FileListItem.openFile(context: Context) {
-    if (fileLoadData.loading) return
+   // if (fileLoadData.loading) return
 
     val fileName = file.name
     var uri: Uri? = null

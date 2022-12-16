@@ -1,9 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 
 @Entity(
     foreignKeys = [
@@ -28,5 +25,7 @@ data class AttachmentEntity(
         val type: String,
         val metadata: String?,
         val fileSize: Long,
-        val url: String
+        @ColumnInfo(index = true)
+        val url: String?,
+        val filePath: String?
 )

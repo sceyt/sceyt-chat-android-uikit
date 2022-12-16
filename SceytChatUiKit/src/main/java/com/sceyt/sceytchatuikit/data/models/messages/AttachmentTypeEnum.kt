@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
-internal enum class AttachmentTypeEnum {
+enum class AttachmentTypeEnum {
     Image,
     Video,
     File;
