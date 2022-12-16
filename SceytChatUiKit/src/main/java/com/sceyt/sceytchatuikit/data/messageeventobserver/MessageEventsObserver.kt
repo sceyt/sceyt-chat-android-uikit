@@ -49,7 +49,7 @@ object MessageEventsObserver {
 
 
     private val onTransferUpdatedFlow_ = MutableSharedFlow<TransferData>(
-        extraBufferCapacity = 30,
+        extraBufferCapacity = 100,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onTransferUpdatedFlow: SharedFlow<TransferData> = onTransferUpdatedFlow_
 
