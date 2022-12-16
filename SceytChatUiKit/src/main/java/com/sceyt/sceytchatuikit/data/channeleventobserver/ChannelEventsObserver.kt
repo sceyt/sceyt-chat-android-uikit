@@ -60,7 +60,7 @@ object ChannelEventsObserver {
 
 
     init {
-        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener() {
+        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
             override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
                 val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
                 onTotalUnreadChangedFlow_.tryEmit(data)
