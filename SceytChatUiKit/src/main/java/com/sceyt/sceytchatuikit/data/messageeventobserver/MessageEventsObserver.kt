@@ -10,9 +10,11 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object MessageEventsObserver {
@@ -46,11 +48,17 @@ object MessageEventsObserver {
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
 
+    private val onTransferUpdatedFlow_ = MutableSharedFlow<TransferData>(
+        extraBufferCapacity = 30,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onTransferUpdatedFlow: SharedFlow<TransferData> = onTransferUpdatedFlow_
+
+
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
-                Log.i("onMessage",message.body.toString())
+                Log.i("onMessage", message.body.toString())
                 onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
             }
 
@@ -83,5 +91,9 @@ object MessageEventsObserver {
 
     fun emitMessageEditedOrDeletedByMe(message: Message) {
         onMessageEditedOrDeletedFlow_.tryEmit(message)
+    }
+
+    fun emitAttachmentTransferUpdate(data: TransferData) {
+        onTransferUpdatedFlow_.tryEmit(data)
     }
 }

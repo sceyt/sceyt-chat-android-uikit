@@ -1,12 +1,14 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
@@ -74,21 +76,22 @@ fun SceytMessage.toMessageDb(): MessageDb {
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
+        attachments = attachments?.map { it.toAttachmentDb(id, tid) },
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
+        attachmentPayLoadEntity = toAttachmentPayLoad()
     )
 }
 
-fun SceytMessage.toMessageDbWithAttachments(attachments: Array<Attachment>?): MessageDb {
+fun SceytMessage.toAttachmentPayLoad(): AttachmentPayLoadEntity? {
     val tid = getTid(id, tid, incoming)
-    return MessageDb(
-        messageEntity = toMessageEntity(),
-        from = from?.toUserEntity(),
-        parent = parent?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
-        lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+    val attachment = attachments?.getOrNull(0) ?: return null
+    return AttachmentPayLoadEntity(
+        messageTid = tid,
+        transferState = attachment.transferState,
+        progressPercent = attachment.progressPercent,
+        url = attachment.url,
+        filePath = attachment.filePath
     )
 }
 
@@ -134,7 +137,7 @@ fun ParentMessageDb.toSceytMessage(): SceytMessage {
 
 fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     return ParentMessageDb(toMessageEntity(), from?.toUserEntity(), attachments?.map {
-        it.toAttachmentEntity(id, getTid(id, tid, incoming))
+        it.toAttachmentDb(id, getTid(id, tid, incoming))
     })
 }
 
@@ -206,9 +209,10 @@ fun MessageDb.toMessage(): Message {
 
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
+    val tid = getTid(id, tid, incoming)
     return SceytMessage(
         id = id,
-        tid = getTid(id, tid, incoming),
+        tid = tid,
         channelId = channelId,
         to = to,
         body = body,
@@ -224,7 +228,9 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         deliveryStatus = deliveryStatus,
         state = state,
         from = from,
-        attachments = attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
+        attachments = attachments?.map {
+            it.toSceytAttachment(tid, TransferState.PendingDownload, 0f)
+        }?.toTypedArray(),
         lastReactions = lastReactions,
         selfReactions = selfReactions,
         reactionScores = reactionScores,
@@ -261,7 +267,7 @@ fun SceytMessage.toMessage(): Message {
         deliveryStatus,
         state,
         from,
-        attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
+        attachments?.map { it.toAttachment() }?.toTypedArray(),
         lastReactions,
         selfReactions,
         reactionScores,

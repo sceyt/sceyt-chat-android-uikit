@@ -46,7 +46,7 @@ class SpeedyLinearLayoutManager : LinearLayoutManager {
                 mPendingPosOffset = -1
             }
             super.onLayoutChildren(recycler, state)
-        } catch (_: IndexOutOfBoundsException) {
+        } catch (_: Exception) {
         }
     }
 

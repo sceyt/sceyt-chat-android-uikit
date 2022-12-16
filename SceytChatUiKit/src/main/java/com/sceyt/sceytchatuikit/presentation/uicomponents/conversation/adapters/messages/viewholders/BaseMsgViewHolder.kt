@@ -32,6 +32,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentUrl
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
@@ -154,7 +155,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 val url = parent?.getAttachmentUrl(itemView.context)
                 if (!url.isNullOrBlank()) {
                     Glide.with(itemView.context)
-                        .load(url)
+                        .load(parent.attachments?.getOrNull(0)?.filePath)
                         .override(imageAttachment.width, imageAttachment.height)
                         .into(imageAttachment)
                 } else

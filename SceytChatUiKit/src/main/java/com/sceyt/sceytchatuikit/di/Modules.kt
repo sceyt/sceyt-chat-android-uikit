@@ -7,6 +7,8 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl
 import com.sceyt.sceytchatuikit.data.repositories.*
 import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferServiceImpl
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogicImpl
@@ -33,6 +35,7 @@ internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
     single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
     single { SceytSyncManager(get(), get()) }
+    single<FileTransferService> { FileTransferServiceImpl(get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
@@ -75,7 +78,7 @@ internal val repositoryModule = module {
 }
 
 internal val cashModule = module {
-    factory { MessagesCash() }
+    single { MessagesCash() }
     single { ChannelsCash() }
 }
 

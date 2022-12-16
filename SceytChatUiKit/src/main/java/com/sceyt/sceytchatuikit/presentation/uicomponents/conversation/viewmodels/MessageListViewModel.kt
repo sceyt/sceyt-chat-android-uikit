@@ -28,10 +28,15 @@ import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -53,6 +58,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val messagesRepository: MessagesRepository by inject()
     private val preference: SceytSharedPreference by inject()
     private val syncManager: SceytSyncManager by inject()
+    private val fileTransferService: FileTransferService by inject()
     internal val myId = preference.getUserId()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
@@ -83,6 +89,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val _onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
     val onNewOutgoingMessageLiveData: LiveData<SceytMessage> = _onNewOutgoingMessageLiveData
 
+
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewThreadMessageFlow: Flow<SceytMessage>
@@ -91,6 +98,8 @@ class MessageListViewModel(private val conversationId: Long,
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
+    val onTransferUpdatedFlow: SharedFlow<TransferData>
+
 
     // Chanel events
     val onChannelEventFlow: Flow<ChannelEventData>
@@ -103,7 +112,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
     private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
-    internal val onScrollToMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
+    internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
     private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
     internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
 
@@ -153,6 +162,8 @@ class MessageListViewModel(private val conversationId: Long,
 
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
+
+        onTransferUpdatedFlow = MessageEventsObserver.onTransferUpdatedFlow
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
@@ -264,6 +275,33 @@ class MessageListViewModel(private val conversationId: Long,
         _onScrollToReplyMessageLiveData.postValue(message)
     }
 
+    fun prepareToPauseOrResumeUpload(item: FileListItem) {
+        when (val state = item.file.transferState) {
+            TransferState.Downloading, TransferState.Uploading -> {
+                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                val newState = if (item.sceytMessage.incoming || state == TransferState.Downloading)
+                    TransferState.PendingDownload
+                else TransferState.PendingUpload
+
+                MessageEventsObserver.emitAttachmentTransferUpdate(
+                    TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
+                            ?: 0f, newState, item.file.filePath, item.file.url)
+                )
+            }
+            TransferState.PendingDownload, TransferState.PendingUpload -> {
+                fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                val newState = if (item.sceytMessage.incoming) TransferState.Downloading
+                else TransferState.Uploading
+                MessageEventsObserver.emitAttachmentTransferUpdate(
+                    TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
+                            ?: 0f,
+                        newState, item.file.filePath, item.file.url)
+                )
+            }
+            else -> {}
+        }
+    }
+
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
@@ -293,16 +331,15 @@ class MessageListViewModel(private val conversationId: Long,
 
     fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            val sceytMessage = message.toSceytUiMessage(isGroup).apply {
-                this.parent = parent?.toSceytUiMessage(isGroup)
-            }
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, sceytMessage).collect { result ->
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
                 when (result) {
                     is SendMessageResult.TempMessage -> {
                         val outMessage = result.message.apply {
                             this.parent = parent?.toSceytUiMessage()
                         }
-                        _onNewOutgoingMessageLiveData.postValue(outMessage)
+                        withContext(Dispatchers.Main) {
+                            _onNewOutgoingMessageLiveData.value = outMessage
+                        }
                     }
                     is SendMessageResult.Response -> {
                         if (result.response is SceytResponse.Error) {
@@ -444,6 +481,9 @@ class MessageListViewModel(private val conversationId: Long,
             is MessageCommandEvent.ScrollToReplyMessage -> {
                 prepareToScrollToReplyMessage(event.message)
             }
+            is MessageCommandEvent.AttachmentLoaderClick -> {
+                prepareToPauseOrResumeUpload(event.item)
+            }
         }
     }
 
@@ -455,6 +495,12 @@ class MessageListViewModel(private val conversationId: Long,
             is ReactionEvent.RemoveReaction -> {
                 deleteReaction(event.message, event.scoreKey)
             }
+        }
+    }
+
+    internal fun needDownload(fileListItem: FileListItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            FileTransferHelper.download(fileListItem)
         }
     }
 

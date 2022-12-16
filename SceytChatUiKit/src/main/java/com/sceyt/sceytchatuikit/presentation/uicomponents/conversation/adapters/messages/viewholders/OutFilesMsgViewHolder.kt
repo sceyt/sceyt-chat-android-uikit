@@ -4,15 +4,16 @@ import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
+import com.sceyt.sceytchatuikit.extensions.dpToPx
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
-import com.sceyt.sceytchatuikit.extensions.dpToPx
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 
@@ -22,7 +23,9 @@ class OutFilesMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListenersImpl?,
         senderNameBuilder: ((User) -> String)?,
+        private val needDownloadCallback: (FileListItem) -> Unit,
 ) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+    private var filedAdapter: MessageFilesAdapter? = null
 
     init {
         binding.setMessageItemStyle()
@@ -75,14 +78,16 @@ class OutFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners = messageListeners))
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context,
+                messageListeners = messageListeners, needDownloadCallback)).also {
+                filedAdapter = it
+            }
         }
     }
 
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
-        (binding.rvFiles.adapter as? MessageFilesAdapter)?.onItemDetached()
-
+        filedAdapter?.onItemDetached()
     }
 
     private fun SceytItemOutFilesMessageBinding.setMessageItemStyle() {

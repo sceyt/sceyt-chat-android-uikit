@@ -93,8 +93,8 @@ fun SceytMessage.getAttachmentUrl(context: Context): String? {
     return null
 }
 
-fun SceytAttachment?.getFileFromMetadata(): File? {
-    val metadata = this?.metadata ?: return null
+private fun String?.getFileFromMetadata(): File? {
+    val metadata = this ?: return null
     try {
         val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
         return File(data.localPath)
@@ -109,9 +109,9 @@ fun SceytAttachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
     if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)
         return loadedFile
 
-    val fileFromMetadata = getFileFromMetadata()
+    /*val fileFromMetadata = metadata.getFileFromMetadata()
     if (fileFromMetadata != null && fileFromMetadata.exists())
-        return fileFromMetadata
+        return fileFromMetadata*/
 
     return null
 }

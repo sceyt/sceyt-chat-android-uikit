@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -12,12 +13,16 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -32,6 +37,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -49,6 +56,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var enabledClickActions = true
 
     init {
+        MessageFilesAdapter.clearListeners()
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
 
         if (attrs != null) {
@@ -131,6 +139,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     clickListeners.onAttachmentLongClick(view, item)
             }
 
+            override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+                if (enabledClickActions)
+                    clickListeners.onAttachmentLoaderClick(view, item)
+            }
+
             override fun onLinkClick(view: View, item: MessageItem) {
                 if (enabledClickActions)
                     clickListeners.onLinkClick(view, item)
@@ -195,6 +208,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         else
             reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
 
+    }
+
+    private fun onAttachmentLoaderClick(item: FileListItem) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(item))
     }
 
     private fun showAddEmojiDialog(message: SceytMessage) {
@@ -302,6 +319,38 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal suspend fun updateProgress(data: TransferData) {
+        Log.i(TAG, data.toString())
+        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+            val predicate: (SceytAttachment) -> Boolean = when (data.state) {
+                TransferState.Uploading, TransferState.PendingUpload, TransferState.Uploaded -> { attachment ->
+                    attachment.tid == data.attachmentTid
+                }
+                else -> { attachment ->
+                    attachment.url == data.url
+                }
+            }
+
+            val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
+            Log.i(TAG, "foundAttachment " + foundAttachment?.tid.toString() + " $data")
+
+            foundAttachment?.let { attachment ->
+              /*  (it.second as MessageItem).message.files?.find { fileItem ->
+                    fileItem.file == attachment
+                }*/
+
+                attachment.filePath = data.filePath
+                attachment.url = data.url
+                attachment.transferState = data.state
+                attachment.progressPercent = data.progressPercent
+
+                withContext(Dispatchers.Main) {
+                    MessageFilesAdapter.update(data)
+                }
+            }
+        }
+    }
+
     internal fun messageSendFailed(tid: Long) {
         messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
             val message = (it.second as MessageItem).message
@@ -384,6 +433,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
     }
 
+    fun setNeedDownloadListener(callBack: (FileListItem) -> Unit) {
+        messagesRV.getViewHolderFactory().setNeedDownloadCallback(callBack)
+    }
 
     fun scrollToMessage(msgId: Long, highlight: Boolean) {
         MessagesAdapter.awaitUpdating {
@@ -501,6 +553,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
         clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
+    }
+
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+        onAttachmentLoaderClick(item)
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {

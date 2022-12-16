@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 
 class MessageConverter {
     @TypeConverter
@@ -27,6 +28,12 @@ class MessageConverter {
 
     @TypeConverter
     fun intToSelfMarkerTypeEnum(value: Int) = value.toEnum<SelfMarkerTypeEnum>()
+
+    @TypeConverter
+    fun transferStateEnumToTnt(value: TransferState?) = value?.ordinal
+
+    @TypeConverter
+    fun intToTransferStateTypeEnum(value: Int?) = value?.toEnum<TransferState>()
 
     @TypeConverter
     fun stringToMarkerCount(json: String?): List<MarkerCount>? {
