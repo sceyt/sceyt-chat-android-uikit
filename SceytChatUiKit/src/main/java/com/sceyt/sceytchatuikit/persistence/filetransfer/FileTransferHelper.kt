@@ -1,11 +1,20 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
+import android.net.Uri
+import android.util.Log
+import android.util.Size
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.toBase64
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import org.json.JSONObject
 import org.koin.core.component.inject
 
 object FileTransferHelper : SceytKoinComponent {
@@ -46,5 +55,45 @@ object FileTransferHelper : SceytKoinComponent {
                     }
                 }
             }))
+    }
+
+    fun addBlurredBytesAndSizeToMetadata(attachment: SceytAttachment) {
+        try {
+            attachment.filePath?.let { path ->
+                var size: Size? = null
+                var base64String: String? = null
+                when (attachment.type) {
+                    AttachmentTypeEnum.Image.value() -> {
+                        size = FileResizeUtil.getImageSize(Uri.parse(path))
+                        FileResizeUtil.scaleDownImageByUrl(path, 10f)?.let { bytes ->
+                            base64String = bytes.toBase64()
+                        }
+                    }
+                    AttachmentTypeEnum.Video.value() -> {
+                        size = FileResizeUtil.getVideoSize(path)
+                        FileResizeUtil.scaleDownVideoByUrl(path, 10f)?.let { bytes ->
+                            base64String = bytes.toBase64()
+                        }
+                    }
+                }
+                setMetadata(base64String, size, attachment)
+            }
+        } catch (ex: Exception) {
+            Log.i(TAG, "Couldn't get an blurred image or sizes.")
+        }
+    }
+
+    fun setMetadata(base64String: String?, size: Size?, attachment: SceytAttachment) {
+        try {
+            val obj = JSONObject(attachment.metadata.toString())
+            obj.put("thumbnail", base64String)
+            size?.let {
+                obj.put("width", it.width)
+                obj.put("height", it.height)
+            }
+            attachment.metadata = obj.toString()
+        } catch (t: Throwable) {
+            Log.e(TAG, "Could not parse malformed JSON: \"" + attachment.metadata.toString() + "\"")
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -141,6 +142,36 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
             }
             addView(imageThumb, 0)
         } else imageThumb?.setImageDrawable(drawable)
+        imageThumb?.isVisible = true
+    }
+
+    fun getImageView(): ImageView {
+        if (imageThumb == null) {
+            imageThumb = AppCompatImageView(context).also {
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            addView(imageThumb, 0)
+        }
+        return imageThumb!!
+    }
+
+    private fun checkAndAddImage() {
+        if (imageThumb == null) {
+            imageThumb = AppCompatImageView(context).also {
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            addView(imageThumb, 0)
+        }
+    }
+
+    fun setBitmapImageThumb(bitmap: Bitmap?) {
+        if (imageThumb == null) {
+            imageThumb = AppCompatImageView(context).also {
+                it.setImageBitmap(bitmap)
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            addView(imageThumb, 0)
+        } else imageThumb?.setImageBitmap(bitmap)
         imageThumb?.isVisible = true
     }
 

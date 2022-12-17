@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
@@ -18,6 +19,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.coroutines.resume
@@ -46,37 +48,46 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
         // checkAndResizeMessageAttachments(context, tmpMessage)
+        val payloads = messageDao.getAllPayLoadsByMsgTid(tmpMessage.tid)
+
         return suspendCancellableCoroutine { continuation ->
             if (tmpMessage.attachments.isNullOrEmpty().not()) {
                 tmpMessage.attachments?.forEach { attachment ->
-                    fileTransferService.upload(attachment, TransferTask(tmpMessage.tid,
-                        state = attachment.transferState,
-                        progressCallback = { updateDate ->
-                            MessageEventsObserver.emitAttachmentTransferUpdate(updateDate)
-                            attachment.transferState = updateDate.state
-                            attachment.progressPercent = updateDate.progressPercent
-                            messageDao.updateAttachmentTransferProgressAndStateWithMsgTid(updateDate.attachmentTid, updateDate.progressPercent, updateDate.state)
-                            messagesCash.updateAttachmentTransferData(updateDate)
-                        },
-                        resultCallback = { result ->
-                            if (result is SceytResponse.Success) {
-                                val transferData = TransferData(tmpMessage.tid,
-                                    attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
-                                attachment.updateWithTransferData(transferData)
-                                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                                messageDao.updateAttachmentAndPayLoad(transferData)
-                                messagesCash.updateAttachmentTransferData(transferData)
-                            } else {
-                                val transferData = TransferData(tmpMessage.tid,
-                                    attachment.tid, attachment.progressPercent
-                                            ?: 0f, TransferState.PendingUpload, attachment.filePath, null)
+                    val payload = payloads.find { it.messageTid == attachment.messageTid }
+                    if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
+                        val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
+                        messageDao.updateAttachmentAndPayLoad(transferData)
+                        messagesCash.updateAttachmentTransferData(transferData)
+                        continuation.resume(true)
+                    } else
+                        fileTransferService.upload(attachment, TransferTask(tmpMessage.tid,
+                            state = attachment.transferState,
+                            progressCallback = { updateDate ->
+                                MessageEventsObserver.emitAttachmentTransferUpdate(updateDate)
+                                attachment.transferState = updateDate.state
+                                attachment.progressPercent = updateDate.progressPercent
+                                messageDao.updateAttachmentTransferProgressAndStateWithMsgTid(updateDate.attachmentTid, updateDate.progressPercent, updateDate.state)
+                                messagesCash.updateAttachmentTransferData(updateDate)
+                            },
+                            resultCallback = { result ->
+                                if (result is SceytResponse.Success) {
+                                    val transferData = TransferData(tmpMessage.tid,
+                                        attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
+                                    attachment.updateWithTransferData(transferData)
+                                    MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                                    messageDao.updateAttachmentAndPayLoad(transferData)
+                                    messagesCash.updateAttachmentTransferData(transferData)
+                                } else {
+                                    val transferData = TransferData(tmpMessage.tid,
+                                        attachment.tid, attachment.progressPercent
+                                                ?: 0f, TransferState.PendingUpload, attachment.filePath, null)
 
-                                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                                messageDao.updateAttachmentAndPayLoad(transferData)
-                                messagesCash.updateAttachmentTransferData(transferData)
-                            }
-                            continuation.resume(result is SceytResponse.Success)
-                        }))
+                                    MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                                    messageDao.updateAttachmentAndPayLoad(transferData)
+                                    messagesCash.updateAttachmentTransferData(transferData)
+                                }
+                                continuation.resume(result is SceytResponse.Success)
+                            }))
                 }
             } else continuation.resume(false)
         }

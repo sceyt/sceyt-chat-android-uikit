@@ -4,11 +4,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
 import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.bitmapToByteArray
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -35,7 +37,7 @@ object FileResizeUtil {
         return File(context.cacheDir.toString() + fileName)
     }
 
-    private fun getImageSize(image: Uri): Size {
+    fun getImageSize(image: Uri): Size {
         val input = FileInputStream(image.path)
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
@@ -43,9 +45,34 @@ object FileResizeUtil {
         return Size(options.outWidth, options.outHeight)
     }
 
-    fun scaleDownFileByUrl(url: String, maxImageSize: Float): Bitmap {
-        val bitmap = BitmapFactory.decodeFile(url)
-        return scaleDownBitmap(bitmap, maxImageSize)
+    fun getVideoSize(path: String): Size {
+        val metaRetriever = MediaMetadataRetriever()
+        metaRetriever.setDataSource(path)
+        val height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
+                ?: 0
+        val width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
+                ?: 0
+        return Size(width, height)
+    }
+
+    fun scaleDownImageByUrl(url: String, maxImageSize: Float): ByteArray? {
+        return try {
+            val bitmap = BitmapFactory.decodeFile(url)
+            scaleDownBitmap(bitmap, maxImageSize).bitmapToByteArray()
+        } catch (ex: Exception) {
+            null
+        }
+    }
+
+    fun scaleDownVideoByUrl(url: String, maxImageSize: Float): ByteArray? {
+        return try {
+            val bitmap = MediaMetadataRetriever().apply {
+                setDataSource(url)
+            }.getFrameAtTime(1000)
+            scaleDownBitmap(bitmap ?: return null, maxImageSize).bitmapToByteArray()
+        } catch (ex: Exception) {
+            null
+        }
     }
 
     fun scaleDownBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
@@ -63,15 +90,17 @@ object FileResizeUtil {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
-    fun createFileFromBitmap(context: Context, bitmap: Bitmap, fileName: String): File {
-        try {
+    fun createFileFromBitmap(context: Context, bitmap: Bitmap, fileName: String): File? {
+        return try {
             val bmpFile = FileOutputStream(context.cacheDir.toString() + fileName)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
             bmpFile.close()
+            File(context.cacheDir.toString() + fileName)
+
         } catch (e: java.lang.Exception) {
+            null
         }
-        return File(context.cacheDir.toString() + fileName)
     }
 
     private fun calculateInSampleSize(size: Size, reqWidth: Int, reqHeight: Int): Int {

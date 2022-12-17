@@ -40,6 +40,7 @@ class MessageFileViewHolder(
         super.bind(item)
         listenerKey = getKey()
         val file = (item as? FileListItem.File)?.file ?: return
+        setListener()
 
         with(binding) {
             tvFileName.text = file.name
@@ -58,8 +59,6 @@ class MessageFileViewHolder(
             }
         }
 
-        setListener()
-
         transferData?.let {
             updateState(it)
             if (it.state == TransferState.Downloading)
@@ -68,7 +67,7 @@ class MessageFileViewHolder(
     }
 
     private fun updateState(data: TransferData) {
-        if (isFileItemInitialized.not() || (data.messageTid  != fileItem.sceytMessage.tid)) return
+        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
         transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
@@ -78,10 +77,7 @@ class MessageFileViewHolder(
             TransferState.PendingDownload -> {
                 needDownloadCallback.invoke(fileItem)
             }
-            TransferState.Downloading -> {
-                binding.icFile.setImageResource(0)
-            }
-            TransferState.Uploading -> {
+            TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
             }
             TransferState.Uploaded, TransferState.Downloaded -> {
