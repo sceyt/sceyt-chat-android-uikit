@@ -25,7 +25,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     protected var listenerKey: String = ""
     protected var transferData: TransferData? = null
     protected var thumb: ByteArray? = null
-    protected var thumBitmap: Drawable? = null
+    protected var thumbBitmap: Drawable? = null
     protected var imageWidth: Int? = null
     protected var imageHeight: Int? = null
 
@@ -65,7 +65,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     fun loadImage(path: String?, imageView: ImageView) {
         Glide.with(itemView.context.applicationContext)
             .load(path)
-            .placeholder(thumBitmap)
+            .placeholder(thumbBitmap)
             .transition(DrawableTransitionOptions.withCrossFade())
             .override(imageView.width, imageView.height)
             .into(imageView)
@@ -77,7 +77,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             .load(bytes)
             .transform(BlurTransformation())
             .addListener(glideRequestListener(onResourceReady = {
-                thumBitmap = it?.toDrawable(context.resources)
+                thumbBitmap = it?.toDrawable(context.resources)
             }))
             .into(imageView)
     }
