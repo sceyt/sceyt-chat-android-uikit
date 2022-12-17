@@ -1,12 +1,15 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.glideRequestListener
 import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbByBytesAndSize
@@ -22,6 +25,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     protected var listenerKey: String = ""
     protected var transferData: TransferData? = null
     protected var thumb: ByteArray? = null
+    protected var thumBitmap: Drawable? = null
     protected var imageWidth: Int? = null
     protected var imageHeight: Int? = null
 
@@ -61,6 +65,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     fun loadImage(path: String?, imageView: ImageView) {
         Glide.with(itemView.context.applicationContext)
             .load(path)
+            .placeholder(thumBitmap)
             .transition(DrawableTransitionOptions.withCrossFade())
             .override(imageView.width, imageView.height)
             .into(imageView)
@@ -68,8 +73,12 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
 
     fun loadBlurImageBytes(bytes: ByteArray?, imageView: ImageView) {
         Glide.with(itemView.context.applicationContext)
+            .asBitmap()
             .load(bytes)
             .transform(BlurTransformation())
+            .addListener(glideRequestListener(onResourceReady = {
+                thumBitmap = it?.toDrawable(context.resources)
+            }))
             .into(imageView)
     }
 }
