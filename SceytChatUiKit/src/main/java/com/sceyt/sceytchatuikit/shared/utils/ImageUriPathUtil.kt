@@ -12,10 +12,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.UnsupportedEncodingException
+import java.io.*
 import java.net.URLEncoder
 
 object ImageUriPathUtil {
@@ -202,4 +199,19 @@ object ImageUriPathUtil {
         return uri.toString().startsWith("content://com.google.android.apps.photos.content")
     }
 
+    @Throws(IOException::class)
+    fun copyFile(context: Context, uri: String, name: String): File {
+        val file = File(uri)
+        if (file.exists()) return file
+        return File(context.cacheDir, name)
+            .apply {
+                if (!exists()) {
+                    outputStream().use { cache ->
+                        context.contentResolver.openInputStream(Uri.parse(uri)).use { inputStream ->
+                            inputStream?.copyTo(cache)
+                        }
+                    }
+                }
+            }
+    }
 }
