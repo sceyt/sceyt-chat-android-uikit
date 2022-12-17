@@ -166,7 +166,7 @@ abstract class MessageDao {
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
 
     @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
-    abstract suspend fun getAllPayLoadsByMsgTid(tid: List<Long>): List<AttachmentPayLoadEntity>
+    abstract suspend fun getAllPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
 
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int

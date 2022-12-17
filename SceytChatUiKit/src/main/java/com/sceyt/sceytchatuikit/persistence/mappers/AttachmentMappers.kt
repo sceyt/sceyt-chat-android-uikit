@@ -1,5 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
+import android.util.Base64
+import android.util.Log
+import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -8,22 +11,9 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-
-/*
-fun Attachment.toAttachmentEntity(messageId: Long, messageTid: Long) = AttachmentEntity(
-    messageId = messageId,
-    messageTid = messageTid,
-    tid = tid,
-    name = name,
-    type = type,
-    metadata = metadata,
-    fileSize = uploadedFileSize,
-    url = url,
-    filePath = filePath
-)
-*/
-
+import org.json.JSONObject
 
 fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long) = AttachmentDb(
     AttachmentEntity(messageId = messageId,
@@ -48,7 +38,7 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             metadata = metadata,
             fileSize = fileSize,
             url = payLoad?.url ?: url,
-            filePath =  payLoad?.filePath ?: filePath,
+            filePath = payLoad?.filePath ?: filePath,
             transferState = payLoad?.transferState,
             progressPercent = payLoad?.progressPercent)
     }
@@ -77,4 +67,35 @@ fun AttachmentDb.toAttachmentPayLoad(messageStatus: DeliveryStatus): AttachmentP
             url = url,
             filePath = filePath)
     }
+}
+
+fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: TransferState): TransferData {
+    return TransferData(
+        messageTid = messageTid,
+        attachmentTid = attachmentTid,
+        state = transferState ?: default,
+        progressPercent = 0f,
+        url = url,
+        filePath = filePath
+    )
+}
+
+fun String?.getThumbByBytesAndSize(): Pair<Size?, ByteArray?>? {
+    var base64Thumb: ByteArray? = null
+    var size: Size? = null
+    try {
+        val jsonObject = JSONObject(this ?: return null)
+        val thumbnail = jsonObject.getString("thumbnail")
+        base64Thumb = Base64.decode(thumbnail, Base64.DEFAULT)
+        val width = jsonObject.getString("width").toIntOrNull()
+        val height = jsonObject.getString("height").toIntOrNull()
+        if (width != null && height != null)
+            size = Size(width, height)
+    } catch (ex: Exception) {
+        Log.i("MetadataReader", "Couldn't get data from attachment metadata with reason ${ex.message}")
+    }
+    if (size == null && base64Thumb == null)
+        return null
+
+    return Pair(size, base64Thumb)
 }
