@@ -51,7 +51,7 @@ fun Bitmap?.bitmapToByteArray(): ByteArray? {
     this ?: return null
     return try {
         val stream = ByteArrayOutputStream()
-        compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        compress(Bitmap.CompressFormat.JPEG, 100, stream)
         stream.toByteArray()
     } catch (ex: Exception) {
         null

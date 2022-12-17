@@ -149,7 +149,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                 .setType(getMessageType(if (index == 0) messageBody else null, attachment))
                                 .apply {
                                     if (index == 0) {
-                                        setBody(binding.messageInput.text.toString())
+                                        setBody(messageBody)
                                         replyMessage?.let {
                                             setParentMessageId(it.id)
                                             setReplyInThread(replyThreadMessageId != null)
@@ -170,7 +170,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         val messageToSend: Message? = Message.MessageBuilder()
                             .setAttachments(allAttachments.toTypedArray())
                             .setType(getMessageType(messageBody))
-                            .setBody(binding.messageInput.text.toString())
+                            .setBody(messageBody)
                             .apply {
                                 replyMessage?.let {
                                     setParentMessageId(it.id)
