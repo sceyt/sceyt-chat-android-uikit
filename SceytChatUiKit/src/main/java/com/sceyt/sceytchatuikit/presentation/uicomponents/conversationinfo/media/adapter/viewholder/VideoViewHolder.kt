@@ -22,7 +22,7 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
 
     override fun bind(item: FileListItem) {
         with(binding) {
-            videoViewController.setImageThumb(null)
+            videoViewController.setBitmapImageThumb(null)
             parentLayout.clipToOutline = true
             videoView.isVisible = false
            // binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
@@ -35,7 +35,7 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
         binding.videoViewController.showPlayPauseButtons(!data.loading)
         if (data.loading) {
             loadProgress.progress = data.progressPercent.toInt()
-            videoViewController.setImageThumb(null)
+            videoViewController.setBitmapImageThumb(null)
         }
         if (file != null) {
             val mediaPath = file.path
