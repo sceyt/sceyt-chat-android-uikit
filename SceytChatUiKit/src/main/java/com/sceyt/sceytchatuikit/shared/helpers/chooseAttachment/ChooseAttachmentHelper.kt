@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -11,9 +12,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.extensions.initAttachmentLauncher
-import com.sceyt.sceytchatuikit.extensions.initCameraLauncher
-import kotlinx.coroutines.runBlocking
+import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.sceytchatuikit.shared.utils.FileUtil
+import com.sceyt.sceytchatuikit.shared.utils.ImageUriPathUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class ChooseAttachmentHelper {
@@ -29,10 +35,13 @@ class ChooseAttachmentHelper {
     private var takePhotoPath: String? = null
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
     private var takePictureCb: ((String) -> Unit)? = null
+    private lateinit var scope: CoroutineScope
+    private val debounceHelper by lazy { DebounceHelper(300L, scope) }
 
     constructor(activity: ComponentActivity) {
         with(activity) {
             this@ChooseAttachmentHelper.context = activity
+            scope = activity.lifecycleScope
 
             requestCameraPermissionLauncher = initPermissionLauncher {
                 onCameraPermissionResult(it)
@@ -56,6 +65,8 @@ class ChooseAttachmentHelper {
 
     constructor(fragment: Fragment) {
         with(fragment) {
+            scope = fragment.lifecycleScope
+
             lifecycleScope.launchWhenResumed {
                 this@ChooseAttachmentHelper.context = requireContext()
             }
@@ -119,22 +130,58 @@ class ChooseAttachmentHelper {
         if (result.resultCode == AppCompatActivity.RESULT_OK) {
             val data = result.data
             if (data?.clipData != null) {
-                val paths = mutableListOf<String>()
+                val uris = mutableListOf<Uri>()
                 for (i in 0 until (data.clipData?.itemCount ?: 0)) {
-                    val uri = data.clipData?.getItemAt(i)?.uri
-                    runBlocking {
-                        context.getPathFromFile(uri)?.let { path ->
-                            paths.add(path)
-                        }
+                    data.clipData?.getItemAt(i)?.uri?.let { uri ->
+                        uris.add(uri)
                     }
                 }
-                if (paths.isNotEmpty())
-                    chooseFilesCb?.invoke(paths)
-            } else
-                context.getPathFromFile(data?.data)?.let { path ->
-                    chooseFilesCb?.invoke(arrayListOf(path))
+                scope.launch(Dispatchers.IO) {
+                    val paths = getPathFromFile(*uris.toTypedArray())
+                    if (paths.isNotEmpty())
+                        withContext(Dispatchers.Main) {
+                            chooseFilesCb?.invoke(paths)
+                        }
                 }
+            } else {
+                scope.launch(Dispatchers.IO) {
+                    val paths = getPathFromFile(data?.data)
+                    if (paths.isNotEmpty())
+                        withContext(Dispatchers.Main) {
+                            chooseFilesCb?.invoke(paths)
+                        }
+                }
+            }
         }
+    }
+
+    private suspend fun getPathFromFile(vararg uris: Uri?): List<String> {
+        val paths = mutableListOf<String>()
+        val filteredUris = uris.filterNotNull()
+        if (filteredUris.isEmpty()) return emptyList()
+
+        filteredUris.forEach { uri ->
+            try {
+                debounceHelper.submitSuspendable {
+                    withContext(Dispatchers.Main) { SceytLoader.showLoading(context) }
+                }
+
+                val path = FileUtil(context).getPath(uri)
+                val file = File(path)
+                if (file.exists()) {
+                    paths.add(path)
+                } else {
+                    val copiedFile = ImageUriPathUtil.copyFile(context, uri.toString(), file.name)
+                    paths.add(copiedFile.path)
+                }
+            } catch (e: Exception) {
+                Log.e(this.TAG, "error to get path with reason ${e.message}")
+            }
+        }
+        debounceHelper.cancelLastDebounce()
+
+        withContext(Dispatchers.Main) { SceytLoader.hideLoading() }
+        return paths
     }
 
     private fun onCameraPermissionResult(isGranted: Boolean) {
@@ -180,7 +227,7 @@ class ChooseAttachmentHelper {
         intent.type = "*/*"
         intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes)
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
-        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, false)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         addAttachmentLauncher.launch(intent)
     }

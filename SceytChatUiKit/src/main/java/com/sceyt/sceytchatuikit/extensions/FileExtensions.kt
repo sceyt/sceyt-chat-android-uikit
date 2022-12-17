@@ -12,12 +12,11 @@ import java.io.File
 
 fun getMimeType(url: String?): String? {
     if (url.isNullOrBlank()) return null
-    var type: String? = null
-    try {
-        type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(url.substring(url.lastIndexOf(".") + 1))
+    return try {
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(url.substring(url.lastIndexOf(".") + 1))
     } catch (ex: Exception) {
+        null
     }
-    return type
 }
 
 fun getMimeTypeTakeFirstPart(url: String?): String? {
