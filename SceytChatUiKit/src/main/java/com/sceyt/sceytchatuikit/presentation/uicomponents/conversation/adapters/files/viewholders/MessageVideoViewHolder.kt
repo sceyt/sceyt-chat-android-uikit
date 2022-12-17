@@ -1,12 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import android.util.Log
 import androidx.core.view.isVisible
-import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.glideCustomTarget
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
@@ -49,57 +45,46 @@ class MessageVideoViewHolder(
         setListener()
 
         transferData?.let {
-            updateState(it)
+            updateState(it, true)
             if (it.state == Downloading)
                 needDownloadCallback.invoke(fileItem)
         }
     }
 
-    private fun updateState(data: TransferData) {
-        Log.i(TAG, "$data  $isFileItemInitialized")
-        if (isFileItemInitialized.not() || (data.messageTid  != fileItem.sceytMessage.tid)) return
+    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
+        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
         transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload -> {
-                loadImage(fileItem.file.filePath)
+                loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
                 binding.videoViewController.showPlayPauseButtons(false)
             }
             PendingDownload -> {
                 needDownloadCallback.invoke(fileItem)
                 binding.videoViewController.showPlayPauseButtons(false)
+                loadBlurImageBytes(thumb, binding.videoViewController.getImageView())
             }
             Downloading -> {
-                binding.videoViewController.setImageThumb(null)
                 binding.videoViewController.showPlayPauseButtons(false)
+                if (isOnBind)
+                    loadBlurImageBytes(thumb, binding.videoViewController.getImageView())
             }
             Uploading -> {
-                loadImage(fileItem.file.filePath)
+                if (isOnBind)
+                    loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
                 binding.videoViewController.showPlayPauseButtons(false)
             }
             Uploaded, Downloaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(fileItem.file.filePath)
-                loadImage(fileItem.file.filePath)
+                loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
             }
         }
     }
 
     private fun setListener() {
         MessageFilesAdapter.setListener(listenerKey, ::updateState)
-    }
-
-    private fun loadImage(path: String?) {
-        with(binding) {
-            Glide.with(itemView.context.applicationContext)
-                .load(path)
-                .override(videoView.width, videoView.height)
-                .into(glideCustomTarget {
-                    if (it != null) {
-                        videoViewController.setImageThumb(it)
-                    }
-                })
-        }
     }
 
     private fun initializePlayer(mediaPath: String?) {

@@ -1,10 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import android.util.Log
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
@@ -45,49 +41,41 @@ class MessageImageViewHolder(
 
         binding.loadProgress.release()
         transferData?.let {
-            updateState(it)
+            updateState(it, true)
             if (it.state == Downloading)
                 needDownloadCallback.invoke(fileItem)
         }
     }
 
-    private fun updateState(data: TransferData) {
-        Log.i(TAG, "$data  $isFileItemInitialized")
-
-        if (isFileItemInitialized.not() || (data.messageTid  != fileItem.sceytMessage.tid)) return
+    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
+        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
         transferData = data
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload -> {
-                loadImage(fileItem.file.filePath)
+                loadImage(fileItem.file.filePath, binding.fileImage)
             }
             PendingDownload -> {
-                binding.fileImage.setImageBitmap(null)
+                loadBlurImageBytes(thumb, binding.fileImage)
                 needDownloadCallback.invoke(fileItem)
             }
             Downloading -> {
-                binding.fileImage.setImageBitmap(null)
+                if (isOnBind)
+                    loadBlurImageBytes(thumb, binding.fileImage)
             }
             Uploading -> {
-                loadImage(fileItem.file.filePath)
+                if (isOnBind)
+                    loadImage(fileItem.file.filePath, binding.fileImage)
             }
             Uploaded, Downloaded -> {
-                loadImage(fileItem.file.filePath)
+                loadImage(fileItem.file.filePath, binding.fileImage)
             }
         }
     }
 
     private fun setListener() {
         MessageFilesAdapter.setListener(listenerKey, ::updateState)
-    }
-
-    private fun loadImage(path: String?) {
-        Glide.with(itemView.context.applicationContext)
-            .load(path)
-            .transition(DrawableTransitionOptions.withCrossFade())
-            .override(binding.root.width, binding.root.height)
-            .into(binding.fileImage)
     }
 
     private fun SceytMessageImageItemBinding.setupStyle() {

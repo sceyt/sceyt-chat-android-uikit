@@ -30,6 +30,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
@@ -194,6 +195,7 @@ internal class PersistenceMessagesLogicImpl(
             attachments?.map {
                 it.transferState = TransferState.Uploading
                 it.progressPercent = 0f
+                FileTransferHelper.addBlurredBytesAndSizeToMetadata(it)
             }
         }
         return tmpMessage
@@ -452,7 +454,7 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
-        val payloads = messageDao.getAllPayLoadsByMsgTid(messages.map { it.tid })
+        val payloads = messageDao.getAllPayLoadsByMsgTid(*messages.map { it.tid }.toLongArray())
         messages.forEach {
             payloads.find { payLoad -> payLoad.messageTid == it.tid }?.let { entity ->
                 it.attachments?.forEach { attachment ->
