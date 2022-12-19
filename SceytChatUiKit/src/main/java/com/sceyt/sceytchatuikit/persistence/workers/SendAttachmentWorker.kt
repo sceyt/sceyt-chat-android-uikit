@@ -80,7 +80,7 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                                 } else {
                                     val transferData = TransferData(tmpMessage.tid,
                                         attachment.tid, attachment.progressPercent
-                                                ?: 0f, TransferState.PendingUpload, attachment.filePath, null)
+                                                ?: 0f, TransferState.ErrorUpload, attachment.filePath, null)
 
                                     MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                                     messageDao.updateAttachmentAndPayLoad(transferData)

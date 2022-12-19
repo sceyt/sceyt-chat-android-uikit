@@ -276,30 +276,33 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        when (val state = item.file.transferState) {
-            TransferState.Downloading, TransferState.Uploading -> {
-                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
-                val newState = if (item.sceytMessage.incoming || state == TransferState.Downloading)
-                    TransferState.PendingDownload
-                else TransferState.PendingUpload
-
-                MessageEventsObserver.emitAttachmentTransferUpdate(
-                    TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
-                            ?: 0f, newState, item.file.filePath, item.file.url)
-                )
-            }
-            TransferState.PendingDownload, TransferState.PendingUpload -> {
+        val newState: TransferState
+        when (val state = item.file.transferState ?: return) {
+            TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload -> {
+                newState = TransferState.Uploading
                 fileTransferService.resume(item.sceytMessage.tid, item.file, state)
-                val newState = if (item.sceytMessage.incoming) TransferState.Downloading
-                else TransferState.Uploading
-                MessageEventsObserver.emitAttachmentTransferUpdate(
-                    TransferData(item.sceytMessage.tid, item.file.tid, item.file.progressPercent
-                            ?: 0f,
-                        newState, item.file.filePath, item.file.url)
-                )
             }
-            else -> {}
+            TransferState.PendingDownload, TransferState.PauseDownload, TransferState.ErrorDownload -> {
+                newState = TransferState.Downloading
+                fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+            }
+            TransferState.Uploading -> {
+                newState = TransferState.PauseUpload
+                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+            }
+            TransferState.Downloading -> {
+                newState = TransferState.PauseDownload
+                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+            }
+            TransferState.Uploaded, TransferState.Downloaded -> {
+                newState = state
+            }
         }
+
+        MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(
+            item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
+            newState, item.file.filePath, item.file.url)
+        )
     }
 
     fun addReaction(message: SceytMessage, scoreKey: String) {

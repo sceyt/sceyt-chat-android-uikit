@@ -12,18 +12,22 @@ enum class TransferState {
     Uploading,
     Downloading,
     Uploaded,
-    Downloaded
+    Downloaded,
+    PauseUpload,
+    PauseDownload,
+    ErrorUpload,
+    ErrorDownload
 }
 
 fun SceytCircularProgressView.getProgressWithState(state: TransferState, progressPercent: Float = 0f) {
     when (state) {
-        PendingUpload -> {
+        PendingUpload, ErrorUpload, PauseUpload -> {
             release()
             setTransferring(false)
             setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_upload))
             isVisible = true
         }
-        PendingDownload -> {
+        PendingDownload, ErrorDownload, PauseDownload -> {
             release()
             setTransferring(false)
             setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_download))
