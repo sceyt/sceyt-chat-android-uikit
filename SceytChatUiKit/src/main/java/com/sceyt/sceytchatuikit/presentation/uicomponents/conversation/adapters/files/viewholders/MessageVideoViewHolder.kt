@@ -40,7 +40,7 @@ class MessageVideoViewHolder(
         listenerKey = getKey()
         binding.parentLayout.clipToOutline = true
         binding.videoView.isVisible = false
-        binding.loadProgress.release()
+        binding.loadProgress.release(item.file.progressPercent)
 
         setListener()
 

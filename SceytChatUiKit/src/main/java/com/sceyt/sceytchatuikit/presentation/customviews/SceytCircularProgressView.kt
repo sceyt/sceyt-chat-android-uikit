@@ -14,6 +14,7 @@ import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.toColorInt
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import kotlin.math.max
 import kotlin.math.min
@@ -32,7 +33,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private val rectBg = RectF()
     private var startAngle = -90f
     private val maxAngle = 360f
-    private val maxProgress = 100
+    private val maxProgress = 100f
 
     private var diameter = 0f
     private var angle = 0f
@@ -52,6 +53,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var iconSizeInPercent: Float = 50f
     private var transferring: Boolean = true
     private var animatingToAngle = angle
+    private var drawingProgressAnimEndCb: ((Boolean) -> Unit)? = null
 
     init {
         attrs?.let {
@@ -148,8 +150,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     private fun drawProgress(newAngel: Float) {
         if (newAngel != angle) {
+            animatingToAngle = newAngel
             if ((updateProgressAnim == null || updateProgressAnim?.isRunning != true)) {
-                animatingToAngle = newAngel
                 updateProgressAnim = ValueAnimator.ofFloat(angle, newAngel).apply {
                     addUpdateListener { animation ->
                         this@SceytCircularProgressView.angle = (animation.animatedValue as Float)
@@ -161,8 +163,9 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
                     start()
 
                     doOnEnd {
-                        if (animatingToAngle != angle)
-                            drawProgress(angle)
+                        if (animatingToAngle != angle) {
+                            drawProgress(animatingToAngle)
+                        } else drawingProgressAnimEndCb?.invoke(true)
                     }
                 }
             }
@@ -213,9 +216,9 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             iconSize = (width * iconSizeInPercent / 100 - paddingStart - paddingEnd).toInt()
     }
 
-    fun release() {
-        this.progress = minProgress
-        startAngle = if (rotateAnimEnabled) 0f else -90f
+    fun release(withProgress: Float? = null) {
+        this.progress = max(withProgress ?: 0f, minProgress)
+        //startAngle = if (rotateAnimEnabled) 0f else -90f
         angle = calculateAngle(progress)
         transferring = true
         if (rotateAnimEnabled) rotate()
@@ -264,6 +267,25 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     fun setTransferring(transferring: Boolean) {
         this.transferring = transferring
         invalidate()
+    }
+
+    fun hideAwaitToAnimFinish(hideCb: ((Boolean) -> Unit)? = null) {
+        if (updateProgressAnim?.isRunning == true) {
+            drawingProgressAnimEndCb = {
+                isVisible = false
+                hideCb?.invoke(true)
+            }
+        } else {
+            hideCb?.invoke(true)
+            isVisible = false
+        }
+    }
+
+    fun getProgressAnim() = updateProgressAnim
+
+    override fun setVisibility(visibility: Int) {
+        super.setVisibility(visibility)
+        drawingProgressAnimEndCb = null
     }
 
     override fun setBackgroundColor(color: Int) {

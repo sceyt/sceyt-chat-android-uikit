@@ -1,14 +1,17 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files
 
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.isNull
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytVideoControllerView
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
+import com.sceyt.sceytchatuikit.shared.utils.MyDiffUtil
 
-class MessageFilesAdapter(private val files: ArrayList<FileListItem>,
+class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
                           private var viewHolderFactory: FilesViewHolderFactory
 ) : RecyclerView.Adapter<BaseViewHolder<FileListItem>>() {
 
@@ -68,4 +71,11 @@ class MessageFilesAdapter(private val files: ArrayList<FileListItem>,
     }
 
     fun getData() = files
+
+    fun notifyUpdate(list: List<FileListItem>) {
+        val myDiffUtil = MyDiffUtil(files, list)
+        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        productDiffResult.dispatchUpdatesTo(this)
+        files = list.toArrayList()
+    }
 }

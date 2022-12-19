@@ -227,8 +227,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
     }
 
-    private fun reset() {
-        if (editMessage != null)
+    private fun reset(clearInput: Boolean = true) {
+        if (clearInput)
             binding.messageInput.text = null
         editMessage = null
         replyMessage = null
@@ -406,7 +406,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onCancelReplyMessageViewClick(view: View) {
         cancelReply()
-        reset()
+        reset(replyMessage == null)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
