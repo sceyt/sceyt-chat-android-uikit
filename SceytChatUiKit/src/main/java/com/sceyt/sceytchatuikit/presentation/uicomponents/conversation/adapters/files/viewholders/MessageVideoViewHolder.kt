@@ -46,7 +46,7 @@ class MessageVideoViewHolder(
 
         transferData?.let {
             updateState(it, true)
-            if (it.state == Downloading)
+            if (it.filePath == null)
                 needDownloadCallback.invoke(fileItem)
         }
     }
@@ -56,19 +56,19 @@ class MessageVideoViewHolder(
         transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
-            PendingUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
                 binding.videoViewController.showPlayPauseButtons(false)
             }
             PendingDownload -> {
                 needDownloadCallback.invoke(fileItem)
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadBlurImageBytes(thumb, binding.videoViewController.getImageView())
+                loadThumb(thumb, binding.videoViewController.getImageView())
             }
             Downloading -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 if (isOnBind)
-                    loadBlurImageBytes(thumb, binding.videoViewController.getImageView())
+                    loadThumb(thumb, binding.videoViewController.getImageView())
             }
             Uploading -> {
                 if (isOnBind)
@@ -79,6 +79,14 @@ class MessageVideoViewHolder(
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(fileItem.file.filePath)
                 loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
+            }
+            PauseDownload -> {
+                binding.videoViewController.showPlayPauseButtons(false)
+                loadThumb(thumb, binding.videoViewController.getImageView())
+            }
+            ErrorDownload -> {
+                binding.videoViewController.showPlayPauseButtons(false)
+                loadThumb(thumb, binding.videoViewController.getImageView())
             }
         }
     }

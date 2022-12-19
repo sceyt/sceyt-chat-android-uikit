@@ -31,7 +31,7 @@ class LinkViewHolder(private var binding: ItemChannelLinkBinding,
 
             tvLinkUrl.text = message.body
 
-            if (listItem.linkPreviewMetaData == null) {
+            /*if (listItem.linkPreviewMetaData == null) {
 
                 setLinkInfo(null)
 
@@ -42,7 +42,7 @@ class LinkViewHolder(private var binding: ItemChannelLinkBinding,
                         setLinkInfo(it)
                     }
                 })
-            } else setLinkInfo(listItem.linkPreviewMetaData)
+            } else setLinkInfo(listItem.linkPreviewMetaData)*/
         }
     }
 

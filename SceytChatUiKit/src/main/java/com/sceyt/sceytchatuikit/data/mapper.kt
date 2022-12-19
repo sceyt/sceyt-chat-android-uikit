@@ -108,6 +108,7 @@ fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
 fun SceytAttachment.toAttachment(): Attachment = Attachment.Builder(filePath, url, type)
     .setMetadata(metadata)
     .setName(name)
+    .setFileSize(fileSize)
     .withTid(tid)
     .build()
 

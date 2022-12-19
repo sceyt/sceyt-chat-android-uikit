@@ -1,8 +1,10 @@
 package com.sceyt.sceytchatuikit.extensions
 
+import android.content.Context
 import android.graphics.*
 import android.util.Base64
 import androidx.core.graphics.scale
+import java.io.File
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -87,9 +89,15 @@ fun Bitmap.scaleBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
 }
 
 fun convertString64ToImage(base64String: String): ByteArray? {
-    return Base64.decode(base64String, Base64.DEFAULT)
+    return Base64.decode(base64String, Base64.NO_WRAP)
 }
 
 fun ByteArray.decodeByteArrayToBitmap(): Bitmap {
     return BitmapFactory.decodeByteArray(this, 0, this.size)
+}
+
+fun Bitmap.toFile(context: Context): File {
+    val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
+    compress(Bitmap.CompressFormat.JPEG, 100, dest.outputStream())
+    return dest
 }
