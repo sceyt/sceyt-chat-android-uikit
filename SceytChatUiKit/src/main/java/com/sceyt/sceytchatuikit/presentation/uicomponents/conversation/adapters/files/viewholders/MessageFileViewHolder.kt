@@ -43,7 +43,7 @@ class MessageFileViewHolder(
 
         with(binding) {
             tvFileName.text = file.name
-            loadProgress.release()
+            loadProgress.release(file.progressPercent)
             tvFileSize.text = file.fileSize.toPrettySize()
         }
 

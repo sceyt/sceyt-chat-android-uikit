@@ -39,7 +39,7 @@ class MessageImageViewHolder(
 
         setListener()
 
-        binding.loadProgress.release()
+        binding.loadProgress.release(item.file.progressPercent)
         transferData?.let {
             updateState(it, true)
             if (it.filePath == null)

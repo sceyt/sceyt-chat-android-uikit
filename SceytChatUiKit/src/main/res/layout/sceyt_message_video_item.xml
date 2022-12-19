@@ -34,7 +34,7 @@
         android:layout_height="50dp"
         android:padding="3dp"
         android:visibility="gone"
-        app:backgroundColor="#33191C33"
+        app:backgroundColor="@color/sceyt_progress_bg_color"
         app:iconSizeInPercent="70"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -167,6 +167,7 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
             AttachmentTypeEnum.Video.value() -> {
                 transcodeVideo(context, attachment.filePath, callback)
             }
+            else -> callback.invoke(Result.success(""))
         }
     }
 }
