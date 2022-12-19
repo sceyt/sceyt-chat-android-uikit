@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
@@ -18,7 +17,6 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -363,7 +361,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val attachment = Attachment.Builder(path, null, getAttachmentType(path))
                     .setName(File(path).name)
                     .setFileSize(getFileSize(path))
-                    .setMetadata(Gson().toJson(AttachmentMetadata(path)))
                     .setUpload(false)
                     .build()
 

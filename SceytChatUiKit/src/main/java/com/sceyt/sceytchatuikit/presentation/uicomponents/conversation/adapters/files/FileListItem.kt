@@ -41,7 +41,7 @@ sealed class FileListItem {
         try {
             val jsonObject = JSONObject(this ?: return)
             val thumbnail = jsonObject.getString("thumbnail")
-            base64Thumb = Base64.decode(thumbnail, Base64.DEFAULT)
+            base64Thumb = Base64.decode(thumbnail, Base64.NO_WRAP)
             val width = jsonObject.getString("width").toIntOrNull()
             val height = jsonObject.getString("height").toIntOrNull()
             if (width != null && height != null)

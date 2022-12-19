@@ -89,7 +89,7 @@ fun Bitmap.scaleBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
 }
 
 fun convertString64ToImage(base64String: String): ByteArray? {
-    return Base64.decode(base64String, Base64.DEFAULT)
+    return Base64.decode(base64String, Base64.NO_WRAP)
 }
 
 fun ByteArray.decodeByteArrayToBitmap(): Bitmap {

@@ -83,9 +83,10 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
-    fun setMetadata(base64String: String?, size: Size?, attachment: SceytAttachment) {
+    private fun setMetadata(base64String: String?, size: Size?, attachment: SceytAttachment) {
         try {
-            val obj = JSONObject(attachment.metadata.toString())
+            val obj = if (attachment.metadata.isNullOrBlank()) JSONObject()
+            else JSONObject(attachment.metadata.toString())
             obj.put("thumbnail", base64String)
             size?.let {
                 obj.put("width", it.width)

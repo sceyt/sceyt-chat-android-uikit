@@ -3,10 +3,8 @@ package com.sceyt.sceytchatuikit.persistence.mappers
 import android.util.Base64
 import android.util.Log
 import android.util.Size
-import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
@@ -47,8 +45,7 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
 
 fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
     with(attachmentEntity) {
-        val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
-        return Attachment.Builder(data.localPath, url, type)
+        return Attachment.Builder(filePath, url, type)
             .setMetadata(metadata)
             .setName(name)
             .withTid(tid)
@@ -87,7 +84,7 @@ fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>?
         val jsonObject = JSONObject(this ?: return null)
         if (needThumb) {
             val thumbnail = jsonObject.getString("thumbnail")
-            base64Thumb = Base64.decode(thumbnail, Base64.DEFAULT)
+            base64Thumb = Base64.decode(thumbnail, Base64.NO_WRAP)
         }
         val width = jsonObject.getString("width").toIntOrNull()
         val height = jsonObject.getString("height").toIntOrNull()

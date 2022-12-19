@@ -36,7 +36,7 @@ fun getFileSize(fileUri: String): Long {
 
 fun File.convertImageFileToBase64(): String {
     return ByteArrayOutputStream().use { outputStream ->
-        Base64OutputStream(outputStream, Base64.DEFAULT).use { base64FilterStream ->
+        Base64OutputStream(outputStream, Base64.NO_WRAP).use { base64FilterStream ->
             inputStream().use { inputStream ->
                 inputStream.copyTo(base64FilterStream)
             }
@@ -45,7 +45,7 @@ fun File.convertImageFileToBase64(): String {
     }
 }
 
-fun ByteArray.toBase64(): String = String(Base64.encode(this, Base64.DEFAULT))
+fun ByteArray.toBase64(): String = String(Base64.encode(this, Base64.NO_WRAP))
 
 fun Bitmap?.bitmapToByteArray(): ByteArray? {
     this ?: return null
