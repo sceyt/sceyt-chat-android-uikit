@@ -130,13 +130,13 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
 
     private fun resumeLoad(attachment: SceytAttachment) {
         when (attachment.transferState) {
-            PendingDownload -> {
+            PendingDownload, PauseDownload, ErrorDownload -> {
                 tasksMap[attachment.url.toString()]?.let {
                     downloadingUrlMap.remove(attachment.url)
                     downloadFile(attachment, it)
                 }
             }
-            PendingUpload -> {
+            PendingUpload, PauseUpload, ErrorUpload -> {
                 tasksMap[attachment.tid.toString()]?.let {
                     uploadFile(attachment, it)
                 }

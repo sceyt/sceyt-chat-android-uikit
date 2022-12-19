@@ -46,7 +46,7 @@ object FileTransferHelper : SceytKoinComponent {
                     is SceytResponse.Error -> {
                         val transferData = TransferData(
                             attachment.messageTid, attachment.tid, attachment.progressPercent ?: 0f,
-                            TransferState.PendingDownload, null, attachment.url)
+                            TransferState.ErrorDownload, null, attachment.url)
 
                         attachment.updateWithTransferData(transferData)
                         MessageEventsObserver.emitAttachmentTransferUpdate(transferData)

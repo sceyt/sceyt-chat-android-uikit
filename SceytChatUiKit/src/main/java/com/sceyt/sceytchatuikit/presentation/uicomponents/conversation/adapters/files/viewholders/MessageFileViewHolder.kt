@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -45,23 +44,12 @@ class MessageFileViewHolder(
         with(binding) {
             tvFileName.text = file.name
             loadProgress.release()
-
-            if (item.message.incoming) {
-                tvFileSize.text = file.fileSize.toPrettySize()
-            } else {
-                val size = if (file.fileSize == 0L) {
-                    file.filePath?.let {
-                        getFileSize(it).also { size -> file.fileSize = size }
-                    } ?: 0L
-                } else file.fileSize
-
-                tvFileSize.text = size.toPrettySize()
-            }
+            tvFileSize.text = file.fileSize.toPrettySize()
         }
 
         transferData?.let {
             updateState(it)
-            if (it.state == TransferState.Downloading)
+            if (it.filePath == null)
                 needDownloadCallback.invoke(fileItem)
         }
     }
@@ -71,7 +59,7 @@ class MessageFileViewHolder(
         transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
-            TransferState.PendingUpload -> {
+            TransferState.PendingUpload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
             TransferState.PendingDownload -> {
@@ -82,6 +70,9 @@ class MessageFileViewHolder(
             }
             TransferState.Uploaded, TransferState.Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+            }
+            TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload -> {
+                binding.icFile.setImageResource(0)
             }
         }
     }

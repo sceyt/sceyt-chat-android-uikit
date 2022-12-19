@@ -80,13 +80,15 @@ fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: Transfe
     )
 }
 
-fun String?.getThumbByBytesAndSize(): Pair<Size?, ByteArray?>? {
+fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>? {
     var base64Thumb: ByteArray? = null
     var size: Size? = null
     try {
         val jsonObject = JSONObject(this ?: return null)
-        val thumbnail = jsonObject.getString("thumbnail")
-        base64Thumb = Base64.decode(thumbnail, Base64.DEFAULT)
+        if (needThumb) {
+            val thumbnail = jsonObject.getString("thumbnail")
+            base64Thumb = Base64.decode(thumbnail, Base64.DEFAULT)
+        }
         val width = jsonObject.getString("width").toIntOrNull()
         val height = jsonObject.getString("height").toIntOrNull()
         if (width != null && height != null)
