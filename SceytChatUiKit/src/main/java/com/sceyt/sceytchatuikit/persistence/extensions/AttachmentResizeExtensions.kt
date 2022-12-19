@@ -3,9 +3,8 @@ package com.sceyt.sceytchatuikit.persistence.extensions
 import android.content.Context
 import android.util.Log
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum
+import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.*
 import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeHelper
 import java.io.File
 
@@ -26,24 +25,24 @@ fun Attachment.resizeImage(context: Context): Attachment {
     return resizedAttachment
 }
 
-fun SceytAttachment.resizeImage(context: Context): SceytAttachment {
-    try {
-        filePath?.let {
+fun resizeImage(context: Context, path: String?): Result<String> {
+    return try {
+        path?.let {
             val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context,
                 it, System.currentTimeMillis().toString(), reqSize = 600)
-            filePath = resizedImageFile.path
-        }
+            Result.success(resizedImageFile.path)
+        } ?: Result.failure(Exception("Wrong file path"))
     } catch (ex: Exception) {
         Log.e("ImageResize", ex.message.toString())
+        Result.failure(ex)
     }
-    return this
 }
 
 suspend fun Attachment.transcodeVideo(context: Context): Attachment {
     var transcodeAttachment = this
     val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
     val result = VideoTranscodeHelper.transcodeAsResult(context, destination = dest, uri = url)
-    if (result.resultType == TranscodeResultEnum.Success) {
+    if (result.resultType == Success) {
         transcodeAttachment = Attachment.Builder(dest.path, url, type)
             .withTid(tid)
             .setName(name)
@@ -55,13 +54,16 @@ suspend fun Attachment.transcodeVideo(context: Context): Attachment {
     return transcodeAttachment
 }
 
-suspend fun SceytAttachment.transcodeVideo(context: Context): SceytAttachment {
-    val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
-    filePath?.let {
-        val result = VideoTranscodeHelper.transcodeAsResult(context, destination = dest, uri = it)
-        if (result.resultType == TranscodeResultEnum.Success) {
-            filePath = dest.path
+fun transcodeVideo(context: Context, path: String?, callback: (Result<String>) -> Unit) {
+    path?.let {
+        val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
+        VideoTranscodeHelper.transcodeAsResultWithCallback(context, destination = dest, uri = it) { data ->
+            when (data.resultType) {
+                Cancelled -> callback(Result.failure(Exception("Canceled")))
+                Failure -> callback(Result.failure(Exception(data.errorMessage)))
+                Success -> callback(Result.success(dest.path))
+                else -> {}
+            }
         }
-    }
-    return this
+    } ?: run { callback(Result.failure(Exception("Wrong file path"))) }
 }

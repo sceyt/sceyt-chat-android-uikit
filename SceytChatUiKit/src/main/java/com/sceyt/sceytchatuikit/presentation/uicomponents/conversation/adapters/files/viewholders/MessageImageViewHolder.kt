@@ -77,6 +77,9 @@ class MessageImageViewHolder(
             ErrorDownload -> {
                 loadThumb(thumb, binding.fileImage)
             }
+            FilePathChanged -> {
+                loadChangedImage(data.filePath, binding.fileImage)
+            }
         }
     }
 

@@ -88,6 +88,9 @@ class MessageVideoViewHolder(
                 binding.videoViewController.showPlayPauseButtons(false)
                 loadThumb(thumb, binding.videoViewController.getImageView())
             }
+            FilePathChanged -> {
+                loadChangedImage(data.filePath, binding.videoViewController.getImageView())
+            }
         }
     }
 
