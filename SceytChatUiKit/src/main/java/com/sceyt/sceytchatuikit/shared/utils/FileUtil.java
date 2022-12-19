@@ -403,14 +403,14 @@ public class FileUtil {
                     ContentValues picDetail = new ContentValues();
                     picDetail.put(MediaStore.Images.Media.DISPLAY_NAME, imageFile.getName());
                     picDetail.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg");
-                    picDetail.put(MediaStore.Images.Media.RELATIVE_PATH,"DCIM/" + UUID.randomUUID().toString());
-                    picDetail.put(MediaStore.Images.Media.IS_PENDING,1);
+                    picDetail.put(MediaStore.Images.Media.RELATIVE_PATH, "DCIM/" + UUID.randomUUID().toString());
+                    picDetail.put(MediaStore.Images.Media.IS_PENDING, 1);
                     Uri finaluri = resolver.insert(picCollection, picDetail);
                     picDetail.clear();
                     picDetail.put(MediaStore.Images.Media.IS_PENDING, 0);
                     resolver.update(picCollection, picDetail, null, null);
                     return finaluri;
-                }else {
+                } else {
                     ContentValues values = new ContentValues();
                     values.put(MediaStore.Images.Media.DATA, filePath);
                     return context.getContentResolver().insert(
@@ -428,13 +428,13 @@ public class FileUtil {
 
         Cursor cursor = context.getContentResolver().query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                , new String[] { MediaStore.Images.Media._ID }
+                , new String[]{MediaStore.Images.Media._ID}
                 , MediaStore.Images.Media.DATA + "=? "
-                , new String[] { absPath }, null);
+                , new String[]{absPath}, null);
 
         if (cursor != null && cursor.moveToFirst()) {
             int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
-            return Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI , Integer.toString(id));
+            return Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Integer.toString(id));
 
         } else if (!absPath.isEmpty()) {
             ContentValues values = new ContentValues();

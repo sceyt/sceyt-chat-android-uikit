@@ -159,12 +159,12 @@ class MessagesCash {
         cashedMessages[updateDate.messageTid]?.let {
             it.attachments?.forEach { attachment ->
                 when (updateDate.state) {
-                    PendingUpload, Uploading, Uploaded -> {
+                    PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
                         if (attachment.tid == updateDate.attachmentTid)
                             update(attachment)
 
                     }
-                    Downloading, Downloaded, PendingDownload -> {
+                    Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
                         if (attachment.url == updateDate.url)
                             update(attachment)
                     }
