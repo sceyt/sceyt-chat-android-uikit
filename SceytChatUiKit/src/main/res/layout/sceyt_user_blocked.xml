@@ -23,7 +23,7 @@
         android:layout_marginStart="10dp"
         android:drawablePadding="10dp"
         android:paddingVertical="18dp"
-        android:text="@string/you_blocked_this_user"
+        android:text="@string/sceyt_you_blocked_this_user"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import android.app.Application
 import android.util.Log
+import androidx.work.WorkManager
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -30,7 +31,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper.addBlurredBytesAndSizeToMetadata
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
@@ -195,7 +196,7 @@ internal class PersistenceMessagesLogicImpl(
             attachments?.map {
                 it.transferState = TransferState.Uploading
                 it.progressPercent = 0f
-                FileTransferHelper.addBlurredBytesAndSizeToMetadata(it)
+                it.addBlurredBytesAndSizeToMetadata()
             }
         }
         return tmpMessage
@@ -228,6 +229,7 @@ internal class PersistenceMessagesLogicImpl(
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             messageDao.deleteMessageByTid(message.tid)
             messagesCash.deleteMessage(message.tid)
+            WorkManager.getInstance(application).cancelAllWorkByTag(message.tid.toString())
             return SceytResponse.Success(message.apply { state = MessageState.Deleted })
         }
         val response = messagesRepository.deleteMessage(channelId, message.id, onlyForMe)

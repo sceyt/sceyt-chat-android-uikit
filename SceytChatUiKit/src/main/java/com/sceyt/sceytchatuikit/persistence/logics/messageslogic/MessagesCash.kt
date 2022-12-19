@@ -168,7 +168,17 @@ class MessagesCash {
                         if (attachment.url == updateDate.url)
                             update(attachment)
                     }
+                    FilePathChanged -> return
                 }
+            }
+        }
+    }
+
+    fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) {
+        cashedMessages[messageTid]?.let {
+            it.attachments?.forEach { attachment ->
+                attachment.filePath = path
+                attachment.metadata = metadata
             }
         }
     }

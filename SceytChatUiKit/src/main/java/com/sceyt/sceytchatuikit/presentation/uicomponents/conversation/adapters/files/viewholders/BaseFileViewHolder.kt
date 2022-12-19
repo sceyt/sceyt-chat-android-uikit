@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.Log
+import android.util.Size
 import android.view.View
 import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
@@ -22,15 +23,13 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     protected var listenerKey: String = ""
     protected var transferData: TransferData? = null
     protected var thumb: Drawable? = null
-    protected var imageWidth: Int? = null
-    protected var imageHeight: Int? = null
+    protected var imageSize: Size? = null
 
     override fun bind(item: FileListItem) {
         fileItem = item
         if (transferData != null && transferData!!.messageTid == item.sceytMessage.tid) return
         thumb = item.thumb?.toDrawable(context.resources)
-        imageWidth = item.size?.width
-        imageHeight = item.size?.height
+        imageSize = item.size
 
         item.file.transferState?.let {
             val attachment = item.file
@@ -61,6 +60,15 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
             .load(path)
             .transition(DrawableTransitionOptions.withCrossFade())
             .placeholder(thumb)
+            .override(imageView.width, imageView.height)
+            .into(imageView)
+
+    }
+
+    fun loadChangedImage(path: String?, imageView: ImageView) {
+        Glide.with(itemView.context.applicationContext)
+            .load(path)
+            .placeholder(imageView.drawable ?: thumb)
             .override(imageView.width, imageView.height)
             .into(imageView)
 

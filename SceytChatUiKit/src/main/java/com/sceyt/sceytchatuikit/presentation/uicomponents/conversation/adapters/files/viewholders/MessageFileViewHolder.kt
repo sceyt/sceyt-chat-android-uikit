@@ -4,7 +4,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
@@ -59,21 +59,22 @@ class MessageFileViewHolder(
         transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
-            TransferState.PendingUpload, TransferState.PauseUpload -> {
+            PendingUpload, PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 needDownloadCallback.invoke(fileItem)
             }
-            TransferState.Downloading, TransferState.Uploading -> {
+            Downloading, Uploading -> {
                 binding.icFile.setImageResource(0)
             }
-            TransferState.Uploaded, TransferState.Downloaded -> {
+            Uploaded, Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
             }
-            TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload -> {
+            ErrorUpload, ErrorDownload, PauseDownload -> {
                 binding.icFile.setImageResource(0)
             }
+            FilePathChanged -> return
         }
     }
 
