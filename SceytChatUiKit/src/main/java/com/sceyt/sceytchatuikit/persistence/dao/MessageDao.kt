@@ -224,12 +224,24 @@ abstract class MessageDao {
             transferData.progressPercent, transferData.state)
     }
 
-    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:tid")
-    abstract fun updateAttachmentByMsgTid(tid: Long, filePath: String?, url: String?)
+    @Transaction
+    open fun updateAttachmentFilePath(tid: Long, filePath: String?, fileSize: Long, metadata: String?) {
+        updateAttachmentFilePathByMsgTid(tid, filePath, fileSize, metadata)
+        updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
+    }
+
+    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid")
+    abstract fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?)
 
     @Query("update AttachmentPayLoad set filePath =:filePath, url =:url," +
             "progressPercent= :progress, transferState =:state  where messageTid =:tid")
     abstract fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
+
+    @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata where messageTid =:msgTid")
+    abstract fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long, metadata: String?)
+
+    @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
+    abstract fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
 
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)

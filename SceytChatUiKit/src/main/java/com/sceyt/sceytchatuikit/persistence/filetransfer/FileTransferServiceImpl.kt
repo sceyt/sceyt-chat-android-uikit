@@ -1,13 +1,18 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
 import android.app.Application
+import android.content.Context
+import android.util.Log
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
+import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
+import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
 import java.io.File
@@ -61,25 +66,33 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
 
     // Default logic
     private fun uploadFile(attachment: SceytAttachment, payLoad: TransferTask) {
-        ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
-            override fun onResult(progress: Float) {
-                if (progress == 1f) return
-                payLoad.progressCallback.onProgress(TransferData(payLoad.messageTid, attachment.tid,
-                    progress * 100, Uploading, attachment.filePath, null))
-            }
+        checkAndResizeMessageAttachments(application, attachment) {
+            if (it.isSuccess) {
+                it.getOrNull()?.let { path ->
+                    payLoad.updateFileLocationCallback.onUpdateFileLocation(path)
+                }
+            } else Log.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
 
-            override fun onError(exception: SceytException?) {
-                payLoad.resultCallback.onResult(SceytResponse.Error(exception))
-            }
-        }, object : UrlCallback {
-            override fun onResult(p0: String?) {
-                payLoad.resultCallback.onResult(SceytResponse.Success(p0))
-            }
+            ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
+                override fun onResult(progress: Float) {
+                    if (progress == 1f) return
+                    payLoad.progressCallback.onProgress(TransferData(payLoad.messageTid, attachment.tid,
+                        progress * 100, Uploading, attachment.filePath, null))
+                }
 
-            override fun onError(exception: SceytException?) {
-                payLoad.resultCallback.onResult(SceytResponse.Error(exception))
-            }
-        })
+                override fun onError(exception: SceytException?) {
+                    payLoad.resultCallback.onResult(SceytResponse.Error(exception))
+                }
+            }, object : UrlCallback {
+                override fun onResult(p0: String?) {
+                    payLoad.resultCallback.onResult(SceytResponse.Success(p0))
+                }
+
+                override fun onError(exception: SceytException?) {
+                    payLoad.resultCallback.onResult(SceytResponse.Error(exception))
+                }
+            })
+        }
     }
 
     private fun downloadFile(attachment: SceytAttachment, payLoad: TransferTask) {
@@ -144,6 +157,19 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
             else -> {}
         }
     }
+
+    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String>) -> Unit) {
+        when (attachment.type) {
+            AttachmentTypeEnum.Image.value() -> {
+                val result = resizeImage(context, attachment.filePath)
+                callback(result)
+            }
+            AttachmentTypeEnum.Video.value() -> {
+                transcodeVideo(context, attachment.filePath, callback)
+            }
+            else -> callback.invoke(Result.success(""))
+        }
+    }
 }
 
 fun interface TransferResultCallback {
@@ -152,5 +178,9 @@ fun interface TransferResultCallback {
 
 fun interface ProgressUpdateCallback {
     fun onProgress(date: TransferData)
+}
+
+fun interface UpdateFileLocationCallback {
+    fun onUpdateFileLocation(path: String)
 }
 

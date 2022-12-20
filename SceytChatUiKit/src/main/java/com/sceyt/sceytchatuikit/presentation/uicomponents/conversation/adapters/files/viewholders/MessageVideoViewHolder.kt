@@ -40,7 +40,7 @@ class MessageVideoViewHolder(
         listenerKey = getKey()
         binding.parentLayout.clipToOutline = true
         binding.videoView.isVisible = false
-        binding.loadProgress.release()
+        binding.loadProgress.release(item.file.progressPercent)
 
         setListener()
 
@@ -87,6 +87,9 @@ class MessageVideoViewHolder(
             ErrorDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 loadThumb(thumb, binding.videoViewController.getImageView())
+            }
+            FilePathChanged -> {
+                loadChangedImage(data.filePath, binding.videoViewController.getImageView())
             }
         }
     }

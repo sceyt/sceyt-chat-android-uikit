@@ -16,7 +16,9 @@ enum class TransferState {
     PauseUpload,
     PauseDownload,
     ErrorUpload,
-    ErrorDownload
+    ErrorDownload,
+    //This state is not saving to db.
+    FilePathChanged
 }
 
 fun SceytCircularProgressView.getProgressWithState(state: TransferState, progressPercent: Float = 0f) {
@@ -42,5 +44,6 @@ fun SceytCircularProgressView.getProgressWithState(state: TransferState, progres
         Uploaded, Downloaded -> {
             isVisible = false
         }
+        FilePathChanged -> return
     }
 }
