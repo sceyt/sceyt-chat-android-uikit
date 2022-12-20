@@ -32,6 +32,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -278,23 +279,23 @@ class MessageListViewModel(private val conversationId: Long,
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
         val newState: TransferState
         when (val state = item.file.transferState ?: return) {
-            TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload -> {
-                newState = TransferState.Uploading
+            PendingUpload, PauseUpload, ErrorUpload -> {
+                newState = Uploading
                 fileTransferService.resume(item.sceytMessage.tid, item.file, state)
             }
-            TransferState.PendingDownload, TransferState.PauseDownload, TransferState.ErrorDownload -> {
-                newState = TransferState.Downloading
+            PendingDownload, PauseDownload, ErrorDownload -> {
+                newState = Downloading
                 fileTransferService.resume(item.sceytMessage.tid, item.file, state)
             }
-            TransferState.Uploading -> {
-                newState = TransferState.PauseUpload
+            Uploading -> {
+                newState = PauseUpload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
             }
-            TransferState.Downloading -> {
-                newState = TransferState.PauseDownload
+            Downloading -> {
+                newState = PauseDownload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
             }
-            TransferState.Uploaded, TransferState.Downloaded -> {
+            Uploaded, Downloaded, FilePathChanged -> {
                 newState = state
             }
         }

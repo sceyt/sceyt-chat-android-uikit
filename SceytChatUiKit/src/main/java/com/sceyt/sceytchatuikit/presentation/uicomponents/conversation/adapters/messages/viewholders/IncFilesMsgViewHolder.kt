@@ -88,6 +88,7 @@ class IncFilesMsgViewHolder(
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)
+            itemAnimator = null
             adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needDownloadCallback)).also {
                 filedAdapter = it
             }

@@ -227,12 +227,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
     }
 
-    private fun reset() {
+    private fun reset(clearInput: Boolean = true) {
+        if (clearInput)
+            binding.messageInput.text = null
         editMessage = null
         replyMessage = null
         allAttachments.clear()
         attachmentsAdapter.clear()
-        binding.messageInput.text = null
         determineState()
     }
 
@@ -405,8 +406,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onCancelReplyMessageViewClick(view: View) {
         cancelReply()
-        replyMessage = null
-        editMessage = null
+        reset(replyMessage == null)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
@@ -422,14 +422,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun send() {
         GlobalScope.launch {
-            for (i in 1..30) {
-                sed(i)
-            }
+            for (i in 1..30)
+                send(i)
         }
-
     }
 
-    suspend fun sed(i: Int) {
+    suspend fun send(i: Int) {
         delay(200)
         withContext(Dispatchers.Main) {
             binding.messageInput.setText(i.toString())

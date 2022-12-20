@@ -54,15 +54,15 @@ object FileTransferHelper : SceytKoinComponent {
                         messagesCash.updateAttachmentTransferData(transferData)
                     }
                 }
-            }))
+            }, updateFileLocationCallback = { }))
     }
 
-    fun addBlurredBytesAndSizeToMetadata(attachment: SceytAttachment) {
+    fun SceytAttachment.addBlurredBytesAndSizeToMetadata() {
         try {
-            attachment.filePath?.let { path ->
+            filePath?.let { path ->
                 var size: Size? = null
                 var base64String: String? = null
-                when (attachment.type) {
+                when (type) {
                     AttachmentTypeEnum.Image.value() -> {
                         size = FileResizeUtil.getImageSize(Uri.parse(path))
                         FileResizeUtil.scaleDownImageByUrl(path, 10f)?.let { bytes ->
@@ -76,25 +76,39 @@ object FileTransferHelper : SceytKoinComponent {
                         }
                     }
                 }
-                setMetadata(base64String, size, attachment)
+                setMetadata(base64String, size)
             }
         } catch (ex: Exception) {
             Log.i(TAG, "Couldn't get an blurred image or sizes.")
         }
     }
 
-    private fun setMetadata(base64String: String?, size: Size?, attachment: SceytAttachment) {
+    private fun SceytAttachment.setMetadata(base64String: String?, size: Size?) {
         try {
-            val obj = if (attachment.metadata.isNullOrBlank()) JSONObject()
-            else JSONObject(attachment.metadata.toString())
+            val obj = if (metadata.isNullOrBlank()) JSONObject()
+            else JSONObject(metadata.toString())
             obj.put("thumbnail", base64String)
             size?.let {
                 obj.put("width", it.width)
                 obj.put("height", it.height)
             }
-            attachment.metadata = obj.toString()
+            metadata = obj.toString()
         } catch (t: Throwable) {
-            Log.e(TAG, "Could not parse malformed JSON: \"" + attachment.metadata.toString() + "\"")
+            Log.e(TAG, "Could not parse malformed JSON: \"" + metadata.toString() + "\"")
+        }
+    }
+
+    fun SceytAttachment.upsertSizeMetadata(size: Size?) {
+        try {
+            val obj = if (metadata.isNullOrBlank()) JSONObject()
+            else JSONObject(metadata.toString())
+            size?.let {
+                obj.put("width", it.width)
+                obj.put("height", it.height)
+            }
+            metadata = obj.toString()
+        } catch (t: Throwable) {
+            Log.e(TAG, "Could not parse malformed JSON: \"" + metadata.toString() + "\"")
         }
     }
 }
