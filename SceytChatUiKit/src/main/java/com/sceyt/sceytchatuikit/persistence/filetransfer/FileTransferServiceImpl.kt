@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
 import java.io.File
+import kotlin.collections.set
 
 class FileTransferServiceImpl(private var application: Application) : FileTransferService {
     private var tasksMap = hashMapOf<String, TransferTask>()
@@ -64,6 +65,34 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
         listeners = fileTransferListeners
     }
 
+    override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
+        val isUploading: Boolean
+        val key: String
+        when (attachment.transferState) {
+            PendingDownload, Downloading, Downloaded, PauseDownload -> {
+                isUploading = false
+                key = attachment.url.toString()
+            }
+            else -> {
+                isUploading = true
+                key = attachment.tid.toString()
+            }
+        }
+        return tasksMap[key] ?: run {
+            FileTransferHelper.createTransferTask(attachment, isUploading)
+        }
+    }
+
+    override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
+        val key: String = when (attachment.transferState) {
+            PendingDownload, Downloading, Downloaded, PauseDownload -> {
+                attachment.url.toString()
+            }
+            else -> attachment.tid.toString()
+        }
+        return tasksMap[key]
+    }
+
     // Default logic
     private fun uploadFile(attachment: SceytAttachment, payLoad: TransferTask) {
         checkAndResizeMessageAttachments(application, attachment) {
@@ -95,35 +124,35 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
         }
     }
 
-    private fun downloadFile(attachment: SceytAttachment, payLoad: TransferTask) {
+    private fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
         val loadedFile = File(application.filesDir, attachment.name)
         val file = attachment.getLocaleFileByNameOrMetadata(loadedFile)
 
         if (file != null) {
-            payLoad.resultCallback.onResult(SceytResponse.Success(file.path))
+            task.resultCallback.onResult(SceytResponse.Success(file.path))
         } else {
             if (downloadingUrlMap[attachment.url] != null) return
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
-            payLoad.progressCallback.onProgress(TransferData(
-                payLoad.messageTid, attachment.tid, 0f, Downloading, null, attachment.url))
+            task.progressCallback.onProgress(TransferData(
+                task.messageTid, attachment.tid, 0f, Downloading, null, attachment.url))
             attachment.url?.let { url ->
                 downloadingUrlMap[url] = url
                 Ion.with(application)
                     .load(attachment.url)
                     .progress { downloaded, total ->
                         val progress = ((downloaded / total.toFloat())) * 100
-                        payLoad.progressCallback.onProgress(TransferData(
-                            payLoad.messageTid, attachment.tid, progress, Downloading, null, attachment.url))
+                        task.progressCallback.onProgress(TransferData(
+                            task.messageTid, attachment.tid, progress, Downloading, null, attachment.url))
                     }
                     .write(loadedFile)
                     .setCallback { e, result ->
                         if (result == null && e != null) {
                             loadedFile.delete()
-                            payLoad.resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
+                            task.resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
                             downloadingUrlMap.remove(attachment.url)
                         } else
-                            payLoad.resultCallback.onResult(SceytResponse.Success(result.path))
+                            task.resultCallback.onResult(SceytResponse.Success(result.path))
                     }
             }
         }

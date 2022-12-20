@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -36,6 +37,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -57,6 +59,7 @@ class MessageListViewModel(private val conversationId: Long,
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
+    private val application: Application by inject()
     private val preference: SceytSharedPreference by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
@@ -279,13 +282,28 @@ class MessageListViewModel(private val conversationId: Long,
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
         val newState: TransferState
         when (val state = item.file.transferState ?: return) {
-            PendingUpload, PauseUpload, ErrorUpload -> {
+            PendingUpload, ErrorUpload, FilePathChanged -> {
                 newState = Uploading
-                fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid)
             }
-            PendingDownload, PauseDownload, ErrorDownload -> {
+            PendingDownload, ErrorDownload -> {
                 newState = Downloading
-                fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
+            }
+            PauseDownload -> {
+                newState = Downloading
+                val task = fileTransferService.findTransferTask(item.file)
+                if (task != null)
+                    fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
+
+            }
+            PauseUpload -> {
+                newState = Uploading
+                val task = fileTransferService.findTransferTask(item.file)
+                if (task != null)
+                    fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                else SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid)
             }
             Uploading -> {
                 newState = PauseUpload
@@ -295,7 +313,7 @@ class MessageListViewModel(private val conversationId: Long,
                 newState = PauseDownload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
             }
-            Uploaded, Downloaded, FilePathChanged -> {
+            Uploaded, Downloaded -> {
                 newState = state
             }
         }
@@ -504,7 +522,7 @@ class MessageListViewModel(private val conversationId: Long,
 
     internal fun needDownload(fileListItem: FileListItem) {
         viewModelScope.launch(Dispatchers.IO) {
-            FileTransferHelper.download(fileListItem)
+            fileTransferService.download(fileListItem.file, FileTransferHelper.createTransferTask(fileListItem.file, false))
         }
     }
 
