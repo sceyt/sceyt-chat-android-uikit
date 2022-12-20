@@ -26,12 +26,13 @@
         app:layout_constraintDimensionRatio="1:.8"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="@dimen/messageProgressSize"
+        android:layout_height="@dimen/messageProgressSize"
         android:padding="3dp"
         android:visibility="gone"
         app:backgroundColor="@color/sceyt_progress_bg_color"

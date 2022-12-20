@@ -17,7 +17,7 @@ import kotlin.coroutines.resume
 class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWare,
                        private val messagesMiddleWare: PersistenceMessagesMiddleWare) : SceytKoinComponent, CoroutineScope {
 
-    private lateinit var syncResultData: SyncResultData
+    private var syncResultData: SyncResultData = SyncResultData()
     private var syncIsInProcess: Boolean = false
     private val syncResultCallbacks = mutableListOf<(SyncResultData) -> Unit>()
 

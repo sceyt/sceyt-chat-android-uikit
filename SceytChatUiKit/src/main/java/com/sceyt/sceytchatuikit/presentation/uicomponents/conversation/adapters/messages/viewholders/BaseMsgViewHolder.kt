@@ -32,7 +32,6 @@ import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentUrl
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon

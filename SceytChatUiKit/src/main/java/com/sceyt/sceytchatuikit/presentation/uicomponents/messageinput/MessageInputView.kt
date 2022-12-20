@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
@@ -361,6 +362,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (file.exists()) {
                 val attachment = Attachment.Builder(path, null, getAttachmentType(path))
                     .setName(File(path).name)
+                    .withTid(ClientWrapper.generateTid())
                     .setFileSize(getFileSize(path))
                     .setUpload(false)
                     .build()

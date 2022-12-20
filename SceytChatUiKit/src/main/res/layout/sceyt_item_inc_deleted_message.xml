@@ -72,7 +72,7 @@
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewStatusIconSize="16dp"
+            app:sceytDateStatusViewStatusIconSize="15dp"
             tools:sceytDateStatusViewDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

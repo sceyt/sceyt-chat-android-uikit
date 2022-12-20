@@ -51,8 +51,8 @@ class IncFilesMsgViewHolder(
                 } else messageBody.isVisible = false
 
                 if (diff.edited || diff.statusChanged) {
-                    setMessageStatusAndDateText(message, messageDate)
                     setMessageDateDependAttachments(messageDate, message.files)
+                    setMessageStatusAndDateText(message, messageDate)
                 }
 
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
@@ -84,7 +84,7 @@ class IncFilesMsgViewHolder(
         with(binding.rvFiles) {
             setHasFixedSize(true)
             if (itemDecorationCount == 0) {
-                val offset = dpToPx(4f)
+                val offset = dpToPx(2f)
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
             setRecycledViewPool(viewPoolFiles)

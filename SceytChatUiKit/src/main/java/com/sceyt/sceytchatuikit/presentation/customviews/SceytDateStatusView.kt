@@ -227,11 +227,9 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     private fun setHighlightedState(highlighted: Boolean) {
         if (highlighted) {
             textPaint.color = Color.WHITE
-            statusDrawable?.setTint(Color.WHITE)
             background = context.getCompatDrawable(R.drawable.sceyt_date_transparent_background)
         } else {
             textPaint.color = textColor
-            statusDrawable?.setTintList(null)
             background = null
             setPadding(paddings[0], paddings[1], paddings[2], paddings[3])
         }
@@ -250,13 +248,6 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         }
     }
 
-    fun setStatusIcon(drawable: Drawable?) {
-        statusDrawable = drawable
-        init()
-        requestLayout()
-        invalidate()
-    }
-
     fun setStatusIconSize(size: Int) {
         statusIconSize = size
         init()
@@ -272,8 +263,19 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         invalidate()
     }
 
-    fun setDateAndStatusIcon(text: String, drawable: Drawable?, edited: Boolean) {
+    fun setStatusIcon(drawable: Drawable?, ignoreHighlight: Boolean = false) {
+        statusDrawable = drawable
+        if (isHighlighted && !ignoreHighlight)
+            statusDrawable?.apply { setTint(Color.WHITE) }
+        init()
+        requestLayout()
+        invalidate()
+    }
+
+    fun setDateAndStatusIcon(text: String, drawable: Drawable?, edited: Boolean, ignoreHighlight: Boolean = false) {
         statusDrawable = drawable?.mutate()
+        if (isHighlighted && !ignoreHighlight)
+            statusDrawable?.apply { setTint(Color.WHITE) }
         dateText = text
         isEdited = edited
         init()
