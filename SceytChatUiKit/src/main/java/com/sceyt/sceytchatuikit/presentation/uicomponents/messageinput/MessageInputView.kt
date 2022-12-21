@@ -30,6 +30,8 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView.InputState.Text
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView.InputState.Voice
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
@@ -58,6 +60,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = null
+    private var inputState = Voice
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -105,7 +108,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             icSendMessage.setOnClickListener {
-                clickListeners.onSendMsgClick(it)
+                when (inputState) {
+                    Text -> clickListeners.onSendMsgClick(it)
+                    Voice -> clickListeners.onVoiceClick(it)
+                }
             }
 
             icAddAttachments.setOnClickListener {
@@ -209,7 +215,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun SceytMessageInputViewBinding.setUpStyle() {
         icAddAttachments.setImageResource(MessageInputViewStyle.attachmentIcon)
-        icSendMessage.setImageResource(MessageInputViewStyle.sendMessageIcon)
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
@@ -239,10 +244,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun determineState() {
-        if (binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()) {
-            binding.icSendMessage.alpha = 0.5f
-        } else
-            binding.icSendMessage.alpha = 1f
+        val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
+        val iconResId = if (showVoiceIcon) R.drawable.sceyt_ic_voice
+        else MessageInputViewStyle.sendMessageIcon
+        binding.icSendMessage.setImageResource(iconResId)
+        inputState = if (showVoiceIcon) Voice else Text
     }
 
     private fun addAttachments(attachments: List<Attachment>) {
@@ -406,6 +412,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         handleAttachmentClick()
     }
 
+    override fun onVoiceClick(view: View) {
+
+    }
+
     override fun onCancelReplyMessageViewClick(view: View) {
         cancelReply()
         reset(replyMessage == null)
@@ -427,6 +437,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             for (i in 1..30)
                 send(i)
         }
+    }
+
+    enum class InputState {
+        Text, Voice
     }
 
     suspend fun send(i: Int) {
