@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
@@ -11,6 +11,14 @@ sealed interface MessageInputClickListeners {
 
     fun interface SendAttachmentClickListener : MessageInputClickListeners {
         fun onSendAttachmentClick(view: View)
+    }
+
+    fun interface VoiceClickListener : MessageInputClickListeners {
+        fun onVoiceClick(view: View)
+    }
+
+    fun interface VoiceLongClickListener : MessageInputClickListeners {
+        fun onVoiceLongClick(view: View)
     }
 
     fun interface CloseReplyMessageViewClickListener : MessageInputClickListeners {
@@ -31,5 +39,7 @@ sealed interface MessageInputClickListeners {
             SendAttachmentClickListener,
             CloseReplyMessageViewClickListener,
             RemoveAttachmentClickListener,
-            JoinClickListener
+            JoinClickListener,
+            VoiceClickListener,
+            VoiceLongClickListener
 }

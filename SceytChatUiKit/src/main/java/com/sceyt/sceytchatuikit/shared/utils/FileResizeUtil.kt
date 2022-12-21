@@ -55,6 +55,15 @@ object FileResizeUtil {
         return Size(width, height)
     }
 
+    fun getVideoDuration(context: Context, path: String): Long? {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(context, Uri.parse(path))
+        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+        val timeInMilliSec = time?.toLongOrNull()
+        retriever.release()
+        return timeInMilliSec
+    }
+
     fun scaleDownImageByUrl(url: String, maxImageSize: Float): ByteArray? {
         return try {
             val bitmap = BitmapFactory.decodeFile(url)

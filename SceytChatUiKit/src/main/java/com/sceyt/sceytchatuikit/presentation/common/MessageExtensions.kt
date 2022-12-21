@@ -21,7 +21,7 @@ import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
-        dateStatusView.setDateAndStatusIcon(dateText, null, edited)
+        dateStatusView.setDateAndStatusIcon(dateText, null, edited, false)
         return
     }
     val iconResId = when (deliveryStatus) {
@@ -33,15 +33,16 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateSt
         else -> null
     }
     iconResId?.let {
-        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited)
+        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited, checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
     }
 }
 
 
-fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean) {
+fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String,
+                                                          edited: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
-        dateStatusView.setDateAndStatusIcon(dateText, null, edited)
+        dateStatusView.setDateAndStatusIcon(dateText, null, edited, false)
         return
     }
     val iconResId = when (deliveryStatus) {
@@ -53,9 +54,13 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
         else -> null
     }
     iconResId?.let {
-        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited)
+        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited, checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
     }
+}
+
+private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
+    return deliveryStatus == DeliveryStatus.Read
 }
 
 fun SceytMessage.getShowBody(context: Context): String {

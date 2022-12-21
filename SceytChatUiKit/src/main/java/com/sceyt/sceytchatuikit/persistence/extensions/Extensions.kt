@@ -1,5 +1,9 @@
 package com.sceyt.sceytchatuikit.persistence.extensions
 
+import kotlinx.coroutines.CancellableContinuation
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
+
 inline fun <reified T : Enum<T>> Int.toEnum(): T = enumValues<T>()[this]
 
 fun String?.equalsIgnoreNull(other: String?): Boolean {
@@ -20,4 +24,13 @@ fun <T> List<T>.toArrayList(): ArrayList<T> {
     } catch (ex: Exception) {
         ArrayList(this)
     }
+}
+
+inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Unit = {}) {
+    if (this is CancellableContinuation<T>) {
+        if (isActive)
+            resume(value)
+        else
+            onExceptionCalled()
+    } else throw Exception("Must use suspendCancellableCoroutine instead of suspendCoroutine")
 }
