@@ -17,6 +17,10 @@ sealed interface MessageInputClickListeners {
         fun onVoiceClick(view: View)
     }
 
+    fun interface VoiceLongClickListener : MessageInputClickListeners {
+        fun onVoiceLongClick(view: View)
+    }
+
     fun interface CloseReplyMessageViewClickListener : MessageInputClickListeners {
         fun onCancelReplyMessageViewClick(view: View)
     }
@@ -36,5 +40,6 @@ sealed interface MessageInputClickListeners {
             CloseReplyMessageViewClickListener,
             RemoveAttachmentClickListener,
             JoinClickListener,
-            VoiceClickListener
+            VoiceClickListener,
+            VoiceLongClickListener
 }
