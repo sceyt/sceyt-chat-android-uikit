@@ -1,18 +1,26 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CloseReplyMessageViewClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.JoinClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.RemoveAttachmentClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendAttachmentClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendMsgClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.VoiceClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.VoiceLongClickListener
 
-open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInputClickListeners.ClickListeners {
-    private var defaultListeners: MessageInputClickListeners.ClickListeners = view
-    private var sendMsgClickListener: MessageInputClickListeners.SendMsgClickListener? = null
-    private var sendAttachmentClickListener: MessageInputClickListeners.SendAttachmentClickListener? = null
-    private var voiceClickListener: MessageInputClickListeners.VoiceClickListener? = null
-    private var voiceLongClickListener: MessageInputClickListeners.VoiceLongClickListener? = null
-    private var closeReplyMessageViewClickListener: MessageInputClickListeners.CloseReplyMessageViewClickListener? = null
-    private var removeAttachmentClickListener: MessageInputClickListeners.RemoveAttachmentClickListener? = null
-    private var joinClickListener: MessageInputClickListeners.JoinClickListener? = null
+open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListeners {
+    private var defaultListeners: ClickListeners = view
+    private var sendMsgClickListener: SendMsgClickListener? = null
+    private var sendAttachmentClickListener: SendAttachmentClickListener? = null
+    private var voiceClickListener: VoiceClickListener? = null
+    private var voiceLongClickListener: VoiceLongClickListener? = null
+    private var closeReplyMessageViewClickListener: CloseReplyMessageViewClickListener? = null
+    private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
+    private var joinClickListener: JoinClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners.onSendMsgClick(view)
@@ -51,7 +59,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
 
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
-            is MessageInputClickListeners.ClickListeners -> {
+            is ClickListeners -> {
                 sendMsgClickListener = listener
                 sendAttachmentClickListener = listener
                 voiceClickListener = listener
@@ -60,25 +68,25 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
             }
-            is MessageInputClickListeners.SendMsgClickListener -> {
+            is SendMsgClickListener -> {
                 sendMsgClickListener = listener
             }
-            is MessageInputClickListeners.SendAttachmentClickListener -> {
+            is SendAttachmentClickListener -> {
                 sendAttachmentClickListener = listener
             }
-            is MessageInputClickListeners.VoiceClickListener -> {
+            is VoiceClickListener -> {
                 voiceClickListener = listener
             }
-            is MessageInputClickListeners.VoiceLongClickListener -> {
+            is VoiceLongClickListener -> {
                 voiceLongClickListener = listener
             }
-            is MessageInputClickListeners.CloseReplyMessageViewClickListener -> {
+            is CloseReplyMessageViewClickListener -> {
                 closeReplyMessageViewClickListener = listener
             }
-            is MessageInputClickListeners.RemoveAttachmentClickListener -> {
+            is RemoveAttachmentClickListener -> {
                 removeAttachmentClickListener = listener
             }
-            is MessageInputClickListeners.JoinClickListener -> {
+            is JoinClickListener -> {
                 joinClickListener = listener
             }
         }

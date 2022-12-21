@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem

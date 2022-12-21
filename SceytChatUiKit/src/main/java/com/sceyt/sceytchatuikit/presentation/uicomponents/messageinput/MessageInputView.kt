@@ -30,14 +30,16 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView.InputState.Text
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView.InputState.Voice
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Text
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Voice
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.SelectFileTypePopupClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.SelectFileTypePopupClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
@@ -49,13 +51,14 @@ import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
-        SelectFileTypePopupClickListeners.ClickListeners, SceytKoinComponent {
+        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.EventListeners, SceytKoinComponent {
 
     private val preferences by inject<SceytSharedPreference>()
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var clickListeners = MessageInputClickListenersImpl(this)
+    private var eventListeners = InputEventsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
@@ -250,10 +253,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun determineState() {
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
-        val iconResId = if (showVoiceIcon) R.drawable.sceyt_ic_voice
+        val iconResId = if (showVoiceIcon) 0
         else MessageInputViewStyle.sendMessageIcon
         binding.icSendMessage.setImageResource(iconResId)
-        inputState = if (showVoiceIcon) Voice else Text
+
+        val newState = if (showVoiceIcon) Voice else Text
+        if (inputState != newState)
+            onInputStateChanged(newState)
+        inputState = newState
     }
 
     private fun addAttachments(attachments: List<Attachment>) {
@@ -296,6 +303,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 context.asComponentActivity().lifecycleScope.launchWhenResumed { readyCb?.invoke() }
             }
         }
+    }
+
+    internal fun onInputStateChanged(newState: InputState) {
+        eventListeners.onStateChanged(newState)
     }
 
     internal fun replyMessage(message: Message) {
@@ -405,6 +416,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners = listener
     }
 
+    fun setEventListener(listener: InputEventsListener) {
+        eventListeners.setListener(listener)
+    }
+
+    fun setCustomEventListener(listener: InputEventsListenerImpl) {
+        eventListeners = listener
+    }
+
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
         selectFileTypePopupClickListeners = listener
     }
@@ -440,19 +459,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInputActionCallback?.join()
     }
 
-
-    enum class InputState {
-        Text, Voice
-    }
-
-    suspend fun send(i: Int) {
-        delay(200)
-        withContext(Dispatchers.Main) {
-            binding.messageInput.setText(i.toString())
-            sendMessage()
-        }
-    }
-
     private fun getPickerListener(): GalleryMediaPicker.PickerListener {
         return GalleryMediaPicker.PickerListener {
             addAttachmentFile(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
@@ -483,5 +489,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
             addAttachmentFile(*it.toTypedArray())
         }
+    }
+
+    override fun onStateChanged(state: InputState) {
+
     }
 }
