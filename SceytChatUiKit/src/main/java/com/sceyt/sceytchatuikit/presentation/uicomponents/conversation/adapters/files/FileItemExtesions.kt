@@ -4,26 +4,21 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import com.google.gson.Gson
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import java.io.File
 
 
 fun FileListItem.getFileFromMetadata(): File? {
-    val metadata = file.metadata ?: return null
+    val path = file.filePath ?: return null
     try {
-        val data = Gson().fromJson(metadata, AttachmentMetadata::class.java)
-        return File(data.localPath)
-    } catch (e: Exception) {
+        return File(path)
+    } catch (_: Exception) {
     }
     return null
 }
 
 fun FileListItem.openFile(context: Context) {
-   // if (fileLoadData.loading) return
-
     val fileName = file.name
     var uri: Uri? = null
     val loadedFile = File(context.filesDir, fileName)

@@ -1,17 +1,17 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
+import android.net.Uri
 import androidx.work.*
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
-import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
-import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper.upsertSizeMetadata
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -20,8 +20,10 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
+import java.io.File
 import kotlin.coroutines.resume
 
 object SendAttachmentWorkManager {
@@ -41,13 +43,12 @@ object SendAttachmentWorkManager {
     }
 }
 
-class SendAttachmentWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
+class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val messageDao: MessageDao by inject()
     private val messagesCash: MessagesCash by inject()
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
-        // checkAndResizeMessageAttachments(context, tmpMessage)
         val payloads = messageDao.getAllPayLoadsByMsgTid(tmpMessage.tid)
 
         return suspendCancellableCoroutine { continuation ->
@@ -80,29 +81,32 @@ class SendAttachmentWorker(private val context: Context, workerParams: WorkerPar
                                 } else {
                                     val transferData = TransferData(tmpMessage.tid,
                                         attachment.tid, attachment.progressPercent
-                                                ?: 0f, TransferState.PendingUpload, attachment.filePath, null)
+                                                ?: 0f, TransferState.ErrorUpload, attachment.filePath, null)
 
                                     MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                                     messageDao.updateAttachmentAndPayLoad(transferData)
                                     messagesCash.updateAttachmentTransferData(transferData)
                                 }
                                 continuation.resume(result is SceytResponse.Success)
+                            },
+                            updateFileLocationCallback = { newPath ->
+                                val transferData = TransferData(tmpMessage.tid,
+                                    attachment.tid, 0f, TransferState.FilePathChanged, newPath, attachment.url)
+
+                                val newFile = File(newPath)
+                                if (newFile.exists()) {
+                                    val fileSize = getFileSize(newPath)
+                                    val dimensions = FileResizeUtil.getImageSize(Uri.parse(newPath))
+                                    attachment.filePath = newPath
+                                    attachment.fileSize = fileSize
+                                    attachment.upsertSizeMetadata(dimensions)
+                                    MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                                    messageDao.updateAttachmentFilePath(tmpMessage.tid, newPath, fileSize, attachment.metadata)
+                                    messagesCash.updateAttachmentFilePathAndMeta(tmpMessage.tid, newPath, attachment.metadata)
+                                }
                             }))
                 }
             } else continuation.resume(false)
-        }
-    }
-
-    private suspend fun checkAndResizeMessageAttachments(context: Context, message: SceytMessage) {
-        message.attachments?.forEach { attachment ->
-            when (attachment.type) {
-                AttachmentTypeEnum.Image.value() -> {
-                    attachment.resizeImage(context)
-                }
-                AttachmentTypeEnum.Video.value() -> {
-                    attachment.transcodeVideo(context)
-                }
-            }
         }
     }
 

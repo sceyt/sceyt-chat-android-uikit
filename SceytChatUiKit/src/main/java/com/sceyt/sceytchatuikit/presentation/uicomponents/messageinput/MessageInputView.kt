@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
@@ -18,7 +17,6 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentMetadata
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -149,7 +147,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                 .setType(getMessageType(if (index == 0) messageBody else null, attachment))
                                 .apply {
                                     if (index == 0) {
-                                        setBody(binding.messageInput.text.toString())
+                                        setBody(messageBody)
                                         replyMessage?.let {
                                             setParentMessageId(it.id)
                                             setReplyInThread(replyThreadMessageId != null)
@@ -170,7 +168,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         val messageToSend: Message? = Message.MessageBuilder()
                             .setAttachments(allAttachments.toTypedArray())
                             .setType(getMessageType(messageBody))
-                            .setBody(binding.messageInput.text.toString())
+                            .setBody(messageBody)
                             .apply {
                                 replyMessage?.let {
                                     setParentMessageId(it.id)
@@ -229,12 +227,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
     }
 
-    private fun reset() {
+    private fun reset(clearInput: Boolean = true) {
+        if (clearInput)
+            binding.messageInput.text = null
         editMessage = null
         replyMessage = null
         allAttachments.clear()
         attachmentsAdapter.clear()
-        binding.messageInput.text = null
         determineState()
     }
 
@@ -362,7 +361,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (file.exists()) {
                 val attachment = Attachment.Builder(path, null, getAttachmentType(path))
                     .setName(File(path).name)
-                    .setMetadata(Gson().toJson(AttachmentMetadata(path)))
+                    .setFileSize(getFileSize(path))
                     .setUpload(false)
                     .build()
 
@@ -407,8 +406,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onCancelReplyMessageViewClick(view: View) {
         cancelReply()
-        replyMessage = null
-        editMessage = null
+        reset(replyMessage == null)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
@@ -424,14 +422,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun send() {
         GlobalScope.launch {
-            for (i in 1..30) {
-                sed(i)
-            }
+            for (i in 1..30)
+                send(i)
         }
-
     }
 
-    suspend fun sed(i: Int) {
+    suspend fun send(i: Int) {
         delay(200)
         withContext(Dispatchers.Main) {
             binding.messageInput.setText(i.toString())

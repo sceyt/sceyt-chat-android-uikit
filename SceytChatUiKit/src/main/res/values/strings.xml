@@ -86,7 +86,7 @@
     <string name="sceyt_yesterday_at">Yesterday at</string>
     <string name="sceyt_at">at</string>
     <string name="sceyt_1_min_ago">1 minute ago</string>
-    <string name="sceyt_last_seen">Last seen</string>
+    <string name="sceyt_last_seen">last seen</string>
     <string name="sceyt_new_messages">New messages</string>
     <string name="sceyt_gallery">Gallery</string>
     <string name="sceyt_this_unsupported_file_format">This file format is not supported</string>
@@ -94,6 +94,6 @@
     <string name="sceyt_max_select_count_should_be">Max select count should be lover than</string>
     <string name="sceyt_video">Video</string>
     <string name="sceyt_image">Image</string>
-    <string name="you_blocked_this_user">You blocked this user</string>
+    <string name="sceyt_you_blocked_this_user">You blocked this user</string>
 
 </resources>

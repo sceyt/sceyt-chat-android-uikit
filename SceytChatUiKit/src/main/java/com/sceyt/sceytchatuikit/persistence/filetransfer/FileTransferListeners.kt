@@ -16,19 +16,21 @@ sealed interface FileTransferListeners {
                 transferTask: TransferTask)
     }
 
-    fun interface OnPause : FileTransferListeners {
+    fun interface PauseListener : FileTransferListeners {
         fun pause(messageTid: Long,
                   attachment: SceytAttachment,
                   state: TransferState)
     }
 
 
-    fun interface OnResume : FileTransferListeners {
+    fun interface ResumeListener : FileTransferListeners {
         fun resume(messageTid: Long,
                    attachment: SceytAttachment,
                    state: TransferState)
     }
 
+
     /** Use this if you want to implement all callbacks */
-    interface Listeners : UploadListener, DownloadListener, OnPause, OnResume
+    interface Listeners : UploadListener, DownloadListener, PauseListener,
+            ResumeListener
 }

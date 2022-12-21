@@ -4,4 +4,5 @@ data class TransferTask(
         val messageTid: Long,
         val state: TransferState?,
         val progressCallback: ProgressUpdateCallback,
-        val resultCallback: TransferResultCallback)
+        val resultCallback: TransferResultCallback,
+        val updateFileLocationCallback: UpdateFileLocationCallback)

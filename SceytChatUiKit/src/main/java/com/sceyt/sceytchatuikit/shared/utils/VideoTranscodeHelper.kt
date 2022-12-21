@@ -94,6 +94,45 @@ object VideoTranscodeHelper {
             }
         }
     }
+
+    fun transcodeAsResultWithCallback(context: Context, destination: File, uri: String, callback: (VideoTranscodeData) -> Unit) {
+        try {
+            VideoCompressor.start(
+                context = context,
+                srcUri = Uri.parse(uri),
+                destPath = destination.absolutePath,
+                configureWith = Configuration(
+                    quality = VideoQuality.MEDIUM,
+                    isMinBitrateCheckEnabled = true,
+                    disableAudio = false,
+                ),
+                listener = object : CompressionListener {
+                    override fun onCancelled() {
+                        callback(VideoTranscodeData(TranscodeResultEnum.Cancelled))
+                    }
+
+                    override fun onFailure(failureMessage: String) {
+                        callback(VideoTranscodeData(TranscodeResultEnum.Failure, failureMessage))
+                    }
+
+                    override fun onProgress(percent: Float) {
+                        callback(VideoTranscodeData(TranscodeResultEnum.Progress, progressPercent = percent))
+                    }
+
+                    override fun onStart() {
+                        callback(VideoTranscodeData(TranscodeResultEnum.Start))
+                    }
+
+                    override fun onSuccess() {
+                        callback(VideoTranscodeData(TranscodeResultEnum.Success))
+                    }
+                },
+            )
+        } catch (ex: Exception) {
+            Log.i("transcodeVideoFailure", ex.message.toString())
+            callback(VideoTranscodeData(TranscodeResultEnum.Failure, ex.message.toString()))
+        }
+    }
 }
 
 

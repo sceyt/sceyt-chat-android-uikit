@@ -12,12 +12,11 @@ import java.io.File
 
 fun getMimeType(url: String?): String? {
     if (url.isNullOrBlank()) return null
-    var type: String? = null
-    try {
-        type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(url.substring(url.lastIndexOf(".") + 1))
+    return try {
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(url.substring(url.lastIndexOf(".") + 1))
     } catch (ex: Exception) {
+        null
     }
-    return type
 }
 
 fun getMimeTypeTakeFirstPart(url: String?): String? {
@@ -37,7 +36,7 @@ fun getFileSize(fileUri: String): Long {
 
 fun File.convertImageFileToBase64(): String {
     return ByteArrayOutputStream().use { outputStream ->
-        Base64OutputStream(outputStream, Base64.DEFAULT).use { base64FilterStream ->
+        Base64OutputStream(outputStream, Base64.NO_WRAP).use { base64FilterStream ->
             inputStream().use { inputStream ->
                 inputStream.copyTo(base64FilterStream)
             }
@@ -46,13 +45,13 @@ fun File.convertImageFileToBase64(): String {
     }
 }
 
-fun ByteArray.toBase64(): String = String(Base64.encode(this, Base64.DEFAULT))
+fun ByteArray.toBase64(): String = String(Base64.encode(this, Base64.NO_WRAP))
 
 fun Bitmap?.bitmapToByteArray(): ByteArray? {
     this ?: return null
     return try {
         val stream = ByteArrayOutputStream()
-        compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        compress(Bitmap.CompressFormat.JPEG, 100, stream)
         stream.toByteArray()
     } catch (ex: Exception) {
         null

@@ -159,16 +159,26 @@ class MessagesCash {
         cashedMessages[updateDate.messageTid]?.let {
             it.attachments?.forEach { attachment ->
                 when (updateDate.state) {
-                    PendingUpload, Uploading, Uploaded -> {
+                    PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
                         if (attachment.tid == updateDate.attachmentTid)
                             update(attachment)
 
                     }
-                    Downloading, Downloaded, PendingDownload -> {
+                    Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
                         if (attachment.url == updateDate.url)
                             update(attachment)
                     }
+                    FilePathChanged -> return
                 }
+            }
+        }
+    }
+
+    fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) {
+        cashedMessages[messageTid]?.let {
+            it.attachments?.forEach { attachment ->
+                attachment.filePath = path
+                attachment.metadata = metadata
             }
         }
     }

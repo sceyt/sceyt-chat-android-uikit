@@ -39,10 +39,10 @@ class MessageImageViewHolder(
 
         setListener()
 
-        binding.loadProgress.release()
+        binding.loadProgress.release(item.file.progressPercent)
         transferData?.let {
             updateState(it, true)
-            if (it.state == Downloading)
+            if (it.filePath == null)
                 needDownloadCallback.invoke(fileItem)
         }
     }
@@ -53,16 +53,16 @@ class MessageImageViewHolder(
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
-            PendingUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 loadImage(fileItem.file.filePath, binding.fileImage)
             }
             PendingDownload -> {
-                loadBlurImageBytes(thumb, binding.fileImage)
+                loadThumb(thumb, binding.fileImage)
                 needDownloadCallback.invoke(fileItem)
             }
             Downloading -> {
                 if (isOnBind)
-                    loadBlurImageBytes(thumb, binding.fileImage)
+                    loadThumb(thumb, binding.fileImage)
             }
             Uploading -> {
                 if (isOnBind)
@@ -70,6 +70,15 @@ class MessageImageViewHolder(
             }
             Uploaded, Downloaded -> {
                 loadImage(fileItem.file.filePath, binding.fileImage)
+            }
+            PauseDownload -> {
+                loadThumb(thumb, binding.fileImage)
+            }
+            ErrorDownload -> {
+                loadThumb(thumb, binding.fileImage)
+            }
+            FilePathChanged -> {
+                loadChangedImage(data.filePath, binding.fileImage)
             }
         }
     }
