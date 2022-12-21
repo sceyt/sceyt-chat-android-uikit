@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 sealed interface SelectFileTypePopupClickListeners {
     fun interface GalleryClickListener : SelectFileTypePopupClickListeners {
