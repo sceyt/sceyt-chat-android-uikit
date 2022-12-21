@@ -3,8 +3,8 @@ package com.sceyt.sceytchatuikit.sceytconfigs
 import androidx.annotation.ColorRes
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
-import androidx.databinding.library.baseAdapters.BR
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.BR
 
 object SceytKitConfig {
     val SceytUITheme = ThemeConfig()

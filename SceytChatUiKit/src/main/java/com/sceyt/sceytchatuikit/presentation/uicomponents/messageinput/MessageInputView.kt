@@ -114,6 +114,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
+            icSendMessage.setOnLongClickListener {
+                if (inputState == Voice) clickListeners.onVoiceLongClick(it)
+                return@setOnLongClickListener true
+            }
+
             icAddAttachments.setOnClickListener {
                 clickListeners.onSendAttachmentClick(it)
             }
@@ -416,6 +421,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     }
 
+    override fun onVoiceLongClick(view: View) {
+
+    }
+
     override fun onCancelReplyMessageViewClick(view: View) {
         cancelReply()
         reset(replyMessage == null)
@@ -431,13 +440,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInputActionCallback?.join()
     }
 
-
-    fun send() {
-        GlobalScope.launch {
-            for (i in 1..30)
-                send(i)
-        }
-    }
 
     enum class InputState {
         Text, Voice
