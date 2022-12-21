@@ -8,6 +8,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
     private var defaultListeners: MessageInputClickListeners.ClickListeners = view
     private var sendMsgClickListener: MessageInputClickListeners.SendMsgClickListener? = null
     private var sendAttachmentClickListener: MessageInputClickListeners.SendAttachmentClickListener? = null
+    private var voiceClickListener: MessageInputClickListeners.VoiceClickListener? = null
     private var closeReplyMessageViewClickListener: MessageInputClickListeners.CloseReplyMessageViewClickListener? = null
     private var removeAttachmentClickListener: MessageInputClickListeners.RemoveAttachmentClickListener? = null
     private var joinClickListener: MessageInputClickListeners.JoinClickListener? = null
@@ -20,6 +21,11 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
     override fun onSendAttachmentClick(view: View) {
         defaultListeners.onSendAttachmentClick(view)
         sendAttachmentClickListener?.onSendAttachmentClick(view)
+    }
+
+    override fun onVoiceClick(view: View) {
+        defaultListeners.onVoiceClick(view)
+        voiceClickListener?.onVoiceClick(view)
     }
 
     override fun onCancelReplyMessageViewClick(view: View) {
@@ -42,6 +48,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
             is MessageInputClickListeners.ClickListeners -> {
                 sendMsgClickListener = listener
                 sendAttachmentClickListener = listener
+                voiceClickListener = listener
                 closeReplyMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
@@ -51,6 +58,9 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : MessageInput
             }
             is MessageInputClickListeners.SendAttachmentClickListener -> {
                 sendAttachmentClickListener = listener
+            }
+            is MessageInputClickListeners.VoiceClickListener -> {
+                voiceClickListener = listener
             }
             is MessageInputClickListeners.CloseReplyMessageViewClickListener -> {
                 closeReplyMessageViewClickListener = listener
