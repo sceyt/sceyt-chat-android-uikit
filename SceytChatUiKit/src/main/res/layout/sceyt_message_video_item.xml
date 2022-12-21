@@ -30,7 +30,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize" />
 
-A    <androidx.appcompat.widget.AppCompatTextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
