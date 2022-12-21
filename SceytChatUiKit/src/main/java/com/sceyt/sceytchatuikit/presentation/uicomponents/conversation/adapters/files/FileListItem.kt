@@ -31,7 +31,10 @@ sealed class FileListItem {
                      val message: SceytMessage) : FileListItem(attachment, message)
 
     data class Video(val attachment: SceytAttachment,
-                     val message: SceytMessage) : FileListItem(attachment, message)
+                     val message: SceytMessage) : FileListItem(attachment, message) {
+
+        var videoDuration: String? = null
+    }
 
     object LoadingMoreItem : FileListItem()
 

@@ -31,7 +31,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.cli
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.MessageInputClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 open class ConversationActivity : AppCompatActivity() {
