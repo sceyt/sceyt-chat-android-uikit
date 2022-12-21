@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
@@ -10,6 +11,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.getVideoDuration
 
 
 class MessageVideoViewHolder(
@@ -41,6 +44,7 @@ class MessageVideoViewHolder(
         binding.parentLayout.clipToOutline = true
         binding.videoView.isVisible = false
         binding.loadProgress.release(item.file.progressPercent)
+        setVideoDuration()
 
         setListener()
 
@@ -79,6 +83,7 @@ class MessageVideoViewHolder(
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(fileItem.file.filePath)
                 loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
+                setVideoDuration()
             }
             PauseDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
@@ -91,6 +96,27 @@ class MessageVideoViewHolder(
             FilePathChanged -> {
                 loadChangedImage(data.filePath, binding.videoViewController.getImageView())
             }
+        }
+    }
+
+    private fun setVideoDuration() {
+        val path = fileItem.file.filePath.run {
+            if (isNotNullOrBlank()) toString()
+            else return
+        }
+        with(binding.tvDuration) {
+            val duration = (fileItem as? FileListItem.Video)?.videoDuration
+            if (duration.isNotNullOrBlank()) {
+                text = duration
+                isVisible = true
+                return
+            }
+            getVideoDuration(context, path)?.let {
+                isVisible = true
+                text = DateTimeUtil.millisecondsToTime(it).also { duration ->
+                    (fileItem as? FileListItem.Video)?.videoDuration = duration
+                }
+            } ?: run { isVisible = false }
         }
     }
 

@@ -88,15 +88,15 @@
             android:id="@+id/rvFiles"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
+            android:layout_marginBottom="2dp"
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
-            tools:itemCount="3"
-            tools:listitem="@layout/sceyt_message_file_item" />
+            tools:itemCount="1"
+            tools:listitem="@layout/sceyt_message_image_item" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
@@ -110,7 +110,7 @@
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewStatusIconSize="16dp"
+            app:sceytDateStatusViewStatusIconSize="15dp"
             tools:sceytDateStatusViewDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
