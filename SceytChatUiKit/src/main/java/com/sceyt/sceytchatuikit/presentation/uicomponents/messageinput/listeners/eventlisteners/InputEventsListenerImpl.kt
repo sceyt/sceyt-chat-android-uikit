@@ -1,25 +1,26 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners
 
+import android.widget.ImageView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 
-open class InputEventsListenerImpl(view: MessageInputView) : InputEventsListener.EventListeners {
-    private var defaultListeners: InputEventsListener.EventListeners = view
-    private var stateListener: InputEventsListener.StateListener? = null
+open class InputEventsListenerImpl(view: MessageInputView) : InputEventsListener.InputEventListeners {
+    private var defaultListeners: InputEventsListener.InputEventListeners = view
+    private var inputStateListener: InputEventsListener.InputStateListener? = null
 
-    override fun onStateChanged(state: InputState) {
-        defaultListeners.onStateChanged(state)
-        stateListener?.onStateChanged(state)
+    override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
+        defaultListeners.onInputStateChanged(sendImage, state)
+        inputStateListener?.onInputStateChanged(sendImage, state)
     }
 
     fun setListener(listener: InputEventsListener) {
         when (listener) {
-            is InputEventsListener.EventListeners -> {
-                stateListener = listener
-                stateListener = listener
+            is InputEventsListener.InputEventListeners -> {
+                inputStateListener = listener
+                inputStateListener = listener
             }
-            is InputEventsListener.StateListener -> {
-                stateListener = listener
+            is InputEventsListener.InputStateListener -> {
+                inputStateListener = listener
             }
         }
     }

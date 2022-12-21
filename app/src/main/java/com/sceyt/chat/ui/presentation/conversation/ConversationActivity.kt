@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.conversation
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -30,8 +31,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 open class ConversationActivity : AppCompatActivity() {
@@ -130,6 +134,15 @@ open class ConversationActivity : AppCompatActivity() {
             override fun onSendMsgClick(view: View) {
                 super.onSendMsgClick(view)
                 println("send")
+            }
+        })
+
+        setCustomEventListener(object : InputEventsListenerImpl(this) {
+            override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
+                sendImage.apply {
+                    setImageResource(MessageInputViewStyle.sendMessageIcon)
+                    alpha = if (state == InputState.Voice) 0.5f else 1f
+                }
             }
         })
     }

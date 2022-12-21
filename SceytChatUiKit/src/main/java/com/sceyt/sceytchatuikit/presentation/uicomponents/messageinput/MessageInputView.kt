@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
@@ -51,7 +52,7 @@ import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
-        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.EventListeners, SceytKoinComponent {
+        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners, SceytKoinComponent {
 
     private val preferences by inject<SceytSharedPreference>()
     private lateinit var attachmentsAdapter: AttachmentsAdapter
@@ -98,6 +99,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             setUpStyle()
             determineState()
+            post { onStateChanged(inputState) }
 
             messageInput.doOnTextChanged { text, _, _, _ ->
                 determineState()
@@ -253,13 +255,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun determineState() {
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
-        val iconResId = if (showVoiceIcon) 0
-        else MessageInputViewStyle.sendMessageIcon
-        binding.icSendMessage.setImageResource(iconResId)
-
         val newState = if (showVoiceIcon) Voice else Text
         if (inputState != newState)
-            onInputStateChanged(newState)
+            onStateChanged(newState)
         inputState = newState
     }
 
@@ -305,8 +303,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun onInputStateChanged(newState: InputState) {
-        eventListeners.onStateChanged(newState)
+    internal fun onStateChanged(newState: InputState) {
+        eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
 
     internal fun replyMessage(message: Message) {
@@ -491,7 +489,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    override fun onStateChanged(state: InputState) {
-
+    override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
+        val iconResId = if (state == Voice) R.drawable.sceyt_ic_voice
+        else MessageInputViewStyle.sendMessageIcon
+        binding.icSendMessage.setImageResource(iconResId)
     }
 }
