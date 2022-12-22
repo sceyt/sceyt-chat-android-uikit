@@ -187,7 +187,7 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
         }
     }
 
-    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String>) -> Unit) {
+    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String?>) -> Unit) {
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
                 val result = resizeImage(context, attachment.filePath)
@@ -196,7 +196,7 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
             AttachmentTypeEnum.Video.value() -> {
                 transcodeVideo(context, attachment.filePath, callback)
             }
-            else -> callback.invoke(Result.success(""))
+            else -> callback.invoke(Result.success(null))
         }
     }
 }

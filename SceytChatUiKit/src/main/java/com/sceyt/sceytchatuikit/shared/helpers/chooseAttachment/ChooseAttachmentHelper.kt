@@ -5,12 +5,15 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
@@ -21,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileInputStream
 
 class ChooseAttachmentHelper {
     private lateinit var context: Context
@@ -138,18 +142,20 @@ class ChooseAttachmentHelper {
                 }
                 scope.launch(Dispatchers.IO) {
                     val paths = getPathFromFile(*uris.toTypedArray())
-                    if (paths.isNotEmpty())
+                    if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
                             chooseFilesCb?.invoke(paths)
                         }
+                    } else Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
                 }
             } else {
                 scope.launch(Dispatchers.IO) {
                     val paths = getPathFromFile(data?.data)
-                    if (paths.isNotEmpty())
+                    if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
                             chooseFilesCb?.invoke(paths)
                         }
+                    } else Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -166,16 +172,26 @@ class ChooseAttachmentHelper {
                     withContext(Dispatchers.Main) { SceytLoader.showLoading(context) }
                 }
 
-                val path = FileUtil(context).getPath(uri)
-                val file = File(path)
-                if (file.exists()) {
-                    paths.add(path)
-                } else {
-                    val copiedFile = ImageUriPathUtil.copyFile(context, uri.toString(), file.name)
-                    paths.add(copiedFile.path)
+                var realFile: File? = null
+                try {
+                    val path = FileUtil(context).getPath(uri)
+                    FileInputStream(File(path))
+                    realFile = File(path)
+                } catch (ex: Exception) {
+                    Log.e(TAG, "error to get path with reason ${ex.message}")
+                } finally {
+                    if (realFile != null && realFile.exists()) {
+                        paths.add(realFile.path)
+                    } else {
+                        val name = DocumentFile.fromSingleUri(context, uri)?.name
+                        if (name != null) {
+                            val copiedFile = ImageUriPathUtil.copyFile(context, uri.toString(), name)
+                            paths.add(copiedFile.path)
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                Log.e(this.TAG, "error to get path with reason ${e.message}")
+                Log.e(TAG, "error to copy file with reason ${e.message}")
             }
         }
         debounceHelper.cancelLastDebounce()

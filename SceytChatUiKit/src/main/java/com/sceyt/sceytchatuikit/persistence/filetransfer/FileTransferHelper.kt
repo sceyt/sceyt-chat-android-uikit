@@ -59,26 +59,31 @@ object FileTransferHelper : SceytKoinComponent {
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 messageDao.updateAttachmentAndPayLoad(transferData)
                 messagesCash.updateAttachmentTransferData(transferData)
+                Log.e(this.TAG, it.message.toString())
             }
         }
     }
 
     fun getUploadResultCallback(attachment: SceytAttachment) = TransferResultCallback { result ->
-        if (result is SceytResponse.Success) {
-            val transferData = TransferData(attachment.messageTid,
-                attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
-            attachment.updateWithTransferData(transferData)
-            MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-            messageDao.updateAttachmentAndPayLoad(transferData)
-            messagesCash.updateAttachmentTransferData(transferData)
-        } else {
-            val transferData = TransferData(attachment.messageTid,
-                attachment.tid, attachment.progressPercent
-                        ?: 0f, TransferState.ErrorUpload, attachment.filePath, null)
+        when (result) {
+            is SceytResponse.Success -> {
+                val transferData = TransferData(attachment.messageTid,
+                    attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
+                attachment.updateWithTransferData(transferData)
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                messageDao.updateAttachmentAndPayLoad(transferData)
+                messagesCash.updateAttachmentTransferData(transferData)
+            }
+            is SceytResponse.Error -> {
+                val transferData = TransferData(attachment.messageTid,
+                    attachment.tid, attachment.progressPercent
+                            ?: 0f, TransferState.ErrorUpload, attachment.filePath, null)
 
-            MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-            messageDao.updateAttachmentAndPayLoad(transferData)
-            messagesCash.updateAttachmentTransferData(transferData)
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                messageDao.updateAttachmentAndPayLoad(transferData)
+                messagesCash.updateAttachmentTransferData(transferData)
+                Log.e(this.TAG, result.message.toString())
+            }
         }
         fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {
             it.invoke((result is SceytResponse.Success))
@@ -124,7 +129,7 @@ object FileTransferHelper : SceytKoinComponent {
                 setMetadata(base64String, size)
             }
         } catch (ex: Exception) {
-            Log.i(TAG, "Couldn't get an blurred image or sizes.")
+            Log.e(TAG, "Couldn't get an blurred image or sizes.")
         }
     }
 
