@@ -215,7 +215,7 @@ abstract class MessageDao {
     }
 
     @Query("update AttachmentPayLoad set progressPercent =:progress, transferState =:state where messageTid =:tid")
-    abstract fun updateAttachmentTransferProgressAndStateWithMsgTid(tid: Long, progress: Float, state: TransferState)
+    abstract fun updateAttachmentTransferDataByMsgTid(tid: Long, progress: Float, state: TransferState)
 
     @Transaction
     open fun updateAttachmentAndPayLoad(transferData: TransferData) {
@@ -225,7 +225,7 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open fun updateAttachmentFilePath(tid: Long, filePath: String?, fileSize: Long, metadata: String?) {
+    open fun updateAttachmentFilePathAndMetadata(tid: Long, filePath: String?, fileSize: Long, metadata: String?) {
         updateAttachmentFilePathByMsgTid(tid, filePath, fileSize, metadata)
         updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
     }

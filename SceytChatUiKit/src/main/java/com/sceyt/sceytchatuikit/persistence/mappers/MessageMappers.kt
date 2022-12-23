@@ -78,8 +78,7 @@ fun SceytMessage.toMessageDb(): MessageDb {
         parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid) },
         lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
-        attachmentPayLoadEntity = toAttachmentPayLoad()
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
     )
 }
 

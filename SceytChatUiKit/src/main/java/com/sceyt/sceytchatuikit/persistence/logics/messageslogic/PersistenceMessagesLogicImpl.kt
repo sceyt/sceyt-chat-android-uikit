@@ -29,9 +29,11 @@ import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper.addBlurredBytesAndSizeToMetadata
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
@@ -353,6 +355,25 @@ internal class PersistenceMessagesLogicImpl(
         return messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
+    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
+        return messageDao.getAllPayLoadsByMsgTid(tid)
+    }
+
+    override fun updateTransferDataByMsgTid(data: TransferData) {
+        messageDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
+        messagesCash.updateAttachmentTransferData(data)
+    }
+
+    override fun updateAttachmentWithTransferData(data: TransferData) {
+        messageDao.updateAttachmentAndPayLoad(data)
+        messagesCash.updateAttachmentTransferData(data)
+    }
+
+    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+        messageDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+        messagesCash.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
+    }
+
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
 
@@ -456,16 +477,16 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
-        val payloads = messageDao.getAllPayLoadsByMsgTid(*messages.map { it.tid }.toLongArray())
+        val tIds = mutableListOf<Long>()
         messages.forEach {
-            payloads.find { payLoad -> payLoad.messageTid == it.tid }?.let { entity ->
-                it.attachments?.forEach { attachment ->
-                    attachment.transferState = entity.transferState
-                    attachment.progressPercent = entity.progressPercent
-                    attachment.filePath = entity.filePath
-                    attachment.url = entity.url
-                }
-            }
+            tIds.add(it.tid)
+            it.parent?.let { parent -> tIds.add(parent.tid) }
+        }
+        val payloads = messageDao.getAllPayLoadsByMsgTid(*tIds.toLongArray())
+
+        messages.forEach {
+            findAndUpdateAttachmentPayLoads(it, payloads)
+            it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
         }
 
         if (loadType == LoadNear && loadKey.key == LoadKeyType.ScrollToMessageById.longValue)
@@ -480,6 +501,17 @@ internal class PersistenceMessagesLogicImpl(
             data = response, cashData = messagesCash.getSorted(),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
+    }
+
+    private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadEntity>) {
+        payloads.find { payLoad -> payLoad.messageTid == message.tid }?.let { entity ->
+            message.attachments?.forEach { attachment ->
+                attachment.transferState = entity.transferState
+                attachment.progressPercent = entity.progressPercent
+                attachment.filePath = entity.filePath
+                attachment.url = entity.url
+            }
+        }
     }
 
     private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int): List<SceytMessage> {

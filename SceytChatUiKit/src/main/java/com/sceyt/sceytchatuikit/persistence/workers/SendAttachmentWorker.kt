@@ -6,14 +6,13 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
-import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
@@ -37,11 +36,10 @@ object SendAttachmentWorkManager {
 
 class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
-    private val messageDao: MessageDao by inject()
-    private val messagesCash: MessagesCash by inject()
+    private val messagesLogic: PersistenceMessagesLogic by inject()
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
-        val payloads = messageDao.getAllPayLoadsByMsgTid(tmpMessage.tid)
+        val payloads = messagesLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
 
         return suspendCancellableCoroutine { continuation ->
             if (tmpMessage.attachments.isNullOrEmpty().not()) {
@@ -49,10 +47,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     val payload = payloads.find { it.messageTid == attachment.messageTid }
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
                         val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
-                        messageDao.updateAttachmentAndPayLoad(transferData)
-                        messagesCash.updateAttachmentTransferData(transferData)
+                        messagesLogic.updateAttachmentWithTransferData(transferData)
                         continuation.safeResume(true)
                     } else {
+                        val transferData = TransferData(tmpMessage.tid, attachment.tid, 0f,
+                            TransferState.Uploading, attachment.filePath, attachment.url)
+                        messagesLogic.updateAttachmentWithTransferData(transferData)
+
                         fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
                             task.addOnCompletionListener(this.toString()) {
                                 continuation.safeResume(it)
@@ -68,7 +69,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val data = inputData
         val messageTid = data.getLong(SendAttachmentWorkManager.MESSAGE_TID, 0)
 
-        val tmpMessage = messageDao.getMessageByTid(messageTid)?.toSceytMessage()
+        val tmpMessage = messagesLogic.getMessageFromDbByTid(messageTid)
                 ?: return Result.success()
 
         if (checkToUploadAttachmentsBeforeSend(tmpMessage))

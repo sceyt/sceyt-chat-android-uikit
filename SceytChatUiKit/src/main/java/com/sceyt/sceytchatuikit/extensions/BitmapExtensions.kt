@@ -92,7 +92,7 @@ fun convertString64ToImage(base64String: String): ByteArray? {
     return Base64.decode(base64String, Base64.NO_WRAP)
 }
 
-fun ByteArray.decodeByteArrayToBitmap(): Bitmap {
+fun ByteArray.decodeByteArrayToBitmap(): Bitmap? {
     return BitmapFactory.decodeByteArray(this, 0, this.size)
 }
 

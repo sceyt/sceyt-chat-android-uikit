@@ -9,6 +9,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -48,5 +49,9 @@ internal interface PersistenceMessagesLogic {
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
     suspend fun getMessageFromDbByTid(tid: Long): SceytMessage?
+    suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity>
+    fun updateTransferDataByMsgTid(data: TransferData)
+    fun updateAttachmentWithTransferData(data: TransferData)
+    fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?)
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }
