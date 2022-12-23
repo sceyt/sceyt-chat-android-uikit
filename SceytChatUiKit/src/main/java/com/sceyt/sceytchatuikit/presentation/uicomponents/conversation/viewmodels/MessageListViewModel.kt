@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.SceytSyncManager
@@ -32,7 +33,6 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
@@ -280,18 +280,26 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val newState: TransferState
+        val defaultState = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
+            PendingUpload else PendingDownload
+        val transferData = TransferData(
+            item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
+            item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
+
         when (val state = item.file.transferState ?: return) {
             PendingUpload, ErrorUpload, FilePathChanged -> {
-                newState = Uploading
+                transferData.state = Uploading
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid)
             }
             PendingDownload, ErrorDownload -> {
-                newState = Downloading
+                transferData.state = Downloading
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
             }
             PauseDownload -> {
-                newState = Downloading
+                transferData.state = Downloading
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
@@ -299,29 +307,28 @@ class MessageListViewModel(private val conversationId: Long,
 
             }
             PauseUpload -> {
-                newState = Uploading
+                transferData.state = Uploading
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
                 else SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid)
             }
             Uploading -> {
-                newState = PauseUpload
+                transferData.state = PauseUpload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
             Downloading -> {
-                newState = PauseDownload
+                transferData.state = PauseDownload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
             Uploaded, Downloaded -> {
-                newState = state
+                transferData.state = state
+                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
         }
-
-        MessageEventsObserver.emitAttachmentTransferUpdate(TransferData(
-            item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
-            newState, item.file.filePath, item.file.url)
-        )
     }
 
     fun addReaction(message: SceytMessage, scoreKey: String) {

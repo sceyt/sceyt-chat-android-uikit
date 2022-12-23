@@ -16,6 +16,7 @@ import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.text.HtmlCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -29,10 +30,8 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
-import com.sceyt.sceytchatuikit.extensions.dpToPx
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.presentation.common.getAttachmentUrl
+import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.mappers.getThumbByBytesAndSize
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
@@ -151,10 +150,15 @@ abstract class BaseMsgViewHolder(private val view: View,
             imageAttachment.isVisible = if (parent?.attachments.isNullOrEmpty()) {
                 false
             } else {
-                val url = parent?.getAttachmentUrl(itemView.context)
-                if (!url.isNullOrBlank()) {
+                val attachment = parent?.attachments?.getOrNull(0)
+                if (attachment?.type.isEqualsVideoOrImage()) {
+                    val path = attachment?.filePath
+                    val placeHolder = attachment?.metadata.getThumbByBytesAndSize(true)?.second
+                        ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
                     Glide.with(itemView.context)
-                        .load(parent.attachments?.getOrNull(0)?.filePath)
+                        .load(path)
+                        .placeholder(placeHolder)
+                        .error(placeHolder)
                         .override(imageAttachment.width, imageAttachment.height)
                         .into(imageAttachment)
                 } else
