@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
@@ -68,20 +69,22 @@ fun SceytMessage.getShowBody(context: Context): String {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() -> body.trim()
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context)
-        else -> context.getString(R.string.sceyt_attachment)
+        else -> context.getString(R.string.sceyt_file)
     }
 }
 
 fun SceytAttachment?.getShowName(context: Context): String {
     this ?: return ""
     return when (type) {
-        "video" -> context.getString(R.string.sceyt_video)
-        "image" -> context.getString(R.string.sceyt_image)
+        AttachmentTypeEnum.Video.value() -> context.getString(R.string.sceyt_video)
+        AttachmentTypeEnum.Image.value() -> context.getString(R.string.sceyt_image)
         else -> name
     }
 }
 
 fun Message.isTextMessage() = attachments.isNullOrEmpty()
+
+fun SceytMessage.isTextMessage() = attachments.isNullOrEmpty()
 
 fun SceytMessage.getAttachmentUrl(context: Context): String? {
     if (!attachments.isNullOrEmpty()) {
