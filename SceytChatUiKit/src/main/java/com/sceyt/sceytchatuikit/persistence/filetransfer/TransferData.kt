@@ -4,7 +4,7 @@ data class TransferData(
         val messageTid: Long,
         val attachmentTid: Long,
         val progressPercent: Float,
-        val state: TransferState,
+        var state: TransferState,
         var filePath: String?,
         val url: String?
 ){

@@ -28,7 +28,9 @@
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toEndOf="@+id/view"
         app:layout_constraintTop_toTopOf="@+id/view"
-        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5" />
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5"
+        tools:src="@tools:sample/backgrounds/scenic"
+        tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvName"

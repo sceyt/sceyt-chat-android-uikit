@@ -7,9 +7,11 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
@@ -27,6 +29,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
+import com.sceyt.sceytchatuikit.persistence.mappers.getThumbByBytesAndSize
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
@@ -42,6 +45,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
@@ -303,6 +307,21 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    private fun loadReplyMessageImage(attachment: Attachment) {
+        if (attachment.type.isEqualsVideoOrImage()) {
+            val placeHolder = attachment.metadata.getThumbByBytesAndSize(true)?.second
+                ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
+            Glide.with(context)
+                .load(attachment.filePath)
+                .placeholder(placeHolder)
+                .override(100)
+                .error(placeHolder)
+                .into(binding.layoutReplyOrEditMessage.imageAttachment)
+        } else binding.layoutReplyOrEditMessage.imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+
+        binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
+    }
+
     internal fun onStateChanged(newState: InputState) {
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
@@ -318,6 +337,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
             tvName.text = text
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
+
+            if (message.attachments.isNullOrEmpty().not())
+                loadReplyMessageImage(message.attachments[0])
+
             tvMessageBody.text = if (message.isTextMessage())
                 message.body.trim()
             else message.toSceytUiMessage().getShowBody(context)
@@ -331,6 +354,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             isVisible = true
             ViewUtil.expandHeight(root, 1, 200)
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
+            layoutImage.isVisible = false
             tvName.text = getString(R.string.sceyt_edit_message)
             tvMessageBody.text = if (message.isTextMessage())
                 message.body.trim()
