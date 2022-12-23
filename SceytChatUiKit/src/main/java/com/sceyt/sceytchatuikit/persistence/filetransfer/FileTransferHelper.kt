@@ -11,8 +11,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.toBase64
-import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.json.JSONObject
 import org.koin.core.component.inject
@@ -20,8 +19,7 @@ import java.io.File
 
 object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
-    private val messageDao by inject<MessageDao>()
-    private val messagesCash by inject<MessagesCash>()
+    private val messagesLogic by inject<PersistenceMessagesLogic>()
 
     fun createTransferTask(attachment: SceytAttachment, isFromUpload: Boolean): TransferTask {
         return TransferTask(messageTid = attachment.messageTid,
@@ -36,8 +34,7 @@ object FileTransferHelper : SceytKoinComponent {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
         MessageEventsObserver.emitAttachmentTransferUpdate(it)
-        messageDao.updateAttachmentTransferProgressAndStateWithMsgTid(it.messageTid, it.progressPercent, it.state)
-        messagesCash.updateAttachmentTransferData(it)
+        messagesLogic.updateTransferDataByMsgTid(it)
     }
 
     fun getDownloadResultCallback(attachment: SceytAttachment) = TransferResultCallback {
@@ -47,8 +44,7 @@ object FileTransferHelper : SceytKoinComponent {
                     100f, TransferState.Downloaded, it.data, attachment.url)
                 attachment.updateWithTransferData(transferData)
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                messageDao.updateAttachmentAndPayLoad(transferData)
-                messagesCash.updateAttachmentTransferData(transferData)
+                messagesLogic.updateAttachmentWithTransferData(transferData)
             }
             is SceytResponse.Error -> {
                 val transferData = TransferData(
@@ -57,8 +53,7 @@ object FileTransferHelper : SceytKoinComponent {
 
                 attachment.updateWithTransferData(transferData)
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                messageDao.updateAttachmentAndPayLoad(transferData)
-                messagesCash.updateAttachmentTransferData(transferData)
+                messagesLogic.updateAttachmentWithTransferData(transferData)
                 Log.e(this.TAG, it.message.toString())
             }
         }
@@ -71,8 +66,7 @@ object FileTransferHelper : SceytKoinComponent {
                     attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
                 attachment.updateWithTransferData(transferData)
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                messageDao.updateAttachmentAndPayLoad(transferData)
-                messagesCash.updateAttachmentTransferData(transferData)
+                messagesLogic.updateAttachmentWithTransferData(transferData)
             }
             is SceytResponse.Error -> {
                 val transferData = TransferData(attachment.messageTid,
@@ -80,8 +74,7 @@ object FileTransferHelper : SceytKoinComponent {
                             ?: 0f, TransferState.ErrorUpload, attachment.filePath, null)
 
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                messageDao.updateAttachmentAndPayLoad(transferData)
-                messagesCash.updateAttachmentTransferData(transferData)
+                messagesLogic.updateAttachmentWithTransferData(transferData)
                 Log.e(this.TAG, result.message.toString())
             }
         }
@@ -102,8 +95,7 @@ object FileTransferHelper : SceytKoinComponent {
             attachment.fileSize = fileSize
             attachment.upsertSizeMetadata(dimensions)
             MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-            messageDao.updateAttachmentFilePath(attachment.messageTid, newPath, fileSize, attachment.metadata)
-            messagesCash.updateAttachmentFilePathAndMeta(attachment.messageTid, newPath, attachment.metadata)
+            messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
         }
     }
 
