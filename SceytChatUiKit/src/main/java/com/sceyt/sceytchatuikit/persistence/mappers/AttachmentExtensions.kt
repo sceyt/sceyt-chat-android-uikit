@@ -89,6 +89,7 @@ fun getBlurredBytesAndSizeToAsString(filePath: String?, type: String): String? {
                         base64String = bytes.toBase64()
                     }
                 }
+                else -> return null
             }
             createMetadata(null, base64String, size)
         }
