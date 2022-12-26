@@ -32,7 +32,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper.addBlurredBytesAndSizeToMetadata
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
@@ -40,13 +39,10 @@ import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
@@ -150,7 +146,6 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun sendMessage(channelId: Long, message: Message) {
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
-
         insertTmpMessageToDb(tmpMessage)
         messagesCash.add(tmpMessage)
 
@@ -198,7 +193,8 @@ internal class PersistenceMessagesLogicImpl(
             attachments?.map {
                 it.transferState = TransferState.Uploading
                 it.progressPercent = 0f
-                it.addBlurredBytesAndSizeToMetadata()
+                if (!it.existThumb())
+                    it.addBlurredBytesAndSizeToMetadata()
             }
         }
         return tmpMessage

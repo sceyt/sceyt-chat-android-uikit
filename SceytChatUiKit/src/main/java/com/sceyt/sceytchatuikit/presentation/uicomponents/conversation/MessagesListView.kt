@@ -241,7 +241,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun addNewMessages(vararg data: MessageListItem) {
         if (data.isEmpty()) return
-        messagesRV.addNewMessages(*data)
+        messagesRV.awaitAnimationEnd {
+            messagesRV.addNewMessages(*data)
+        }
     }
 
     internal fun updateMessage(message: SceytMessage) {

@@ -296,8 +296,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
-    onNewOutgoingMessageLiveData.observe(lifecycleOwner, Observer {
-        if (hasNext || hasNextDb) return@Observer
+    onNewOutGoingMessageFlow.onEach {
+        if (hasNext || hasNextDb) return@onEach
         viewModelScope.launch {
             val initMessage = mapToMessageListItem(
                 data = arrayListOf(it),
@@ -308,7 +308,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.addNewMessages(*initMessage.toTypedArray())
             messagesListView.updateViewState(PageState.Nothing)
         }
-    })
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
         checkEnableDisableActions(it)
