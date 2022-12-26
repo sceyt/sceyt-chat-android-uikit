@@ -164,6 +164,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
         }
+        messages.findIndexed { it is MessageListItem.DateSeparatorItem && it.msgId == tid }?.let {
+            messages.removeAt(it.first)
+            notifyItemRemoved(it.first)
+        }
     }
 
     fun sort(recyclerView: RecyclerView) {

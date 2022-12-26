@@ -359,7 +359,7 @@ class MessageListViewModel(private val conversationId: Long,
     }
 
 
-    fun sendMessage(message: Message, parent: Message? = null) {
+    fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
                 if (result is SendMessageResult.Response) {
@@ -431,7 +431,7 @@ class MessageListViewModel(private val conversationId: Long,
 
 
                 if (shouldShowDate(sceytMessage, prevMessage))
-                    messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.id))
+                    messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
                 val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
                     isGroup = this@MessageListViewModel.isGroup

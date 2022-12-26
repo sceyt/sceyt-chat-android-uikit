@@ -5,6 +5,7 @@ import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
@@ -135,12 +136,19 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun onMessageEditedOrDeleted(data: Message) {
         channelsCash.get(data.channelId)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
-                if (lastMessage.id == data.id) {
-                    channelsCash.updateLastMessage(data.channelId, data.toSceytUiMessage(channel.isGroup))
+                if (lastMessage.tid == data.tid) {
+                    if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
+                        channelsCash.updateLastMessage(data.channelId, null)
+                    else
+                        channelsCash.updateLastMessage(data.channelId, data.toSceytUiMessage(channel.isGroup))
                 }
             } ?: run {
-                channel.lastMessage = data.toSceytUiMessage(channel.isGroup)
-                channelsCash.upsertChannel(channel)
+                if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
+                    deleteMessage(data.channelId, data.toSceytUiMessage())
+                else {
+                    channel.lastMessage = data.toSceytUiMessage(channel.isGroup)
+                    channelsCash.upsertChannel(channel)
+                }
             }
         }
     }
@@ -383,17 +391,6 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    private suspend fun deleteChannelDb(channelId: Long) {
-        channelDao.deleteChannelAndLinks(channelId)
-        messageDao.deleteAllMessages(channelId)
-        channelsCash.deleteChannel(channelId)
-    }
-
-    private fun upsertChannelsToCash(channels: List<SceytChannel>) {
-        if (channels.isEmpty()) return
-        channelsCash.upsertChannel(*channels.toTypedArray())
-    }
-
     override suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.muteChannel(channelId, muteUntil)
 
@@ -497,5 +494,29 @@ internal class PersistenceChannelsLogicImpl(
 
     override fun getTotalUnreadCount(): Flow<Int> {
         return channelDao.getTotalUnreadCountAsFlow().filterNotNull()
+    }
+
+    private suspend fun deleteChannelDb(channelId: Long) {
+        channelDao.deleteChannelAndLinks(channelId)
+        messageDao.deleteAllMessages(channelId)
+        channelsCash.deleteChannel(channelId)
+    }
+
+    private fun upsertChannelsToCash(channels: List<SceytChannel>) {
+        if (channels.isEmpty()) return
+        channelsCash.upsertChannel(*channels.toTypedArray())
+    }
+
+
+    private suspend fun deleteMessage(channelId: Long, message: SceytMessage) {
+        channelsCash.get(channelId)?.let {
+            if (it.lastMessage?.id == message.id) {
+                val lastMessage = messageDao.getLastMessage(channelId)
+                with(lastMessage?.messageEntity) {
+                    channelDao.updateLastMessage(channelId, this?.tid, this?.createdAt)
+                }
+                channelsCash.updateLastMessage(channelId, lastMessage?.toSceytMessage())
+            }
+        }
     }
 }

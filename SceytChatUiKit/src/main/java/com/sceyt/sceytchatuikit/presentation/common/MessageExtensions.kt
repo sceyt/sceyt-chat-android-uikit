@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -68,13 +69,14 @@ fun SceytMessage.getShowBody(context: Context): String {
     return when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() -> body.trim()
-        attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context)
+        attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
         else -> context.getString(R.string.sceyt_file)
     }
 }
 
-fun SceytAttachment?.getShowName(context: Context): String {
+fun SceytAttachment?.getShowName(context: Context, body: String): String {
     this ?: return ""
+    if (body.isNotNullOrBlank()) return body
     return when (type) {
         AttachmentTypeEnum.Video.value() -> context.getString(R.string.sceyt_video)
         AttachmentTypeEnum.Image.value() -> context.getString(R.string.sceyt_image)

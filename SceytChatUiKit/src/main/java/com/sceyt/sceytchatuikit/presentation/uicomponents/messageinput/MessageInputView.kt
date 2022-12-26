@@ -171,6 +171,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                         setBody(messageBody)
                                         replyMessage?.let {
                                             setParentMessageId(it.id)
+                                            setParentMessage(it)
                                             setReplyInThread(replyThreadMessageId != null)
                                         } ?: replyThreadMessageId?.let {
                                             setParentMessageId(it)
@@ -193,6 +194,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                             .apply {
                                 replyMessage?.let {
                                     setParentMessageId(it.id)
+                                    setParentMessage(it)
                                     setReplyInThread(replyThreadMessageId != null)
                                 } ?: replyThreadMessageId?.let {
                                     setParentMessageId(it)
