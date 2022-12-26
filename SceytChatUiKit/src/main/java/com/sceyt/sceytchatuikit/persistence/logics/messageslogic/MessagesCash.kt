@@ -38,9 +38,12 @@ class MessagesCash {
 
     fun add(message: SceytMessage) {
         synchronized(lock) {
-            val payLoad = getPayLoads(message)
+            val exist = cashedMessages[message.tid] != null
+            val payLoad = if (exist)
+                getPayLoads(message) else null
             cashedMessages[message.tid] = message
-            emitMessageUpdated(payLoad?.toList(), message)
+            if (exist)
+                emitMessageUpdated(payLoad?.toList(), message)
         }
     }
 

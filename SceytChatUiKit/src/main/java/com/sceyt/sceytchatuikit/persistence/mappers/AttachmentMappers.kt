@@ -1,8 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
-import android.util.Base64
-import android.util.Log
-import android.util.Size
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
@@ -11,7 +8,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import org.json.JSONObject
 
 fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long) = AttachmentDb(
     AttachmentEntity(messageId = messageId,
@@ -75,26 +71,4 @@ fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: Transfe
         url = url,
         filePath = filePath
     )
-}
-
-fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>? {
-    var base64Thumb: ByteArray? = null
-    var size: Size? = null
-    try {
-        val jsonObject = JSONObject(this ?: return null)
-        if (needThumb) {
-            val thumbnail = jsonObject.getString("thumbnail")
-            base64Thumb = Base64.decode(thumbnail, Base64.NO_WRAP)
-        }
-        val width = jsonObject.getString("width").toIntOrNull()
-        val height = jsonObject.getString("height").toIntOrNull()
-        if (width != null && height != null)
-            size = Size(width, height)
-    } catch (ex: Exception) {
-        Log.i("MetadataReader", "Couldn't get data from attachment metadata with reason ${ex.message}")
-    }
-    if (size == null && base64Thumb == null)
-        return null
-
-    return Pair(size, base64Thumb)
 }

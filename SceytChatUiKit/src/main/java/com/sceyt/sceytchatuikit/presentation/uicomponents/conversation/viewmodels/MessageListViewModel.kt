@@ -90,12 +90,10 @@ class MessageListViewModel(private val conversationId: Long,
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
 
-    private val _onNewOutgoingMessageLiveData = MutableLiveData<SceytMessage>()
-    val onNewOutgoingMessageLiveData: LiveData<SceytMessage> = _onNewOutgoingMessageLiveData
-
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
+    val onNewOutGoingMessageFlow: Flow<SceytMessage>
     val onNewThreadMessageFlow: Flow<SceytMessage>
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onMessageReactionUpdatedFlow: Flow<SceytMessage>
@@ -163,6 +161,9 @@ class MessageListViewModel(private val conversationId: Long,
         }
 
         onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
+
+        onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
+            .filter { it.channelId == channel.id && !it.replyInThread }
 
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
@@ -361,20 +362,10 @@ class MessageListViewModel(private val conversationId: Long,
     fun sendMessage(message: Message, parent: Message? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
-                when (result) {
-                    is SendMessageResult.TempMessage -> {
-                        val outMessage = result.message.apply {
-                            this.parent = parent?.toSceytUiMessage()
-                        }
-                        withContext(Dispatchers.Main) {
-                            _onNewOutgoingMessageLiveData.value = outMessage
-                        }
-                    }
-                    is SendMessageResult.Response -> {
-                        if (result.response is SceytResponse.Error) {
-                            // Implement logic if you want to show failed status
-                            Log.e("sendMessage", "send message error-> ${result.response.message}")
-                        }
+                if (result is SendMessageResult.Response) {
+                    if (result.response is SceytResponse.Error) {
+                        // Implement logic if you want to show failed status
+                        Log.e("sendMessage", "send message error-> ${result.response.message}")
                     }
                 }
             }

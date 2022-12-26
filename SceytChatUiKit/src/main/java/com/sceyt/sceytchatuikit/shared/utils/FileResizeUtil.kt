@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
+import android.media.ThumbnailUtils
 import android.net.Uri
 import android.util.Log
 import android.util.Size
@@ -64,21 +65,21 @@ object FileResizeUtil {
         return timeInMilliSec
     }
 
-    fun scaleDownImageByUrl(url: String, maxImageSize: Float): ByteArray? {
+    fun getImageThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
         return try {
             val bitmap = BitmapFactory.decodeFile(url)
-            scaleDownBitmap(bitmap, maxImageSize).bitmapToByteArray()
+            createThumbFromBitmap(bitmap, maxImageSize).bitmapToByteArray()
         } catch (ex: Exception) {
             null
         }
     }
 
-    fun scaleDownVideoByUrl(url: String, maxImageSize: Float): ByteArray? {
+    fun getVideoThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
         return try {
             val bitmap = MediaMetadataRetriever().apply {
                 setDataSource(url)
             }.getFrameAtTime(1000)
-            scaleDownBitmap(bitmap ?: return null, maxImageSize).bitmapToByteArray()
+            createThumbFromBitmap(bitmap ?: return null, maxImageSize).bitmapToByteArray()
         } catch (ex: Exception) {
             null
         }
@@ -89,6 +90,13 @@ object FileResizeUtil {
         val width = (ratio * realImage.width).roundToInt()
         val height = (ratio * realImage.height).roundToInt()
         return Bitmap.createScaledBitmap(realImage, width, height, true)
+    }
+
+    fun createThumbFromBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
+        val ratio = (maxImageSize / realImage.width).coerceAtMost(maxImageSize / realImage.height)
+        val width = (ratio * realImage.width).roundToInt()
+        val height = (ratio * realImage.height).roundToInt()
+       return ThumbnailUtils.extractThumbnail(realImage, width, height)
     }
 
     private fun getResizedBitmap(bitmap: Bitmap, filePath: String): Bitmap {

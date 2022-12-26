@@ -280,10 +280,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.rvAttachments.adapter = attachmentsAdapter
     }
 
-    private fun getAttachmentType(path: String?): String {
-        return when (val type = getMimeTypeTakeFirstPart(path)) {
-            AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> type
-            else -> AttachmentTypeEnum.File.value()
+    private fun getAttachmentType(path: String?): AttachmentTypeEnum {
+        return when (getMimeTypeTakeFirstPart(path)) {
+            AttachmentTypeEnum.Image.value() -> AttachmentTypeEnum.Image
+            AttachmentTypeEnum.Video.value() -> AttachmentTypeEnum.Video
+            else -> AttachmentTypeEnum.File
         }
     }
 
@@ -396,7 +397,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         showHideJoinButton(true)
     }
 
-    fun addAttachmentFile(vararg filePath: String) {
+    fun addAttachment(vararg filePath: String) {
         val attachments = mutableListOf<Attachment>()
         for (path in filePath) {
             if (checkIsExistAttachment(path))
@@ -404,7 +405,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             val file = File(path)
             if (file.exists()) {
-                val attachment = Attachment.Builder(path, null, getAttachmentType(path))
+                val type = getAttachmentType(path).value()
+                val attachment = Attachment.Builder(path, null, type)
                     .setName(File(path).name)
                     .withTid(ClientWrapper.generateTid())
                     .setFileSize(getFileSize(path))
@@ -483,7 +485,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun getPickerListener(): GalleryMediaPicker.PickerListener {
         return GalleryMediaPicker.PickerListener {
-            addAttachmentFile(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+            addAttachment(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
         }
     }
 
@@ -503,13 +505,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onTakePhotoClick() {
         chooseAttachmentHelper?.takePicture {
-            addAttachmentFile(it)
+            addAttachment(it)
         }
     }
 
     override fun onFileClick() {
         chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
-            addAttachmentFile(*it.toTypedArray())
+            addAttachment(*it.toTypedArray())
         }
     }
 
