@@ -93,7 +93,7 @@ class ChannelsCash {
         }
     }
 
-    fun updateLastMessage(channelId: Long, message: SceytMessage) {
+    fun updateLastMessage(channelId: Long, message: SceytMessage?) {
         synchronized(lock) {
             cashedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)

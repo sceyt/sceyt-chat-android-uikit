@@ -275,6 +275,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
         if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
+            if (messagesRV.isEmpty())
+                pageStateView?.updateState(PageState.StateEmpty())
             return
         }
         messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
