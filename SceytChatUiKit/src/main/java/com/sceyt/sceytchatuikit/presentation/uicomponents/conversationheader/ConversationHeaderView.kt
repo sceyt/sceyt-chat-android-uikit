@@ -75,10 +75,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private fun init() {
         binding.setUpStyle()
 
-        context.asComponentActivity().lifecycleScope.launch {
-            delay(2000)
-            binding.subTitle.isSelected = true
-        }
+        post { binding.subTitle.isSelected = true }
 
         binding.icBack.setOnClickListener {
             clickListeners.onBackClick(it)
