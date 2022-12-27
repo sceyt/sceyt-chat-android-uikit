@@ -7,6 +7,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.annotation.MenuRes
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.*
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
@@ -73,6 +75,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private fun init() {
         binding.setUpStyle()
 
+        context.asComponentActivity().lifecycleScope.launch {
+            delay(2000)
+            binding.subTitle.isSelected = true
+        }
+
         binding.icBack.setOnClickListener {
             clickListeners.onBackClick(it)
         }
@@ -114,9 +121,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                     getString(R.string.sceyt_online)
                 } else {
                     member.user.presence?.lastActiveAt?.let {
-                        if (it != 0L)
-                            DateTimeUtil.getPresenceDateFormatData(context, Date(it))
-                        else null
+                        if (it != 0L) {
+                            val text = DateTimeUtil.getPresenceDateFormatData(context, Date(it))
+                            if (subjectTextView.text.equals(text)) return
+                            else text
+                        } else null
                     }
                 }
             } else getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
@@ -300,6 +309,13 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
             uiElementsListeners.onSubject(subTitle, channel, replyMessage, isReplyInThread)
             uiElementsListeners.onAvatar(avatar, channel, isReplyInThread)
+        }
+    }
+
+    fun setToolbarMenu(@MenuRes resId: Int, listener: Toolbar.OnMenuItemClickListener) {
+        with(binding.toolbar) {
+            inflateMenu(resId)
+            setOnMenuItemClickListener(listener)
         }
     }
 
