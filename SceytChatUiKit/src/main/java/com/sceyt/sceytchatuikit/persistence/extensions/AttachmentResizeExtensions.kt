@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.extensions
 import android.content.Context
 import android.util.Log
 import com.sceyt.chat.models.attachment.Attachment
+import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeExtension
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.*
 import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeHelper
@@ -11,8 +12,7 @@ import java.io.File
 fun Attachment.resizeImage(context: Context): Attachment {
     var resizedAttachment = this
     try {
-        val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context,
-            url, System.currentTimeMillis().toString(), reqSize = 600)
+        val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, url, reqSize = 600)
         resizedAttachment = Attachment.Builder(resizedImageFile.path, url, type)
             .withTid(tid)
             .setName(name)
@@ -28,8 +28,7 @@ fun Attachment.resizeImage(context: Context): Attachment {
 fun resizeImage(context: Context, path: String?): Result<String> {
     return try {
         path?.let {
-            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context,
-                it, System.currentTimeMillis().toString(), reqSize = 600)
+            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, it, reqSize = 600)
             Result.success(resizedImageFile.path)
         } ?: Result.failure(Exception("Wrong file path"))
     } catch (ex: Exception) {
@@ -56,7 +55,7 @@ suspend fun Attachment.transcodeVideo(context: Context): Attachment {
 
 fun transcodeVideo(context: Context, path: String?, callback: (Result<String>) -> Unit) {
     path?.let {
-        val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
+        val dest = File("${context.cacheDir}/" + System.currentTimeMillis().toString() + getMimeTypeTakeExtension(path))
         VideoTranscodeHelper.transcodeAsResultWithCallback(context, destination = dest, uri = it) { data ->
             when (data.resultType) {
                 Cancelled -> callback(Result.failure(Exception("Canceled")))

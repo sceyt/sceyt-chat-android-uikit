@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
+import android.app.Application
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
@@ -10,17 +12,23 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.toBase64
+import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
-fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?): String? {
+fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?, duration: Long?): String? {
     return try {
         val obj = if (currentMetadata.isNullOrBlank()) JSONObject()
         else JSONObject(currentMetadata.toString())
-        obj.put("thumbnail", base64String)
+        obj.put(SceytConstants.Thumb, base64String)
         size?.let {
-            obj.put("width", it.width)
-            obj.put("height", it.height)
+            obj.put(SceytConstants.Width, it.width)
+            obj.put(SceytConstants.Height, it.height)
+        }
+        duration?.let {
+            val durSec = TimeUnit.MILLISECONDS.toSeconds(it)
+            obj.put(SceytConstants.Duration, durSec)
         }
         obj.toString()
     } catch (t: Throwable) {
@@ -34,8 +42,8 @@ fun SceytAttachment.upsertSizeMetadata(size: Size?) {
         val obj = if (metadata.isNullOrBlank()) JSONObject()
         else JSONObject(metadata.toString())
         size?.let {
-            obj.put("width", it.width)
-            obj.put("height", it.height)
+            obj.put(SceytConstants.Width, it.width)
+            obj.put(SceytConstants.Height, it.height)
         }
         metadata = obj.toString()
     } catch (t: Throwable) {
@@ -49,11 +57,11 @@ fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>?
     try {
         val jsonObject = JSONObject(this ?: return null)
         if (needThumb) {
-            val thumbnail = jsonObject.getString("thumbnail")
+            val thumbnail = jsonObject.getString(SceytConstants.Thumb)
             base64Thumb = Base64.decode(thumbnail, Base64.NO_WRAP)
         }
-        val width = jsonObject.getString("width").toIntOrNull()
-        val height = jsonObject.getString("height").toIntOrNull()
+        val width = jsonObject.getString(SceytConstants.Width).toIntOrNull()
+        val height = jsonObject.getString(SceytConstants.Height).toIntOrNull()
         if (width != null && height != null)
             size = Size(width, height)
     } catch (ex: Exception) {
@@ -65,16 +73,17 @@ fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>?
     return Pair(size, base64Thumb)
 }
 
-fun SceytAttachment.addBlurredBytesAndSizeToMetadata() {
-    getBlurredBytesAndSizeToAsString(filePath, type)?.let {
+fun SceytAttachment.addAttachmentMetadata(application: Application) {
+    getBlurredBytesAndSizeToAsString(application, filePath, type)?.let {
         metadata = it
     }
 }
 
-fun getBlurredBytesAndSizeToAsString(filePath: String?, type: String): String? {
+fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: String): String? {
     return try {
         filePath?.let { path ->
-            var size: Size? = null
+            val size: Size?
+            var durationMilliSec: Long? = null
             var base64String: String? = null
             when (type) {
                 AttachmentTypeEnum.Image.value() -> {
@@ -85,13 +94,14 @@ fun getBlurredBytesAndSizeToAsString(filePath: String?, type: String): String? {
                 }
                 AttachmentTypeEnum.Video.value() -> {
                     size = FileResizeUtil.getVideoSize(path)
+                    durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
                     FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
                         base64String = bytes.toBase64()
                     }
                 }
                 else -> return null
             }
-            createMetadata(null, base64String, size)
+            createMetadata(null, base64String, size, durationMilliSec)
         }
     } catch (ex: Exception) {
         Log.e(TAG, "Couldn't get an blurred image or sizes.")
@@ -99,16 +109,28 @@ fun getBlurredBytesAndSizeToAsString(filePath: String?, type: String): String? {
     }
 }
 
+fun getDimensions(type: String, path: String): Size? {
+    return when (type) {
+        AttachmentTypeEnum.Image.value() -> {
+            FileResizeUtil.getImageSize(Uri.parse(path))
+        }
+        AttachmentTypeEnum.Video.value() -> {
+            FileResizeUtil.getVideoSize(path)
+        }
+        else -> return null
+    }
+}
+
 fun SceytAttachment.existThumb(): Boolean {
     return try {
         val jsonObject = JSONObject(metadata ?: return false)
-        jsonObject.getString("thumbnail").isNotNullOrBlank()
+        jsonObject.getString(SceytConstants.Thumb).isNotNullOrBlank()
     } catch (ex: Exception) {
         Log.i("MetadataReader", "Couldn't get data from attachment metadata with reason ${ex.message}")
         false
     }
 }
 
-fun getMetadataFromThumb(filePath: String?, type: String): String? {
-    return getBlurredBytesAndSizeToAsString(filePath, type)
+fun getMetadataFromThumb(context: Context, filePath: String?, type: String): String? {
+    return getBlurredBytesAndSizeToAsString(context, filePath, type)
 }

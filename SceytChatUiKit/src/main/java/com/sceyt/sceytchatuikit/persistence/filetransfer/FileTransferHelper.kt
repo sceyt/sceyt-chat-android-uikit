@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
-import android.net.Uri
 import android.util.Log
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -9,8 +8,8 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
-import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.koin.core.component.inject
 import java.io.File
 
@@ -24,7 +23,8 @@ object FileTransferHelper : SceytKoinComponent {
             progressCallback = getProgressUpdateCallback(attachment),
             resultCallback = if (isFromUpload) getUploadResultCallback(attachment)
             else getDownloadResultCallback(attachment),
-            updateFileLocationCallback = getUpdateFileLocationCallback(attachment))
+            updateFileLocationCallback = getUpdateFileLocationCallback(attachment),
+            thumbCallback = getThumbCallback(attachment))
     }
 
     fun getProgressUpdateCallback(attachment: SceytAttachment) = ProgressUpdateCallback {
@@ -87,12 +87,20 @@ object FileTransferHelper : SceytKoinComponent {
         val newFile = File(newPath)
         if (newFile.exists()) {
             val fileSize = getFileSize(newPath)
-            val dimensions = FileResizeUtil.getImageSize(Uri.parse(newPath))
+            val dimensions = getDimensions(attachment.type, newPath)
             attachment.filePath = newPath
             attachment.fileSize = fileSize
             attachment.upsertSizeMetadata(dimensions)
             MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
         }
+    }
+
+    fun getThumbCallback(attachment: SceytAttachment) = ThumbCallback { newPath ->
+        val transferData = TransferData(attachment.messageTid,
+            attachment.tid, attachment.progressPercent
+                    ?: 0f, TransferState.ThumbLoaded, newPath, attachment.url)
+
+        MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
     }
 }
