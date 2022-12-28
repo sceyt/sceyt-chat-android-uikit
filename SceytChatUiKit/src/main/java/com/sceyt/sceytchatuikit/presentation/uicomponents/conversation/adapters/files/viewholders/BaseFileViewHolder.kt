@@ -22,13 +22,13 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
     protected val context: Context by lazy { itemView.context }
     protected var listenerKey: String = ""
     protected var transferData: TransferData? = null
-    protected var thumb: Drawable? = null
+    protected var blurredThumb: Drawable? = null
     protected var imageSize: Size? = null
 
     override fun bind(item: FileListItem) {
         fileItem = item
         if (transferData != null && transferData!!.messageTid == item.sceytMessage.tid) return
-        thumb = item.thumb?.toDrawable(context.resources)
+        blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         imageSize = item.size
 
         item.file.transferState?.let {
@@ -55,26 +55,30 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         return key
     }
 
-    fun loadImage(path: String?, imageView: ImageView) {
+    fun loadThumb(path: String?, imageView: ImageView) {
         Glide.with(itemView.context.applicationContext)
             .load(path)
             .transition(DrawableTransitionOptions.withCrossFade())
-            .placeholder(thumb)
+            .placeholder(blurredThumb)
             .override(imageView.width, imageView.height)
             .into(imageView)
-
     }
 
-    fun loadChangedImage(path: String?, imageView: ImageView) {
-        Glide.with(itemView.context.applicationContext)
-            .load(path)
-            .placeholder(imageView.drawable ?: thumb)
-            .override(imageView.width, imageView.height)
-            .into(imageView)
-
+    fun drawThumbOrRequest(imageView: ImageView, requestThumb: () -> Unit) {
+        if (isFileItemInitialized.not()) return
+        if (fileItem.thumbPath != null)
+            loadThumb(fileItem.thumbPath, imageView)
+        else {
+            loadBlurThumb(blurredThumb, imageView)
+            requestThumb()
+        }
     }
 
-    fun loadThumb(thumb: Drawable?, imageView: ImageView) {
+    protected fun getSize(): Size {
+        return Size(itemView.width, itemView.height)
+    }
+
+    fun loadBlurThumb(thumb: Drawable?, imageView: ImageView) {
         imageView.setImageDrawable(thumb)
     }
 }

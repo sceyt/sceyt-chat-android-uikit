@@ -19,23 +19,23 @@ import kotlin.math.roundToInt
 
 object FileResizeUtil {
 
-    fun resizeAndCompressImage(context: Context, filePath: String, fileName: String,
+    fun resizeAndCompressImage(context: Context, filePath: String,
                                reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File {
         val initialSize = getImageSize(Uri.parse(filePath))
         var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
             inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
         })
-
+        val dest = "${context.cacheDir}/" + System.currentTimeMillis().toString() + ".JPEG"
         try {
             bmpPic = getResizedBitmap(bitmap = bmpPic, filePath)
-            val bmpFile = FileOutputStream(context.cacheDir.toString() + fileName)
+            val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
             bmpFile.close()
         } catch (e: java.lang.Exception) {
             Log.i(TAG, e.message.toString())
         }
-        return File(context.cacheDir.toString() + fileName)
+        return File(dest)
     }
 
     fun getImageSize(image: Uri): Size {
@@ -57,18 +57,21 @@ object FileResizeUtil {
     }
 
     fun getVideoDuration(context: Context, path: String): Long? {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, Uri.parse(path))
-        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-        val timeInMilliSec = time?.toLongOrNull()
-        retriever.release()
+        val timeInMilliSec: Long? = try {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(context, Uri.parse(path))
+            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            retriever.release()
+            time?.toLongOrNull()
+        } catch (e: Exception) {
+            null
+        }
         return timeInMilliSec
     }
 
     fun getImageThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
         return try {
-            val bitmap = BitmapFactory.decodeFile(url)
-            createThumbFromBitmap(bitmap, maxImageSize).bitmapToByteArray()
+            getImageThumb(url, maxImageSize).bitmapToByteArray()
         } catch (ex: Exception) {
             null
         }
@@ -76,11 +79,48 @@ object FileResizeUtil {
 
     fun getVideoThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
         return try {
+            getVideoThumb(url, maxImageSize).bitmapToByteArray()
+        } catch (ex: Exception) {
+            null
+        }
+    }
+
+    fun getVideoThumb(url: String, maxImageSize: Float): Bitmap? {
+        return try {
             val bitmap = MediaMetadataRetriever().apply {
                 setDataSource(url)
             }.getFrameAtTime(1000)
-            createThumbFromBitmap(bitmap ?: return null, maxImageSize).bitmapToByteArray()
+            createThumbFromBitmap(bitmap ?: return null, maxImageSize)
         } catch (ex: Exception) {
+            null
+        }
+    }
+
+    fun getImageThumb(url: String, maxImageSize: Float): Bitmap? {
+        return try {
+            val bitmap = BitmapFactory.decodeFile(url)
+            createThumbFromBitmap(bitmap, maxImageSize)
+        } catch (ex: Exception) {
+            null
+        }
+    }
+
+    fun getVideoThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
+        return try {
+            getVideoThumb(url, maxImageSize)?.let {
+                createFileFromBitmap(context, it)
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun getImageThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
+        return try {
+            getImageThumb(url, maxImageSize)?.let {
+                createFileFromBitmap(context, it)
+            }
+        } catch (_: Exception) {
             null
         }
     }
@@ -96,7 +136,7 @@ object FileResizeUtil {
         val ratio = (maxImageSize / realImage.width).coerceAtMost(maxImageSize / realImage.height)
         val width = (ratio * realImage.width).roundToInt()
         val height = (ratio * realImage.height).roundToInt()
-       return ThumbnailUtils.extractThumbnail(realImage, width, height)
+        return ThumbnailUtils.extractThumbnail(realImage, width, height)
     }
 
     private fun getResizedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
@@ -107,14 +147,14 @@ object FileResizeUtil {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
-    fun createFileFromBitmap(context: Context, bitmap: Bitmap, fileName: String): File? {
+    fun createFileFromBitmap(context: Context, bitmap: Bitmap): File? {
         return try {
-            val bmpFile = FileOutputStream(context.cacheDir.toString() + fileName)
+            val fileDest = "${context.cacheDir}/" + System.currentTimeMillis() + ".JPEG"
+            val bmpFile = FileOutputStream(fileDest)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
             bmpFile.close()
-            File(context.cacheDir.toString() + fileName)
-
+            File(fileDest)
         } catch (e: java.lang.Exception) {
             null
         }

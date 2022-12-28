@@ -6,11 +6,12 @@ import android.view.ViewGroup
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 
 class FilesViewHolderFactory(context: Context, private val messageListeners: MessageClickListenersImpl?,
-                             private val needDownloadCallback: (FileListItem) -> Unit) {
+                             private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
@@ -18,15 +19,15 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
         return when (viewType) {
             FileViewType.File.ordinal -> {
                 MessageFileViewHolder(SceytMessageFileItemBinding.inflate(layoutInflater, parent, false),
-                    messageListeners, needDownloadCallback)
+                    messageListeners, needMediaDataCallback)
             }
             FileViewType.Image.ordinal -> {
                 MessageImageViewHolder(SceytMessageImageItemBinding.inflate(layoutInflater, parent, false),
-                    messageListeners, needDownloadCallback)
+                    messageListeners, needMediaDataCallback)
             }
             FileViewType.Video.ordinal -> {
                 MessageVideoViewHolder(SceytMessageVideoItemBinding.inflate(layoutInflater, parent, false),
-                    messageListeners, needDownloadCallback)
+                    messageListeners, needMediaDataCallback)
             }
             else -> throw RuntimeException("Not supported view type")
         }

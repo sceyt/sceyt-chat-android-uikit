@@ -3,11 +3,12 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -15,7 +16,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
         private val messageListeners: MessageClickListenersImpl?,
-        private val needDownloadCallback: (FileListItem) -> Unit
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder(binding.root) {
 
     init {
@@ -50,7 +51,7 @@ class MessageFileViewHolder(
         transferData?.let {
             updateState(it)
             if (it.filePath == null)
-                needDownloadCallback.invoke(fileItem)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
     }
 
@@ -63,7 +64,7 @@ class MessageFileViewHolder(
                 binding.icFile.setImageResource(0)
             }
             PendingDownload -> {
-                needDownloadCallback.invoke(fileItem)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
             }
             Downloading, Uploading -> {
                 binding.icFile.setImageResource(0)
@@ -74,12 +75,12 @@ class MessageFileViewHolder(
             ErrorUpload, ErrorDownload, PauseDownload -> {
                 binding.icFile.setImageResource(0)
             }
-            FilePathChanged -> return
+            FilePathChanged, ThumbLoaded -> return
         }
     }
 
     private fun setListener() {
-        MessageFilesAdapter.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(listenerKey, ::updateState)
     }
 
     private fun SceytMessageFileItemBinding.setupStyle() {

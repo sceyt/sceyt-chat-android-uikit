@@ -9,7 +9,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.extensions.isLink
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
@@ -24,7 +24,7 @@ open class MessageViewHolderFactory(context: Context) {
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
     private var userNameBuilder: ((User) -> String)? = null
-    private var needDownloadCallback: (FileListItem) -> Unit = {}
+    private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return when (viewType) {
@@ -70,13 +70,13 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncFilesMsgViewHolder(
             SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder, needDownloadCallback)
+            viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutFilesMsgViewHolder(
             SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder, needDownloadCallback)
+            viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -145,9 +145,11 @@ open class MessageViewHolderFactory(context: Context) {
         userNameBuilder = builder
     }
 
-    fun setNeedDownloadCallback(callback: (FileListItem) -> Unit) {
-        needDownloadCallback = callback
+    fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
+        needMediaDataCallback = callback
     }
+
+    fun getNeedMediaDataCallback() = needMediaDataCallback
 
     protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners
 

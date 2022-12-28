@@ -68,7 +68,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
 
     messagesListView.setNeedDownloadListener {
-        needDownload(it)
+        needMediaInfo(it)
     }
 
     fun checkEnableDisableActions(channel: SceytChannel) {

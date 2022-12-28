@@ -5,7 +5,8 @@ data class TransferTask(
         val state: TransferState?,
         val progressCallback: ProgressUpdateCallback,
         val resultCallback: TransferResultCallback,
-        val updateFileLocationCallback: UpdateFileLocationCallback) {
+        val updateFileLocationCallback: UpdateFileLocationCallback,
+        val thumbCallback: ThumbCallback) {
 
     val onCompletionListeners: HashMap<String, (Boolean) -> Unit> by lazy { hashMapOf() }
 
