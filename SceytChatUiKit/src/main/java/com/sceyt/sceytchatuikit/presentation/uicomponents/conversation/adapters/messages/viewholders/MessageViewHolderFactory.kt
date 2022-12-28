@@ -155,6 +155,8 @@ open class MessageViewHolderFactory(context: Context) {
 
     protected fun getDisplayedListener() = displayedListener
 
+    protected fun getUserNameBuilder() = userNameBuilder
+
     enum class MessageViewTypeEnum {
         IncText,
         OutText,
