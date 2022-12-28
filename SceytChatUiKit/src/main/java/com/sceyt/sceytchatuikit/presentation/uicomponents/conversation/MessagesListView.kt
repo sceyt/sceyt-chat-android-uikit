@@ -16,13 +16,14 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -56,7 +57,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var enabledClickActions = true
 
     init {
-        MessageFilesAdapter.clearListeners()
+        TransferUpdateObserver.clearListeners()
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
 
         if (attrs != null) {
@@ -335,6 +336,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
+            if (data.state == TransferState.ThumbLoaded) {
+                updateThumb(data, predicate)
+                return
+            }
+
             val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
             val foundAttachmentFiles = (it.second as MessageItem).message.files?.map { item -> item.file }?.find(predicate)
 
@@ -343,7 +349,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 foundAttachmentFiles?.updateWithTransferData(data)
 
                 withContext(Dispatchers.Main) {
-                    MessageFilesAdapter.update(data)
+                    TransferUpdateObserver.update(data)
+                }
+            }
+        }
+    }
+
+    private suspend fun updateThumb(data: TransferData, predicate: (SceytAttachment) -> Boolean) {
+        Log.i(TAG, data.toString())
+        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+            val foundAttachmentFiles = (it.second as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
+            foundAttachmentFiles?.let { listItem ->
+                listItem.thumbPath = data.filePath
+
+                withContext(Dispatchers.Main) {
+                    TransferUpdateObserver.update(data)
                 }
             }
         }
@@ -431,8 +451,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
     }
 
-    fun setNeedDownloadListener(callBack: (FileListItem) -> Unit) {
-        messagesRV.getViewHolderFactory().setNeedDownloadCallback(callBack)
+    fun setNeedDownloadListener(callBack: (NeedMediaInfoData) -> Unit) {
+        messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
     fun scrollToMessage(msgId: Long, highlight: Boolean) {

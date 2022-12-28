@@ -171,7 +171,7 @@ class MessagesCash {
                         if (attachment.url == updateDate.url)
                             update(attachment)
                     }
-                    FilePathChanged -> return
+                    FilePathChanged, ThumbLoaded -> return
                 }
             }
         }

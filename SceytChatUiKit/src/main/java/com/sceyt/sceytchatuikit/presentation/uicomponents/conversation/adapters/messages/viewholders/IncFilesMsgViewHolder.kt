@@ -7,7 +7,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncFilesMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -24,7 +24,7 @@ class IncFilesMsgViewHolder(
         private val messageListeners: MessageClickListenersImpl?,
         displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
-        private val needDownloadCallback: (FileListItem) -> Unit
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
@@ -89,7 +89,7 @@ class IncFilesMsgViewHolder(
             }
             setRecycledViewPool(viewPoolFiles)
             itemAnimator = null
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needDownloadCallback)).also {
+            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
                 filedAdapter = it
             }
         }

@@ -23,6 +23,12 @@ fun getMimeTypeTakeFirstPart(url: String?): String? {
     return getMimeType(url)?.takeWhile { it != '/' }
 }
 
+fun getMimeTypeTakeExtension(url: String?): String? {
+    return getMimeType(url)?.split("/")?.getOrNull(1)?.let {
+        ".$it"
+    }
+}
+
 fun getFileSize(fileUri: String): Long {
     return try {
         var sizeInBytes: Long = 0

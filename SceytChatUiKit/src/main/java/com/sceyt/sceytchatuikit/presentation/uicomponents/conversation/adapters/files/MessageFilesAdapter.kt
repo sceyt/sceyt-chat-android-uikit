@@ -3,9 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytVideoControllerView
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
@@ -14,28 +12,6 @@ import com.sceyt.sceytchatuikit.shared.utils.MyDiffUtil
 class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
                           private var viewHolderFactory: FilesViewHolderFactory
 ) : RecyclerView.Adapter<BaseViewHolder<FileListItem>>() {
-
-    companion object {
-        private val progressUpdateListener: HashMap<String, (TransferData) -> Unit> = hashMapOf()
-
-        internal fun setListener(key: String, listener: (TransferData) -> Unit) {
-            progressUpdateListener[key] = listener
-        }
-
-        internal fun clearListeners() {
-            progressUpdateListener.clear()
-        }
-
-        fun update(data: TransferData) {
-            val key: String = if (data.attachmentTid.isNull() || data.attachmentTid == 0L) {
-                data.url.toString()
-            } else {
-                data.attachmentTid.toString()
-            }
-
-            progressUpdateListener[key]?.invoke(data)
-        }
-    }
 
     val videoControllersList = arrayListOf<SceytVideoControllerView>()
 

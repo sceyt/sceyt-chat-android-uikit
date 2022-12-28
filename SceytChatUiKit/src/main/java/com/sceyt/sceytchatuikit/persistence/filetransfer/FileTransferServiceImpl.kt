@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.filetransfer
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import android.util.Size
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -15,12 +16,17 @@ import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.getLocaleFileByNameOrMetadata
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import java.io.File
+import java.io.FileNotFoundException
 import kotlin.collections.set
+import kotlin.math.min
 
 class FileTransferServiceImpl(private var application: Application) : FileTransferService {
     private var tasksMap = hashMapOf<String, TransferTask>()
     private var downloadingUrlMap = hashMapOf<String, String>()
+    private var thumbPaths = hashMapOf<String, String>()
+    private var preparingThumbsMap = hashMapOf<Long, Long>()
 
     private var listeners: FileTransferListeners.Listeners = object : FileTransferListeners.Listeners {
         override fun upload(attachment: SceytAttachment,
@@ -38,6 +44,10 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
 
         override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
             resumeLoad(attachment)
+        }
+
+        override fun getThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
+            getAttachmentThumb(messageTid, attachment, size)
         }
     }
 
@@ -59,6 +69,10 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
 
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
         listeners.resume(messageTid, attachment, state)
+    }
+
+    override fun getThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
+        listeners.getThumb(messageTid, attachment, size)
     }
 
     override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) {
@@ -200,6 +214,41 @@ class FileTransferServiceImpl(private var application: Application) : FileTransf
             else -> callback.invoke(Result.success(null))
         }
     }
+
+    private fun getAttachmentThumbPath(context: Context, attachment: SceytAttachment, size: Size): Result<String?> {
+        val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
+        val minSize = min(size.height, size.width)
+        val reqSize = if (minSize > 0) minSize.toFloat() else 500f
+        val resizePath = when (attachment.type) {
+            AttachmentTypeEnum.Image.value() -> {
+                FileResizeUtil.getImageThumbAsFile(context, path, reqSize)?.path
+            }
+            AttachmentTypeEnum.Video.value() -> {
+                FileResizeUtil.getVideoThumbAsFile(context, path, reqSize)?.path
+            }
+            else -> null
+        }
+        return Result.success(resizePath)
+    }
+
+    private fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
+        if (preparingThumbsMap[messageTid] != null) return
+        preparingThumbsMap[messageTid] = messageTid
+        val task = findOrCreateTransferTask(attachment)
+        thumbPaths[messageTid.toString()]?.let {
+            task.thumbCallback.onThumb(it)
+            preparingThumbsMap.remove(messageTid)
+            return
+        } ?: run {
+            val result = getAttachmentThumbPath(application, attachment, size)
+            if (result.isSuccess)
+                result.getOrNull()?.let { path ->
+                    thumbPaths[messageTid.toString()] = path
+                    task.thumbCallback.onThumb(path)
+                }
+            preparingThumbsMap.remove(messageTid)
+        }
+    }
 }
 
 fun interface TransferResultCallback {
@@ -212,5 +261,9 @@ fun interface ProgressUpdateCallback {
 
 fun interface UpdateFileLocationCallback {
     fun onUpdateFileLocation(path: String)
+}
+
+fun interface ThumbCallback {
+    fun onThumb(path: String)
 }
 
