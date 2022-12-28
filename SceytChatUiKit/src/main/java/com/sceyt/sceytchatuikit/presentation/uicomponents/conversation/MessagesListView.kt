@@ -328,7 +328,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         Log.i(TAG, data.toString())
         messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
-                TransferState.Uploading, TransferState.PendingUpload, TransferState.Uploaded -> { attachment ->
+                TransferState.Uploading, TransferState.PendingUpload, TransferState.PauseUpload, TransferState.Uploaded -> { attachment ->
                     attachment.tid == data.attachmentTid
                 }
                 else -> { attachment ->
