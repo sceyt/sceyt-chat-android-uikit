@@ -266,4 +266,16 @@ object DateTimeUtil {
         }
         return "$minutes:$secs"
     }
+
+    fun secondsToTime(seconds: Long): String {
+        val minutes = seconds / 60
+        val secondsStr = seconds.toString()
+
+        val secs: String = if (secondsStr.length >= 2) {
+            secondsStr.substring(0, 2)
+        } else {
+            "0$secondsStr"
+        }
+        return "$minutes:$secs"
+    }
 }

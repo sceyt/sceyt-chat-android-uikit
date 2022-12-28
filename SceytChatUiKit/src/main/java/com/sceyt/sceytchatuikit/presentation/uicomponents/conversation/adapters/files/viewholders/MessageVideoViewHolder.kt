@@ -3,22 +3,22 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.getVideoDuration
 
 
 class MessageVideoViewHolder(
         private val binding: SceytMessageVideoItemBinding,
         private val messageListeners: MessageClickListenersImpl?,
-        private val needDownloadCallback: (FileListItem) -> Unit
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder(binding.root) {
 
     init {
@@ -51,77 +51,82 @@ class MessageVideoViewHolder(
         transferData?.let {
             updateState(it, true)
             if (it.filePath == null)
-                needDownloadCallback.invoke(fileItem)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
+
+        if (fileItem.thumbPath.isNullOrBlank())
+            requestThumb()
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
         transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        val imageView = binding.videoViewController.getImageView()
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
-                loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
+                drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
             PendingDownload -> {
-                needDownloadCallback.invoke(fileItem)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadThumb(thumb, binding.videoViewController.getImageView())
+                loadBlurThumb(blurredThumb, imageView)
             }
             Downloading -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 if (isOnBind)
-                    loadThumb(thumb, binding.videoViewController.getImageView())
+                    loadBlurThumb(blurredThumb, imageView)
             }
             Uploading -> {
                 if (isOnBind)
-                    loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
+                    drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
-            Uploaded, Downloaded -> {
+            Downloaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(fileItem.file.filePath)
-                loadImage(fileItem.file.filePath, binding.videoViewController.getImageView())
-                setVideoDuration()
+                drawThumbOrRequest(imageView, ::requestThumb)
+            }
+            Uploaded -> {
+                binding.videoViewController.showPlayPauseButtons(true)
+                initializePlayer(fileItem.file.filePath)
+                drawThumbOrRequest(imageView, ::requestThumb)
             }
             PauseDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadThumb(thumb, binding.videoViewController.getImageView())
+                loadBlurThumb(blurredThumb, imageView)
             }
             ErrorDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadThumb(thumb, binding.videoViewController.getImageView())
+                loadBlurThumb(blurredThumb, imageView)
             }
             FilePathChanged -> {
-                loadChangedImage(data.filePath, binding.videoViewController.getImageView())
+                requestThumb()
+            }
+            ThumbLoaded -> {
+                loadThumb(fileItem.thumbPath, imageView)
             }
         }
     }
 
     private fun setVideoDuration() {
-        val path = fileItem.file.filePath.run {
-            if (isNotNullOrBlank()) toString()
-            else return
-        }
         with(binding.tvDuration) {
-            val duration = (fileItem as? FileListItem.Video)?.videoDuration
-            if (duration.isNotNullOrBlank()) {
-                text = duration
+            (fileItem as? FileListItem.Video)?.videoDuration?.let {
+                text = DateTimeUtil.secondsToTime(it)
                 isVisible = true
-                return
-            }
-            getVideoDuration(context, path)?.let {
-                isVisible = true
-                text = DateTimeUtil.millisecondsToTime(it).also { duration ->
-                    (fileItem as? FileListItem.Video)?.videoDuration = duration
-                }
             } ?: run { isVisible = false }
         }
     }
 
+    private fun requestThumb() {
+        itemView.post {
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getSize()))
+        }
+    }
+
     private fun setListener() {
-        MessageFilesAdapter.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(listenerKey, ::updateState)
     }
 
     private fun initializePlayer(mediaPath: String?) {

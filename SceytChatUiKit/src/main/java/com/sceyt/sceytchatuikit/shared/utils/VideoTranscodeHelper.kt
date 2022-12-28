@@ -103,7 +103,7 @@ object VideoTranscodeHelper {
                 destPath = destination.absolutePath,
                 configureWith = Configuration(
                     quality = VideoQuality.MEDIUM,
-                    isMinBitrateCheckEnabled = true,
+                    isMinBitrateCheckEnabled = false,
                     disableAudio = false,
                 ),
                 listener = object : CompressionListener {

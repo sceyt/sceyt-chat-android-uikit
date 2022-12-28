@@ -32,6 +32,7 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
@@ -52,9 +53,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
-class MessageListViewModel(private val conversationId: Long,
-                           internal val replyInThread: Boolean = false,
-                           internal var channel: SceytChannel) : BaseViewModel(), SceytKoinComponent {
+class MessageListViewModel(
+        private val conversationId: Long,
+        internal val replyInThread: Boolean = false,
+        internal var channel: SceytChannel,
+) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
@@ -325,7 +328,7 @@ class MessageListViewModel(private val conversationId: Long,
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
-            Uploaded, Downloaded -> {
+            Uploaded, Downloaded, ThumbLoaded -> {
                 transferData.state = state
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
@@ -416,8 +419,10 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal suspend fun mapToMessageListItem(data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
-                                              compareMessage: SceytMessage? = null): List<MessageListItem> {
+    internal suspend fun mapToMessageListItem(
+            data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
+            compareMessage: SceytMessage? = null,
+    ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
         val messageItems = arrayListOf<MessageListItem>()
@@ -518,9 +523,19 @@ class MessageListViewModel(private val conversationId: Long,
         }
     }
 
-    internal fun needDownload(fileListItem: FileListItem) {
-        viewModelScope.launch(Dispatchers.IO) {
-            fileTransferService.download(fileListItem.file, FileTransferHelper.createTransferTask(fileListItem.file, false))
+    internal fun needMediaInfo(data: NeedMediaInfoData) {
+        val attachment = data.item.file
+        when (data) {
+            is NeedMediaInfoData.NeedDownload -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
+                }
+            }
+            is NeedMediaInfoData.NeedThumb -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    fileTransferService.getThumb(data.item.sceytMessage.tid, attachment, data.size)
+                }
+            }
         }
     }
 

@@ -194,7 +194,7 @@ internal class PersistenceMessagesLogicImpl(
                 it.transferState = TransferState.Uploading
                 it.progressPercent = 0f
                 if (!it.existThumb())
-                    it.addBlurredBytesAndSizeToMetadata()
+                    it.addAttachmentMetadata(application)
             }
         }
         return tmpMessage
