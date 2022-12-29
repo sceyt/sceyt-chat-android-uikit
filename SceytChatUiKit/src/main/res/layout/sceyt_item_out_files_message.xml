@@ -51,10 +51,12 @@
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/rvFiles"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
-            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-            app:layout_constraintTop_toBottomOf="@+id/viewReply"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Lore ipsum  is the correct text which" />
 
@@ -67,6 +69,7 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
             tools:itemCount="3"

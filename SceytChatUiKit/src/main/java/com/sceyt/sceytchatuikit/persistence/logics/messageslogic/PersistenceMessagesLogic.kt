@@ -36,6 +36,7 @@ internal interface PersistenceMessagesLogic {
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
     suspend fun sendMessage(channelId: Long, message: Message)
+    suspend fun sendMessages(channelId: Long, messages: List<Message>)
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message)
     suspend fun sendPendingMessages(channelId: Long)

@@ -157,6 +157,12 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
+    override suspend fun sendMessages(channelId: Long, messages: List<Message>) {
+        messages.forEach {
+            sendMessage(channelId, it)
+        }
+    }
+
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> = callbackFlow {
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         trySend(SendMessageResult.TempMessage(tmpMessage))

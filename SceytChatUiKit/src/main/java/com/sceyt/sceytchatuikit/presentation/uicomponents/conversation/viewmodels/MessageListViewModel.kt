@@ -375,6 +375,12 @@ class MessageListViewModel(
         }
     }
 
+    fun sendMessages(messages: List<Message>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.sendMessages(channel.id, messages)
+        }
+    }
+
     fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
