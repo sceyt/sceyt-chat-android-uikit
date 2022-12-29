@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.*
 import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeHelper
 import java.io.File
+import java.util.*
 
 fun Attachment.resizeImage(context: Context): Attachment {
     var resizedAttachment = this
@@ -55,7 +56,7 @@ suspend fun Attachment.transcodeVideo(context: Context): Attachment {
 
 fun transcodeVideo(context: Context, path: String?, callback: (Result<String>) -> Unit) {
     path?.let {
-        val dest = File("${context.cacheDir}/" + System.currentTimeMillis().toString() + getMimeTypeTakeExtension(path))
+        val dest = File("${context.cacheDir}/" + UUID.randomUUID() + getMimeTypeTakeExtension(path))
         VideoTranscodeHelper.transcodeAsResultWithCallback(context, destination = dest, uri = it) { data ->
             when (data.resultType) {
                 Cancelled -> callback(Result.failure(Exception("Canceled")))

@@ -47,9 +47,6 @@ object ConnectionEventsObserver {
         })
     }
 
-    internal fun init() {}
-
-
     suspend fun awaitToConnectSceyt(): Boolean {
         if (isConnected)
             return true
