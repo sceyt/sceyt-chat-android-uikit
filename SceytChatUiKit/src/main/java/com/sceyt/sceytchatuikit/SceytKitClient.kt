@@ -25,17 +25,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import kotlin.collections.set
+import kotlin.coroutines.CoroutineContext
 
-object SceytKitClient : SceytKoinComponent {
+object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val application: Application by inject()
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
     private val channelsCash: ChannelsCash by inject()
-    private val scope by lazy { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
     private val persistenceChannelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
@@ -85,44 +87,43 @@ object SceytKitClient : SceytKoinComponent {
     }
 
     private fun setListener() {
-        scope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                val connectStatus = it.state
-                if (connectStatus == Types.ConnectState.StateConnected) {
-                    notifyState(true, null)
+        ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
+            val connectStatus = it.state
+            if (connectStatus == Types.ConnectState.StateConnected) {
+                notifyState(true, null)
 
-                    val status = ClientWrapper.currentUser.presence.status
-                    ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
-                        if (ConnectionEventsObserver.isConnected)
-                            ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
-                                SceytKitConfig.presenceStatusText else status) {
-                            }
-                    }
-                    SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                val status = ClientWrapper.currentUser.presence.status
+                ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
+                    if (ConnectionEventsObserver.isConnected)
+                        ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
+                            SceytKitConfig.presenceStatusText else status) {
+                        }
+                }
+                SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                launch {
                     persistenceMessagesMiddleWare.sendAllPendingMarkers()
                     persistenceMessagesMiddleWare.sendAllPendingMessages()
-                    sceytSyncManager.startSync()
-                } else if (connectStatus == Types.ConnectState.StateFailed) {
-                    notifyState(false, it.status?.error?.message)
-                } else if (connectStatus == Types.ConnectState.StateDisconnect) {
-                    if (it.status?.error?.code == 40102)
-                        onTokenExpired_.tryEmit(Unit)
-                    else notifyState(false, it.status?.error?.message)
                 }
+                sceytSyncManager.startSync()
+            } else if (connectStatus == Types.ConnectState.StateFailed) {
+                notifyState(false, it.status?.error?.message)
+            } else if (connectStatus == Types.ConnectState.StateDisconnect) {
+                if (it.status?.error?.code == 40102)
+                    onTokenExpired_.tryEmit(Unit)
+                else notifyState(false, it.status?.error?.message)
             }
-        }
+        }.launchIn(this)
 
-        scope.launch {
-            ConnectionEventsObserver.onTokenExpired.collect {
-                onTokenExpired_.tryEmit(Unit)
-            }
-        }
+        ConnectionEventsObserver.onTokenExpired.onEach {
+            onTokenExpired_.tryEmit(Unit)
+        }.launchIn(this)
 
-        scope.launch {
-            ConnectionEventsObserver.onTokenWillExpire.collect {
-                onTokenWillExpire_.tryEmit(Unit)
-            }
-        }
+        ConnectionEventsObserver.onTokenWillExpire.onEach {
+            onTokenWillExpire_.tryEmit(Unit)
+        }.launchIn(this)
+
+        (this as CoroutineScope).coroutineContext
+
     }
 
     private fun notifyState(success: Boolean, errorMessage: String?) {
@@ -170,4 +171,7 @@ object SceytKitClient : SceytKoinComponent {
             }
         })
     }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 }
