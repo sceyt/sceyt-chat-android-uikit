@@ -500,8 +500,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             this@bind.sendMessage(message)
         }
 
-        override fun sendReplyMessage(message: Message, parent: Message?) {
-            this@bind.sendMessage(message)
+        override fun sendMessages(message: List<Message>) {
+            this@bind.sendMessages(message)
         }
 
         override fun sendEditMessage(message: SceytMessage) {

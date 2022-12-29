@@ -76,7 +76,7 @@ fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>?
 fun SceytAttachment.addAttachmentMetadata(application: Application) {
     getBlurredBytesAndSizeToAsString(application, filePath, type)?.let {
         metadata = it
-    }
+    } ?: run { metadata = "" }
 }
 
 fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: String): String? {

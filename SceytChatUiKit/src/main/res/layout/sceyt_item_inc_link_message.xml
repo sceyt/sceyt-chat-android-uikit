@@ -41,7 +41,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="8dp"
             android:singleLine="true"
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
@@ -51,7 +51,8 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
-            tools:text="Henry Willian" />
+            tools:text="Henry Willian"
+            tools:visibility="visible" />
 
         <ViewStub
             android:id="@+id/viewReply"

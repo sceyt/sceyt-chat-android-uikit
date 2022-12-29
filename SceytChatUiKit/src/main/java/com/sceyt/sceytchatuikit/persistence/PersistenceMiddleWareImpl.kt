@@ -245,6 +245,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.sendMessage(channelId, message)
     }
 
+    override suspend fun sendMessages(channelId: Long, messages: List<Message>) {
+        return messagesLogic.sendMessages(channelId, messages)
+    }
+
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message) {
         return messagesLogic.sendMessageWithUploadedAttachments(channelId, message)
     }

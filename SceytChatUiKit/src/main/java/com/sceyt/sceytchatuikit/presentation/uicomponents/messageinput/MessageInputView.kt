@@ -162,8 +162,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             } else {
                 cancelReply {
                     if (allAttachments.isNotEmpty()) {
+                        val messages = arrayListOf<Message>()
                         allAttachments.forEachIndexed { index, attachment ->
-                            val messageToSend: Message? = Message.MessageBuilder()
+                            val message = Message.MessageBuilder()
                                 .setAttachments(arrayOf(attachment))
                                 .setType(getMessageType(if (index == 0) messageBody else null, attachment))
                                 .apply {
@@ -180,14 +181,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                     }
                                 }.build()
 
-                            if (index == 0 && replyMessage != null) {
-                                messageToSend?.let { msg -> messageInputActionCallback?.sendReplyMessage(msg, replyMessage) }
-                            } else {
-                                messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
-                            }
+                            messages.add(message)
                         }
+                        messageInputActionCallback?.sendMessages(messages)
                     } else {
-                        val messageToSend: Message? = Message.MessageBuilder()
+                        val message = Message.MessageBuilder()
                             .setAttachments(allAttachments.toTypedArray())
                             .setType(getMessageType(messageBody))
                             .setBody(messageBody)
@@ -202,10 +200,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                 }
                             }.build()
 
-                        if (replyMessage != null)
-                            messageToSend?.let { msg -> messageInputActionCallback?.sendReplyMessage(msg, replyMessage) }
-                        else
-                            messageToSend?.let { msg -> messageInputActionCallback?.sendMessage(msg) }
+                        messageInputActionCallback?.sendMessage(message)
                     }
                     reset()
                 }
@@ -424,7 +419,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)
-        fun sendReplyMessage(message: Message, parent: Message?)
+        fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
         fun join()
