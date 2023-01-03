@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -48,11 +49,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChatClient.getClient().getChannel(id, object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -70,14 +71,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
-                        continuation.resume(SceytResponse.Success(emptyList()))
+                        continuation.safeResume(SceytResponse.Success(emptyList()))
                     else {
-                        continuation.resume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                        continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
                     }
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -95,14 +96,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
-                        continuation.resume(SceytResponse.Success(emptyList()))
+                        continuation.safeResume(SceytResponse.Success(emptyList()))
                     else {
-                        continuation.resume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                        continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
                     }
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -113,14 +114,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             channelsQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
-                        continuation.resume(SceytResponse.Success(emptyList()))
+                        continuation.safeResume(SceytResponse.Success(emptyList()))
                     else {
-                        continuation.resume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                        continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
                     }
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -158,11 +159,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             DirectChannelOperator.createChannelRequest(user).execute(object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -184,14 +185,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
             createChannelRequest?.execute(object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             }) ?: run {
-                continuation.resume(SceytResponse.Error(SceytException(0, "Invalid channel type")))
+                continuation.safeResume(SceytResponse.Error(SceytException(0, "Invalid channel type")))
             }
         }
     }
@@ -220,11 +221,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).markUsRead(object : ChannelCallback {
                 override fun onResult(data: Channel) {
-                    continuation.resume(SceytResponse.Success(data.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(data.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -234,11 +235,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).markUsUnread(object : ChannelCallback {
                 override fun onResult(data: Channel) {
-                    continuation.resume(SceytResponse.Success(data.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(data.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -248,11 +249,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).leave(object : ActionCallback {
                 override fun onSuccess() {
-                    continuation.resume(SceytResponse.Success(channelId))
+                    continuation.safeResume(SceytResponse.Success(channelId))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -262,11 +263,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).clearHistory(object : ActionCallback {
                 override fun onSuccess() {
-                    continuation.resume(SceytResponse.Success(channelId))
+                    continuation.safeResume(SceytResponse.Success(channelId))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -276,11 +277,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             BlockUserRequest(userId).execute(object : UsersCallback {
                 override fun onResult(data: MutableList<User>?) {
-                    continuation.resume(SceytResponse.Success(data))
+                    continuation.safeResume(SceytResponse.Success(data))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
 
             })
@@ -291,11 +292,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             UnBlockUserRequest(userId).execute(object : UsersCallback {
                 override fun onResult(data: MutableList<User>?) {
-                    continuation.resume(SceytResponse.Success(data))
+                    continuation.safeResume(SceytResponse.Success(data))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -305,11 +306,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).block(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
-                    continuation.resume(SceytResponse.Success(channelId))
+                    continuation.safeResume(SceytResponse.Success(channelId))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -319,11 +320,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).unBlock(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
-                    continuation.resume(SceytResponse.Success(channelId))
+                    continuation.safeResume(SceytResponse.Success(channelId))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -333,11 +334,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).delete(object : ActionCallback {
                 override fun onSuccess() {
-                    continuation.resume(SceytResponse.Success(channelId))
+                    continuation.safeResume(SceytResponse.Success(channelId))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -353,11 +354,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             }, object : UrlCallback {
 
                 override fun onResult(url: String) {
-                    continuation.resume(SceytResponse.Success(url))
+                    continuation.safeResume(SceytResponse.Success(url))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -367,11 +368,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             val channelCallback = object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             }
 
@@ -384,7 +385,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     PublicChannelOperator.build(channelId).update(data.channelUrl, data.newSubject, data.metadata, data.label,
                         data.avatarUrl ?: "", channelCallback)
                 }
-                else -> continuation.resume(SceytResponse.Error(SceytException(0, "This is Direct channel")))
+                else -> continuation.safeResume(SceytResponse.Error(SceytException(0, "This is Direct channel")))
             }
         }
     }
@@ -395,13 +396,13 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 .loadNext(object : MembersCallback {
                     override fun onResult(members: MutableList<Member>?) {
                         if (members.isNullOrEmpty())
-                            continuation.resume(SceytResponse.Success(emptyList()))
+                            continuation.safeResume(SceytResponse.Success(emptyList()))
                         else
-                            continuation.resume(SceytResponse.Success(members.map { it.toSceytMember() }))
+                            continuation.safeResume(SceytResponse.Success(members.map { it.toSceytMember() }))
                     }
 
                     override fun onError(e: SceytException?) {
-                        continuation.resume(SceytResponse.Error(e))
+                        continuation.safeResume(SceytResponse.Error(e))
                     }
                 })
         }
@@ -411,11 +412,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).addMembers(members, object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -425,11 +426,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).changeMemberRole(member, object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -439,11 +440,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).changeOwner(userId, object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -453,11 +454,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).kickMember(userId, object : ChannelCallback {
                 override fun onResult(channel: Channel) {
-                    continuation.resume(SceytResponse.Success(channel.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -467,11 +468,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             GroupChannelOperator.build(channelId).blockMember(userId, object : ChannelCallback {
                 override fun onResult(channel: Channel?) {
-                    continuation.resume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -481,11 +482,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).unMute(object : ChannelCallback {
                 override fun onResult(channel: Channel?) {
-                    continuation.resume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -495,11 +496,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).mute(muteUntil, object : ChannelCallback {
                 override fun onResult(channel: Channel?) {
-                    continuation.resume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -509,11 +510,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             PublicChannelOperator.build(channelId).join(object : ChannelCallback {
                 override fun onResult(result: Channel) {
-                    continuation.resume(SceytResponse.Success(result.toSceytUiChannel()))
+                    continuation.safeResume(SceytResponse.Success(result.toSceytUiChannel()))
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error))
+                    continuation.safeResume(SceytResponse.Error(error))
                 }
             })
         }

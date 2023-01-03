@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
@@ -59,6 +60,10 @@ interface ChannelDao {
 
     @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
+
+    @Transaction
+    @Query("select * from UserChatLink join channels on UserChatLink.user_id =:peerId and UserChatLink.chatType = :channelTypeEnum")
+    suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
 
     @Transaction
     @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id where chat_id =:channelId " +

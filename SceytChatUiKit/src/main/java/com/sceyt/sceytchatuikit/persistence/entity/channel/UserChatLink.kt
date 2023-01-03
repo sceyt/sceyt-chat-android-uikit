@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 
 @Entity(indices = [Index(value = ["chat_id", "user_id"], unique = true, name = "uniqueUserInChat")])
 data class UserChatLink(
@@ -14,4 +15,5 @@ data class UserChatLink(
         @ColumnInfo(name = "chat_id", index = true)
         var chatId: Long,
         var role: String,
+        val chatType: ChannelTypeEnum
 )
