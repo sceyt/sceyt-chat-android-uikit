@@ -14,6 +14,8 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChan
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
 import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogicImpl
+import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransferLogic
+import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransferLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
@@ -35,7 +37,7 @@ internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
     single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
     single { SceytSyncManager(get(), get()) }
-    single<FileTransferService> { FileTransferServiceImpl(get()) }
+    single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
@@ -68,6 +70,8 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get()) }
+
+    single<FileTransferLogic> { FileTransferLogicImpl(get()) }
 }
 
 internal val repositoryModule = module {

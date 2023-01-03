@@ -18,7 +18,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
 object SendAttachmentWorkManager {
-    private const val ATTACHMENT_WORK_NAME = "ATTACHMENT_WORK_NAME"
     const val MESSAGE_TID = "MESSAGE_TID"
 
     fun schedule(context: Context, messageTid: Long) {
@@ -30,7 +29,7 @@ object SendAttachmentWorkManager {
             .setInputData(dataBuilder.build())
             .build()
 
-        WorkManager.getInstance(context).beginUniqueWork(ATTACHMENT_WORK_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, myWorkRequest)
+        WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
             .enqueue()
     }
 }

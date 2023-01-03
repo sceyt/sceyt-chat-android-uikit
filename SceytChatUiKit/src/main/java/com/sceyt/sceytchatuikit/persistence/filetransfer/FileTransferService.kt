@@ -6,4 +6,5 @@ interface FileTransferService : FileTransferListeners.Listeners {
     fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners)
     fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask
     fun findTransferTask(attachment: SceytAttachment): TransferTask?
+    fun getTasks(): HashMap<String, TransferTask>
 }
