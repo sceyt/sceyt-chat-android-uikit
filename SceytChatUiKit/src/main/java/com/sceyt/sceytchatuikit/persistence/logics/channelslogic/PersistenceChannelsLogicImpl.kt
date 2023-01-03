@@ -168,7 +168,7 @@ internal class PersistenceChannelsLogicImpl(
         }
         usersDao.insertUsers(members.map { it.toUserEntity() })
         channelDao.insertChannelAndLinks(channel.toChannelEntity(preference.getUserId()), members.map {
-            UserChatLink(userId = it.id, chatId = channel.id, role = it.role.name)
+            UserChatLink(userId = it.id, chatId = channel.id, role = it.role.name, chatType = channel.channelType)
         })
     }
 
@@ -257,9 +257,9 @@ internal class PersistenceChannelsLogicImpl(
         val users = arrayListOf<UserEntity>()
         val lastMessages = arrayListOf<MessageDb>()
 
-        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>, lastMessage: SceytMessage?) {
+        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>, lastMessage: SceytMessage?, channelType: ChannelTypeEnum) {
             members.forEach { member ->
-                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
+                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name, chatType = channelType))
                 users.add(member.toUserEntity())
             }
 
@@ -288,13 +288,13 @@ internal class PersistenceChannelsLogicImpl(
 
         list.forEach { channel ->
             if (channel.isGroup) {
-                addEntitiesToLists(channel.id, (channel as SceytGroupChannel).members, channel.lastMessage)
+                addEntitiesToLists(channel.id, (channel as SceytGroupChannel).members, channel.lastMessage, channel.channelType)
             } else {
                 val members = arrayListOf<SceytMember>()
                 (channel as SceytDirectChannel).peer?.let {
                     members.add(it)
                 }
-                addEntitiesToLists(channel.id, members, channel.lastMessage)
+                addEntitiesToLists(channel.id, members, channel.lastMessage, channel.channelType)
             }
         }
         usersDao.insertUsers(users)
@@ -303,6 +303,10 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
+        val channelDb = channelDao.getDirectChannel(user.id)
+        if (channelDb != null)
+            return SceytResponse.Success(channelDb.toChannel())
+
         val response = channelsRepository.createDirectChannel(user)
 
         if (response is SceytResponse.Success) {
@@ -463,7 +467,8 @@ internal class PersistenceChannelsLogicImpl(
                     channelDao.insertUserChatLink(UserChatLink(
                         userId = sceytMember.id,
                         chatId = it.id,
-                        role = sceytMember.role.name))
+                        role = sceytMember.role.name,
+                        chatType = it.channelType))
 
                     channelsCash.addedMembers(channelId, sceytMember)
                 }

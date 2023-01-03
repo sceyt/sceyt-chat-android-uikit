@@ -10,10 +10,10 @@ import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 internal class PersistenceUsersLogicImpl(
         private val userDao: UserDao,
@@ -28,7 +28,7 @@ internal class PersistenceUsersLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let {
                 it.forEach { user ->
-                   /// userDao.updateUser(user.toUserEntity())
+                    /// userDao.updateUser(user.toUserEntity())
                 }
             }
         }
@@ -72,8 +72,8 @@ internal class PersistenceUsersLogicImpl(
         val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
             ClientWrapper.setPresence(presence, status) {
                 if (it.isOk)
-                    continuation.resume(SceytResponse.Success(true))
-                else continuation.resume(SceytResponse.Error(it.error))
+                    continuation.safeResume(SceytResponse.Success(true))
+                else continuation.safeResume(SceytResponse.Error(it.error))
             }
         }
 

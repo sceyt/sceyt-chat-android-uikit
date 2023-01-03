@@ -13,6 +13,7 @@ import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
@@ -20,7 +21,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class MessagesRepositoryImpl : MessagesRepository {
 
@@ -44,14 +44,14 @@ class MessagesRepositoryImpl : MessagesRepository {
             getQuery(conversationId, replyInThread, true).loadPrev(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
-                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                    continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
                 override fun onError(e: SceytException?) {
                     if (replyInThread && lastMessageId == 0L)
-                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                        continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else
-                        continuation.resume(SceytResponse.Error(e))
+                        continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -66,14 +66,14 @@ class MessagesRepositoryImpl : MessagesRepository {
             getQuery(conversationId, replyInThread, false).loadNext(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
-                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                    continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
                 override fun onError(e: SceytException?) {
                     if (replyInThread && lastMessageId == 0L)
-                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                        continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else
-                        continuation.resume(SceytResponse.Error(e))
+                        continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -88,14 +88,14 @@ class MessagesRepositoryImpl : MessagesRepository {
             getQuery(conversationId, replyInThread, true).loadNear(messageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
-                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                    continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
                 override fun onError(e: SceytException?) {
                     if (replyInThread && messageId == 0L)
-                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                        continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else
-                        continuation.resume(SceytResponse.Error(e))
+                        continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -111,11 +111,11 @@ class MessagesRepositoryImpl : MessagesRepository {
             getQueryByType(type, channelId).loadNext(lastMsgId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
-                    continuation.resume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                    continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
                 }
             })
         }
@@ -164,11 +164,11 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
                 override fun onResult(message: Message?) {
-                    continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
+                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error))
+                    continuation.safeResume(SceytResponse.Error(error))
                 }
             })
         }
@@ -178,11 +178,11 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).deleteMessage(messageId, onlyForMe, object : MessageCallback {
                 override fun onResult(msg: Message) {
-                    continuation.resume(SceytResponse.Success(msg.toSceytUiMessage()))
+                    continuation.safeResume(SceytResponse.Success(msg.toSceytUiMessage()))
                 }
 
                 override fun onError(ex: SceytException?) {
-                    continuation.resume(SceytResponse.Error(ex))
+                    continuation.safeResume(SceytResponse.Error(ex))
                 }
             })
         }
@@ -192,11 +192,11 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).editMessage(message.toMessage(), object : MessageCallback {
                 override fun onResult(result: Message) {
-                    continuation.resume(SceytResponse.Success(result.toSceytUiMessage()))
+                    continuation.safeResume(SceytResponse.Success(result.toSceytUiMessage()))
                 }
 
                 override fun onError(ex: SceytException?) {
-                    continuation.resume(SceytResponse.Error(ex))
+                    continuation.safeResume(SceytResponse.Error(ex))
                 }
             })
         }
@@ -206,11 +206,11 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).addReactionWithMessageId(messageId, scoreKey, 1, "", false, object : MessageCallback {
                 override fun onResult(message: Message?) {
-                    continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
+                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error))
+                    continuation.safeResume(SceytResponse.Error(error))
                 }
             })
         }
@@ -220,11 +220,11 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).deleteReactionWithMessageId(messageId, scoreKey, object : MessageCallback {
                 override fun onResult(message: Message?) {
-                    continuation.resume(SceytResponse.Success(message?.toSceytUiMessage()))
+                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
 
                 override fun onError(error: SceytException?) {
-                    continuation.resume(SceytResponse.Error(error))
+                    continuation.safeResume(SceytResponse.Error(error))
                 }
             })
         }
@@ -236,12 +236,12 @@ class MessagesRepositoryImpl : MessagesRepository {
             ChannelOperator.build(channelId).markMessagesAsRead(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     Log.i("messageMarker","send read marker success from msgs -> ${result.messageIds}")
-                    continuation.resume(SceytResponse.Success(result))
+                    continuation.safeResume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {
                     Log.e("messageMarker","send read marker error from msgs -> ${id.toList()}")
-                    continuation.resume(SceytResponse.Error(error))
+                    continuation.safeResume(SceytResponse.Error(error))
                 }
             })
         }
@@ -253,12 +253,12 @@ class MessagesRepositoryImpl : MessagesRepository {
             ChannelOperator.build(channelId).markMessagesAsDelivered(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     Log.i("messageMarker","send delivery marker success from msgs -> ${result.messageIds}")
-                    continuation.resume(SceytResponse.Success(result))
+                    continuation.safeResume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {
                     Log.e("messageMarker","send delivery marker error from msgs -> ${id.toList()}")
-                    continuation.resume(SceytResponse.Error(error))
+                    continuation.safeResume(SceytResponse.Error(error))
                 }
             })
         }
