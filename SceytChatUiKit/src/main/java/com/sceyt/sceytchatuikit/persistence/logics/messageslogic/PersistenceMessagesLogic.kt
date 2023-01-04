@@ -19,7 +19,7 @@ internal interface PersistenceMessagesLogic {
     fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageReactionUpdated(data: Message)
-    suspend fun onMessageEditedOrDeleted(data: Message)
+    suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
                                  loadKey: LoadKeyData, ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 

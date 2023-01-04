@@ -284,7 +284,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.updateMessage(updateMessage)
-            if (message.state == MessageState.Deleted)
+            if (message.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
                 messagesRV.adapter?.notifyItemChanged(it.first)
             else
                 updateItem(it.first, it.second, oldMessage.diff(message))

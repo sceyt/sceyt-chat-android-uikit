@@ -260,10 +260,7 @@ class MessageListViewModel(
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
-            _messageEditedDeletedLiveData.postValue(response)
-            if (response is SceytResponse.Success)
-                MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
-                        ?: return@launch)
+            notifyPageStateWithResponse(response)
         }
     }
 

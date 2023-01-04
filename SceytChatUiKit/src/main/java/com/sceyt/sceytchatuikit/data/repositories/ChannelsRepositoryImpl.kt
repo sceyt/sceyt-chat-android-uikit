@@ -23,8 +23,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class ChannelsRepositoryImpl : ChannelsRepository {
 
@@ -345,7 +343,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     override suspend fun uploadAvatar(avatarUri: String): SceytResponse<String> {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             ChatClient.getClient().upload(avatarUri, object : ProgressCallback {
                 override fun onResult(pct: Float) {
                 }

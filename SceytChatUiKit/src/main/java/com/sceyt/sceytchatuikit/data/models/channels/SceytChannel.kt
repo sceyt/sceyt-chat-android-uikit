@@ -4,23 +4,21 @@ import android.os.Parcelable
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import kotlinx.parcelize.IgnoredOnParcel
-import kotlinx.parcelize.Parcelize
 import java.util.*
 
-@Parcelize
-open class SceytChannel(open var id: Long,
-                        open var createdAt: Long,
-                        open var updatedAt: Long,
-                        open var unreadMessageCount: Long,
-                        open var lastMessage: SceytMessage?,
-                        open var label: String?,
-                        open var metadata: String?,
-                        open var muted: Boolean,
-                        open var muteExpireDate: Date?,
-                        open var markedUsUnread: Boolean,
-                        open var lastDeliveredMessageId: Long,
-                        open var lastReadMessageId: Long,
-                        open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
+abstract class SceytChannel(open var id: Long,
+                            open var createdAt: Long,
+                            open var updatedAt: Long,
+                            open var unreadMessageCount: Long,
+                            open var lastMessage: SceytMessage?,
+                            open var label: String?,
+                            open var metadata: String?,
+                            open var muted: Boolean,
+                            open var muteExpireDate: Date?,
+                            open var markedUsUnread: Boolean,
+                            open var lastDeliveredMessageId: Long,
+                            open var lastReadMessageId: Long,
+                            open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
     open val channelSubject = ""
@@ -66,19 +64,5 @@ open class SceytChannel(open var id: Long,
         return result
     }
 
-    public override fun clone(): SceytChannel {
-        return SceytChannel(id = id,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            unreadMessageCount = unreadMessageCount,
-            lastMessage = lastMessage?.clone(),
-            label = label,
-            metadata = metadata,
-            muted = muted,
-            muteExpireDate = muteExpireDate,
-            markedUsUnread = markedUsUnread,
-            lastDeliveredMessageId = lastDeliveredMessageId,
-            lastReadMessageId = lastReadMessageId,
-            channelType = channelType)
-    }
+    public abstract override fun clone(): SceytChannel
 }

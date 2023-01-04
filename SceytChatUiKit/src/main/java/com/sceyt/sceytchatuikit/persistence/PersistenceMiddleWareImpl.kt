@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceCo
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -102,8 +103,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     private fun onMessageEditedOrDeleted(data: Message?) {
         data ?: return
         launch {
-            messagesLogic.onMessageEditedOrDeleted(data)
-            channelLogic.onMessageEditedOrDeleted(data)
+            val sceytMessage = data.toSceytUiMessage()
+            messagesLogic.onMessageEditedOrDeleted(sceytMessage)
+            channelLogic.onMessageEditedOrDeleted(sceytMessage)
         }
     }
 

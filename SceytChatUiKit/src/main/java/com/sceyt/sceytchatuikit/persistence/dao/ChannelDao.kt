@@ -62,7 +62,8 @@ interface ChannelDao {
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
 
     @Transaction
-    @Query("select * from UserChatLink join channels on UserChatLink.user_id =:peerId and UserChatLink.chatType = :channelTypeEnum")
+    @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
+            "where link.user_id =:peerId and type =:channelTypeEnum")
     suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
 
     @Transaction

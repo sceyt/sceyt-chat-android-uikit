@@ -39,10 +39,13 @@ import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
@@ -97,9 +100,9 @@ internal class PersistenceMessagesLogicImpl(
         messagesCash.messageUpdated(data.toSceytUiMessage())
     }
 
-    override suspend fun onMessageEditedOrDeleted(data: Message) {
+    override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         messageDao.updateMessage(data.toMessageEntity())
-        messagesCash.messageUpdated(data.toSceytUiMessage())
+        messagesCash.messageUpdated(data)
         if (data.state == MessageState.Deleted)
             deletedPayloads(data.id, data.tid)
     }
@@ -233,15 +236,15 @@ internal class PersistenceMessagesLogicImpl(
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             messageDao.deleteMessageByTid(message.tid)
             messagesCash.deleteMessage(message.tid)
+            persistenceChannelsLogic.onMessageEditedOrDeleted(message)
             WorkManager.getInstance(application).cancelAllWorkByTag(message.tid.toString())
             return SceytResponse.Success(message.apply { state = MessageState.Deleted })
         }
         val response = messagesRepository.deleteMessage(channelId, message.id, onlyForMe)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
-                deletedPayloads(message.id, message.tid)
-                messageDao.updateMessage(resultMessage.toMessageEntity())
-                messagesCash.messageUpdated(resultMessage)
+                onMessageEditedOrDeleted(resultMessage)
+                persistenceChannelsLogic.onMessageEditedOrDeleted(resultMessage)
             }
         }
         return response

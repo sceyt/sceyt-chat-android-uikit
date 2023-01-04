@@ -4,7 +4,6 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
@@ -133,20 +132,20 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override suspend fun onMessageEditedOrDeleted(data: Message) {
+    override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         channelsCash.get(data.channelId)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
                 if (lastMessage.tid == data.tid) {
                     if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
                         channelsCash.updateLastMessage(data.channelId, null)
                     else
-                        channelsCash.updateLastMessage(data.channelId, data.toSceytUiMessage(channel.isGroup))
+                        channelsCash.updateLastMessage(data.channelId, data)
                 }
             } ?: run {
                 if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
-                    deleteMessage(data.channelId, data.toSceytUiMessage())
+                    deleteMessage(data.channelId, data)
                 else {
-                    channel.lastMessage = data.toSceytUiMessage(channel.isGroup)
+                    channel.lastMessage = data
                     channelsCash.upsertChannel(channel)
                 }
             }
@@ -168,7 +167,7 @@ internal class PersistenceChannelsLogicImpl(
         }
         usersDao.insertUsers(members.map { it.toUserEntity() })
         channelDao.insertChannelAndLinks(channel.toChannelEntity(preference.getUserId()), members.map {
-            UserChatLink(userId = it.id, chatId = channel.id, role = it.role.name, chatType = channel.channelType)
+            UserChatLink(userId = it.id, chatId = channel.id, role = it.role.name)
         })
     }
 
@@ -257,9 +256,9 @@ internal class PersistenceChannelsLogicImpl(
         val users = arrayListOf<UserEntity>()
         val lastMessages = arrayListOf<MessageDb>()
 
-        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>, lastMessage: SceytMessage?, channelType: ChannelTypeEnum) {
+        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>, lastMessage: SceytMessage?) {
             members.forEach { member ->
-                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name, chatType = channelType))
+                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
                 users.add(member.toUserEntity())
             }
 
@@ -288,13 +287,13 @@ internal class PersistenceChannelsLogicImpl(
 
         list.forEach { channel ->
             if (channel.isGroup) {
-                addEntitiesToLists(channel.id, (channel as SceytGroupChannel).members, channel.lastMessage, channel.channelType)
+                addEntitiesToLists(channel.id, (channel as SceytGroupChannel).members, channel.lastMessage)
             } else {
                 val members = arrayListOf<SceytMember>()
                 (channel as SceytDirectChannel).peer?.let {
                     members.add(it)
                 }
-                addEntitiesToLists(channel.id, members, channel.lastMessage, channel.channelType)
+                addEntitiesToLists(channel.id, members, channel.lastMessage)
             }
         }
         usersDao.insertUsers(users)
@@ -467,8 +466,7 @@ internal class PersistenceChannelsLogicImpl(
                     channelDao.insertUserChatLink(UserChatLink(
                         userId = sceytMember.id,
                         chatId = it.id,
-                        role = sceytMember.role.name,
-                        chatType = it.channelType))
+                        role = sceytMember.role.name))
 
                     channelsCash.addedMembers(channelId, sceytMember)
                 }

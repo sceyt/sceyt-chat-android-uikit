@@ -5,6 +5,7 @@ import com.sceyt.chat.Types
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
@@ -207,7 +208,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     MessagesCash.messageUpdatedFlow.onEach { messages ->
         messages.forEach {
-            messagesListView.updateMessage(it)
+            if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
+                messagesListView.messageEditedOrDeleted(it)
+            else messagesListView.updateMessage(it)
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
