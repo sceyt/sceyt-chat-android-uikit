@@ -14,7 +14,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -41,8 +40,7 @@ internal class PersistenceMembersLogicImpl(
             ChannelMembersEventEnum.Role, ChannelMembersEventEnum.Added -> {
                 usersDao.insertUsers(data.members.map { it.toUserEntity() })
                 channelDao.insertUserChatLinks(data.members.map {
-                    UserChatLink(userId = it.id, chatId = chatId,
-                        role = it.role.name, chatType = data.channel.toSceytUiChannel().channelType)
+                    UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
@@ -99,8 +97,7 @@ internal class PersistenceMembersLogicImpl(
         val users = arrayListOf<UserEntity>()
         channelDao.getChannelById(channelId)?.let { channel ->
             list.forEach { member ->
-                links.add(UserChatLink(userId = member.id, chatId = channelId,
-                    role = member.role.name, chatType = channel.channelEntity.type))
+                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
                 users.add(member.toUserEntity())
             }
         }
@@ -137,16 +134,13 @@ internal class PersistenceMembersLogicImpl(
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.let { members ->
-                channelDao.getChannelById(channelId)?.let { channel ->
-                    channelDao.insertUserChatLinks(members.map { sceytMember ->
-                        UserChatLink(
-                            userId = sceytMember.id,
-                            chatId = channelId,
-                            role = sceytMember.role.name,
-                            chatType = channel.channelEntity.type
-                        )
-                    })
-                }
+                channelDao.insertUserChatLinks(members.map { sceytMember ->
+                    UserChatLink(
+                        userId = sceytMember.id,
+                        chatId = channelId,
+                        role = sceytMember.role.name
+                    )
+                })
             }
         }
         return response
@@ -156,12 +150,10 @@ internal class PersistenceMembersLogicImpl(
         val response = channelsRepository.addMembersToChannel(channelId, members)
 
         if (response is SceytResponse.Success) {
-            response.data?.let { chanel ->
-                usersDao.insertUsers(members.map { it.toUserEntity() })
-                channelDao.insertUserChatLinks(members.map {
-                    UserChatLink(userId = it.id, chatId = channelId, role = it.role.name, chatType = chanel.channelType)
-                })
-            }
+            usersDao.insertUsers(members.map { it.toUserEntity() })
+            channelDao.insertUserChatLinks(members.map {
+                UserChatLink(userId = it.id, chatId = channelId, role = it.role.name)
+            })
         }
         return response
     }

@@ -11,12 +11,11 @@ import com.sceyt.chat.sceyt_callbacks.UserCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.suspendCoroutine
 
 internal class ProfileRepositoryImpl : ProfileRepository {
 
     override suspend fun updateProfile(firstName: String?, lastName: String?, avatarUri: String?): SceytResponse<User> {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             User.setProfileRequest().apply {
                 avatarUri?.let { uri ->
                     setAvatar(uri)

@@ -19,25 +19,26 @@ fun FileListItem.getFileFromMetadata(): File? {
 }
 
 fun FileListItem.openFile(context: Context) {
-    val fileName = file.name
-    var uri: Uri? = null
-    val loadedFile = File(context.filesDir, fileName)
-    if (loadedFile.exists()) {
-        uri = context.getFileUriWithProvider(loadedFile)
-    } else {
-        getFileFromMetadata()?.let {
-            uri = context.getFileUriWithProvider(it)
+    try {
+        val fileName = file.name
+        var uri: Uri? = null
+        val loadedFile = File(context.filesDir, fileName)
+        if (loadedFile.exists()) {
+            uri = context.getFileUriWithProvider(loadedFile)
+        } else {
+            getFileFromMetadata()?.let {
+                uri = context.getFileUriWithProvider(it)
+            }
         }
-    }
 
-    if (uri != null) {
-        try {
+        if (uri != null) {
             val intent = Intent(Intent.ACTION_VIEW)
                 .setData(uri)
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, context.getString(R.string.sceyt_no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
+
         }
+    } catch (e: Exception) {
+        Toast.makeText(context, context.getString(R.string.sceyt_no_proper_app_to_open_file), Toast.LENGTH_SHORT).show()
     }
 }

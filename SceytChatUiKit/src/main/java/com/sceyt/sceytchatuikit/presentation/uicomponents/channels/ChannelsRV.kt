@@ -12,7 +12,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsItemComparatorBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -149,16 +149,9 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
     fun getViewHolderFactory() = viewHolderFactory
 
     private fun sortAndUpdate(sortChannelsBy: SceytKitConfig.ChannelSortType, data: List<ChannelListItem>) {
-        val hasLoading = data.findLast { it is ChannelListItem.LoadingMoreItem } != null
-        val sortedList = ArrayList(data.filterIsInstance<ChannelListItem.ChannelItem>().map { it.channel })
-            .sortedWith(ChannelsComparatorBy(sortChannelsBy))
-
-        val newList: ArrayList<ChannelListItem> = ArrayList(sortedList.map { ChannelListItem.ChannelItem(it) })
-        if (hasLoading)
-            newList.add(ChannelListItem.LoadingMoreItem)
-
+        val sortedList = data.sortedWith(ChannelsItemComparatorBy(sortChannelsBy))
         awaitAnimationEnd {
-            post { setData(newList) }
+            post { setData(sortedList) }
         }
     }
 
@@ -166,6 +159,4 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         super.onDetachedFromWindow()
         ChannelViewHolderFactory.clearCash()
     }
-
-
 }
