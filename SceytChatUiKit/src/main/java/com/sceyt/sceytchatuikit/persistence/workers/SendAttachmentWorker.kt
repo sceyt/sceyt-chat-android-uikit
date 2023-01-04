@@ -38,7 +38,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     private val fileTransferService: FileTransferService by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
 
-    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Boolean {
+    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Pair<Boolean, String?> {
         val payloads = messagesLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
 
         return suspendCancellableCoroutine { continuation ->
@@ -48,20 +48,20 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
                         val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
                         messagesLogic.updateAttachmentWithTransferData(transferData)
-                        continuation.safeResume(true)
+                        continuation.safeResume(Pair(true, payload.url))
                     } else {
                         val transferData = TransferData(tmpMessage.tid, attachment.tid, 0f,
                             TransferState.Uploading, attachment.filePath, attachment.url)
                         messagesLogic.updateAttachmentWithTransferData(transferData)
 
                         fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
-                            task.addOnCompletionListener(this.toString()) {
-                                continuation.safeResume(it)
-                            }
+                            task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
+                                continuation.safeResume(Pair(success, url))
+                            })
                         })
                     }
                 }
-            } else continuation.safeResume(false)
+            } else continuation.safeResume(Pair(false, null))
         }
     }
 
@@ -70,10 +70,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val messageTid = data.getLong(SendAttachmentWorkManager.MESSAGE_TID, 0)
 
         val tmpMessage = messagesLogic.getMessageFromDbByTid(messageTid)
-                ?: return Result.success()
+                ?: return Result.failure()
 
-        if (checkToUploadAttachmentsBeforeSend(tmpMessage))
+        val result = checkToUploadAttachmentsBeforeSend(tmpMessage)
+        if (result.first && result.second.isNotNullOrBlank()) {
+            tmpMessage.attachments?.getOrNull(0)?.url = result.second
             SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
+        }
 
         return Result.success()
     }

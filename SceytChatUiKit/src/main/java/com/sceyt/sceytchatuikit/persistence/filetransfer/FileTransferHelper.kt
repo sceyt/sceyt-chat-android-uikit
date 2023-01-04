@@ -76,7 +76,7 @@ object FileTransferHelper : SceytKoinComponent {
             }
         }
         fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {
-            it.invoke((result is SceytResponse.Success))
+            it.invoke((result is SceytResponse.Success), result.data)
         }
     }
 
