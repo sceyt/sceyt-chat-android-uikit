@@ -84,12 +84,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
-            val channelListQuery = ChannelListQuery.Builder()
-                .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
-                .order(getOrder())
-                .query(query.ifBlank { null })
-                .limit(20)
-                .build().also { channelsQuery = it }
+            val channelListQuery = createChannelListQuery(query).also { channelsQuery = it }
 
             channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
@@ -109,7 +104,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
-            channelsQuery.loadNext(object : ChannelsCallback {
+            val query = if (::channelsQuery.isInitialized)
+                channelsQuery
+            else createChannelListQuery().also { channelsQuery = it }
+
+            query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(emptyList()))
@@ -516,5 +515,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
             })
         }
+    }
+
+    private fun createChannelListQuery(query: String? = null): ChannelListQuery {
+        return ChannelListQuery.Builder()
+            .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
+            .order(getOrder())
+            .query(query?.ifBlank { null })
+            .limit(20)
+            .build()
     }
 }

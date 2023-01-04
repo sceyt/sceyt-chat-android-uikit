@@ -8,9 +8,9 @@ data class TransferTask(
         val updateFileLocationCallback: UpdateFileLocationCallback,
         val thumbCallback: ThumbCallback) {
 
-    val onCompletionListeners: HashMap<String, (Boolean) -> Unit> by lazy { hashMapOf() }
+    val onCompletionListeners: HashMap<String, (success: Boolean, url: String?) -> Unit> by lazy { hashMapOf() }
 
-    fun addOnCompletionListener(key: String, listener: (Boolean) -> Unit) {
+    fun addOnCompletionListener(key: String, listener: (success: Boolean, url: String?) -> Unit) {
         onCompletionListeners[key] = listener
     }
 }
