@@ -95,6 +95,7 @@
     <string name="sceyt_max_select_count_should_be">Max select count should be lover than</string>
     <string name="sceyt_video">Video</string>
     <string name="sceyt_image">Image</string>
+    <string name="sceyt_voice">Voice</string>
     <string name="sceyt_you_blocked_this_user">You blocked this user</string>
     <string name="sceyt_could_not_open_file">Could\'t open file</string>
 

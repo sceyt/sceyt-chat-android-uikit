@@ -80,6 +80,7 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
     return when (type) {
         AttachmentTypeEnum.Video.value() -> context.getString(R.string.sceyt_video)
         AttachmentTypeEnum.Image.value() -> context.getString(R.string.sceyt_image)
+        AttachmentTypeEnum.Voice.value() -> context.getString(R.string.sceyt_voice)
         else -> name
     }
 }

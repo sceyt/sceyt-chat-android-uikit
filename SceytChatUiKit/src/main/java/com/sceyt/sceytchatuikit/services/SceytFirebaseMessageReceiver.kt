@@ -14,7 +14,7 @@ internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
 
         try {
             SceytFirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)
-        } catch (exception: IllegalStateException) {
+        } catch (exception: Exception) {
             Log.e(TAG, exception.message.toString())
         }
     }

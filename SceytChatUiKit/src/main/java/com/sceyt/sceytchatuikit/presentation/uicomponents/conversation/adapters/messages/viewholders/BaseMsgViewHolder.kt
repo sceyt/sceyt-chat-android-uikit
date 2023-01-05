@@ -17,6 +17,7 @@ import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.toColorInt
 import androidx.core.text.HtmlCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -28,6 +29,7 @@ import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -151,19 +153,33 @@ abstract class BaseMsgViewHolder(private val view: View,
                 false
             } else {
                 val attachment = parent?.attachments?.getOrNull(0)
-                if (attachment?.type.isEqualsVideoOrImage()) {
-                    val path = attachment?.filePath
-                    val placeHolder = attachment?.metadata.getThumbByBytesAndSize(true)?.second
-                        ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
-                    Glide.with(itemView.context)
-                        .load(path)
-                        .placeholder(placeHolder)
-                        .error(placeHolder)
-                        .override(imageAttachment.width, imageAttachment.height)
-                        .into(imageAttachment)
-                } else
-                    imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
-                true
+                icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
+                when {
+                    attachment?.type.isEqualsVideoOrImage() -> {
+                        val path = attachment?.filePath
+                        val placeHolder = attachment?.metadata.getThumbByBytesAndSize(true)?.second
+                            ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
+                        Glide.with(itemView.context)
+                            .load(path)
+                            .placeholder(placeHolder)
+                            .error(placeHolder)
+                            .override(imageAttachment.width, imageAttachment.height)
+                            .into(imageAttachment)
+                        true
+                    }
+                    attachment?.type == AttachmentTypeEnum.Voice.value() -> {
+                        icMsgBodyStartIcon.setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_voice)?.apply {
+                            if (message.incoming)
+                                setTint("#818C99".toColorInt())
+                            else setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                        })
+                        false
+                    }
+                    else -> {
+                        imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+                        true
+                    }
+                }
             }
             root.isVisible = true
 
