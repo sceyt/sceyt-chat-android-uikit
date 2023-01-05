@@ -1,6 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files
 
 import android.view.ViewGroup
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -14,6 +17,10 @@ class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
 ) : RecyclerView.Adapter<BaseViewHolder<FileListItem>>() {
 
     val videoControllersList = arrayListOf<SceytVideoControllerView>()
+
+    init {
+        observeToAppLifeCycle()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<FileListItem> {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -53,5 +60,13 @@ class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesTo(this)
         files = list.toArrayList()
+    }
+
+
+    private fun observeToAppLifeCycle() {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_DESTROY || event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP)
+                videoControllersList.forEach { it.pause() }
+        })
     }
 }
