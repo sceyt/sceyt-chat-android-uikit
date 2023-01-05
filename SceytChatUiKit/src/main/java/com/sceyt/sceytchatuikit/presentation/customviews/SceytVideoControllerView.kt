@@ -195,4 +195,9 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         player = null
         setInitialState()
     }
+
+    fun pause(){
+        player?.pause()
+        playPauseItem.setImageDrawable(playDrawable)
+    }
 }
