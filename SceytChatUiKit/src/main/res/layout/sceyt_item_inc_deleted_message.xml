@@ -23,8 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/avatar"
-        android:background="@drawable/sceyt_bg_inc_message"
-        android:paddingTop="4dp">
+        android:background="@drawable/sceyt_bg_inc_message">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"

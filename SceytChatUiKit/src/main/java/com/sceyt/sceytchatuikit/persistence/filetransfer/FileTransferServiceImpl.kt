@@ -29,7 +29,7 @@ internal class FileTransferServiceImpl(private var application: Application,
         }
 
         override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-            fileTransferLogic.resumeLoad(attachment)
+            fileTransferLogic.resumeLoad(attachment, state)
         }
 
         override fun getThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {

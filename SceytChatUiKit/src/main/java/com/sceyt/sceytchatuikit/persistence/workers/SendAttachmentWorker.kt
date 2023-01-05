@@ -24,9 +24,14 @@ object SendAttachmentWorkManager {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
 
+        val networkConstraint = Constraints.Builder().apply {
+            setRequiredNetworkType(NetworkType.CONNECTED)
+        }.build()
+
         val myWorkRequest = OneTimeWorkRequest.Builder(SendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
             .setInputData(dataBuilder.build())
+            .setConstraints(networkConstraint)
             .build()
 
         WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
