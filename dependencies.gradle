@@ -29,8 +29,8 @@ ext {
 
     fragment_ktx_version = '1.5.5'
     firebase_core_version = '20.0.2'
-    firebase_messaging_version = '23.1.0'
-    firebase_bom_version = '31.0.2'
+    firebase_messaging_version = '23.1.1'
+    firebase_bom_version = '31.1.1'
     firebase_crashlitics_version = '18.2.6'
     flex_box_version = "3.0.0"
 
@@ -44,7 +44,7 @@ ext {
     ion_version = "3.1.0"
 
     kotlin_version = '1.6.10'
-    koin_version = '3.3.1'
+    koin_version = '3.3.2'
 
     legacy_version = '1.0.0'
     lifecycle_version = '2.5.1'

@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.extensions
 
-import kotlinx.coroutines.CancellableContinuation
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -27,10 +26,9 @@ fun <T> List<T>.toArrayList(): ArrayList<T> {
 }
 
 inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Unit = {}) {
-    if (this is CancellableContinuation<T>) {
-        if (isActive)
-            resume(value)
-        else
-            onExceptionCalled()
-    } else throw Exception("Must use suspendCancellableCoroutine instead of suspendCoroutine")
+    try {
+        resume(value)
+    } catch (ex: Exception) {
+        onExceptionCalled()
+    }
 }

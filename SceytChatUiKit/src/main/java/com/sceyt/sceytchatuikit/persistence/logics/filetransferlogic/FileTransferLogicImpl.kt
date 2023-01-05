@@ -33,7 +33,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     private var thumbPaths = hashMapOf<String, String>()
     private var preparingThumbsMap = hashMapOf<Long, Long>()
     private var pendingUploadQue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
-    private var uploading: Boolean = false
+    private var currentUploadingAttachment: SceytAttachment? = null
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
         checkAndUpload(attachment, task)
@@ -87,8 +87,8 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
         }
     }
 
-    override fun resumeLoad(attachment: SceytAttachment) {
-        when (attachment.transferState) {
+    override fun resumeLoad(attachment: SceytAttachment, state: TransferState) {
+        when (state) {
             TransferState.PendingDownload, TransferState.PauseDownload, TransferState.ErrorDownload -> {
                 fileTransferService.getTasks()[attachment.url.toString()]?.let {
                     downloadingUrlMap.remove(attachment.url)
@@ -124,13 +124,16 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     }
 
     private fun checkAndUpload(attachment: SceytAttachment, task: TransferTask) {
-        if (uploading.not())
+        if (currentUploadingAttachment == null)
             uploadAttachment(attachment, task)
-        else pendingUploadQue.add(Pair(attachment, task))
+        else {
+            if (currentUploadingAttachment?.tid != attachment.tid)
+                pendingUploadQue.add(Pair(attachment, task))
+        }
     }
 
     private fun uploadNext() {
-        uploading = false
+        currentUploadingAttachment = null
         if (pendingUploadQue.isEmpty()) return
         pendingUploadQue.poll()?.let {
             uploadAttachment(it.first, it.second)
@@ -138,7 +141,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     }
 
     private fun uploadAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
-        uploading = true
+        currentUploadingAttachment = attachment
         checkAndResizeMessageAttachments(application, attachment) {
             if (it.isSuccess) {
                 it.getOrNull()?.let { path ->
