@@ -10,6 +10,7 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
@@ -117,6 +118,16 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             return diff
         }
         return null
+    }
+
+    internal fun onTyping(data: ChannelTypingEventData) {
+        channelsRV.getChannelIndexed(data.channel.id)?.let { pair ->
+            val channelItem = pair.second
+            val oldChannel = channelItem.channel.clone()
+            channelItem.channel.typingData = data
+            val diff = oldChannel.diff(channelItem.channel)
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+        }
     }
 
     internal fun deleteChannel(channelId: Long?) {

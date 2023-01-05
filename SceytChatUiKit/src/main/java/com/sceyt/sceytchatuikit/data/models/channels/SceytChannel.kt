@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
 import android.os.Parcelable
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import kotlinx.parcelize.IgnoredOnParcel
@@ -28,6 +29,8 @@ abstract class SceytChannel(open var id: Long,
 
     @IgnoredOnParcel
     open val isGroup = false
+
+    var typingData: ChannelTypingEventData? = null
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {

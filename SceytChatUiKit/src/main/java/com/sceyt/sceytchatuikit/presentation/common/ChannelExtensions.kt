@@ -22,7 +22,8 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
                 && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state,
         markedUsUnreadChanged = markedUsUnread != other.markedUsUnread,
         lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
-        peerBlockedChanged = peerBlockedChanged
+        peerBlockedChanged = peerBlockedChanged,
+        typingStateChanged = typingData != other.typingData
     )
 }
 
