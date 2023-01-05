@@ -306,16 +306,22 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun loadReplyMessageImage(attachment: Attachment) {
-        if (attachment.type.isEqualsVideoOrImage()) {
-            val placeHolder = attachment.metadata.getThumbByBytesAndSize(true)?.second
-                ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
-            Glide.with(context)
-                .load(attachment.filePath)
-                .placeholder(placeHolder)
-                .override(100)
-                .error(placeHolder)
-                .into(binding.layoutReplyOrEditMessage.imageAttachment)
-        } else binding.layoutReplyOrEditMessage.imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+        when {
+            attachment.type.isEqualsVideoOrImage() -> {
+                val placeHolder = attachment.metadata.getThumbByBytesAndSize(true)?.second
+                    ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
+                Glide.with(context)
+                    .load(attachment.filePath)
+                    .placeholder(placeHolder)
+                    .override(100)
+                    .error(placeHolder)
+                    .into(binding.layoutReplyOrEditMessage.imageAttachment)
+            }
+            attachment.type == AttachmentTypeEnum.Voice.value() -> {
+                binding.layoutReplyOrEditMessage.imageAttachment.isVisible = false
+            }
+            else -> binding.layoutReplyOrEditMessage.imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+        }
 
         binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
     }
