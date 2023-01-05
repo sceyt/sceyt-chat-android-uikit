@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders
 
+import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.widget.ImageView
@@ -89,6 +90,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
                     if (markedUsUnreadChanged)
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
+
+                    if (typingStateChanged)
+                        setTypingState(channel, binding.lastMessage)
                 }
             }
             ChannelListItem.LoadingMoreItem -> Unit
@@ -195,6 +199,21 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 }
             else unreadMessagesCount.isVisible = false
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    open fun setTypingState(channel: SceytChannel, textView: TextView) {
+        val data = channel.typingData ?: return
+        if (data.typing) {
+            textView.setTypeface(null, Typeface.ITALIC)
+            if (channel.isGroup) {
+                val name = userNameBuilder?.invoke(data.member.user)
+                        ?: data.member.getPresentableFirstName()
+                textView.text = "$name ${context.getString(R.string.sceyt_typing_)}"
+            } else
+                textView.text = context.getString(R.string.sceyt_typing_)
+
+        } else setLastMessagedText(channel, textView)
     }
 
     protected fun getDateTxt(channel: SceytChannel?): String {

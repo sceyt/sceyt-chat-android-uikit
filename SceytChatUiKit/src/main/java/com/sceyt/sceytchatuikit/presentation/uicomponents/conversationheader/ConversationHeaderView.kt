@@ -57,6 +57,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var typingTextBuilder: ((SceytMember) -> String)? = null
     private var userNameBuilder: ((User) -> String)? = null
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
+    private val typingCancelHelper by lazy { TypingCancelHelper() }
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -318,6 +319,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     //Event listeners
     override fun onTypingEvent(data: ChannelTypingEventData) {
+        typingCancelHelper.await(data) {
+            setTyping(it)
+        }
         setTyping(data)
     }
 

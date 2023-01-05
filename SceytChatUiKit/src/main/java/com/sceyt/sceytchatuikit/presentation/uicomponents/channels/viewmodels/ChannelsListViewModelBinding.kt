@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -11,12 +12,15 @@ import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.*
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
+
+    val typingCancelHelper by lazy { TypingCancelHelper() }
 
     getChannels(0, query = searchQuery)
 
@@ -70,6 +74,13 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
         channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelEventsObserver.onChannelTypingEventFlow.onEach {
+        typingCancelHelper.await(it) { data ->
+            channelsListView.onTyping(data)
+        }
+        channelsListView.onTyping(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     blockUserLiveData.observe(lifecycleOwner) {
