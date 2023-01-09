@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
+import android.util.Size
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -96,9 +97,11 @@ class MessageImageViewHolder(
 
     private fun requestThumb() {
         itemView.post {
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getSize()))
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getThumbSize()))
         }
     }
+
+    override fun getThumbSize() = Size(binding.fileImage.width, binding.fileImage.height)
 
     private fun setListener() {
         TransferUpdateObserver.setListener(listenerKey, ::updateState)

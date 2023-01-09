@@ -74,9 +74,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         }
     }
 
-    protected fun getSize(): Size {
-        return Size(itemView.width, itemView.height)
-    }
+    open fun getThumbSize() = Size(itemView.width / 2, itemView.height)
 
     fun loadBlurThumb(thumb: Drawable?, imageView: ImageView) {
         imageView.setImageDrawable(thumb)
