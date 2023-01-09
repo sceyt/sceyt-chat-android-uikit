@@ -6,7 +6,7 @@
     android:padding="1dp">
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/icImage"
+        android:id="@+id/fileImage"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
@@ -17,39 +17,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize6"
         app:srcCompat="@color/sceyt_color_gray"/>
-
-    <View
-        android:id="@+id/viewBg"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/sceyt_bg_corners_30"
-        android:backgroundTint="#66000000"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/loadProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layerType="hardware"
-        app:indicatorColor="@color/sceyt_color_accent"
-        app:indicatorSize="32dp"
-        app:layout_constraintBottom_toBottomOf="@+id/viewBg"
-        app:layout_constraintEnd_toEndOf="@+id/viewBg"
-        app:layout_constraintStart_toStartOf="@+id/viewBg"
-        app:layout_constraintTop_toTopOf="@+id/viewBg"
-        app:trackColor="@color/sceyt_color_white"
-        app:trackCornerRadius="5dp"
-        app:trackThickness="2.5dp" />
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupLoading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:constraint_referenced_ids="loadProgress,viewBg" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

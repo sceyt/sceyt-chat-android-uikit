@@ -9,13 +9,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelMediaBinding
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -25,6 +28,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -65,6 +70,10 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
+
+        MessageEventsObserver.onTransferUpdatedFlow
+            .onEach(::onTransferStateUpdate)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun addPageStateView() {
@@ -86,6 +95,10 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
 
     open fun onInitialMediaList(list: List<FileListItem>) {
         mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()).also {
+            it.setNeedMediaDataCallback { data ->
+                viewModel.needMediaInfo(data)
+            }
+
             it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                 item.openFile(requireContext())
             })
@@ -119,6 +132,10 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
 
     open fun onPageStateChange(pageState: PageState) {
         pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
+    }
+
+    open fun onTransferStateUpdate(transferData: TransferData) {
+        TransferUpdateObserver.update(transferData)
     }
 
     protected fun loadInitialMediaList() {

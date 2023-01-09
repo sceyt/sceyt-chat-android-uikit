@@ -9,6 +9,8 @@ import com.sceyt.sceytchatuikit.data.repositories.*
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferServiceImpl
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogicImpl
@@ -52,6 +54,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java).build()
         }
     }
+
     single { provideDatabase(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().userDao() }
@@ -67,6 +70,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
     factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get()) }
@@ -91,7 +95,7 @@ internal val viewModelModule = module {
         MessageListViewModel(params.get(), params.get(), params.get())
     }
     viewModel { LinksViewModel(get()) }
-    viewModel { ChannelAttachmentsViewModel(get()) }
+    viewModel { ChannelAttachmentsViewModel() }
     viewModel { ChannelMembersViewModel(get()) }
     viewModel { CreateChatViewModel() }
 }

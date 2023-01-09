@@ -51,7 +51,7 @@ class MessageVideoViewHolder(
 
         transferData?.let {
             updateState(it, true)
-            if (it.filePath == null)
+            if (it.filePath.isNullOrBlank())
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
 

@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.databinding.ItemChannelFileBinding
 import com.sceyt.sceytchatuikit.databinding.ItemChannelImageBinding
 import com.sceyt.sceytchatuikit.databinding.ItemChannelVideoBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
@@ -17,8 +18,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 
 open class ChannelAttachmentViewHolderFactory(context: Context) {
 
-    private val layoutInflater = LayoutInflater.from(context)
+    protected val layoutInflater = LayoutInflater.from(context)
     private var clickListeners = AttachmentClickListenersImpl()
+    private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
         return when (viewType) {
@@ -32,17 +34,20 @@ open class ChannelAttachmentViewHolderFactory(context: Context) {
 
     open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder {
         return ImageViewHolder(
-            ItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners)
+            ItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder {
         return VideoViewHolder(
-            ItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners)
+            ItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder {
         return FileViewHolder(
-            ItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners)
+            ItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseFileViewHolder {
@@ -64,6 +69,14 @@ open class ChannelAttachmentViewHolderFactory(context: Context) {
     fun setClickListener(listeners: AttachmentClickListeners) {
         clickListeners.setListener(listeners)
     }
+
+    fun getClickListeners() = clickListeners as AttachmentClickListeners.ClickListeners
+
+    fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
+        needMediaDataCallback = callback
+    }
+
+    protected fun getNeedMediaDataCallback() = needMediaDataCallback
 
     enum class ItemType {
         Image, Video, File, Loading
