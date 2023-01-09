@@ -105,7 +105,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         if (items.isEmpty()) return
 
         val firstItem = getFirstMessageItem()
-        val dateItem = messages.find { it is MessageListItem.DateSeparatorItem && it.msgId == firstItem?.message?.id }
+        val dateItem = messages.find { it is MessageListItem.DateSeparatorItem && it.msgTid == firstItem?.message?.tid }
         messages.addAll(0, items)
         notifyItemRangeInserted(0, items.size)
         updateDateAndState(items.last(), firstItem, dateItem)
@@ -164,7 +164,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
         }
-        messages.findIndexed { it is MessageListItem.DateSeparatorItem && it.msgId == tid }?.let {
+        messages.findIndexed { it is MessageListItem.DateSeparatorItem && it.msgTid == tid }?.let {
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
         }
