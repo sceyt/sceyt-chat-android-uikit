@@ -3,8 +3,11 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import androidx.lifecycle.viewModelScope
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -12,8 +15,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 
-class ChannelAttachmentsViewModel(private val messagesRepository: MessagesRepository) : BaseViewModel() {
+class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
+    private val messagesLogic: PersistenceMessagesLogic by inject()
+    private val fileTransferService: FileTransferService by inject()
 
     private val _filesFlow = MutableStateFlow<List<FileListItem>>(arrayListOf())
     val filesFlow: StateFlow<List<FileListItem>> = _filesFlow
@@ -27,7 +33,7 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
+            val response = messagesLogic.getMessagesByType(channelId, lastMessageId, type)
             initResponse(response, isLoadingMore)
         }
     }
@@ -60,5 +66,22 @@ class ChannelAttachmentsViewModel(private val messagesRepository: MessagesReposi
             fileItems.add(FileListItem.LoadingMoreItem)
 
         return fileItems
+    }
+
+
+    fun needMediaInfo(data: NeedMediaInfoData) {
+        val attachment = data.item.file
+        when (data) {
+            is NeedMediaInfoData.NeedDownload -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
+                }
+            }
+            is NeedMediaInfoData.NeedThumb -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    fileTransferService.getThumb(data.item.sceytMessage.tid, attachment, data.size)
+                }
+            }
+        }
     }
 }

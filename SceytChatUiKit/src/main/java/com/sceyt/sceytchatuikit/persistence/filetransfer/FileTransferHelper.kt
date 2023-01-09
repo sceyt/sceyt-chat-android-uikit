@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
@@ -15,7 +16,7 @@ import java.io.File
 
 object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
-    private val messagesLogic by inject<PersistenceMessagesLogic>()
+    private val messagesLogic by inject<PersistenceAttachmentLogic>()
 
     fun createTransferTask(attachment: SceytAttachment, isFromUpload: Boolean): TransferTask {
         return TransferTask(messageTid = attachment.messageTid,

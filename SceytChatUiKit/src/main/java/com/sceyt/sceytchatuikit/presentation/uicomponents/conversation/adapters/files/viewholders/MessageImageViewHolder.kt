@@ -44,13 +44,12 @@ class MessageImageViewHolder(
         binding.loadProgress.release(item.file.progressPercent)
         transferData?.let {
             updateState(it, true)
-            if (it.filePath == null)
+            if (it.filePath.isNullOrBlank())
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
 
         if (fileItem.thumbPath.isNullOrBlank())
             requestThumb()
-
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
