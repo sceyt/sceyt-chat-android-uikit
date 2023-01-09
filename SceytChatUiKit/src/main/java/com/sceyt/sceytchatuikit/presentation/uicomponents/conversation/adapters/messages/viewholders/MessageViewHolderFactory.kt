@@ -17,9 +17,9 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 open class MessageViewHolderFactory(context: Context) {
 
-    private val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
-    private val viewPoolReactions = RecyclerView.RecycledViewPool()
-    private val viewPoolFiles = RecyclerView.RecycledViewPool()
+    protected val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
+    protected val viewPoolReactions = RecyclerView.RecycledViewPool()
+    protected val viewPoolFiles = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
@@ -149,7 +149,7 @@ open class MessageViewHolderFactory(context: Context) {
         needMediaDataCallback = callback
     }
 
-    fun getNeedMediaDataCallback() = needMediaDataCallback
+    protected fun getNeedMediaDataCallback() = needMediaDataCallback
 
     protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners
 
