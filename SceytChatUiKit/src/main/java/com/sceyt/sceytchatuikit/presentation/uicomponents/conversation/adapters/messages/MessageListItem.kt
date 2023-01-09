@@ -8,7 +8,7 @@ sealed class MessageListItem {
         var linkPreviewData: LinkPreviewHelper.PreviewMetaData? = null
     }
 
-    data class DateSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
+    data class DateSeparatorItem(val createdAt: Long, val msgTid: Long) : MessageListItem()
     data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
     object LoadingPrevItem : MessageListItem()
     object LoadingNextItem : MessageListItem()
@@ -21,7 +21,7 @@ sealed class MessageListItem {
                 other.message == message
             }
             other is DateSeparatorItem && this is DateSeparatorItem -> {
-                other.createdAt == createdAt && other.msgId == msgId
+                other.createdAt == createdAt && other.msgTid == msgTid
             }
             other is UnreadMessagesSeparatorItem && this is UnreadMessagesSeparatorItem -> {
                 other.msgId == msgId
