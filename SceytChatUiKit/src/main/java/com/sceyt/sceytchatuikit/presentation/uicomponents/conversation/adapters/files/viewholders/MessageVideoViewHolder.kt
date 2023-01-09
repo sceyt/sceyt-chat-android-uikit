@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
+import android.util.Size
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -121,9 +122,11 @@ class MessageVideoViewHolder(
 
     private fun requestThumb() {
         itemView.post {
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getSize()))
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getThumbSize()))
         }
     }
+
+    override fun getThumbSize() = Size(binding.videoView.width, binding.videoView.height)
 
     private fun setListener() {
         TransferUpdateObserver.setListener(listenerKey, ::updateState)
