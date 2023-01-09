@@ -64,6 +64,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
     protected lateinit var messageListItem: MessageListItem
+    val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
 
     @CallSuper
