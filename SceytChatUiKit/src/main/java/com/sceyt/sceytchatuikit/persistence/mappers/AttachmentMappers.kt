@@ -72,3 +72,14 @@ fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: Transfe
         filePath = filePath
     )
 }
+
+fun SceytAttachment.toTransferData(): TransferData? {
+    return TransferData(
+        messageTid = messageTid,
+        attachmentTid = tid,
+        progressPercent = (progressPercent ?: 0).toFloat(),
+        state = transferState ?: return null,
+        filePath = filePath,
+        url = url
+    )
+}

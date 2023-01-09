@@ -2,16 +2,15 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.util.Size
 import android.view.View
 import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
@@ -31,17 +30,7 @@ abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         imageSize = item.size
 
-        item.file.transferState?.let {
-            val attachment = item.file
-            Log.i(TAG, "${attachment.transferState}  ${attachment.progressPercent}")
-            transferData = TransferData(
-                messageTid = item.sceytMessage.tid,
-                attachmentTid = attachment.tid,
-                progressPercent = attachment.progressPercent ?: 0f,
-                state = it,
-                filePath = attachment.filePath,
-                url = attachment.url)
-        } ?: run { transferData = null }
+        transferData = item.file.toTransferData()
     }
 
     protected fun getKey(): String {
