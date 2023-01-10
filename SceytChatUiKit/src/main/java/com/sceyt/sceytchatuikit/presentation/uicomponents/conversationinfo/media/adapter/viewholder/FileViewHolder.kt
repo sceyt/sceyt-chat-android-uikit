@@ -39,7 +39,7 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
 
         transferData?.let {
             updateState(it)
-            if (it.filePath.isNullOrBlank())
+            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
     }

@@ -50,7 +50,7 @@ class MessageFileViewHolder(
 
         transferData?.let {
             updateState(it)
-            if (it.filePath.isNullOrBlank())
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
     }

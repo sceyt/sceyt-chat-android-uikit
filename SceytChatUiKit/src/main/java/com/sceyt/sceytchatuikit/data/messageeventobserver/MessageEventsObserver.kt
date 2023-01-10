@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
-import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
@@ -58,7 +57,6 @@ object MessageEventsObserver {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
-                Log.i("onMessage", message.body.toString())
                 onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
             }
 

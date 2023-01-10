@@ -27,7 +27,7 @@ class ImageViewHolder(private val binding: ItemChannelImageBinding,
 
         transferData?.let {
             updateState(it, true)
-            if (it.filePath.isNullOrBlank())
+            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
 
