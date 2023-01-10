@@ -44,7 +44,7 @@ class MessageImageViewHolder(
         binding.loadProgress.release(item.file.progressPercent)
         transferData?.let {
             updateState(it, true)
-            if (it.filePath.isNullOrBlank())
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
         }
 
