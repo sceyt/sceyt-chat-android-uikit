@@ -22,7 +22,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var fullName: String? = null
     private var imageUrl: String? = null
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var textSize = 50
+    private var textSize = 0
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private var avatarBackgroundColor: Int = 0
     private var defaultAvatarResId: Int = 0
@@ -33,7 +33,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarViewIsGroup, false)
             fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
             imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
-            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, 50)
+            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, textSize)
             avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, 0)
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
             a.recycle()
@@ -56,7 +56,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun drawName(canvas: Canvas) {
         textPaint.textAlign = Paint.Align.CENTER
-        textPaint.textSize = textSize.toFloat()
+        textPaint.textSize = if (textSize > 0) textSize.toFloat() else width * 0.38f
         textPaint.color = Color.WHITE
 
         val xPos = (width / 2).toFloat()
@@ -85,8 +85,8 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
     }
 
-    private fun loadAvatarImage() {
-        if (!imageUrl.isNullOrBlank()) {
+    private fun loadAvatarImage(oldImageUrl: String?) {
+        if (!imageUrl.isNullOrBlank() && imageUrl != oldImageUrl) {
             avatarLoadCb?.invoke(true)
 
             Glide.with(context.applicationContext)
@@ -116,18 +116,20 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
+        val oldImageUrl = imageUrl
         fullName = name
         imageUrl = url
         defaultAvatarResId = defaultIcon
         invalidate()
-        loadAvatarImage()
+        loadAvatarImage(oldImageUrl)
     }
 
     fun setImageUrl(url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
+        val oldImageUrl = imageUrl
         imageUrl = url
         defaultAvatarResId = defaultIcon
         invalidate()
-        loadAvatarImage()
+        loadAvatarImage(oldImageUrl)
     }
 
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {

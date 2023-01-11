@@ -58,6 +58,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var userNameBuilder: ((User) -> String)? = null
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private val typingCancelHelper by lazy { TypingCancelHelper() }
+    private var enablePresence: Boolean = true
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -112,6 +113,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
+        if (enablePresence.not()) {
+            subjectTextView.isVisible = false
+            return
+        }
         if (!replyInThread) {
             val title = if (channel is SceytDirectChannel) {
                 val member = channel.peer ?: return
@@ -152,7 +157,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
         with(binding) {
             uiElementsListeners.onTitle(title, channel, null, false)
-            uiElementsListeners.onSubject(subTitle, channel, null, false)
+            uiElementsListeners.onSubTitle(subTitle, channel, null, false)
             uiElementsListeners.onAvatar(avatar, channel, false)
         }
     }
@@ -165,7 +170,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
         with(binding) {
             uiElementsListeners.onTitle(title, channel, message, true)
-            uiElementsListeners.onSubject(subTitle, channel, message, true)
+            uiElementsListeners.onSubTitle(subTitle, channel, message, true)
             uiElementsListeners.onAvatar(avatar, channel, true)
         }
     }
@@ -239,14 +244,14 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun setPresenceUpdated(users: List<User>) {
-        if (::channel.isInitialized.not() || channel.isGroup) return
+        if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
         (channel as? SceytDirectChannel)?.let { directChannel ->
             val peer = directChannel.peer
             if (users.contains(peer?.user)) {
                 users.find { user -> user.id == peer?.id }?.let {
                     directChannel.peer?.user = it
                     if (!isTyping)
-                        uiElementsListeners.onSubject(binding.subTitle, channel, replyMessage, isReplyInThread)
+                        uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
                 }
             }
         }
@@ -305,7 +310,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     fun invalidateUi() {
         with(binding) {
             uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
-            uiElementsListeners.onSubject(subTitle, channel, replyMessage, isReplyInThread)
+            uiElementsListeners.onSubTitle(subTitle, channel, replyMessage, isReplyInThread)
             uiElementsListeners.onAvatar(avatar, channel, isReplyInThread)
         }
     }
@@ -315,6 +320,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             inflateMenu(resId)
             setOnMenuItemClickListener(listener)
         }
+    }
+
+    fun enableDisableToShowPresence(enable: Boolean) {
+        enablePresence = enable
     }
 
     //Event listeners
@@ -334,7 +343,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+    override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
         post { setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread) }
     }
 

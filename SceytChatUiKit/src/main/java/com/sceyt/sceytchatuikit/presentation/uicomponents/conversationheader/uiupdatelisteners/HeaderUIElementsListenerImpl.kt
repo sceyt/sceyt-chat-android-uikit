@@ -9,7 +9,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUIElementsListener.ElementsListeners {
     private var defaultListeners: HeaderUIElementsListener.ElementsListeners = view
     private var titleListener: HeaderUIElementsListener.TitleListener? = null
-    private var subjectListener: HeaderUIElementsListener.SubjectListener? = null
+    private var subTitleListener: HeaderUIElementsListener.SubTitleListener? = null
     private var avatarListener: HeaderUIElementsListener.AvatarListener? = null
 
     override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
@@ -17,9 +17,9 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         titleListener?.onTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
-        defaultListeners.onSubject(subjectTextView, channel, replyMessage, replyInThread)
-        subjectListener?.onSubject(subjectTextView, channel, replyMessage, replyInThread)
+    override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+        defaultListeners.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
+        subTitleListener?.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
     override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean) {
@@ -31,14 +31,14 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         when (listener) {
             is HeaderUIElementsListener.ElementsListeners -> {
                 titleListener = listener
-                subjectListener = listener
+                subTitleListener = listener
                 avatarListener = listener
             }
             is HeaderUIElementsListener.TitleListener -> {
                 titleListener = listener
             }
-            is HeaderUIElementsListener.SubjectListener -> {
-                subjectListener = listener
+            is HeaderUIElementsListener.SubTitleListener -> {
+                subTitleListener = listener
             }
             is HeaderUIElementsListener.AvatarListener -> {
                 avatarListener = listener

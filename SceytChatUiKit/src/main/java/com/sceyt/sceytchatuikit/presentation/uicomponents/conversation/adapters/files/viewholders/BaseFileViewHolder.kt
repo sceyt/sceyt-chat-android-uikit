@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.Size
 import android.view.View
@@ -14,11 +13,9 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
-
 abstract class BaseFileViewHolder(itemView: View) : BaseViewHolder<FileListItem>(itemView) {
     protected lateinit var fileItem: FileListItem
     val isFileItemInitialized get() = this::fileItem.isInitialized
-    protected val context: Context by lazy { itemView.context }
     protected var listenerKey: String = ""
     protected var transferData: TransferData? = null
     protected var blurredThumb: Drawable? = null

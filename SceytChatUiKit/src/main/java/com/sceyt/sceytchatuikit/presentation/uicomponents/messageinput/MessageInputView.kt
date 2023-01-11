@@ -69,6 +69,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var typingJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = null
     private var inputState = Voice
+    private var disabledInput: Boolean = false
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -326,6 +327,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
     }
 
+    private fun hideInputWithMessage(message: String) {
+        binding.layoutCloseInput.apply {
+            tvMessage.text = message
+            root.isVisible = true
+        }
+        binding.layoutInput.isVisible = false
+    }
+
     internal fun onStateChanged(newState: InputState) {
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
@@ -384,8 +393,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         rvAttachments.isVisible = false
                         layoutReplyOrEditMessage.root.isVisible = false
                     }
-                    layoutInput.isVisible = !isBlockedPeer
-                    layoutUserBlocked.root.isVisible = (channel as? SceytDirectChannel)?.peer?.user?.blocked == true
+                    if (isBlockedPeer)
+                        hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user))
+                    else if (disabledInput.not())
+                        layoutInput.isVisible = true
                 }
             }
             else -> {}
@@ -421,6 +432,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         addAttachments(attachments)
+    }
+
+
+    fun enableDisableInput(message: String, enable: Boolean) {
+        disabledInput = enable.not()
+        if (!enable)
+            hideInputWithMessage(message)
     }
 
     interface MessageInputActionCallback {
