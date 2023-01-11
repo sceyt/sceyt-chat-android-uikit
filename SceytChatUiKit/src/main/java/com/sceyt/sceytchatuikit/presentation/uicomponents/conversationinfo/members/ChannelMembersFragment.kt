@@ -46,12 +46,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.popups.PopupMenuMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.inject
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     private var binding: FragmentChannelMembersBinding? = null
-    private val viewModel by viewModel<ChannelMembersViewModel>()
+    private val viewModel by inject<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
     private var pageStateView: PageStateView? = null
@@ -71,6 +70,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         initViews()
         addPageStateView()
         loadInitialMembers()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        membersAdapter = null
     }
 
     private fun getBundleArguments() {
@@ -277,18 +281,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             is PaginationResponse.DBResponse -> {
                 if (data.offset == 0) {
                     setOrUpdateMembersAdapter(data.data)
-                    Log.i("sdfsdf","db =0 "+data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
-                } else
-                {
-                    Log.i("sdfsdf","db >0 "+data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                    Log.i("sdfsdf", "db =0 " + data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                } else {
+                    Log.i("sdfsdf", "db >0 " + data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
 
                     membersAdapter?.addNewItems(data.data)
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                if (data.data is SceytResponse.Success)
-                {
-                    Log.i("sdfsdf","server "+data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                if (data.data is SceytResponse.Success) {
+                    Log.i("sdfsdf", "server " + data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
                     updateMembersWithServerResponse(data, data.hasNext)
                 }
             }

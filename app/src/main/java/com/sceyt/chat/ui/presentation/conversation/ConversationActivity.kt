@@ -70,8 +70,8 @@ open class ConversationActivity : AppCompatActivity() {
     private fun ConversationHeaderView.initHeaderView() {
         //Example
         setCustomUiElementsListener(object : HeaderUIElementsListenerImpl(this) {
-            override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
-                super.onSubject(subjectTextView, channel, replyMessage, replyInThread)
+            override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+                super.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
                 println("onSubject")
             }
         })
