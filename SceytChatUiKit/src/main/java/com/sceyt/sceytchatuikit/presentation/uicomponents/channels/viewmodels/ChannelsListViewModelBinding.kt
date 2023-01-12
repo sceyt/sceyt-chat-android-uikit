@@ -127,16 +127,6 @@ fun ChannelsViewModel.bind(searchView: SearchInputView) {
     }
 }
 
-fun ChannelsViewModel.bindExtendedSearch(searchView: SearchInputView) {
-    searchView.setDebouncedTextChangeListener {
-        searchChannels(0, query = listOf(it))
-    }
-
-    searchView.setOnQuerySubmitListener {
-        searchChannels(0, query = listOf(it))
-    }
-}
-
 @Suppress("unused")
 fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
     viewModel.bind(channelsListView, lifecycleOwner)
