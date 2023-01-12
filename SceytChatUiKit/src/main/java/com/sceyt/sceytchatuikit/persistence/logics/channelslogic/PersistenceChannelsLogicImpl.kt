@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
@@ -186,6 +187,40 @@ internal class PersistenceChannelsLogicImpl(
             awaitToConnectSceyt()
 
             val response = if (offset == 0) channelsRepository.getChannels(searchQuery)
+            else channelsRepository.loadMoreChannels()
+
+            if (response is SceytResponse.Success) {
+                val channels = response.data ?: arrayListOf()
+
+                saveChannelsToDb(channels)
+                val hasDiff = channelsCash.addAll(channels.map { it.clone() }, offset != 0) || offset == 0
+                hasNext = response.data?.size == CHANNELS_LOAD_SIZE
+
+                trySend(PaginationResponse.ServerResponse(data = response, cashData = channelsCash.getSorted(),
+                    loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
+                    loadType = LoadNext, ignoredDb = ignoreDb))
+            }
+
+            channel.close()
+            awaitClose()
+        }
+    }
+
+    override suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
+                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+        return callbackFlow {
+            if (offset == 0) channelsCash.clear()
+
+            val dbChannels = searchChannelsDb(offset, searchItems)
+            var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
+
+            channelsCash.addAll(dbChannels.map { it.clone() }, false)
+            trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
+                hasNext = hasNext, hasPrev = false))
+
+            awaitToConnectSceyt()
+
+            val response = if (offset == 0) channelsRepository.getChannels(searchItems.first())
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
@@ -522,4 +557,49 @@ internal class PersistenceChannelsLogicImpl(
             }
         }
     }
+
+
+
+
+
+    // TODO need further improvements
+
+    private suspend fun searchChannelsDb(offset: Int, searchItems: List<String>): List<SceytChannel> {
+        return if (searchItems.isEmpty()) {
+            channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel -> channel.toChannel() }
+        } else {
+
+            //val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "GLOB", "or")
+            val globOrSubject = concatWithSeparator(searchItems, "subject", "GLOB", "or")
+            val inSubject = concatWithPrefix(searchItems, "link.user_id", "IN", ",")
+
+            var whereQuery = "((${globOrSubject}) and channels.type != 0) "
+            whereQuery += "or "
+            whereQuery += "((${inSubject}) and channels.type == 0) "
+
+            val finalQuery =
+                "select * from channels " +
+                        "join UserChatLink as link on link.chat_id = channels.chat_id " +
+                        "join users as usr on link.user_id = usr.user_id " +
+                        "where ($whereQuery) " +
+                        "group by channels.chat_id " +
+                        "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit $CHANNELS_LOAD_SIZE offset $offset"
+
+            val simpleSQLiteQuery = SimpleSQLiteQuery(finalQuery)
+            channelDao.searchChannelsRaw(simpleSQLiteQuery).map { channel -> channel.toChannel() }
+        }
+    }
+
+    private fun concatWithSeparator(items: List<String>, dbKey: String, dbFunction: String, dbSeparator: String): String {
+        return items.asSequence().map {
+            "$dbKey $dbFunction '*${it}*'"
+        }.joinToString(" $dbSeparator ")
+    }
+
+    private fun concatWithPrefix(items: List<String>, dbKey: String, dbFunction: String, dbSeparator: String): String {
+        return "$dbKey $dbFunction (" + items.asSequence().map {
+            "'${it}'"
+        }.joinToString(" $dbSeparator ") + ")"
+    }
+
 }
