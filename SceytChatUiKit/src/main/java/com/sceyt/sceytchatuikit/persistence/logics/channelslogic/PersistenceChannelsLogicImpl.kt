@@ -569,13 +569,13 @@ internal class PersistenceChannelsLogicImpl(
             channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel -> channel.toChannel() }
         } else {
 
-            //val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "GLOB", "or")
+            val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "GLOB", "or")
             val globOrSubject = concatWithSeparator(searchItems, "subject", "GLOB", "or")
-            val inSubject = concatWithPrefix(searchItems, "link.user_id", "IN", ",")
+//            val inSubject = concatWithPrefix(searchItems, "link.user_id", "IN", ",")
 
             var whereQuery = "((${globOrSubject}) and channels.type != 0) "
             whereQuery += "or "
-            whereQuery += "((${inSubject}) and channels.type == 0) "
+            whereQuery += "((${globOrUserId}) and channels.type == 0) "
 
             val finalQuery =
                 "select * from channels " +
