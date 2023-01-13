@@ -51,7 +51,7 @@ fun SceytAttachment.upsertSizeMetadata(size: Size?) {
     }
 }
 
-fun String?.getThumbByBytesAndSize(needThumb: Boolean): Pair<Size?, ByteArray?>? {
+fun String?.getInfoFromMetadata(needThumb: Boolean): Pair<Size?, ByteArray?>? {
     var base64Thumb: ByteArray? = null
     var size: Size? = null
     try {

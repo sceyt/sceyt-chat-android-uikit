@@ -6,9 +6,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
-import com.sceyt.sceytchatuikit.extensions.isLink
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -122,11 +122,14 @@ open class MessageViewHolderFactory(context: Context) {
         val inc = message.incoming
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
-            message.attachments.isNullOrEmpty() -> {
-                if (message.body.isLink())
+            message.attachments.isNullOrEmpty().not() -> {
+                val attachment = message.attachments?.getOrNull(0)
+                if (attachment?.type == AttachmentTypeEnum.Link.value())
                     if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
-                else
-                    if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
+                else if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
+            }
+            message.attachments.isNullOrEmpty() -> {
+                if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
             }
             else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
         }

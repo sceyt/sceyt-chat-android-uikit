@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 
 class ViewPagerAdapter(private val activity: AppCompatActivity,
                        private val mFragments: ArrayList<Fragment>) : FragmentStateAdapter(activity) {
@@ -27,6 +28,7 @@ class ViewPagerAdapter(private val activity: AppCompatActivity,
                 is ChannelMediaFragment -> activity.getString(R.string.sceyt_media)
                 is ChannelFilesFragment -> activity.getString(R.string.sceyt_files)
                 is ChannelLinksFragment -> activity.getString(R.string.sceyt_links)
+                is ChannelVoiceFragment -> activity.getString(R.string.sceyt_voice)
                 else -> ""
             }
         } ?: ""

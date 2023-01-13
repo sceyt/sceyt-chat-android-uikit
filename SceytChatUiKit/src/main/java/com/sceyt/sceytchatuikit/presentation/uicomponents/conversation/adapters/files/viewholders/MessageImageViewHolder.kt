@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
         private val messageListeners: MessageClickListenersImpl?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder(binding.root) {
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()
@@ -37,15 +37,14 @@ class MessageImageViewHolder(
 
     override fun bind(item: FileListItem) {
         super.bind(item)
-        listenerKey = getKey()
 
         setListener()
 
         binding.loadProgress.release(item.file.progressPercent)
-        transferData?.let {
+        viewHolderHelper.transferData?.let {
             updateState(it, true)
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
         if (fileItem.thumbPath.isNullOrBlank())
@@ -53,57 +52,54 @@ class MessageImageViewHolder(
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        transferData = data
+        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
+        viewHolderHelper.transferData = data
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
-                drawThumbOrRequest(binding.fileImage, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
             Uploading -> {
                 if (isOnBind)
-                    drawThumbOrRequest(binding.fileImage, ::requestThumb)
+                    viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
             Uploaded -> {
-                drawThumbOrRequest(binding.fileImage, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
             PendingDownload -> {
-                loadBlurThumb(blurredThumb, binding.fileImage)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+                if (!isOnBind)
+                    needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
             Downloading -> {
                 if (isOnBind)
-                    loadBlurThumb(blurredThumb, binding.fileImage)
+                    viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
             Downloaded -> {
-                drawThumbOrRequest(binding.fileImage, ::requestThumb)
+                if (fileItem.thumbPath.isNullOrBlank())
+                    viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+                else viewHolderHelper.loadThumb(fileItem.thumbPath, binding.fileImage)
             }
             PauseDownload -> {
-                loadBlurThumb(blurredThumb, binding.fileImage)
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
             ErrorDownload -> {
-                loadBlurThumb(blurredThumb, binding.fileImage)
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
             FilePathChanged -> {
                 requestThumb()
             }
             ThumbLoaded -> {
-                loadThumb(data.filePath, binding.fileImage)
+                viewHolderHelper.loadThumb(data.filePath, binding.fileImage)
             }
-        }
-    }
-
-    private fun requestThumb() {
-        itemView.post {
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getThumbSize()))
         }
     }
 
     override fun getThumbSize() = Size(binding.fileImage.width, binding.fileImage.height)
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
     }
 
     private fun SceytMessageImageItemBinding.setupStyle() {

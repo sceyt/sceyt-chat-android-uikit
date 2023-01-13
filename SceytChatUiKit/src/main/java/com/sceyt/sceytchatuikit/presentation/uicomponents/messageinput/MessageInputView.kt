@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
@@ -29,7 +30,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
-import com.sceyt.sceytchatuikit.persistence.mappers.getThumbByBytesAndSize
+import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
@@ -145,6 +146,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun sendMessage() {
         val messageBody = binding.messageInput.text.toString().trim()
+        checkBodyIsLink()
 
         if (messageBody != "" || allAttachments.isNotEmpty()) {
             if (editMessage != null) {
@@ -207,6 +209,20 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
         }
+    }
+
+    private fun checkBodyIsLink(): Boolean {
+        val body = binding.messageInput.text.toString()
+        val isLink = Patterns.WEB_URL.matcher(body).matches();
+        if (isLink) {
+            val attachment = Attachment.Builder("", body, AttachmentTypeEnum.Link.value())
+                .withTid(ClientWrapper.generateTid())
+                .setName("")
+                .build()
+
+            allAttachments.add(attachment)
+        }
+        return isLink
     }
 
     private fun handleAttachmentClick() {
@@ -309,7 +325,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun loadReplyMessageImage(attachment: Attachment) {
         when {
             attachment.type.isEqualsVideoOrImage() -> {
-                val placeHolder = attachment.metadata.getThumbByBytesAndSize(true)?.second
+                val placeHolder = attachment.metadata.getInfoFromMetadata(true)?.second
                     ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
                 Glide.with(context)
                     .load(attachment.filePath)

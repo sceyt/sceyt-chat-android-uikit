@@ -3,66 +3,78 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.sceytchatuikit.databinding.ItemChannelFileBinding
-import com.sceyt.sceytchatuikit.databinding.ItemChannelImageBinding
-import com.sceyt.sceytchatuikit.databinding.ItemChannelVideoBinding
-import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.FileViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.ImageViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VideoViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.*
+import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
-open class ChannelAttachmentViewHolderFactory(context: Context) {
+open class ChannelAttachmentViewHolderFactory(context: Context,
+                                              private val linkPreviewHelper: LinkPreviewHelper? = null) {
 
     protected val layoutInflater = LayoutInflater.from(context)
     private var clickListeners = AttachmentClickListenersImpl()
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelFileViewHolder {
         return when (viewType) {
             ItemType.Image.ordinal -> createImageViewHolder(parent)
             ItemType.Video.ordinal -> createVideoViewHolder(parent)
             ItemType.File.ordinal -> createFileViewHolder(parent)
+            ItemType.Voice.ordinal -> createVoiceViewHolder(parent)
+            ItemType.Link.ordinal -> createLinkViewHolder(parent)
             ItemType.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
     }
 
-    open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder {
+    open fun createImageViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return ImageViewHolder(
             ItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
-    open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder {
+    open fun createVideoViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return VideoViewHolder(
             ItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
-    open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder {
+    open fun createFileViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return FileViewHolder(
             ItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
-    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseFileViewHolder {
+    open fun createVoiceViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+        return VoiceViewHolder(
+            ItemChannelVoiceBinding.inflate(layoutInflater, parent, false), clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
+    }
+
+    open fun createLinkViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+        return LinkViewHolder(
+            ItemChannelLinkBinding.inflate(layoutInflater, parent, false), linkPreviewHelper,
+            clickListeners)
+    }
+
+    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
-        return object : BaseFileViewHolder(binding.root) {
-            override fun bind(item: FileListItem) {}
+        return object : BaseChannelFileViewHolder(binding.root, {}) {
         }
     }
 
-    open fun getItemViewType(item: FileListItem): Int {
+    open fun getItemViewType(item: ChannelFileItem): Int {
         return when (item) {
-            is FileListItem.Image -> ItemType.Image.ordinal
-            is FileListItem.Video -> ItemType.Video.ordinal
-            is FileListItem.File -> ItemType.File.ordinal
-            is FileListItem.LoadingMoreItem -> ItemType.Loading.ordinal
+            is ChannelFileItem.Image -> ItemType.Image.ordinal
+            is ChannelFileItem.Video -> ItemType.Video.ordinal
+            is ChannelFileItem.File -> ItemType.File.ordinal
+            is ChannelFileItem.Voice -> ItemType.Voice.ordinal
+            is ChannelFileItem.Link -> ItemType.Link.ordinal
+            is ChannelFileItem.LoadingMoreItem -> ItemType.Loading.ordinal
         }
     }
 
@@ -79,6 +91,6 @@ open class ChannelAttachmentViewHolderFactory(context: Context) {
     protected fun getNeedMediaDataCallback() = needMediaDataCallback
 
     enum class ItemType {
-        Image, Video, File, Loading
+        Image, Video, File, Voice, Link, Loading
     }
 }

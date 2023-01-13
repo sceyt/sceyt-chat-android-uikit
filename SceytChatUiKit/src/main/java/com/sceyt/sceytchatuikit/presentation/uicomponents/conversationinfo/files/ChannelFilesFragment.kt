@@ -8,18 +8,19 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelFilesBinding
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
@@ -33,7 +34,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
     private var binding: FragmentChannelFilesBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
-    private val mediaType = AttachmentTypeEnum.File.value()
+    private val mediaType = listOf(AttachmentTypeEnum.File.value())
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -67,10 +68,10 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
-    open fun onInitialFilesList(list: List<FileListItem>) {
-        mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()).also {
+    open fun onInitialFilesList(list: List<ChannelFileItem>) {
+        mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
             it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                item.openFile(requireContext())
+                item.file.openFile(requireContext())
             })
         })
         with((binding ?: return).rvFiles) {
@@ -80,13 +81,13 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     if (isLastItemDisplaying() && viewModel.canLoadNext())
-                        loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.sceytMessage?.id ?: 0)
+                        loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
                 }
             })
         }
     }
 
-    open fun onMoreFilesList(list: List<FileListItem>) {
+    open fun onMoreFilesList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
     }
 

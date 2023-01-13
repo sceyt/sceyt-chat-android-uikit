@@ -569,7 +569,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {
-        item.openFile(context)
+        item.file.openFile(context)
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {

@@ -20,7 +20,7 @@ class MessageVideoViewHolder(
         private val binding: SceytMessageVideoItemBinding,
         private val messageListeners: MessageClickListenersImpl?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseFileViewHolder(binding.root) {
+) : BaseFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()
@@ -41,7 +41,6 @@ class MessageVideoViewHolder(
 
     override fun bind(item: FileListItem) {
         super.bind(item)
-        listenerKey = getKey()
         binding.parentLayout.clipToOutline = true
         binding.videoView.isVisible = false
         binding.loadProgress.release(item.file.progressPercent)
@@ -49,10 +48,10 @@ class MessageVideoViewHolder(
 
         setListener()
 
-        transferData?.let {
+        viewHolderHelper.transferData?.let {
             updateState(it, true)
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
         if (fileItem.thumbPath.isNullOrBlank())
@@ -60,76 +59,70 @@ class MessageVideoViewHolder(
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        transferData = data
+        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
+        viewHolderHelper.transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         val imageView = binding.videoViewController.getImageView()
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
-                drawThumbOrRequest(imageView, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadBlurThumb(blurredThumb, imageView)
+                viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
             Downloading -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 if (isOnBind)
-                    loadBlurThumb(blurredThumb, imageView)
+                    viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
             Uploading -> {
                 if (isOnBind)
-                    drawThumbOrRequest(imageView, ::requestThumb)
+                    viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
             Downloaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(fileItem.file.filePath)
-                drawThumbOrRequest(imageView, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
             Uploaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
                 initializePlayer(fileItem.file.filePath)
-                drawThumbOrRequest(imageView, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
             PauseDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadBlurThumb(blurredThumb, imageView)
+                viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
             ErrorDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
-                loadBlurThumb(blurredThumb, imageView)
+                viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
             FilePathChanged -> {
                 requestThumb()
             }
             ThumbLoaded -> {
-                loadThumb(fileItem.thumbPath, imageView)
+                viewHolderHelper.loadThumb(fileItem.thumbPath, imageView)
             }
         }
     }
 
     private fun setVideoDuration() {
         with(binding.tvDuration) {
-            (fileItem as? FileListItem.Video)?.videoDuration?.let {
+            fileItem.duration?.let {
                 text = DateTimeUtil.secondsToTime(it)
                 isVisible = true
             } ?: run { isVisible = false }
         }
     }
 
-    private fun requestThumb() {
-        itemView.post {
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getThumbSize()))
-        }
-    }
-
     override fun getThumbSize() = Size(binding.videoView.width, binding.videoView.height)
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
     }
 
     private fun initializePlayer(mediaPath: String?) {
