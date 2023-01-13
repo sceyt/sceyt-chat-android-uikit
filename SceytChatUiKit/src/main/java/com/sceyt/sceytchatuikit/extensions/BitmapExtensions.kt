@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.Base64
 import androidx.core.graphics.scale
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import java.io.File
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -93,7 +94,8 @@ fun convertString64ToImage(base64String: String): ByteArray? {
 }
 
 fun ByteArray.decodeByteArrayToBitmap(): Bitmap? {
-    return BitmapFactory.decodeByteArray(this, 0, this.size)
+    val bitmap = BitmapFactory.decodeByteArray(this, 0, this.size)
+    return FileResizeUtil.getOrientationCorrectedBitmap(bitmap?: return null, this)
 }
 
 fun Bitmap.toFile(context: Context): File {
