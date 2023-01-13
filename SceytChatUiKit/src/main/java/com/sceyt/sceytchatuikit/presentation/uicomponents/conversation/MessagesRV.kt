@@ -277,6 +277,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun clearData() {
-        mAdapter.clearData()
+        if (::mAdapter.isInitialized)
+            mAdapter.clearData()
     }
 }

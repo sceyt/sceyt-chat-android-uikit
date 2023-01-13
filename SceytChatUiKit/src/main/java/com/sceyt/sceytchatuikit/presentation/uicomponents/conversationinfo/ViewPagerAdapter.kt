@@ -11,18 +11,18 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 
 class ViewPagerAdapter(private val activity: AppCompatActivity,
-                       private val mFragments: ArrayList<Fragment>) : FragmentStateAdapter(activity) {
+                       private val fragments: ArrayList<Fragment>) : FragmentStateAdapter(activity) {
 
     override fun getItemCount(): Int {
-        return mFragments.size
+        return fragments.size
     }
 
     override fun createFragment(position: Int): Fragment {
-        return mFragments[position]
+        return fragments[position]
     }
 
     fun getTagByPosition(position: Int): String {
-        return mFragments.getOrNull(position)?.let {
+        return fragments.getOrNull(position)?.let {
             when (it) {
                 is ChannelMembersFragment -> activity.getString(R.string.sceyt_members)
                 is ChannelMediaFragment -> activity.getString(R.string.sceyt_media)
@@ -34,5 +34,15 @@ class ViewPagerAdapter(private val activity: AppCompatActivity,
         } ?: ""
     }
 
-    fun getFragment() = mFragments
+    fun getFragment() = fragments
+
+    fun historyCleared() {
+        fragments.forEach {
+            (it as? HistoryClearedListener)?.onCleared()
+        }
+    }
+
+    fun interface HistoryClearedListener{
+        fun onCleared()
+    }
 }

@@ -29,6 +29,7 @@
     <string name="sceyt_attachment">Attachment</string>
     <string name="sceyt_react">React</string>
     <string name="sceyt_add">Add</string>
+    <string name="sceyt_add_small_case">add</string>
     <string name="sceyt_remove">Remove</string>
     <string name="sceyt_reply">Reply</string>
     <string name="sceyt_reply_in_thread">Reply in thread</string>
@@ -98,5 +99,12 @@
     <string name="sceyt_voice">Voice</string>
     <string name="sceyt_you_blocked_this_user">You blocked this user</string>
     <string name="sceyt_could_not_open_file">Could\'t open file</string>
+    <string name="sceyt_block_user">Block user</string>
+    <string name="sceyt_mute">mute</string>
+    <string name="sceyt_un_mute">unmute</string>
+    <string name="sceyt_more">more</string>
+    <string name="sceyt_audio">audio</string>
+    <string name="sceyt_video_small_case">video</string>
+    <string name="sceyt_unblock_user">Unblock user</string>
 
 </resources>

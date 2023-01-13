@@ -5,27 +5,38 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
-import android.widget.Toolbar
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.ActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.DirectChantButtonsActionsDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.DirectChantButtonsActionsDialog.ActionsEnum.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.GroupChantButtonsActionsDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsDirectChatFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsDirectChatFragment.ClickActionsEnum.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsGroupChatFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsGroupChatFragment.ClickActionsEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
@@ -33,7 +44,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import java.util.concurrent.TimeUnit
 
 
 open class ConversationInfoActivity : AppCompatActivity() {
@@ -42,8 +53,6 @@ open class ConversationInfoActivity : AppCompatActivity() {
     private var displayNameDefaultBg: Drawable? = null
     private var binding: ActivityConversationInfoBinding? = null
     private val viewModel: ConversationInfoViewModel by viewModels()
-    private val chooseAttachmentHelper = ChooseAttachmentHelper(asComponentActivity())
-    private var isEditMode = false
     private var isSaveLoading = false
     private var avatarUrl: String? = null
     private var alphaAnimation: AlphaAnimation? = null
@@ -61,9 +70,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
         viewModel.getChannelFromServer(channel.id)
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
         addAppBarOffsetChangeListener(binding?.appbar)
-
-        //  binding?.tabLayout?.setSelectedTabIndicator(getCompatDrawable(R.drawable.tab_dra))
-
+        initButtons()
     }
 
     private fun getBundleArguments() {
@@ -78,7 +85,6 @@ open class ConversationInfoActivity : AppCompatActivity() {
 
         viewModel.editChannelLiveData.observe(this) {
             channel = it
-            onEditChannel(it)
         }
 
         viewModel.leaveChannelLiveData.observe(this, ::onLeaveChannel)
@@ -91,68 +97,57 @@ open class ConversationInfoActivity : AppCompatActivity() {
 
         viewModel.muteUnMuteLiveData.observe(this) {
             channel.muted = it.muted
+            initButtons()
             onMuteUnMuteChannel(it)
         }
 
         viewModel.pageStateLiveData.observe(this, ::onPageStateChange)
     }
 
+    private fun initButtons() {
+        val fragment: Fragment = when (channel) {
+            is SceytGroupChannel -> {
+                InfoButtonsGroupChatFragment.newInstance(channel).also {
+                    it.setClickActionsListener(::onGroupButtonClick)
+                }
+            }
+            else -> {
+                InfoButtonsDirectChatFragment.newInstance(channel).also {
+                    it.setClickActionsListener(::onButtonClick)
+                }
+            }
+        }
+        supportFragmentManager.commit {
+            replace(R.id.layout_buttons, fragment)
+        }
+    }
+
+    private fun onButtonClick(clickActionsEnum: InfoButtonsDirectChatFragment.ClickActionsEnum) {
+        when (clickActionsEnum) {
+            VideCall -> onVideoCallClick(channel)
+            AudioCall -> onAudioCallClick(channel)
+            CallOut -> onCallOutClick(channel)
+            Mute -> onMuteUnMuteClick(channel, true)
+            UnMute -> onMuteUnMuteClick(channel, false)
+            More -> onMoreClick(channel)
+        }
+    }
+
+    private fun onGroupButtonClick(clickActionsEnum: ClickActionsEnum) {
+        when (clickActionsEnum) {
+            ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
+            ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
+            ClickActionsEnum.Report -> onReportClick(channel)
+            ClickActionsEnum.Join -> onJoinClick(channel)
+            ClickActionsEnum.Add -> onAddClick(channel)
+            ClickActionsEnum.More -> onMoreClick(channel)
+        }
+    }
+
     private fun ActivityConversationInfoBinding.initViews() {
-        //  switchNotifications.setOnlyClickable()
         displayNameDefaultBg = subject.background
 
-        avatar.setAvatarImageLoadListener {
-            //   loadingProfileImage.isVisible = it
-        }
-
-        /*  tvEditOrSave.setOnClickListener {
-              val newSubject = subject.text?.trim().toString()
-              val isEditedAvatar = avatarUrl != channel.iconUrl
-              val isEditedDisplayName = newSubject != channel.channelSubject.trim()
-              if (isEditMode) {
-                  if (isEditedAvatar || isEditedDisplayName) {
-                      isLoadingEditChannel(true)
-                      this@ConversationInfoActivity.isSaveLoading = true
-                      editChannel(newSubject, avatarUrl)
-                  }
-              }
-              isEditMode = !isEditMode
-              setEditMode(isEditMode)
-          }
-
-          icEditPhoto.setOnClickListener {
-              EditAvatarTypeDialog(this@ConversationInfoActivity, avatarUrl.isNullOrBlank().not()) {
-                  when (it) {
-                      EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
-                          chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
-                              if (uris.isNotEmpty())
-                                  setAvatarImage(uris[0])
-                          }
-                      }
-                      EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
-                          chooseAttachmentHelper.takePicture { uri ->
-                              setAvatarImage(uri)
-                          }
-                      }
-                      EditAvatarTypeDialog.EditAvatarType.Delete -> {
-                          setAvatarImage(null)
-                      }
-                  }
-              }.show()
-          }*/
-
-        /* subject.setOnEditorActionListener { _, actionId, _ ->
-             if (actionId == EditorInfo.IME_ACTION_DONE)
-                 tvEditOrSave.callOnClick()
-             false
-         }*/
-
-        /* clearHistory.setOnClickListener {
-             showSceytDialog(com.sceyt.sceytchatuikit.R.string.sceyt_clear_history_title, com.sceyt.sceytchatuikit.R.string.sceyt_clear_history_desc, com.sceyt.sceytchatuikit.R.string.sceyt_clear) {
-                 clearHistory()
-             }
-         }
-
+        /*
          leaveChannel.setOnClickListener {
              showSceytDialog(com.sceyt.sceytchatuikit.R.string.sceyt_leave_channel_title, com.sceyt.sceytchatuikit.R.string.sceyt_leave_channel_desc, com.sceyt.sceytchatuikit.R.string.sceyt_leave) {
                  leaveChannel()
@@ -165,55 +160,9 @@ open class ConversationInfoActivity : AppCompatActivity() {
             }
         }
 */
-        /*blockUnblockUser.setOnClickListener {
-            val user = (channel as SceytDirectChannel).peer ?: return@setOnClickListener
-            val dialogTitleId: Int
-            val dialogDescId: Int
-            val positiveBtnTitleId: Int
-            val callback: () -> Unit
-
-            if (user.user.blocked) {
-                dialogTitleId = com.sceyt.sceytchatuikit.R.string.sceyt_unblock_user_title
-                dialogDescId = com.sceyt.sceytchatuikit.R.string.sceyt_unblock_user_desc
-                positiveBtnTitleId = com.sceyt.sceytchatuikit.R.string.sceyt_unblock
-                callback = { unblockUser(user.id) }
-            } else {
-                dialogTitleId = com.sceyt.sceytchatuikit.R.string.sceyt_block_user_title
-                dialogDescId = com.sceyt.sceytchatuikit.R.string.sceyt_block_user_desc
-                positiveBtnTitleId = com.sceyt.sceytchatuikit.R.string.sceyt_block
-                callback = { blockUser(user.id) }
-            }
-            showSceytDialog(dialogTitleId, dialogDescId, positiveBtnTitleId, callback)
-        }*/
-
-        /*   deleteChannel.setOnClickListener {
-               showSceytDialog(com.sceyt.sceytchatuikit.R.string.sceyt_delete_channel_title, com.sceyt.sceytchatuikit.R.string.sceyt_delete_channel_desc, R.string.sceyt_delete) {
-                   deleteChannel()
-               }
-           }*/
-
-        /*   switchNotifications.setOnClickListener {
-               if (channel.muted) {
-                   unMuteChannel()
-                 //  switchNotifications.isChecked = false
-               } else {
-                   MuteNotificationDialog(this@ConversationInfoActivity) {
-                       val until = when (it) {
-                           MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                           MuteTypeEnum.Mute2Hour -> TimeUnit.HOURS.toMillis(2)
-                           MuteTypeEnum.Mute1Day -> TimeUnit.DAYS.toMillis(1)
-                           MuteTypeEnum.MuteForever -> 0L
-                       }
-                       muteChannel(until)
-                      // switchNotifications.isChecked = true
-                   }.show()
-               }
-           }*/
-
         icBack.setOnClickListener {
             onBackPressed()
         }
-
     }
 
     protected fun addAppBarOffsetChangeListener(appBar: AppBarLayout?) {
@@ -250,36 +199,9 @@ open class ConversationInfoActivity : AppCompatActivity() {
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
     }
 
-
-    private fun ActivityConversationInfoBinding.setEditMode(isEditMode: Boolean) {
-        subject.isEnabled = isEditMode
-        // icEditPhoto.isVisible = isEditMode
-
-        if (isEditMode) {
-            subject.background = displayNameDefaultBg
-            //subject.setSelection(subject.text?.length ?: 0)
-            subject.setHint(R.string.sceyt_hint_channel_subject)
-            // tvEditOrSave.text = getString(R.string.sceyt_save)
-            //showSoftInput(subject)
-        } else {
-            subject.background = null
-            subject.hint = ""
-            // tvEditOrSave.text = getString(R.string.sceyt_edit)
-            //hideKeyboard(subject)
-        }
-    }
-
     private fun setAvatarImage(filePath: String?) {
         avatarUrl = filePath
         binding?.avatar?.setImageUrl(filePath)
-    }
-
-    private fun getBlockText(blocked: Boolean) = if (blocked) getString(R.string.sceyt_unblock)
-    else getString(R.string.sceyt_block)
-
-    private fun ActivityConversationInfoBinding.isLoadingEditChannel(loading: Boolean) {
-        // tvEditOrSave.isVisible = !loading
-        //progressSave.isVisible = loading
     }
 
     private fun setChannelDetails(channel: SceytChannel) {
@@ -307,19 +229,6 @@ open class ConversationInfoActivity : AppCompatActivity() {
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = pagerAdapter.getTagByPosition(position)
         }.attach()
-    }
-
-    protected fun editChannel(subject: String, avatarUrl: String?) {
-        val data = EditChannelData(
-            newSubject = subject,
-            metadata = channel.metadata,
-            label = channel.label,
-            avatarUrl = avatarUrl,
-            channelUrl = (channel as? SceytGroupChannel)?.channelUrl,
-            channelType = channel.channelType,
-            avatarEdited = channel.getChannelAvatarUrl() == avatarUrl
-        )
-        viewModel.saveChanges(channel.id, data)
     }
 
     protected fun clearHistory() {
@@ -354,17 +263,6 @@ open class ConversationInfoActivity : AppCompatActivity() {
         viewModel.unMuteChannel(channel.id)
     }
 
-    protected fun showSceytDialog(@StringRes titleId: Int,
-                                  @StringRes descId: Int,
-                                  @StringRes positiveBtnTitleId: Int, positiveCb: () -> Unit) {
-        SceytDialog(this@ConversationInfoActivity, positiveCb)
-            .setTitle(getString(titleId))
-            .setDescription(getString(descId))
-            .setPositiveButtonTextColor(getCompatColor(R.color.sceyt_color_red))
-            .setPositiveButtonTitle(getString(positiveBtnTitleId))
-            .show()
-    }
-
     protected fun getChannel() = channel.clone()
 
     open fun setActivityContentView() {
@@ -373,17 +271,82 @@ open class ConversationInfoActivity : AppCompatActivity() {
             .root)
     }
 
+    open fun onClearHistoryClick(channel: SceytChannel) {
+        showSceytDialog(this, R.string.sceyt_clear_history_title, R.string.sceyt_clear_history_desc, R.string.sceyt_clear) {
+            clearHistory()
+        }
+    }
+
+    open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
+        (channel as? SceytDirectChannel)?.let {
+            if (block)
+                blockUser(it.peer?.id ?: return)
+            else unblockUser(it.peer?.id ?: return)
+        }
+    }
+
+    open fun onDeleteChatClick(channel: SceytChannel) {
+        showSceytDialog(this, R.string.sceyt_delete_channel_title, R.string.sceyt_delete_channel_desc, R.string.sceyt_delete) {
+            deleteChannel()
+        }
+    }
+
+    open fun onVideoCallClick(channel: SceytChannel) {
+
+    }
+
+    open fun onAudioCallClick(channel: SceytChannel) {
+
+    }
+
+    open fun onCallOutClick(channel: SceytChannel) {
+
+    }
+
+    open fun onMoreClick(channel: SceytChannel) {
+        if (channel.isGroup) {
+            GroupChantButtonsActionsDialog.newInstance(this, channel).apply {
+                setChooseTypeCb(::onGroupChatMoreActionClick)
+            }.show()
+        } else
+            DirectChantButtonsActionsDialog.newInstance(this, (channel as SceytDirectChannel)).apply {
+                setChooseTypeCb(::onDirectChatMoreActionClick)
+            }.show()
+    }
+
+    open fun onJoinClick(channel: SceytChannel) {
+
+    }
+
+    open fun onAddClick(channel: SceytChannel) {
+
+    }
+
+    open fun onReportClick(channel: SceytChannel) {
+
+    }
+
+    open fun onDirectChatMoreActionClick(actionsEnum: DirectChantButtonsActionsDialog.ActionsEnum) {
+        when (actionsEnum) {
+            ClearHistory -> onClearHistoryClick(channel)
+            BlockUser -> onBlockUnBlockUserClick(channel, true)
+            UnBlockUser -> onBlockUnBlockUserClick(channel, false)
+            Delete -> onDeleteChatClick(channel)
+        }
+    }
+
+    open fun onGroupChatMoreActionClick(actionsEnum: GroupChantButtonsActionsDialog.ActionsEnum) {
+        when (actionsEnum) {
+            GroupChantButtonsActionsDialog.ActionsEnum.ClearHistory -> onClearHistoryClick(channel)
+            GroupChantButtonsActionsDialog.ActionsEnum.Delete -> onDeleteChatClick(channel)
+        }
+    }
+
     open fun onChannel(channel: SceytChannel) {
         setChannelDetails(channel)
         pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
             (membersFragment as ChannelMembersFragment).updateChannel(channel)
         }
-    }
-
-    open fun onEditChannel(sceytChannel: SceytChannel) {
-        setChannelDetails(sceytChannel)
-        binding?.isLoadingEditChannel(false)
-        isSaveLoading = false
     }
 
     open fun onLeaveChannel(channelId: Long) {
@@ -394,7 +357,12 @@ open class ConversationInfoActivity : AppCompatActivity() {
         onBackPressed()
     }
 
+    open fun onMuteUnMuteChannel(sceytChannel: SceytChannel) {
+
+    }
+
     open fun onClearHistory(channelId: Long) {
+        pagerAdapter.historyCleared()
         customToastSnackBar(getString(R.string.sceyt_history_was_successfully_cleared))
     }
 
@@ -402,12 +370,23 @@ open class ConversationInfoActivity : AppCompatActivity() {
         val peer = (channel as SceytDirectChannel).peer
         users.find { user -> user.id == peer?.id }?.let { user ->
             (channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
-            //binding?.blockUnblockUser?.text = getBlockText(user.blocked)
         }
     }
 
-    open fun onMuteUnMuteChannel(sceytChannel: SceytChannel) {
-
+    open fun onMuteUnMuteClick(sceytChannel: SceytChannel, mute: Boolean) {
+        if (mute.not()) {
+            unMuteChannel()
+        } else {
+            MuteNotificationDialog(this@ConversationInfoActivity) {
+                val until = when (it) {
+                    MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
+                    MuteTypeEnum.Mute2Hour -> TimeUnit.HOURS.toMillis(2)
+                    MuteTypeEnum.Mute1Day -> TimeUnit.DAYS.toMillis(1)
+                    MuteTypeEnum.MuteForever -> 0L
+                }
+                muteChannel(until)
+            }.show()
+        }
     }
 
     open fun setPagerAdapter(pagerAdapter: ViewPagerAdapter) {
@@ -445,15 +424,13 @@ open class ConversationInfoActivity : AppCompatActivity() {
     open fun onPageStateChange(pageState: PageState) {
         if (pageState is PageState.StateError) {
             setChannelDetails(channel)
-            binding?.setEditMode(false)
-            binding?.isLoadingEditChannel(false)
             isSaveLoading = false
             customToastSnackBar(binding?.root, pageState.errorMessage.toString())
         }
     }
 
     open fun getViewPagerY(): Int {
-        return (binding?.appbar?.height ?: 0)/* + (binding?.layoutToolbar?.height ?: 0)*/
+        return (binding?.appbar?.height ?: 0)
     }
 
     override fun onBackPressed() {
