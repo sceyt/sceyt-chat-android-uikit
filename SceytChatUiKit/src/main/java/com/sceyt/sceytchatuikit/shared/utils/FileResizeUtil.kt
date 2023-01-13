@@ -27,7 +27,7 @@ object FileResizeUtil {
         })
         val dest = "${context.cacheDir}/" + System.currentTimeMillis().toString() + ".JPEG"
         try {
-            bmpPic = getResizedBitmap(bitmap = bmpPic, filePath)
+            bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
             val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
@@ -118,7 +118,8 @@ object FileResizeUtil {
     fun getImageThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
         return try {
             getImageThumb(url, maxImageSize)?.let {
-                createFileFromBitmap(context, it)
+                val bitmap = getOrientationCorrectedBitmap(it, url)
+                createFileFromBitmap(context, bitmap)
             }
         } catch (_: Exception) {
             null
@@ -139,7 +140,7 @@ object FileResizeUtil {
         return ThumbnailUtils.extractThumbnail(realImage, width, height)
     }
 
-    private fun getResizedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
+    private fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
         val matrix = Matrix()
         val rotationAngle = getFileOrientation(imagePath = filePath)
         if (rotationAngle != 0)
@@ -154,6 +155,7 @@ object FileResizeUtil {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
             bmpFile.close()
+            bitmap.recycle()
             File(fileDest)
         } catch (e: java.lang.Exception) {
             null
