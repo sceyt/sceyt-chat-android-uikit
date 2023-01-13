@@ -22,6 +22,8 @@ internal interface PersistenceChannelsLogic {
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadChannels(offset: Int, searchQuery: String,
                              loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+    suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
+                                ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
