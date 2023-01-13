@@ -26,10 +26,10 @@ fun Attachment.resizeImage(context: Context): Attachment {
     return resizedAttachment
 }
 
-fun resizeImage(context: Context, path: String?): Result<String> {
+fun resizeImage(context: Context, path: String?, reqSize: Int = 600): Result<String> {
     return try {
         path?.let {
-            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, it, reqSize = 600)
+            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, it, reqSize)
             Result.success(resizedImageFile.path)
         } ?: Result.failure(Exception("Wrong file path"))
     } catch (ex: Exception) {
