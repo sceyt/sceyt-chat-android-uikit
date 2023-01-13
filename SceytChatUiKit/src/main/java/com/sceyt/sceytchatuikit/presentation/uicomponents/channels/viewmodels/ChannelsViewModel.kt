@@ -29,7 +29,6 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
 
     internal var searchQuery = ""
-    internal var searchItems = listOf("")
 
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
@@ -38,6 +37,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
 
     fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null) {
+        //Reset search if any
         searchQuery = query
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
@@ -50,14 +50,13 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun searchChannels(offset: Int, query: List<String> = searchItems, loadKey: LoadKeyData? = null) {
-        searchItems = query
+    fun searchChannels(offset: Int, query: List<String>, loadKey: LoadKeyData? = null) {
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.searchChannels(offset, searchItems, loadKey, false).collect {
+            channelMiddleWare.searchChannels(offset, query, loadKey, false).collect {
                 initPaginationResponse(it)
             }
         }
