@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
+open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
     private var binding: FragmentChannelMediaBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
@@ -157,5 +158,10 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
             }
             return fragment
         }
+    }
+
+    override fun onCleared() {
+        mediaAdapter?.clearData()
+        pageStateView?.updateState(PageState.StateEmpty())
     }
 }

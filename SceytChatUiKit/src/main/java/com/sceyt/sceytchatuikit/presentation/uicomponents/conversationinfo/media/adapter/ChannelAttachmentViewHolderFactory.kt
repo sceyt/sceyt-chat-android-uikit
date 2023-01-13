@@ -64,6 +64,8 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
         return object : BaseChannelFileViewHolder(binding.root, {}) {
+            override fun bind(item: ChannelFileItem) {
+            }
         }
     }
 

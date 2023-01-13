@@ -13,7 +13,6 @@ abstract class BaseChannelFileViewHolder(itemView: View,
     protected lateinit var fileItem: ChannelFileItem
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
 
-    @CallSuper
     override fun bind(item: ChannelFileItem) {
         fileItem = item
         viewHolderHelper.bind(item)

@@ -411,8 +411,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     }
                     if (isBlockedPeer)
                         hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user))
-                    else if (disabledInput.not())
-                        layoutInput.isVisible = true
+                    else {
+                        if (disabledInput.not()) {
+                            layoutCloseInput.root.isVisible = false
+                            layoutInput.isVisible = true
+                        }
+                    }
                 }
             }
             else -> {}

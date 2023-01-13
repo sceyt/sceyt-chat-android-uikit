@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
-    // Todo di
     private val channelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val membersMiddleWare by inject<PersistenceMembersMiddleWare>()
 

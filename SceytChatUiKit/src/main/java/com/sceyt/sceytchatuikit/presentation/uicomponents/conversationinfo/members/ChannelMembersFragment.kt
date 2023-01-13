@@ -220,7 +220,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                         itemsDb.add(MemberItem.LoadingMore)
                 } else itemsDb.remove(MemberItem.LoadingMore)
 
-            Log.i("sdfsdf","final "+itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+            Log.i("sdfsdf", "final " + itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
             setOrUpdateMembersAdapter(itemsDb)
         }
     }

@@ -220,6 +220,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         channel = it
         messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
         checkEnableDisableActions(channel)
+        if (channel.lastMessage == null)
+            messagesListView.clearData()
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onScrollToLastMessageLiveData.observe(lifecycleOwner, Observer {

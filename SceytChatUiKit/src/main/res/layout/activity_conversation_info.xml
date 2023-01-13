@@ -133,67 +133,12 @@
                         app:layout_constraintTop_toBottomOf="@+id/subject"
                         tools:text="78 members" />
 
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/mute"
-                        android:layout_width="wrap_content"
+                    <FrameLayout
+                        android:id="@+id/layout_buttons"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="30dp"
-                        android:drawableTop="@drawable/sceyt_ic_muted"
-                        android:drawablePadding="10dp"
-                        android:includeFontPadding="false"
-                        android:minWidth="35dp"
-                        android:text="mute"
-                        android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="13sp"
-                        android:visibility="visible"
-                        app:iconSize="@dimen/_34sdp"
-                        app:layout_constraintEnd_toStartOf="@+id/report"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintHorizontal_chainStyle="packed"
-                        app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/membersCount" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/report"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="30dp"
-                        android:layout_marginTop="30dp"
-                        android:drawableTop="@drawable/sceyt_ic_info"
-                        android:drawablePadding="10dp"
-                        android:gravity="center"
-                        android:minWidth="35dp"
-                        android:text="report"
-                        android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="13sp"
-                        app:layout_constraintEnd_toStartOf="@+id/join"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/mute"
-                        app:layout_constraintTop_toBottomOf="@+id/membersCount" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/join"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="30dp"
-                        android:drawableTop="@drawable/sceyt_ic_invite_users"
-                        android:drawablePadding="10dp"
-                        android:gravity="center"
-                        android:minWidth="35dp"
-                        android:text="join"
-                        android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="13sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/report"
-                        app:layout_constraintTop_toBottomOf="@+id/membersCount" />
-
-                    <androidx.constraintlayout.widget.Barrier
-                        android:id="@+id/barrier"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:barrierDirection="bottom"
-                        app:constraint_referenced_ids="join,report,mute" />
 
                     <View
                         android:id="@+id/divider1"
@@ -201,7 +146,7 @@
                         android:layout_height="8dp"
                         android:layout_marginTop="20dp"
                         android:background="@color/sceyt_color_input"
-                        app:layout_constraintTop_toBottomOf="@+id/barrier" />
+                        app:layout_constraintTop_toBottomOf="@+id/layout_buttons" />
 
                     <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/appCompatTextView6"

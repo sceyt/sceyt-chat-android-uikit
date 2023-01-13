@@ -7,8 +7,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 
-class ChannelMediaAdapter(private val attachments: ArrayList<ChannelFileItem>,
-                          private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,)
+class ChannelMediaAdapter(
+        private var attachments: ArrayList<ChannelFileItem>,
+        private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,
+)
     : RecyclerView.Adapter<BaseChannelFileViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelFileViewHolder {
@@ -45,4 +47,10 @@ class ChannelMediaAdapter(private val attachments: ArrayList<ChannelFileItem>,
     }
 
     fun getLastMediaItem() = attachments.findLast { it !is ChannelFileItem.LoadingMoreItem }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clearData() {
+        attachments = arrayListOf()
+        notifyDataSetChanged()
+    }
 }
