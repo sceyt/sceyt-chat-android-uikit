@@ -220,7 +220,7 @@ internal class PersistenceChannelsLogicImpl(
 
             awaitToConnectSceyt()
 
-            val response = if (offset == 0) channelsRepository.getChannels(searchItems.first())
+            val response = if (offset == 0) channelsRepository.getChannels(searchItems.firstOrNull()?: "")
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
