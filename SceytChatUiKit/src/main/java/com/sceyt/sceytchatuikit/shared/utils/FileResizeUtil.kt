@@ -12,6 +12,7 @@ import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.bitmapToByteArray
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -148,6 +149,14 @@ object FileResizeUtil {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
+    fun getOrientationCorrectedBitmap(bitmap: Bitmap, byteArray: ByteArray): Bitmap {
+        val matrix = Matrix()
+        val rotationAngle = getFileOrientation(ByteArrayInputStream(byteArray))
+        if (rotationAngle != 0)
+            matrix.setRotate(rotationAngle.toFloat())
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
     fun createFileFromBitmap(context: Context, bitmap: Bitmap): File? {
         return try {
             val fileDest = "${context.cacheDir}/" + System.currentTimeMillis() + ".JPEG"
@@ -180,6 +189,21 @@ object FileResizeUtil {
         var rotate = 0
         try {
             val exif = ExifInterface(imagePath)
+            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
+                ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
+                ExifInterface.ORIENTATION_ROTATE_90 -> rotate = 90
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return rotate
+    }
+
+    private fun getFileOrientation(inputStream: ByteArrayInputStream): Int {
+        var rotate = 0
+        try {
+            val exif = ExifInterface(inputStream)
             when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
                 ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
                 ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
