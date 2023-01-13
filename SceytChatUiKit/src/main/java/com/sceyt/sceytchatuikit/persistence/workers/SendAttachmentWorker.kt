@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.workers
 import android.content.Context
 import androidx.work.*
 import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -51,6 +52,10 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         return suspendCancellableCoroutine { continuation ->
             if (tmpMessage.attachments.isNullOrEmpty().not()) {
                 tmpMessage.attachments?.forEach { attachment ->
+                    if (attachment.type == AttachmentTypeEnum.Link.value()) {
+                        continuation.safeResume(Pair(true, attachment.url))
+                        return@suspendCancellableCoroutine
+                    }
                     val payload = payloads.find { it.messageTid == attachment.messageTid }
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
                         val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)

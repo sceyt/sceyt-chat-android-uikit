@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:padding="1dp">
 
-    <com.google.android.material.imageview.ShapeableImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/fileImage"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -15,7 +15,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize6"
         app:srcCompat="@color/sceyt_color_gray"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

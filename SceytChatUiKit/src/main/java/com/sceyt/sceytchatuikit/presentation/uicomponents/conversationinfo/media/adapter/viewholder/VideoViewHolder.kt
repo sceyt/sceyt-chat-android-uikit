@@ -7,14 +7,14 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class VideoViewHolder(private val binding: ItemChannelVideoBinding,
                       private val clickListeners: AttachmentClickListenersImpl,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder(binding.root) {
+                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.root.setOnClickListener {
@@ -22,17 +22,16 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
         }
     }
 
-    override fun bind(item: FileListItem) {
+    override fun bind(item: ChannelFileItem) {
         super.bind(item)
-        listenerKey = getKey()
         setVideoDuration()
 
         setListener()
 
-        transferData?.let {
+        viewHolderHelper.transferData?.let {
             updateState(it, true)
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
         if (fileItem.thumbPath.isNullOrBlank())
@@ -40,60 +39,55 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        transferData = data
+        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.messageTid)) return
+        viewHolderHelper.transferData = data
         when (data.state) {
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
-                drawThumbOrRequest(binding.image, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
             }
             TransferState.PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
-                loadBlurThumb(blurredThumb, binding.image)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
             TransferState.Downloading -> {
                 if (isOnBind)
-                    loadBlurThumb(blurredThumb, binding.image)
+                    viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
             TransferState.Uploading -> {
                 if (isOnBind)
-                    drawThumbOrRequest(binding.image, ::requestThumb)
+                    viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
             }
             TransferState.Downloaded, TransferState.Uploaded -> {
-                drawThumbOrRequest(binding.image, ::requestThumb)
+                viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
             }
             TransferState.PauseDownload -> {
-                loadBlurThumb(blurredThumb, binding.image)
+                viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
             TransferState.ErrorDownload -> {
-                loadBlurThumb(blurredThumb, binding.image)
+                viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
             TransferState.FilePathChanged -> {
                 requestThumb()
             }
             TransferState.ThumbLoaded -> {
-                loadThumb(data.filePath, binding.image)
+                viewHolderHelper.loadThumb(data.filePath, binding.image)
             }
         }
     }
 
     private fun setVideoDuration() {
         with(binding.tvDuration) {
-            (fileItem as? FileListItem.Video)?.videoDuration?.let {
+            fileItem.duration?.let {
                 text = DateTimeUtil.secondsToTime(it)
                 isVisible = true
             } ?: run { isVisible = false }
         }
     }
 
-    private fun requestThumb() {
-        itemView.post {
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem, getThumbSize()))
-        }
-    }
 
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
     }
 }

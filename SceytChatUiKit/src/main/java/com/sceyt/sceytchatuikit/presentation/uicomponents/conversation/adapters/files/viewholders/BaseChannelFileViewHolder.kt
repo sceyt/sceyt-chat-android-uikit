@@ -2,17 +2,19 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.util.Size
 import android.view.View
+import androidx.annotation.CallSuper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 
-abstract class BaseFileViewHolder(itemView: View,
-                                  private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseViewHolder<FileListItem>(itemView) {
-    protected lateinit var fileItem: FileListItem
+abstract class BaseChannelFileViewHolder(itemView: View,
+                                         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseViewHolder<ChannelFileItem>(itemView) {
+    protected lateinit var fileItem: ChannelFileItem
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
 
-    override fun bind(item: FileListItem) {
+    @CallSuper
+    override fun bind(item: ChannelFileItem) {
         fileItem = item
         viewHolderHelper.bind(item)
     }

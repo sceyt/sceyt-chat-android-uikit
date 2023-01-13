@@ -4,6 +4,7 @@ enum class AttachmentTypeEnum {
     Image,
     Video,
     Voice,
+    Link,
     File;
 
     fun value(): String {
@@ -11,6 +12,7 @@ enum class AttachmentTypeEnum {
             Image -> "image"
             Video -> "video"
             Voice -> "voice"
+            Link -> "link"
             File -> "file"
         }
     }

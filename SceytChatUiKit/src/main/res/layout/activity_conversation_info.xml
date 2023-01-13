@@ -7,67 +7,68 @@
     android:background="@color/sceyt_color_bg"
     tools:context=".presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutToolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
-        app:layout_constraintTop_toTopOf="parent">
+    <!-- <androidx.constraintlayout.widget.ConstraintLayout
+         android:id="@+id/layoutToolbar"
+         android:layout_width="match_parent"
+         android:layout_height="?android:attr/actionBarSize"
+         app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="12dp"
-            android:background="?selectableItemBackgroundBorderless"
-            android:padding="4dp"
-            android:tint="@color/sceyt_color_accent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_arrow_back" />
+         <androidx.appcompat.widget.AppCompatImageView
+             android:id="@+id/icBack"
+             android:layout_width="32dp"
+             android:layout_height="32dp"
+             android:layout_marginStart="12dp"
+             android:background="?selectableItemBackgroundBorderless"
+             android:padding="4dp"
+             android:tint="@color/sceyt_color_accent"
+             app:layout_constraintBottom_toBottomOf="parent"
+             app:layout_constraintStart_toStartOf="parent"
+             app:layout_constraintTop_toTopOf="parent"
+             app:srcCompat="@drawable/sceyt_ic_arrow_back" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvEditOrSave"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:background="?selectableItemBackgroundBorderless"
-            android:padding="5dp"
-            android:text="@string/sceyt_edit"
-            android:textColor="@color/sceyt_color_accent"
-            android:textSize="@dimen/mediumTextSize"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/icBack"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/icBack"
-            tools:visibility="visible" />
+         <androidx.appcompat.widget.AppCompatTextView
+             android:id="@+id/tvEditOrSave"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_marginEnd="12dp"
+             android:background="?selectableItemBackgroundBorderless"
+             android:padding="5dp"
+             android:text="@string/sceyt_edit"
+             android:textColor="@color/sceyt_color_accent"
+             android:textSize="@dimen/mediumTextSize"
+             android:visibility="gone"
+             app:layout_constraintBottom_toBottomOf="@+id/icBack"
+             app:layout_constraintEnd_toEndOf="parent"
+             app:layout_constraintTop_toTopOf="@+id/icBack"
+             tools:visibility="visible" />
 
-        <ProgressBar
-            android:id="@+id/progressSave"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:padding="4dp"
-            android:layout_marginEnd="12dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/tvEditOrSave"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvEditOrSave"
-            app:srcCompat="@drawable/sceyt_radio_button_checked_state" />
+         <ProgressBar
+             android:id="@+id/progressSave"
+             android:layout_width="32dp"
+             android:layout_height="32dp"
+             android:layout_marginEnd="12dp"
+             android:padding="4dp"
+             android:visibility="gone"
+             app:layout_constraintBottom_toBottomOf="@+id/tvEditOrSave"
+             app:layout_constraintEnd_toEndOf="parent"
+             app:layout_constraintTop_toTopOf="@+id/tvEditOrSave"
+             app:srcCompat="@drawable/sceyt_radio_button_checked_state" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <View
-        android:id="@+id/underline"
-        android:layout_width="match_parent"
-        android:layout_height=".5dp"
-        android:background="@color/sceyt_color_divider"
-        app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
+     </androidx.constraintlayout.widget.ConstraintLayout>-->
+    <!--
+        <View
+            android:id="@+id/underline"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/sceyt_color_divider"
+            app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />-->
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinatorLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/underline">
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
@@ -77,9 +78,13 @@
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/colla"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:contentScrim="@color/sceyt_color_white"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:scrimAnimationDuration="100"
+                app:scrimVisibleHeightTrigger="250dp"
                 app:titleCollapseMode="scale"
                 app:toolbarId="@+id/appbar">
 
@@ -87,163 +92,345 @@
                     android:id="@+id/layoutDetails"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="16dp"
+                    android:paddingTop="40dp"
                     app:layout_collapseMode="parallax"
                     app:layout_constraintTop_toBottomOf="@+id/underline">
 
                     <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
                         android:id="@+id/avatar"
-                        android:layout_width="72dp"
-                        android:layout_height="72dp"
+                        android:layout_width="108dp"
+                        android:layout_height="108dp"
+                        android:scaleType="centerCrop"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:sceytAvatarViewTextSize="@dimen/extraLargeTextSize"
-                        tools:sceytAvatarViewFullName="User name" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                    <androidx.appcompat.widget.AppCompatImageView
-                        android:id="@+id/icEditPhoto"
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/sceyt_bg_circle"
-                        android:backgroundTint="#60E3E7FF"
-                        android:scaleType="centerInside"
-                        app:layout_constraintBottom_toBottomOf="@+id/avatar"
-                        app:layout_constraintEnd_toEndOf="@+id/avatar"
-                        app:layout_constraintStart_toStartOf="@id/avatar"
-                        app:layout_constraintTop_toTopOf="@id/avatar"
-                        app:srcCompat="@drawable/sceyt_ic_pick_photo" />
-
-                    <ProgressBar
-                        android:id="@+id/loadingProfileImage"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:visibility="gone"
-                        app:layout_constraintBottom_toBottomOf="@+id/avatar"
-                        app:layout_constraintEnd_toEndOf="@+id/avatar"
-                        app:layout_constraintStart_toStartOf="@+id/avatar"
-                        app:layout_constraintTop_toTopOf="@+id/avatar" />
-
-                    <androidx.appcompat.widget.AppCompatEditText
+                    <TextView
                         android:id="@+id/subject"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginTop="8dp"
                         android:ellipsize="end"
                         android:fontFamily="@font/roboto_medium"
-                        android:hint="@string/sceyt_hint_channel_subject"
-                        android:inputType="text"
                         android:maxLines="2"
                         android:textColor="@color/sceyt_color_text_themed"
-                        android:textColorHint="@color/sceyt_color_hint"
-                        android:textSize="@dimen/bigTextSize"
-                        app:layout_constraintBottom_toBottomOf="@+id/avatar"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@+id/avatar"
-                        app:layout_constraintTop_toTopOf="@+id/avatar" />
+                        android:textSize="@dimen/mediumTextSize"
+                        app:layout_constraintEnd_toEndOf="@+id/avatar"
+                        app:layout_constraintStart_toStartOf="@+id/avatar"
+                        app:layout_constraintTop_toBottomOf="@+id/avatar"
+                        tools:text="@string/sceyt_hint_channel_subject" />
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switchNotifications"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/membersCount"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:background="@drawable/sceyt_bg_top_bottom_lines"
-                        android:backgroundTint="@color/sceyt_color_divider"
-                        android:checked="false"
-                        android:drawableStart="@drawable/sceyt_ic_notification_on"
-                        android:drawablePadding="12dp"
+                        android:layout_marginTop="3dp"
+                        android:gravity="center"
+                        android:textColor="@color/sceyt_color_gray_800"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="@+id/avatar"
+                        app:layout_constraintStart_toStartOf="@+id/avatar"
+                        app:layout_constraintTop_toBottomOf="@+id/subject"
+                        tools:text="78 members" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/mute"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="30dp"
+                        android:drawableTop="@drawable/sceyt_ic_muted"
+                        android:drawablePadding="10dp"
                         android:includeFontPadding="false"
-                        android:text="@string/sceyt_mute_notifications"
+                        android:minWidth="35dp"
+                        android:text="mute"
                         android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="@dimen/mediumTextSize"
-                        android:theme="@style/SceytSwitchStyle"
-                        app:layout_constraintEnd_toEndOf="parent"
+                        android:textSize="13sp"
+                        android:visibility="visible"
+                        app:iconSize="@dimen/_34sdp"
+                        app:layout_constraintEnd_toStartOf="@+id/report"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintHorizontal_chainStyle="packed"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/avatar" />
+                        app:layout_constraintTop_toBottomOf="@+id/membersCount" />
 
                     <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/clearHistory"
-                        android:layout_width="match_parent"
+                        android:id="@+id/report"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:background="?selectableItemBackground"
-                        android:paddingVertical="10dp"
-                        android:text="@string/sceyt_clear_history"
-                        android:textColor="@color/sceyt_color_red"
-                        android:textSize="@dimen/mediumTextSize"
-                        app:layout_constraintTop_toBottomOf="@id/switchNotifications" />
+                        android:layout_marginHorizontal="30dp"
+                        android:layout_marginTop="30dp"
+                        android:drawableTop="@drawable/sceyt_ic_info"
+                        android:drawablePadding="10dp"
+                        android:gravity="center"
+                        android:minWidth="35dp"
+                        android:text="report"
+                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toStartOf="@+id/join"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toEndOf="@+id/mute"
+                        app:layout_constraintTop_toBottomOf="@+id/membersCount" />
 
                     <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/leaveChannel"
-                        android:layout_width="match_parent"
+                        android:id="@+id/join"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?selectableItemBackground"
-                        android:paddingVertical="10dp"
-                        android:text="@string/sceyt_leave_channel"
-                        android:textColor="@color/sceyt_color_red"
-                        android:textSize="@dimen/mediumTextSize"
-                        app:layout_constraintTop_toBottomOf="@id/clearHistory" />
+                        android:layout_marginTop="30dp"
+                        android:drawableTop="@drawable/sceyt_ic_invite_users"
+                        android:drawablePadding="10dp"
+                        android:gravity="center"
+                        android:minWidth="35dp"
+                        android:text="join"
+                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toEndOf="@+id/report"
+                        app:layout_constraintTop_toBottomOf="@+id/membersCount" />
 
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/blockAndLeaveChannel"
-                        android:layout_width="match_parent"
+                    <androidx.constraintlayout.widget.Barrier
+                        android:id="@+id/barrier"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?selectableItemBackground"
-                        android:paddingVertical="10dp"
-                        android:text="@string/sceyt_block_and_leave_channel"
-                        android:textColor="@color/sceyt_color_red"
-                        android:textSize="@dimen/mediumTextSize"
-                        app:layout_constraintTop_toBottomOf="@id/leaveChannel" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/deleteChannel"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="?selectableItemBackground"
-                        android:paddingVertical="10dp"
-                        android:text="@string/sceyt_delete"
-                        android:textColor="@color/sceyt_color_red"
-                        android:textSize="@dimen/mediumTextSize"
-                        app:layout_constraintTop_toBottomOf="@id/blockAndLeaveChannel" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/blockUnblockUser"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="?selectableItemBackground"
-                        android:paddingVertical="10dp"
-                        android:text="@string/sceyt_block"
-                        android:textColor="@color/sceyt_color_red"
-                        android:textSize="@dimen/mediumTextSize"
-                        app:layout_constraintTop_toBottomOf="@id/deleteChannel" />
+                        app:barrierDirection="bottom"
+                        app:constraint_referenced_ids="join,report,mute" />
 
                     <View
-                        android:id="@+id/divider"
+                        android:id="@+id/divider1"
                         android:layout_width="match_parent"
-                        android:layout_height=".5dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@color/sceyt_color_divider"
-                        app:layout_constraintTop_toBottomOf="@+id/blockUnblockUser" />
+                        android:layout_height="8dp"
+                        android:layout_marginTop="20dp"
+                        android:background="@color/sceyt_color_input"
+                        app:layout_constraintTop_toBottomOf="@+id/barrier" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/appCompatTextView6"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="@font/roboto_medium"
+                        android:includeFontPadding="false"
+                        android:text="Channel description"
+                        android:textColor="@color/sceyt_color_gray_800"
+                        android:textSize="13sp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/divider1" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/tvPhone"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="4dp"
+                        android:text="Channel for planning annual meetings"
+                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textSize="16sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView6" />
+
+                    <View
+                        android:id="@+id/divider2"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@color/sceyt_color_input"
+                        app:layout_constraintTop_toBottomOf="@+id/tvPhone" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/tvLink"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="16dp"
+                        android:layout_marginTop="16dp"
+                        android:drawableStart="@drawable/sceyt_ic_channel_link"
+                        android:drawablePadding="16dp"
+                        android:gravity="center_vertical"
+                        android:text="waafi.com/join/tkngt56-VG-DI..."
+                        app:layout_constraintEnd_toStartOf="@+id/appCompatImageView3"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/divider2" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/appCompatImageView3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/tvLink"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/tvLink"
+                        app:srcCompat="@drawable/sceyt_ic_qr" />
+
+                    <View
+                        android:id="@+id/divider3"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@color/sceyt_color_input"
+                        app:layout_constraintTop_toBottomOf="@+id/tvLink" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/members"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:drawableStart="@drawable/sceyt_ic_members"
+                        android:drawablePadding="16dp"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:text="@string/sceyt_members"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/divider3" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/admins"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:drawableStart="@drawable/sceyt_ic_admin"
+                        android:drawablePadding="16dp"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:text="Admins"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/members" />
+
+                    <View
+                        android:id="@+id/divider4"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@color/sceyt_color_input"
+                        app:layout_constraintTop_toBottomOf="@+id/admins" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/activity_goods_details_toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?actionBarSize"
+                    android:contentInsetStart="0dp"
+                    android:contentInsetLeft="0dp"
+                    android:contentInsetEnd="0dp"
+                    android:contentInsetRight="0dp"
+                    app:contentInsetEnd="0dp"
+                    app:contentInsetLeft="0dp"
+                    app:contentInsetRight="0dp"
+                    app:contentInsetStart="0dp"
+                    app:layout_collapseMode="pin">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_collapseMode="pin"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:id="@+id/icBack"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="12dp"
+                            android:background="?selectableItemBackgroundBorderless"
+                            android:padding="4dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:srcCompat="@drawable/sceyt_ic_arrow_back" />
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/layoutToolbar"
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp"
+                            android:visibility="invisible"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/icBack"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+                                android:id="@+id/toolbarAvatar"
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintDimensionRatio="1:1"
+                                app:layout_constraintHeight_percent=".75"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                android:id="@+id/title"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="12dp"
+                                android:fontFamily="@font/roboto_medium"
+                                android:singleLine="true"
+                                android:textColor="@color/sceyt_color_text_themed"
+                                android:textSize="16sp"
+                                app:layout_constraintBottom_toTopOf="@+id/subTitle"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintHorizontal_bias="0.5"
+                                app:layout_constraintStart_toEndOf="@+id/toolbarAvatar"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintVertical_chainStyle="packed"
+                                tools:text="Title" />
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                android:id="@+id/subTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="marquee"
+                                android:freezesText="true"
+                                android:marqueeRepeatLimit="marquee_forever"
+                                android:singleLine="true"
+                                android:text="78 subscribers"
+                                android:textColor="@color/sceyt_color_gray_400"
+                                android:textSize="13sp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="@+id/title"
+                                app:layout_constraintStart_toEndOf="@+id/toolbarAvatar"
+                                app:layout_constraintStart_toStartOf="@+id/title"
+                                app:layout_constraintTop_toBottomOf="@+id/title" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </androidx.appcompat.widget.Toolbar>
+
             </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+            <View
+                android:id="@+id/view_top"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#f0f2f5" />
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:background="@color/sceyt_color_bg"
-                app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
-                app:tabGravity="fill"
+                android:background="@color/sceyt_color_white"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tabIndicator="@drawable/sceyt_bg_corners_6"
                 app:tabIndicatorColor="@color/sceyt_color_accent"
-                app:tabMaxWidth="0dp"
-                app:tabMode="fixed"
+                app:tabIndicatorFullWidth="false"
+                app:tabIndicatorHeight="2dp"
+                app:tabMaxWidth="100dp"
+                app:tabMinWidth="100dp"
                 app:tabSelectedTextColor="@color/sceyt_color_text_themed"
-                app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
+                app:tabTextAppearance="@style/TabTextAppearance"
                 app:tabTextColor="@color/sceyt_color_gray_400" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#f0f2f5" />
 
         </com.google.android.material.appbar.AppBarLayout>
 

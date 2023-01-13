@@ -13,6 +13,7 @@ object SceytKitConfig {
     var CHANNELS_MEMBERS_LOAD_SIZE = 20
     var USERS_LOAD_SIZE = 30
     var MESSAGES_LOAD_SIZE = 30
+    var ATTACHMENTS_LOAD_SIZE = 30
 
     var enableDarkMode = true
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode

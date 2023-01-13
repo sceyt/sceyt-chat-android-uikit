@@ -1,21 +1,22 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
+import android.content.res.ColorStateList
 import com.sceyt.sceytchatuikit.databinding.ItemChannelFileBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import java.util.*
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class FileViewHolder(private val binding: ItemChannelFileBinding,
                      private val clickListeners: AttachmentClickListenersImpl,
-                     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder(binding.root) {
+                     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()
@@ -24,35 +25,32 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
         }
     }
 
-    override fun bind(item: FileListItem) {
+    override fun bind(item: ChannelFileItem) {
         super.bind(item)
-        listenerKey = getKey()
-        val file = (item as? FileListItem.File)?.file ?: return
+        val file = (item as? ChannelFileItem.File)?.file ?: return
         setListener()
 
         with(binding) {
             tvFileName.text = file.name
-            val date = DateTimeUtil.convertDateToString(Date(item.message.createdAt), "dd/MM/yyyy")
-            val sizeAndDate = "${file.fileSize.toPrettySize()}, $date"
-            tvFileSizeAndDate.text = sizeAndDate
+            tvFileSizeAndDate.text = file.fileSize.toPrettySize()
         }
 
-        transferData?.let {
+        viewHolderHelper.transferData?.let {
             updateState(it)
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
     }
 
     private fun updateState(data: TransferData) {
-        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        transferData = data
+        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.tid)) return
+        viewHolderHelper.transferData = data
         when (data.state) {
             TransferState.PendingUpload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
             TransferState.PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
             TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
@@ -68,10 +66,11 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
     }
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
     }
 
     private fun ItemChannelFileBinding.setupStyle() {
         icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

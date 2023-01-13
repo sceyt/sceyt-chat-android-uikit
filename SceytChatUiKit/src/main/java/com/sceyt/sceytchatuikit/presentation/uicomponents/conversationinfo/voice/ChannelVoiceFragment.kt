@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelFilesBinding
+import com.sceyt.sceytchatuikit.databinding.FragmentChannelVoiceBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -29,16 +29,16 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
+open class ChannelVoiceFragment : Fragment(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
-    private var binding: FragmentChannelFilesBinding? = null
+    private var binding: FragmentChannelVoiceBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
-    private val mediaType = listOf(AttachmentTypeEnum.File.value())
+    private val mediaType = listOf(AttachmentTypeEnum.Voice.value())
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentChannelFilesBinding.inflate(inflater, container, false).also {
+        return FragmentChannelVoiceBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }
@@ -58,7 +58,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
 
     private fun initViewModel() {
         lifecycleScope.launch {
-            viewModel.filesFlow.collect(::onInitialFilesList)
+            viewModel.filesFlow.collect(::onInitialVoiceList)
         }
 
         lifecycleScope.launch {
@@ -68,13 +68,13 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
-    open fun onInitialFilesList(list: List<ChannelFileItem>) {
+    open fun onInitialVoiceList(list: List<ChannelFileItem>) {
         mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
             it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                 item.file.openFile(requireContext())
             })
         })
-        with((binding ?: return).rvFiles) {
+        with((binding ?: return).rvVoice) {
             adapter = mediaAdapter
 
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -123,8 +123,8 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent {
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): ChannelFilesFragment {
-            val fragment = ChannelFilesFragment()
+        fun newInstance(channel: SceytChannel): ChannelVoiceFragment {
+            val fragment = ChannelVoiceFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

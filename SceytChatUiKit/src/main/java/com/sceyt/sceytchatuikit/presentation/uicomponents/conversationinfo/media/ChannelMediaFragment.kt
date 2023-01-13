@@ -17,12 +17,13 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
@@ -37,7 +38,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
     private var binding: FragmentChannelMediaBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
-    private val mediaType = "media"
+    private val mediaType = listOf("image", "video")
     private var pageStateView: PageStateView? = null
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
@@ -93,14 +94,14 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
         })
     }
 
-    open fun onInitialMediaList(list: List<FileListItem>) {
-        mediaAdapter = ChannelMediaAdapter(list as ArrayList<FileListItem>, ChannelAttachmentViewHolderFactory(requireContext()).also {
+    open fun onInitialMediaList(list: List<ChannelFileItem>) {
+        mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
             it.setNeedMediaDataCallback { data ->
                 viewModel.needMediaInfo(data)
             }
 
             it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                item.openFile(requireContext())
+                item.file.openFile(requireContext())
             })
         })
         with((binding ?: return).rvFiles) {
@@ -119,14 +120,14 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.canLoadNext())
-                        loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.sceytMessage?.id ?: 0)
+                    if (isLastItemDisplaying() && viewModel.canLoadPrev())
+                        loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
                 }
             })
         }
     }
 
-    open fun onMoreMediaList(list: List<FileListItem>) {
+    open fun onMoreMediaList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
     }
 
