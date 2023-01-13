@@ -12,6 +12,7 @@ import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.bitmapToByteArray
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -27,7 +28,7 @@ object FileResizeUtil {
         })
         val dest = "${context.cacheDir}/" + System.currentTimeMillis().toString() + ".JPEG"
         try {
-            bmpPic = getResizedBitmap(bitmap = bmpPic, filePath)
+            bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
             val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
@@ -118,7 +119,8 @@ object FileResizeUtil {
     fun getImageThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
         return try {
             getImageThumb(url, maxImageSize)?.let {
-                createFileFromBitmap(context, it)
+                val bitmap = getOrientationCorrectedBitmap(it, url)
+                createFileFromBitmap(context, bitmap)
             }
         } catch (_: Exception) {
             null
@@ -139,9 +141,17 @@ object FileResizeUtil {
         return ThumbnailUtils.extractThumbnail(realImage, width, height)
     }
 
-    private fun getResizedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
+    private fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
         val matrix = Matrix()
         val rotationAngle = getFileOrientation(imagePath = filePath)
+        if (rotationAngle != 0)
+            matrix.setRotate(rotationAngle.toFloat())
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
+    fun getOrientationCorrectedBitmap(bitmap: Bitmap, byteArray: ByteArray): Bitmap {
+        val matrix = Matrix()
+        val rotationAngle = getFileOrientation(ByteArrayInputStream(byteArray))
         if (rotationAngle != 0)
             matrix.setRotate(rotationAngle.toFloat())
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
@@ -154,6 +164,7 @@ object FileResizeUtil {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
             bmpFile.close()
+            bitmap.recycle()
             File(fileDest)
         } catch (e: java.lang.Exception) {
             null
@@ -178,6 +189,21 @@ object FileResizeUtil {
         var rotate = 0
         try {
             val exif = ExifInterface(imagePath)
+            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
+                ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
+                ExifInterface.ORIENTATION_ROTATE_90 -> rotate = 90
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return rotate
+    }
+
+    private fun getFileOrientation(inputStream: ByteArrayInputStream): Int {
+        var rotate = 0
+        try {
+            val exif = ExifInterface(inputStream)
             when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
                 ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
                 ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
