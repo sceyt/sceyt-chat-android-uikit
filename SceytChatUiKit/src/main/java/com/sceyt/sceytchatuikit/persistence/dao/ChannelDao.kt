@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
@@ -40,6 +41,9 @@ interface ChannelDao {
     @Query("select * from channels where subject LIKE '%' || :query || '%' " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
+
+    @RawQuery
+    suspend fun searchChannelsRaw(query: SimpleSQLiteQuery): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels where chat_id =:id")

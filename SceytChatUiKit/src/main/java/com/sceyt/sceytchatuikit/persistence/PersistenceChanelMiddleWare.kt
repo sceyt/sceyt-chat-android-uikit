@@ -13,6 +13,9 @@ interface PersistenceChanelMiddleWare {
     suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
                              ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
+    suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
+                               ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>

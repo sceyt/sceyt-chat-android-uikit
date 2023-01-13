@@ -120,11 +120,11 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
             }
     }
 
-    internal fun setDebouncedTextChangeListener(inputChangedListener: InputChangedListener) {
+    fun setDebouncedTextChangeListener(inputChangedListener: InputChangedListener) {
         debouncedInputChangedListener = inputChangedListener
     }
 
-    internal fun setOnQuerySubmitListener(listener: InputTextSubmitListener) {
+    fun setOnQuerySubmitListener(listener: InputTextSubmitListener) {
         querySubmitListener = listener
     }
 
