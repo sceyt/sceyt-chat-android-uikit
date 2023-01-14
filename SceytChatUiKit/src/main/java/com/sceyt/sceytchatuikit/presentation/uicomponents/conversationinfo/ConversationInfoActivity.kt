@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -44,13 +46,14 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
 open class ConversationInfoActivity : AppCompatActivity() {
     private lateinit var channel: SceytChannel
     private lateinit var pagerAdapter: ViewPagerAdapter
-    private var displayNameDefaultBg: Drawable? = null
     private var binding: ActivityConversationInfoBinding? = null
     private val viewModel: ConversationInfoViewModel by viewModels()
     private var isSaveLoading = false
@@ -145,7 +148,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     private fun ActivityConversationInfoBinding.initViews() {
-        displayNameDefaultBg = subject.background
+        icBack.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
 
         /*
          leaveChannel.setOnClickListener {
@@ -209,19 +212,10 @@ open class ConversationInfoActivity : AppCompatActivity() {
         with(binding ?: return) {
             avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
             toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
-            subject.setText(channel.channelSubject)
-            title.text = channel.channelSubject
-            // switchNotifications.isChecked = channel.muted
-            // switchNotifications.jumpDrawablesToCurrentState()
 
-            val isDirect = channel.channelType == ChannelTypeEnum.Direct
-            // tvEditOrSave.isVisible = !isDirect
-            //   deleteChannel.isVisible = isDirect
-            //   leaveChannel.isVisible = !isDirect
-            //  blockAndLeaveChannel.isVisible = !isDirect
-            //  blockUnblockUser.isVisible = isDirect
-            /*if (isDirect)
-                blockUnblockUser.text = getBlockText((channel as SceytDirectChannel).peer?.user?.blocked == true)*/
+            setChannelTitle(channel)
+            setPresenceOrMembers(channel)
+            setChannelDescription(channel)
         }
     }
 
@@ -229,6 +223,12 @@ open class ConversationInfoActivity : AppCompatActivity() {
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = pagerAdapter.getTagByPosition(position)
         }.attach()
+
+        tabLayout.apply {
+            val color = getCompatColor(SceytKitConfig.sceytColorAccent)
+            setSelectedTabIndicatorColor(color)
+            tabRippleColor = ColorStateList.valueOf(color)
+        }
     }
 
     protected fun clearHistory() {
@@ -278,11 +278,12 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
-        (channel as? SceytDirectChannel)?.let {
-            if (block)
-                blockUser(it.peer?.id ?: return)
-            else unblockUser(it.peer?.id ?: return)
-        }
+        val peer = (channel as? SceytDirectChannel)?.peer ?: return
+        if (block) {
+            showSceytDialog(this, R.string.sceyt_block_user_title, R.string.sceyt_block_user_desc, R.string.sceyt_block) {
+                blockUser(peer.id)
+            }
+        } else unblockUser(peer.id)
     }
 
     open fun onDeleteChatClick(channel: SceytChannel) {
@@ -380,8 +381,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
             MuteNotificationDialog(this@ConversationInfoActivity) {
                 val until = when (it) {
                     MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                    MuteTypeEnum.Mute2Hour -> TimeUnit.HOURS.toMillis(2)
-                    MuteTypeEnum.Mute1Day -> TimeUnit.DAYS.toMillis(1)
+                    MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
                     MuteTypeEnum.MuteForever -> 0L
                 }
                 muteChannel(until)
@@ -408,6 +408,54 @@ open class ConversationInfoActivity : AppCompatActivity() {
                 }))
             }
             layout.startAnimation(alphaAnimation)
+        }
+    }
+
+    open fun setChannelTitle(channel: SceytChannel) {
+        with(binding ?: return) {
+            subject.text = channel.channelSubject
+            titleToolbar.text = channel.channelSubject
+        }
+    }
+
+    open fun setPresenceOrMembers(channel: SceytChannel) {
+        with(binding ?: return) {
+            val title: String = if (channel is SceytDirectChannel) {
+                val member = channel.peer ?: return
+                if (member.user.presence?.state == PresenceState.Online) {
+                    getString(R.string.sceyt_online)
+                } else {
+                    member.user.presence?.lastActiveAt?.let {
+                        if (it != 0L)
+                            DateTimeUtil.getPresenceDateFormatData(this@ConversationInfoActivity, Date(it))
+                        else ""
+                    } ?: ""
+                }
+            } else {
+                if (channel.channelType == ChannelTypeEnum.Private)
+                    getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
+                else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
+            }
+            tvPresenceOrMembers.text = title
+            subTitleToolbar.text = title
+        }
+    }
+
+    open fun setChannelDescription(channel: SceytChannel) {
+        with(binding ?: return) {
+            if (channel is SceytDirectChannel) {
+                val status = channel.peer?.user?.presence?.status
+                        ?: SceytKitConfig.presenceStatusText
+                if (status.isNotNullOrBlank()) {
+                    tvTitle.text = getString(R.string.sceyt_about)
+                    tvDescription.text = status
+                } else groupChannelDescription.isVisible = false
+            } else {
+                if (channel.label.isNotNullOrBlank()) {
+                    tvTitle.text = getString(R.string.sceyt_channel_description)
+                    tvDescription.text = channel.label
+                } else groupChannelDescription.isVisible = false
+            }
         }
     }
 

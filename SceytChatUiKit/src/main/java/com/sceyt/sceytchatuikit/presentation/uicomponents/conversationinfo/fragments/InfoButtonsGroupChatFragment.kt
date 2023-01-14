@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsGroupChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -60,6 +61,12 @@ class InfoButtonsGroupChatFragment : Fragment() {
 
         more.setOnClickListenerDisableClickViewForWhile {
             buttonsListener?.invoke(ClickActionsEnum.More)
+        }
+    }
+
+    private fun determinateState() {
+        if (channel.channelType == ChannelTypeEnum.Private) {
+
         }
     }
 

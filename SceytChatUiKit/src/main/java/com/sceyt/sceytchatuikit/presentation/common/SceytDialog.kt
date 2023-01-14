@@ -8,6 +8,7 @@ import androidx.annotation.StringRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytDialogViewBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class SceytDialog(
         context: Context,
@@ -73,8 +74,9 @@ class SceytDialog(
             SceytDialog(context, positiveCb)
                 .setTitle(context.getString(titleId))
                 .setDescription(context.getString(descId))
-                .setPositiveButtonTextColor(context.getCompatColor(R.color.sceyt_color_red))
                 .setPositiveButtonTitle(context.getString(positiveBtnTitleId))
+                .setPositiveButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                .setNegativeButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
                 .show()
         }
     }
