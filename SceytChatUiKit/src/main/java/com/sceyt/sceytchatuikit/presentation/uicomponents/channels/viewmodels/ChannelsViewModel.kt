@@ -33,8 +33,15 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
 
+    private val _searchChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
+    val searchChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _searchChannelsFlow
+
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
+
+    enum class NotifyFlow {
+        LOAD, SEARCH
+    }
 
     fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null) {
         //Reset search if any
@@ -50,14 +57,21 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun searchChannels(offset: Int, query: List<String>, loadKey: LoadKeyData? = null) {
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+    fun searchChannels(offset: Int, query: List<String>, loadKey: LoadKeyData? = null, notifyFlow: NotifyFlow) {
+        if (notifyFlow == NotifyFlow.LOAD)  {
+            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
-        notifyPageLoadingState(false)
+            notifyPageLoadingState(false)
+        }
 
         viewModelScope.launch(Dispatchers.IO) {
             channelMiddleWare.searchChannels(offset, query, loadKey, false).collect {
-                initPaginationResponse(it)
+                when (notifyFlow) {
+                    // Notifies chanel list like getChannels
+                    NotifyFlow.LOAD -> initPaginationResponse(it)
+                    // Just notifies search flow
+                    NotifyFlow.SEARCH -> _searchChannelsFlow.value = it
+                }
             }
         }
     }
