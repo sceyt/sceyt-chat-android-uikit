@@ -10,6 +10,8 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.DialogChannelActionsBinding
+import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChantButtonsActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: DialogChannelActionsBinding
@@ -23,6 +25,7 @@ class DirectChantButtonsActionsDialog(context: Context) : Dialog(context, R.styl
         }.root)
 
         binding.initView()
+        binding.setupStyle()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
             val wlp: WindowManager.LayoutParams = it.attributes
@@ -69,6 +72,10 @@ class DirectChantButtonsActionsDialog(context: Context) : Dialog(context, R.styl
 
     enum class ActionsEnum {
         ClearHistory, BlockUser, UnBlockUser, Delete
+    }
+
+    private fun DialogChannelActionsBinding.setupStyle() {
+        unBlockUser.setTextViewDrawableColor(SceytKitConfig.sceytColorAccent)
     }
 
     companion object {

@@ -131,16 +131,24 @@ fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000
 
 fun TextView.setTextViewDrawableColor(@ColorRes color: Int) {
     for (drawable in compoundDrawables) {
-        if (drawable != null) {
+        if (drawable != null)
             drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
-        }
+    }
+    for (drawable in compoundDrawablesRelative) {
+        if (drawable != null)
+            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
     }
 }
 
 fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
     texts.forEach {
-        for (drawable in it.compoundDrawables) {
-            if (drawable != null) {
+        it.compoundDrawables.forEach { drawable ->
+            drawable?.let {
+                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            }
+        }
+        it.compoundDrawablesRelative.forEach { drawable ->
+            drawable?.let {
                 drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
             }
         }

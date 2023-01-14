@@ -27,11 +27,7 @@ class MuteNotificationDialog(
             dismiss()
         }
         mBinding.muteTwoHour.setOnClickListener {
-            chooseListener?.invoke(MuteTypeEnum.Mute2Hour)
-            dismiss()
-        }
-        mBinding.muteOneDay.setOnClickListener {
-            chooseListener?.invoke(MuteTypeEnum.Mute1Day)
+            chooseListener?.invoke(MuteTypeEnum.Mute8Hour)
             dismiss()
         }
         mBinding.muteForever.setOnClickListener {

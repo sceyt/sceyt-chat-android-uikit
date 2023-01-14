@@ -116,8 +116,7 @@ class ProfileFragment : Fragment() {
                 MuteNotificationDialog(requireContext()) {
                     val until = when (it) {
                         MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                        MuteTypeEnum.Mute2Hour -> TimeUnit.HOURS.toMillis(2)
-                        MuteTypeEnum.Mute1Day -> TimeUnit.DAYS.toMillis(1)
+                        MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
                         MuteTypeEnum.MuteForever -> 0L
                     }
                     viewModel.muteNotifications(until)
