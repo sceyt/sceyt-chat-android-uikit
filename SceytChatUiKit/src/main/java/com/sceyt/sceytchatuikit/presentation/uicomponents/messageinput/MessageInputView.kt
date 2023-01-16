@@ -68,7 +68,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
     private var disabledInput: Boolean = false
 

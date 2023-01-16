@@ -33,6 +33,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -55,7 +56,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var updateTypingJob: Job? = null
     private var isGroup = false
     private var typingTextBuilder: ((SceytMember) -> String)? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var enablePresence: Boolean = true

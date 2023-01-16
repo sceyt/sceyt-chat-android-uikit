@@ -95,7 +95,7 @@ class InfoButtonsPublicChannelFragment : Fragment(), SceytKoinComponent {
             join.isVisible = false
             binding.muteUnMute.isVisible = true
 
-            val enabledActions = myRole?.name == RoleTypeEnum.Owner.value() || myRole?.name == "admin"
+            val enabledActions = myRole?.name == RoleTypeEnum.Owner.toString() || myRole?.name == "admin"
             more.isVisible = enabledActions
             add.isVisible = enabledActions
             leave.isVisible = !enabledActions

@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
@@ -27,6 +28,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -74,6 +76,8 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                 item.file.openFile(requireContext())
             })
+            getUserNameBuilder()
+                    ?: SceytKitConfig.userNameBuilder?.let { builder -> it.setUserNameBuilder(builder) }
         })
         with((binding ?: return).rvVoice) {
             adapter = mediaAdapter
@@ -96,6 +100,8 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
     }
 
+    open fun getUserNameBuilder(): ((User) -> String)? = SceytKitConfig.userNameBuilder
+
     protected fun loadInitialFilesList() {
         viewModel.loadMessages(channel.id, 0, false, mediaType)
     }
@@ -114,7 +120,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
             post {
                 (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
-                    if (it > (binding?.root?.height ?: 0))
+                    if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }
             }

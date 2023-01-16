@@ -172,6 +172,15 @@ open class ConversationInfoActivity : AppCompatActivity() {
         icBack.setOnClickListener {
             onBackPressed()
         }
+
+        members.setOnClickListener {
+            binding ?: return@setOnClickListener
+            supportFragmentManager.commit {
+                setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+                addToBackStack(ChannelMembersFragment::class.java.simpleName)
+                replace(R.id.rootFrameLayout, getChannelMembersFragment(channel))
+            }
+        }
     }
 
     protected fun addAppBarOffsetChangeListener(appBar: AppBarLayout?) {
@@ -196,11 +205,9 @@ open class ConversationInfoActivity : AppCompatActivity() {
         val fragments = arrayListOf<Fragment>(
             getChannelMediaFragment(channel),
             getChannelFilesFragment(channel),
-            getChannelLinksFragment(channel),
             getChannelVoiceFragment(channel),
+            getChannelLinksFragment(channel),
         )
-        /*  if (channel.channelType != ChannelTypeEnum.Direct)
-              fragments.add(0, getChannelMembersFragment(channel))*/
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
 
@@ -208,20 +215,15 @@ open class ConversationInfoActivity : AppCompatActivity() {
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
     }
 
-    private fun setAvatarImage(filePath: String?) {
-        avatarUrl = filePath
-        binding?.avatar?.setImageUrl(filePath)
-    }
-
     private fun setChannelDetails(channel: SceytChannel) {
         avatarUrl = channel.iconUrl
         with(binding ?: return) {
-            avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
-            toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
+            groupChannelMembers.isVisible = channel.isGroup
 
             setChannelTitle(channel)
             setPresenceOrMembers(channel)
             setChannelDescription(channel)
+            setChannelAvatar(channel)
         }
     }
 
@@ -274,6 +276,8 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     protected fun getChannel() = channel.clone()
+
+    protected fun getBinding() = binding
 
     open fun setActivityContentView() {
         setContentView(ActivityConversationInfoBinding.inflate(layoutInflater)
@@ -492,6 +496,13 @@ open class ConversationInfoActivity : AppCompatActivity() {
             }
             tvPresenceOrMembers.text = title
             subTitleToolbar.text = title
+        }
+    }
+
+    open fun setChannelAvatar(channel: SceytChannel) {
+        with(binding ?: return) {
+            avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
+            toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
         }
     }
 

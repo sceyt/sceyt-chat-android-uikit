@@ -5,10 +5,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 
 sealed interface MemberClickListeners {
 
-    fun interface MoreClickClickListener : MemberClickListeners {
-        fun onMoreClick(view: View, item: MemberItem.Member)
+    fun interface MemberLongClickListener : MemberClickListeners {
+        fun onMemberLongClick(view: View, item: MemberItem.Member)
     }
 
     /** Use this if you want to implement all callbacks */
-    interface ClickListeners : MoreClickClickListener
+    interface ClickListeners : MemberLongClickListener
 }

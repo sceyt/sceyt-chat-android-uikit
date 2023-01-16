@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 open class MessageViewHolderFactory(context: Context) {
@@ -23,7 +24,7 @@ open class MessageViewHolderFactory(context: Context) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {

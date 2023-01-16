@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.annotation.ColorRes
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import com.sceyt.sceytchatuikit.R
@@ -104,6 +105,11 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
                 listener.invoke(it.toString())
             }
         }
+    }
+
+    fun setIconsTint(@ColorRes colorId: Int) {
+        iconsTint = colorId
+        setIconsAndColors()
     }
 
     fun setBackClickListener(listener: OnClickListener) {

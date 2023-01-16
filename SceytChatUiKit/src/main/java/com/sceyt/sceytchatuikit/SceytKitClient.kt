@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -42,6 +43,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
+    private val persistenceAttachmentsLogic by inject<PersistenceAttachmentLogic>()
     private val sceytSyncManager by inject<SceytSyncManager>()
     private val filesTransferService by inject<FileTransferService>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
@@ -139,6 +141,8 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     fun getChannelsMiddleWare() = persistenceChannelsMiddleWare
 
     fun getMessagesMiddleWare() = persistenceMessagesMiddleWare
+
+    fun getAttachmentsLogic() = persistenceAttachmentsLogic
 
     fun getMembersMiddleWare() = persistenceMembersMiddleWare
 
