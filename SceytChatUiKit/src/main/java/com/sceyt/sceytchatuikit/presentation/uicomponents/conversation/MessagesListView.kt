@@ -531,8 +531,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = listener
     }
 
-    fun enableDisableClickActions(enabled: Boolean) {
-        enabledClickActions = enabled
+    fun enableDisableClickActions(enabled: Boolean, force: Boolean) {
+        if (force)
+            enabledClickActions = enabled
+        else if (enabledClickActions)
+            enabledClickActions = enabled
     }
 
 
@@ -566,7 +569,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {
-        item.openFile(context)
+        item.file.openFile(context)
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {

@@ -44,7 +44,7 @@
             android:layout_margin="6dp"
             android:background="@drawable/sceyt_bg_corners_20"
             android:backgroundTint="#4D000000"
-            android:drawableStart="@drawable/ic_video"
+            android:drawableStart="@drawable/sceyt_ic_video"
             android:drawablePadding="5dp"
             android:includeFontPadding="false"
             android:paddingHorizontal="7dp"

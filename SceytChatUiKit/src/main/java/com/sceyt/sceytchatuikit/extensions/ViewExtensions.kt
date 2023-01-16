@@ -2,6 +2,8 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.annotation.SuppressLint
 import android.content.res.Resources
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
@@ -9,6 +11,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
@@ -16,6 +21,7 @@ import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
+import com.sceyt.sceytchatuikit.shared.utils.ViewEnabledUtils
 import kotlinx.coroutines.*
 import kotlin.math.roundToInt
 
@@ -113,5 +119,38 @@ fun View.setOnLongClickListenerAvailable(clockAvailableData: ClickAvailableData,
             }, disableDuration)
         }
         return@setOnLongClickListener true
+    }
+}
+
+fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+    setOnClickListener {
+        ViewEnabledUtils.disableClickViewForWhile(it, disableDuration)
+        onClickCallBack.invoke(it)
+    }
+}
+
+fun TextView.setTextViewDrawableColor(@ColorRes color: Int) {
+    for (drawable in compoundDrawables) {
+        if (drawable != null)
+            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
+    }
+    for (drawable in compoundDrawablesRelative) {
+        if (drawable != null)
+            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
+    }
+}
+
+fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
+    texts.forEach {
+        it.compoundDrawables.forEach { drawable ->
+            drawable?.let {
+                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            }
+        }
+        it.compoundDrawablesRelative.forEach { drawable ->
+            drawable?.let {
+                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            }
+        }
     }
 }

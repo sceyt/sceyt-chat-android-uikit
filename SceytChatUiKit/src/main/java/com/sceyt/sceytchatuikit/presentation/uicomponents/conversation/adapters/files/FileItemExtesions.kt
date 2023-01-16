@@ -5,12 +5,13 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import java.io.File
 
 
-fun FileListItem.getFileFromMetadata(): File? {
-    val path = file.filePath ?: return null
+fun SceytAttachment.getFileFromMetadata(): File? {
+    val path = filePath ?: return null
     try {
         return File(path)
     } catch (_: Exception) {
@@ -18,9 +19,9 @@ fun FileListItem.getFileFromMetadata(): File? {
     return null
 }
 
-fun FileListItem.openFile(context: Context) {
+fun SceytAttachment.openFile(context: Context) {
     try {
-        val fileName = file.name
+        val fileName = name
         var uri: Uri? = null
         val loadedFile = File(context.filesDir, fileName)
         if (loadedFile.exists()) {

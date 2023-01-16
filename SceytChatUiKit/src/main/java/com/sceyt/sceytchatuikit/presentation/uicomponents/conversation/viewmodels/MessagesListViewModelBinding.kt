@@ -74,7 +74,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId)
-                && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true))
+                && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true), false)
     }
 
     checkEnableDisableActions(channel)
@@ -220,6 +220,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         channel = it
         messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
         checkEnableDisableActions(channel)
+        if (channel.lastMessage == null)
+            messagesListView.clearData()
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onScrollToLastMessageLiveData.observe(lifecycleOwner, Observer {

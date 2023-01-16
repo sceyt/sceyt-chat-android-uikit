@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="20dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icBlocked"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/appCompatTextView2"
+        app:layout_constraintEnd_toStartOf="@+id/tvMessage"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
@@ -17,19 +19,22 @@
         app:srcCompat="@drawable/sceyt_ic_user_blocked" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/appCompatTextView2"
+        android:id="@+id/tvMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:drawablePadding="10dp"
+        android:ellipsize="end"
+        android:maxLines="3"
         android:paddingVertical="18dp"
-        android:text="@string/sceyt_you_blocked_this_user"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="14sp"
+        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/icBlocked" />
+        app:layout_constraintStart_toEndOf="@+id/icBlocked"
+        tools:text="@tools:sample/lorem/random" />
 
     <View
         android:layout_width="match_parent"

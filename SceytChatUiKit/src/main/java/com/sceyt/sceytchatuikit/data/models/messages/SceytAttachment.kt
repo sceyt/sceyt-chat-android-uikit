@@ -7,21 +7,26 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytAttachment(
+        val id: Long?,
         val tid: Long,
+        val messageId: Long,
         val messageTid: Long,
+        var userId: String?,
         val name: String,
         val type: String,
         var metadata: String?,
         var fileSize: Long,
+        val createdAt: Long,
         var url: String?,
         var filePath: String?,
         var transferState: TransferState?,
         var progressPercent: Float?
+
 ) : Parcelable, Cloneable {
 
     public override fun clone(): SceytAttachment {
-        return SceytAttachment(tid, messageTid, name, type, metadata, fileSize, url,
-            filePath, transferState, progressPercent)
+        return SceytAttachment(id, tid, messageId, messageTid, userId, name, type, metadata, fileSize,
+            createdAt, url, filePath, transferState, progressPercent)
     }
 
     fun updateWithTransferData(data: TransferData) {

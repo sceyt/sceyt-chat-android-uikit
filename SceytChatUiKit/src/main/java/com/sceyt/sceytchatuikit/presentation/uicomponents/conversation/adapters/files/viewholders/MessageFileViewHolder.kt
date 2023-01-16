@@ -17,7 +17,7 @@ class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
         private val messageListeners: MessageClickListenersImpl?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseFileViewHolder(binding.root) {
+) : BaseFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()
@@ -38,7 +38,6 @@ class MessageFileViewHolder(
 
     override fun bind(item: FileListItem) {
         super.bind(item)
-        listenerKey = getKey()
         val file = (item as? FileListItem.File)?.file ?: return
         setListener()
 
@@ -48,23 +47,23 @@ class MessageFileViewHolder(
             tvFileSize.text = file.fileSize.toPrettySize()
         }
 
-        transferData?.let {
+        viewHolderHelper.transferData?.let {
             updateState(it)
-            if (it.filePath == null)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
     }
 
     private fun updateState(data: TransferData) {
-        if (isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        transferData = data
+        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
+        viewHolderHelper. transferData = data
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload, PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
             Downloading, Uploading -> {
                 binding.icFile.setImageResource(0)
@@ -80,7 +79,7 @@ class MessageFileViewHolder(
     }
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
     }
 
     private fun SceytMessageFileItemBinding.setupStyle() {

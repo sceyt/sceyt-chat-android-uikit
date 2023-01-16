@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders
 
-import android.content.Context
 import android.view.View
 import android.widget.Toast
 import com.sceyt.sceytchatuikit.R
@@ -10,8 +9,6 @@ import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 
 abstract class BaseGalleryViewHolder(view: View,
                                      protected val clickListener: MediaClickListener) : BaseViewHolder<MediaItem>(view) {
-
-    protected val context: Context by lazy { view.context }
 
     protected fun onItemClick(item: MediaItem) {
         if (item.media.isWrongImage) {

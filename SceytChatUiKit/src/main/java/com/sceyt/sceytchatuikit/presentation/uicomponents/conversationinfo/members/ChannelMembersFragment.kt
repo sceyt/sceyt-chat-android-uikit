@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members
 
 import android.app.Activity
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,10 +32,7 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.screenHeightPx
-import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -46,12 +44,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.popups.PopupMenuMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.inject
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     private var binding: FragmentChannelMembersBinding? = null
-    private val viewModel by viewModel<ChannelMembersViewModel>()
+    private val viewModel by inject<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
     private var pageStateView: PageStateView? = null
@@ -73,6 +70,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         loadInitialMembers()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        membersAdapter = null
+    }
+
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.getParcelable(CHANNEL))
     }
@@ -92,19 +94,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun initViews() {
-        binding?.addMembers?.setOnClickListener {
-            onAddMembersClick()
-            /*  *//* addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
-             requireContext().asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)*/
-        }
-    }
+        binding?.icAddMembers?.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+        binding?.toolbar?.setIconsTint(SceytKitConfig.sceytColorAccent)
 
-    private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
-        /* if (result.resultCode == Activity.RESULT_OK) {
-             result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                 addMembersToChannel(users)
-             }
-         }*/
+        binding?.layoutAddMembers?.setOnClickListener {
+            onAddMembersClick()
+        }
+
+        binding?.toolbar?.setBackClickListener {
+            requireActivity().onBackPressed()
+        }
     }
 
     private fun setNewOwner(newOwnerId: String) {
@@ -182,7 +181,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
             membersAdapter = ChannelMembersAdapter(data as ArrayList, currentUserIsOwner,
                 ChannelMembersViewHolderFactory(requireContext()).also {
-                    it.setOnClickListener(MemberClickListeners.MoreClickClickListener(::showMemberMoreOptionPopup))
+                    it.setOnClickListener(MemberClickListeners.MemberLongClickListener(::showMemberMoreOptionPopup))
                 })
 
             binding?.rvMembers?.adapter = membersAdapter
@@ -216,7 +215,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                         itemsDb.add(MemberItem.LoadingMore)
                 } else itemsDb.remove(MemberItem.LoadingMore)
 
-            Log.i("sdfsdf","final "+itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+            Log.i("sdfsdf", "final " + itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
             setOrUpdateMembersAdapter(itemsDb)
         }
     }
@@ -277,18 +276,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             is PaginationResponse.DBResponse -> {
                 if (data.offset == 0) {
                     setOrUpdateMembersAdapter(data.data)
-                    Log.i("sdfsdf","db =0 "+data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
-                } else
-                {
-                    Log.i("sdfsdf","db >0 "+data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                    Log.i("sdfsdf", "db =0 " + data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                } else {
+                    Log.i("sdfsdf", "db >0 " + data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
 
                     membersAdapter?.addNewItems(data.data)
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                if (data.data is SceytResponse.Success)
-                {
-                    Log.i("sdfsdf","server "+data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                if (data.data is SceytResponse.Success) {
+                    Log.i("sdfsdf", "server " + data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
                     updateMembersWithServerResponse(data, data.hasNext)
                 }
             }

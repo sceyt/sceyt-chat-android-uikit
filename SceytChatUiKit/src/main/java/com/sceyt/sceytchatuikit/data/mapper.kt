@@ -92,12 +92,16 @@ fun GroupChannel.getChannelUrl(): String {
 }
 
 fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float) = SceytAttachment(
+    id = id,
     tid = tid,
     messageTid = messageTid,
+    messageId = messageId,
+    userId = userId,
     name = name,
     type = type,
     metadata = metadata,
     fileSize = uploadedFileSize,
+    createdAt = createdAt,
     url = url,
     filePath = filePath,
     transferState = transferState,
@@ -105,12 +109,20 @@ fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
 )
 
 
-fun SceytAttachment.toAttachment(): Attachment = Attachment.Builder(filePath, url, type)
-    .setMetadata(metadata)
-    .setName(name)
-    .setFileSize(fileSize)
-    .withTid(tid)
-    .build()
+fun SceytAttachment.toAttachment(): Attachment = Attachment(
+    id ?: 0,
+    messageId,
+    name,
+    type,
+    metadata,
+    fileSize,
+    url,
+    createdAt,
+    userId,
+    tid,
+    filePath,
+    false,
+)
 
 
 fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
