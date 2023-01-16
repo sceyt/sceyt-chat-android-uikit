@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.pushes
 
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.PrivateChannel
@@ -28,10 +29,20 @@ fun getMessageBodyFromPushJson(messageJson: String?, channelId: Long?, from: Use
     val transient = messageJsonObject.getBoolean("Transient")
     val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
+    val attachmentArray = ArrayList<Attachment>()
+    val attachments = messageJsonObject.getJSONArray("Attachments")
+    for (i in 0 until attachments.length()) {
+        when (val value: Any = attachments[i]) {
+            is JSONObject -> {
+                getAttachmentFromPushJson(value)?.let { attachmentArray.add(it) }
+            }
+        }
+    }
+
     return Message(messageId, messageId, channelId
             ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
         0L, true, true, transient, false, false, DeliveryStatus.Sent, MessageState.None,
-        from, null, null, null, null, null, null,
+        from, attachmentArray.toTypedArray(), null, null, null, null, null,
         null, null, false, 0, 0)
 }
 
@@ -73,4 +84,15 @@ fun getChannelFromPushJson(channelJson: String?): Channel? {
             false, 0, 0)
     }
     return channel
+}
+
+@Throws(JSONException::class)
+fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
+    attachment ?: return null
+    val data = attachment.getString("Data")
+    val name = attachment.getString("Name")
+    val type = attachment.getString("Type")
+    val size = attachment.getLong("Size")
+
+    return Attachment.Builder("", data, type).setFileSize(size).setName(name).build()
 }
