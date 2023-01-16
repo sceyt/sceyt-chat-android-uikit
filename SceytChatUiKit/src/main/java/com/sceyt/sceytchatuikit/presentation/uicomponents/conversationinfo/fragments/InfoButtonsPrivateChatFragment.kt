@@ -6,20 +6,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsGroupChannelBinding
+import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPrivateChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class InfoButtonsGroupChatFragment : Fragment() {
-    private lateinit var binding: SceytInfoPageLayoutButtonsGroupChannelBinding
+class InfoButtonsPrivateChatFragment : Fragment() {
+    private lateinit var binding: SceytInfoPageLayoutButtonsPrivateChannelBinding
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytInfoPageLayoutButtonsGroupChannelBinding.inflate(layoutInflater, container, false)
+        return SceytInfoPageLayoutButtonsPrivateChannelBinding.inflate(layoutInflater, container, false)
             .also { binding = it }
             .root
     }
@@ -36,7 +35,7 @@ class InfoButtonsGroupChatFragment : Fragment() {
         channel = requireNotNull(arguments?.getParcelable(ChannelLinksFragment.CHANNEL))
     }
 
-    private fun SceytInfoPageLayoutButtonsGroupChannelBinding.setOnClickListeners() {
+    private fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setOnClickListeners() {
         muteUnMute.apply {
             if (channel.muted) {
                 text = getString(R.string.sceyt_un_mute)
@@ -47,26 +46,20 @@ class InfoButtonsGroupChatFragment : Fragment() {
             }
         }
 
+        call.setOnClickListenerDisableClickViewForWhile {
+            buttonsListener?.invoke(ClickActionsEnum.Call)
+        }
+
+        video.setOnClickListenerDisableClickViewForWhile {
+            buttonsListener?.invoke(ClickActionsEnum.VideoCall)
+        }
+
         muteUnMute.setOnClickListenerDisableClickViewForWhile {
             buttonsListener?.invoke(if (channel.muted) ClickActionsEnum.UnMute else ClickActionsEnum.Mute)
         }
 
-        join.setOnClickListenerDisableClickViewForWhile {
-            buttonsListener?.invoke(ClickActionsEnum.Join)
-        }
-
-        add.setOnClickListenerDisableClickViewForWhile {
-            buttonsListener?.invoke(ClickActionsEnum.Add)
-        }
-
         more.setOnClickListenerDisableClickViewForWhile {
             buttonsListener?.invoke(ClickActionsEnum.More)
-        }
-    }
-
-    private fun determinateState() {
-        if (channel.channelType == ChannelTypeEnum.Private) {
-
         }
     }
 
@@ -75,19 +68,19 @@ class InfoButtonsGroupChatFragment : Fragment() {
     }
 
     enum class ClickActionsEnum {
-        Mute, UnMute, Report, Join, Add, More
+        Call, VideoCall, Mute, UnMute, More
     }
 
-    private fun SceytInfoPageLayoutButtonsGroupChannelBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(muteUnMute, join, add, more),
+    private fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setupStyle() {
+        setTextViewsDrawableColor(listOf(muteUnMute, call, video, more),
             requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoButtonsGroupChatFragment {
-            val fragment = InfoButtonsGroupChatFragment()
+        fun newInstance(channel: SceytChannel): InfoButtonsPrivateChatFragment {
+            val fragment = InfoButtonsPrivateChatFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

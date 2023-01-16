@@ -12,7 +12,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class InfoButtonsDirectChatFragment : Fragment() {
+open class InfoButtonsDirectChatFragment : Fragment() {
     private lateinit var binding: SceytInfoPageLayoutButtonsDirectChannelBinding
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel

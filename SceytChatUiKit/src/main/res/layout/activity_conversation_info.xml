@@ -175,11 +175,12 @@
                         android:id="@+id/members"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="10dp"
                         android:drawableStart="@drawable/sceyt_ic_members"
                         android:drawablePadding="16dp"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
+                        android:paddingVertical="6dp"
                         android:text="@string/sceyt_members"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -189,12 +190,14 @@
                         android:id="@+id/admins"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="14dp"
                         android:drawableStart="@drawable/sceyt_ic_admin"
                         android:drawablePadding="16dp"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
+                        android:paddingVertical="6dp"
                         android:text="@string/sceyt_admins"
+                        android:visibility="gone"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/members" />
@@ -203,7 +206,7 @@
                         android:id="@+id/divider4"
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="10dp"
                         android:background="@color/sceyt_color_input"
                         app:layout_constraintTop_toBottomOf="@+id/admins" />
 
@@ -211,8 +214,8 @@
                         android:id="@+id/group_channel_members"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        app:constraint_referenced_ids="divider4,admins,members" />
+                        android:visibility="visible"
+                        app:constraint_referenced_ids="divider4,members" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
