@@ -31,11 +31,11 @@ class PersistenceAttachmentLogicImpl(
     }
 
     override suspend fun getNextAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>): Flow<PaginationResponse<AttachmentWithUserData>> {
-        TODO("Not yet implemented")
+        return loadAttachments(loadType = LoadNext, conversationId, lastAttachmentId, types, offset = 0, loadKey = LoadKeyData(), false)
     }
 
     override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>): Flow<PaginationResponse<AttachmentWithUserData>> {
-        TODO("Not yet implemented")
+        return loadAttachments(loadType = LoadNear, conversationId, attachmentId, types, offset = 0, loadKey = LoadKeyData(), false)
     }
 
     override fun updateTransferDataByMsgTid(data: TransferData) {
@@ -82,7 +82,7 @@ class PersistenceAttachmentLogicImpl(
         var hasNext = false
         var hasPrev = false
         val hasDiff = true
-        var data: List<AttachmentWithUserData> = arrayListOf()
+        var data: List<AttachmentWithUserData>
         var mappedResponse: SceytResponse<List<AttachmentWithUserData>> = SceytResponse.Error()
 
         when (loadType) {
@@ -100,27 +100,58 @@ class PersistenceAttachmentLogicImpl(
                 } else
                     mappedResponse = SceytResponse.Error((response as SceytResponse.Error).exception)
             }
-            LoadNext -> TODO()
-            LoadNear -> TODO()
-            LoadNewest -> TODO()
+            LoadNext -> {
+                val response = attachmentsRepository.getNextAttachments(conversationId, attachmentId, types)
+                if (response is SceytResponse.Success) {
+                    response.data?.let { pair ->
+                        data = pair.first.map {
+                            AttachmentWithUserData(it.toSceytAttachment(it.messageId,
+                                TransferState.PendingDownload, 0f), pair.second[it.userId])
+                        }
+                        mappedResponse = SceytResponse.Success(data)
+                    }
+                    hasPrev = response.data?.first?.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                } else
+                    mappedResponse = SceytResponse.Error((response as SceytResponse.Error).exception)
+            }
+            LoadNear -> {
+                val response = attachmentsRepository.getNearAttachments(conversationId, attachmentId, types)
+                if (response is SceytResponse.Success) {
+                    response.data?.let { pair ->
+                        data = pair.first.map {
+                            AttachmentWithUserData(it.toSceytAttachment(it.messageId,
+                                TransferState.PendingDownload, 0f), pair.second[it.userId])
+                        }
+                        mappedResponse = SceytResponse.Success(data)
+
+                        val groupOldAndNewData = pair.first.groupBy { it.id > attachmentId }
+                        val newest = groupOldAndNewData[true]
+                        val oldest = groupOldAndNewData[false]
+
+                        hasNext = (newest?.size ?: 0) >= SceytKitConfig.MESSAGES_LOAD_SIZE / 2
+                        hasPrev = (oldest?.size ?: 0) >= SceytKitConfig.MESSAGES_LOAD_SIZE / 2
+                    }
+                } else
+                    mappedResponse = SceytResponse.Error((response as SceytResponse.Error).exception)
+            }
+            else -> throw java.lang.Exception("Load type $loadType not supported from attachments")
+
+            // saveMessagesToDb(messages)
+            // val tIds = getMessagesTid(messages)
+            // val payloads = messageDao.getAllPayLoadsByMsgTid(*tIds.toLongArray())
+
+            /*  messages.forEach {
+                  findAndUpdateAttachmentPayLoads(it, payloads)
+                  it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
+              }*/
+
+            /* if (loadType == LoadNear && loadKey.key == LoadKeyType.ScrollToMessageById.longValue)
+                 messagesCash.clear()*/
+
+            //hasDiff = messagesCash.addAll(messages, true)
         }
-
-        // saveMessagesToDb(messages)
-        // val tIds = getMessagesTid(messages)
-        // val payloads = messageDao.getAllPayLoadsByMsgTid(*tIds.toLongArray())
-
-        /*  messages.forEach {
-              findAndUpdateAttachmentPayLoads(it, payloads)
-              it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
-          }*/
-
-        /* if (loadType == LoadNear && loadKey.key == LoadKeyType.ScrollToMessageById.longValue)
-             messagesCash.clear()*/
-
-        //hasDiff = messagesCash.addAll(messages, true)
-
         return PaginationResponse.ServerResponse(
-            data = mappedResponse, cashData = data,
+            data = mappedResponse, cashData = emptyList(),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }

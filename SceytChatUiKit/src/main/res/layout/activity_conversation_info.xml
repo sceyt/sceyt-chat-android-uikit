@@ -57,7 +57,7 @@
                         android:fontFamily="@font/roboto_medium"
                         android:maxLines="2"
                         android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="@dimen/mediumTextSize"
+                        android:textSize="20sp"
                         app:layout_constraintEnd_toEndOf="@+id/avatar"
                         app:layout_constraintStart_toStartOf="@+id/avatar"
                         app:layout_constraintTop_toBottomOf="@+id/avatar"
@@ -176,12 +176,15 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
+                        android:background="?selectableItemBackground"
                         android:drawableStart="@drawable/sceyt_ic_members"
                         android:drawablePadding="16dp"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="6dp"
                         android:text="@string/sceyt_members"
+                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textSize="16sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/divider3" />
@@ -191,12 +194,15 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
+                        android:background="?selectableItemBackground"
                         android:drawableStart="@drawable/sceyt_ic_admin"
                         android:drawablePadding="16dp"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="6dp"
                         android:text="@string/sceyt_admins"
+                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textSize="16sp"
                         android:visibility="gone"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -214,7 +220,6 @@
                         android:id="@+id/group_channel_members"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="visible"
                         app:constraint_referenced_ids="divider4,members" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -357,6 +362,11 @@
             app:layout_constraintTop_toBottomOf="@+id/layoutDetails" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <FrameLayout
+        android:id="@+id/rootFrameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

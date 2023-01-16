@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
@@ -10,6 +11,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.*
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 open class ChannelAttachmentViewHolderFactory(context: Context,
@@ -17,6 +19,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     protected val layoutInflater = LayoutInflater.from(context)
     private var clickListeners = AttachmentClickListenersImpl()
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelFileViewHolder {
@@ -52,7 +55,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     open fun createVoiceViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return VoiceViewHolder(
             ItemChannelVoiceBinding.inflate(layoutInflater, parent, false), clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            needMediaDataCallback = needMediaDataCallback, userNameBuilder = userNameBuilder)
     }
 
     open fun createLinkViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
@@ -88,6 +91,10 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
+    }
+
+    fun setUserNameBuilder(builder: (User) -> String) {
+        userNameBuilder = builder
     }
 
     protected fun getNeedMediaDataCallback() = needMediaDataCallback

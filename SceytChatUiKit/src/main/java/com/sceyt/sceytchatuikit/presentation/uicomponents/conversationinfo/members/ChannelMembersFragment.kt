@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members
 
 import android.app.Activity
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,10 +32,7 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.screenHeightPx
-import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -96,19 +94,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun initViews() {
-        binding?.addMembers?.setOnClickListener {
-            onAddMembersClick()
-            /*  *//* addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext()))
-             requireContext().asAppCompatActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)*/
-        }
-    }
+        binding?.icAddMembers?.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+        binding?.toolbar?.setIconsTint(SceytKitConfig.sceytColorAccent)
 
-    private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
-        /* if (result.resultCode == Activity.RESULT_OK) {
-             result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                 addMembersToChannel(users)
-             }
-         }*/
+        binding?.layoutAddMembers?.setOnClickListener {
+            onAddMembersClick()
+        }
+
+        binding?.toolbar?.setBackClickListener {
+            requireActivity().onBackPressed()
+        }
     }
 
     private fun setNewOwner(newOwnerId: String) {
@@ -186,7 +181,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
             membersAdapter = ChannelMembersAdapter(data as ArrayList, currentUserIsOwner,
                 ChannelMembersViewHolderFactory(requireContext()).also {
-                    it.setOnClickListener(MemberClickListeners.MoreClickClickListener(::showMemberMoreOptionPopup))
+                    it.setOnClickListener(MemberClickListeners.MemberLongClickListener(::showMemberMoreOptionPopup))
                 })
 
             binding?.rvMembers?.adapter = membersAdapter

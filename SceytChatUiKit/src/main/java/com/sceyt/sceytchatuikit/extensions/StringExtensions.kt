@@ -56,3 +56,8 @@ fun CharSequence?.setBoldSpan(from: Int, to: Int): SpannableStringBuilder {
     str.setSpan(StyleSpan(Typeface.BOLD), from, to, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     return str
 }
+
+fun CharSequence?.firstCharToUppercase(): CharSequence? {
+    if (this == null || isNullOrBlank()) return this
+    return replaceRange(0, 1, first().uppercase())
+}

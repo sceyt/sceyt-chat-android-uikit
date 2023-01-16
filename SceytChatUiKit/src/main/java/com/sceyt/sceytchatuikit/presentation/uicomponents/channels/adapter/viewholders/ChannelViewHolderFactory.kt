@@ -24,7 +24,7 @@ open class ChannelViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
     private val channelClickListenersImpl = ChannelClickListenersImpl()
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {

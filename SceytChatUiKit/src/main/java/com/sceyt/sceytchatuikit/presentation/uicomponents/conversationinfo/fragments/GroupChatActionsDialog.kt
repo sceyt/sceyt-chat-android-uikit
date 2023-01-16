@@ -75,7 +75,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     private fun determinateState() {
         val myRole = channel.getMyRole(preferences.getUserId())
-        val enabledActions = myRole?.name == RoleTypeEnum.Owner.value()
+        val enabledActions = myRole?.name == RoleTypeEnum.Owner.toString()
         binding.delete.isVisible = enabledActions
     }
 

@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.ItemChannelVoiceBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
@@ -15,6 +16,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class VoiceViewHolder(private var binding: ItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
+                      private val userNameBuilder: ((User) -> String)?,
                       needMediaDataCallback: (NeedMediaInfoData) -> Unit)
     : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
 
@@ -31,7 +33,10 @@ class VoiceViewHolder(private var binding: ItemChannelVoiceBinding,
         val attachment = item.file
 
         with(binding) {
-            tvFileName.text = (item as ChannelFileItem.Voice).data.user?.getPresentableName()
+            val user = (item as ChannelFileItem.Voice).data.user
+            tvFileName.text = user?.let {
+                userNameBuilder?.invoke(it) ?: it.getPresentableName()
+            } ?: ""
             tvDate.text = DateTimeUtil.getDateTimeString(attachment.createdAt, "dd.MM.yy • HH:mm")
             with(tvDuration) {
                 fileItem.duration?.let {
