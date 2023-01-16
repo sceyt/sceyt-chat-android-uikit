@@ -60,10 +60,23 @@
         <item name="android:windowBackground">@drawable/sceyt_bg_dialog</item>
     </style>
 
+    <style name="SceytDialogNoTitle95" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowMinWidthMajor">95%</item>
+        <item name="android:windowMinWidthMinor">95%</item>
+        <item name="android:windowBackground">@drawable/sceyt_bg_dialog</item>
+    </style>
+
     <style name="SceytDialogWindowAnimation">
         <item name="android:windowEnterAnimation">@anim/sceyt_anim_dialog_enter</item>
         <item name="android:windowExitAnimation">@anim/sceyt_anim_dialog_exit</item>
     </style>
+
+    <style name="SceytDialogFromBottomAnimation">
+        <item name="android:windowEnterAnimation">@anim/sceyt_anim_slide_from_bottom</item>
+        <item name="android:windowExitAnimation">@anim/sceyt_anim_slide_to_bottom</item>
+    </style>
+
 
     <style name="SceytBottomNavigationTextStyle" parent="@style/TextAppearance.AppCompat.Caption">
         <item name="android:textSize">10sp</item>
@@ -81,6 +94,20 @@
         <item name="colorControlNormal">@color/sceyt_color_divider</item>
         <item name="colorControlActivated">@color/sceyt_color_accent</item>
         <item name="colorControlHighlight">@color/sceyt_color_accent</item>
+    </style>
+
+    <style name="WaafiTabLayout" parent="Theme.AppCompat">
+        <item name="tabTextAppearance">@style/TabTextAppearance</item>
+        <item name="tabIndicatorFullWidth">true</item>
+        <item name="tabTextColor">@color/sceyt_color_text_themed</item>
+        <item name="tabIndicatorColor">@color/sceyt_color_accent</item>
+    </style>
+
+
+    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+        <item name="fontFamily">@font/roboto_medium</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
 </resources>

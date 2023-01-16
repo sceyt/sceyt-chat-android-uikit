@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
-    // Todo di
     private val channelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val membersMiddleWare by inject<PersistenceMembersMiddleWare>()
 
@@ -39,6 +38,9 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
+
+    private val _joinLiveData = MutableLiveData<SceytChannel>()
+    val joinLiveData: LiveData<SceytChannel> = _joinLiveData
 
 
     fun getChannelFromServer(id: Long) {
@@ -108,6 +110,13 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.unMuteChannel(channelId)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
+        }
+    }
+
+    fun joinChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsMiddleWare.join(channelId)
+            notifyResponseAndPageState(_joinLiveData, response)
         }
     }
 }

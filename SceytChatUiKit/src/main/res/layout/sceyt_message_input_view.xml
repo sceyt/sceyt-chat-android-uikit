@@ -50,8 +50,7 @@
         android:layout_marginTop="1dp"
         android:background="@color/sceyt_color_dialog_bg_themed"
         android:paddingVertical="12dp"
-        app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage"
-        tools:layout_editor_absoluteX="16dp">
+        app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage">
 
         <androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/messageInput"
@@ -109,8 +108,8 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <include
-        android:id="@+id/layoutUserBlocked"
-        layout="@layout/sceyt_user_blocked"
+        android:id="@+id/layoutCloseInput"
+        layout="@layout/sceyt_disable_message_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"

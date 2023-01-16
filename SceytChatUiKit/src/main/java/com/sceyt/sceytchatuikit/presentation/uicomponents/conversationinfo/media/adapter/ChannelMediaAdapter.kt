@@ -3,18 +3,21 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 
-class ChannelMediaAdapter(private val attachments: ArrayList<FileListItem>,
-                          private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory)
-    : RecyclerView.Adapter<BaseFileViewHolder>() {
+class ChannelMediaAdapter(
+        private var attachments: ArrayList<ChannelFileItem>,
+        private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,
+)
+    : RecyclerView.Adapter<BaseChannelFileViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelFileViewHolder {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: BaseFileViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BaseChannelFileViewHolder, position: Int) {
         holder.bind(attachments[position])
     }
 
@@ -27,12 +30,12 @@ class ChannelMediaAdapter(private val attachments: ArrayList<FileListItem>,
     }
 
     private fun removeLoading() {
-        if (attachments.remove(FileListItem.LoadingMoreItem))
+        if (attachments.remove(ChannelFileItem.LoadingMoreItem))
             notifyItemRemoved(attachments.lastIndex + 1)
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun addNewItems(items: List<FileListItem>) {
+    fun addNewItems(items: List<ChannelFileItem>) {
         removeLoading()
         if (items.isEmpty()) return
 
@@ -43,5 +46,11 @@ class ChannelMediaAdapter(private val attachments: ArrayList<FileListItem>,
             notifyItemRangeInserted(attachments.size - items.size, items.size)
     }
 
-    fun getLastMediaItem() = attachments.findLast { it != FileListItem.LoadingMoreItem }
+    fun getLastMediaItem() = attachments.findLast { it !is ChannelFileItem.LoadingMoreItem }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clearData() {
+        attachments = arrayListOf()
+        notifyDataSetChanged()
+    }
 }

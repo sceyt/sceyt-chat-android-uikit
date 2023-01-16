@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
@@ -29,7 +30,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
-import com.sceyt.sceytchatuikit.persistence.mappers.getThumbByBytesAndSize
+import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
@@ -67,8 +68,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private var typingJob: Job? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
+    private var disabledInput: Boolean = false
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -144,6 +146,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun sendMessage() {
         val messageBody = binding.messageInput.text.toString().trim()
+        checkBodyIsLink()
 
         if (messageBody != "" || allAttachments.isNotEmpty()) {
             if (editMessage != null) {
@@ -206,6 +209,20 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
         }
+    }
+
+    private fun checkBodyIsLink(): Boolean {
+        val body = binding.messageInput.text.toString()
+        val isLink = Patterns.WEB_URL.matcher(body).matches();
+        if (isLink) {
+            val attachment = Attachment.Builder("", body, AttachmentTypeEnum.Link.value())
+                .withTid(ClientWrapper.generateTid())
+                .setName("")
+                .build()
+
+            allAttachments.add(attachment)
+        }
+        return isLink
     }
 
     private fun handleAttachmentClick() {
@@ -308,7 +325,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun loadReplyMessageImage(attachment: Attachment) {
         when {
             attachment.type.isEqualsVideoOrImage() -> {
-                val placeHolder = attachment.metadata.getThumbByBytesAndSize(true)?.second
+                val placeHolder = attachment.metadata.getInfoFromMetadata(true)?.second
                     ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
                 Glide.with(context)
                     .load(attachment.filePath)
@@ -324,6 +341,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
+    }
+
+    private fun hideInputWithMessage(message: String) {
+        binding.layoutCloseInput.apply {
+            tvMessage.text = message
+            root.isVisible = true
+        }
+        binding.layoutInput.isVisible = false
     }
 
     internal fun onStateChanged(newState: InputState) {
@@ -384,8 +409,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         rvAttachments.isVisible = false
                         layoutReplyOrEditMessage.root.isVisible = false
                     }
-                    layoutInput.isVisible = !isBlockedPeer
-                    layoutUserBlocked.root.isVisible = (channel as? SceytDirectChannel)?.peer?.user?.blocked == true
+                    if (isBlockedPeer)
+                        hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user))
+                    else {
+                        if (disabledInput.not()) {
+                            layoutCloseInput.root.isVisible = false
+                            layoutInput.isVisible = true
+                        }
+                    }
                 }
             }
             else -> {}
@@ -421,6 +452,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         addAttachments(attachments)
+    }
+
+
+    fun enableDisableInput(message: String, enable: Boolean) {
+        disabledInput = enable.not()
+        if (!enable)
+            hideInputWithMessage(message)
     }
 
     interface MessageInputActionCallback {

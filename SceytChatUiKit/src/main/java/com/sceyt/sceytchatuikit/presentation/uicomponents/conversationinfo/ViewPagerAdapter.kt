@@ -8,29 +8,41 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 
 class ViewPagerAdapter(private val activity: AppCompatActivity,
-                       private val mFragments: ArrayList<Fragment>) : FragmentStateAdapter(activity) {
+                       private val fragments: ArrayList<Fragment>) : FragmentStateAdapter(activity) {
 
     override fun getItemCount(): Int {
-        return mFragments.size
+        return fragments.size
     }
 
     override fun createFragment(position: Int): Fragment {
-        return mFragments[position]
+        return fragments[position]
     }
 
     fun getTagByPosition(position: Int): String {
-        return mFragments.getOrNull(position)?.let {
+        return fragments.getOrNull(position)?.let {
             when (it) {
                 is ChannelMembersFragment -> activity.getString(R.string.sceyt_members)
                 is ChannelMediaFragment -> activity.getString(R.string.sceyt_media)
                 is ChannelFilesFragment -> activity.getString(R.string.sceyt_files)
                 is ChannelLinksFragment -> activity.getString(R.string.sceyt_links)
+                is ChannelVoiceFragment -> activity.getString(R.string.sceyt_voice)
                 else -> ""
             }
         } ?: ""
     }
 
-    fun getFragment() = mFragments
+    fun getFragment() = fragments
+
+    fun historyCleared() {
+        fragments.forEach {
+            (it as? HistoryClearedListener)?.onCleared()
+        }
+    }
+
+    fun interface HistoryClearedListener{
+        fun onCleared()
+    }
 }

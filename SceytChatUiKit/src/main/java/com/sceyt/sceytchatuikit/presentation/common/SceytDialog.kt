@@ -4,8 +4,11 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.annotation.StringRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytDialogViewBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class SceytDialog(
         context: Context,
@@ -61,5 +64,20 @@ class SceytDialog(
     fun setNegativeButtonTextColor(color: Int): SceytDialog {
         binding.buttonCancel.setTextColor(color)
         return this
+    }
+
+    companion object {
+        fun showSceytDialog(context: Context,
+                            @StringRes titleId: Int,
+                            @StringRes descId: Int,
+                            @StringRes positiveBtnTitleId: Int, positiveCb: () -> Unit) {
+            SceytDialog(context, positiveCb)
+                .setTitle(context.getString(titleId))
+                .setDescription(context.getString(descId))
+                .setPositiveButtonTitle(context.getString(positiveBtnTitleId))
+                .setPositiveButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                .setNegativeButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                .show()
+        }
     }
 }

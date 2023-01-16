@@ -527,7 +527,7 @@ class MessageListViewModel(
     }
 
     internal fun needMediaInfo(data: NeedMediaInfoData) {
-        val attachment = data.item.file
+        val attachment = data.item
         when (data) {
             is NeedMediaInfoData.NeedDownload -> {
                 viewModelScope.launch(Dispatchers.IO) {
@@ -536,7 +536,7 @@ class MessageListViewModel(
             }
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.getThumb(data.item.sceytMessage.tid, attachment, data.size)
+                    fileTransferService.getThumb(attachment.messageTid, attachment, data.size)
                 }
             }
         }

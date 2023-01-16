@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.conversationinfo
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.sceyt.chat.ui.presentation.addmembers.AddMembersActivity
 import com.sceyt.chat.ui.presentation.changerole.ChangeRoleActivity
@@ -23,6 +24,8 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
     }
 
     class CustomMembersFragment : ChannelMembersFragment() {
+        private lateinit var changeRoleActivityLauncher: ActivityResultLauncher<Intent>
+        private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
 
         override fun changeRoleClick(member: SceytMember) {
             changeRoleActivityLauncher.launch(ChangeRoleActivity.newInstance(requireContext(), member))
@@ -46,23 +49,26 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             }
         }
 
-        private val changeRoleActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.getStringExtra(ChangeRoleActivity.CHOSEN_ROLE)?.let { role ->
-                    val member = result.data?.getParcelableExtra<SceytMember>(ChangeRoleActivity.MEMBER)
-                            ?: return@let
-                    if (role == "owner")
-                        changeOwnerClick(member.id)
-                    else
-                        changeRoleClick(member, role)
+        override fun onAttach(context: Context) {
+            super.onAttach(context)
+            addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
+                        addMembersToChannel(users)
+                    }
                 }
             }
-        }
 
-        private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                    addMembersToChannel(users)
+            changeRoleActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.getStringExtra(ChangeRoleActivity.CHOSEN_ROLE)?.let { role ->
+                        val member = result.data?.getParcelableExtra<SceytMember>(ChangeRoleActivity.MEMBER)
+                                ?: return@let
+                        if (role == "owner")
+                            changeOwnerClick(member.id)
+                        else
+                            changeRoleClick(member, role)
+                    }
                 }
             }
         }

@@ -32,7 +32,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
@@ -144,6 +143,19 @@ internal class PersistenceMessagesLogicImpl(
                 trySend(it)
             }
         awaitClose()
+    }
+
+    override suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>> {
+        val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
+        if (response is SceytResponse.Success) {
+            val tIds = getMessagesTid(response.data)
+            val payloads = messageDao.getAllPayLoadsByMsgTid(*tIds.toLongArray())
+            response.data?.forEach {
+                findAndUpdateAttachmentPayLoads(it, payloads)
+                it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
+            }
+        }
+        return response
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message) {
@@ -360,25 +372,6 @@ internal class PersistenceMessagesLogicImpl(
         return messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
-    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
-        return messageDao.getAllPayLoadsByMsgTid(tid)
-    }
-
-    override fun updateTransferDataByMsgTid(data: TransferData) {
-        messageDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
-        messagesCash.updateAttachmentTransferData(data)
-    }
-
-    override fun updateAttachmentWithTransferData(data: TransferData) {
-        messageDao.updateAttachmentAndPayLoad(data)
-        messagesCash.updateAttachmentTransferData(data)
-    }
-
-    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
-        messageDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
-        messagesCash.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
-    }
-
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
 
@@ -482,11 +475,7 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
-        val tIds = mutableListOf<Long>()
-        messages.forEach {
-            tIds.add(it.tid)
-            it.parent?.let { parent -> tIds.add(parent.tid) }
-        }
+        val tIds = getMessagesTid(messages)
         val payloads = messageDao.getAllPayLoadsByMsgTid(*tIds.toLongArray())
 
         messages.forEach {
@@ -598,6 +587,15 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.deleteAttachmentsChunked(listOf(tid))
         messageDao.deleteAttachmentsPayloadsChunked(listOf(tid))
         reactionDao.deleteAllReactionsAndScores(id)
+    }
+
+    private fun getMessagesTid(messages: List<SceytMessage>?): List<Long> {
+        val tIds = mutableListOf<Long>()
+        messages?.forEach {
+            tIds.add(it.tid)
+            it.parent?.let { parent -> tIds.add(parent.tid) }
+        }
+        return tIds
     }
 
     private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {

@@ -11,8 +11,8 @@ sealed interface HeaderUIElementsListener {
         fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean)
     }
 
-    fun interface SubjectListener : HeaderUIElementsListener {
-        fun onSubject(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean)
+    fun interface SubTitleListener : HeaderUIElementsListener {
+        fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean)
     }
 
     fun interface AvatarListener : HeaderUIElementsListener {
@@ -20,5 +20,5 @@ sealed interface HeaderUIElementsListener {
     }
 
     /** Use this if you want to implement all callbacks */
-    interface ElementsListeners : TitleListener, SubjectListener, AvatarListener
+    interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener
 }
