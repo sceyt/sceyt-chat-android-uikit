@@ -2,8 +2,8 @@
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:gravity="center"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:gravity="center">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/muteUnMute"
@@ -23,6 +23,23 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/leave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:drawableTop="@drawable/sceyt_ic_leave"
+        android:drawablePadding="10dp"
+        android:gravity="center"
+        android:minWidth="50dp"
+        android:text="@string/sceyt_leave_small_case"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toStartOf="@+id/add"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/report"
+        app:layout_constraintTop_toTopOf="@+id/report" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/join"

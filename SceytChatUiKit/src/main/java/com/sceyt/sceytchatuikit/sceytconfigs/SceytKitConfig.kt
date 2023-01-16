@@ -21,7 +21,7 @@ object SceytKitConfig {
     var presenceStatusText = ""
 
     @ColorRes
-    var sceytColorAccent = R.color.sceyt_color_green
+    var sceytColorAccent = R.color.sceyt_color_accent
 
     class ThemeConfig : BaseObservable() {
         @Bindable

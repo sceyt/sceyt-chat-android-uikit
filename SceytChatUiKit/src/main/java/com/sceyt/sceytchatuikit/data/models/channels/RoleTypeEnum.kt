@@ -5,7 +5,7 @@ enum class RoleTypeEnum {
     Owner,
     Member;
 
-    override fun toString(): String {
+    fun value(): String {
         return when (this) {
             None -> ""
             Owner -> "owner"

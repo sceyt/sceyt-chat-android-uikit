@@ -81,7 +81,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.canLoadNext())
+                    if (isLastItemDisplaying() && viewModel.canLoadPrev())
                         loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
                 }
             })
@@ -114,7 +114,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
             post {
                 (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
-                    if (it > 0)
+                    if (it > (binding?.root?.height ?: 0))
                         layoutParams.height = screenHeightPx() - it
                 }
             }

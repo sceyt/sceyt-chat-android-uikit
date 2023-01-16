@@ -83,7 +83,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
             post {
                 (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
-                    if (it > 0)
+                    if (it > (binding?.root?.height ?: 0))
                         layoutParams.height = screenHeightPx() - it
                 }
             }

@@ -9,18 +9,18 @@ import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.databinding.DialogChannelActionsBinding
+import com.sceyt.sceytchatuikit.databinding.DialogDirectChannelActionsBinding
 import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class DirectChantButtonsActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
-    private lateinit var binding: DialogChannelActionsBinding
+class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
+    private lateinit var binding: DialogDirectChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytDirectChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(DialogChannelActionsBinding.inflate(LayoutInflater.from(context)).also {
+        setContentView(DialogDirectChannelActionsBinding.inflate(LayoutInflater.from(context)).also {
             binding = it
         }.root)
 
@@ -43,7 +43,7 @@ class DirectChantButtonsActionsDialog(context: Context) : Dialog(context, R.styl
         listener = cb
     }
 
-    private fun DialogChannelActionsBinding.initView() {
+    private fun DialogDirectChannelActionsBinding.initView() {
         channel.peer?.let {
             blockUser.isVisible = it.user.blocked.not()
             unBlockUser.isVisible = it.user.blocked
@@ -74,13 +74,13 @@ class DirectChantButtonsActionsDialog(context: Context) : Dialog(context, R.styl
         ClearHistory, BlockUser, UnBlockUser, Delete
     }
 
-    private fun DialogChannelActionsBinding.setupStyle() {
+    private fun DialogDirectChannelActionsBinding.setupStyle() {
         unBlockUser.setTextViewDrawableColor(SceytKitConfig.sceytColorAccent)
     }
 
     companion object {
-        fun newInstance(context: Context, channel: SceytDirectChannel): DirectChantButtonsActionsDialog {
-            val dialog = DirectChantButtonsActionsDialog(context)
+        fun newInstance(context: Context, channel: SceytDirectChannel): DirectChatActionsDialog {
+            val dialog = DirectChatActionsDialog(context)
             dialog.setChannel(channel)
             return dialog
         }

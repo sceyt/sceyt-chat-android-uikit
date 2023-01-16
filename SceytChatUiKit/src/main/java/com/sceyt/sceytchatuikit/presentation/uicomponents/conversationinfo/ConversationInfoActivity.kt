@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
@@ -20,7 +19,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
@@ -32,13 +31,11 @@ import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.DirectChantButtonsActionsDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.DirectChantButtonsActionsDialog.ActionsEnum.*
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.GroupChantButtonsActionsDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsDirectChatFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.DirectChatActionsDialog.ActionsEnum.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsDirectChatFragment.ClickActionsEnum.*
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsGroupChatFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsGroupChatFragment.ClickActionsEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsPrivateChatFragment.ClickActionsEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsPublicChannelFragment.PublicChannelClickActionsEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
@@ -98,6 +95,12 @@ open class ConversationInfoActivity : AppCompatActivity() {
 
         viewModel.blockUnblockUserLiveData.observe(this, ::onBlockUnblockUser)
 
+        viewModel.joinLiveData.observe(this) {
+            channel = it
+            initButtons()
+            onJoinChannel(it)
+        }
+
         viewModel.muteUnMuteLiveData.observe(this) {
             channel.muted = it.muted
             initButtons()
@@ -108,15 +111,20 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     private fun initButtons() {
-        val fragment: Fragment = when (channel) {
-            is SceytGroupChannel -> {
-                InfoButtonsGroupChatFragment.newInstance(channel).also {
+        val fragment: Fragment = when (channel.channelType) {
+            Direct -> {
+                getInfoButtonsDirectChatFragment(channel).also {
+                    it.setClickActionsListener(::onButtonClick)
+                }
+            }
+            Private -> {
+                getInfoButtonsPrivateChatFragment(channel).also {
                     it.setClickActionsListener(::onGroupButtonClick)
                 }
             }
-            else -> {
-                InfoButtonsDirectChatFragment.newInstance(channel).also {
-                    it.setClickActionsListener(::onButtonClick)
+            Public -> {
+                getInfoButtonsPublicChannelFragment(channel).also {
+                    it.setClickActionsListener(::onPublicButtonClick)
                 }
             }
         }
@@ -140,29 +148,27 @@ open class ConversationInfoActivity : AppCompatActivity() {
         when (clickActionsEnum) {
             ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
             ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
-            ClickActionsEnum.Report -> onReportClick(channel)
-            ClickActionsEnum.Join -> onJoinClick(channel)
-            ClickActionsEnum.Add -> onAddClick(channel)
+            ClickActionsEnum.Call -> onAudioCallClick(channel)
+            ClickActionsEnum.VideoCall -> onVideoCallClick(channel)
             ClickActionsEnum.More -> onMoreClick(channel)
+        }
+    }
+
+    private fun onPublicButtonClick(clickActionsEnum: PublicChannelClickActionsEnum) {
+        when (clickActionsEnum) {
+            PublicChannelClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
+            PublicChannelClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
+            PublicChannelClickActionsEnum.Leave -> onLeaveChatClick(channel)
+            PublicChannelClickActionsEnum.Report -> onReportClick(channel)
+            PublicChannelClickActionsEnum.Join -> onJoinClick(channel)
+            PublicChannelClickActionsEnum.Add -> onAddClick(channel)
+            PublicChannelClickActionsEnum.More -> onMoreClick(channel)
         }
     }
 
     private fun ActivityConversationInfoBinding.initViews() {
         icBack.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
 
-        /*
-         leaveChannel.setOnClickListener {
-             showSceytDialog(com.sceyt.sceytchatuikit.R.string.sceyt_leave_channel_title, com.sceyt.sceytchatuikit.R.string.sceyt_leave_channel_desc, com.sceyt.sceytchatuikit.R.string.sceyt_leave) {
-                 leaveChannel()
-             }
-         }*/
-
-        /*blockAndLeaveChannel.setOnClickListener {
-            showSceytDialog(com.sceyt.sceytchatuikit.R.string.sceyt_block_and_leave_channel_title, com.sceyt.sceytchatuikit.R.string.sceyt_block_and_leave_channel_desc, com.sceyt.sceytchatuikit.R.string.sceyt_leave) {
-                blockAndLeaveChannel()
-            }
-        }
-*/
         icBack.setOnClickListener {
             onBackPressed()
         }
@@ -263,6 +269,10 @@ open class ConversationInfoActivity : AppCompatActivity() {
         viewModel.unMuteChannel(channel.id)
     }
 
+    protected fun joinChannel() {
+        viewModel.joinChannel(channel.id)
+    }
+
     protected fun getChannel() = channel.clone()
 
     open fun setActivityContentView() {
@@ -272,8 +282,31 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     open fun onClearHistoryClick(channel: SceytChannel) {
-        showSceytDialog(this, R.string.sceyt_clear_history_title, R.string.sceyt_clear_history_desc, R.string.sceyt_clear) {
+        val descId: Int = when (channel.channelType) {
+            Direct -> R.string.sceyt_clear_direct_history_desc
+            else -> R.string.sceyt_clear_group_history_desc
+        }
+        showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear) {
             clearHistory()
+        }
+    }
+
+    open fun onLeaveChatClick(channel: SceytChannel) {
+        val titleId: Int
+        val descId: Int
+        when (channel.channelType) {
+            Private -> {
+                titleId = R.string.sceyt_leave_group_title
+                descId = R.string.sceyt_leave_group_desc
+            }
+            Public -> {
+                titleId = R.string.sceyt_leave_channel_title
+                descId = R.string.sceyt_leave_channel_desc
+            }
+            else -> return
+        }
+        showSceytDialog(this, titleId, descId, R.string.sceyt_leave) {
+            leaveChannel()
         }
     }
 
@@ -287,7 +320,23 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     open fun onDeleteChatClick(channel: SceytChannel) {
-        showSceytDialog(this, R.string.sceyt_delete_channel_title, R.string.sceyt_delete_channel_desc, R.string.sceyt_delete) {
+        val titleId: Int
+        val descId: Int
+        when (channel.channelType) {
+            Private -> {
+                titleId = R.string.sceyt_delete_group_title
+                descId = R.string.sceyt_delete_group_desc
+            }
+            Public -> {
+                titleId = R.string.sceyt_delete_channel_title
+                descId = R.string.sceyt_delete_channel_desc
+            }
+            Direct -> {
+                titleId = R.string.sceyt_delete_p2p_title
+                descId = R.string.sceyt_delete_p2p_desc
+            }
+        }
+        showSceytDialog(this, titleId, descId, R.string.sceyt_delete) {
             deleteChannel()
         }
     }
@@ -306,17 +355,17 @@ open class ConversationInfoActivity : AppCompatActivity() {
 
     open fun onMoreClick(channel: SceytChannel) {
         if (channel.isGroup) {
-            GroupChantButtonsActionsDialog.newInstance(this, channel).apply {
+            GroupChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onGroupChatMoreActionClick)
             }.show()
         } else
-            DirectChantButtonsActionsDialog.newInstance(this, (channel as SceytDirectChannel)).apply {
+            DirectChatActionsDialog.newInstance(this, (channel as SceytDirectChannel)).apply {
                 setChooseTypeCb(::onDirectChatMoreActionClick)
             }.show()
     }
 
     open fun onJoinClick(channel: SceytChannel) {
-
+        joinChannel()
     }
 
     open fun onAddClick(channel: SceytChannel) {
@@ -327,7 +376,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
 
     }
 
-    open fun onDirectChatMoreActionClick(actionsEnum: DirectChantButtonsActionsDialog.ActionsEnum) {
+    open fun onDirectChatMoreActionClick(actionsEnum: DirectChatActionsDialog.ActionsEnum) {
         when (actionsEnum) {
             ClearHistory -> onClearHistoryClick(channel)
             BlockUser -> onBlockUnBlockUserClick(channel, true)
@@ -336,10 +385,11 @@ open class ConversationInfoActivity : AppCompatActivity() {
         }
     }
 
-    open fun onGroupChatMoreActionClick(actionsEnum: GroupChantButtonsActionsDialog.ActionsEnum) {
+    open fun onGroupChatMoreActionClick(actionsEnum: GroupChatActionsDialog.ActionsEnum) {
         when (actionsEnum) {
-            GroupChantButtonsActionsDialog.ActionsEnum.ClearHistory -> onClearHistoryClick(channel)
-            GroupChantButtonsActionsDialog.ActionsEnum.Delete -> onDeleteChatClick(channel)
+            GroupChatActionsDialog.ActionsEnum.ClearHistory -> onClearHistoryClick(channel)
+            GroupChatActionsDialog.ActionsEnum.Leave -> onLeaveChatClick(channel)
+            GroupChatActionsDialog.ActionsEnum.Delete -> onDeleteChatClick(channel)
         }
     }
 
@@ -359,6 +409,10 @@ open class ConversationInfoActivity : AppCompatActivity() {
     }
 
     open fun onMuteUnMuteChannel(sceytChannel: SceytChannel) {
+
+    }
+
+    open fun onJoinChannel(sceytChannel: SceytChannel) {
 
     }
 
@@ -432,7 +486,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
                     } ?: ""
                 }
             } else {
-                if (channel.channelType == ChannelTypeEnum.Private)
+                if (channel.channelType == Private)
                     getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
                 else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
             }
@@ -468,6 +522,14 @@ open class ConversationInfoActivity : AppCompatActivity() {
     open fun getChannelLinksFragment(channel: SceytChannel) = ChannelLinksFragment.newInstance(channel)
 
     open fun getChannelVoiceFragment(channel: SceytChannel) = ChannelVoiceFragment.newInstance(channel)
+
+
+    //Buttons
+    open fun getInfoButtonsDirectChatFragment(channel: SceytChannel) = InfoButtonsDirectChatFragment.newInstance(channel)
+
+    open fun getInfoButtonsPrivateChatFragment(channel: SceytChannel) = InfoButtonsPrivateChatFragment.newInstance(channel)
+
+    open fun getInfoButtonsPublicChannelFragment(channel: SceytChannel) = InfoButtonsPublicChannelFragment.newInstance(channel)
 
     open fun onPageStateChange(pageState: PageState) {
         if (pageState is PageState.StateError) {
