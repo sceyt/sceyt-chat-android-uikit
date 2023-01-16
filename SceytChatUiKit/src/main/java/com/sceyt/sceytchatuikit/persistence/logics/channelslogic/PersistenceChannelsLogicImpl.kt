@@ -569,8 +569,8 @@ internal class PersistenceChannelsLogicImpl(
             channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel -> channel.toChannel() }
         } else {
 
-            val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "GLOB", "or")
-            val globOrSubject = concatWithSeparator(searchItems, "subject", "GLOB", "or")
+            val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "LIKE", "","%","or")
+            val globOrSubject = concatWithSeparator(searchItems, "subject", "LIKE", "","%","or")
 //            val inSubject = concatWithPrefix(searchItems, "link.user_id", "IN", ",")
 
             var whereQuery = "((${globOrSubject}) and channels.type != 0) "
@@ -590,9 +590,9 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    private fun concatWithSeparator(items: List<String>, dbKey: String, dbFunction: String, dbSeparator: String): String {
+    private fun concatWithSeparator(items: List<String>, dbKey: String, dbFunction: String, dbPatternPrefix: String, dbPatternSuffix: String, dbSeparator: String): String {
         return items.asSequence().map {
-            "$dbKey $dbFunction '*${it}*'"
+            "$dbKey $dbFunction '${dbPatternPrefix}${it}${dbPatternSuffix}'"
         }.joinToString(" $dbSeparator ")
     }
 
