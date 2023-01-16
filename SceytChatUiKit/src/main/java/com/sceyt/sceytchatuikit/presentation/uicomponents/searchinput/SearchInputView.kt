@@ -140,6 +140,11 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         eventListeners = listener
     }
 
+    fun clearSearchAndFocus(){
+        binding.input.setText("")
+        binding.input.clearFocus()
+    }
+
     fun interface InputChangedListener {
         fun onInputChanged(query: String)
     }
