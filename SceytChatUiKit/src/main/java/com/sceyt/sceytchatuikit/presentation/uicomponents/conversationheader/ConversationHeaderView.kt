@@ -16,10 +16,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -132,7 +129,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                         } else null
                     }
                 }
-            } else getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
+            } else if (channel.channelType == ChannelTypeEnum.Private)
+                getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
+            else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
 
             subjectTextView.text = title
             subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping

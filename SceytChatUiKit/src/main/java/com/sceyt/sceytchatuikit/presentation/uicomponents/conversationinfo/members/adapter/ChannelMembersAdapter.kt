@@ -14,7 +14,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 
 class ChannelMembersAdapter(
         private var members: ArrayList<MemberItem>,
-        var showMoreIcon: Boolean,
         private val viewHolderFactory: ChannelMembersViewHolderFactory) : RecyclerView.Adapter<BaseMemberViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMemberViewHolder {
@@ -87,10 +86,4 @@ class ChannelMembersAdapter(
     fun getMemberItemById(memberId: String) = members.findIndexed { it is MemberItem.Member && it.member.id == memberId }
 
     fun getMemberItemByRole(role: String) = members.findIndexed { it is MemberItem.Member && it.member.role.name == role }
-
-    fun showHideMoreIcon(show: Boolean) {
-        if (show == showMoreIcon) return
-        notifyUpdate(members, true)
-        showMoreIcon = show
-    }
 }
