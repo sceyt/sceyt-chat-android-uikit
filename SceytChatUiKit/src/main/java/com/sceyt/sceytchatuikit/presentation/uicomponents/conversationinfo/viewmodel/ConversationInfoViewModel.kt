@@ -4,9 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.toGroupChannel
+import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -41,6 +47,9 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val _joinLiveData = MutableLiveData<SceytChannel>()
     val joinLiveData: LiveData<SceytChannel> = _joinLiveData
+
+    private val _channelMemberEventLiveData = MutableLiveData<ChannelMembersEventData>()
+    val channelMemberEventLiveData: LiveData<ChannelMembersEventData> = _channelMemberEventLiveData
 
 
     fun getChannelFromServer(id: Long) {
@@ -117,6 +126,25 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.join(channelId)
             notifyResponseAndPageState(_joinLiveData, response)
+        }
+    }
+
+    fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val members = users.map { it.toMember() }
+            val response = membersMiddleWare.addMembersToChannel(channelId, members)
+            if (response is SceytResponse.Success) {
+                val groupChannel = (response.data ?: return@launch).toGroupChannel()
+                if (groupChannel.members.isNullOrEmpty()) return@launch
+
+                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
+                    channel = groupChannel,
+                    members = groupChannel.members,
+                    eventType = ChannelMembersEventEnum.Added
+                ))
+            }
+
+            notifyPageStateWithResponse(response)
         }
     }
 }

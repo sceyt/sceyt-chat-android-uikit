@@ -10,16 +10,20 @@
     <string name="sceyt_subscribers_count">%1$d subscribers</string>
     <string name="sceyt_hint_channel_subject">Subject</string>
     <string name="sceyt_add_members">Add members</string>
+    <string name="sceyt_add_subscribers">Add subscribers</string>
+    <string name="sceyt_add_admins">Add admins</string>
     <string name="sceyt_edited">edited</string>
     <string name="sceyt_message_was_deleted">Message was deleted.</string>
     <string name="sceyt_today">Today</string>
     <string name="sceyt_clear_history">Clear history</string>
     <string name="sceyt_members">Members</string>
+    <string name="sceyt_subscribers">Subscribers</string>
     <string name="sceyt_remove_member">Kick member</string>
     <string name="sceyt_set_owner">Set Owner</string>
     <string name="sceyt_change_role">Change role</string>
     <string name="sceyt_block_and_kick_member">Block and kick member</string>
     <string name="sceyt_member_name_you">(You)</string>
+    <string name="sceyt_you">You</string>
     <string name="sceyt_take_photo">Take photo</string>
     <string name="sceyt_upload_from_gallery">Upload from Gallery</string>
     <string name="sceyt_file">File</string>
@@ -122,5 +126,6 @@
     <string name="sceyt_about">About</string>
     <string name="sceyt_leave_group">Leave group</string>
     <string name="sceyt_call">call</string>
+    <string name="sceyt_revoke_admin">Revoke admin</string>
 
 </resources>

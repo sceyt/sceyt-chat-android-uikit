@@ -74,7 +74,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        launch { membersLogic.onChannelMemberEvent(data) }
+        launch {
+            membersLogic.onChannelMemberEvent(data)
+            channelLogic.onChannelMemberEvent(data)
+        }
     }
 
     private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {

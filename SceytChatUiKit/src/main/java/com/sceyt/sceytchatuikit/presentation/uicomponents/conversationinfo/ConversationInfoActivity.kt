@@ -12,6 +12,7 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
@@ -19,13 +20,17 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
+import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.ActivityConversationInfoBinding
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
@@ -39,20 +44,24 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragm
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import org.koin.android.ext.android.inject
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
-open class ConversationInfoActivity : AppCompatActivity() {
+open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
     private lateinit var pagerAdapter: ViewPagerAdapter
     private var binding: ActivityConversationInfoBinding? = null
-    private val viewModel: ConversationInfoViewModel by viewModels()
+    protected val viewModel: ConversationInfoViewModel by viewModels()
+    private val preferences: SceytSharedPreference by inject()
     private var isSaveLoading = false
     private var avatarUrl: String? = null
     private var alphaAnimation: AlphaAnimation? = null
@@ -71,6 +80,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
         addAppBarOffsetChangeListener(binding?.appbar)
         initButtons()
+        observeToChannelUpdate()
     }
 
     private fun getBundleArguments() {
@@ -133,6 +143,12 @@ open class ConversationInfoActivity : AppCompatActivity() {
         }
     }
 
+    private fun observeToChannelUpdate() {
+        ChannelsCash.channelUpdatedFlow.onEach {
+            onChannel(it.channel)
+        }.launchIn(lifecycleScope)
+    }
+
     private fun onButtonClick(clickActionsEnum: InfoButtonsDirectChatFragment.ClickActionsEnum) {
         when (clickActionsEnum) {
             VideCall -> onVideoCallClick(channel)
@@ -161,7 +177,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
             PublicChannelClickActionsEnum.Leave -> onLeaveChatClick(channel)
             PublicChannelClickActionsEnum.Report -> onReportClick(channel)
             PublicChannelClickActionsEnum.Join -> onJoinClick(channel)
-            PublicChannelClickActionsEnum.Add -> onAddClick(channel)
+            PublicChannelClickActionsEnum.Add -> onAddSubscribersClick(channel)
             PublicChannelClickActionsEnum.More -> onMoreClick(channel)
         }
     }
@@ -174,12 +190,11 @@ open class ConversationInfoActivity : AppCompatActivity() {
         }
 
         members.setOnClickListener {
-            binding ?: return@setOnClickListener
-            supportFragmentManager.commit {
-                setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-                addToBackStack(ChannelMembersFragment::class.java.simpleName)
-                replace(R.id.rootFrameLayout, getChannelMembersFragment(channel))
-            }
+            onMembersClick(channel)
+        }
+
+        admins.setOnClickListener {
+            onAdminsClick(channel)
         }
     }
 
@@ -219,6 +234,11 @@ open class ConversationInfoActivity : AppCompatActivity() {
         avatarUrl = channel.iconUrl
         with(binding ?: return) {
             groupChannelMembers.isVisible = channel.isGroup
+            members.text = if (channel.channelType == Public)
+                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
+            admins.isVisible = (channel as? SceytGroupChannel)?.members?.find {
+                it.id == preferences.getUserId()
+            }?.role?.name == RoleTypeEnum.Owner.toString()
 
             setChannelTitle(channel)
             setPresenceOrMembers(channel)
@@ -279,10 +299,37 @@ open class ConversationInfoActivity : AppCompatActivity() {
 
     protected fun getBinding() = binding
 
+    protected fun getMembersType(): MemberTypeEnum {
+        return if (::channel.isInitialized) {
+            when (channel.channelType) {
+                Private, Direct -> MemberTypeEnum.Member
+                Public -> MemberTypeEnum.Subscriber
+            }
+        } else MemberTypeEnum.Member
+    }
+
     open fun setActivityContentView() {
         setContentView(ActivityConversationInfoBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
+    }
+
+    open fun onMembersClick(channel: SceytChannel) {
+        binding ?: return
+        supportFragmentManager.commit {
+            setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+            addToBackStack(ChannelMembersFragment::class.java.simpleName)
+            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, getMembersType()))
+        }
+    }
+
+    open fun onAdminsClick(channel: SceytChannel) {
+        binding ?: return
+        supportFragmentManager.commit {
+            setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+            addToBackStack(ChannelMembersFragment::class.java.simpleName)
+            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, MemberTypeEnum.Admin))
+        }
     }
 
     open fun onClearHistoryClick(channel: SceytChannel) {
@@ -372,7 +419,7 @@ open class ConversationInfoActivity : AppCompatActivity() {
         joinChannel()
     }
 
-    open fun onAddClick(channel: SceytChannel) {
+    open fun onAddSubscribersClick(channel: SceytChannel) {
 
     }
 
@@ -524,7 +571,8 @@ open class ConversationInfoActivity : AppCompatActivity() {
         }
     }
 
-    open fun getChannelMembersFragment(channel: SceytChannel) = ChannelMembersFragment.newInstance(channel)
+    open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum) =
+            ChannelMembersFragment.newInstance(channel, memberType)
 
     open fun getChannelMediaFragment(channel: SceytChannel) = ChannelMediaFragment.newInstance(channel)
 

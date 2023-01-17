@@ -10,6 +10,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver.awaitToConnectSceyt
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -102,6 +103,10 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
+        updateChannelDbAndCash((data.channel ?: return).toSceytUiChannel())
+    }
+
+    override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         updateChannelDbAndCash((data.channel ?: return).toSceytUiChannel())
     }
 
