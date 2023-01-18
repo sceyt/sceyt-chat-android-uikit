@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import android.graphics.Bitmap
-import android.util.Base64
 import android.util.Log
 import android.util.Size
 import com.sceyt.chat.models.attachment.Attachment
@@ -9,6 +8,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
+import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
@@ -112,7 +112,7 @@ private fun String?.getInfoFromMetadata(callback: (size: Size?, blurredThumb: Bi
     try {
         val jsonObject = JSONObject(this ?: return)
         jsonObject.getFromJsonObject(SceytConstants.Thumb)?.let {
-            base64Thumb = Base64.decode(it, Base64.NO_WRAP)
+            base64Thumb = it.toByteArraySafety()
         }
         val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
         val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
@@ -126,25 +126,14 @@ private fun String?.getInfoFromMetadata(callback: (size: Size?, blurredThumb: Bi
     callback(size, base64Thumb?.decodeByteArrayToBitmap(), duration)
 }
 
-private fun String?.getInfoFromMetadata(keys: List<String>, callback: (size: Size?, blurredThumb: Bitmap?, videoDuration: Long?) -> Unit) {
-    var base64Thumb: ByteArray? = null
-    var size: Size? = null
-    var duration: Long? = null
+fun String?.getInfoFromMetadataByKey(key: String): String? {
     try {
-        val jsonObject = JSONObject(this ?: return)
-        jsonObject.getFromJsonObject(SceytConstants.Thumb)?.let {
-            base64Thumb = Base64.decode(it, Base64.NO_WRAP)
-        }
-        val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
-        val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
-        duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
-        if (width != null && height != null)
-            size = Size(width, height)
+        val jsonObject = JSONObject(this ?: return null)
+        return jsonObject.getFromJsonObject(key)
     } catch (ex: Exception) {
         Log.i(this?.TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
+        return null
     }
-
-    callback(size, base64Thumb?.decodeByteArrayToBitmap(), duration)
 }
 
 private fun JSONObject.getFromJsonObject(name: String): String? {
