@@ -38,4 +38,7 @@
     <color name="sceyt_progress_bg_color">#6617191C</color>
     <color name="sceyt_color_admin_role">#7A6EF6</color>
 
+    <color name="sceyt_color_bg_color">#17191C</color>
+    <color name="sceyt_color_text">#17191C</color>
+
 </resources>
