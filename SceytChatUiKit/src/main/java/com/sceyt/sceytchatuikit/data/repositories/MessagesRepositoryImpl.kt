@@ -142,6 +142,21 @@ class MessagesRepositoryImpl : MessagesRepository {
         awaitClose()
     }
 
+    override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(conversationId).getMessagesById(ids.toLongArray(), object : MessagesCallback {
+                override fun onResult(result: MutableList<Message>?) {
+                    continuation.safeResume(SceytResponse.Success(result?.map { it.toSceytUiMessage() }
+                            ?: emptyList()))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(error))
+                }
+            })
+        }
+    }
+
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message) = callbackFlow {
         var tmpMessage: Message? = null
         tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {

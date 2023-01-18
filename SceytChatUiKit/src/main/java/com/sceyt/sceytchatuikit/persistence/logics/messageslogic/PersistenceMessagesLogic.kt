@@ -19,19 +19,22 @@ internal interface PersistenceMessagesLogic {
     suspend fun onMessageReactionUpdated(data: Message)
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                 loadKey: LoadKeyData, ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+                                 loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                 ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+                                 ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
-                                 ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
+                                 loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
-                                   ignoreDb: Boolean, ignoreCash: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+                                   ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+
+    suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
 
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
+
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
     suspend fun sendMessage(channelId: Long, message: Message)
     suspend fun sendMessages(channelId: Long, messages: List<Message>)

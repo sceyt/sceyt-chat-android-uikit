@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -31,6 +32,7 @@ internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
+        private val channelsCash: ChannelsCash,
         private val persistenceChannelsLogic: PersistenceChannelsLogic) : PersistenceMembersLogic {
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
@@ -95,11 +97,10 @@ internal class PersistenceMembersLogicImpl(
 
         val links = arrayListOf<UserChatLink>()
         val users = arrayListOf<UserEntity>()
-        channelDao.getChannelById(channelId)?.let { channel ->
-            list.forEach { member ->
-                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
-                users.add(member.toUserEntity())
-            }
+
+        list.forEach { member ->
+            links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
+            users.add(member.toUserEntity())
         }
 
         usersDao.insertUsers(users)
@@ -124,6 +125,7 @@ internal class PersistenceMembersLogicImpl(
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
                 channelDao.updateOwner(channelId = channelId, newOwnerId = member.id)
+                channelsCash.upsertChannel(response.data)
             }
         }
         return response
@@ -154,6 +156,7 @@ internal class PersistenceMembersLogicImpl(
             channelDao.insertUserChatLinks(members.map {
                 UserChatLink(userId = it.id, chatId = channelId, role = it.role.name)
             })
+            (response.data as? SceytGroupChannel)?.let { channelsCash.updateMembersCount(it) }
         }
         return response
     }
@@ -161,8 +164,10 @@ internal class PersistenceMembersLogicImpl(
     override suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.blockAndDeleteMember(channelId, memberId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
+            (response.data as? SceytGroupChannel)?.let { channelsCash.updateMembersCount(it) }
+        }
 
         return response
     }
@@ -170,8 +175,10 @@ internal class PersistenceMembersLogicImpl(
     override suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.deleteMember(channelId, memberId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
+            (response.data as? SceytGroupChannel)?.let { channelsCash.updateMembersCount(it) }
+        }
 
         return response
     }

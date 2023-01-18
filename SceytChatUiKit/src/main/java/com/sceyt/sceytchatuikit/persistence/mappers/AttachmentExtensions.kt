@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import android.util.Size
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
@@ -49,28 +48,6 @@ fun SceytAttachment.upsertSizeMetadata(size: Size?) {
     } catch (t: Throwable) {
         Log.e(TAG, "Could not parse malformed JSON: \"" + metadata.toString() + "\"")
     }
-}
-
-fun String?.getInfoFromMetadata(needThumb: Boolean): Pair<Size?, ByteArray?>? {
-    var base64Thumb: ByteArray? = null
-    var size: Size? = null
-    try {
-        val jsonObject = JSONObject(this ?: return null)
-        if (needThumb) {
-            val thumbnail = jsonObject.getString(SceytConstants.Thumb)
-            base64Thumb = Base64.decode(thumbnail, Base64.NO_WRAP)
-        }
-        val width = jsonObject.getString(SceytConstants.Width).toIntOrNull()
-        val height = jsonObject.getString(SceytConstants.Height).toIntOrNull()
-        if (width != null && height != null)
-            size = Size(width, height)
-    } catch (ex: Exception) {
-        Log.i("MetadataReader", "Couldn't get data from attachment metadata with reason ${ex.message}")
-    }
-    if (size == null && base64Thumb == null)
-        return null
-
-    return Pair(size, base64Thumb)
 }
 
 fun SceytAttachment.addAttachmentMetadata(application: Application) {

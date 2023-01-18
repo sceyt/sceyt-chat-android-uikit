@@ -21,6 +21,7 @@ data class AttachmentEntity(
         val id: Long?,
         val messageId: Long,
         val messageTid: Long,
+        val channelId: Long,
         var userId: String?,
         val tid: Long,
         val name: String,
