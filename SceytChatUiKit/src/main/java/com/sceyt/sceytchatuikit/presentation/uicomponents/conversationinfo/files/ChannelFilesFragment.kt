@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -59,33 +60,36 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     private fun initViewModel() {
         lifecycleScope.launch {
-            viewModel.filesFlow.collect(::onInitialFilesList)
+            viewModel.filesFlow.filterNot { it.isEmpty() }.collect(::onInitialFilesList)
         }
 
         lifecycleScope.launch {
-            viewModel.loadMoreFilesFlow.collect(::onMoreFilesList)
+            viewModel.loadMoreFilesFlow.filterNot { it.isEmpty() }.collect(::onMoreFilesList)
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
     open fun onInitialFilesList(list: List<ChannelFileItem>) {
-        mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
-            it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                item.file.openFile(requireContext())
+        if (mediaAdapter == null) {
+            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                    item.file.openFile(requireContext())
+                })
             })
-        })
-        with((binding ?: return).rvFiles) {
-            adapter = mediaAdapter
+            with((binding ?: return).rvFiles) {
+                adapter = mediaAdapter
 
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.canLoadNext())
-                        loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
-                }
-            })
-        }
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (isLastItemDisplaying() && viewModel.canLoadPrev())
+                            loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id
+                                    ?: 0, mediaAdapter?.getFileItems()?.size ?: 0)
+                    }
+                })
+            }
+        } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
     open fun onMoreFilesList(list: List<ChannelFileItem>) {
@@ -97,11 +101,11 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     protected fun loadInitialFilesList() {
-        viewModel.loadMessages(channel.id, 0, false, mediaType)
+        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 
-    protected fun loadMoreFilesList(lasMsgId: Long) {
-        viewModel.loadMessages(channel.id, lasMsgId, true, mediaType)
+    protected fun loadMoreFilesList(lastAttachmentId: Long, offset: Int) {
+        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
     private fun addPageStateView() {

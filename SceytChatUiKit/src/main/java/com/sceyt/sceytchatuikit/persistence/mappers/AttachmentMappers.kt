@@ -17,11 +17,12 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import org.json.JSONObject
 
-fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long) = AttachmentDb(
+fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId: Long) = AttachmentDb(
     AttachmentEntity(
         id = id,
         messageId = messageId,
         messageTid = messageTid,
+        channelId = channelId,
         userId = userId,
         tid = tid,
         name = name,
@@ -37,7 +38,7 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long) = Attachme
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
         return SceytAttachment(
-            id = primaryKey.toLong(),
+            id = id,
             tid = tid,
             messageId = messageId,
             messageTid = messageTid,

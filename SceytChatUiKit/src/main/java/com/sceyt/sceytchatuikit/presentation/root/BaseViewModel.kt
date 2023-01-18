@@ -125,7 +125,7 @@ open class BaseViewModel : ViewModel() {
 
     internal fun checkIgnoreDatabasePagingResponse(response: PaginationResponse.DBResponse<*>): Boolean {
         if (response.data.isNotEmpty()) return false
-
+        // When db data is empty, check  maybe loading data from server
         return when (response.loadType) {
             LoadPrev, LoadNewest -> hasPrev || loadingPrevItems.get()
             LoadNext -> hasNext || loadingNextItems.get()

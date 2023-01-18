@@ -39,7 +39,6 @@ class ImageViewHolder(private val binding: ItemChannelImageBinding,
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.messageTid)) return
         viewHolderHelper.transferData = data
-        fileItem.file.updateWithTransferData(data)
 
         when (data.state) {
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
