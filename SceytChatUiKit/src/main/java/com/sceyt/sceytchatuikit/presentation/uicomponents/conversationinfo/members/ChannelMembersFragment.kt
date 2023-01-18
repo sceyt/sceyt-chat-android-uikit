@@ -30,7 +30,6 @@ import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -51,7 +50,6 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     private val viewModel by viewModel<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
-    private var pageStateView: PageStateView? = null
     lateinit var channel: SceytChannel
         private set
     lateinit var memberType: MemberTypeEnum
@@ -294,7 +292,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun revokeAdmin(member: SceytMember) {
-        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Member.name)))
+        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Admin.toString())))
     }
 
     protected open fun onChannelEvent(eventData: ChannelEventData) {
@@ -338,7 +336,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, (membersAdapter?.itemCount ?: 0) == 0)
+        if (pageState is PageState.StateError)
+            customToastSnackBar(requireView(), pageState.errorMessage.toString())
     }
 
     fun updateChannel(channel: SceytChannel) {
