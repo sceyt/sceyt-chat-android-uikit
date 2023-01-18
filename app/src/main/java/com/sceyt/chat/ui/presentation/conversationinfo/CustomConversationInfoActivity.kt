@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.ui.presentation.addmembers.AddMembersActivity
 import com.sceyt.chat.ui.presentation.changerole.ChangeRoleActivity
 import com.sceyt.sceytchatuikit.R.anim
+import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.asActivity
@@ -61,6 +63,8 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
+                        if (memberType == MemberTypeEnum.Admin)
+                            users.map { it.role = Role(RoleTypeEnum.Admin.toString()) }
                         addMembersToChannel(users)
                     }
                 }
