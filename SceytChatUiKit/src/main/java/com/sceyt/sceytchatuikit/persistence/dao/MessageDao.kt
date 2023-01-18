@@ -155,6 +155,9 @@ abstract class MessageDao {
     @Query("select * from messages where message_id =:id")
     abstract suspend fun getMessageById(id: Long): MessageDb?
 
+    @Query("select message_id as id, tid from messages where message_id in (:ids)")
+    abstract suspend fun getExistMessagesByIds(ids: List<Long>): List<MessageIdAndTid>
+
     @Transaction
     @Query("select * from messages where tid =:tid")
     abstract suspend fun getMessageByTid(tid: Long): MessageDb?
@@ -166,7 +169,7 @@ abstract class MessageDao {
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
 
     @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
-    abstract suspend fun getAllPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
+    abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
 
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
     abstract suspend fun getLastMessage(channelId: Long): MessageDb?

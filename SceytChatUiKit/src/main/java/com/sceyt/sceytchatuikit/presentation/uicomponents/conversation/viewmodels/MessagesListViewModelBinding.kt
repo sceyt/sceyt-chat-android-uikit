@@ -539,6 +539,10 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
         headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
     }.launchIn(lifecycleOwner.lifecycleScope)
 
+    ChannelsCash.channelUpdatedFlow.onEach {
+        headerView.setChannel(it.channel)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
     onChannelTypingEventFlow.onEach {
         headerView.onTyping(it)
     }.launchIn(lifecycleOwner.lifecycleScope)

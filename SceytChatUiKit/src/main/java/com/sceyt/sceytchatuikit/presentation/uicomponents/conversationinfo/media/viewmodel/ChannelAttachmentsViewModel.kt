@@ -12,8 +12,9 @@ import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAt
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -21,47 +22,70 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val fileTransferService: FileTransferService by inject()
 
-    private val _filesFlow = MutableStateFlow<List<ChannelFileItem>>(arrayListOf())
-    val filesFlow: StateFlow<List<ChannelFileItem>> = _filesFlow
+    private val _filesFlow = MutableSharedFlow<List<ChannelFileItem>>(
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val filesFlow: SharedFlow<List<ChannelFileItem>> = _filesFlow
 
-    private val _loadMoreFilesFlow = MutableStateFlow<List<ChannelFileItem>>(arrayListOf())
-    val loadMoreFilesFlow: StateFlow<List<ChannelFileItem>> = _loadMoreFilesFlow
+    private val _loadMoreFilesFlow = MutableSharedFlow<List<ChannelFileItem>>(
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val loadMoreFilesFlow: SharedFlow<List<ChannelFileItem>> = _loadMoreFilesFlow
 
-    fun loadMessages(channelId: Long, lastMessageId: Long, isLoadingMore: Boolean, type: List<String>) {
-        loadingNextItems.set(true)
+    fun loadAttachments(channelId: Long, lastAttachmentId: Long, isLoadingMore: Boolean, type: List<String>, offset: Int) {
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadPrev)
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            attachmentLogic.getPrevAttachments(channelId, lastMessageId, type).collect { response ->
-                initResponse(response, isLoadingMore)
+            attachmentLogic.getPrevAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
+                initPaginationResponse(response)
             }
         }
     }
 
-    private fun initResponse(response: PaginationResponse<AttachmentWithUserData>, loadingNext: Boolean) {
+    private fun initPaginationResponse(response: PaginationResponse<AttachmentWithUserData>) {
         when (response) {
-            is PaginationResponse.DBResponse -> {}
-            is PaginationResponse.ServerResponse -> {
-                if (response.data is SceytResponse.Success) {
-                    emitMessagesListResponse(mapToFileListItem(response.data.data, response.hasPrev), loadingNext)
+            is PaginationResponse.DBResponse -> {
+                if (!checkIgnoreDatabasePagingResponse(response)) {
+                    initPaginationDbResponse(response)
                 }
-                notifyPageStateWithResponse(response.data, loadingNext, response.data.data.isNullOrEmpty())
-                loadingNextItems.set(false)
-
             }
-            is PaginationResponse.Nothing -> return
+            is PaginationResponse.ServerResponse ->
+                initPaginationServerResponse(response)
+            else -> return
         }
         pagingResponseReceived(response)
     }
 
-    private fun emitMessagesListResponse(response: List<ChannelFileItem>, loadingNext: Boolean) {
-        if (loadingNext)
-            _loadMoreFilesFlow.value = response
-        else _filesFlow.value = response
+    private fun initPaginationDbResponse(response: PaginationResponse.DBResponse<AttachmentWithUserData>) {
+        if (response.offset == 0) {
+            _filesFlow.tryEmit(mapToFileListItem(response.data, response.hasPrev))
+        } else {
+            _loadMoreFilesFlow.tryEmit(mapToFileListItem(response.data, response.hasPrev))
+        }
+        notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
     }
 
-    private fun mapToFileListItem(data: List<AttachmentWithUserData>?, hasNext: Boolean): List<ChannelFileItem> {
+    private fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<AttachmentWithUserData>) {
+        when (response.data) {
+            is SceytResponse.Success -> {
+                if (response.hasDiff) {
+                    val newMessages = mapToFileListItem(data = response.cashData,
+                        hasPrev = response.hasPrev)
+                    _filesFlow.tryEmit(newMessages)
+                } else if (response.hasPrev.not())
+                    _loadMoreFilesFlow.tryEmit(emptyList())
+            }
+            is SceytResponse.Error -> {
+                if (hasNextDb.not())
+                    _loadMoreFilesFlow.tryEmit(emptyList())
+            }
+        }
+        notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
+    }
+
+    private fun mapToFileListItem(data: List<AttachmentWithUserData>?, hasPrev: Boolean): List<ChannelFileItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
         val fileItems = arrayListOf<ChannelFileItem>()
 
@@ -77,7 +101,7 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
             item?.let { fileItem -> fileItems.add(fileItem) }
         }
 
-        if (hasNext)
+        if (hasPrev)
             fileItems.add(ChannelFileItem.LoadingMoreItem)
 
         return fileItems

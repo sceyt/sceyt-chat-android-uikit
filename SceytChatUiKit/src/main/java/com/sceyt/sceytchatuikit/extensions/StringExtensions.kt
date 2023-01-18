@@ -5,6 +5,7 @@ import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import android.util.Base64
 import androidx.core.text.isDigitsOnly
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -60,4 +61,13 @@ fun CharSequence?.setBoldSpan(from: Int, to: Int): SpannableStringBuilder {
 fun CharSequence?.firstCharToUppercase(): CharSequence? {
     if (this == null || isNullOrBlank()) return this
     return replaceRange(0, 1, first().uppercase())
+}
+
+fun String?.toByteArraySafety(): ByteArray? {
+    this ?: return null
+    return try {
+        Base64.decode(this, Base64.NO_WRAP)
+    } catch (e: Exception) {
+        null
+    }
 }

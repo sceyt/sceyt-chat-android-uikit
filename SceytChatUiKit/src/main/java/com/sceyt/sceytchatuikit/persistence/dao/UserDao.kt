@@ -14,6 +14,9 @@ interface UserDao {
     @Query("select * from users where user_id =:id")
     suspend fun getUserById(id: String): UserEntity?
 
+    @Query("select * from users where user_id in (:id)")
+    suspend fun getUsersById(id: List<String>): List<UserEntity>
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateUser(user: UserEntity)
 

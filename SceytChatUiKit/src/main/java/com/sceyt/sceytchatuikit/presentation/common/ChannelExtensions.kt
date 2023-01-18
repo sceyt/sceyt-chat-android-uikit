@@ -4,6 +4,7 @@ import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -24,8 +25,8 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         markedUsUnreadChanged = markedUsUnread != other.markedUsUnread,
         lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
         peerBlockedChanged = peerBlockedChanged,
-        typingStateChanged = typingData != other.typingData
-    )
+        typingStateChanged = typingData != other.typingData,
+        membersChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount)
 }
 
 fun SceytChannel.checkIsMemberInChannel(myId: String?): Boolean {

@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransfe
 import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransferLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogicImpl
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCash
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogicImpl
@@ -60,6 +61,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().messageDao() }
     single { get<SceytDatabase>().reactionDao() }
     single { get<SceytDatabase>().pendingMarkersDao() }
+    single { get<SceytDatabase>().attachmentsDao() }
 
     single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get()) }
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
@@ -69,8 +71,8 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
     factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get()) }
-    factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get()) }
+    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get()) }
 
@@ -88,6 +90,7 @@ internal val repositoryModule = module {
 internal val cashModule = module {
     single { MessagesCash() }
     single { ChannelsCash() }
+    factory { AttachmentsCash() }
 }
 
 internal val viewModelModule = module {

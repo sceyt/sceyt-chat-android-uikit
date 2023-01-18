@@ -25,6 +25,8 @@ interface PersistenceMessagesMiddleWare {
     suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean,
                                    loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
+    suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
+
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 

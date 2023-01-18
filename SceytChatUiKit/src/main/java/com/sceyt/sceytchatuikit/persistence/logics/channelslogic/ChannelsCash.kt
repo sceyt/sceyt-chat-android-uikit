@@ -188,6 +188,13 @@ class ChannelsCash {
         channelAddedFlow_.tryEmit(channel.clone())
     }
 
+    fun updateMembersCount(channel: SceytGroupChannel) {
+        cashedData[channel.id]?.let {
+            (it as? SceytGroupChannel)?.memberCount = channel.memberCount
+            channelUpdated(it, false)
+        } ?: upsertChannel(channel)
+    }
+
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {
         var detectedDiff = false
         list.forEach {

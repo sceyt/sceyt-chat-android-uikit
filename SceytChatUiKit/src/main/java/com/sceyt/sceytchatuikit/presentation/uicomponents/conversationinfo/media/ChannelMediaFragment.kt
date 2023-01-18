@@ -96,36 +96,39 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     open fun onInitialMediaList(list: List<ChannelFileItem>) {
-        mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
-            it.setNeedMediaDataCallback { data ->
-                viewModel.needMediaInfo(data)
-            }
+        if (mediaAdapter == null) {
+            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+                it.setNeedMediaDataCallback { data ->
+                    viewModel.needMediaInfo(data)
+                }
 
-            it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                item.file.openFile(requireContext())
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                    item.file.openFile(requireContext())
+                })
             })
-        })
-        with((binding ?: return).rvFiles) {
-            adapter = mediaAdapter
-            layoutManager = GridLayoutManager(requireContext(), 3).also {
-                it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                    override fun getSpanSize(position: Int): Int {
-                        return when (mediaAdapter?.getItemViewType(position)) {
-                            ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> 3
-                            else -> 1
+            with((binding ?: return).rvFiles) {
+                adapter = mediaAdapter
+                layoutManager = GridLayoutManager(requireContext(), 3).also {
+                    it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                        override fun getSpanSize(position: Int): Int {
+                            return when (mediaAdapter?.getItemViewType(position)) {
+                                ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> 3
+                                else -> 1
+                            }
                         }
                     }
                 }
-            }
 
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                        loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
-                }
-            })
-        }
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (isLastItemDisplaying() && viewModel.canLoadPrev())
+                            loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
+                                mediaAdapter?.getFileItems()?.size ?: 0)
+                    }
+                })
+            }
+        } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
     open fun onMoreMediaList(list: List<ChannelFileItem>) {
@@ -141,11 +144,11 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     protected fun loadInitialMediaList() {
-        viewModel.loadMessages(channel.id, 0, false, mediaType)
+        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 
-    protected fun loadMoreMediaList(lasMsgId: Long) {
-        viewModel.loadMessages(channel.id, lasMsgId, true, mediaType)
+    protected fun loadMoreMediaList(lastAttachmentId: Long, offset: Int) {
+        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
     companion object {

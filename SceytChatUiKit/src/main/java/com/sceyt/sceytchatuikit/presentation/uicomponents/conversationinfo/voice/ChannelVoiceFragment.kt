@@ -72,24 +72,27 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     open fun onInitialVoiceList(list: List<ChannelFileItem>) {
-        mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
-            it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                item.file.openFile(requireContext())
+        if (mediaAdapter == null) {
+            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                    item.file.openFile(requireContext())
+                })
+                getUserNameBuilder()
+                        ?: SceytKitConfig.userNameBuilder?.let { builder -> it.setUserNameBuilder(builder) }
             })
-            getUserNameBuilder()
-                    ?: SceytKitConfig.userNameBuilder?.let { builder -> it.setUserNameBuilder(builder) }
-        })
-        with((binding ?: return).rvVoice) {
-            adapter = mediaAdapter
+            with((binding ?: return).rvVoice) {
+                adapter = mediaAdapter
 
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                        loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
-                }
-            })
-        }
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (isLastItemDisplaying() && viewModel.canLoadPrev())
+                            loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
+                                mediaAdapter?.getFileItems()?.size ?: 0)
+                    }
+                })
+            }
+        } else binding?.rvVoice?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
     open fun onMoreFilesList(list: List<ChannelFileItem>) {
@@ -103,11 +106,11 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     open fun getUserNameBuilder(): ((User) -> String)? = SceytKitConfig.userNameBuilder
 
     protected fun loadInitialFilesList() {
-        viewModel.loadMessages(channel.id, 0, false, mediaType)
+        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 
-    protected fun loadMoreFilesList(lasMsgId: Long) {
-        viewModel.loadMessages(channel.id, lasMsgId, true, mediaType)
+    protected fun loadMoreFilesList(lastAttachmentId: Long, offset: Int) {
+        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
     private fun addPageStateView() {

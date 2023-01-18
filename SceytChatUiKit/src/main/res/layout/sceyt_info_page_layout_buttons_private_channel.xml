@@ -8,32 +8,36 @@
         android:id="@+id/call"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="?selectableItemBackgroundBorderless"
         android:drawableTop="@drawable/sceyt_ic_phone_24"
         android:drawablePadding="10dp"
         android:gravity="center"
         android:minWidth="50dp"
         android:text="@string/sceyt_call"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="13sp" />
+        android:textSize="13sp"
+        android:visibility="gone" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/video"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:background="?selectableItemBackgroundBorderless"
         android:drawableTop="@drawable/sceyt_ic_video_24"
         android:drawablePadding="10dp"
         android:gravity="center"
         android:minWidth="50dp"
         android:text="@string/sceyt_video_small_case"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="13sp" />
+        android:textSize="13sp"
+        android:visibility="gone" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/muteUnMute"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
+        android:background="?selectableItemBackgroundBorderless"
         android:drawableTop="@drawable/sceyt_ic_muted_channel"
         android:drawablePadding="10dp"
         android:gravity="center"
@@ -47,6 +51,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:background="?selectableItemBackgroundBorderless"
         android:drawableTop="@drawable/sceyt_ic_more_24"
         android:drawablePadding="10dp"
         android:gravity="center"

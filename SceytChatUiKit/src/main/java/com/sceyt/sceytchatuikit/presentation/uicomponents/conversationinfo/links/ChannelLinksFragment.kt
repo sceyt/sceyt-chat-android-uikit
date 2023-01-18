@@ -91,24 +91,27 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     open fun onInitialLinksList(list: List<ChannelFileItem>) {
-        mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
-            it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                onLinkClick(item.file.url)
+        if (mediaAdapter == null) {
+            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                    onLinkClick(item.file.url)
+                })
             })
-        })
 
-        with((binding ?: return).rvLinks) {
-            adapter = mediaAdapter
+            with((binding ?: return).rvLinks) {
+                adapter = mediaAdapter
 
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    if (isLastItemDisplaying() && viewModel.canLoadPrev()) {
-                        loadMoreLinksList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0)
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (isLastItemDisplaying() && viewModel.canLoadPrev()) {
+                            loadMoreLinksList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
+                                mediaAdapter?.getFileItems()?.size ?: 0)
+                        }
                     }
-                }
-            })
-        }
+                })
+            }
+        } else binding?.rvLinks?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
     open fun onMoreLinksList(list: List<ChannelFileItem>) {
@@ -120,11 +123,11 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     protected fun loadInitialLinksList() {
-        viewModel.loadMessages(channel.id, 0, false, mediaType)
+        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 
-    protected fun loadMoreLinksList(lasMsgId: Long) {
-        viewModel.loadMessages(channel.id, lasMsgId, true, mediaType)
+    protected fun loadMoreLinksList(lastAttachmentId: Long, offset: Int) {
+        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
     companion object {
