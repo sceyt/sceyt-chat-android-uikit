@@ -122,7 +122,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
-                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+                                        ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return channelLogic.searchChannels(offset, searchItems, loadKey, ignoreDb)
     }
 
@@ -240,6 +240,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
                                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(conversationId, replyInThread, loadKey, ignoreDb)
+    }
+
+    override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
+        return messagesLogic.loadMessagesById(conversationId, ids)
     }
 
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
