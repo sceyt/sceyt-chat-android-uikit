@@ -128,4 +128,9 @@
     <string name="sceyt_call">call</string>
     <string name="sceyt_revoke_admin">Revoke admin</string>
 
+    <string name="sceyt_forward">Forward</string>
+    <string name="sceyt_saved">Saved</string>
+    <string name="sceyt_share">Share</string>
+    <string name="sceyt_media_cannot_save_to_gallery">Cannot save file to gallery. Check permission and allow app to access storage</string>
+
 </resources>
