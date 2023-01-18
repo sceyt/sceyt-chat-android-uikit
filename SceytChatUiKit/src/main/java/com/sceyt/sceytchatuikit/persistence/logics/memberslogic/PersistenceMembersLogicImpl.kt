@@ -97,11 +97,10 @@ internal class PersistenceMembersLogicImpl(
 
         val links = arrayListOf<UserChatLink>()
         val users = arrayListOf<UserEntity>()
-        channelDao.getChannelById(channelId)?.let { channel ->
-            list.forEach { member ->
-                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
-                users.add(member.toUserEntity())
-            }
+
+        list.forEach { member ->
+            links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
+            users.add(member.toUserEntity())
         }
 
         usersDao.insertUsers(users)
