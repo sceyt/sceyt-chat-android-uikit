@@ -30,7 +30,8 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
-import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadata
+import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
@@ -213,7 +214,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun checkBodyIsLink(): Boolean {
         val body = binding.messageInput.text.toString()
-        val isLink = Patterns.WEB_URL.matcher(body).matches();
+        val isLink = Patterns.WEB_URL.matcher(body).matches()
         if (isLink) {
             val attachment = Attachment.Builder("", body, AttachmentTypeEnum.Link.value())
                 .withTid(ClientWrapper.generateTid())
@@ -325,7 +326,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun loadReplyMessageImage(attachment: Attachment) {
         when {
             attachment.type.isEqualsVideoOrImage() -> {
-                val placeHolder = attachment.metadata.getInfoFromMetadata(true)?.second
+                val placeHolder = attachment.metadata.getInfoFromMetadataByKey(SceytConstants.Thumb)?.toByteArraySafety()
                     ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
                 Glide.with(context)
                     .load(attachment.filePath)
@@ -454,12 +455,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         addAttachments(attachments)
     }
 
-
     fun enableDisableInput(message: String, enable: Boolean) {
         disabledInput = enable.not()
         if (!enable)
             hideInputWithMessage(message)
     }
+
+    fun isEmpty() = binding.messageInput.text.isNotNullOrBlank()
+
+    fun getComposedMessage() = binding.messageInput.text
 
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)
