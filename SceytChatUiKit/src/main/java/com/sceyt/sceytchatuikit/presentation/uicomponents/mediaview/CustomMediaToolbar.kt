@@ -31,7 +31,7 @@ class CustomMediaToolbar @JvmOverloads constructor(
     }
 
     private fun setupViews() {
-        binding = com.sceyt.sceytchatuikit.databinding.CustomVideoToolbarBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = CustomVideoToolbarBinding.inflate(LayoutInflater.from(context), this, true)
         binding.tvTitle.text = title
         binding.imvBack.setImageResource(navigationIconId)
     }

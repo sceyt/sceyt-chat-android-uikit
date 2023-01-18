@@ -8,9 +8,12 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.DialogActionsBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Save
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Share
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.FileType.Image
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class ActionDialog(
         context: Context,
@@ -24,6 +27,7 @@ class ActionDialog(
         super.onCreate(savedInstanceState)
         binding = DialogActionsBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
+        binding.setupStyle()
         initView()
 
         window?.let {
@@ -54,6 +58,10 @@ class ActionDialog(
 //            dismiss()
 //        }
 
+    }
+
+    private fun DialogActionsBinding.setupStyle() {
+        setTextViewsDrawableColor(listOf(save, share), context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     enum class Action {
