@@ -46,10 +46,11 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.inject
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
-    private var binding: FragmentChannelMembersBinding? = null
     private val viewModel by viewModel<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
+    var binding: FragmentChannelMembersBinding? = null
+        private set
     lateinit var channel: SceytChannel
         private set
     lateinit var memberType: MemberTypeEnum

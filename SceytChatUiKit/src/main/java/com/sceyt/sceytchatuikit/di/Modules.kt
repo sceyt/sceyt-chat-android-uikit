@@ -29,6 +29,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateChatViewModel
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateServiceImpl
@@ -100,4 +101,5 @@ internal val viewModelModule = module {
     viewModel { ChannelAttachmentsViewModel() }
     viewModel { ChannelMembersViewModel(get()) }
     viewModel { CreateChatViewModel() }
+    viewModel { ConversationInfoViewModel() }
 }
