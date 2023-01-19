@@ -177,13 +177,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 pinnedLastReadMessageId = channel.lastReadMessageId
 
             lifecycleOwner.lifecycleScope.launch {
-                val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
-                messagesListView.addNextPageMessages(mapToMessageListItem(data = it.second,
-                    hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
-                if (isLastDisplaying)
-                    messagesListView.scrollToLastMessage()
+                val currentMessages = messagesListView.getData()?.filterIsInstance<MessageListItem.MessageItem>()?.map { item -> item.message }
+                val newMessages = currentMessages?.minus(it.second.toSet())
+                if (!newMessages.isNullOrEmpty()) {
+                    val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
+                    messagesListView.addNextPageMessages(mapToMessageListItem(data = newMessages,
+                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
+                    if (isLastDisplaying)
+                        messagesListView.scrollToLastMessage()
 
-                messagesListView.sortMessages()
+                    messagesListView.sortMessages()
+                }
             }
         }
     })

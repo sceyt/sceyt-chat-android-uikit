@@ -549,7 +549,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Choose file type popup listeners
     override fun onGalleryClick() {
-        GalleryMediaPicker.instance(*allAttachments.map { it.url }.toTypedArray()).apply {
+        GalleryMediaPicker.instance(selections = allAttachments.map { it.url }.toTypedArray()).apply {
             GalleryMediaPicker.pickerListener = getPickerListener()
         }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
     }

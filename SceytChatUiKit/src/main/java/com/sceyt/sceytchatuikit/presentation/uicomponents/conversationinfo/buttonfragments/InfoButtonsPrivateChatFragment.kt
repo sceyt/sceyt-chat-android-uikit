@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,18 +7,18 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsDirectChannelBinding
+import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPrivateChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-open class InfoButtonsDirectChatFragment : Fragment() {
-    private lateinit var binding: SceytInfoPageLayoutButtonsDirectChannelBinding
+class InfoButtonsPrivateChatFragment : Fragment() {
+    private lateinit var binding: SceytInfoPageLayoutButtonsPrivateChannelBinding
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytInfoPageLayoutButtonsDirectChannelBinding.inflate(layoutInflater, container, false)
+        return SceytInfoPageLayoutButtonsPrivateChannelBinding.inflate(layoutInflater, container, false)
             .also { binding = it }
             .root
     }
@@ -27,15 +27,15 @@ open class InfoButtonsDirectChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
+        binding.setOnClickListeners()
         binding.setupStyle()
-        binding.initViews()
     }
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.getParcelable(ChannelLinksFragment.CHANNEL))
     }
 
-    private fun SceytInfoPageLayoutButtonsDirectChannelBinding.initViews() {
+    private fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setOnClickListeners() {
         muteUnMute.apply {
             if (channel.muted) {
                 text = getString(R.string.sceyt_un_mute)
@@ -46,12 +46,12 @@ open class InfoButtonsDirectChatFragment : Fragment() {
             }
         }
 
-        video.setOnClickListenerDisableClickViewForWhile {
-            buttonsListener?.invoke(ClickActionsEnum.VideCall)
+        call.setOnClickListenerDisableClickViewForWhile {
+            buttonsListener?.invoke(ClickActionsEnum.Call)
         }
 
-        audio.setOnClickListenerDisableClickViewForWhile {
-            buttonsListener?.invoke(ClickActionsEnum.AudioCall)
+        video.setOnClickListenerDisableClickViewForWhile {
+            buttonsListener?.invoke(ClickActionsEnum.VideoCall)
         }
 
         muteUnMute.setOnClickListenerDisableClickViewForWhile {
@@ -68,19 +68,19 @@ open class InfoButtonsDirectChatFragment : Fragment() {
     }
 
     enum class ClickActionsEnum {
-        Mute, UnMute, VideCall, AudioCall, CallOut, More
+        Call, VideoCall, Mute, UnMute, More
     }
 
-    private fun SceytInfoPageLayoutButtonsDirectChannelBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(video, audio, muteUnMute, more),
+    private fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setupStyle() {
+        setTextViewsDrawableColor(listOf(muteUnMute, call, video, more),
             requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoButtonsDirectChatFragment {
-            val fragment = InfoButtonsDirectChatFragment()
+        fun newInstance(channel: SceytChannel): InfoButtonsPrivateChatFragment {
+            val fragment = InfoButtonsPrivateChatFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

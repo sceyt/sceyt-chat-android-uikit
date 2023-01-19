@@ -26,7 +26,8 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
         peerBlockedChanged = peerBlockedChanged,
         typingStateChanged = typingData != other.typingData,
-        membersChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount)
+        membersChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount,
+        metadataUpdated = metadata != other.metadata)
 }
 
 fun SceytChannel.checkIsMemberInChannel(myId: String?): Boolean {

@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs
 
 import android.app.Dialog
 import android.content.Context
