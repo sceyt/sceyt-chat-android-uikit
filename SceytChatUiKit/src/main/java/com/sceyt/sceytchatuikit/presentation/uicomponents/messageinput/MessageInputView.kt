@@ -233,7 +233,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     selectFileTypePopupClickListeners.onGalleryClick()
                 }
                 AttachmentChooseType.Camera -> {
+                    //TODO custom camera impl
+                }
+                AttachmentChooseType.Image -> {
                     selectFileTypePopupClickListeners.onTakePhotoClick()
+                }
+                AttachmentChooseType.Video -> {
+                    selectFileTypePopupClickListeners.onTakeVideoClick()
                 }
                 AttachmentChooseType.File -> {
                     selectFileTypePopupClickListeners.onFileClick()
@@ -461,7 +467,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             hideInputWithMessage(message)
     }
 
-    fun isEmpty() = binding.messageInput.text.isNotNullOrBlank()
+    fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
 
     fun getComposedMessage() = binding.messageInput.text
 
@@ -550,6 +556,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onTakePhotoClick() {
         chooseAttachmentHelper?.takePicture {
+            addAttachment(it)
+        }
+    }
+
+    override fun onTakeVideoClick() {
+        chooseAttachmentHelper?.takeVideo {
             addAttachment(it)
         }
     }

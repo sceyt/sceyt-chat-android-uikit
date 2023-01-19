@@ -25,6 +25,7 @@
     <string name="sceyt_member_name_you">(You)</string>
     <string name="sceyt_you">You</string>
     <string name="sceyt_take_photo">Take photo</string>
+    <string name="sceyt_take_video">Take video</string>
     <string name="sceyt_upload_from_gallery">Upload from Gallery</string>
     <string name="sceyt_file">File</string>
     <string name="sceyt_cancel">Cancel</string>
