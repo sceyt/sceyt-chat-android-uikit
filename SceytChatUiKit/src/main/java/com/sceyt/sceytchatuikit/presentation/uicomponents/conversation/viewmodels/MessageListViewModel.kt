@@ -382,9 +382,6 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
             _messageEditedDeletedLiveData.postValue(response)
-            if (response is SceytResponse.Success)
-                MessageEventsObserver.emitMessageEditedOrDeletedByMe(response.data?.toMessage()
-                        ?: return@launch)
         }
     }
 
