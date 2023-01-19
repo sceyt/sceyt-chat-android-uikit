@@ -75,7 +75,7 @@
 
     </declare-styleable>
 
-    <declare-styleable name="CustomToolbar">
+    <declare-styleable name="SceytCustomToolbar">
         <attr name="title" format="string" />
         <attr name="navigationIcon" format="reference" />
         <attr name="navigationEndIcon" format="reference" />

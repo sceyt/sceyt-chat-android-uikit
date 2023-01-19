@@ -124,6 +124,7 @@
     <string name="sceyt_unblock_user">Unblock user</string>
     <string name="sceyt_admins">Admins</string>
     <string name="sceyt_channel_description">Channel description</string>
+    <string name="sceyt_description">Description</string>
     <string name="sceyt_about">About</string>
     <string name="sceyt_leave_group">Leave group</string>
     <string name="sceyt_call">call</string>

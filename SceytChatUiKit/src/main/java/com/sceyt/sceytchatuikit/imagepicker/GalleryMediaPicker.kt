@@ -47,6 +47,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private var selectedMediaPaths = mutableSetOf<String>()
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
+    private var maxSelectCount: Int = GalleryPickerStyle.maxSelectCount
     private val imagesAdapter by lazy {
         GalleryMediaAdapter(::onMediaClick)
     }
@@ -64,11 +65,15 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         }
 
         savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
-            selectedMediaPaths = it.toMutableSet()
+            selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
         } ?: run {
             arguments?.getStringArray(STATE_SELECTION)?.let {
-                selectedMediaPaths = it.toMutableSet()
+                selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
             }
+        }
+
+        arguments?.getInt(MAX_SELECTION_COUNT)?.let {
+            maxSelectCount = it
         }
     }
 
@@ -132,9 +137,9 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     private fun onMediaClick(mediaItem: MediaItem) {
         val item = mediaItem.media
-        if (selectedMedia.size == GalleryPickerStyle.maxSelectCount && item.selected.not()) {
+        if (selectedMedia.size == maxSelectCount && item.selected.not()) {
             Toast.makeText(requireContext(), "${context?.getString(R.string.sceyt_max_select_count_should_be)} " +
-                    "${GalleryPickerStyle.maxSelectCount}", Toast.LENGTH_SHORT).show()
+                    "$maxSelectCount", Toast.LENGTH_SHORT).show()
             return
         }
         item.selected = !item.selected
@@ -302,12 +307,15 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         private const val LOADER_ID = 0x1337
         private const val CHUNK_SIZE = 150
         private const val STATE_SELECTION = "stateSelection"
+        private const val MAX_SELECTION_COUNT = "maxSelectionCount"
 
         var pickerListener: PickerListener? = null
 
-        fun instance(vararg selections: String): GalleryMediaPicker {
+        fun instance(maxSelectCount: Int = GalleryPickerStyle.maxSelectCount, vararg selections: String): GalleryMediaPicker {
             return GalleryMediaPicker().apply {
-                arguments = bundleOf(STATE_SELECTION to selections)
+                arguments = bundleOf(
+                    STATE_SELECTION to selections,
+                    MAX_SELECTION_COUNT to maxSelectCount)
             }
         }
     }

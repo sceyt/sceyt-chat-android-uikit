@@ -264,7 +264,7 @@
                             android:layout_marginEnd="12dp"
                             android:visibility="invisible"
                             app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintEnd_toStartOf="@id/icEdit"
                             app:layout_constraintStart_toEndOf="@+id/icBack"
                             app:layout_constraintTop_toTopOf="parent">
 
@@ -314,6 +314,17 @@
 
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:id="@+id/icEdit"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="?selectableItemBackgroundBorderless"
+                            android:padding="4dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:srcCompat="@drawable/sceyt_ic_edit" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 

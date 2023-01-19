@@ -171,6 +171,7 @@ abstract class MessageDao {
     @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
     abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
 
+    @Transaction
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
     abstract suspend fun getLastMessage(channelId: Long): MessageDb?
 
