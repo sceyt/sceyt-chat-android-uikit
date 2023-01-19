@@ -330,10 +330,9 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.editMessage(id, message)
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
-                //todo should return updatedMsg
-
-                messageDao.updateMessage(message.toMessageEntity())
-                messagesCash.messageUpdated(message)
+                messageDao.updateMessage(updatedMsg.toMessageEntity())
+                messagesCash.messageUpdated(updatedMsg)
+                persistenceChannelsLogic.onMessageEditedOrDeleted(updatedMsg)
             }
         }
         return response

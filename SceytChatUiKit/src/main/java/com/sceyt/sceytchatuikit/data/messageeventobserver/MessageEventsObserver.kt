@@ -96,10 +96,6 @@ object MessageEventsObserver {
         onOutGoingMessageStatusFlow_.tryEmit(Pair(channelId, message))
     }
 
-    fun emitMessageEditedOrDeletedByMe(message: Message) {
-        onMessageEditedOrDeletedFlow_.tryEmit(message)
-    }
-
     fun emitAttachmentTransferUpdate(data: TransferData) {
         onTransferUpdatedFlow_.tryEmit(data)
     }
