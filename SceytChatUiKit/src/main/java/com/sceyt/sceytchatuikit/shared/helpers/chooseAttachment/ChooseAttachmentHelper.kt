@@ -29,16 +29,20 @@ import java.io.FileInputStream
 class ChooseAttachmentHelper {
     private lateinit var context: Context
     private var requestCameraPermissionLauncher: ActivityResultLauncher<String>
+    private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>
     private var requestGalleryPermissionLauncher: ActivityResultLauncher<String>
     private var requestFilesPermissionLauncher: ActivityResultLauncher<String>
     private var takePhotoLauncher: ActivityResultLauncher<Uri>
+    private var takeVideoLauncher: ActivityResultLauncher<Uri>
     private var addAttachmentLauncher: ActivityResultLauncher<Intent>
     private var allowMultiple: Boolean = true
     private var onlyImages: Boolean = true
 
     private var takePhotoPath: String? = null
+    private var takeVideoPath: String? = null
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
     private var takePictureCb: ((String) -> Unit)? = null
+    private var takeVideoCb: ((String) -> Unit)? = null
     private lateinit var scope: CoroutineScope
     private val debounceHelper by lazy { DebounceHelper(300L, scope) }
 
@@ -50,6 +54,9 @@ class ChooseAttachmentHelper {
             requestCameraPermissionLauncher = initPermissionLauncher {
                 onCameraPermissionResult(it)
             }
+            requestVideoCameraPermissionLauncher = initPermissionLauncher {
+                onVideoCameraPermissionResult(it)
+            }
             requestGalleryPermissionLauncher = initPermissionLauncher {
                 onGalleryPermissionResult(it)
             }
@@ -59,6 +66,10 @@ class ChooseAttachmentHelper {
 
             takePhotoLauncher = initCameraLauncher {
                 onTakePhotoResult(it)
+            }
+
+            takeVideoLauncher = initVideoCameraLauncher {
+                onTakeVideoResult(it)
             }
 
             addAttachmentLauncher = initAttachmentLauncher {
@@ -78,6 +89,9 @@ class ChooseAttachmentHelper {
             requestCameraPermissionLauncher = initPermissionLauncher {
                 onCameraPermissionResult(it)
             }
+            requestVideoCameraPermissionLauncher = initPermissionLauncher {
+                onVideoCameraPermissionResult(it)
+            }
             requestGalleryPermissionLauncher = initPermissionLauncher {
                 onGalleryPermissionResult(it)
             }
@@ -87,6 +101,10 @@ class ChooseAttachmentHelper {
 
             takePhotoLauncher = initCameraLauncher {
                 onTakePhotoResult(it)
+            }
+
+            takeVideoLauncher = initVideoCameraLauncher {
+                onTakeVideoResult(it)
             }
 
             addAttachmentLauncher = initAttachmentLauncher {
@@ -100,6 +118,14 @@ class ChooseAttachmentHelper {
         if (context.checkAndAskPermissions(requestCameraPermissionLauncher,
                     android.Manifest.permission.CAMERA)) {
             takePhotoLauncher.launch(getPhotoFileUri())
+        }
+    }
+
+    fun takeVideo(result: (uri: String) -> Unit) {
+        takeVideoCb = result
+        if (context.checkAndAskPermissions(requestVideoCameraPermissionLauncher,
+                android.Manifest.permission.CAMERA)) {
+            takeVideoLauncher.launch(getVideoFileUri())
         }
     }
 
@@ -127,6 +153,14 @@ class ChooseAttachmentHelper {
             takePhotoPath?.let { path ->
                 takePictureCb?.invoke(path)
             }.also { takePhotoPath = null }
+        }
+    }
+
+    private fun onTakeVideoResult(success: Boolean) {
+        if (success) {
+            takeVideoPath?.let { path ->
+                takeVideoCb?.invoke(path)
+            }.also { takeVideoPath = null }
         }
     }
 
@@ -207,6 +241,13 @@ class ChooseAttachmentHelper {
             context.shortToast("Please enable camera permission in settings")
     }
 
+    private fun onVideoCameraPermissionResult(isGranted: Boolean) {
+        if (isGranted) {
+            takeVideoLauncher.launch(getVideoFileUri())
+        } else if (context.checkDeniedOneOfPermissions(android.Manifest.permission.CAMERA))
+            context.shortToast("Please enable camera permission in settings")
+    }
+
     private fun onGalleryPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             openGallery()
@@ -253,5 +294,12 @@ class ChooseAttachmentHelper {
         if (!directory.exists()) directory.mkdir()
         val file = File.createTempFile("Photo_${System.currentTimeMillis()}", ".jpg", directory)
         return context.getFileUriWithProvider(file).also { takePhotoPath = file.path }
+    }
+
+    private fun getVideoFileUri(): Uri {
+        val directory = File(context.filesDir, "Videos")
+        if (!directory.exists()) directory.mkdir()
+        val file = File.createTempFile("Video_${System.currentTimeMillis()}", ".mp4", directory)
+        return context.getFileUriWithProvider(file).also { takeVideoPath = file.path }
     }
 }

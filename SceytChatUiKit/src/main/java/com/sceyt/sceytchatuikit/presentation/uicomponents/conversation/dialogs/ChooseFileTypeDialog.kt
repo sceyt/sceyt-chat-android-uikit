@@ -24,7 +24,11 @@ class ChooseFileTypeDialog(
 
     private fun initView() {
         mBinding.tvTakePhoto.setOnClickListener {
-            chooseListener?.invoke(AttachmentChooseType.Camera)
+            chooseListener?.invoke(AttachmentChooseType.Image)
+            dismiss()
+        }
+        mBinding.tvTakeVideo.setOnClickListener {
+            chooseListener?.invoke(AttachmentChooseType.Video)
             dismiss()
         }
         mBinding.tvUploadFromGallery.setOnClickListener {
