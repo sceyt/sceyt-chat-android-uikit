@@ -58,7 +58,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     fun searchChannels(offset: Int, query: List<String>, loadKey: LoadKeyData? = null, notifyFlow: NotifyFlow) {
-        if (notifyFlow == NotifyFlow.LOAD)  {
+        if (notifyFlow == NotifyFlow.LOAD) {
             setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
             notifyPageLoadingState(false)
@@ -157,9 +157,9 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun muteChannel(channelId: Long) {
+    fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.muteChannel(channelId, 0)
+            channelMiddleWare.muteChannel(channelId, muteUntil)
         }
     }
 
