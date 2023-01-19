@@ -5,11 +5,13 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.FileClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.GalleryClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.TakePhotoClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.TakeVideoClickListener
 
 open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : ClickListeners {
     private var defaultListeners: ClickListeners = view
     private var galleryClickListener: GalleryClickListener? = null
     private var takePhotoClickListener: TakePhotoClickListener? = null
+    private var takeVideoClickListener: TakeVideoClickListener? = null
     private var fileClickListener: FileClickListener? = null
 
 
@@ -21,6 +23,11 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
     override fun onTakePhotoClick() {
         defaultListeners.onTakePhotoClick()
         takePhotoClickListener?.onTakePhotoClick()
+    }
+
+    override fun onTakeVideoClick() {
+        defaultListeners.onTakeVideoClick()
+        takeVideoClickListener?.onTakeVideoClick()
     }
 
     override fun onFileClick() {
@@ -40,6 +47,9 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
             }
             is TakePhotoClickListener -> {
                 takePhotoClickListener = listener
+            }
+            is TakeVideoClickListener -> {
+                takeVideoClickListener = listener
             }
             is FileClickListener -> {
                 fileClickListener = listener

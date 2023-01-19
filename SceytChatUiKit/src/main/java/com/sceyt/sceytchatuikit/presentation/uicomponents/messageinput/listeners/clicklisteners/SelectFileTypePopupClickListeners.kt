@@ -9,6 +9,10 @@ sealed interface SelectFileTypePopupClickListeners {
         fun onTakePhotoClick()
     }
 
+    fun interface TakeVideoClickListener : SelectFileTypePopupClickListeners {
+        fun onTakeVideoClick()
+    }
+
     fun interface FileClickListener : SelectFileTypePopupClickListeners {
         fun onFileClick()
     }
@@ -17,5 +21,6 @@ sealed interface SelectFileTypePopupClickListeners {
     interface ClickListeners :
             GalleryClickListener,
             TakePhotoClickListener,
+            TakeVideoClickListener,
             FileClickListener
 }

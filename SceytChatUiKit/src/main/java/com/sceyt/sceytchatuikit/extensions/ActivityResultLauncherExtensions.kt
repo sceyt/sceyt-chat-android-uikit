@@ -21,8 +21,16 @@ fun ComponentActivity.initCameraLauncher(callback: ActivityResultCallback<Boolea
     return registerForActivityResult(ActivityResultContracts.TakePicture(), callback)
 }
 
+fun ComponentActivity.initVideoCameraLauncher(callback: ActivityResultCallback<Boolean>): ActivityResultLauncher<Uri> {
+    return registerForActivityResult(ActivityResultContracts.CaptureVideo(), callback)
+}
+
 fun Fragment.initCameraLauncher(callback: ActivityResultCallback<Boolean>): ActivityResultLauncher<Uri> {
     return registerForActivityResult(ActivityResultContracts.TakePicture(), callback)
+}
+
+fun Fragment.initVideoCameraLauncher(callback: ActivityResultCallback<Boolean>): ActivityResultLauncher<Uri> {
+    return registerForActivityResult(ActivityResultContracts.CaptureVideo(), callback)
 }
 
 fun ComponentActivity.initAttachmentLauncher(callback: ActivityResultCallback<ActivityResult>): ActivityResultLauncher<Intent> {

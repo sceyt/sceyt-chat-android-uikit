@@ -255,27 +255,25 @@ object DateTimeUtil {
     }
 
     fun millisecondsToTime(milliseconds: Long): String {
-        val minutes = milliseconds / 1000 / 60
-        val seconds = milliseconds / 1000 % 60
-        val secondsStr = seconds.toString()
+        val hours = TimeUnit.MILLISECONDS.toHours(milliseconds)
+        val minutes =
+            TimeUnit.MILLISECONDS.toMinutes(milliseconds) - TimeUnit.HOURS.toMinutes(hours)
+        val seconds =
+            TimeUnit.MILLISECONDS.toSeconds(milliseconds) - TimeUnit.MINUTES.toSeconds(minutes)
 
-        val secs: String = if (secondsStr.length >= 2) {
-            secondsStr.substring(0, 2)
-        } else {
-            "0$secondsStr"
-        }
-        return "$minutes:$secs"
+        return if (hours > 0)
+            if (hours > 9)
+                String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            else
+                String.format("%d:%02d:%02d", hours, minutes, seconds)
+        else
+            if (minutes > 9)
+                String.format("%02d:%02d", minutes, seconds)
+            else
+                String.format("%d:%02d", minutes, seconds)
     }
 
     fun secondsToTime(seconds: Long): String {
-        val minutes = seconds / 60
-        val secondsStr = seconds.toString()
-
-        val secs: String = if (secondsStr.length >= 2) {
-            secondsStr.substring(0, 2)
-        } else {
-            "0$secondsStr"
-        }
-        return "$minutes:$secs"
+        return millisecondsToTime(seconds * 1000)
     }
 }
