@@ -5,7 +5,6 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
-import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isInvisible
@@ -33,14 +32,19 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPrivateChatFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPrivateChatFragment.ClickActionsEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment.PublicChannelClickActionsEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.GroupChatActionsDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.editchannel.EditChannelFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.*
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.DirectChatActionsDialog.ActionsEnum.*
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsDirectChatFragment.ClickActionsEnum.*
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsPrivateChatFragment.ClickActionsEnum
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments.InfoButtonsPublicChannelFragment.PublicChannelClickActionsEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
@@ -53,6 +57,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -60,7 +65,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
     private lateinit var pagerAdapter: ViewPagerAdapter
     private var binding: ActivityConversationInfoBinding? = null
-    protected val viewModel: ConversationInfoViewModel by viewModels()
+    protected val viewModel: ConversationInfoViewModel by viewModel()
     private val preferences: SceytSharedPreference by inject()
     private var isSaveLoading = false
     private var avatarUrl: String? = null
@@ -74,6 +79,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         getBundleArguments()
         initViewModel()
+        binding?.setupStyle()
         binding?.initViews()
         setChannelDetails(channel)
         viewModel.getChannelFromServer(channel.id)
@@ -145,6 +151,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun observeToChannelUpdate() {
         ChannelsCash.channelUpdatedFlow.onEach {
+            channel = it.channel
             onChannel(it.channel)
         }.launchIn(lifecycleScope)
     }
@@ -183,8 +190,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun ActivityConversationInfoBinding.initViews() {
-        icBack.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
-
         icBack.setOnClickListener {
             onBackPressed()
         }
@@ -195,6 +200,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         admins.setOnClickListener {
             onAdminsClick(channel)
+        }
+
+        icEdit.setOnClickListener {
+            onEditClick(channel)
         }
     }
 
@@ -236,9 +245,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             groupChannelMembers.isVisible = channel.isGroup
             members.text = if (channel.channelType == Public)
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
-            admins.isVisible = (channel as? SceytGroupChannel)?.members?.find {
+
+            val isGroupOwner = (channel as? SceytGroupChannel)?.members?.find {
                 it.id == preferences.getUserId()
             }?.role?.name == RoleTypeEnum.Owner.toString()
+
+            admins.isVisible = isGroupOwner
+            icEdit.isVisible = isGroupOwner
 
             setChannelTitle(channel)
             setPresenceOrMembers(channel)
@@ -329,6 +342,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
             addToBackStack(ChannelMembersFragment::class.java.simpleName)
             replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, MemberTypeEnum.Admin))
+        }
+    }
+
+    open fun onEditClick(channel: SceytChannel) {
+        binding ?: return
+        supportFragmentManager.commit {
+            setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+            addToBackStack(EditChannelFragment::class.java.simpleName)
+            replace(R.id.rootFrameLayout, getEditChannelFragment(channel))
         }
     }
 
@@ -567,6 +589,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 if (channel.label.isNotNullOrBlank()) {
                     tvTitle.text = getString(R.string.sceyt_channel_description)
                     tvDescription.text = channel.label
+                    groupChannelDescription.isVisible = true
                 } else groupChannelDescription.isVisible = false
             }
         }
@@ -582,6 +605,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun getChannelLinksFragment(channel: SceytChannel) = ChannelLinksFragment.newInstance(channel)
 
     open fun getChannelVoiceFragment(channel: SceytChannel) = ChannelVoiceFragment.newInstance(channel)
+
+    open fun getEditChannelFragment(channel: SceytChannel) = EditChannelFragment.newInstance(channel)
 
 
     //Buttons
@@ -606,6 +631,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     override fun onBackPressed() {
         super.onBackPressed()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+    }
+
+    private fun ActivityConversationInfoBinding.setupStyle() {
+        icBack.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+        icEdit.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     companion object {

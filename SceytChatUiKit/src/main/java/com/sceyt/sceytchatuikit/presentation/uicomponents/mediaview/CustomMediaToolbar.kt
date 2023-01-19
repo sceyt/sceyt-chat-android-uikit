@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview;
+package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview
 
 import android.content.Context
 import android.util.AttributeSet
@@ -21,9 +21,9 @@ class CustomMediaToolbar @JvmOverloads constructor(
     init {
 
         if (attrs != null) {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.CustomToolbar)
-            navigationIconId = typedArray.getResourceId(R.styleable.CustomToolbar_navigationIcon, navigationIconId)
-            title = typedArray.getString(R.styleable.CustomToolbar_title) ?: title
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SceytCustomToolbar)
+            navigationIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_navigationIcon, navigationIconId)
+            title = typedArray.getString(R.styleable.SceytCustomToolbar_title) ?: title
             typedArray.recycle()
         }
 

@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.fragments
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
