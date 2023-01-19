@@ -212,7 +212,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
-                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+                                        ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCash.clear()
 
@@ -225,7 +225,8 @@ internal class PersistenceChannelsLogicImpl(
 
             awaitToConnectSceyt()
 
-            val response = if (offset == 0) channelsRepository.getChannels(searchItems.firstOrNull()?: "")
+            val response = if (offset == 0) channelsRepository.getChannels(searchItems.firstOrNull()
+                    ?: "")
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
@@ -550,7 +551,6 @@ internal class PersistenceChannelsLogicImpl(
         channelsCash.upsertChannel(*channels.toTypedArray())
     }
 
-
     private suspend fun deleteMessage(channelId: Long, message: SceytMessage) {
         channelsCash.get(channelId)?.let {
             if (it.lastMessage?.id == message.id) {
@@ -574,8 +574,8 @@ internal class PersistenceChannelsLogicImpl(
             channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel -> channel.toChannel() }
         } else {
 
-            val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "LIKE", "","%","or")
-            val globOrSubject = concatWithSeparator(searchItems, "subject", "LIKE", "","%","or")
+            val globOrUserId = concatWithSeparator(searchItems, "link.user_id", "LIKE", "", "%", "or")
+            val globOrSubject = concatWithSeparator(searchItems, "subject", "LIKE", "", "%", "or")
 //            val inSubject = concatWithPrefix(searchItems, "link.user_id", "IN", ",")
 
             var whereQuery = "((${globOrSubject}) and channels.type != 0) "
@@ -583,12 +583,12 @@ internal class PersistenceChannelsLogicImpl(
             whereQuery += "((${globOrUserId}) and channels.type == 0) "
 
             val finalQuery =
-                "select * from channels " +
-                        "join UserChatLink as link on link.chat_id = channels.chat_id " +
-                        "join users as usr on link.user_id = usr.user_id " +
-                        "where ($whereQuery) " +
-                        "group by channels.chat_id " +
-                        "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit $CHANNELS_LOAD_SIZE offset $offset"
+                    "select * from channels " +
+                            "join UserChatLink as link on link.chat_id = channels.chat_id " +
+                            "join users as usr on link.user_id = usr.user_id " +
+                            "where ($whereQuery) " +
+                            "group by channels.chat_id " +
+                            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit $CHANNELS_LOAD_SIZE offset $offset"
 
             val simpleSQLiteQuery = SimpleSQLiteQuery(finalQuery)
             channelDao.searchChannelsRaw(simpleSQLiteQuery).map { channel -> channel.toChannel() }
