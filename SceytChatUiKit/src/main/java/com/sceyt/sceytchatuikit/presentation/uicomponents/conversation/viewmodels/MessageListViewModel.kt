@@ -8,8 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytSyncManager
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -36,7 +36,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -63,10 +62,8 @@ class MessageListViewModel(
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val application: Application by inject()
-    private val preference: SceytSharedPreference by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
-    internal val myId = preference.getUserId()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
 
@@ -470,7 +467,7 @@ class MessageListViewModel(
         return message.reactionScores?.map {
             ReactionItem.Reaction(SceytReaction(it.key, it.score,
                 message.lastReactions?.find { reaction ->
-                    reaction.key == it.key && reaction.user.id == myId
+                    reaction.key == it.key && reaction.user.id == SceytKitClient.myId
                 } != null), message)
         }?.sortedByDescending { it.reaction.score }
     }

@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import com.sceyt.chat.models.role.Role
+import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
@@ -30,13 +31,13 @@ internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         metadataUpdated = metadata != other.metadata)
 }
 
-fun SceytChannel.checkIsMemberInChannel(myId: String?): Boolean {
+fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
         toGroupChannel().members.find { it.id == myId } != null
     } else true
 }
 
-fun SceytChannel.getMyRole(myId: String?): Role? {
+fun SceytChannel.getMyRole(): Role? {
     return if (isGroup) {
         toGroupChannel().members.find { it.id == myId }?.role
     } else null

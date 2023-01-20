@@ -48,6 +48,8 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val filesTransferService by inject<FileTransferService>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
+    val myId get() = preferences.getUserId()
+
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)

@@ -7,22 +7,18 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPublicChannelBinding
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import org.koin.android.ext.android.inject
 
-class InfoButtonsPublicChannelFragment : Fragment(), SceytKoinComponent {
+class InfoButtonsPublicChannelFragment : Fragment() {
     private lateinit var binding: SceytInfoPageLayoutButtonsPublicChannelBinding
     private var buttonsListener: ((PublicChannelClickActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
-    private val preferences: SceytSharedPreference by inject()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytInfoPageLayoutButtonsPublicChannelBinding.inflate(layoutInflater, container, false)
@@ -76,7 +72,7 @@ class InfoButtonsPublicChannelFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun determinateState() {
-        val myRole = channel.getMyRole(preferences.getUserId())
+        val myRole = channel.getMyRole()
         val isMember = myRole != null
         with(binding) {
             if (!isMember) {
