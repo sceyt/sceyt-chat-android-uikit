@@ -71,7 +71,7 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
-                    val newMessages = mapToFileListItem(data = response.cashData,
+                    val newMessages = mapToFileListItem(data = response.cacheData,
                         hasPrev = response.hasPrev)
                     _filesFlow.tryEmit(newMessages)
                 } else if (response.hasPrev.not())
@@ -82,7 +82,7 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
                     _loadMoreFilesFlow.tryEmit(emptyList())
             }
         }
-        notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
+        notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
     }
 
     private fun mapToFileListItem(data: List<AttachmentWithUserData>?, hasPrev: Boolean): List<ChannelFileItem> {

@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
@@ -38,7 +38,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
-    private val channelsCash: ChannelsCash by inject()
+    private val channelsCache: ChannelsCache by inject()
     private val persistenceChannelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
@@ -161,7 +161,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     fun clearData() {
         database.clearAllTables()
         preferences.clear()
-        channelsCash.clear()
+        channelsCache.clear()
     }
 
     fun logOut(listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {

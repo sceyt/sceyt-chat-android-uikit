@@ -18,7 +18,7 @@ sealed class PaginationResponse<T> {
 
     /**
      * @param data is items from server.
-     * @param cashData is items from database or from cash, include elements from start.
+     * @param cacheData is items from database or from cash, include elements from start.
      * @param loadKey is the the helper key, which has been set when request started.
      * @param offset is the offset, which has been set when request started.
      * @param hasDiff is the difference between database/cash items and server items.
@@ -29,7 +29,7 @@ sealed class PaginationResponse<T> {
      * */
     data class ServerResponse<T>(
             val data: SceytResponse<List<T>>,
-            val cashData: List<T>,
+            val cacheData: List<T>,
             val loadKey: LoadKeyData?,
             val offset: Int,
             val hasDiff: Boolean,

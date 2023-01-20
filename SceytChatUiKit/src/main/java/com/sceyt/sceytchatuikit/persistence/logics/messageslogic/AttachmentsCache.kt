@@ -6,8 +6,8 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
-class AttachmentsCash {
-    private var cashedAttachments = hashMapOf<Long, SceytAttachment>()
+class AttachmentsCache {
+    private var cachedAttachments = hashMapOf<Long, SceytAttachment>()
     private val lock = Any()
 
     companion object {
@@ -24,7 +24,7 @@ class AttachmentsCash {
             return if (checkDifference)
                 putAndCheckHasDiff(true, *list.toTypedArray())
             else {
-                cashedAttachments.putAll(list.associateBy { it.messageTid })
+                cachedAttachments.putAll(list.associateBy { it.messageTid })
                 false
             }
         }
@@ -32,8 +32,8 @@ class AttachmentsCash {
 
     fun add(attachment: SceytAttachment) {
         synchronized(lock) {
-            val exist = cashedAttachments[attachment.tid] != null
-            cashedAttachments[attachment.tid] = attachment
+            val exist = cachedAttachments[attachment.tid] != null
+            cachedAttachments[attachment.tid] = attachment
             if (exist)
                 emitAttachmentUpdated(attachment)
         }
@@ -41,21 +41,21 @@ class AttachmentsCash {
 
     fun get(messageTid: Long): SceytAttachment? {
         synchronized(lock) {
-            return cashedAttachments[messageTid]
+            return cachedAttachments[messageTid]
         }
     }
 
     fun clear() {
         synchronized(lock) {
-            cashedAttachments.clear()
+            cachedAttachments.clear()
         }
     }
 
     fun getSorted(desc: Boolean = true): List<SceytAttachment> {
         synchronized(lock) {
             val data = if (desc)
-                cashedAttachments.values.sortedByDescending { it.createdAt }
-            else cashedAttachments.values.sortedBy { it.createdAt }
+                cachedAttachments.values.sortedByDescending { it.createdAt }
+            else cachedAttachments.values.sortedBy { it.createdAt }
             return data.map { it.clone() }
         }
     }
@@ -63,7 +63,7 @@ class AttachmentsCash {
     fun messageUpdated(vararg attachments: SceytAttachment) {
         synchronized(lock) {
             attachments.forEach {
-                cashedAttachments[it.messageTid] = it
+                cachedAttachments[it.messageTid] = it
             }
             emitAttachmentUpdated(*attachments)
         }
@@ -72,7 +72,7 @@ class AttachmentsCash {
 
     fun deleteAttachment(messageTid: Long) {
         synchronized(lock) {
-            cashedAttachments.remove(messageTid)
+            cachedAttachments.remove(messageTid)
         }
     }
 
@@ -93,10 +93,10 @@ class AttachmentsCash {
         var detectedDiff = false
         messages.forEach {
             if (!detectedDiff) {
-                val old = cashedAttachments[it.messageTid]
+                val old = cachedAttachments[it.messageTid]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: includeNotExistToDiff
             }
-            cashedAttachments[it.messageTid] = it
+            cachedAttachments[it.messageTid] = it
         }
         return detectedDiff
     }

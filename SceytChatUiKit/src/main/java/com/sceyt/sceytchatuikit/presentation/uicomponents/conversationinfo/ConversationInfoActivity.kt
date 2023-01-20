@@ -26,7 +26,7 @@ import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.ActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
@@ -148,7 +148,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun observeToChannelUpdate() {
-        ChannelsCash.channelUpdatedFlow
+        ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }
             .onEach {
                 channel = it.channel

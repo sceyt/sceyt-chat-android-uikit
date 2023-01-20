@@ -22,8 +22,8 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEnt
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageIdAndTid
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCash
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCache
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.getTid
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachment
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
@@ -37,8 +37,8 @@ class PersistenceAttachmentLogicImpl(
         private val messageDao: MessageDao,
         private val attachmentDao: AttachmentDao,
         private val userDao: UserDao,
-        private val messagesCash: MessagesCash,
-        private val attachmentsCash: AttachmentsCash,
+        private val messagesCache: MessagesCache,
+        private val attachmentsCache: AttachmentsCache,
         private val attachmentsRepository: AttachmentsRepository,
         private val messagesMiddleWare: PersistenceMessagesMiddleWare) : PersistenceAttachmentLogic {
 
@@ -63,24 +63,24 @@ class PersistenceAttachmentLogicImpl(
 
     override fun updateTransferDataByMsgTid(data: TransferData) {
         messageDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
-        messagesCash.updateAttachmentTransferData(data)
+        messagesCache.updateAttachmentTransferData(data)
     }
 
     override fun updateAttachmentWithTransferData(data: TransferData) {
         messageDao.updateAttachmentAndPayLoad(data)
-        messagesCash.updateAttachmentTransferData(data)
+        messagesCache.updateAttachmentTransferData(data)
     }
 
     override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         messageDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
-        messagesCash.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
+        messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
     }
 
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
                                 types: List<String>, loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
                                 offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<AttachmentWithUserData>> {
         return callbackFlow {
-            if (offset == 0) attachmentsCash.clear()
+            if (offset == 0) attachmentsCache.clear()
 
             // Load from database
             if (!ignoreDb)
@@ -129,7 +129,7 @@ class PersistenceAttachmentLogicImpl(
         attachments.map {
             data.add(AttachmentWithUserData(it, users.find { userEntity -> userEntity.id == it.userId }?.toUser()))
         }
-        attachmentsCash.addAll(attachments, false)
+        attachmentsCache.addAll(attachments, false)
 
         return PaginationResponse.DBResponse(data, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -191,19 +191,19 @@ class PersistenceAttachmentLogicImpl(
         val mappedResponse = handelServerResponse(conversationId, response)
 
         if (loadType == LoadNear)
-            attachmentsCash.clear()
+            attachmentsCache.clear()
 
         if (mappedResponse is SceytResponse.Success)
             mappedResponse.data?.let {
-                hasDiff = attachmentsCash.addAll(it.map { data -> data.attachment }, true)
+                hasDiff = attachmentsCache.addAll(it.map { data -> data.attachment }, true)
             }
 
-        val cashData = attachmentsCash.getSorted().map {
+        val cashData = attachmentsCache.getSorted().map {
             AttachmentWithUserData(it, response.data?.second?.get(it.userId))
         }
 
         return PaginationResponse.ServerResponse(
-            data = mappedResponse, cashData = cashData,
+            data = mappedResponse, cacheData = cashData,
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }

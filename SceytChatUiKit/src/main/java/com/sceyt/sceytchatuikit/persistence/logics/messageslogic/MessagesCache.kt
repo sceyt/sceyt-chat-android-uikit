@@ -12,8 +12,8 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
-class MessagesCash {
-    private var cashedMessages = hashMapOf<Long, SceytMessage>()
+class MessagesCache {
+    private var cachedMessages = hashMapOf<Long, SceytMessage>()
     private val lock = Any()
 
     companion object {
@@ -30,7 +30,7 @@ class MessagesCash {
             return if (checkDifference)
                 putAndCheckHasDiff(true, *list.toTypedArray())
             else {
-                cashedMessages.putAll(list.associateBy { it.tid })
+                cachedMessages.putAll(list.associateBy { it.tid })
                 false
             }
         }
@@ -38,10 +38,10 @@ class MessagesCash {
 
     fun add(message: SceytMessage) {
         synchronized(lock) {
-            val exist = cashedMessages[message.tid] != null
+            val exist = cachedMessages[message.tid] != null
             val payLoad = if (exist)
                 getPayLoads(message) else null
-            cashedMessages[message.tid] = message
+            cachedMessages[message.tid] = message
             if (exist)
                 emitMessageUpdated(payLoad?.toList(), message)
         }
@@ -49,19 +49,19 @@ class MessagesCash {
 
     fun get(tid: Long): SceytMessage? {
         synchronized(lock) {
-            return cashedMessages[tid]
+            return cachedMessages[tid]
         }
     }
 
     fun clear() {
         synchronized(lock) {
-            cashedMessages.clear()
+            cachedMessages.clear()
         }
     }
 
     fun getSorted(): List<SceytMessage> {
         synchronized(lock) {
-            return cashedMessages.values.sortedWith(MessageComparator()).map { it.clone() }
+            return cachedMessages.values.sortedWith(MessageComparator()).map { it.clone() }
         }
     }
 
@@ -69,7 +69,7 @@ class MessagesCash {
         synchronized(lock) {
             val payLoad = getPayLoads(*message)
             message.forEach {
-                cashedMessages[it.tid] = it
+                cachedMessages[it.tid] = it
             }
             emitMessageUpdated(payLoad, *message)
         }
@@ -79,7 +79,7 @@ class MessagesCash {
         synchronized(lock) {
             val updatesMessages = mutableListOf<SceytMessage>()
             tIds.forEach {
-                cashedMessages[it]?.let { message ->
+                cachedMessages[it]?.let { message ->
                     message.deliveryStatus = status
                     updatesMessages.add(message)
                 }
@@ -91,7 +91,7 @@ class MessagesCash {
 
     fun deleteMessage(tid: Long) {
         synchronized(lock) {
-            cashedMessages.remove(tid)
+            cachedMessages.remove(tid)
         }
     }
 
@@ -127,7 +127,7 @@ class MessagesCash {
     private fun getPayLoads(vararg messages: SceytMessage): List<AttachmentPayLoadEntity>? {
         var payloads: List<AttachmentPayLoadEntity>? = null
         messages.forEach {
-            payloads = cashedMessages[it.tid]?.attachments?.map { attachment ->
+            payloads = cachedMessages[it.tid]?.attachments?.map { attachment ->
                 AttachmentPayLoadEntity(
                     messageTid = it.tid,
                     transferState = attachment.transferState,
@@ -144,10 +144,10 @@ class MessagesCash {
         var detectedDiff = false
         messages.forEach {
             if (!detectedDiff) {
-                val old = cashedMessages[it.tid]
+                val old = cachedMessages[it.tid]
                 detectedDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
             }
-            cashedMessages[it.tid] = it
+            cachedMessages[it.tid] = it
         }
         return detectedDiff
     }
@@ -159,7 +159,7 @@ class MessagesCash {
             attachment.filePath = updateDate.filePath
             attachment.url = updateDate.url
         }
-        cashedMessages[updateDate.messageTid]?.let {
+        cachedMessages[updateDate.messageTid]?.let {
             it.attachments?.forEach { attachment ->
                 when (updateDate.state) {
                     PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
@@ -178,7 +178,7 @@ class MessagesCash {
     }
 
     fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) {
-        cashedMessages[messageTid]?.let {
+        cachedMessages[messageTid]?.let {
             it.attachments?.forEach { attachment ->
                 attachment.filePath = path
                 attachment.metadata = metadata
