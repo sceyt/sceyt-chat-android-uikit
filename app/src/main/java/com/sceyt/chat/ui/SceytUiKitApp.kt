@@ -15,6 +15,7 @@ import com.android.volley.toolbox.Volley
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.Types
+import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
@@ -66,6 +67,8 @@ class SceytUiKitApp : Application() {
             appId = "lzkxqzdgrl",
             host = "https://uk-london-south-api-2-staging.waafi.com",
             enableDatabase = true)
+
+        ChatClient.setSceytLogLevel(SCTLogLevel.Info, null)
     }
 
     private fun setNetworkListeners() {

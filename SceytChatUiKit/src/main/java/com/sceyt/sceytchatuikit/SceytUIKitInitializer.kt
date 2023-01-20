@@ -16,8 +16,9 @@ import org.koin.dsl.koinApplication
 class SceytUIKitInitializer(private val application: Application) {
 
     fun initialize(clientId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
-        val chatClient = ChatClient.setup(application, host, appId, clientId)
+        //Set static flags before calling setup
         ChatClient.setEnableNetworkAwarenessReconnection(true)
+        val chatClient = ChatClient.setup(application, host, appId, clientId)
         AXEmojiManager.install(application, AXGoogleEmojiProvider(application))
         initKoin(enableDatabase)
         initTheme()
