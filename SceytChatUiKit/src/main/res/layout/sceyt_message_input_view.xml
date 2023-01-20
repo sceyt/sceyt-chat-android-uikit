@@ -6,6 +6,7 @@
     android:layout_height="wrap_content">
 
     <View
+        android:id="@+id/viewTop"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/sceyt_color_divider"
@@ -98,14 +99,18 @@
         android:id="@+id/btnJoin"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_accent"
+        android:background="@color/sceyt_gallery_item_default_color"
+        android:gravity="center"
+        android:paddingVertical="16dp"
         android:text="@string/sceyt_join"
-        android:textColor="@color/sceyt_color_white"
-        android:textSize="@dimen/smallTextSize"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/mediumTextSize"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewTop" />
 
     <include
         android:id="@+id/layoutCloseInput"

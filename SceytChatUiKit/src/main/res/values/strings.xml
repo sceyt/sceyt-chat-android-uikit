@@ -31,7 +31,7 @@
     <string name="sceyt_cancel">Cancel</string>
     <string name="sceyt_edit_message">Edit message</string>
     <string name="sceyt_something_went_wrong">Something went wrong</string>
-    <string name="sceyt_join">join</string>
+    <string name="sceyt_join">Join</string>
     <string name="sceyt_attachment">Attachment</string>
     <string name="sceyt_react">React</string>
     <string name="sceyt_add">Add</string>
@@ -123,7 +123,6 @@
     <string name="sceyt_video_small_case">video</string>
     <string name="sceyt_unblock_user">Unblock user</string>
     <string name="sceyt_admins">Admins</string>
-    <string name="sceyt_channel_description">Channel description</string>
     <string name="sceyt_description">Description</string>
     <string name="sceyt_about">About</string>
     <string name="sceyt_leave_group">Leave group</string>

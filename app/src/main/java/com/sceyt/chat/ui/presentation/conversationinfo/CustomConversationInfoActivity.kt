@@ -22,8 +22,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 
 class CustomConversationInfoActivity : ConversationInfoActivity() {
 
-    override fun getChannelMembersFragment(channel: SceytChannel, membersType: MemberTypeEnum): ChannelMembersFragment {
-        return CustomMembersFragment.newInstance(channel, membersType)
+    override fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): ChannelMembersFragment {
+        return CustomMembersFragment.newInstance(channel, memberType)
     }
 
     override fun onAddSubscribersClick(channel: SceytChannel) {
@@ -75,7 +75,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                viewModel.addMembersToChannel(getChannel().id, users)
+                addMembers(users)
             }
         }
     }

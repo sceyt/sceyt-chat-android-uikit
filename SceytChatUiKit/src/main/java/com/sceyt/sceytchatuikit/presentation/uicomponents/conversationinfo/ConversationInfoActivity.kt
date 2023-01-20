@@ -20,11 +20,8 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
-import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.ActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -242,7 +239,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private fun setChannelDetails(channel: SceytChannel) {
         avatarUrl = channel.iconUrl
         with(binding ?: return) {
-            groupChannelMembers.isVisible = channel.isGroup
             members.text = if (channel.channelType == Public)
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
 
@@ -250,7 +246,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 it.id == preferences.getUserId()
             }?.role?.name == RoleTypeEnum.Owner.toString()
 
-            admins.isVisible = isGroupOwner
+            admins.isVisible = isGroupOwner || channel.channelType == Private
+            groupChannelMembers.isVisible = isGroupOwner || channel.channelType == Private
             icEdit.isVisible = isGroupOwner
 
             setChannelTitle(channel)
@@ -306,6 +303,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected fun joinChannel() {
         viewModel.joinChannel(channel.id)
+    }
+
+    protected fun addMembers(members: List<SceytMember>) {
+        viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
     protected fun getChannel() = channel.clone()
@@ -587,7 +588,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 } else groupChannelDescription.isVisible = false
             } else {
                 if (channel.label.isNotNullOrBlank()) {
-                    tvTitle.text = getString(R.string.sceyt_channel_description)
+                    tvTitle.text = getString(R.string.sceyt_description)
                     tvDescription.text = channel.label
                     groupChannelDescription.isVisible = true
                 } else groupChannelDescription.isVisible = false

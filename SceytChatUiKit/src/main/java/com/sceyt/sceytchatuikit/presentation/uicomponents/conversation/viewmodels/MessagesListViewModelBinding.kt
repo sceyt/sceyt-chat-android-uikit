@@ -451,6 +451,11 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         messageInputView.checkIsParticipant(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
+    pageStateLiveData.observe(lifecycleOwner, Observer {
+        if (it is PageState.StateError && it.showMessage)
+            customToastSnackBar(messageInputView, it.errorMessage.toString())
+    })
+
     channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             channel = it.data ?: return@Observer
