@@ -465,12 +465,13 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     })
 
     joinLiveData.observe(lifecycleOwner, Observer {
-        if (it is SceytResponse.Success) {
-            messageInputView.joinSuccess()
-            (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
+        when (it) {
+            is SceytResponse.Success -> {
+                messageInputView.joinSuccess()
+                (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
+            }
+            is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
         }
-
-        notifyPageStateWithResponse(it)
     })
 
     onEditMessageCommandLiveData.observe(lifecycleOwner, Observer {
