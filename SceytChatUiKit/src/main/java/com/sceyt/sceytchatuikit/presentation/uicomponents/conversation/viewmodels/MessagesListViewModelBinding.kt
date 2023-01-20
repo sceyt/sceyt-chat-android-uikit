@@ -23,8 +23,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -48,7 +48,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
      * Also set update current chat Id in ChannelsCash*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            ChannelsCash.currentChannelId = channel.id
+            ChannelsCache.currentChannelId = channel.id
             if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected) {
                 if (pendingDisplayMsgIds.isNotEmpty()) {
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
@@ -143,7 +143,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
-                    val newMessages = mapToMessageListItem(data = response.cashData,
+                    val newMessages = mapToMessageListItem(data = response.cacheData,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev)
                     messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
@@ -164,7 +164,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    ChannelsCash.channelDeletedFlow
+    ChannelsCache.channelDeletedFlow
         .filter { it == channel.id }
         .onEach {
             messagesListView.context.asActivity().finish()
@@ -211,7 +211,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCash.messageUpdatedFlow.onEach { messages ->
+    MessagesCache.messageUpdatedFlow.onEach { messages ->
         messages.forEach {
             if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
                 messagesListView.messageEditedOrDeleted(it)
@@ -544,7 +544,7 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
         headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCash.channelUpdatedFlow
+    ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach { headerView.setChannel(it.channel) }
         .launchIn(lifecycleOwner.lifecycleScope)

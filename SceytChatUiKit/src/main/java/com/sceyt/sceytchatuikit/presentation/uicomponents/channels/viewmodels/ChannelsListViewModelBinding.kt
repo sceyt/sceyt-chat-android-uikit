@@ -9,7 +9,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
@@ -35,7 +35,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
-                    val newChannels = mapToChannelItem(data = response.cashData, hasNext = response.hasNext)
+                    val newChannels = mapToChannelItem(data = response.cacheData, hasNext = response.hasNext)
                     channelsListView.setChannelsList(newChannels)
                 } else {
                     if (!hasNextDb) channelsListView.hideLoadingMore()
@@ -55,11 +55,11 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCash.channelDeletedFlow.onEach {
+    ChannelsCache.channelDeletedFlow.onEach {
         channelsListView.deleteChannel(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCash.channelUpdatedFlow.onEach { data ->
+    ChannelsCache.channelUpdatedFlow.onEach { data ->
         val diff = channelsListView.channelUpdated(data.channel)
         if (diff != null) {
             if (diff.lastMessageChanged || data.needSorting)
@@ -68,7 +68,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             getChannels(0, query = searchQuery)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCash.channelAddedFlow.onEach { sceytChannel ->
+    ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
     }.launchIn(lifecycleOwner.lifecycleScope)
 

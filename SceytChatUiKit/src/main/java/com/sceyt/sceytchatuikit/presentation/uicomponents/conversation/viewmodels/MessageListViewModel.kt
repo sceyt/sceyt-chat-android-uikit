@@ -35,7 +35,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -150,7 +150,7 @@ class MessageListViewModel(
         onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
             .filter { it.channel.id == channel.id }
 
-        onChannelUpdatedEventFlow = ChannelsCash.channelUpdatedFlow
+        onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }
             .map { it.channel }
 
@@ -243,7 +243,7 @@ class MessageListViewModel(
             is PaginationResponse.ServerResponse -> {
                 _loadMessagesFlow.value = response
                 notifyPageStateWithResponse(response.data, response.offset > 0,
-                    response.cashData.isEmpty(), showError = false)
+                    response.cacheData.isEmpty(), showError = false)
             }
             else -> return
         }

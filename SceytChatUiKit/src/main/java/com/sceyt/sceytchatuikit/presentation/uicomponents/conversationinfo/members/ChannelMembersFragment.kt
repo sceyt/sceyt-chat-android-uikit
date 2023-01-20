@@ -204,7 +204,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
-        val itemsDb = data.cashData as ArrayList
+        val itemsDb = data.cacheData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
             val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
 

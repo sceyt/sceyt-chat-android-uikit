@@ -81,7 +81,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                     withContext(Dispatchers.Main) {
                         _membersLiveData.value = PaginationResponse.ServerResponse(
                             SceytResponse.Success(mapToMemberItem(it.data.data, it.hasNext)),
-                            it.cashData.map { MemberItem.Member(it) }, it.loadKey,
+                            it.cacheData.map { MemberItem.Member(it) }, it.loadKey,
                             it.offset, it.hasDiff, it.hasNext, it.hasPrev, it.loadType, it.ignoredDb)
                     }
                 }

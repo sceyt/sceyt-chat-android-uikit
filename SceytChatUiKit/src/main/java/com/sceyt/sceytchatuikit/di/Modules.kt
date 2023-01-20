@@ -11,7 +11,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferServiceImpl
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogicImpl
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCash
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
@@ -20,8 +20,8 @@ import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransfe
 import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransferLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogicImpl
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCash
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCash
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCache
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
@@ -89,9 +89,9 @@ internal val repositoryModule = module {
 }
 
 internal val cashModule = module {
-    single { MessagesCash() }
-    single { ChannelsCash() }
-    factory { AttachmentsCash() }
+    single { MessagesCache() }
+    single { ChannelsCache() }
+    factory { AttachmentsCache() }
 }
 
 internal val viewModelModule = module {

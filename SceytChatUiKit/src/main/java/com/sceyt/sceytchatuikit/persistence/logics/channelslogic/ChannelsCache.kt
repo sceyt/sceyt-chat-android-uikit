@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import java.util.*
 
-class ChannelsCash {
+class ChannelsCache {
     private var cashedData = hashMapOf<Long, SceytChannel>()
     private val lock = Any()
 

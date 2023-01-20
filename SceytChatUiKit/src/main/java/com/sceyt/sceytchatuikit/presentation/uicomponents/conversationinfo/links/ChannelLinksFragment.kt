@@ -119,7 +119,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0)
+        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
     }
 
     protected fun loadInitialLinksList() {

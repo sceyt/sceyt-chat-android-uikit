@@ -43,7 +43,7 @@ internal class PersistenceChannelsLogicImpl(
         private val usersDao: UserDao,
         private val messageDao: MessageDao,
         private val preference: SceytSharedPreference,
-        private val channelsCash: ChannelsCash) : PersistenceChannelsLogic {
+        private val channelsCache: ChannelsCache) : PersistenceChannelsLogic {
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
@@ -62,26 +62,26 @@ internal class PersistenceChannelsLogicImpl(
             ClearedHistory -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateLastMessage(channelId, null, null)
-                    channelsCash.clearedHistory(channelId)
+                    channelsCache.clearedHistory(channelId)
                 }
             }
             Updated -> {
                 data.channel?.let { channel ->
                     channelDao.insertChannel(channel.toChannelEntity())
-                    channelsCash.upsertChannel(channel.toSceytUiChannel())
+                    channelsCache.upsertChannel(channel.toSceytUiChannel())
                 }
             }
             Muted -> {
                 data.channelId?.let { channelId ->
                     val time = data.channel?.muteExpireDate()?.time ?: 0
                     channelDao.updateMuteState(channelId, true, time)
-                    channelsCash.updateMuteState(channelId, true, time)
+                    channelsCache.updateMuteState(channelId, true, time)
                 }
             }
             UnMuted -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateMuteState(channelId, false)
-                    channelsCash.updateMuteState(channelId, false)
+                    channelsCache.updateMuteState(channelId, false)
                 }
             }
             MarkedUsUnread -> updateChannelDbAndCash(data.channel?.toSceytUiChannel())
@@ -98,7 +98,7 @@ internal class PersistenceChannelsLogicImpl(
             val members = if (it is GroupChannel) it.members else arrayListOf((it as DirectChannel).peer)
             val sceytChannel = channel.toSceytUiChannel()
             insertChannel(sceytChannel, *members.map { member -> member.toSceytMember() }.toTypedArray())
-            channelsCash.add(sceytChannel)
+            channelsCache.add(sceytChannel)
         }
     }
 
@@ -111,11 +111,11 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        channelsCash.get(data.channel.id)?.let { channel ->
+        channelsCache.get(data.channel.id)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
                 if (data.messageIds.contains(lastMessage.id)) {
                     data.channel.lastMessage?.let {
-                        channelsCash.updateLastMessage(channel.id, it)
+                        channelsCache.updateLastMessage(channel.id, it)
                     }
                 }
             }
@@ -139,20 +139,20 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
-        channelsCash.get(data.channelId)?.let { channel ->
+        channelsCache.get(data.channelId)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
                 if (lastMessage.tid == data.tid) {
                     if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
-                        channelsCash.updateLastMessage(data.channelId, null)
+                        channelsCache.updateLastMessage(data.channelId, null)
                     else
-                        channelsCash.updateLastMessage(data.channelId, data)
+                        channelsCache.updateLastMessage(data.channelId, data)
                 }
             } ?: run {
                 if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
                     deleteMessage(data.channelId, data)
                 else {
                     channel.lastMessage = data
-                    channelsCash.upsertChannel(channel)
+                    channelsCache.upsertChannel(channel)
                 }
             }
         }
@@ -161,7 +161,7 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun updateChannelDbAndCash(channel: SceytChannel?) {
         channel ?: return
         channelDao.updateChannel(channel.toChannelEntity(preference.getUserId()))
-        channelsCash.upsertChannel(channel)
+        channelsCache.upsertChannel(channel)
     }
 
     private suspend fun insertChannel(channel: SceytChannel, vararg members: SceytMember) {
@@ -180,12 +180,12 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
                                       ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
-            if (offset == 0) channelsCash.clear()
+            if (offset == 0) channelsCache.clear()
 
             val dbChannels = getChannelsDb(offset, searchQuery)
             var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
 
-            channelsCash.addAll(dbChannels.map { it.clone() }, false)
+            channelsCache.addAll(dbChannels.map { it.clone() }, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
 
@@ -198,10 +198,10 @@ internal class PersistenceChannelsLogicImpl(
                 val channels = response.data ?: arrayListOf()
 
                 saveChannelsToDb(channels)
-                val hasDiff = channelsCash.addAll(channels.map { it.clone() }, offset != 0) || offset == 0
+                val hasDiff = channelsCache.addAll(channels.map { it.clone() }, offset != 0) || offset == 0
                 hasNext = response.data?.size == CHANNELS_LOAD_SIZE
 
-                trySend(PaginationResponse.ServerResponse(data = response, cashData = channelsCash.getSorted(),
+                trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb))
             }
@@ -214,12 +214,12 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
                                         ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
-            if (offset == 0) channelsCash.clear()
+            if (offset == 0) channelsCache.clear()
 
             val dbChannels = searchChannelsDb(offset, searchItems)
             var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
 
-            channelsCash.addAll(dbChannels.map { it.clone() }, false)
+            channelsCache.addAll(dbChannels.map { it.clone() }, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
 
@@ -233,10 +233,10 @@ internal class PersistenceChannelsLogicImpl(
                 val channels = response.data ?: arrayListOf()
 
                 saveChannelsToDb(channels)
-                val hasDiff = channelsCash.addAll(channels.map { it.clone() }, offset != 0) || offset == 0
+                val hasDiff = channelsCache.addAll(channels.map { it.clone() }, offset != 0) || offset == 0
                 hasNext = response.data?.size == CHANNELS_LOAD_SIZE
 
-                trySend(PaginationResponse.ServerResponse(data = response, cashData = channelsCash.getSorted(),
+                trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb))
             }
@@ -267,7 +267,7 @@ internal class PersistenceChannelsLogicImpl(
                     if (response is SceytResponse.Success) {
                         response.data?.let {
                             saveChannelsToDb(it)
-                            channelsCash.upsertChannel(*it.toTypedArray())
+                            channelsCache.upsertChannel(*it.toTypedArray())
                             syncedChannels.addAll(it)
                         }
                     }
@@ -352,7 +352,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { channel ->
                 insertChannel(channel, SceytMember(user))
-                channelsCash.add(channel)
+                channelsCache.add(channel)
             }
         }
 
@@ -365,7 +365,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { channel ->
                 insertChannel(channel, *(channel as SceytGroupChannel).members.toTypedArray())
-                channelsCash.add(channel)
+                channelsCache.add(channel)
             }
         }
 
@@ -402,7 +402,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
-            channelsCash.clearedHistory(channelId)
+            channelsCache.clearedHistory(channelId)
         }
 
         return response
@@ -440,7 +440,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             channelDao.updateMuteState(channelId = channelId, muted = true, muteUntil = muteUntil)
-            channelsCash.updateMuteState(channelId, true, muteUntil)
+            channelsCache.updateMuteState(channelId, true, muteUntil)
         }
 
         return response
@@ -451,7 +451,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             channelDao.updateMuteState(channelId = channelId, muted = false)
-            channelsCash.updateMuteState(channelId, false)
+            channelsCache.updateMuteState(channelId, false)
         }
 
         return response
@@ -467,7 +467,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success)
             response.data?.toChannelEntity(preference.getUserId())?.let {
                 channelDao.insertChannel(it)
-                channelsCash.upsertChannel(response.data)
+                channelsCache.upsertChannel(response.data)
             }
 
         return response
@@ -491,7 +491,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let {
                 channelDao.updateChannel(it.toChannelEntity(preference.getUserId()))
-                channelsCash.upsertChannel(it)
+                channelsCache.upsertChannel(it)
             }
         }
 
@@ -509,7 +509,10 @@ internal class PersistenceChannelsLogicImpl(
                         chatId = it.id,
                         role = sceytMember.role.name))
 
-                    channelsCash.addedMembers(channelId, sceytMember)
+                    if (channelsCache.get(channelId) == null)
+                        channelsCache.add(it)
+                    else
+                        channelsCache.addedMembers(channelId, sceytMember)
                 }
             }
 
@@ -519,21 +522,21 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
-            channelsCash.updateLastMessage(channelId, message)
+            channelsCache.updateLastMessage(channelId, message)
         } else {
             channelDao.updateLastMessageWithLastRead(channelId, message.tid, message.id, message.createdAt)
-            channelsCash.updateLastMessageWithLastRead(channelId, message)
+            channelsCache.updateLastMessageWithLastRead(channelId, message)
         }
     }
 
     override suspend fun setUnreadCount(channelId: Long, count: Int) {
         channelDao.updateUnreadCount(channelId, count)
-        channelsCash.updateUnreadCount(channelId, count)
+        channelsCache.updateUnreadCount(channelId, count)
     }
 
     override suspend fun blockUnBlockUser(userId: String, block: Boolean) {
         val channels = channelDao.getChannelByPeerId(userId)
-        channelsCash.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
+        channelsCache.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
     }
 
     override fun getTotalUnreadCount(): Flow<Int> {
@@ -543,28 +546,25 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun deleteChannelDb(channelId: Long) {
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessages(channelId)
-        channelsCash.deleteChannel(channelId)
+        channelsCache.deleteChannel(channelId)
     }
 
     private fun upsertChannelsToCash(channels: List<SceytChannel>) {
         if (channels.isEmpty()) return
-        channelsCash.upsertChannel(*channels.toTypedArray())
+        channelsCache.upsertChannel(*channels.toTypedArray())
     }
 
     private suspend fun deleteMessage(channelId: Long, message: SceytMessage) {
-        channelsCash.get(channelId)?.let {
+        channelsCache.get(channelId)?.let {
             if (it.lastMessage?.id == message.id) {
                 val lastMessage = messageDao.getLastMessage(channelId)
                 with(lastMessage?.messageEntity) {
                     channelDao.updateLastMessage(channelId, this?.tid, this?.createdAt)
                 }
-                channelsCash.updateLastMessage(channelId, lastMessage?.toSceytMessage())
+                channelsCache.updateLastMessage(channelId, lastMessage?.toSceytMessage())
             }
         }
     }
-
-
-
 
 
     // TODO need further improvements
