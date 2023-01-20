@@ -55,7 +55,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.getChannelFromServer(id)
-            notifyResponseAndPageState(_channelLiveData, response)
+            notifyResponseAndPageState(_channelLiveData, response, showError = false)
         }
     }
 

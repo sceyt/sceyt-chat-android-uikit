@@ -360,6 +360,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             root.isVisible = true
         }
         binding.layoutInput.isVisible = false
+        binding.btnJoin.isVisible = false
     }
 
     internal fun onStateChanged(newState: InputState) {

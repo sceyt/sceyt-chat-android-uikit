@@ -65,8 +65,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private var binding: ActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
     private val preferences: SceytSharedPreference by inject()
-    private var isSaveLoading = false
-    private var avatarUrl: String? = null
     private var alphaAnimation: AlphaAnimation? = null
 
     @CallSuper
@@ -241,7 +239,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun setChannelDetails(channel: SceytChannel) {
-        avatarUrl = channel.iconUrl
         with(binding ?: return) {
             members.text = if (channel.channelType == Public)
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
@@ -624,8 +621,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onPageStateChange(pageState: PageState) {
         if (pageState is PageState.StateError) {
             setChannelDetails(channel)
-            isSaveLoading = false
-            customToastSnackBar(binding?.root, pageState.errorMessage.toString())
+            if (pageState.showMessage)
+                customToastSnackBar(binding?.root, pageState.errorMessage.toString())
         }
     }
 
