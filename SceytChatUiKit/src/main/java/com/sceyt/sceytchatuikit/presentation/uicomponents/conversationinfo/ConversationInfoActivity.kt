@@ -51,6 +51,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewm
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
@@ -147,10 +148,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun observeToChannelUpdate() {
-        ChannelsCash.channelUpdatedFlow.onEach {
-            channel = it.channel
-            onChannel(it.channel)
-        }.launchIn(lifecycleScope)
+        ChannelsCash.channelUpdatedFlow
+            .filter { it.channel.id == channel.id }
+            .onEach {
+                channel = it.channel
+                onChannel(it.channel)
+            }
+            .launchIn(lifecycleScope)
     }
 
     private fun onButtonClick(clickActionsEnum: InfoButtonsDirectChatFragment.ClickActionsEnum) {
