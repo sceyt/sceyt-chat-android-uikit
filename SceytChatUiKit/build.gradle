@@ -91,7 +91,7 @@ android {
 
 
 dependencies {
-    implementation project(':SceytSDK-debug')
+    implementation project(':SceytSDK')
     implementation project(':AXEmojiView')
 
     api supportDependencies.coreKtx
