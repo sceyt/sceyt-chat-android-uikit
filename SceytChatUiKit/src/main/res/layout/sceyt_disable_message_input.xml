@@ -7,7 +7,7 @@
     android:paddingHorizontal="20dp">
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icBlocked"
+        android:id="@+id/icStateIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -16,7 +16,7 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_user_blocked" />
+        app:srcCompat="@drawable/sceyt_ic_warning" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvMessage"
@@ -33,7 +33,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/icBlocked"
+        app:layout_constraintStart_toEndOf="@+id/icStateIcon"
         tools:text="@tools:sample/lorem/random" />
 
     <View

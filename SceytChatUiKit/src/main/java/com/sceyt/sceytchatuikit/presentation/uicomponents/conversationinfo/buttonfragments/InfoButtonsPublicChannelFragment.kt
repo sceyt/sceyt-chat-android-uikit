@@ -4,9 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
 import androidx.core.view.isVisible
-import androidx.core.view.setMargins
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
@@ -83,8 +81,6 @@ class InfoButtonsPublicChannelFragment : Fragment(), SceytKoinComponent {
         with(binding) {
             if (!isMember) {
                 join.isVisible = true
-                (join.layoutParams as MarginLayoutParams).setMargins(0)
-
                 muteUnMute.isVisible = false
                 more.isVisible = false
                 add.isVisible = false

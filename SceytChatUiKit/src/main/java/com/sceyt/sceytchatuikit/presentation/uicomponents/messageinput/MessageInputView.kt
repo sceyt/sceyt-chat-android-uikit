@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
@@ -253,6 +254,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
+        btnJoin.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         with(layoutReplyOrEditMessage) {
             icReplyOrEdit.setColorFilter(context.getCompatColorByTheme(SceytKitConfig.sceytColorAccent))
             tvName.setTextColor(context.getCompatColorByTheme(MessageInputViewStyle.userNameTextColor))
@@ -310,6 +312,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showHideJoinButton(show: Boolean) {
+        if (disabledInput) return
         binding.btnJoin.isVisible = show
         binding.layoutInput.isVisible = show.not()
     }
@@ -350,9 +353,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
     }
 
-    private fun hideInputWithMessage(message: String) {
+    private fun hideInputWithMessage(message: String, @DrawableRes startIcon: Int) {
         binding.layoutCloseInput.apply {
             tvMessage.text = message
+            icStateIcon.setImageResource(startIcon)
             root.isVisible = true
         }
         binding.layoutInput.isVisible = false
@@ -417,7 +421,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         layoutReplyOrEditMessage.root.isVisible = false
                     }
                     if (isBlockedPeer)
-                        hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user))
+                        hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
                     else {
                         if (disabledInput.not()) {
                             layoutCloseInput.root.isVisible = false
@@ -461,10 +465,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         addAttachments(attachments)
     }
 
-    fun enableDisableInput(message: String, enable: Boolean) {
+    fun enableDisableInput(message: String, enable: Boolean, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
         disabledInput = enable.not()
         if (!enable)
-            hideInputWithMessage(message)
+            hideInputWithMessage(message, startIcon)
     }
 
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()

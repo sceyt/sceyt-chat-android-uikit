@@ -239,12 +239,14 @@ class MessageListViewModel(
             is PaginationResponse.DBResponse -> {
                 if (!checkIgnoreDatabasePagingResponse(response)) {
                     _loadMessagesFlow.value = response
-                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0,
+                        response.data.isEmpty(), showError = false)
                 }
             }
             is PaginationResponse.ServerResponse -> {
                 _loadMessagesFlow.value = response
-                notifyPageStateWithResponse(response.data, response.offset > 0, response.cashData.isEmpty())
+                notifyPageStateWithResponse(response.data, response.offset > 0,
+                    response.cashData.isEmpty(), showError = false)
             }
             else -> return
         }

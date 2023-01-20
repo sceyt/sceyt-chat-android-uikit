@@ -99,7 +99,7 @@
                         android:layout_marginTop="16dp"
                         android:fontFamily="@font/roboto_medium"
                         android:includeFontPadding="false"
-                        android:text="@string/sceyt_channel_description"
+                        android:text="@string/sceyt_description"
                         android:textColor="@color/sceyt_color_gray_800"
                         android:textSize="13sp"
                         app:layout_constraintStart_toStartOf="parent"

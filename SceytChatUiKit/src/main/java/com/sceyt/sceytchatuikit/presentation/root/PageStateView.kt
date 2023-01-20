@@ -65,7 +65,7 @@ class PageStateView @JvmOverloads constructor(context: Context, attrs: Attribute
                 loadingStateView?.isVisible = state.isLoading && showLoadingIfNeed
             }
             is PageState.StateError -> {
-                if (enableErrorSnackBar)
+                if (enableErrorSnackBar && state.showMessage)
                     customToastSnackBar(this, state.errorMessage.toString())
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false

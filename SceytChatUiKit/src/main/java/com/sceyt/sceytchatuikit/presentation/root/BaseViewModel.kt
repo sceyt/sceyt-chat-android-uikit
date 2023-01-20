@@ -143,9 +143,10 @@ open class BaseViewModel : ViewModel() {
     fun <T> notifyPageStateWithResponse(response: SceytResponse<T>,
                                         wasLoadingMore: Boolean = false,
                                         isEmpty: Boolean = false,
-                                        searchQuery: String? = null) {
+                                        searchQuery: String? = null,
+                                        showError: Boolean = true) {
         val state = when {
-            response is SceytResponse.Error -> PageState.StateError(response, searchQuery, wasLoadingMore)
+            response is SceytResponse.Error -> PageState.StateError(response, searchQuery, wasLoadingMore, showError)
             isEmpty -> PageState.StateEmpty(searchQuery, wasLoadingMore)
             wasLoadingMore -> PageState.StateLoadingMore(false)
             else -> PageState.StateLoading(false)
@@ -157,10 +158,11 @@ open class BaseViewModel : ViewModel() {
                                        response: SceytResponse<T>,
                                        wasLoadingMore: Boolean = false,
                                        isEmpty: Boolean = false,
-                                       searchQuery: String? = null) {
+                                       searchQuery: String? = null,
+                                       showError: Boolean = true) {
         if (response is SceytResponse.Success) {
             liveData?.postValue(response.data)
         }
-        notifyPageStateWithResponse(response, wasLoadingMore, isEmpty, searchQuery)
+        notifyPageStateWithResponse(response, wasLoadingMore, isEmpty, searchQuery, showError)
     }
 }
