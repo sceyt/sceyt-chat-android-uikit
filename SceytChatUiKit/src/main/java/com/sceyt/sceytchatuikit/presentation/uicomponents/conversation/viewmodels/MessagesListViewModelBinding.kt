@@ -6,6 +6,7 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
@@ -73,7 +74,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun checkEnableDisableActions(channel: SceytChannel) {
-        messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel(myId)
+        messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel()
                 && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true), false)
     }
 

@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -272,7 +273,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
-        showChannelActionsPopup(view, item)
+        if (item.channel.checkIsMemberInChannel())
+            showChannelActionsPopup(view, item)
     }
 
 

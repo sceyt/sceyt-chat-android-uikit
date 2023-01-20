@@ -8,20 +8,16 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.DialogGroupChannelActionsBinding
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.presentation.common.getMyRole
-import org.koin.core.component.inject
 
-class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95), SceytKoinComponent {
+class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: DialogGroupChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
-    private val preferences: SceytSharedPreference by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +70,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     }
 
     private fun determinateState() {
-        val myRole = channel.getMyRole(preferences.getUserId())
+        val myRole = channel.getMyRole()
         val enabledActions = myRole?.name == RoleTypeEnum.Owner.toString()
         binding.delete.isVisible = enabledActions
     }
