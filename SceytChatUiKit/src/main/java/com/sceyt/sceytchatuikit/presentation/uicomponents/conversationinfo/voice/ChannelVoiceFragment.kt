@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -75,7 +76,8 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         if (mediaAdapter == null) {
             mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    item.file.openFile(requireContext())
+                    // item.file.openFile(requireContext())
+                    // voice message play functionality is handled in VoiceMessageViewHolder
                 })
                 getUserNameBuilder()
                         ?: SceytKitConfig.userNameBuilder?.let { builder -> it.setUserNameBuilder(builder) }
@@ -128,6 +130,11 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 }
             }
         })
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AudioPlayerHelper.stopAll()
     }
 
     companion object {
