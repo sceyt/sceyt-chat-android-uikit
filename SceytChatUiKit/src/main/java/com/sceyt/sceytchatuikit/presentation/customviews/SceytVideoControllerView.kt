@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatImageView
@@ -31,7 +32,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private var mediaPath: String? = null
     private var player: ExoPlayer? = null
     private var playerView: PlayerView? = null
-    private var onPlayPauseClick: ((play: Boolean) -> Unit)? = null
+    private var onPlayPauseClick: ((view: View, play: Boolean) -> Unit)? = null
     private var showPlayPauseButton = true
     private var playPauseButtonSize = 130
 
@@ -67,7 +68,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
             if (isPlaying) {
                 player?.pause()
                 playPauseItem.setImageDrawable(playDrawable)
-                onPlayPauseClick?.invoke(false)
+                onPlayPauseClick?.invoke(it, false)
             } else {
                 if (!isInitializesPlayer)
                     initPlayer(mediaPath)
@@ -76,7 +77,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                 player?.prepare()
                 player?.play()
                 playPauseItem.setImageDrawable(pauseDrawable)
-                onPlayPauseClick?.invoke(true)
+                onPlayPauseClick?.invoke(it, true)
             }
             isPlaying = !isPlaying
         }
@@ -185,7 +186,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         playPauseItem.isVisible = show
     }
 
-    fun setPlayPauseClickListener(listener: (Boolean) -> Unit) {
+    fun setPlayPauseClickListener(listener: (view: View, play: Boolean) -> Unit) {
         onPlayPauseClick = listener
     }
 
@@ -196,8 +197,10 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         setInitialState()
     }
 
-    fun pause(){
+    fun pause() {
         player?.pause()
         playPauseItem.setImageDrawable(playDrawable)
     }
+
+    fun getPlayPauseImageView() = playPauseItem
 }

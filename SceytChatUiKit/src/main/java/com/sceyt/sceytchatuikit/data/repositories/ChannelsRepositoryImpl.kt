@@ -270,6 +270,20 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).hide(object : ChannelCallback {
+                override fun onResult(data: Channel) {
+                    continuation.safeResume(SceytResponse.Success(data.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                }
+            })
+        }
+    }
+
     override suspend fun blockUser(userId: String): SceytResponse<List<User>> {
         return suspendCancellableCoroutine { continuation ->
             BlockUserRequest(userId).execute(object : UsersCallback {

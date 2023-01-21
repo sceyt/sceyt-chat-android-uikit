@@ -190,6 +190,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.join(channelId)
     }
 
+    override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.hideChannel(channelId)
+    }
+
     override fun getTotalUnreadCount(): Flow<Int> {
         return channelLogic.getTotalUnreadCount()
     }

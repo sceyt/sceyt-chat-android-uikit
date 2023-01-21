@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
@@ -13,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
@@ -37,7 +37,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     val searchChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _searchChannelsFlow
 
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
-    val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
+    val blockUserLiveData = _blockUserLiveData.asLiveData()
 
     enum class NotifyFlow {
         LOAD, SEARCH
@@ -92,7 +92,6 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
         pagingResponseReceived(response)
     }
-
 
     internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
@@ -166,6 +165,12 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             channelMiddleWare.unMuteChannel(channelId)
+        }
+    }
+
+    fun hideChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            channelMiddleWare.hideChannel(channelId)
         }
     }
 

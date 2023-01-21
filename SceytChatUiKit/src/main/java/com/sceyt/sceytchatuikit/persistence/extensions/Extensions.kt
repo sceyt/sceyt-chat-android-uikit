@@ -1,5 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.extensions
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -31,4 +33,8 @@ inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Uni
     } catch (ex: Exception) {
         onExceptionCalled()
     }
+}
+
+fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {
+    return this
 }
