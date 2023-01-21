@@ -48,7 +48,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
             Created, Joined -> {
-                onChanelCreatedOrJoined(data.channel)
+                onChanelCreatedOrJoinedOrUnHidden(data.channel)
             }
             Deleted -> {
                 data.channelId?.let { channelId -> deleteChannelDb(channelId) }
@@ -86,14 +86,14 @@ internal class PersistenceChannelsLogicImpl(
             }
             MarkedUsUnread -> updateChannelDbAndCash(data.channel?.toSceytUiChannel())
             Blocked -> deleteChannelDb(data.channelId ?: return)
+            Hidden -> data.channelId?.let { deleteChannelDb(it) }
+            UnHidden ->  onChanelCreatedOrJoinedOrUnHidden(data.channel)
             UnBlocked -> TODO()
             Invited -> TODO()
-            Hidden -> TODO()
-            UnHidden -> TODO()
         }
     }
 
-    private suspend fun onChanelCreatedOrJoined(channel: Channel?) {
+    private suspend fun onChanelCreatedOrJoinedOrUnHidden(channel: Channel?) {
         channel?.let {
             val members = if (it is GroupChannel) it.members else arrayListOf((it as DirectChannel).peer)
             val sceytChannel = channel.toSceytUiChannel()
@@ -452,6 +452,17 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             channelDao.updateMuteState(channelId = channelId, muted = false)
             channelsCache.updateMuteState(channelId, false)
+        }
+
+        return response
+    }
+
+    override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.hideChannel(channelId)
+
+        if (response is SceytResponse.Success) {
+            channelDao.deleteChannel(channelId = channelId)
+            channelsCache.deleteChannel(channelId)
         }
 
         return response

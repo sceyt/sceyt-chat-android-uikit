@@ -24,8 +24,9 @@ internal interface PersistenceChannelsLogic {
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadChannels(offset: Int, searchQuery: String,
                              loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+
     suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
-                                ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+                               ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
@@ -38,6 +39,7 @@ internal interface PersistenceChannelsLogic {
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromDb(channelId: Long): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>>

@@ -23,6 +23,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesL
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem.Image
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem.Video
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
@@ -68,6 +69,11 @@ open class ConversationActivity : AppCompatActivity() {
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
         viewModel.bind(binding.messageInputView, replyMessage, lifecycleOwner = this)
         viewModel.bind(binding.headerView, replyMessage, lifecycleOwner = this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
     }
 
     private fun ConversationHeaderView.initHeaderView() {

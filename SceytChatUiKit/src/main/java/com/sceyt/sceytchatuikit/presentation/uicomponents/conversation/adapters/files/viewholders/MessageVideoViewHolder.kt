@@ -37,6 +37,10 @@ class MessageVideoViewHolder(
         binding.loadProgress.setOnClickListener {
             messageListeners?.onAttachmentLoaderClick(it, fileItem)
         }
+
+        binding.videoViewController.getPlayPauseImageView().setOnClickListener {
+            messageListeners?.onAttachmentClick(it, fileItem)
+        }
     }
 
     override fun bind(item: FileListItem) {
@@ -85,12 +89,12 @@ class MessageVideoViewHolder(
             }
             Downloaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
-                initializePlayer(fileItem.file.filePath)
+                // initializePlayer(fileItem.file.filePath)
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
             Uploaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
-                initializePlayer(fileItem.file.filePath)
+                //initializePlayer(fileItem.file.filePath)
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
             PauseDownload -> {
