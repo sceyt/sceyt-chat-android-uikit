@@ -131,8 +131,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onAttachmentClick(view: View, item: FileListItem) {
-                if (enabledClickActions)
-                    clickListeners.onAttachmentClick(view, item)
+                clickListeners.onAttachmentClick(view, item)
             }
 
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
@@ -141,13 +140,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
-                if (enabledClickActions)
-                    clickListeners.onAttachmentLoaderClick(view, item)
+                clickListeners.onAttachmentLoaderClick(view, item)
             }
 
             override fun onLinkClick(view: View, item: MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onLinkClick(view, item)
+                clickListeners.onLinkClick(view, item)
             }
 
             override fun onScrollToDownClick(view: ScrollToDownView) {

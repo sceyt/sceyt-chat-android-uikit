@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -74,8 +75,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun checkEnableDisableActions(channel: SceytChannel) {
-        messagesListView.enableDisableClickActions(!replyInThread && channel.checkIsMemberInChannel()
-                && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true), false)
+        messagesListView.enableDisableClickActions(
+            enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
+                    && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true), false)
     }
 
     checkEnableDisableActions(channel)

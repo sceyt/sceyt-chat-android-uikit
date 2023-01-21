@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
@@ -106,48 +107,55 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         } else
             titleTextView.text = if (isGroup) channel.channelSubject else {
                 val member = (channel as? SceytDirectChannel)?.peer ?: return
-                userNameBuilder?.invoke(member.user) ?: member.getPresentableName()
+                userNameBuilder?.invoke(member.user)
+                        ?: member.user.getPresentableNameCheckDeleted(context)
             }
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
-        if (enablePresence.not()) {
+        if (enablePresence.not() || channel.isPeerDeleted()) {
             subjectTextView.isVisible = false
             return
         }
-        if (!replyInThread) {
-            val title = if (channel is SceytDirectChannel) {
-                val member = channel.peer ?: return
-                if (member.user.presence?.state == PresenceState.Online) {
-                    getString(R.string.sceyt_online)
-                } else {
-                    member.user.presence?.lastActiveAt?.let {
-                        if (it != 0L) {
-                            val text = DateTimeUtil.getPresenceDateFormatData(context, Date(it))
-                            if (subjectTextView.text.equals(text)) return
-                            else text
-                        } else null
+        post {
+            if (!replyInThread) {
+                val title = if (channel is SceytDirectChannel) {
+                    val member = channel.peer ?: return@post
+                    if (member.user.presence?.state == PresenceState.Online) {
+                        getString(R.string.sceyt_online)
+                    } else {
+                        member.user.presence?.lastActiveAt?.let {
+                            if (it != 0L) {
+                                val text = DateTimeUtil.getPresenceDateFormatData(context, Date(it))
+                                if (subjectTextView.text.equals(text)) return@post
+                                else text
+                            } else null
+                        }
                     }
-                }
-            } else if (channel.channelType == ChannelTypeEnum.Private)
-                getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
-            else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
+                } else if (channel.channelType == ChannelTypeEnum.Private)
+                    getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
+                else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
 
-            subjectTextView.text = title
-            subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping
-        } else {
-            val fullName = replyMessage?.from?.fullName
-            val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-            subjectTextView.text = subTitleText
-            subjectTextView.isVisible = !fullName.isNullOrBlank() && !isTyping
+                subjectTextView.text = title
+                subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping
+            } else {
+                val fullName = replyMessage?.from?.fullName
+                val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
+                subjectTextView.text = subTitleText
+                subjectTextView.isVisible = !fullName.isNullOrBlank() && !isTyping
+            }
         }
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread) {
-            val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-            avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
+            if (channel.isPeerDeleted())
+                avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+            else {
+                val subjAndSUrl = channel.getSubjectAndAvatarUrl()
+                avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
+            }
         }
     }
 
@@ -344,7 +352,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
-        post { setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread) }
+        setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
     override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean) {

@@ -73,7 +73,7 @@ internal class FileTransferServiceImpl(private var application: Application,
         val isUploading: Boolean
         val key: String
         when (attachment.transferState) {
-            PendingDownload, Downloading, Downloaded, PauseDownload -> {
+            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload -> {
                 isUploading = false
                 key = attachment.url.toString()
             }
@@ -89,7 +89,7 @@ internal class FileTransferServiceImpl(private var application: Application,
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
         val key: String = when (attachment.transferState) {
-            PendingDownload, Downloading, Downloaded, PauseDownload -> {
+            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload -> {
                 attachment.url.toString()
             }
             else -> attachment.tid.toString()

@@ -28,6 +28,7 @@ import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.models.user.UserActivityStatus
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -199,7 +200,13 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (message.canShowAvatarAndName) {
             val user = message.from
             val displayName = getSenderName(user)
-            avatarView.setNameAndImageUrl(displayName, user?.avatarURL, UserStyle.userDefaultAvatar)
+            if (isDeletedUser(user)) {
+                avatarView.setImageUrl(null, UserStyle.deletedUserAvatar)
+                tvName.setTextColor(context.getCompatColor(R.color.sceyt_color_red))
+            } else {
+                avatarView.setNameAndImageUrl(displayName, user?.avatarURL, UserStyle.userDefaultAvatar)
+                tvName.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            }
             tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true
@@ -290,7 +297,11 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private fun getSenderName(user: User?): String {
         user ?: return ""
-        return senderNameBuilder?.invoke(user) ?: user.getPresentableName()
+        return senderNameBuilder?.invoke(user) ?: user.getPresentableNameCheckDeleted(context)
+    }
+
+    private fun isDeletedUser(user: User?): Boolean {
+        return user?.activityState == UserActivityStatus.Deleted
     }
 
     fun getMessageItem(): MessageListItem? {

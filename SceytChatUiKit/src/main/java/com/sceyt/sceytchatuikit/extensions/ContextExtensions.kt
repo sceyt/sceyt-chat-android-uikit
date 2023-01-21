@@ -32,7 +32,6 @@ import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.security.AccessController.getContext
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -59,7 +58,14 @@ fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Bool
     return createConfigurationContext(configuration)?.getCompatDrawable(drawableId)
 }
 
-fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)
+fun Context.getCompatDrawable(@DrawableRes drawableId: Int): Drawable? {
+    return try {
+        ContextCompat.getDrawable(this, drawableId)
+    } catch (e: Exception) {
+        Log.i(TAG, e.message.toString())
+        null
+    }
+}
 
 fun Context.asComponentActivity(): ComponentActivity {
     return when (this) {
