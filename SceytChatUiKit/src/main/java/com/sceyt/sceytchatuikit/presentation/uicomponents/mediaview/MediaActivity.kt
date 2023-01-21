@@ -14,7 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.ActivityMediaBinding
 import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -64,13 +64,13 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initView() {
-        val message = intent.getParcelableExtra<SceytMessage>(MSG_ITEM)!!
-        if (message.attachments.isNullOrEmpty()) {
+        val attachments = intent.extras?.getParcelableArrayList<SceytAttachment>(SCEYT_ATTACHMENTS)
+        if (attachments.isNullOrEmpty()) {
             finish()
             return
         }
         val mediaFiles = arrayListOf<MediaFile>()
-        message.attachments!!.forEach {
+        attachments.forEach {
             val filepath = it.filePath
             if (filepath != null) {
                 val fileType = when (it.type) {
@@ -79,7 +79,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
                     else -> null
                 }
                 if (fileType != null) {
-                    val dateText = DateTimeUtil.getDateTimeString(message.createdAt)
+                    val dateText = DateTimeUtil.getDateTimeString(it.createdAt)
                     mediaFiles.add(
                         MediaFile(
                             title = it.name,
@@ -205,13 +205,27 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     companion object {
-        private const val MSG_ITEM = "message_item"
-        fun openMediaView(context: Context, message: SceytMessage) = launch(
-            context,
-            bundleOf(MSG_ITEM to message),
+        private const val SCEYT_ATTACHMENTS = "sceyt_attachments"
+        fun openMediaView(context: Context, attachment: SceytAttachment) {
+            val items = java.util.ArrayList<SceytAttachment>().apply { add(attachment) }
+            openMediaView(context, items)
+        }
+
+        fun openMediaView(context: Context, attachments: Array<SceytAttachment>) = openMediaView(
+            context = context,
+            attachments = java.util.ArrayList<SceytAttachment>().apply {
+                attachments.forEach { add(it) }
+            }
         )
 
-        fun launch(context: Context, extras: Bundle? = null) {
+        fun openMediaView(context: Context, attachments: java.util.ArrayList<SceytAttachment>) = launch(
+            context = context,
+            extras = bundleOf(
+                SCEYT_ATTACHMENTS to attachments,
+            ),
+        )
+
+        private fun launch(context: Context, extras: Bundle? = null) {
             context.launchActivity<MediaActivity> {
                 extras?.let { putExtras(extras) }
             }
