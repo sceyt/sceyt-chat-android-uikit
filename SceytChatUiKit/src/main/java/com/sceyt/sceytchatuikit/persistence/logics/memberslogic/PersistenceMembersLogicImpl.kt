@@ -56,16 +56,16 @@ internal class PersistenceMembersLogicImpl(
         channelDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
     }
 
-    override suspend fun loadChannelMembers(channelId: Long, offset: Int): Flow<PaginationResponse<SceytMember>> {
+    override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         val normalizedOffset = offset / CHANNELS_MEMBERS_LOAD_SIZE * CHANNELS_MEMBERS_LOAD_SIZE
         Log.i(TAG, "normalizedOffset  old->$offset normalized-> $normalizedOffset")
         return callbackFlow {
-            val dbMembers = getMembersDb(channelId, normalizedOffset, CHANNELS_MEMBERS_LOAD_SIZE)
+            val dbMembers = getMembersDb(channelId, normalizedOffset, role, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
             if (dbMembers.isNotEmpty())
                 trySend(PaginationResponse.DBResponse(dbMembers, null, normalizedOffset, hasNextDb))
 
-            val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset)
+            val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset, role)
 
             if (response is SceytResponse.Success) {
                 saveMembersToDb(channelId, response.data)
@@ -73,7 +73,7 @@ internal class PersistenceMembersLogicImpl(
                 getRemovedItemsAndDeleteFromDb(channelId, dbMembers, response.data)
 
                 // Get new updated items from DB
-                val updatedMembers = getMembersDb(channelId, 0, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
+                val updatedMembers = getMembersDb(channelId, 0, role, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
                 val hasNextServer = response.data?.size == CHANNELS_MEMBERS_LOAD_SIZE
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = updatedMembers, loadKey = null,
                     normalizedOffset, hasDiff = true, hasNext = hasNextServer, hasPrev = false,
@@ -87,9 +87,11 @@ internal class PersistenceMembersLogicImpl(
         }
     }
 
-    private suspend fun getMembersDb(channelId: Long, offset: Int, limit: Int): List<SceytMember> {
-        return channelDao.getChannelMembers(channelId, limit = limit, offset = offset)
-            .map { memberEntity -> memberEntity.toSceytMember() }
+    private suspend fun getMembersDb(channelId: Long, offset: Int, role: String?, limit: Int): List<SceytMember> {
+        val data = if (!role.isNullOrBlank())
+            channelDao.getChannelMembersWithRole(channelId, limit = limit, offset = offset, role)
+        else channelDao.getChannelMembers(channelId, limit, offset)
+        return data.map { memberEntity -> memberEntity.toSceytMember() }
     }
 
     private suspend fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {

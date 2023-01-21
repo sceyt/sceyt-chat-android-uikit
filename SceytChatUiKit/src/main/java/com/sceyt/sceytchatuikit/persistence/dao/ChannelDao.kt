@@ -71,9 +71,14 @@ interface ChannelDao {
     suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
 
     @Transaction
-    @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id where chat_id =:channelId " +
+    @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id  where chat_id =:channelId " +
             "order by user_id limit :limit offset :offset")
     suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
+
+    @Transaction
+    @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id  where chat_id =:channelId " +
+            "and role=:role order by user_id limit :limit offset :offset")
+    suspend fun getChannelMembersWithRole(channelId: Long, limit: Int, offset: Int, role: String): List<ChanelMemberDb>
 
     @Query("select chat_id from channels where chat_id not in (:ids)")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>

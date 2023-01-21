@@ -15,5 +15,5 @@ interface PersistenceMembersMiddleWare {
     suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel>
     suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>
     suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>
-    suspend fun loadChannelMembers(channelId: Long, offset: Int): Flow<PaginationResponse<SceytMember>>
+    suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>>
 }

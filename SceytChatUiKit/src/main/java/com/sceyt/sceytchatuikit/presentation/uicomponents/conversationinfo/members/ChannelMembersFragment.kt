@@ -159,6 +159,50 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         })
     }
 
+    private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
+        val itemsDb = data.cacheData as ArrayList
+        binding?.rvMembers?.awaitAnimationEnd {
+            val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
+
+            if (members.size > itemsDb.size) {
+                val items = members.subList(itemsDb.size - 1, members.size)
+                itemsDb.addAll(items.minus(itemsDb.toSet()))
+            }
+
+            if (data.offset + SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
+                if (hasNext) {
+                    if (!itemsDb.contains(MemberItem.LoadingMore))
+                        itemsDb.add(MemberItem.LoadingMore)
+                } else itemsDb.remove(MemberItem.LoadingMore)
+
+            Log.i(TAG, "final " + itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+            setOrUpdateMembersAdapter(itemsDb)
+        }
+    }
+
+    private fun addMembers(members: List<Member>?) {
+        if (members.isNullOrEmpty()) return
+        membersAdapter?.addNewItemsToStart(members.map {
+            MemberItem.Member(it.toSceytMember())
+        })
+        binding?.rvMembers?.scrollToPosition(0)
+    }
+
+    private fun removeMember(memberId: String) {
+        membersAdapter?.getMemberItemById(memberId)?.let {
+            membersAdapter?.getData()?.removeAt(it.first)
+            membersAdapter?.notifyItemRemoved(it.first)
+        }
+    }
+
+    private fun getRole(): String? {
+        return when (memberType) {
+            MemberTypeEnum.Admin -> RoleTypeEnum.Admin.toString()
+            MemberTypeEnum.Subscriber -> null
+            MemberTypeEnum.Member -> null
+        }
+    }
+
     open fun showMemberLongClick(item: MemberItem.Member) {
         if (currentUserIsOwnerOrAdmin().not() || item.member.id == preferences.getUserId()) return
 
@@ -213,51 +257,15 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         return currentUserRole?.name == RoleTypeEnum.Owner.toString() || currentUserRole?.name == RoleTypeEnum.Admin.toString()
     }
 
-    private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
-        val itemsDb = data.cacheData as ArrayList
-        binding?.rvMembers?.awaitAnimationEnd {
-            val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
-
-            if (members.size > itemsDb.size) {
-                val items = members.subList(itemsDb.size - 1, members.size)
-                itemsDb.addAll(items.minus(itemsDb.toSet()))
-            }
-
-            if (data.offset + SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
-                if (hasNext) {
-                    if (!itemsDb.contains(MemberItem.LoadingMore))
-                        itemsDb.add(MemberItem.LoadingMore)
-                } else itemsDb.remove(MemberItem.LoadingMore)
-
-            Log.i(TAG, "final " + itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
-            setOrUpdateMembersAdapter(itemsDb)
-        }
-    }
-
-    private fun addMembers(members: List<Member>?) {
-        if (members.isNullOrEmpty()) return
-        membersAdapter?.addNewItemsToStart(members.map {
-            MemberItem.Member(it.toSceytMember())
-        })
-        binding?.rvMembers?.scrollToPosition(0)
-    }
-
-    private fun removeMember(memberId: String) {
-        membersAdapter?.getMemberItemById(memberId)?.let {
-            membersAdapter?.getData()?.removeAt(it.first)
-            membersAdapter?.notifyItemRemoved(it.first)
-        }
-    }
-
     protected fun loadInitialMembers() {
         lifecycleScope.launch {
             delay(300)
-            viewModel.getChannelMembers(channel.id, 0)
+            viewModel.getChannelMembers(channel.id, 0, getRole())
         }
     }
 
     protected fun loadMoreMembers(offset: Int) {
-        viewModel.getChannelMembers(channel.id, offset)
+        viewModel.getChannelMembers(channel.id, offset, getRole())
     }
 
     protected fun addMembersToChannel(members: List<SceytMember>) {
