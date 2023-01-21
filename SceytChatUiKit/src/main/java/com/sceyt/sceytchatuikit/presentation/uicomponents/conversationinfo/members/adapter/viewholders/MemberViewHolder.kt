@@ -42,7 +42,7 @@ class MemberViewHolder(private val binding: ItemChannelMembersBinding,
         with(binding) {
 
             val presentableName = userNameBuilder?.invoke(member.user)
-                    ?: member.getPresentableNameWithYou(itemView.context, currentUserId)
+                    ?: member.getPresentableNameWithYou(itemView.context)
 
             if (diff.nameChanged || diff.avatarChanged) {
                 avatar.setNameAndImageUrl(presentableName, member.user.avatarURL, UserStyle.userDefaultAvatar)

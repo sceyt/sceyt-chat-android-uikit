@@ -34,7 +34,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
             imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, textSize)
-            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarBackgroundColor, 0)
+            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarColor, 0)
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
             a.recycle()
         }
@@ -136,7 +136,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         avatarLoadCb = cb
     }
 
-    fun setAvatarBackgroundColor(color: Int) {
+    fun setAvatarColor(color: Int) {
         avatarBackgroundColor = color
         invalidate()
     }

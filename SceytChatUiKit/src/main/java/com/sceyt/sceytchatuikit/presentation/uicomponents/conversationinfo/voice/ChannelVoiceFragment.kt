@@ -116,7 +116,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
             setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_file_items_yet)
+                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_voice_items_yet)
             }
             setLoadingStateView(R.layout.sceyt_loading_state)
             pageStateView = this

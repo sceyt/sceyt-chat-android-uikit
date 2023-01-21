@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import com.sceyt.chat.models.role.Role
+import com.sceyt.chat.models.user.UserActivityStatus
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -41,4 +42,8 @@ fun SceytChannel.getMyRole(): Role? {
     return if (isGroup) {
         toGroupChannel().members.find { it.id == myId }?.role
     } else null
+}
+
+fun SceytChannel.isPeerDeleted(): Boolean {
+    return (this is SceytDirectChannel) && peer?.user?.activityState == UserActivityStatus.Deleted
 }

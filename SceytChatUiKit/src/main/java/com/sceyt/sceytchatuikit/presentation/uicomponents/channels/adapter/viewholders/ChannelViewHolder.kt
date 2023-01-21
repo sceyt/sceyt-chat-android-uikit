@@ -15,10 +15,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
-import com.sceyt.sceytchatuikit.extensions.setOnClickListenerAvailable
-import com.sceyt.sceytchatuikit.extensions.setOnLongClickListenerAvailable
+import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -127,7 +125,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val fromText = if (message.incoming) {
                 val from = channel.lastMessage?.from
                 val userFirstName = from?.let {
-                    userNameBuilder?.invoke(from) ?: from.getPresentableFirstName()
+                    userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
                 }
                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
                     "${userFirstName}: "
@@ -149,7 +147,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
             (channel as? SceytDirectChannel)?.peer?.user?.let { from ->
-                userNameBuilder?.invoke(from) ?: from.getPresentableFirstName()
+                userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }
     }
@@ -163,7 +161,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
-        binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
+        if (channel is SceytDirectChannel && channel.isPeerDeleted()) {
+            binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+        } else
+            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
     }
 
     open fun setLastMessageStatus(channel: SceytChannel, dateStatusView: SceytDateStatusView) {

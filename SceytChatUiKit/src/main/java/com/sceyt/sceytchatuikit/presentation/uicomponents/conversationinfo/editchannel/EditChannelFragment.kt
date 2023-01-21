@@ -93,7 +93,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     private fun setDetails() {
         avatarUrl = channel.getChannelAvatarUrl()
         with(binding ?: return) {
-            avatar.setNameAndImageUrl(channel.channelSubject, avatarUrl)
+            avatar.setImageUrl(avatarUrl)
             tvSubject.setText(channel.channelSubject.trim())
             tvDescription.setText(channel.label?.trim())
         }
@@ -114,7 +114,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
 
     open fun setProfileImage(filePath: String?) {
         avatarUrl = resizeImage(requireContext(), filePath, 500).getOrNull()
-        binding?.avatar?.setNameAndImageUrl(channel.channelSubject, avatarUrl)
+        binding?.avatar?.setImageUrl(avatarUrl)
         checkSaveState()
     }
 

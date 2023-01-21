@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsDirectChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -36,6 +38,10 @@ open class InfoButtonsDirectChatFragment : Fragment() {
     }
 
     private fun SceytInfoPageLayoutButtonsDirectChannelBinding.initViews() {
+        val isPeerDeleted = channel.isPeerDeleted()
+        video.isVisible = !isPeerDeleted
+        audio.isVisible = !isPeerDeleted
+
         muteUnMute.apply {
             if (channel.muted) {
                 text = getString(R.string.sceyt_un_mute)

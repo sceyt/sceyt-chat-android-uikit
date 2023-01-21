@@ -91,6 +91,7 @@
     <string name="sceyt_unblock">Unblock</string>
     <string name="sceyt_no_media_items_yet">No media items yet</string>
     <string name="sceyt_no_file_items_yet">No file items yet</string>
+    <string name="sceyt_no_voice_items_yet">No voice items yet</string>
     <string name="sceyt_no_link_items_yet">No link items yet</string>
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_mute_chat">Mute chat:</string>
@@ -133,5 +134,6 @@
     <string name="sceyt_saved">Saved</string>
     <string name="sceyt_share">Share</string>
     <string name="sceyt_media_cannot_save_to_gallery">Cannot save file to gallery. Check permission and allow app to access storage</string>
+    <string name="sceyt_deleted_user">Deleted User</string>
 
 </resources>

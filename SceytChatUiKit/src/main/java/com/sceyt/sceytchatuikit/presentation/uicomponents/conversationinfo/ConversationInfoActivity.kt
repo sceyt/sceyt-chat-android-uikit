@@ -28,6 +28,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.*
@@ -50,6 +51,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -543,13 +545,23 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelTitle(channel: SceytChannel) {
         with(binding ?: return) {
-            subject.text = channel.channelSubject
-            titleToolbar.text = channel.channelSubject
+            if (channel.isPeerDeleted()) {
+                subject.text = getString(R.string.sceyt_deleted_user)
+                titleToolbar.text = getString(R.string.sceyt_deleted_user)
+            } else {
+                subject.text = channel.channelSubject
+                titleToolbar.text = channel.channelSubject
+            }
         }
     }
 
     open fun setPresenceOrMembers(channel: SceytChannel) {
         with(binding ?: return) {
+            if (channel.isPeerDeleted()) {
+                tvPresenceOrMembers.isVisible = false
+                subTitleToolbar.isVisible = false
+                return
+            }
             val title: String = if (channel is SceytDirectChannel) {
                 val member = channel.peer ?: return
                 if (member.user.presence?.state == PresenceState.Online) {
@@ -573,8 +585,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelAvatar(channel: SceytChannel) {
         with(binding ?: return) {
-            avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
-            toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
+            if (channel.isPeerDeleted()) {
+                avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+                toolbarAvatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+            } else {
+                avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
+                toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl)
+            }
         }
     }
 
