@@ -116,7 +116,7 @@ open class ConversationActivity : AppCompatActivity() {
                         if (item.file.filePath.isNullOrBlank())
                         //Do nothing if file is not ready to display or just call super.onAttachmentClick(view, item)
                         else
-                            MediaActivity.openMediaView(this@ConversationActivity, item.sceytMessage)
+                            MediaActivity.openMediaView(this@ConversationActivity, item.file)
                     }
                     else -> {
                         super.onAttachmentClick(view, item)
