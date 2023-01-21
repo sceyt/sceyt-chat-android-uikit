@@ -10,7 +10,9 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +35,12 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
 
     private val _channelEventEventLiveData = MutableLiveData<ChannelEventData>()
     val channelEventEventLiveData: LiveData<ChannelEventData> = _channelEventEventLiveData
+
+    private val _channelAddMemberLiveData = MutableLiveData<List<SceytMember>>()
+    val channelAddMemberLiveData = _channelAddMemberLiveData.asLiveData()
+
+    private val _channelRemoveMemberLiveData = MutableLiveData<List<SceytMember>>()
+    val channelRemoveMemberLiveData = _channelRemoveMemberLiveData.asLiveData()
 
     init {
         viewModelScope.launch {
@@ -124,6 +132,8 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                     members = groupChannel.members,
                     eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
                 ))
+
+                _channelRemoveMemberLiveData.postValue(groupChannel.members.map { it.toSceytMember() })
             }
 
             notifyPageStateWithResponse(response)
@@ -159,6 +169,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                     members = groupChannel.members,
                     eventType = ChannelMembersEventEnum.Added
                 ))
+                _channelAddMemberLiveData.postValue(groupChannel.members.map { it.toSceytMember() })
             }
 
             notifyPageStateWithResponse(response)

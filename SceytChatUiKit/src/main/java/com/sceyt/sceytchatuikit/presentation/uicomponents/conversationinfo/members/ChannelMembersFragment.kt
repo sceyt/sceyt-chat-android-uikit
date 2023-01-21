@@ -96,6 +96,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
         viewModel.channelEventEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
 
+        viewModel.channelAddMemberLiveData.observe(viewLifecycleOwner, ::onAddedMember)
+
+        viewModel.channelRemoveMemberLiveData.observe(viewLifecycleOwner, ::onRemovedMember)
+
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
@@ -197,6 +201,12 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                 membersAdapter?.notifyUpdate(data)
             }
         }
+    }
+
+    open fun onAddedMember(data: List<SceytMember>) {
+    }
+
+    open fun onRemovedMember(data: List<SceytMember>) {
     }
 
     protected fun currentUserIsOwnerOrAdmin(): Boolean {
