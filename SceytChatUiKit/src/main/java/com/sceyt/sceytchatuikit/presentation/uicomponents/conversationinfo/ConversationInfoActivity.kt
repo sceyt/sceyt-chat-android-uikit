@@ -19,7 +19,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
@@ -29,6 +28,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
+import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
@@ -57,7 +57,6 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -67,7 +66,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var pagerAdapter: ViewPagerAdapter
     private var binding: ActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
-    private val preferences: SceytSharedPreference by inject()
     private var alphaAnimation: AlphaAnimation? = null
 
     @CallSuper
@@ -248,13 +246,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             members.text = if (channel.channelType == Public)
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
 
-            val isGroupOwner = (channel as? SceytGroupChannel)?.members?.find {
-                it.id == preferences.getUserId()
-            }?.role?.name == RoleTypeEnum.Owner.toString()
+            val myRole = channel.getMyRole()
+            val isOwnerOrAdmin = myRole?.name == RoleTypeEnum.Owner.toString() || myRole?.name == RoleTypeEnum.Admin.toString()
 
-            admins.isVisible = isGroupOwner || channel.channelType == Private
-            groupChannelMembers.isVisible = isGroupOwner || channel.channelType == Private
-            icEdit.isVisible = isGroupOwner
+            admins.isVisible = isOwnerOrAdmin || channel.channelType == Private
+            groupChannelMembers.isVisible = isOwnerOrAdmin || channel.channelType == Private
+            icEdit.isVisible = isOwnerOrAdmin
 
             setChannelTitle(channel)
             setPresenceOrMembers(channel)
