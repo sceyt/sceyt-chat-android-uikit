@@ -20,6 +20,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
@@ -120,6 +121,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             initButtons()
             onMuteUnMuteChannel(it)
         }
+
+        viewModel.channelAddMemberLiveData.observe(this, ::onAddMember)
 
         viewModel.pageStateLiveData.observe(this, ::onPageStateChange)
     }
@@ -419,15 +422,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onVideoCallClick(channel: SceytChannel) {
-
     }
 
     open fun onAudioCallClick(channel: SceytChannel) {
-
     }
 
     open fun onCallOutClick(channel: SceytChannel) {
+    }
 
+    open fun onAddMember(data: ChannelMembersEventData) {
     }
 
     open fun onMoreClick(channel: SceytChannel) {
@@ -446,11 +449,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onAddSubscribersClick(channel: SceytChannel) {
-
     }
 
     open fun onReportClick(channel: SceytChannel) {
-
     }
 
     open fun onDirectChatMoreActionClick(actionsEnum: DirectChatActionsDialog.ActionsEnum) {
@@ -487,11 +488,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onMuteUnMuteChannel(sceytChannel: SceytChannel) {
-
     }
 
     open fun onJoinChannel(sceytChannel: SceytChannel) {
-
     }
 
     open fun onClearHistory(channelId: Long) {

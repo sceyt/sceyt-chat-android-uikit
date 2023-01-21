@@ -48,8 +48,8 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _joinLiveData = MutableLiveData<SceytChannel>()
     val joinLiveData: LiveData<SceytChannel> = _joinLiveData
 
-    private val _channelMemberEventLiveData = MutableLiveData<ChannelMembersEventData>()
-    val channelMemberEventLiveData: LiveData<ChannelMembersEventData> = _channelMemberEventLiveData
+    private val _channelAddMemberLiveData = MutableLiveData<ChannelMembersEventData>()
+    val channelAddMemberLiveData: LiveData<ChannelMembersEventData> = _channelAddMemberLiveData
 
 
     fun getChannelFromServer(id: Long) {
@@ -137,7 +137,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 if (groupChannel.members.isNullOrEmpty()) return@launch
 
-                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
+                _channelAddMemberLiveData.postValue(ChannelMembersEventData(
                     channel = groupChannel,
                     members = groupChannel.members,
                     eventType = ChannelMembersEventEnum.Added
