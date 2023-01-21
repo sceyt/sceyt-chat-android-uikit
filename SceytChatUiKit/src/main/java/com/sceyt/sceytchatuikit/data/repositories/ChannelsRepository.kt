@@ -26,7 +26,7 @@ interface ChannelsRepository {
     suspend fun uploadAvatar(avatarUri: String): SceytResponse<String>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
-    suspend fun loadChannelMembers(channelId: Long, offset: Int): SceytResponse<List<SceytMember>>
+    suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): SceytResponse<List<SceytMember>>
     suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel>
     suspend fun changeChannelOwner(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun changeChannelMemberRole(channelId: Long, member: Member): SceytResponse<SceytChannel>

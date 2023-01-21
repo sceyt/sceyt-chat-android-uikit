@@ -62,12 +62,12 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
         }
     }
 
-    fun getChannelMembers(channelId: Long, offset: Int) {
+    fun getChannelMembers(channelId: Long, offset: Int, role: String?) {
         setPagingLoadingStarted(LoadNext)
         notifyPageLoadingState(offset > 0)
 
         viewModelScope.launch(Dispatchers.IO) {
-            membersMiddleWare.loadChannelMembers(channelId, offset).collect {
+            membersMiddleWare.loadChannelMembers(channelId, offset, role).collect {
                 initResponse(it)
             }
         }

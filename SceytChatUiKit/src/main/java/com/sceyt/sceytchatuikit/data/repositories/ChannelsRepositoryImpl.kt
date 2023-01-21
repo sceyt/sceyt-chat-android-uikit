@@ -34,11 +34,15 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
     }
 
-    private fun createMemberListQuery(channelId: Long, offset: Int): MemberListQuery {
+    private fun createMemberListQuery(channelId: Long, offset: Int, role: String?): MemberListQuery {
         return MemberListQuery.Builder(channelId)
             .limit(SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
             .orderType(MemberListQuery.QueryOrderType.ListQueryOrderAscending)
             .order(MemberListQuery.MemberListOrder.MemberListQueryOrderKeyUserName)
+            .apply {
+                if (!role.isNullOrBlank())
+                    withRole(role)
+            }
             .offset(offset)
             .build()
     }
@@ -401,9 +405,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun loadChannelMembers(channelId: Long, offset: Int): SceytResponse<List<SceytMember>> {
+    override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): SceytResponse<List<SceytMember>> {
         return suspendCancellableCoroutine { continuation ->
-            createMemberListQuery(channelId, offset)
+            createMemberListQuery(channelId, offset, role)
                 .loadNext(object : MembersCallback {
                     override fun onResult(members: MutableList<Member>?) {
                         if (members.isNullOrEmpty())
