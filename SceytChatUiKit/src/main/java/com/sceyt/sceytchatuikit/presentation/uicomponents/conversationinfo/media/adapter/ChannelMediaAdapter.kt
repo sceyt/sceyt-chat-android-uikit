@@ -22,6 +22,16 @@ class ChannelMediaAdapter(
         holder.bind(attachments[position])
     }
 
+    override fun onViewAttachedToWindow(holder: BaseChannelFileViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        holder.onViewAttachedToWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: BaseChannelFileViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
+    }
+
     override fun getItemCount(): Int {
         return attachments.size
     }
