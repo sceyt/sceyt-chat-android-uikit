@@ -210,8 +210,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.changeChannelOwner(channelId, newOwnerId)
     }
 
-    override suspend fun changeChannelMemberRole(channelId: Long, member: SceytMember): SceytResponse<SceytChannel> {
-        return membersLogic.changeChannelMemberRole(channelId, member)
+    override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {
+        return membersLogic.changeChannelMemberRole(channelId, *member)
     }
 
     override suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel> {

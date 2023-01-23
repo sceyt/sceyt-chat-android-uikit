@@ -133,8 +133,8 @@ internal class PersistenceMembersLogicImpl(
         return response
     }
 
-    override suspend fun changeChannelMemberRole(channelId: Long, member: SceytMember): SceytResponse<SceytChannel> {
-        val response = channelsRepository.changeChannelMemberRole(channelId, member.toMember())
+    override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {
+        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map { it.toMember() }.toTypedArray())
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.let { members ->

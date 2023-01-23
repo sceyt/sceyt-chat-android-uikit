@@ -29,7 +29,7 @@ interface ChannelsRepository {
     suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): SceytResponse<List<SceytMember>>
     suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel>
     suspend fun changeChannelOwner(channelId: Long, userId: String): SceytResponse<SceytChannel>
-    suspend fun changeChannelMemberRole(channelId: Long, member: Member): SceytResponse<SceytChannel>
+    suspend fun changeChannelMemberRole(channelId: Long, vararg member: Member): SceytResponse<SceytChannel>
     suspend fun deleteMember(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun blockAndDeleteMember(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>

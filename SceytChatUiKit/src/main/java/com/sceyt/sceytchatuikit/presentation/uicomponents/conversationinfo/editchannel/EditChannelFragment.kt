@@ -109,7 +109,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun onAvatarImageSelected(filePath: String?) {
         if (filePath != null) {
             setProfileImage(filePath)
-        } else customToastSnackBar(binding?.root, "wrong_image")
+        } else customToastSnackBar(binding?.root, "Wrong image")
     }
 
     open fun setProfileImage(filePath: String?) {

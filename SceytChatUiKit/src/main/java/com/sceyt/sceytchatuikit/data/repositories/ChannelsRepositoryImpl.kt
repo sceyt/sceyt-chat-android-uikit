@@ -437,9 +437,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun changeChannelMemberRole(channelId: Long, member: Member): SceytResponse<SceytChannel> {
+    override suspend fun changeChannelMemberRole(channelId: Long, vararg member: Member): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            GroupChannelOperator.build(channelId).changeMemberRole(member, object : ChannelCallback {
+            GroupChannelOperator.build(channelId).changeMembersRole(member.toList(), object : ChannelCallback {
                 override fun onResult(channel: Channel) {
                     continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
