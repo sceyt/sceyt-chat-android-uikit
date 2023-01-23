@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.databinding.FragmentMediaBinding
 
 class MediaFragment : Fragment() {
-    lateinit var binding: FragmentMediaBinding
+    private lateinit var binding: FragmentMediaBinding
     private var mediaFile: MediaFile? = null
     private var onMediaClickCallback: OnMediaClickCallback? = null
 
@@ -49,8 +49,22 @@ class MediaFragment : Fragment() {
         mediaFile = arguments?.getSerializable(MEDIA_FILE) as MediaFile
     }
 
+    override fun onResume() {
+        super.onResume()
+        setPlayingState(true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        setPlayingState(false)
+    }
+
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
+        setPlayingState(isVisibleToUser)
+    }
+
+    private fun setPlayingState(isVisibleToUser: Boolean) {
         if (mediaFile?.type == FileType.Video) {
             if (::binding.isInitialized) {
                 if (!isVisibleToUser) {
