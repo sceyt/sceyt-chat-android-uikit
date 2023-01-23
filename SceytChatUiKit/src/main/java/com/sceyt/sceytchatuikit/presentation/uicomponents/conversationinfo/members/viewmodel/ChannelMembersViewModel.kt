@@ -140,9 +140,9 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
         }
     }
 
-    fun changeRole(channelId: Long, member: SceytMember) {
+    fun changeRole(channelId: Long, vararg member: SceytMember) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.changeChannelMemberRole(channelId, member)
+            val response = membersMiddleWare.changeChannelMemberRole(channelId, *member)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(

@@ -196,15 +196,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             onBackPressed()
         }
 
-        members.setOnClickListener {
+        members.setOnClickListenerDisableClickViewForWhile {
             onMembersClick(channel)
         }
 
-        admins.setOnClickListener {
+        admins.setOnClickListenerDisableClickViewForWhile {
             onAdminsClick(channel)
         }
 
-        icEdit.setOnClickListener {
+        icEdit.setOnClickListenerDisableClickViewForWhile {
             onEditClick(channel)
         }
     }

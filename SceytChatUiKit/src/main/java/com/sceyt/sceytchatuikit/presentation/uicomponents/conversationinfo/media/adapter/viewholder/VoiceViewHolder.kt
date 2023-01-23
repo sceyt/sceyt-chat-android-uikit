@@ -8,7 +8,6 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.ItemChannelVoiceBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -24,14 +23,8 @@ class VoiceViewHolder(private var binding: ItemChannelVoiceBinding,
                       private val userNameBuilder: ((User) -> String)?,
                       needMediaDataCallback: (NeedMediaInfoData) -> Unit)
     : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
+
     private var lastFilePath: String? = ""
-        set(value) {
-            field = if (value.isNull()) {
-                ""
-            } else {
-                value
-            }
-        }
 
     init {
         binding.setupStyle()
@@ -90,7 +83,7 @@ class VoiceViewHolder(private var binding: ItemChannelVoiceBinding,
 
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
-        AudioPlayerHelper.stop(lastFilePath)
+        AudioPlayerHelper.stop(lastFilePath ?: "")
     }
 
     private fun ItemChannelVoiceBinding.setupStyle() {

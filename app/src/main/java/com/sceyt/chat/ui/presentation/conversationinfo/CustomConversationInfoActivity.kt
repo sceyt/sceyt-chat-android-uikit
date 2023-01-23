@@ -47,6 +47,11 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
                 .overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
 
+        override fun onAddedMember(data: List<SceytMember>) {
+            if (memberType == MemberTypeEnum.Admin)
+                viewModel.changeRole(channel.id, *data.toTypedArray())
+        }
+
         companion object {
             fun newInstance(channel: SceytChannel, membersType: MemberTypeEnum): CustomMembersFragment {
                 val fragment = CustomMembersFragment()

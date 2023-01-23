@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface PersistenceMembersMiddleWare {
     suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel>
-    suspend fun changeChannelMemberRole(channelId: Long, member: SceytMember): SceytResponse<SceytChannel>
+    suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel>
     suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>>
     suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel>
     suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>

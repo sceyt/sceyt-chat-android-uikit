@@ -54,9 +54,12 @@ internal class PersistenceChannelsLogicImpl(
                 data.channelId?.let { channelId -> deleteChannelDb(channelId) }
             }
             Left -> {
-                val leftUser = (data.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                if (leftUser == preference.getUserId()) {
-                    data.channelId?.let { channelId -> deleteChannelDb(channelId) }
+                val leftUser = (data.channel as? GroupChannel)?.members?.getOrNull(0)?.id ?: return
+                data.channelId?.let { channelId ->
+                    if (leftUser == preference.getUserId()) {
+                        deleteChannelDb(channelId)
+                    } else
+                        channelDao.deleteUserChatLinks(channelId, leftUser)
                 }
             }
             ClearedHistory -> {
@@ -87,7 +90,7 @@ internal class PersistenceChannelsLogicImpl(
             MarkedUsUnread -> updateChannelDbAndCash(data.channel?.toSceytUiChannel())
             Blocked -> deleteChannelDb(data.channelId ?: return)
             Hidden -> data.channelId?.let { deleteChannelDb(it) }
-            UnHidden ->  onChanelCreatedOrJoinedOrUnHidden(data.channel)
+            UnHidden -> onChanelCreatedOrJoinedOrUnHidden(data.channel)
             UnBlocked -> TODO()
             Invited -> TODO()
         }

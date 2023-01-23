@@ -21,10 +21,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnu
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -46,7 +43,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.inject
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
-    private val viewModel by viewModel<ChannelMembersViewModel>()
+    protected val viewModel by viewModel<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
     var binding: FragmentChannelMembersBinding? = null
@@ -164,10 +161,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         binding?.rvMembers?.awaitAnimationEnd {
             val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
 
-            if (members.size > itemsDb.size) {
-                val items = members.subList(itemsDb.size - 1, members.size)
-                itemsDb.addAll(items.minus(itemsDb.toSet()))
-            }
+            /* if (members.size > itemsDb.size) {
+                 val items = members.subList(itemsDb.size - 1, members.size)
+                 itemsDb.addAll(items.minus(itemsDb.toSet()))
+             }*/
 
             if (data.offset + SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
                 if (hasNext) {
@@ -311,7 +308,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun revokeAdmin(member: SceytMember) {
-        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Admin.toString())))
+        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Member.toString())))
+    }
+
+    protected open fun changeRole(vararg member: SceytMember) {
+        viewModel.changeRole(channel.id, *member)
     }
 
     protected open fun onChannelEvent(eventData: ChannelEventData) {
