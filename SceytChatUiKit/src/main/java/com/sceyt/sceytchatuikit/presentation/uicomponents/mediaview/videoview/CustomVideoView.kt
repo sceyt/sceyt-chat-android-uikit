@@ -59,8 +59,6 @@ class CustomVideoView @JvmOverloads constructor(
             binding.videoView.prepareAsync {
                 binding.videoView.start()
                 binding.videoView.isLooping = isLooping
-
-                binding.videoView.pause()
                 post {
                     binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
                 }
@@ -74,8 +72,6 @@ class CustomVideoView @JvmOverloads constructor(
             binding.videoView.prepareAsync {
                 binding.videoView.start()
                 binding.videoView.isLooping = isLooping
-
-                binding.videoView.pause()
                 post {
                     binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
                 }
@@ -89,8 +85,6 @@ class CustomVideoView @JvmOverloads constructor(
             binding.videoView.prepareAsync {
                 binding.videoView.start()
                 binding.videoView.isLooping = isLooping
-
-                binding.videoView.pause()
                 post {
                     binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
                 }
