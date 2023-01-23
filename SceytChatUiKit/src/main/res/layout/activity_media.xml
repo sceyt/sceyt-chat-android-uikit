@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@color/sceyt_color_bg_color">
+    android:background="@color/sceyt_color_media_player_black">
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/vpMedia"
@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
-        android:background="@color/sceyt_color_bg_color"
+        android:background="@color/sceyt_color_media_player_black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
