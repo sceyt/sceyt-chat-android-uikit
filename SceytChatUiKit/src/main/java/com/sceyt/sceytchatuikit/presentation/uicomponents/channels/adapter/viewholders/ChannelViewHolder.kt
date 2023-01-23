@@ -63,6 +63,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
 
+                setUnreadCount(channel.unreadMessageCount, binding.unreadMessagesCount)
+
                 diff.run {
                     if (!hasDifference()) return@run
 
@@ -80,9 +82,6 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
                     if (lastMessageChanged)
                         setLastMessagedText(channel, binding.lastMessage)
-
-                    if (unreadCountChanged)
-                        setUnreadCount(channel.unreadMessageCount, binding.unreadMessagesCount)
 
                     if (onlineStateChanged)
                         setOnlineStatus(channel, binding.onlineStatus)
