@@ -50,9 +50,12 @@ class DebounceHelper {
 
     /**
      * Cancels the current work without shutting down the Coroutine scope.
+     * Return is last job have been active.
      */
-    fun cancelLastDebounce() {
+    fun cancelLastDebounce(): Boolean {
+        val isActive = job?.isActive
         job?.cancel()
+        return isActive ?: false
     }
 
     /**

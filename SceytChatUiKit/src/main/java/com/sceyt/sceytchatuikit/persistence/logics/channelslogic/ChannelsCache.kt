@@ -19,7 +19,7 @@ class ChannelsCache {
 
     companion object {
         private val channelUpdatedFlow_ = MutableSharedFlow<ChannelUpdateData>(
-            extraBufferCapacity = 1,
+            extraBufferCapacity = 5,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<ChannelUpdateData> = channelUpdatedFlow_

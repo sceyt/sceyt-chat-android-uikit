@@ -221,6 +221,13 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     /**
+     * Cancel last sort channels job.
+     * */
+    fun cancelLastSort(): Boolean {
+        return debounceHelper.cancelLastDebounce()
+    }
+
+    /**
      * @param listener Channel click listeners, to listen click events.
      */
     fun setChannelClickListener(listener: ChannelClickListeners) {

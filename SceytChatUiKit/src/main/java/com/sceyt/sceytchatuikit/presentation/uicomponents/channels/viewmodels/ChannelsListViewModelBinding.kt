@@ -1,7 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -17,6 +19,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInpu
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
@@ -60,15 +63,21 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
-        val diff = channelsListView.channelUpdated(data.channel)
-        if (diff != null) {
-            if (diff.lastMessageChanged || data.needSorting)
-                channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-        } else
-            getChannels(0, query = searchQuery)
+        viewModelScope.launch {
+            val isCanceled = channelsListView.cancelLastSort()
+            val diff = channelsListView.channelUpdated(data.channel)
+            Log.i("diffChannel", data.channel.lastMessage?.body.toString() + "  " + data.channel.unreadMessageCount)
+            if (diff != null) {
+                if (diff.lastMessageChanged || data.needSorting || isCanceled)
+                    channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+            } else
+                getChannels(0, query = searchQuery)
+        }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
+        Log.i("diffChannel", "add " + sceytChannel.lastMessage?.body.toString() + "  " + sceytChannel.unreadMessageCount)
+        channelsListView.cancelLastSort()
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
     }.launchIn(lifecycleOwner.lifecycleScope)
 
