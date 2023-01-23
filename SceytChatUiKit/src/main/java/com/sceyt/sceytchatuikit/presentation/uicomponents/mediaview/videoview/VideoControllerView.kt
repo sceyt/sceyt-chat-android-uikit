@@ -15,6 +15,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import com.sceyt.sceytchatuikit.databinding.MediaControllerBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.OnMediaClickCallback
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.applySystemWindowInsetsMargin
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -162,6 +163,8 @@ class VideoControllerView @JvmOverloads constructor(
         }
 
         onMediaClickCallback = context as OnMediaClickCallback
+
+        binding.btnPlayPauseBottom.applySystemWindowInsetsMargin(applyBottom = true)
     }
 
     fun setUserVisibleHint(isVisibleToUser: Boolean) {

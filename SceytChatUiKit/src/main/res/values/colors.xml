@@ -39,7 +39,7 @@
     <color name="sceyt_color_admin_role">#7A6EF6</color>
     <color name="sceyt_color_disabled">#BFBFC2</color>
 
-    <color name="sceyt_color_bg_color">#17191C</color>
-    <color name="sceyt_color_text">#17191C</color>
+    <color name="sceyt_color_media_player_black">#000000</color>
+    <color name="sceyt_color_media_player_menu_text">#17191C</color>
 
 </resources>

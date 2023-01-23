@@ -17,12 +17,10 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.ActivityMediaBinding
 import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import com.sceyt.sceytchatuikit.extensions.getMimeType
 import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Forward
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Save
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Share
@@ -50,16 +48,19 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         super.onCreate(savedInstanceState)
         binding = ActivityMediaBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
-        statusBarIconsColorWithBackground(true)
-        window.navigationBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, true)
         initView()
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
-        binding.root.applySystemWindowInsetsPadding(applyBottom = true)
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.systemBars())
+//        binding.root.applySystemWindowInsetsPadding(applyBottom = true)
+        binding.root.post {
+            WindowInsetsControllerCompat(
+                window,
+                binding.root,
+            ).apply {
+                show(WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
         }
     }
 
@@ -129,20 +130,26 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     override fun onMediaClick() {
         binding.toolbar.visibility =
                 if (binding.toolbar.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-//        toggleFullScreen(binding.toolbar.visibility == View.GONE)
+        toggleFullScreen(binding.toolbar.visibility == View.GONE)
     }
 
     private fun toggleFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
             WindowInsetsControllerCompat(
                 window,
-                binding.root
-            ).hide(WindowInsetsCompat.Type.systemBars())
+                binding.root,
+            ).apply {
+                hide(WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
         } else {
             WindowInsetsControllerCompat(
                 window,
-                binding.root
-            ).show(WindowInsetsCompat.Type.systemBars())
+                binding.root,
+            ).apply {
+                show(WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
         }
     }
 

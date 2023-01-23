@@ -15,7 +15,7 @@
         android:drawableStart="@drawable/sceyt_media_view_ic_save_to_gallery"
         android:drawablePadding="21dp"
         android:paddingVertical="10dp"
-        android:textColor="@color/sceyt_color_text"
+        android:textColor="@color/sceyt_color_media_player_menu_text"
         android:textSize="12sp"
         tools:text="Save" />
 
@@ -43,7 +43,7 @@
         android:drawableStart="@drawable/sceyt_media_view_ic_share"
         android:drawablePadding="15dp"
         android:paddingVertical="10dp"
-        android:textColor="@color/sceyt_color_text"
+        android:textColor="@color/sceyt_color_media_player_menu_text"
         android:textSize="12sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/selectPhoto"

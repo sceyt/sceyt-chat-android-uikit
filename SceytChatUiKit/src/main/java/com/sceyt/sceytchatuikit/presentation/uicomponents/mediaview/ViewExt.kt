@@ -33,10 +33,10 @@ fun View.applySystemWindowInsetsMargin(
         applyBottom: Boolean = false,
 ) {
     doOnApplyWindowInsets { view, insets, _, margin ->
-        val left = if (applyLeft) insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).left else 0
-        val top = if (applyTop) insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).top else 0
-        val right = if (applyRight) insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).right else 0
-        val bottom = if (applyBottom) insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).bottom else 0
+        val left = if (applyLeft) insets.getInsets(WindowInsetsCompat.Type.systemBars()).left else 0
+        val top = if (applyTop) insets.getInsets(WindowInsetsCompat.Type.systemBars()).top else 0
+        val right = if (applyRight) insets.getInsets(WindowInsetsCompat.Type.systemBars()).right else 0
+        val bottom = if (applyBottom) insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom else 0
 
         view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             leftMargin = margin.left + left
