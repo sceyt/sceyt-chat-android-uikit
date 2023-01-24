@@ -15,7 +15,7 @@ interface ChannelsRepository {
     suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
-    suspend fun clearHistory(channelId: Long): SceytResponse<Long>
+    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>

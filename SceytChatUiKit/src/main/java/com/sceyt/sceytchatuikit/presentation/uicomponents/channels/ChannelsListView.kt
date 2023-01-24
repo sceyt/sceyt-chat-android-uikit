@@ -47,7 +47,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var defaultClickListeners: ChannelClickListenersImpl
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
-    private var channelEventListener: ((ChannelEvent) -> Unit)? = null
+    private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
     private val debounceHelper by lazy { DebounceHelper(300) }
 
     init {
@@ -206,8 +206,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     /**
      * @param listener From listening events connected with channel.
      */
-    internal fun setChannelEvenListener(listener: (ChannelEvent) -> Unit) {
-        channelEventListener = listener
+    internal fun setChannelCommandEvenListener(listener: (ChannelEvent) -> Unit) {
+        channelCommandEventListener = listener
     }
 
     internal fun getData() = channelsRV.getData()
@@ -287,30 +287,30 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Popup callbacks
     override fun onMarkAsReadClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
     }
 
     override fun onMarkAsUnReadClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.MarkAsUnRead(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.MarkAsUnRead(channel))
     }
 
     override fun onLeaveChannelClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
     }
 
     override fun onClearHistoryClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.ClearHistory(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.ClearHistory(channel))
     }
 
     override fun onBlockChannelClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.BlockChannel(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.BlockChannel(channel))
     }
 
     override fun onBlockUserClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.BlockUser(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.BlockUser(channel))
     }
 
     override fun onUnBlockUserClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.UnBlockUser(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.UnBlockUser(channel))
     }
 }

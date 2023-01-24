@@ -272,8 +272,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    protected fun clearHistory() {
-        viewModel.clearHistory(channel.id)
+    protected fun clearHistory(forEveryone: Boolean) {
+        viewModel.clearHistory(channel.id, forEveryone)
     }
 
     protected fun leaveChannel() {
@@ -364,7 +364,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             else -> R.string.sceyt_clear_group_history_desc
         }
         showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear) {
-            clearHistory()
+            clearHistory(channel.channelType == Public)
         }
     }
 

@@ -10,6 +10,8 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -23,6 +25,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Displaye
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
@@ -83,6 +86,15 @@ internal class PersistenceMessagesLogicImpl(
         launch {
             onMessage(data, false)
             persistenceChannelsLogic.onFcmMessage(data)
+        }
+    }
+
+    override suspend fun onChannelEvent(data: ChannelEventData) {
+        when (data.eventType) {
+            Deleted, ClearedHistory, Left, Hidden -> {
+                data.channelId?.let { messageDao.deleteAllMessages(it) }
+            }
+            else -> return
         }
     }
 
@@ -438,7 +450,8 @@ internal class PersistenceMessagesLogicImpl(
                                                     ignoreDb: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
-        val hasDiff: Boolean
+        var hasDiff: Boolean
+        var forceHasDiff = false
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
 
@@ -448,6 +461,12 @@ internal class PersistenceMessagesLogicImpl(
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
+                    // Check maybe messages was cleared
+                    if (offset == 0 && messages.isEmpty()) {
+                        messageDao.deleteAllMessages(channelId)
+                        messagesCache.clear()
+                        forceHasDiff = true
+                    }
                 }
             }
             LoadNext -> {
@@ -492,6 +511,8 @@ internal class PersistenceMessagesLogicImpl(
             messagesCache.clear()
 
         hasDiff = messagesCache.addAll(messages, true)
+
+        if (forceHasDiff) hasDiff = true
 
         // Mark messages as received
         markChannelMessagesAsDelivered(channelId, messages)
@@ -622,8 +643,12 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long) {
-        val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, status = status) }
-        pendingMarkersDao.insertMany(list)
+        try {
+            val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, status = status) }
+            pendingMarkersDao.insertMany(list)
+        } catch (e: Exception) {
+            Log.e(TAG, "Couldn't insert pending markers.")
+        }
     }
 
     private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: SelfMarkerTypeEnum, vararg ids: Long) {

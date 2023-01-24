@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
@@ -215,16 +214,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun checkBodyIsLink(): Boolean {
         val body = binding.messageInput.text.toString()
-        val isLink = Patterns.WEB_URL.matcher(body).matches()
-        if (isLink) {
-            val attachment = Attachment.Builder("", body, AttachmentTypeEnum.Link.value())
+        val links = body.extractLinks()
+        val isContainsLink = links.isNotEmpty()
+        if (isContainsLink) {
+            val attachment = Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
                 .withTid(ClientWrapper.generateTid())
                 .setName("")
                 .build()
 
             allAttachments.add(attachment)
         }
-        return isLink
+        return isContainsLink
     }
 
     private fun handleAttachmentClick() {

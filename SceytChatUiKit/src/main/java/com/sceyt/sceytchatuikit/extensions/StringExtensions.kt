@@ -6,6 +6,7 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.Base64
+import android.util.Patterns
 import androidx.core.text.isDigitsOnly
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -70,4 +71,15 @@ fun String?.toByteArraySafety(): ByteArray? {
     } catch (e: Exception) {
         null
     }
+}
+
+fun String?.extractLinks(): Array<String> {
+    this ?: return emptyArray()
+    val links = ArrayList<String>()
+    val m = Patterns.WEB_URL.matcher(this)
+    while (m.find()) {
+        val url = m.group()
+        links.add(url)
+    }
+    return links.toTypedArray()
 }

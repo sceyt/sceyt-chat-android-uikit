@@ -67,7 +67,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
 
     private fun onChannelEvent(data: ChannelEventData) {
-        launch { channelLogic.onChannelEvent(data) }
+        launch {
+            channelLogic.onChannelEvent(data)
+            messagesLogic.onChannelEvent(data)
+        }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
@@ -139,8 +142,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.markChannelAsUnRead(channelId)
     }
 
-    override suspend fun clearHistory(channelId: Long): SceytResponse<Long> {
-        return channelLogic.clearHistory(channelId)
+    override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
+        return channelLogic.clearHistory(channelId, forEveryone)
     }
 
     override suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long> {

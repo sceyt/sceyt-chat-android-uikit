@@ -433,7 +433,6 @@ class MessageListViewModel(
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
 
-
                 if (shouldShowDate(sceytMessage, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
