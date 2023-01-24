@@ -135,6 +135,9 @@ interface ChannelDao {
     @Query("delete from UserChatLink where chat_id =:channelId")
     suspend fun deleteChatLinks(channelId: Long)
 
+    @Query("delete from UserChatLink where chat_id =:channelId and user_id != :exceptUserId")
+    suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
+
     @Transaction
     suspend fun deleteChannelAndLinks(channelId: Long) {
         deleteChannel(channelId)
