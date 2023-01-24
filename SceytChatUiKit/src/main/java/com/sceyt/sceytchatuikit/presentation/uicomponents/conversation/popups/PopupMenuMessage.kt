@@ -13,6 +13,7 @@ import androidx.core.graphics.BlendModeCompat
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 
 class PopupMenuMessage(private val context: Context, anchor: View, private var message: SceytMessage) : PopupMenu(context, anchor) {
 
@@ -20,9 +21,13 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var m
     override fun show() {
         inflate(R.menu.sceyt_menu_popup_message)
         (menu as MenuBuilder).setOptionalIconsVisible(true)
+
+        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank()
+        menu.findItem(R.id.sceyt_reply).isVisible = message.deliveryStatus != DeliveryStatus.Pending
+                && message.deliveryStatus != DeliveryStatus.Failed
+
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
-        val replyItem = menu.findItem(R.id.sceyt_reply)
-        replyItem.isVisible = message.deliveryStatus != DeliveryStatus.Pending && message.deliveryStatus != DeliveryStatus.Failed
+
         if (message.incoming) {
             deleteMessageItem.isVisible = false
             menu.findItem(R.id.sceyt_edit_message)?.isVisible = false

@@ -2,13 +2,17 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter
 
 import android.graphics.Color
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBinding,
                                private val callbacks: Callbacks) : BaseViewHolder<AttachmentItem>(binding.root) {
@@ -22,6 +26,16 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBind
                     .into(this)
                 setPadding(0)
                 setBackgroundColor(Color.TRANSPARENT)
+
+                if (item.attachment.type == AttachmentTypeEnum.Video.value()) {
+                    val durationMillis = FileResizeUtil.getVideoDuration(context, item.attachment.filePath)
+                            ?: 0
+                    binding.tvDuration.apply {
+                        if (durationMillis > 0)
+                            text = DateTimeUtil.secondsToTime(durationMillis / 1000)
+                        isVisible = durationMillis > 0
+                    }
+                } else binding.tvDuration.isVisible = false
             } else {
                 setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.sceyt_ic_file))
                 setBackgroundColor(ContextCompat.getColor(itemView.context, SceytKitConfig.sceytColorAccent))
