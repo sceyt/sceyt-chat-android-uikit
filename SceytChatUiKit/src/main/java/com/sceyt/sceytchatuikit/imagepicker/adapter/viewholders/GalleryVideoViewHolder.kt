@@ -3,11 +3,11 @@ package com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.databinding.ItemGalleryVideoBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemGalleryVideoBinding
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
 
-class GalleryVideoViewHolder(val binding: ItemGalleryVideoBinding,
+class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
                              clickListener: GalleryMediaAdapter.MediaClickListener) : BaseGalleryViewHolder(binding.root, clickListener) {
 
     override fun bind(item: MediaItem) {
@@ -20,7 +20,7 @@ class GalleryVideoViewHolder(val binding: ItemGalleryVideoBinding,
             .load(item.media.realPath)
             .override(itemView.width)
             .placeholder(R.color.sceyt_gallery_item_default_color)
-            .error(R.drawable.ic_broken_image)
+            .error(R.drawable.sceyt_ic_broken_image)
             .into(binding.ivImage)
 
         binding.tvDuration.text = millisecondsToTime((item as MediaItem.Video).duration.toLong())

@@ -18,7 +18,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -92,29 +91,30 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     private fun setListener() {
         ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
-            val connectStatus = it.state
-            if (connectStatus == Types.ConnectState.StateConnected) {
-                notifyState(true, null)
+            when (it.state) {
+                Types.ConnectState.StateConnected -> {
+                    notifyState(true, null)
 
-                val status = ClientWrapper.currentUser.presence.status
-                ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
-                    if (ConnectionEventsObserver.isConnected)
-                        ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
-                            SceytKitConfig.presenceStatusText else status) {
-                        }
+                    ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
+                        if (ConnectionEventsObserver.isConnected)
+                            persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
+                    }
+                    SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                    launch {
+                        persistenceMessagesMiddleWare.sendAllPendingMarkers()
+                        persistenceMessagesMiddleWare.sendAllPendingMessages()
+                    }
+                    sceytSyncManager.startSync()
                 }
-                SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
-                launch {
-                    persistenceMessagesMiddleWare.sendAllPendingMarkers()
-                    persistenceMessagesMiddleWare.sendAllPendingMessages()
+                Types.ConnectState.StateFailed -> {
+                    notifyState(false, it.status?.error?.message)
                 }
-                sceytSyncManager.startSync()
-            } else if (connectStatus == Types.ConnectState.StateFailed) {
-                notifyState(false, it.status?.error?.message)
-            } else if (connectStatus == Types.ConnectState.StateDisconnect) {
-                if (it.status?.error?.code == 40102)
-                    onTokenExpired_.tryEmit(Unit)
-                else notifyState(false, it.status?.error?.message)
+                Types.ConnectState.StateDisconnect -> {
+                    if (it.status?.error?.code == 40102)
+                        onTokenExpired_.tryEmit(Unit)
+                    else notifyState(false, it.status?.error?.message)
+                }
+                else -> {}
             }
         }.launchIn(this)
 
@@ -125,9 +125,6 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         ConnectionEventsObserver.onTokenWillExpire.onEach {
             onTokenWillExpire_.tryEmit(Unit)
         }.launchIn(this)
-
-        (this as CoroutineScope).coroutineContext
-
     }
 
     private fun notifyState(success: Boolean, errorMessage: String?) {
@@ -164,16 +161,17 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         channelsCache.clear()
     }
 
-    fun logOut(listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+    fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+        clearData()
+        ClientWrapper.currentUser = null
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
             override fun onSuccess() {
-                clearData()
                 ChatClient.getClient().disconnect()
-                listener?.invoke(true, null)
+                unregisterPushCallback?.invoke(true, null)
             }
 
             override fun onError(exception: SceytException?) {
-                listener?.invoke(false, exception?.message)
+                unregisterPushCallback?.invoke(false, exception?.message)
             }
         })
     }

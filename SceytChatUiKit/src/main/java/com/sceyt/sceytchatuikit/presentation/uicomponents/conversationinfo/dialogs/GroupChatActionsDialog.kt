@@ -11,17 +11,17 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.DialogGroupChannelActionsBinding
+import com.sceyt.sceytchatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
-    private lateinit var binding: DialogGroupChannelActionsBinding
+    private lateinit var binding: SceytDialogGroupChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(DialogGroupChannelActionsBinding.inflate(LayoutInflater.from(context)).also {
+        setContentView(SceytDialogGroupChannelActionsBinding.inflate(LayoutInflater.from(context)).also {
             binding = it
         }.root)
 
@@ -40,7 +40,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
         this.channel = channel
     }
 
-    private fun DialogGroupChannelActionsBinding.initView() {
+    private fun SceytDialogGroupChannelActionsBinding.initView() {
         when (channel.channelType) {
             ChannelTypeEnum.Private -> {
                 binding.leaveChat.text = context.getString(R.string.sceyt_leave_group)

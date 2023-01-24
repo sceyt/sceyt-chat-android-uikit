@@ -80,7 +80,7 @@
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutAddMembers"
-            tools:listitem="@layout/item_channel_members" />
+            tools:listitem="@layout/sceyt_item_channel_members" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

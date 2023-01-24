@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelFilesBinding
+import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelFilesBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -33,14 +33,14 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
-    private var binding: FragmentChannelFilesBinding? = null
+    private var binding: SceytFragmentChannelFilesBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = listOf(AttachmentTypeEnum.File.value())
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentChannelFilesBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelFilesBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }

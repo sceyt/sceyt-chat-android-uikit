@@ -74,4 +74,24 @@ class UsersRepositoryImpl : UsersRepository {
             })
         }
     }
+
+    override suspend fun getSceytUserById(id: String): SceytResponse<User> {
+        return suspendCancellableCoroutine { continuation ->
+            val builder = UserListQueryByIds.Builder()
+                .setIds(listOf(id))
+                .build()
+
+            builder.load(object : UsersCallback {
+                override fun onResult(users: MutableList<User>) {
+                    if (users.isNotEmpty())
+                        continuation.safeResume(SceytResponse.Success(users[0]))
+                    else continuation.safeResume(SceytResponse.Error(SceytException(0, "User not found")))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                }
+            })
+        }
+    }
 }

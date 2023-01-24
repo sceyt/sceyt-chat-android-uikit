@@ -12,7 +12,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelVoiceBinding
+import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelVoiceBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -21,7 +21,6 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
@@ -35,14 +34,14 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
-    private var binding: FragmentChannelVoiceBinding? = null
+    private var binding: SceytFragmentChannelVoiceBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = listOf(AttachmentTypeEnum.Voice.value())
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentChannelVoiceBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelVoiceBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }
@@ -76,7 +75,6 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         if (mediaAdapter == null) {
             mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    // item.file.openFile(requireContext())
                     // voice message play functionality is handled in VoiceMessageViewHolder
                 })
                 getUserNameBuilder()

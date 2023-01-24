@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelLinksBinding
+import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelLinksBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.openLink
@@ -32,14 +32,14 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
-    private var binding: FragmentChannelLinksBinding? = null
+    private var binding: SceytFragmentChannelLinksBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = listOf("link")
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentChannelLinksBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelLinksBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }

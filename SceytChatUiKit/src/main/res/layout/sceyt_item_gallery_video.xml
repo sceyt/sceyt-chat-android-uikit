@@ -30,11 +30,30 @@
             setMediaCheckedState="@{data.selected}"
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:layout_margin="9dp"
+            android:layout_margin="7dp"
+            android:background="?selectableItemBackgroundBorderless"
             android:scaleType="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_gallery_unchecked_state" />
+            app:srcCompat="@drawable/sceyt_ic_gallery_unchecked_state" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:background="@drawable/sceyt_bg_corners_20"
+            android:backgroundTint="#4D000000"
+            android:drawableStart="@drawable/sceyt_ic_video"
+            android:drawablePadding="5dp"
+            android:includeFontPadding="false"
+            android:paddingHorizontal="7dp"
+            android:paddingVertical="3dp"
+            android:textColor="@color/sceyt_color_white"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="0:11" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

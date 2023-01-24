@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelMediaBinding
+import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMediaBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -37,14 +37,14 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
-    private var binding: FragmentChannelMediaBinding? = null
+    private var binding: SceytFragmentChannelMediaBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
     private val mediaType = listOf("image", "video")
     private var pageStateView: PageStateView? = null
     private val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentChannelMediaBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }

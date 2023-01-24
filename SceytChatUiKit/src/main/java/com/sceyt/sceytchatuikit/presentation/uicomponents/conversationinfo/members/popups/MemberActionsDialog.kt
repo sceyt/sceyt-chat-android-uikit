@@ -10,18 +10,18 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.databinding.DialogMembrerActionsBinding
+import com.sceyt.sceytchatuikit.databinding.SceytDialogMembrerActionsBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 
 class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95), SceytKoinComponent {
-    private lateinit var binding: DialogMembrerActionsBinding
+    private lateinit var binding: SceytDialogMembrerActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var member: SceytMember
     private var currentIsOwner: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(DialogMembrerActionsBinding.inflate(LayoutInflater.from(context)).also {
+        setContentView(SceytDialogMembrerActionsBinding.inflate(LayoutInflater.from(context)).also {
             binding = it
         }.root)
 
@@ -41,7 +41,7 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
         this.currentIsOwner = currentIsOwner
     }
 
-    private fun DialogMembrerActionsBinding.initView() {
+    private fun SceytDialogMembrerActionsBinding.initView() {
         revokeAdmin.setOnClickListener {
             listener?.invoke(ActionsEnum.RevokeAdmin)
             dismiss()

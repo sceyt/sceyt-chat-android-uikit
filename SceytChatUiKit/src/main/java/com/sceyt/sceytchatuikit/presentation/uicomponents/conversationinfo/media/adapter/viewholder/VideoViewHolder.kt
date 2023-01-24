@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 
 import android.util.Size
 import androidx.core.view.isVisible
-import com.sceyt.sceytchatuikit.databinding.ItemChannelVideoBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -12,7 +12,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
-class VideoViewHolder(private val binding: ItemChannelVideoBinding,
+class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
                       private val clickListeners: AttachmentClickListenersImpl,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
 

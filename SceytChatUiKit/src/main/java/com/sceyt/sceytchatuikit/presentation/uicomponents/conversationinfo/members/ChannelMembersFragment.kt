@@ -23,7 +23,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
-import com.sceyt.sceytchatuikit.databinding.FragmentChannelMembersBinding
+import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -46,7 +46,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
     private var membersAdapter: ChannelMembersAdapter? = null
-    var binding: FragmentChannelMembersBinding? = null
+    var binding: SceytFragmentChannelMembersBinding? = null
         private set
     lateinit var channel: SceytChannel
         private set
@@ -55,7 +55,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     private var currentUserRole: Role? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentChannelMembersBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }

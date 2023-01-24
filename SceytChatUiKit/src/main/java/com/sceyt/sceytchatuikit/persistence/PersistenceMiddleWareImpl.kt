@@ -4,6 +4,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.Settings
+import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
@@ -325,12 +326,20 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.getCurrentUser()
     }
 
+    override fun getCurrentUserAsFlow(): Flow<User> {
+        return usersLogic.getCurrentUserAsFlow()
+    }
+
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
         return usersLogic.uploadAvatar(avatarUrl)
     }
 
     override suspend fun updateProfile(firsName: String?, lastName: String?, avatarUrl: String?): SceytResponse<User> {
         return usersLogic.updateProfile(firsName, lastName, avatarUrl)
+    }
+
+    override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
+        return usersLogic.setPresenceState(presenceState)
     }
 
     override suspend fun updateStatus(status: String): SceytResponse<Boolean> {
