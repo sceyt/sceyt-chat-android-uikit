@@ -578,7 +578,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {
-        context.openLink(item.message.body)
+        item.message.attachments?.firstOrNull()?.let {
+            context.openLink(it.url)
+        }
     }
 
     override fun onScrollToDownClick(view: ScrollToDownView) {

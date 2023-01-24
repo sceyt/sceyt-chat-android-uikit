@@ -60,14 +60,18 @@ object ChannelEventsObserver {
 
 
     init {
-        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
+        ChatClient.getClient().addChannelListener(TAG,object : ChannelListener {
             override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
                 val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
                 onTotalUnreadChangedFlow_.tryEmit(data)
                 Log.i("totalUnreadCountUpdated", "${channel?.unreadMessageCount}  $totalUnreadChannelCount  $totalUnreadMessageCount  ${channel?.lastReadMessageId}")
             }
 
-            override fun onClearedHistory(channel: Channel?) {
+            override fun onDeleteAllMessagesForMe(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
+            }
+
+            override fun onDeleteAllMessagesForEveryone(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
             }
 

@@ -105,8 +105,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.updateStateView(it)
     }
 
-    channelsListView.setChannelEvenListener {
-        onChannelEvent(it)
+    channelsListView.setChannelCommandEvenListener {
+        onChannelCommandEvent(it)
     }
 
     channelsListView.setReachToEndListener { offset, lastChannel ->

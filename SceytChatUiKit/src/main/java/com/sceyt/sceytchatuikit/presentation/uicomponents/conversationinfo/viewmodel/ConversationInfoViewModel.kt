@@ -66,9 +66,9 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun clearHistory(channelId: Long) {
+    fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.clearHistory(channelId)
+            val response = channelsMiddleWare.clearHistory(channelId, forEveryone)
             notifyResponseAndPageState(_clearHistoryLiveData, response)
         }
     }

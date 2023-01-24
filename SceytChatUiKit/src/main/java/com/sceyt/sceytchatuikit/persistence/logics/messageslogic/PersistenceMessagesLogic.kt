@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.SharedFlow
 internal interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
     fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
+    suspend fun onChannelEvent(data: ChannelEventData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageReactionUpdated(data: Message)
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)

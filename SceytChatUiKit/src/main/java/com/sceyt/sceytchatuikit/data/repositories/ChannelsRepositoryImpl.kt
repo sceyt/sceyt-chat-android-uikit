@@ -260,9 +260,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun clearHistory(channelId: Long): SceytResponse<Long> {
+    override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).clearHistory(object : ActionCallback {
+            ChannelOperator.build(channelId).deleteAllChannelMessages(forEveryone, object : ActionCallback {
                 override fun onSuccess() {
                     continuation.safeResume(SceytResponse.Success(channelId))
                 }

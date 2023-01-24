@@ -138,9 +138,9 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun clearHistory(channelId: Long) {
+    fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.clearHistory(channelId)
+            channelMiddleWare.clearHistory(channelId, forEveryone)
         }
     }
 
@@ -174,12 +174,12 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    internal fun onChannelEvent(event: ChannelEvent) {
+    internal fun onChannelCommandEvent(event: ChannelEvent) {
         when (event) {
             is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
             is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
             is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
-            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id)
+            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id, event.channel.channelType == ChannelTypeEnum.Public)
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
             is ChannelEvent.BlockUser -> {
                 if (event.channel.channelType == ChannelTypeEnum.Direct)

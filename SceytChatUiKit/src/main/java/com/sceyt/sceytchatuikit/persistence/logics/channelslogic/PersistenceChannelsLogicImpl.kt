@@ -415,8 +415,8 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override suspend fun clearHistory(channelId: Long): SceytResponse<Long> {
-        val response = channelsRepository.clearHistory(channelId)
+    override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
+        val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
             channelDao.updateLastMessage(channelId, null, null)
