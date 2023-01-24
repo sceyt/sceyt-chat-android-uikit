@@ -1,8 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
-import android.util.Log
 import android.util.Size
-import com.sceyt.sceytchatuikit.databinding.ItemChannelImageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -11,7 +10,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 
-class ImageViewHolder(private val binding: ItemChannelImageBinding,
+class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
                       private val clickListeners: AttachmentClickListenersImpl,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
 

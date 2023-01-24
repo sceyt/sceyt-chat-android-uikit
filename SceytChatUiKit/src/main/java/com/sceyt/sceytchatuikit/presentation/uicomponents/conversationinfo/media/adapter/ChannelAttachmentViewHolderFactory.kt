@@ -36,31 +36,31 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     open fun createImageViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return ImageViewHolder(
-            ItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners,
+            SceytItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return VideoViewHolder(
-            ItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
+            SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return FileViewHolder(
-            ItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners,
+            SceytItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVoiceViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return VoiceViewHolder(
-            ItemChannelVoiceBinding.inflate(layoutInflater, parent, false), clickListeners,
+            SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback, userNameBuilder = userNameBuilder)
     }
 
     open fun createLinkViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
         return LinkViewHolder(
-            ItemChannelLinkBinding.inflate(layoutInflater, parent, false), linkPreviewHelper,
+            SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false), linkPreviewHelper,
             clickListeners)
     }
 

@@ -8,7 +8,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.databinding.ItemChannelMembersBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.sceytchatuikit.extensions.firstCharToUppercase
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameWithYou
@@ -21,8 +21,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.util.*
 
-class MemberViewHolder(private val binding: ItemChannelMembersBinding,
-                       private val currentUserId: String?,
+class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
                        private val memberClickListeners: MemberClickListenersImpl,
                        private val userNameBuilder: ((User) -> String)? = null) : BaseMemberViewHolder(binding.root) {
 

@@ -12,10 +12,10 @@ object GalleryPickerStyle {
     var counterColor: Int = SceytKitConfig.sceytColorAccent
 
     @DrawableRes
-    var checkedStateIcon: Int = R.drawable.ic_gallery_checked_state
+    var checkedStateIcon: Int = R.drawable.sceyt_ic_gallery_checked_state
 
     @DrawableRes
-    var unCheckedStateIcon: Int = R.drawable.ic_gallery_unchecked_state
+    var unCheckedStateIcon: Int = R.drawable.sceyt_ic_gallery_unchecked_state
 
     var maxSelectCount: Int = 20
 }

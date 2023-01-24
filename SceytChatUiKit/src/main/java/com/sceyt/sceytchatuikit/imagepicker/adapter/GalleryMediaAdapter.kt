@@ -6,8 +6,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.databinding.ItemGalleryImageBinding
-import com.sceyt.sceytchatuikit.databinding.ItemGalleryVideoBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemGalleryImageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemGalleryVideoBinding
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryImageViewHolder
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryVideoViewHolder
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -31,10 +31,10 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : Recyc
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MediaItem> {
         return when (viewType) {
-            ViewType.Image.ordinal -> GalleryImageViewHolder(ItemGalleryImageBinding.inflate(
+            ViewType.Image.ordinal -> GalleryImageViewHolder(SceytItemGalleryImageBinding.inflate(
                 LayoutInflater.from(parent.context), parent, false), clickListener)
 
-            ViewType.Video.ordinal -> GalleryVideoViewHolder(ItemGalleryVideoBinding.inflate(
+            ViewType.Video.ordinal -> GalleryVideoViewHolder(SceytItemGalleryVideoBinding.inflate(
                 LayoutInflater.from(parent.context), parent, false), clickListener)
 
             else -> throw Exception("Unsupported view type")

@@ -5,17 +5,17 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.databinding.DialogMuteNotificationsBinding
+import com.sceyt.sceytchatuikit.databinding.SceytDialogMuteNotificationsBinding
 
 class MuteNotificationDialog(
         context: Context,
         private val chooseListener: ((MuteTypeEnum) -> Unit)? = null,
 ) : Dialog(context, R.style.SceytDialogNoTitle) {
-    private lateinit var mBinding: DialogMuteNotificationsBinding
+    private lateinit var mBinding: SceytDialogMuteNotificationsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = DialogMuteNotificationsBinding.inflate(LayoutInflater.from(context))
+        mBinding = SceytDialogMuteNotificationsBinding.inflate(LayoutInflater.from(context))
         setContentView(mBinding.root)
         initView()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)

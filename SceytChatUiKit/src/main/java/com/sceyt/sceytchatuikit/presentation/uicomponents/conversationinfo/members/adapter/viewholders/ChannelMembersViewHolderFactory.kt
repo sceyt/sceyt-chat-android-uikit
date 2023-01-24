@@ -4,8 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.databinding.ItemChannelMembersBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
@@ -13,14 +12,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import org.koin.core.component.inject
 
 open class ChannelMembersViewHolderFactory(context: Context) : SceytKoinComponent {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = MemberClickListenersImpl()
-    private val preferences by inject<SceytSharedPreference>()
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
-    protected val currentUserId = preferences.getUserId()
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMemberViewHolder {
         return when (viewType) {
@@ -31,7 +27,7 @@ open class ChannelMembersViewHolderFactory(context: Context) : SceytKoinComponen
     }
 
     open fun createMemberViewHolder(parent: ViewGroup): BaseMemberViewHolder {
-        return MemberViewHolder(ItemChannelMembersBinding.inflate(layoutInflater, parent, false), currentUserId,
+        return MemberViewHolder(SceytItemChannelMembersBinding.inflate(layoutInflater, parent, false),
             clickListeners, userNameBuilder)
     }
 

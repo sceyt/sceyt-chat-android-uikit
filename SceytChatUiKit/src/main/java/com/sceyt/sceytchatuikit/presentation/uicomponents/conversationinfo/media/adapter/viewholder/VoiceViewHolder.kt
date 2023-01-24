@@ -5,7 +5,7 @@ import android.widget.ImageView
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.databinding.ItemChannelVoiceBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
@@ -18,7 +18,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 
-class VoiceViewHolder(private var binding: ItemChannelVoiceBinding,
+class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
                       private val userNameBuilder: ((User) -> String)?,
                       needMediaDataCallback: (NeedMediaInfoData) -> Unit)
@@ -86,7 +86,7 @@ class VoiceViewHolder(private var binding: ItemChannelVoiceBinding,
         AudioPlayerHelper.stop(lastFilePath ?: "")
     }
 
-    private fun ItemChannelVoiceBinding.setupStyle() {
+    private fun SceytItemChannelVoiceBinding.setupStyle() {
         icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 

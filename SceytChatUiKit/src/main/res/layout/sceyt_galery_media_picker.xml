@@ -24,7 +24,7 @@
         android:layout_below="@+id/tvTitle"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:spanCount="3"
-        tools:listitem="@layout/item_gallery_image" />
+        tools:listitem="@layout/sceyt_item_gallery_image" />
 
     <View
         android:layout_width="match_parent"
@@ -54,14 +54,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_arrow_next" />
+            app:srcCompat="@drawable/sceyt_ic_arrow_next" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/counter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="@drawable/bg_gallery_counter"
+            android:background="@drawable/sceyt_bg_gallery_counter"
             android:elevation="2dp"
             android:includeFontPadding="false"
             android:maxLength="3"

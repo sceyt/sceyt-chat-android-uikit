@@ -6,7 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.databinding.ItemChannelLinkBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelLinkBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.glideRequestListener
@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 
-class LinkViewHolder(private var binding: ItemChannelLinkBinding,
+class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                      private val linkPreview: LinkPreviewHelper?,
                      private val clickListener: AttachmentClickListenersImpl)
     : BaseChannelFileViewHolder(binding.root, {}) {
@@ -55,7 +55,7 @@ class LinkViewHolder(private var binding: ItemChannelLinkBinding,
         }
     }
 
-    private fun ItemChannelLinkBinding.setLinkInfo(data: LinkPreviewHelper.PreviewMetaData?) {
+    private fun SceytItemChannelLinkBinding.setLinkInfo(data: LinkPreviewHelper.PreviewMetaData?) {
         if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.messageId != fileItem.file.messageTid) {
             tvLinkName.text = ""
             tvLinkName.isVisible = false
@@ -88,7 +88,7 @@ class LinkViewHolder(private var binding: ItemChannelLinkBinding,
         }
     }
 
-    private fun ItemChannelLinkBinding.setupStyle() {
+    private fun SceytItemChannelLinkBinding.setupStyle() {
         icLinkImage.backgroundTintList = ColorStateList.valueOf(itemView.context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

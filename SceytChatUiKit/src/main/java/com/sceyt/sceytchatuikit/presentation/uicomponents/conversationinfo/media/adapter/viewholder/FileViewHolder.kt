@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
 import android.content.res.ColorStateList
-import com.sceyt.sceytchatuikit.databinding.ItemChannelFileBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelFileBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class FileViewHolder(private val binding: ItemChannelFileBinding,
+class FileViewHolder(private val binding: SceytItemChannelFileBinding,
                      private val clickListeners: AttachmentClickListenersImpl,
                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
 
@@ -69,7 +69,7 @@ class FileViewHolder(private val binding: ItemChannelFileBinding,
         TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
     }
 
-    private fun ItemChannelFileBinding.setupStyle() {
+    private fun SceytItemChannelFileBinding.setupStyle() {
         icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }

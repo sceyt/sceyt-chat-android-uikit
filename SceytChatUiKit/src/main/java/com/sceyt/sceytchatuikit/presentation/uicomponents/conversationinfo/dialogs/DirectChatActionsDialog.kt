@@ -9,19 +9,19 @@ import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.databinding.DialogDirectChannelActionsBinding
+import com.sceyt.sceytchatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
-    private lateinit var binding: DialogDirectChannelActionsBinding
+    private lateinit var binding: SceytDialogDirectChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytDirectChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(DialogDirectChannelActionsBinding.inflate(LayoutInflater.from(context)).also {
+        setContentView(SceytDialogDirectChannelActionsBinding.inflate(LayoutInflater.from(context)).also {
             binding = it
         }.root)
 
@@ -44,7 +44,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         listener = cb
     }
 
-    private fun DialogDirectChannelActionsBinding.initView() {
+    private fun SceytDialogDirectChannelActionsBinding.initView() {
         channel.peer?.let {
             blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
             unBlockUser.isVisible = it.user.blocked
@@ -75,7 +75,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         ClearHistory, BlockUser, UnBlockUser, Delete
     }
 
-    private fun DialogDirectChannelActionsBinding.setupStyle() {
+    private fun SceytDialogDirectChannelActionsBinding.setupStyle() {
         unBlockUser.setTextViewDrawableColor(SceytKitConfig.sceytColorAccent)
     }
 

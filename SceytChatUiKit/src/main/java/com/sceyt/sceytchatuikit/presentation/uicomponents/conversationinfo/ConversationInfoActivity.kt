@@ -23,7 +23,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventDat
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
 import com.sceyt.sceytchatuikit.data.toSceytMember
-import com.sceyt.sceytchatuikit.databinding.ActivityConversationInfoBinding
+import com.sceyt.sceytchatuikit.databinding.SceytActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit
 open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
     private lateinit var pagerAdapter: ViewPagerAdapter
-    private var binding: ActivityConversationInfoBinding? = null
+    private var binding: SceytActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
     private var alphaAnimation: AlphaAnimation? = null
 
@@ -191,7 +191,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    private fun ActivityConversationInfoBinding.initViews() {
+    private fun SceytActivityConversationInfoBinding.initViews() {
         icBack.setOnClickListener {
             onBackPressed()
         }
@@ -326,7 +326,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun setActivityContentView() {
-        setContentView(ActivityConversationInfoBinding.inflate(layoutInflater)
+        setContentView(SceytActivityConversationInfoBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
     }
@@ -648,7 +648,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }
 
-    private fun ActivityConversationInfoBinding.setupStyle() {
+    private fun SceytActivityConversationInfoBinding.setupStyle() {
         icBack.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
         icEdit.imageTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
     }
