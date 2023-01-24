@@ -1,5 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members
 
-enum class MemberTypeEnum {
+enum class MemberRoleTypeEnum {
     Member, Subscriber, Admin
 }

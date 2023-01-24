@@ -21,11 +21,16 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnu
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
+import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
@@ -50,7 +55,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         private set
     lateinit var channel: SceytChannel
         private set
-    lateinit var memberType: MemberTypeEnum
+    lateinit var memberRoleType: MemberRoleTypeEnum
         private set
     private var currentUserRole: Role? = null
 
@@ -77,8 +82,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.getParcelable(CHANNEL))
-        val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
-        memberType = MemberTypeEnum.values().getOrNull(type) ?: MemberTypeEnum.Member
+        val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberRoleTypeEnum.Member.ordinal))
+        memberRoleType = MemberRoleTypeEnum.values().getOrNull(type) ?: MemberRoleTypeEnum.Member
         getCurrentUserRole()
     }
 
@@ -107,7 +112,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
 
             layoutAddMembers.setOnClickListener {
-                onAddMembersClick(memberType)
+                onAddMembersClick(memberRoleType)
             }
 
             toolbar.setBackClickListener {
@@ -118,16 +123,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun initStringsWithAddType() {
         with(binding ?: return) {
-            when (memberType) {
-                MemberTypeEnum.Member -> {
+            when (memberRoleType) {
+                MemberRoleTypeEnum.Member -> {
                     toolbar.setTitle(getString(R.string.sceyt_members))
                     addMembers.text = getString(R.string.sceyt_add_members)
                 }
-                MemberTypeEnum.Subscriber -> {
+                MemberRoleTypeEnum.Subscriber -> {
                     toolbar.setTitle(getString(R.string.sceyt_subscribers))
                     addMembers.text = getString(R.string.sceyt_add_subscribers)
                 }
-                MemberTypeEnum.Admin -> {
+                MemberRoleTypeEnum.Admin -> {
                     toolbar.setTitle(getString(R.string.sceyt_admins))
                     addMembers.text = getString(R.string.sceyt_add_admins)
                 }
@@ -193,14 +198,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getRole(): String? {
-        return when (memberType) {
-            MemberTypeEnum.Admin -> RoleTypeEnum.Admin.toString()
-            MemberTypeEnum.Subscriber -> null
-            MemberTypeEnum.Member -> null
+        return when (memberRoleType) {
+            MemberRoleTypeEnum.Admin -> RoleTypeEnum.Admin.toString()
+            MemberRoleTypeEnum.Subscriber -> null
+            MemberRoleTypeEnum.Member -> null
         }
     }
 
-    open fun showMemberLongClick(item: MemberItem.Member) {
+    protected open fun showMemberLongClick(item: MemberItem.Member) {
         if (currentUserIsOwnerOrAdmin().not() || item.member.id == preferences.getUserId()) return
 
         MemberActionsDialog
@@ -208,14 +213,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             .apply {
                 setChooseTypeCb {
                     when (it) {
-                        RevokeAdmin -> revokeAdminClick(item.member)
-                        Delete -> kickMemberClick(item.member.id)
+                        RevokeAdmin -> onRevokeAdminClick(item.member)
+                        Delete -> onKickMemberClick(item.member)
                     }
                 }
             }.show()
     }
 
-    open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
+    protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
             val currentUser = (channel as SceytGroupChannel).members.find {
                 it.id == preferences.getUserId()
@@ -244,10 +249,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun onAddedMember(data: List<SceytMember>) {
+    protected open fun onAddedMember(data: List<SceytMember>) {
     }
 
-    open fun onRemovedMember(data: List<SceytMember>) {
+    protected open fun onRemovedMember(data: List<SceytMember>) {
     }
 
     protected fun currentUserIsOwnerOrAdmin(): Boolean {
@@ -269,16 +274,49 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
-    protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
+    protected open fun onAddMembersClick(memberType: MemberRoleTypeEnum) {
         // Override and add your logic
     }
 
-    protected open fun revokeAdminClick(member: SceytMember) {
-        revokeAdmin(member)
+    protected open fun onRevokeAdminClick(member: SceytMember) {
+        SceytDialog.showSceytDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke) {
+            revokeAdmin(member)
+        }.apply {
+            val name = SceytKitConfig.userNameBuilder?.invoke(member.user)
+                    ?: member.user.getPresentableNameCheckDeleted(requireContext())
+            val desc = String.format(getString(R.string.sceyt_revoke_admin_desc), name)
+            val nameFromIndex = desc.lastIndexOf(name)
+            val roleFromIndex = desc.lastIndexOf("“Admin”")
+            var formatted = desc.setBoldSpan(nameFromIndex, nameFromIndex + name.length)
+            formatted = formatted.setBoldSpan(roleFromIndex, roleFromIndex + "“Admin”".length)
+            setDescription(formatted)
+        }
     }
 
-    protected open fun kickMemberClick(memberId: String) {
-        viewModel.kickMember(channel.id, memberId, false)
+    protected open fun onKickMemberClick(member: SceytMember) {
+        val titleId: Int
+        val descId: Int
+        when (channel.channelType) {
+            Private -> {
+                titleId = R.string.sceyt_remove_member_title
+                descId = R.string.sceyt_remove_member_desc
+            }
+            Public -> {
+                titleId = R.string.sceyt_remove_subscriber_title
+                descId = R.string.sceyt_remove_subscriber_desc
+            }
+            Direct -> return
+        }
+        SceytDialog.showSceytDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove) {
+            viewModel.kickMember(channel.id, member.id, false)
+        }.apply {
+            val name = SceytKitConfig.userNameBuilder?.invoke(member.user)
+                    ?: member.user.getPresentableNameCheckDeleted(requireContext())
+
+            val desc = String.format(getString(descId), name)
+            val fromIndex = desc.lastIndexOf(name)
+            setDescription(desc.setBoldSpan(fromIndex, fromIndex + name.length))
+        }
     }
 
     protected open fun onMembersList(data: PaginationResponse<MemberItem>) {
@@ -332,11 +370,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         when (eventData.eventType) {
             ChannelMembersEventEnum.Role -> {
                 eventData.members?.forEach { member ->
-                    membersAdapter?.getMemberItemById(member.id)?.let {
-                        val memberItem = it.second as MemberItem.Member
-                        memberItem.member = member.toSceytMember()
-                        membersAdapter?.notifyItemChanged(it.first, MemberItemPayloadDiff.DEFAULT)
-                    }
+                    if (memberRoleType == MemberRoleTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.toString()) {
+                        removeMember(member.id)
+                    } else
+                        membersAdapter?.getMemberItemById(member.id)?.let {
+                            val memberItem = it.second as MemberItem.Member
+                            memberItem.member = member.toSceytMember()
+                            membersAdapter?.notifyItemChanged(it.first, MemberItemPayloadDiff.DEFAULT)
+                        } ?: addMembers(arrayListOf(member))
                 }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
@@ -369,7 +410,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         const val CHANNEL = "CHANNEL"
         const val MEMBER_TYPE = "ADD_BUTTON_TITLE"
 
-        fun newInstance(channel: SceytChannel, addMemberType: MemberTypeEnum = MemberTypeEnum.Member): ChannelMembersFragment {
+        fun newInstance(channel: SceytChannel, addMemberType: MemberRoleTypeEnum = MemberRoleTypeEnum.Member): ChannelMembersFragment {
             val fragment = ChannelMembersFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)

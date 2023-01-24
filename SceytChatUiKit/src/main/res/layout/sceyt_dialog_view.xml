@@ -25,7 +25,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="20dp"
-        android:fontFamily="@font/roboto_medium"
         android:textColor="@color/sceyt_color_gray_400"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintEnd_toEndOf="@+id/textTitle"
