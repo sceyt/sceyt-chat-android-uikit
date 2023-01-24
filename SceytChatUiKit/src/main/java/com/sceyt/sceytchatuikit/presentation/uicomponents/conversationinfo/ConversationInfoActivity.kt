@@ -47,7 +47,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberRoleTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
@@ -316,13 +316,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected fun getBinding() = binding
 
-    protected fun getMembersType(): MemberRoleTypeEnum {
+    protected fun getMembersType(): MemberTypeEnum {
         return if (::channel.isInitialized) {
             when (channel.channelType) {
-                Private, Direct -> MemberRoleTypeEnum.Member
-                Public -> MemberRoleTypeEnum.Subscriber
+                Private, Direct -> MemberTypeEnum.Member
+                Public -> MemberTypeEnum.Subscriber
             }
-        } else MemberRoleTypeEnum.Member
+        } else MemberTypeEnum.Member
     }
 
     open fun setActivityContentView() {
@@ -345,7 +345,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
             addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, MemberRoleTypeEnum.Admin))
+            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, MemberTypeEnum.Admin))
         }
     }
 
@@ -610,7 +610,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberRoleTypeEnum) =
+    open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum) =
             ChannelMembersFragment.newInstance(channel, memberType)
 
     open fun getChannelMediaFragment(channel: SceytChannel) = ChannelMediaFragment.newInstance(channel)
