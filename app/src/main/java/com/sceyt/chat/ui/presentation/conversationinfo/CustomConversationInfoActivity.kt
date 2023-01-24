@@ -17,35 +17,35 @@ import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberRoleTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 
 class CustomConversationInfoActivity : ConversationInfoActivity() {
 
-    override fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberRoleTypeEnum): ChannelMembersFragment {
+    override fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): ChannelMembersFragment {
         return CustomMembersFragment.newInstance(channel, memberType)
     }
 
     override fun onAddSubscribersClick(channel: SceytChannel) {
-        addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this, MemberRoleTypeEnum.Subscriber))
+        addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this, MemberTypeEnum.Subscriber))
         overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
     }
 
     class CustomMembersFragment : ChannelMembersFragment() {
         private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
 
-        override fun onAddMembersClick(memberType: MemberRoleTypeEnum) {
+        override fun onAddMembersClick(memberType: MemberTypeEnum) {
             addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType))
             requireContext().asComponentActivity()
                 .overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
 
         override fun onAddedMember(data: List<SceytMember>) {
-            if (memberRoleType == MemberRoleTypeEnum.Admin)
+            if (memberType == MemberTypeEnum.Admin)
                 viewModel.changeRole(channel.id, *data.toTypedArray())
         }
 
         companion object {
-            fun newInstance(channel: SceytChannel, membersType: MemberRoleTypeEnum): CustomMembersFragment {
+            fun newInstance(channel: SceytChannel, membersType: MemberTypeEnum): CustomMembersFragment {
                 val fragment = CustomMembersFragment()
                 fragment.setBundleArguments {
                     putParcelable(CHANNEL, channel)
@@ -60,7 +60,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                        if (memberRoleType == MemberRoleTypeEnum.Admin) {
+                        if (memberType == MemberTypeEnum.Admin) {
                             users.map { it.role = Role(RoleTypeEnum.Admin.toString()) }
                             changeRole(*users.toTypedArray())
                         }

@@ -55,7 +55,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         private set
     lateinit var channel: SceytChannel
         private set
-    lateinit var memberRoleType: MemberRoleTypeEnum
+    lateinit var memberType: MemberTypeEnum
         private set
     private var currentUserRole: Role? = null
 
@@ -82,8 +82,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.getParcelable(CHANNEL))
-        val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberRoleTypeEnum.Member.ordinal))
-        memberRoleType = MemberRoleTypeEnum.values().getOrNull(type) ?: MemberRoleTypeEnum.Member
+        val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
+        memberType = MemberTypeEnum.values().getOrNull(type) ?: MemberTypeEnum.Member
         getCurrentUserRole()
     }
 
@@ -112,7 +112,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
 
             layoutAddMembers.setOnClickListener {
-                onAddMembersClick(memberRoleType)
+                onAddMembersClick(memberType)
             }
 
             toolbar.setBackClickListener {
@@ -123,16 +123,16 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     private fun initStringsWithAddType() {
         with(binding ?: return) {
-            when (memberRoleType) {
-                MemberRoleTypeEnum.Member -> {
+            when (memberType) {
+                MemberTypeEnum.Member -> {
                     toolbar.setTitle(getString(R.string.sceyt_members))
                     addMembers.text = getString(R.string.sceyt_add_members)
                 }
-                MemberRoleTypeEnum.Subscriber -> {
+                MemberTypeEnum.Subscriber -> {
                     toolbar.setTitle(getString(R.string.sceyt_subscribers))
                     addMembers.text = getString(R.string.sceyt_add_subscribers)
                 }
-                MemberRoleTypeEnum.Admin -> {
+                MemberTypeEnum.Admin -> {
                     toolbar.setTitle(getString(R.string.sceyt_admins))
                     addMembers.text = getString(R.string.sceyt_add_admins)
                 }
@@ -198,10 +198,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getRole(): String? {
-        return when (memberRoleType) {
-            MemberRoleTypeEnum.Admin -> RoleTypeEnum.Admin.toString()
-            MemberRoleTypeEnum.Subscriber -> null
-            MemberRoleTypeEnum.Member -> null
+        return when (memberType) {
+            MemberTypeEnum.Admin -> RoleTypeEnum.Admin.toString()
+            MemberTypeEnum.Subscriber -> null
+            MemberTypeEnum.Member -> null
         }
     }
 
@@ -274,7 +274,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
-    protected open fun onAddMembersClick(memberType: MemberRoleTypeEnum) {
+    protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
         // Override and add your logic
     }
 
@@ -370,7 +370,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         when (eventData.eventType) {
             ChannelMembersEventEnum.Role -> {
                 eventData.members?.forEach { member ->
-                    if (memberRoleType == MemberRoleTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.toString()) {
+                    if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.toString()) {
                         removeMember(member.id)
                     } else
                         membersAdapter?.getMemberItemById(member.id)?.let {
@@ -410,7 +410,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         const val CHANNEL = "CHANNEL"
         const val MEMBER_TYPE = "ADD_BUTTON_TITLE"
 
-        fun newInstance(channel: SceytChannel, addMemberType: MemberRoleTypeEnum = MemberRoleTypeEnum.Member): ChannelMembersFragment {
+        fun newInstance(channel: SceytChannel, addMemberType: MemberTypeEnum = MemberTypeEnum.Member): ChannelMembersFragment {
             val fragment = ChannelMembersFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)

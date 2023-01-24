@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberRoleTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class AddMembersActivity : AppCompatActivity() {
@@ -28,7 +28,7 @@ class AddMembersActivity : AppCompatActivity() {
     private lateinit var usersAdapter: SelectableUsersAdapter
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
     private var selectedUsers = arrayListOf<SceytMember>()
-    private var memberType: MemberRoleTypeEnum = MemberRoleTypeEnum.Member
+    private var memberType: MemberTypeEnum = MemberTypeEnum.Member
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +49,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     private fun getIntentExtra() {
         intent?.getIntExtra(MEMBER_TYPE, memberType.ordinal)?.let { ordinal ->
-            memberType = MemberRoleTypeEnum.values().getOrNull(ordinal) ?: memberType
+            memberType = MemberTypeEnum.values().getOrNull(ordinal) ?: memberType
         }
     }
 
@@ -91,9 +91,9 @@ class AddMembersActivity : AppCompatActivity() {
     private fun initStringsWithMemberType() {
         with(binding) {
             when (memberType) {
-                MemberRoleTypeEnum.Member -> toolbar.setTitle(getString(R.string.sceyt_add_members))
-                MemberRoleTypeEnum.Subscriber -> toolbar.setTitle(getString(R.string.sceyt_add_subscribers))
-                MemberRoleTypeEnum.Admin -> toolbar.setTitle(getString(R.string.sceyt_add_admins))
+                MemberTypeEnum.Member -> toolbar.setTitle(getString(R.string.sceyt_add_members))
+                MemberTypeEnum.Subscriber -> toolbar.setTitle(getString(R.string.sceyt_add_subscribers))
+                MemberTypeEnum.Admin -> toolbar.setTitle(getString(R.string.sceyt_add_admins))
             }
         }
     }
@@ -177,7 +177,7 @@ class AddMembersActivity : AppCompatActivity() {
         const val SELECTED_USERS = "selectedUsers"
         const val MEMBER_TYPE = "memberType"
 
-        fun newInstance(context: Context, memberType: MemberRoleTypeEnum = MemberRoleTypeEnum.Member): Intent {
+        fun newInstance(context: Context, memberType: MemberTypeEnum = MemberTypeEnum.Member): Intent {
             return Intent(context, AddMembersActivity::class.java).apply {
                 putExtra(MEMBER_TYPE, memberType.ordinal)
             }
