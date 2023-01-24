@@ -36,22 +36,22 @@ class SceytDialog(
         }
     }
 
-    fun setTitle(title: String): SceytDialog {
+    fun setTitle(title: CharSequence): SceytDialog {
         binding.textTitle.text = title
         return this
     }
 
-    fun setDescription(description: String): SceytDialog {
+    fun setDescription(description: CharSequence): SceytDialog {
         binding.textDescription.text = description
         return this
     }
 
-    fun setPositiveButtonTitle(positiveBtnTitle: String): SceytDialog {
+    fun setPositiveButtonTitle(positiveBtnTitle: CharSequence): SceytDialog {
         binding.buttonAccept.text = positiveBtnTitle
         return this
     }
 
-    fun setNegativeButtonTitle(negativeBtnTitle: String): SceytDialog {
+    fun setNegativeButtonTitle(negativeBtnTitle: CharSequence): SceytDialog {
         binding.buttonCancel.text = negativeBtnTitle
         return this
     }
@@ -68,16 +68,18 @@ class SceytDialog(
 
     companion object {
         fun showSceytDialog(context: Context,
-                            @StringRes titleId: Int,
-                            @StringRes descId: Int,
-                            @StringRes positiveBtnTitleId: Int, positiveCb: () -> Unit) {
-            SceytDialog(context, positiveCb)
-                .setTitle(context.getString(titleId))
-                .setDescription(context.getString(descId))
-                .setPositiveButtonTitle(context.getString(positiveBtnTitleId))
-                .setPositiveButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-                .setNegativeButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-                .show()
+                            @StringRes titleId: Int = R.string.sceyt_empty_string,
+                            @StringRes descId: Int = R.string.sceyt_empty_string,
+                            @StringRes positiveBtnTitleId: Int, positiveCb: () -> Unit): SceytDialog {
+
+            return SceytDialog(context, positiveCb).apply {
+                setTitle(context.getString(titleId))
+                setDescription(context.getString(descId))
+                setPositiveButtonTitle(context.getString(positiveBtnTitleId))
+                setPositiveButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                setNegativeButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                show()
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 <resources>
+    <string name="sceyt_empty_string" translatable="false" />
     <string name="sceyt_search_for_channels">Search for channels</string>
     <string name="sceyt_search">Search</string>
     <string name="sceyt_your_last_message">You</string>
@@ -129,6 +130,13 @@
     <string name="sceyt_leave_group">Leave group</string>
     <string name="sceyt_call">call</string>
     <string name="sceyt_revoke_admin">Revoke admin</string>
+    <string name="sceyt_revoke">Revoke</string>
+    <string name="sceyt_remove_subscriber_title">Remove subscriber</string>
+    <string name="sceyt_remove_subscriber_desc">Are you sure to remove %s from this channel?</string>
+    <string name="sceyt_remove_member_title">Remove member</string>
+    <string name="sceyt_remove_member_desc">Are you sure to remove %s from this group?</string>
+    <string name="sceyt_revoke_admin_title">Revoke admin</string>
+    <string name="sceyt_revoke_admin_desc">Are you sure you want to revoke “Admin” rights from user: %s?</string>
 
     <string name="sceyt_forward">Forward</string>
     <string name="sceyt_saved">Saved</string>

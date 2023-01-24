@@ -7,7 +7,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.ui.presentation.addmembers.AddMembersActivity
-import com.sceyt.chat.ui.presentation.changerole.ChangeRoleActivity
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -18,42 +17,35 @@ import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberRoleTypeEnum
 
 class CustomConversationInfoActivity : ConversationInfoActivity() {
 
-    override fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): ChannelMembersFragment {
+    override fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberRoleTypeEnum): ChannelMembersFragment {
         return CustomMembersFragment.newInstance(channel, memberType)
     }
 
     override fun onAddSubscribersClick(channel: SceytChannel) {
-        addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this, MemberTypeEnum.Subscriber))
+        addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this, MemberRoleTypeEnum.Subscriber))
         overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
     }
 
     class CustomMembersFragment : ChannelMembersFragment() {
-        private lateinit var changeRoleActivityLauncher: ActivityResultLauncher<Intent>
         private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
 
-        override fun revokeAdminClick(member: SceytMember) {
-            changeRoleActivityLauncher.launch(ChangeRoleActivity.newInstance(requireContext(), member))
-            requireContext().asComponentActivity()
-                .overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
-        }
-
-        override fun onAddMembersClick(memberType: MemberTypeEnum) {
+        override fun onAddMembersClick(memberType: MemberRoleTypeEnum) {
             addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType))
             requireContext().asComponentActivity()
                 .overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
         }
 
         override fun onAddedMember(data: List<SceytMember>) {
-            if (memberType == MemberTypeEnum.Admin)
+            if (memberRoleType == MemberRoleTypeEnum.Admin)
                 viewModel.changeRole(channel.id, *data.toTypedArray())
         }
 
         companion object {
-            fun newInstance(channel: SceytChannel, membersType: MemberTypeEnum): CustomMembersFragment {
+            fun newInstance(channel: SceytChannel, membersType: MemberRoleTypeEnum): CustomMembersFragment {
                 val fragment = CustomMembersFragment()
                 fragment.setBundleArguments {
                     putParcelable(CHANNEL, channel)
@@ -68,8 +60,10 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                        if (memberType == MemberTypeEnum.Admin)
+                        if (memberRoleType == MemberRoleTypeEnum.Admin) {
                             users.map { it.role = Role(RoleTypeEnum.Admin.toString()) }
+                            changeRole(*users.toTypedArray())
+                        }
                         addMembersToChannel(users)
                     }
                 }
