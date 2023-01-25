@@ -119,22 +119,34 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
         post {
             if (!replyInThread) {
-                val title = if (channel is SceytDirectChannel) {
-                    val member = channel.peer ?: return@post
-                    if (member.user.presence?.state == PresenceState.Online) {
-                        getString(R.string.sceyt_online)
-                    } else {
-                        member.user.presence?.lastActiveAt?.let {
-                            if (it != 0L) {
-                                val text = DateTimeUtil.getPresenceDateFormatData(context, Date(it))
-                                if (subjectTextView.text.equals(text)) return@post
-                                else text
-                            } else null
+                val title = when (channel.channelType) {
+                    ChannelTypeEnum.Direct -> {
+                        val member = (channel as? SceytDirectChannel)?.peer ?: return@post
+                        if (member.user.presence?.state == PresenceState.Online) {
+                            getString(R.string.sceyt_online)
+                        } else {
+                            member.user.presence?.lastActiveAt?.let {
+                                if (it != 0L) {
+                                    val text = DateTimeUtil.getPresenceDateFormatData(context, Date(it))
+                                    if (subjectTextView.text.equals(text)) return@post
+                                    else text
+                                } else null
+                            }
                         }
                     }
-                } else if (channel.channelType == ChannelTypeEnum.Private)
-                    getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
-                else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
+                    ChannelTypeEnum.Private -> {
+                        val memberCount = (channel as SceytGroupChannel).memberCount
+                        if (memberCount > 1)
+                            getString(R.string.sceyt_members_count, memberCount)
+                        else getString(R.string.sceyt_member_count, memberCount)
+                    }
+                    ChannelTypeEnum.Public -> {
+                        val memberCount = (channel as SceytGroupChannel).memberCount
+                        if (memberCount > 1)
+                            getString(R.string.sceyt_subscribers_count, memberCount)
+                        else getString(R.string.sceyt_subscriber_count, memberCount)
+                    }
+                }
 
                 subjectTextView.text = title
                 subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping

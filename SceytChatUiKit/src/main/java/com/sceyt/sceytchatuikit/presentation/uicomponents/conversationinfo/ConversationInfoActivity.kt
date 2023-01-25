@@ -558,21 +558,31 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 subTitleToolbar.isVisible = false
                 return
             }
-            val title: String = if (channel is SceytDirectChannel) {
-                val member = channel.peer ?: return
-                if (member.user.presence?.state == PresenceState.Online) {
-                    getString(R.string.sceyt_online)
-                } else {
-                    member.user.presence?.lastActiveAt?.let {
-                        if (it != 0L)
-                            DateTimeUtil.getPresenceDateFormatData(this@ConversationInfoActivity, Date(it))
-                        else ""
-                    } ?: ""
+            val title: String = when (channel.channelType) {
+                Direct -> {
+                    val member = (channel as? SceytDirectChannel)?.peer ?: return
+                    if (member.user.presence?.state == PresenceState.Online) {
+                        getString(R.string.sceyt_online)
+                    } else {
+                        member.user.presence?.lastActiveAt?.let {
+                            if (it != 0L)
+                                DateTimeUtil.getPresenceDateFormatData(this@ConversationInfoActivity, Date(it))
+                            else ""
+                        } ?: ""
+                    }
                 }
-            } else {
-                if (channel.channelType == Private)
-                    getString(R.string.sceyt_members_count, (channel as SceytGroupChannel).memberCount)
-                else getString(R.string.sceyt_subscribers_count, (channel as SceytGroupChannel).memberCount)
+                Private -> {
+                    val memberCount = (channel as SceytGroupChannel).memberCount
+                    if (memberCount > 1)
+                        getString(R.string.sceyt_members_count, memberCount)
+                    else getString(R.string.sceyt_member_count, memberCount)
+                }
+                Public -> {
+                    val memberCount = (channel as SceytGroupChannel).memberCount
+                    if (memberCount > 1)
+                        getString(R.string.sceyt_subscribers_count, memberCount)
+                    else getString(R.string.sceyt_subscriber_count, memberCount)
+                }
             }
             tvPresenceOrMembers.text = title
             subTitleToolbar.text = title
