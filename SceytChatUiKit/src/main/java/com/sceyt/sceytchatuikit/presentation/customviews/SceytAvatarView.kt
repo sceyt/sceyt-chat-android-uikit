@@ -4,6 +4,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Build
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.AttributeSet
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
@@ -21,7 +25,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var isGroup = false
     private var fullName: String? = null
     private var imageUrl: String? = null
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private var textSize = 0
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private var avatarBackgroundColor: Int = 0
@@ -60,9 +64,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         textPaint.color = Color.WHITE
 
         val xPos = (width / 2).toFloat()
-        val yPos = (height / 2 - (textPaint.descent() + textPaint.ascent()) / 2)
 
-        canvas.drawText(getAvatarText(fullName ?: ""), xPos, yPos, textPaint)
+        val staticLayout = getStaticLayout(getAvatarText(fullName ?: ""))
+        canvas.save()
+        canvas.translate(xPos, (height - staticLayout.height) / 2f)
+        staticLayout.draw(canvas)
+        canvas.restore()
     }
 
     private fun drawBackgroundColor(canvas: Canvas) {
@@ -72,17 +79,29 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         })
     }
 
-    private fun getAvatarText(title: String): String {
+    private fun getAvatarText(title: String): CharSequence {
         if (title.trim().isBlank()) return ""
         val strings = title.trim().split(" ")
         return if (strings.size > 1) {
-            return ("${strings[0].first()}${strings[1].first()}").uppercase()
-        } else strings[0].first().uppercase()
+            return ("${strings[0]}${strings[1]}".uppercase())
+        } else strings[0].uppercase()
     }
 
     private fun getAvatarRandomColor(): Int {
         val colors = UserStyle.avatarColors
         return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
+    }
+
+    private fun getStaticLayout(title: CharSequence): StaticLayout {
+        val textWidth = textPaint.measureText(title.toString()).toInt()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            StaticLayout.Builder.obtain(title, 0, title.length, textPaint, textWidth)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setLineSpacing(0f, 1f)
+                .setIncludePad(false).build()
+        } else {
+            StaticLayout(title, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
+        }
     }
 
     private fun loadAvatarImage(oldImageUrl: String?) {
