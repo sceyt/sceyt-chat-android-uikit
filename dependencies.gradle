@@ -23,14 +23,13 @@ ext {
     exo_player_media_version = '1.0.0-beta02'
 
     jsoup_version = '1.15.3'
-
-    material_version = '1.8.0-alpha02'
+    material_version = '1.9.0-alpha01'
     moshi_converter_version = '2.9.0'
 
     fragment_ktx_version = '1.5.5'
     firebase_core_version = '20.0.2'
     firebase_messaging_version = '23.1.1'
-    firebase_bom_version = '31.1.1'
+    firebase_bom_version = '31.2.0'
     firebase_crashlitics_version = '18.2.6'
     flex_box_version = "3.0.0"
 
