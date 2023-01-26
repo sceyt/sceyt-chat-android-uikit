@@ -361,7 +361,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onClearHistoryClick(channel: SceytChannel) {
         val descId: Int = when (channel.channelType) {
             Direct -> R.string.sceyt_clear_direct_history_desc
-            else -> R.string.sceyt_clear_group_history_desc
+            Private -> R.string.sceyt_clear_private_chat_history_desc
+            Public -> R.string.sceyt_clear_public_chat_history_desc
         }
         showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear) {
             clearHistory(channel.channelType == Public)
