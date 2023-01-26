@@ -148,7 +148,7 @@ class MessageListViewModel(
             .filter { it.channelId == channel.id }
 
         onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
-            .filter { it.channel.id == channel.id }
+            .filter { it.channel.id == channel.id && it.member.id != SceytKitClient.myId }
 
         onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }
