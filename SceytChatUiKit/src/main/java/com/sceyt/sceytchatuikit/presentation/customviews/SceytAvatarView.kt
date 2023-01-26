@@ -81,12 +81,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun getAvatarText(title: String): CharSequence {
         if (title.trim().isBlank()) return ""
-        val strings = title.trim().split(" ")
+        val strings = title.trim().split(" ").filter { it.isNotBlank() }
+        if (strings.isEmpty()) return ""
+
         val firstChar = strings[0].run {
             String(Character.toChars(codePointAt(0)))
         }
         return if (strings.size > 1) {
-            val secondChar = strings[1].run {
+            val secondChar = strings.getOrNull(1) ?: "".run {
                 String(Character.toChars(codePointAt(0)))
             }
             "${firstChar}${secondChar}".uppercase()
