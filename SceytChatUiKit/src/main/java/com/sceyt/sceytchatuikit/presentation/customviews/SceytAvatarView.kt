@@ -98,6 +98,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
     }
 
+    @Suppress("DEPRECATION")
     private fun getStaticLayout(title: CharSequence): StaticLayout {
         val textWidth = textPaint.measureText(title.toString()).toInt()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -105,9 +106,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                 .setLineSpacing(0f, 1f)
                 .setIncludePad(false).build()
-        } else {
-            StaticLayout(title, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
-        }
+        } else StaticLayout(title, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
     }
 
     private fun loadAvatarImage(oldImageUrl: String?) {
