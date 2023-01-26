@@ -24,5 +24,5 @@ abstract class BaseFileViewHolder(itemView: View,
         }
     }
 
-    open fun getThumbSize() = Size(itemView.width / 2, itemView.height)
+    open fun getThumbSize() = Size(itemView.width, itemView.height)
 }

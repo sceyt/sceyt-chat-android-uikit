@@ -123,7 +123,7 @@ class MessageVideoViewHolder(
         }
     }
 
-    override fun getThumbSize() = Size(binding.videoView.width, binding.videoView.height)
+    override fun getThumbSize() = Size(1080, 1080)
 
     private fun setListener() {
         TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
