@@ -141,20 +141,22 @@ object FileResizeUtil {
         return ThumbnailUtils.extractThumbnail(realImage, width, height)
     }
 
-    private fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
+    fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
         val matrix = Matrix()
         val rotationAngle = getFileOrientation(imagePath = filePath)
-        if (rotationAngle != 0)
+        return if (rotationAngle != 0) {
             matrix.setRotate(rotationAngle.toFloat())
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } else bitmap
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, byteArray: ByteArray): Bitmap {
         val matrix = Matrix()
         val rotationAngle = getFileOrientation(ByteArrayInputStream(byteArray))
-        if (rotationAngle != 0)
+        return if (rotationAngle != 0) {
             matrix.setRotate(rotationAngle.toFloat())
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } else bitmap
     }
 
     fun createFileFromBitmap(context: Context, bitmap: Bitmap): File? {

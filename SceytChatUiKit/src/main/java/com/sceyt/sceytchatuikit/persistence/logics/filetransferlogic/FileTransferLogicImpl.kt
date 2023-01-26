@@ -25,7 +25,7 @@ import org.koin.core.component.inject
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.*
-import kotlin.math.min
+import kotlin.math.max
 
 internal class FileTransferLogicImpl(private val application: Application) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
@@ -176,7 +176,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String?>) -> Unit) {
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
-                val result = resizeImage(context, attachment.filePath)
+                val result = resizeImage(context, attachment.filePath, 1080)
                 callback(result)
             }
             AttachmentTypeEnum.Video.value() -> {
@@ -188,8 +188,8 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
 
     private fun getAttachmentThumbPath(context: Context, attachment: SceytAttachment, size: Size): Result<String?> {
         val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
-        val minSize = min(size.height, size.width)
-        val reqSize = if (minSize > 0) minSize.toFloat() else 500f
+        val minSize = max(size.height, size.width)
+        val reqSize = if (minSize > 0) minSize.toFloat() else 800f
         val resizePath = when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
                 FileResizeUtil.getImageThumbAsFile(context, path, reqSize)?.path
