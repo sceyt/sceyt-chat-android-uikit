@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -85,12 +86,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelEventsObserver.onChannelTypingEventFlow.onEach {
-        typingCancelHelper.await(it) { data ->
-            channelsListView.onTyping(data)
-        }
-        channelsListView.onTyping(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    ChannelEventsObserver.onChannelTypingEventFlow
+        .filter { it.member.id != SceytKitClient.myId }
+        .onEach {
+            typingCancelHelper.await(it) { data ->
+                channelsListView.onTyping(data)
+            }
+            channelsListView.onTyping(it)
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     blockUserLiveData.observe(lifecycleOwner) {
         when (it) {
