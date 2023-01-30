@@ -61,6 +61,7 @@
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/tvMessageBody"
         app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@+id/imageAttachment"
         app:layout_constraintStart_toStartOf="@+id/tvName"
         app:layout_constraintTop_toTopOf="@+id/tvMessageBody" />
@@ -68,7 +69,6 @@
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvMessageBody"
         android:layout_width="wrap_content"
-        app:layout_constrainedWidth="true"
         android:layout_height="wrap_content"
         android:layout_marginTop="3dp"
         android:ellipsize="end"
@@ -76,6 +76,7 @@
         android:maxLines="2"
         android:textColor="@color/sceyt_color_black_themed"
         android:textSize="@dimen/smallTextSize"
+        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/icMsgBodyStartIcon"
