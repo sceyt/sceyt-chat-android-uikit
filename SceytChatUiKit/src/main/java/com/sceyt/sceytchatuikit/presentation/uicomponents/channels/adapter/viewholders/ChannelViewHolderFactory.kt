@@ -21,10 +21,11 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 open class ChannelViewHolderFactory(context: Context) {
-    private val layoutInflater = LayoutInflater.from(context)
-    private val channelClickListenersImpl = ChannelClickListenersImpl()
+    protected val layoutInflater = LayoutInflater.from(context)
+    protected val channelClickListenersImpl = ChannelClickListenersImpl()
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+        private set
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {

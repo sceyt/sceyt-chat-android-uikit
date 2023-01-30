@@ -28,7 +28,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val channelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
 
-    internal var searchQuery = ""
+    var searchQuery = ""
+        private set
 
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
