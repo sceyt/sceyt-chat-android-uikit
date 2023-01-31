@@ -112,7 +112,7 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
         setIconsAndColors()
     }
 
-    fun setBackClickListener(listener: OnClickListener) {
+    fun setNavigationIconClickListener(listener: OnClickListener) {
         binding.icBack.setOnClickListener(listener)
     }
 

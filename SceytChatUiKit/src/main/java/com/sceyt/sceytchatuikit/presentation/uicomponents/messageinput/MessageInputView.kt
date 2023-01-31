@@ -31,6 +31,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
@@ -301,14 +302,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         binding.rvAttachments.adapter = attachmentsAdapter
-    }
-
-    private fun getAttachmentType(path: String?): AttachmentTypeEnum {
-        return when (getMimeTypeTakeFirstPart(path)) {
-            AttachmentTypeEnum.Image.value() -> AttachmentTypeEnum.Image
-            AttachmentTypeEnum.Video.value() -> AttachmentTypeEnum.Video
-            else -> AttachmentTypeEnum.File
-        }
     }
 
     private fun showHideJoinButton(show: Boolean) {

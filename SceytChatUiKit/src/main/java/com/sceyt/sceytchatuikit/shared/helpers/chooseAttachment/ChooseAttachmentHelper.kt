@@ -124,7 +124,7 @@ class ChooseAttachmentHelper {
     fun takeVideo(result: (uri: String) -> Unit) {
         takeVideoCb = result
         if (context.checkAndAskPermissions(requestVideoCameraPermissionLauncher,
-                android.Manifest.permission.CAMERA)) {
+                    android.Manifest.permission.CAMERA)) {
             takeVideoLauncher.launch(getVideoFileUri())
         }
     }

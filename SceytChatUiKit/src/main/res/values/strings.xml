@@ -146,5 +146,7 @@
     <string name="sceyt_share">Share</string>
     <string name="sceyt_media_cannot_save_to_gallery">Cannot save file to gallery. Check permission and allow app to access storage</string>
     <string name="sceyt_deleted_user">Deleted User</string>
+    <string name="sceyt_share_with">Share with</string>
+    <string name="sceyt_write_a_message">Write a message</string>
 
 </resources>

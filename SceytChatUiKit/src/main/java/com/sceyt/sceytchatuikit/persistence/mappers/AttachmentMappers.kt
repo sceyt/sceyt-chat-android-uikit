@@ -5,9 +5,11 @@ import android.util.Log
 import android.util.Size
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
+import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
@@ -103,6 +105,15 @@ fun SceytAttachment.toTransferData(): TransferData? {
 
 fun SceytAttachment.getInfoFromMetadata(callback: (size: Size?, blurredThumb: Bitmap?, duration: Long?) -> Unit) {
     metadata?.getInfoFromMetadata(callback)
+}
+
+
+fun getAttachmentType(path: String?): AttachmentTypeEnum {
+    return when (getMimeTypeTakeFirstPart(path)) {
+        AttachmentTypeEnum.Image.value() -> AttachmentTypeEnum.Image
+        AttachmentTypeEnum.Video.value() -> AttachmentTypeEnum.Video
+        else -> AttachmentTypeEnum.File
+    }
 }
 
 private fun String?.getInfoFromMetadata(callback: (size: Size?, blurredThumb: Bitmap?, videoDuration: Long?) -> Unit) {

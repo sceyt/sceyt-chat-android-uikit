@@ -16,6 +16,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
         android:theme="@style/SceytAppTheme">
+        <activity android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.share.SceytShareActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+        </activity>
         <activity
             android:name=".presentation.login.LoginActivity"
             android:exported="true"
@@ -36,7 +51,6 @@
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustNothing" />
-
         <activity
             android:name=".presentation.conversation.ConversationActivity"
             android:exported="false"
@@ -58,10 +72,9 @@
             android:name=".presentation.mainactivity.MainActivity"
             android:configChanges="uiMode"
             android:exported="false"
-            android:windowSoftInputMode="adjustNothing"
             android:launchMode="singleTask"
-            android:theme="@style/DefaultFontTheme" />
-
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustNothing" />
     </application>
 
 </manifest>
