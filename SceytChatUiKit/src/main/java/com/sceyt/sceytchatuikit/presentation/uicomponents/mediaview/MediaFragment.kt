@@ -38,6 +38,7 @@ class MediaFragment : Fragment() {
                 binding.videoView.visibility = View.GONE
                 Glide.with(this)
                     .load(it.path)
+                    .centerInside()
                     .into(binding.imageView)
 
                 binding.imageView.setOnClickListener { onMediaClickCallback?.onMediaClick() }
