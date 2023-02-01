@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.share.adapter
+package com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
@@ -9,7 +9,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.adapter.viewholders.ShareableChannelViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.viewholders.ShareableChannelViewHolderFactory
 
 
 class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem>,

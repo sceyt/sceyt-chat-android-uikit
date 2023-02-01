@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.share
+package com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity
 
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -14,8 +14,8 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.adapter.ShareableChannelsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.adapter.viewholders.ShareableChannelViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.ShareableChannelsAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.viewholders.ShareableChannelViewHolderFactory
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
