@@ -6,15 +6,17 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.activity.viewModels
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel.State.Finish
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel.State.Loading
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel.State.Finish
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel.State.Loading
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -48,6 +50,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                         sharedUris.add(uri)
                     }
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
+                    binding.messageInput.isVisible = false
                     body = intent.getCharSequenceExtra(Intent.EXTRA_TEXT) as String
                 } else finish()
             }
@@ -92,7 +95,8 @@ open class SceytShareActivity : SceytShareableActivity() {
     }
 
     protected fun sendFilesMessage() {
-        viewModel.sendFilesMessage(channelIds = selectedChannels.toLongArray(), uris = sharedUris)
+        val messageBody = (binding.messageInput.text ?: "").trim().toString()
+        viewModel.sendFilesMessage(channelIds = selectedChannels.toLongArray(), uris = sharedUris, messageBody)
             .onEach {
                 when (it) {
                     Loading -> SceytLoader.showLoading(this@SceytShareActivity)

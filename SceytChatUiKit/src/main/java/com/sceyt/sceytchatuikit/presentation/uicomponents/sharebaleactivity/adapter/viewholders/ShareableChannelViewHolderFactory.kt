@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.share.adapter.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.viewholders
 
 import android.content.Context
 import android.view.LayoutInflater

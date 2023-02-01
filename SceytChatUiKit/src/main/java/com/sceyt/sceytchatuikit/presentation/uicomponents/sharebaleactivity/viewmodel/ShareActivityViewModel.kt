@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel
+package com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel
 
 import android.app.Application
 import android.net.Uri
@@ -61,7 +61,7 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>): Flow<State> {
+    fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>, messageBody: String): Flow<State> {
         return callbackFlow {
             trySend(State.Loading)
             val paths = getPathFromFile(*uris.toTypedArray())
@@ -75,9 +75,9 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
                         .setUpload(false)
                         .build()
                 }
-                attachments.map { attachment ->
+                attachments.mapIndexed { index, attachment ->
                     val message = MessageBuilder(channelId)
-                        .setBody("")
+                        .setBody(if (index == 0) messageBody else "")
                         .setAttachments(arrayOf(attachment))
                         .setTid(ClientWrapper.generateTid())
                         .setType(MessageTypeEnum.Media.value())
