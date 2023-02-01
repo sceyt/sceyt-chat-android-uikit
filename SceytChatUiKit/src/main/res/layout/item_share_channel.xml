@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="17dp">
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
@@ -36,7 +37,7 @@
         android:lines="1"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
-        app:layout_constraintBottom_toTopOf="@+id/tvStatus"
+        app:layout_constraintBottom_toTopOf="@+id/tvMemberCount"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@id/avatar"
@@ -45,7 +46,7 @@
         tools:text="John" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvStatus"
+        android:id="@+id/tvMemberCount"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"

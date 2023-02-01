@@ -13,7 +13,8 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel.State.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel.State.Finish
+import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareActivityViewModel.State.Loading
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -64,55 +65,46 @@ open class SceytShareActivity : SceytShareableActivity() {
     }
 
     private fun SceytActivityShareBinding.initViews() {
-        checkEnableShare()
+        determinateShareBtnState()
 
         toolbar.setNavigationIconClickListener {
             onBackPressed()
         }
 
+        toolbar.setQueryChangeListener(::onSearchQueryChanged)
+
         btnShare.setOnClickListener {
-            when {
-                body.isNotNullOrBlank() -> {
-                    sendTextMessage()
-                }
-                sharedUris.isNotEmpty() -> {
-                    sendFilesMessage()
-                }
-                else -> finish()
-            }
+            onShareClick()
         }
     }
 
     protected fun sendTextMessage() {
-        viewModel.sendTextMessage(channelIds = selectedChannels.map {
-            it.id
-        }.toLongArray(), body = body.toString()).onEach {
-            when (it) {
-                Loading -> SceytLoader.showLoading(this@SceytShareActivity)
-                Finish -> {
-                    SceytLoader.hideLoading()
-                    finish()
+        viewModel.sendTextMessage(channelIds = selectedChannels.toLongArray(), body = body.toString())
+            .onEach {
+                when (it) {
+                    Loading -> SceytLoader.showLoading(this@SceytShareActivity)
+                    Finish -> {
+                        SceytLoader.hideLoading()
+                        finish()
+                    }
                 }
-            }
-        }.launchIn(lifecycleScope)
+            }.launchIn(lifecycleScope)
     }
-
 
     protected fun sendFilesMessage() {
-        viewModel.sendFilesMessage(channelIds = selectedChannels.map {
-            it.id
-        }.toLongArray(), uris = sharedUris).onEach {
-            when (it) {
-                Loading -> SceytLoader.showLoading(this@SceytShareActivity)
-                Finish -> {
-                    SceytLoader.hideLoading()
-                    finish()
+        viewModel.sendFilesMessage(channelIds = selectedChannels.toLongArray(), uris = sharedUris)
+            .onEach {
+                when (it) {
+                    Loading -> SceytLoader.showLoading(this@SceytShareActivity)
+                    Finish -> {
+                        SceytLoader.hideLoading()
+                        finish()
+                    }
                 }
-            }
-        }.launchIn(lifecycleScope)
+            }.launchIn(lifecycleScope)
     }
 
-    private fun checkEnableShare() {
+    protected fun determinateShareBtnState() {
         with(binding.btnShare) {
             if (enableNext()) {
                 alpha = 1f
@@ -128,7 +120,27 @@ open class SceytShareActivity : SceytShareableActivity() {
 
     override fun onChannelsClick(channel: SceytChannel) {
         super.onChannelsClick(channel)
-        checkEnableShare()
+        determinateShareBtnState()
+    }
+
+    protected open fun onShareClick() {
+        when {
+            body.isNotNullOrBlank() -> {
+                sendTextMessage()
+            }
+            sharedUris.isNotEmpty() -> {
+                sendFilesMessage()
+            }
+            else -> finish()
+        }
+    }
+
+    override fun finish() {
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        if (intent != null)
+            startActivity(intent)
+
+        super.finish()
     }
 
     companion object {
