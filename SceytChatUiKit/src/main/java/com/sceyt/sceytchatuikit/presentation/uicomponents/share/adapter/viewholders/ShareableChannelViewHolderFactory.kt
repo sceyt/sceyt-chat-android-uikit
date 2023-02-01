@@ -37,7 +37,7 @@ open class ShareableChannelViewHolderFactory(context: Context) {
         return ChannelLoadingMoreViewHolder(binding)
     }
 
-    fun setChannelClickListener(listener: ChannelClickListeners.ChannelClickClickListener) {
+    fun setChannelClickListener(listener: ChannelClickListeners.ChannelClickListener) {
         channelClickListenersImpl.setListener(listener)
     }
 

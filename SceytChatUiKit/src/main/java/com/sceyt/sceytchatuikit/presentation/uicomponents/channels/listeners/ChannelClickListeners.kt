@@ -6,11 +6,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 
 sealed interface ChannelClickListeners {
 
-    fun interface ChannelClickClickListener : ChannelClickListeners {
+    fun interface ChannelClickListener : ChannelClickListeners {
         fun onChannelClick(item: ChannelListItem.ChannelItem)
     }
 
-    fun interface ChannelClickLongClickListener : ChannelClickListeners {
+    fun interface ChannelLongClickListener : ChannelClickListeners {
         fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem)
     }
 
@@ -20,8 +20,8 @@ sealed interface ChannelClickListeners {
 
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
-            ChannelClickClickListener,
-            ChannelClickLongClickListener,
+            ChannelClickListener,
+            ChannelLongClickListener,
             AvatarClickListener,
             ChannelClickListeners
 }

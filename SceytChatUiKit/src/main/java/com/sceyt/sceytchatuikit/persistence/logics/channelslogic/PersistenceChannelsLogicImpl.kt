@@ -222,13 +222,13 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
-                                        ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+    override suspend fun searchChannels(offset: Int, limit: Int, searchItems: List<String>, loadKey: LoadKeyData?,
+                                        onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCache.clear()
 
-            val dbChannels = searchChannelsDb(offset, searchItems)
-            var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
+            val dbChannels = searchChannelsDb(offset, limit, searchItems, onlyMine)
+            var hasNext = dbChannels.size == if (searchItems.isEmpty()) CHANNELS_LOAD_SIZE else limit
 
             channelsCache.addAll(dbChannels.map { it.clone() }, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
@@ -599,7 +599,7 @@ internal class PersistenceChannelsLogicImpl(
 
     // TODO need further improvements
 
-    private suspend fun searchChannelsDb(offset: Int, searchItems: List<String>): List<SceytChannel> {
+    private suspend fun searchChannelsDb(offset: Int, limit: Int, searchItems: List<String>, onlyMine: Boolean): List<SceytChannel> {
         return if (searchItems.isEmpty()) {
             channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel -> channel.toChannel() }
         } else {
@@ -608,17 +608,19 @@ internal class PersistenceChannelsLogicImpl(
             val globOrSubject = concatWithSeparator(searchItems, "subject", "LIKE", "", "%", "or")
 //            val inSubject = concatWithPrefix(searchItems, "link.user_id", "IN", ",")
 
-            var whereQuery = "((${globOrSubject}) and channels.type != 0) "
+            var whereQuery = "(((${globOrSubject}) and channels.type != 0) "
             whereQuery += "or "
-            whereQuery += "((${globOrUserId}) and channels.type == 0) "
+            whereQuery += "((${globOrUserId}) and channels.type == 0)) "
+            if (onlyMine)
+                whereQuery += "and channels.myRole != ${RoleTypeEnum.None.ordinal}"
 
             val finalQuery =
                     "select * from channels " +
                             "join UserChatLink as link on link.chat_id = channels.chat_id " +
                             "join users as usr on link.user_id = usr.user_id " +
-                            "where ($whereQuery) " +
+                            "where $whereQuery " +
                             "group by channels.chat_id " +
-                            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit $CHANNELS_LOAD_SIZE offset $offset"
+                            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit $limit offset $offset"
 
             val simpleSQLiteQuery = SimpleSQLiteQuery(finalQuery)
             channelDao.searchChannelsRaw(simpleSQLiteQuery).map { channel -> channel.toChannel() }

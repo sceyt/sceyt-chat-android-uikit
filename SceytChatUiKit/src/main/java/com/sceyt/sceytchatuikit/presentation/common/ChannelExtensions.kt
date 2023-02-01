@@ -11,7 +11,7 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 
-internal fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
+fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
     val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
             && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked

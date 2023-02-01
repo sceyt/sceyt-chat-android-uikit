@@ -33,7 +33,7 @@ interface ChannelDao {
     suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where myRole is null or myRole !=:ignoreRole " +
+    @Query("select * from channels where myRole !=:ignoreRole " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
 
