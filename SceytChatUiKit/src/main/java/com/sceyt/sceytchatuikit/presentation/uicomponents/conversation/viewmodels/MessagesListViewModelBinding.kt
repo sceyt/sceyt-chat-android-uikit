@@ -281,13 +281,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     messageEditedDeletedLiveData.observe(lifecycleOwner, Observer {
-        if (it is SceytResponse.Error) {
+        if (it is SceytResponse.Success) {
             if (it.data?.deliveryStatus == DeliveryStatus.Pending ||
                     it.data?.deliveryStatus == DeliveryStatus.Failed) {
                 messagesListView.messageEditedOrDeleted(it.data)
-            } else
-                customToastSnackBar(messagesListView, it.message ?: "")
-        }
+            }
+        } else
+            customToastSnackBar(messagesListView, it.message ?: "")
     })
 
     addDeleteReactionLiveData.observe(lifecycleOwner, Observer {

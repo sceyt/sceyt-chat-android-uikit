@@ -39,6 +39,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.sceytchatuikit.persistence.workers.SendSharedAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
@@ -219,9 +220,24 @@ internal class PersistenceMessagesLogicImpl(
         awaitClose()
     }
 
-    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message) {
+    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) {
+        val tmpMessage = tmpMessageToSceytMessage(channelId, message)
+        MessageEventsObserver.emitOutgoingMessage(tmpMessage)
+        insertTmpMessageToDb(tmpMessage)
+        messagesCache.add(tmpMessage)
+
+        if (message.attachments.isNullOrEmpty().not()) {
+            SendSharedAttachmentWorkManager.schedule(application, tmpMessage.tid)
+        } else {
+            val response = messagesRepository.sendMessage(channelId, message)
+            onMessageSentResponse(channelId, response)
+        }
+    }
+
+    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         val response = messagesRepository.sendMessage(channelId, message)
         onMessageSentResponse(channelId, response)
+        return response
     }
 
     private fun tmpMessageToSceytMessage(channelId: Long, message: Message): SceytMessage {
@@ -463,8 +479,8 @@ internal class PersistenceMessagesLogicImpl(
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
                     // Check maybe messages was cleared
                     if (offset == 0 && messages.isEmpty()) {
-                        messageDao.deleteAllMessages(channelId)
-                        messagesCache.clear()
+                        messageDao.deleteAllMessagesExceptPending(channelId)
+                        messagesCache.clearAllExceptPending()
                         forceHasDiff = true
                     }
                 }

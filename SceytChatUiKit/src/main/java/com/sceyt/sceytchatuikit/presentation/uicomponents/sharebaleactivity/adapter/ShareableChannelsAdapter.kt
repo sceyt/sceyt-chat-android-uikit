@@ -49,7 +49,7 @@ class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem
         holder.onViewDetachedFromWindow()
     }
 
-    fun removeLoading() {
+    private fun removeLoading() {
         if (channels.remove(mLoadingItem))
             notifyItemRemoved(channels.lastIndex + 1)
     }
@@ -67,12 +67,12 @@ class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem
         removeLoading()
 
         val filteredItems = items.minus(channels.toSet())
-        channels.addAll(filteredItems)
 
-        if (channels.size == filteredItems.size)
-            notifyDataSetChanged()
-        else
-            notifyItemRangeInserted(channels.size - filteredItems.size, filteredItems.size)
+        if (filteredItems.find { it is ChannelListItem.ChannelItem } == null)
+            return
+
+        channels.addAll(filteredItems)
+        notifyItemRangeInserted(channels.size - filteredItems.size, filteredItems.size)
     }
 
     fun getSkip() = channels.filter { it !is ChannelListItem.LoadingMoreItem }.size
@@ -90,6 +90,14 @@ class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem
                 notifyItemRemoved(index)
                 return@forEachIndexed
             }
+        }
+    }
+
+    fun updateChannelSelectedState(selected: Boolean, channelItem: ChannelListItem.ChannelItem) {
+        val index = channels.indexOf(channelItem)
+        if (index >= 0) {
+            channelItem.selected = selected
+            notifyItemChanged(index, Unit)
         }
     }
 }

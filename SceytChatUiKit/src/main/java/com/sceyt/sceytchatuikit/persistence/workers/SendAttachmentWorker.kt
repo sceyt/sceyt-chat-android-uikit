@@ -3,6 +3,8 @@ package com.sceyt.sceytchatuikit.persistence.workers
 import android.content.Context
 import androidx.work.*
 import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -85,11 +87,15 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 ?: return Result.failure()
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage)
-        if (result.first && result.second.isNotNullOrBlank()) {
+        return if (result.first && result.second.isNotNullOrBlank()) {
             tmpMessage.attachments?.getOrNull(0)?.url = result.second
-            SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
-        }
 
-        return Result.success()
+            ConnectionEventsObserver.awaitToConnectSceyt()
+            val response = SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
+            if (response is SceytResponse.Success) {
+                Result.success()
+            } else Result.retry()
+        } else
+            Result.failure()
     }
 }

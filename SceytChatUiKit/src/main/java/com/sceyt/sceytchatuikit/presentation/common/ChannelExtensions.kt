@@ -47,3 +47,7 @@ fun SceytChannel.getMyRole(): Role? {
 fun SceytChannel.isPeerDeleted(): Boolean {
     return (this is SceytDirectChannel) && peer?.user?.activityState == UserActivityStatus.Deleted
 }
+
+fun SceytChannel.isPeerBlocked(): Boolean {
+    return (this is SceytDirectChannel) && peer?.user?.blocked==true
+}

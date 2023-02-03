@@ -271,7 +271,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.sendMessages(channelId, messages)
     }
 
-    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message) {
+    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) {
+        return messagesLogic.sendSharedFileMessage(channelId, message)
+    }
+
+    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         return messagesLogic.sendMessageWithUploadedAttachments(channelId, message)
     }
 

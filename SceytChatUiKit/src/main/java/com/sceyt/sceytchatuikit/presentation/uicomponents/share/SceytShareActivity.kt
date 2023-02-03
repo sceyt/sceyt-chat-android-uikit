@@ -8,11 +8,12 @@ import android.os.Parcelable
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel.State.Finish
@@ -57,7 +58,9 @@ open class SceytShareActivity : SceytShareableActivity() {
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 if (uris != null && uris.isNotEmpty()) {
-                    for (uri in uris) {
+                    if (uris.size > 30)
+                        customToastSnackBar("You can share max 30 item")
+                    for (uri in uris.take(30)) {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         sharedUris.add(uri)
                     }
@@ -122,9 +125,10 @@ open class SceytShareActivity : SceytShareableActivity() {
 
     override fun getRV() = binding.rvChannels
 
-    override fun onChannelsClick(channel: SceytChannel) {
-        super.onChannelsClick(channel)
-        determinateShareBtnState()
+    override fun onChannelClick(channelItem: ChannelListItem.ChannelItem): Boolean {
+        return super.onChannelClick(channelItem).also {
+            determinateShareBtnState()
+        }
     }
 
     protected open fun onShareClick() {

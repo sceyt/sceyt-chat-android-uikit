@@ -1,10 +1,12 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
+import android.util.Log
 import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -48,6 +50,7 @@ abstract class MessageDao {
 
     @Transaction
     open suspend fun insertMessages(messagesDb: List<MessageDb>) {
+        if (messagesDb.isEmpty()) return
         upsertMessageEntities(messagesDb.map { it.messageEntity })
         //Delete attachments before insert
         deleteAttachmentsChunked(messagesDb.map { it.messageEntity.tid })
@@ -226,9 +229,17 @@ abstract class MessageDao {
 
     @Transaction
     open fun updateAttachmentAndPayLoad(transferData: TransferData) {
-        updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
-        updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
-            transferData.progressPercent, transferData.state)
+        try {
+            updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
+        } catch (e: Exception) {
+            Log.i(TAG, "Couldn't updateAttachmentByMsgTid: ${e.message}")
+        }
+        try {
+            updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
+                transferData.progressPercent, transferData.state)
+        } catch (e: Exception) {
+            Log.i(TAG, "Couldn't updateAttachmentPayLoadByMsgTid: ${e.message}")
+        }
     }
 
     @Transaction
@@ -255,6 +266,9 @@ abstract class MessageDao {
 
     @Query("delete from messages where channelId =:channelId")
     abstract suspend fun deleteAllMessages(channelId: Long)
+
+    @Query("delete from messages where channelId =:channelId and deliveryStatus != :deliveryStatus")
+    abstract suspend fun deleteAllMessagesExceptPending(channelId: Long, deliveryStatus: DeliveryStatus = Pending)
 
     @Transaction
     open suspend fun deleteAttachmentsChunked(messageTides: List<Long>) {
