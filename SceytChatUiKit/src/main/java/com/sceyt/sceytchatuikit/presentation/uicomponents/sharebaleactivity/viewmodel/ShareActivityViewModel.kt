@@ -1,28 +1,34 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message.MessageBuilder
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
+import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
 import com.sceyt.sceytchatuikit.shared.utils.ImageUriPathUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.io.File
 import java.io.FileInputStream
@@ -32,46 +38,50 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
     private val messagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val application by inject<Application>()
 
-    fun sendTextMessage(vararg channelIds: Long, body: String): Flow<State> {
-        return callbackFlow {
-            trySend(State.Loading)
+    fun sendTextMessage(vararg channelIds: Long, body: String) = callbackFlow {
+        trySend(State.Loading)
 
-            val count = AtomicInteger(0)
-            viewModelScope.launch {
-                channelIds.forEach { channelId ->
-                    val message = MessageBuilder(channelId)
-                        .setBody(body)
-                        .setTid(ClientWrapper.generateTid())
-                        .setType(MessageTypeEnum.Text.value())
-                        .build()
+        val count = AtomicInteger(0)
+        withContext(Dispatchers.IO) {
+            channelIds.forEach { channelId ->
+                val message = MessageBuilder(channelId)
+                    .setBody(body)
+                    .setTid(ClientWrapper.generateTid())
+                    .setType(MessageTypeEnum.Text.value())
+                    .build()
 
-                    launch(Dispatchers.IO) {
-                        messagesMiddleWare.sendMessageAsFlow(channelId, message).collect {
-                            if (it is SendMessageResult.Response) {
-                                val resultCount = count.addAndGet(1)
+                launch(Dispatchers.IO) {
+                    messagesMiddleWare.sendMessageAsFlow(channelId, message).collect {
+                        if (it is SendMessageResult.Response) {
+                            val resultCount = count.addAndGet(1)
 
-                                if (resultCount == channelIds.size)
-                                    trySend(State.Finish)
-                            }
+                            if (resultCount == channelIds.size)
+                                trySend(State.Finish)
                         }
                     }
                 }
             }
-            awaitClose()
         }
+        awaitClose()
     }
 
-    fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>, messageBody: String): Flow<State> {
-        return callbackFlow {
-            trySend(State.Loading)
-            val paths = getPathFromFile(*uris.toTypedArray())
+    fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>, messageBody: String) = callbackFlow {
+        trySend(State.Loading)
+
+        withContext(Dispatchers.IO) {
+            val paths = getPathFromFile(*uris.toTypedArray()).toMutableList()
+            val resizedPaths = paths.map { path ->
+                checkAndResizeMessageFile(application, path)
+            }
 
             channelIds.forEach { channelId ->
-                val attachments = paths.map { path ->
+                val attachments = resizedPaths.map { data ->
+                    val fileName = File(data.originalFilePath).name
+                    val path = data.resizedPath
                     Attachment.Builder(path, "", getAttachmentType(path).value())
-                        .setName(File(path).name ?: "File")
+                        .setName(fileName)
                         .withTid(ClientWrapper.generateTid())
-                        .setFileSize(getFileSize(path))
+                        .setFileSize(getFileSize(data.resizedPath))
                         .setUpload(false)
                         .build()
                 }
@@ -83,12 +93,41 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
                         .setType(MessageTypeEnum.Media.value())
                         .build()
 
-                    messagesMiddleWare.sendMessage(channelId, message)
+                    messagesMiddleWare.sendSharedFileMessage(channelId, message)
                 }
             }
+        }
 
-            trySend(State.Finish)
-            awaitClose()
+        trySend(State.Finish)
+        awaitClose()
+    }
+
+    data class ResizeFileInfo(
+            var resizedPath: String,
+            val originalFilePath: String,
+            val type: AttachmentTypeEnum
+    )
+
+    private suspend fun checkAndResizeMessageFile(context: Context, path: String) = suspendCancellableCoroutine { continuation ->
+        val type = getAttachmentType(path)
+        val data = ResizeFileInfo(path, path, type)
+        when (type.value()) {
+            AttachmentTypeEnum.Image.value() -> {
+                val result = resizeImage(context, path, 1080)
+                if (result.isSuccess && result.getOrNull().isNotNullOrBlank())
+                    data.resizedPath = result.getOrThrow()
+
+                continuation.safeResume(data)
+            }
+            AttachmentTypeEnum.Video.value() -> {
+                transcodeVideo(context, path) { result ->
+                    if (result.isSuccess && result.getOrNull().isNotNullOrBlank())
+                        data.resizedPath = result.getOrThrow()
+
+                    continuation.safeResume(data)
+                }
+            }
+            else -> continuation.safeResume(data)
         }
     }
 

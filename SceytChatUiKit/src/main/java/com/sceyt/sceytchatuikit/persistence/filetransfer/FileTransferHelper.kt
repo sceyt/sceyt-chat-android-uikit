@@ -8,7 +8,6 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
-import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
 import org.koin.core.component.inject
@@ -19,7 +18,9 @@ object FileTransferHelper : SceytKoinComponent {
     private val messagesLogic by inject<PersistenceAttachmentLogic>()
 
     fun createTransferTask(attachment: SceytAttachment, isFromUpload: Boolean): TransferTask {
-        return TransferTask(messageTid = attachment.messageTid,
+        return TransferTask(
+            attachment = attachment,
+            messageTid = attachment.messageTid,
             state = attachment.transferState,
             progressCallback = getProgressUpdateCallback(attachment),
             resultCallback = if (isFromUpload) getUploadResultCallback(attachment)
@@ -52,7 +53,7 @@ object FileTransferHelper : SceytKoinComponent {
                 attachment.updateWithTransferData(transferData)
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
-                Log.e(this.TAG, it.message.toString())
+                Log.e(this.TAG, "Couldn't download file " + it.message.toString())
             }
         }
     }
@@ -73,7 +74,7 @@ object FileTransferHelper : SceytKoinComponent {
 
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
-                Log.e(this.TAG, result.message.toString())
+                Log.e(this.TAG, "Couldn't upload file " + result.message.toString())
             }
         }
         fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {

@@ -8,7 +8,6 @@ import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.sceytchatuikit.extensions.isNull
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
@@ -38,13 +37,7 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     protected fun getKey(): String {
         if (isFileItemInitialized.not()) return ""
-        val data = fileItem.file
-        val key: String = if (data.tid.isNull() || data.tid == 0L) {
-            data.url.toString()
-        } else {
-            data.tid.toString()
-        }
-        return key
+        return fileItem.file.messageTid.toString()
     }
 
     fun loadThumb(path: String?, imageView: ImageView) {

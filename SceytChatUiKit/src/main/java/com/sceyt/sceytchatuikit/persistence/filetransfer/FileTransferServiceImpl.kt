@@ -8,16 +8,21 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransferLogic
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
 internal class FileTransferServiceImpl(private var application: Application,
                                        private var fileTransferLogic: FileTransferLogic) : FileTransferService {
-    private var tasksMap = hashMapOf<String, TransferTask>()
+    private var tasksMap = ConcurrentHashMap<String, TransferTask>()
 
     private var listeners: FileTransferListeners.Listeners = object : FileTransferListeners.Listeners {
         override fun upload(attachment: SceytAttachment,
                             transferTask: TransferTask) {
             fileTransferLogic.uploadFile(attachment, transferTask)
+        }
+
+        override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) {
+            fileTransferLogic.uploadSharedFile(attachment, transferTask)
         }
 
         override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
@@ -40,12 +45,17 @@ internal class FileTransferServiceImpl(private var application: Application,
 
     override fun upload(attachment: SceytAttachment,
                         transferTask: TransferTask) {
-        tasksMap[attachment.tid.toString()] = transferTask
+        tasksMap[attachment.messageTid.toString()] = transferTask
         listeners.upload(attachment, transferTask)
     }
 
+    override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) {
+        tasksMap[attachment.messageTid.toString()] = transferTask
+        listeners.uploadSharedFile(attachment, transferTask)
+    }
+
     override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-        tasksMap[attachment.url.toString()] = transferTask
+        tasksMap[attachment.messageTid.toString()] = transferTask
         listeners.download(attachment, transferTask)
     }
 
@@ -70,31 +80,17 @@ internal class FileTransferServiceImpl(private var application: Application,
     }
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
-        val isUploading: Boolean
-        val key: String
-        when (attachment.transferState) {
-            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload -> {
-                isUploading = false
-                key = attachment.url.toString()
-            }
-            else -> {
-                isUploading = true
-                key = attachment.tid.toString()
-            }
+        val isUploading: Boolean = when (attachment.transferState) {
+            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload -> false
+            else -> true
         }
-        return tasksMap[key] ?: run {
+        return tasksMap[attachment.messageTid.toString()] ?: run {
             FileTransferHelper.createTransferTask(attachment, isUploading)
         }
     }
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
-        val key: String = when (attachment.transferState) {
-            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload -> {
-                attachment.url.toString()
-            }
-            else -> attachment.tid.toString()
-        }
-        return tasksMap[key]
+        return tasksMap[attachment.messageTid.toString()]
     }
 
     override fun getTasks() = tasksMap

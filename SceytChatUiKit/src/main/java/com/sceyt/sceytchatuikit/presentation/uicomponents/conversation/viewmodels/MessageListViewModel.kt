@@ -35,6 +35,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
@@ -59,6 +60,7 @@ class MessageListViewModel(
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
+    private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val application: Application by inject()
@@ -256,13 +258,6 @@ class MessageListViewModel(
         }
     }
 
-    fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
-            notifyPageStateWithResponse(response)
-        }
-    }
-
     fun prepareToEditMessage(message: SceytMessage) {
         _onEditMessageCommandLiveData.postValue(message)
     }
@@ -317,11 +312,17 @@ class MessageListViewModel(
             Uploading -> {
                 transferData.state = PauseUpload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                viewModelScope.launch(Dispatchers.IO) {
+                    attachmentLogic.updateAttachmentWithTransferData(transferData)
+                }
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
             Downloading -> {
                 transferData.state = PauseDownload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                viewModelScope.launch(Dispatchers.IO) {
+                    attachmentLogic.updateAttachmentWithTransferData(transferData)
+                }
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
             Uploaded, Downloaded, ThumbLoaded -> {
@@ -380,6 +381,13 @@ class MessageListViewModel(
     fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
+            _messageEditedDeletedLiveData.postValue(response)
+        }
+    }
+
+    fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
             _messageEditedDeletedLiveData.postValue(response)
         }
     }

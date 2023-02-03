@@ -32,8 +32,8 @@ class AttachmentsCache {
 
     fun add(attachment: SceytAttachment) {
         synchronized(lock) {
-            val exist = cachedAttachments[attachment.tid] != null
-            cachedAttachments[attachment.tid] = attachment
+            val exist = cachedAttachments[attachment.messageTid] != null
+            cachedAttachments[attachment.messageTid] = attachment
             if (exist)
                 emitAttachmentUpdated(attachment)
         }

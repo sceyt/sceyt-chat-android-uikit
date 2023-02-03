@@ -85,8 +85,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
         }
 
-    private var replyMessage: Message? = null
-    private var replyThreadMessageId: Long? = null
+    var replyMessage: Message? = null
+        private set
+    var replyThreadMessageId: Long? = null
+        private set
 
     init {
         if (!isInEditMode)
@@ -271,16 +273,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
     }
 
-    private fun reset(clearInput: Boolean = true) {
-        if (clearInput)
-            binding.messageInput.text = null
-        editMessage = null
-        replyMessage = null
-        allAttachments.clear()
-        attachmentsAdapter.clear()
-        determineState()
-    }
-
     private fun determineState() {
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
         val newState = if (showVoiceIcon) Voice else Text
@@ -457,6 +449,16 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         addAttachments(attachments)
+    }
+
+    fun reset(clearInput: Boolean = true) {
+        if (clearInput)
+            binding.messageInput.text = null
+        editMessage = null
+        replyMessage = null
+        allAttachments.clear()
+        attachmentsAdapter.clear()
+        determineState()
     }
 
     fun enableDisableInput(message: String, enable: Boolean, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {

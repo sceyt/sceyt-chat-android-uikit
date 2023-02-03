@@ -7,7 +7,7 @@ data class TransferData(
         var state: TransferState,
         var filePath: String?,
         val url: String?
-){
+) {
     override fun toString(): String {
         return "messageTid $messageTid, attachmentTid $attachmentTid, progressPercent $progressPercent, state $state, filePath $filePath, url$url"
     }

@@ -59,6 +59,16 @@ class MessagesCache {
         }
     }
 
+    fun clearAllExceptPending() {
+        synchronized(lock) {
+            cachedMessages.values
+                .filter { it.deliveryStatus != DeliveryStatus.Pending }
+                .map { it.tid }.forEach {
+                    cachedMessages.remove(it)
+                }
+        }
+    }
+
     fun getSorted(): List<SceytMessage> {
         synchronized(lock) {
             return cachedMessages.values.sortedWith(MessageComparator()).map { it.clone() }
@@ -163,9 +173,8 @@ class MessagesCache {
             it.attachments?.forEach { attachment ->
                 when (updateDate.state) {
                     PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
-                        if (attachment.tid == updateDate.attachmentTid)
+                        if (attachment.messageTid == updateDate.messageTid)
                             update(attachment)
-
                     }
                     Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
                         if (attachment.url == updateDate.url)

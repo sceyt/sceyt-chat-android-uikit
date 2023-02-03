@@ -89,20 +89,7 @@ fun Message.isTextMessage() = attachments.isNullOrEmpty()
 
 fun SceytMessage.isTextMessage() = attachments.isNullOrEmpty()
 
-fun SceytMessage.getAttachmentUrl(context: Context): String? {
-    if (!attachments.isNullOrEmpty()) {
-        attachments!![0].apply {
-            if (type.isEqualsVideoOrImage()) {
-                val file = getLocaleFileByNameOrMetadata(File(context.filesDir, name))
-                return if (file != null) file.path
-                else url
-            }
-        }
-    }
-    return null
-}
-
-fun SceytAttachment?.getLocaleFileByNameOrMetadata(loadedFile: File): File? {
+fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     if (this == null) return null
 
     if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)

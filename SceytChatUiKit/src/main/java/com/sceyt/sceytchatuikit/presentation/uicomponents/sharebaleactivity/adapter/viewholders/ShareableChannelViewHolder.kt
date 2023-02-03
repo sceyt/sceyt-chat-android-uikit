@@ -51,8 +51,6 @@ open class ShareableChannelViewHolder(private val binding: ItemShareChannelBindi
         }
 
         binding.root.setOnClickListener {
-            item.selected = !item.selected
-            binding.checkbox.isChecked = item.selected
             clickListener.onChannelClick(item)
         }
     }
