@@ -12,13 +12,13 @@ import java.util.*
 
 fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
     var memberCount = 1L
-    var myRole: RoleTypeEnum? = null
+    val myRole: RoleTypeEnum
     var channelUrl: String? = null
     if (isGroup) {
         memberCount = (this as SceytGroupChannel).memberCount
         myRole = getMyRoleType(currentUserId)
         channelUrl = this.channelUrl
-    }
+    } else myRole = RoleTypeEnum.Owner
 
     return ChannelEntity(
         id = id,
@@ -54,7 +54,7 @@ fun Channel.toChannelEntity(): ChannelEntity {
     var subject = ""
     val avatarUrl: String
     var channelUrl: String? = null
-    var myRole: Member.MemberType? = null
+    val myRole: Member.MemberType
 
     if (this is GroupChannel) {
         memberCount = this.memberCount
@@ -65,6 +65,7 @@ fun Channel.toChannelEntity(): ChannelEntity {
     } else {
         this as DirectChannel
         avatarUrl = this.peer.avatarURL
+        myRole = Member.MemberType.MemberTypeOwner
     }
 
     return ChannelEntity(
@@ -83,7 +84,7 @@ fun Channel.toChannelEntity(): ChannelEntity {
         subject = subject,
         avatarUrl = avatarUrl,
         memberCount = memberCount,
-        myRole = myRole?.toRoleType(),
+        myRole = myRole.toRoleType(),
         channelUrl = channelUrl,
         lastDeliveredMessageId = lastDeliveredMessageId,
         lastReadMessageId = lastReadMessageId

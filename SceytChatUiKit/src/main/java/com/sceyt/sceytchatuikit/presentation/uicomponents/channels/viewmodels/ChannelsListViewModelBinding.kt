@@ -50,10 +50,12 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 
     suspend fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
-        when (response) {
-            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
-            else -> return
+        viewModelScope.launch {
+            when (response) {
+                is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
+                is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
+                else -> return@launch
+            }
         }
     }
 

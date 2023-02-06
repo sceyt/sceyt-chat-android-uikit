@@ -14,18 +14,11 @@
         app:sceytSearchableToolbarEnableSearch="false"
         app:sceytSearchableToolbarTitle="@string/sceyt_members" />
 
-    <View
-        android:id="@+id/underline"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
-
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/underline">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"

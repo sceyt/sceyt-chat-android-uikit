@@ -72,7 +72,7 @@ class NewChannelActivity : AppCompatActivity() {
             viewModel.loadUsers(query, false)
         }
 
-        binding.toolbar.setBackClickListener {
+        binding.toolbar.setNavigationIconClickListener {
             super.onBackPressed()
             overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
         }
