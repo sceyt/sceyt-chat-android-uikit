@@ -50,7 +50,8 @@ sealed class PaginationResponse<T> {
 
 data class LoadKeyData(
         val key: Long = -1,
-        val value: Long = -1
+        val value: Long = -1,
+        val data: Any? = null
 )
 
 fun PaginationResponse<*>.getLoadKey(): LoadKeyData? {

@@ -21,7 +21,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
-object SendAttachmentWorkManager {
+object SendSharedAttachmentWorkManager {
     const val MESSAGE_TID = "MESSAGE_TID"
 
     fun schedule(context: Context, messageTid: Long) {
@@ -32,7 +32,7 @@ object SendAttachmentWorkManager {
             setRequiredNetworkType(NetworkType.CONNECTED)
         }.build()
 
-        val myWorkRequest = OneTimeWorkRequest.Builder(SendAttachmentWorker::class.java)
+        val myWorkRequest = OneTimeWorkRequest.Builder(SendSharedAttachmentWorker::class.java)
             .addTag(messageTid.toString())
             .setInputData(dataBuilder.build())
             .setConstraints(networkConstraint)
@@ -43,7 +43,7 @@ object SendAttachmentWorkManager {
     }
 }
 
-class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
+class SendSharedAttachmentWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -68,7 +68,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                             TransferState.Uploading, attachment.filePath, attachment.url)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
 
-                        fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
+                        fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
                             task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
                                 continuation.safeResume(Pair(success, url))
                             })
@@ -81,21 +81,22 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
 
     override suspend fun doWork(): Result {
         val data = inputData
-        val messageTid = data.getLong(SendAttachmentWorkManager.MESSAGE_TID, 0)
+        val messageTid = data.getLong(SendSharedAttachmentWorkManager.MESSAGE_TID, 0)
 
         val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
                 ?: return Result.failure()
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage)
-        return if (result.first && result.second.isNotNullOrBlank()) {
+        if (result.first && result.second.isNotNullOrBlank()) {
             tmpMessage.attachments?.getOrNull(0)?.url = result.second
 
             ConnectionEventsObserver.awaitToConnectSceyt()
             val response = SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
-            if (response is SceytResponse.Success) {
+            return if (response is SceytResponse.Success) {
                 Result.success()
             } else Result.retry()
-        } else
-            Result.failure()
+        }
+
+        return Result.success()
     }
 }

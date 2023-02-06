@@ -125,9 +125,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
     }
 
-    override suspend fun searchChannels(offset: Int, searchItems: List<String>, loadKey: LoadKeyData?,
-                                        ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannels(offset, searchItems, loadKey, ignoreDb)
+    override suspend fun searchChannels(offset: Int, limit: Int, searchItems: List<String>,
+                                        loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.searchChannels(offset, limit, searchItems, loadKey, onlyMine, ignoreDb)
     }
 
     override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
@@ -271,7 +271,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.sendMessages(channelId, messages)
     }
 
-    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message) {
+    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) {
+        return messagesLogic.sendSharedFileMessage(channelId, message)
+    }
+
+    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         return messagesLogic.sendMessageWithUploadedAttachments(channelId, message)
     }
 

@@ -71,7 +71,7 @@ class AddMembersActivity : AppCompatActivity() {
             viewModel.loadUsers(query, false)
         }
 
-        binding.toolbar.setBackClickListener {
+        binding.toolbar.setNavigationIconClickListener {
             super.onBackPressed()
         }
 

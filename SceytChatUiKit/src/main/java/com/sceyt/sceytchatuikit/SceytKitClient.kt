@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit
 import android.app.Application
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.ClientWrapper
@@ -166,6 +167,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
         clearData()
+        WorkManager.getInstance(application).cancelAllWork()
         ClientWrapper.currentUser = null
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
             override fun onSuccess() {

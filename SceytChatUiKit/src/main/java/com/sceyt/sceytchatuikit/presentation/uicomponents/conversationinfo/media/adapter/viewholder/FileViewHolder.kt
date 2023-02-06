@@ -43,7 +43,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     }
 
     private fun updateState(data: TransferData) {
-        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.tid)) return
+        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.messageTid)) return
         viewHolderHelper.transferData = data
         when (data.state) {
             TransferState.PendingUpload, TransferState.PauseUpload -> {

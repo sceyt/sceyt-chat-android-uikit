@@ -31,6 +31,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
@@ -84,8 +85,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
         }
 
-    private var replyMessage: Message? = null
-    private var replyThreadMessageId: Long? = null
+    var replyMessage: Message? = null
+        private set
+    var replyThreadMessageId: Long? = null
+        private set
 
     init {
         if (!isInEditMode)
@@ -270,16 +273,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
     }
 
-    private fun reset(clearInput: Boolean = true) {
-        if (clearInput)
-            binding.messageInput.text = null
-        editMessage = null
-        replyMessage = null
-        allAttachments.clear()
-        attachmentsAdapter.clear()
-        determineState()
-    }
-
     private fun determineState() {
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
         val newState = if (showVoiceIcon) Voice else Text
@@ -301,14 +294,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         binding.rvAttachments.adapter = attachmentsAdapter
-    }
-
-    private fun getAttachmentType(path: String?): AttachmentTypeEnum {
-        return when (getMimeTypeTakeFirstPart(path)) {
-            AttachmentTypeEnum.Image.value() -> AttachmentTypeEnum.Image
-            AttachmentTypeEnum.Video.value() -> AttachmentTypeEnum.Video
-            else -> AttachmentTypeEnum.File
-        }
     }
 
     private fun showHideJoinButton(show: Boolean) {
@@ -464,6 +449,16 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         addAttachments(attachments)
+    }
+
+    fun reset(clearInput: Boolean = true) {
+        if (clearInput)
+            binding.messageInput.text = null
+        editMessage = null
+        replyMessage = null
+        allAttachments.clear()
+        attachmentsAdapter.clear()
+        determineState()
     }
 
     fun enableDisableInput(message: String, enable: Boolean, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {

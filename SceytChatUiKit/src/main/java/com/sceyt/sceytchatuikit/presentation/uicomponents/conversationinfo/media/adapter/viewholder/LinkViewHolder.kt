@@ -41,13 +41,10 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
             tvLinkUrl.text = attachment.url
 
             if ((fileItem as ChannelFileItem.Link).linkPreviewMetaData == null) {
-
                 setLinkInfo(null)
-
                 linkPreview?.getPreview(attachment.messageTid, attachment.url.toString(), successListener = {
                     if (it.messageId == fileItem.file.messageTid) {
                         (fileItem as ChannelFileItem.Link).linkPreviewMetaData = it
-
                         setLinkInfo(it)
                     }
                 })
@@ -69,8 +66,8 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                 .load(if (data.favicon.isNullOrBlank().not()) data.favicon else data.imageUrl)
                 .placeholder(R.drawable.sceyt_ic_link_with_background)
                 .override(icLinkImage.width)
-                .listener(glideRequestListener { sucess ->
-                    if (sucess) {
+                .listener(glideRequestListener { success ->
+                    if (success) {
                         icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
                     } else {
                         icLinkImage.setImageResource(R.drawable.sceyt_ic_link_with_background)

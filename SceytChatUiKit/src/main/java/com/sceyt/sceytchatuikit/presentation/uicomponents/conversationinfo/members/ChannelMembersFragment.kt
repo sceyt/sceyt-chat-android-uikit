@@ -115,7 +115,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                 onAddMembersClick(memberType)
             }
 
-            toolbar.setBackClickListener {
+            toolbar.setNavigationIconClickListener {
                 requireActivity().onBackPressed()
             }
         }

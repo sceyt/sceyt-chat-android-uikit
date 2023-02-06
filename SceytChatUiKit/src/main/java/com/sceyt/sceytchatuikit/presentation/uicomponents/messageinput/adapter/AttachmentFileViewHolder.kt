@@ -1,14 +1,13 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter
 
 import android.graphics.Color
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
-import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -23,7 +22,9 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBind
                 Glide.with(context)
                     .load(item.attachment.filePath)
                     .override(itemView.width)
-                    .into(this)
+                    .into(glideCustomTarget(onResourceReady = { resource, _ ->
+                        setImageDrawable(resource)
+                    }))
                 setPadding(0)
                 setBackgroundColor(Color.TRANSPARENT)
 
@@ -37,9 +38,10 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputAttachmentBind
                     }
                 } else binding.tvDuration.isVisible = false
             } else {
-                setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.sceyt_ic_file))
-                setBackgroundColor(ContextCompat.getColor(itemView.context, SceytKitConfig.sceytColorAccent))
+                setBackgroundColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
                 setPadding(40)
+                setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_file))
+                binding.tvDuration.isVisible = false
             }
         }
 

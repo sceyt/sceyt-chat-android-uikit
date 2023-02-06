@@ -6,8 +6,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 
 open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
     private var defaultListeners: ChannelClickListeners.ClickListeners? = null
-    private var channelClickListener: ChannelClickListeners.ChannelClickClickListener? = null
-    private var channelLongClickListener: ChannelClickListeners.ChannelClickLongClickListener? = null
+    private var channelClickListener: ChannelClickListeners.ChannelClickListener? = null
+    private var channelLongClickListener: ChannelClickListeners.ChannelLongClickListener? = null
     private var avatarClickListener: ChannelClickListeners.AvatarClickListener? = null
 
     internal constructor()
@@ -38,10 +38,10 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
                 channelLongClickListener = listener
                 avatarClickListener = listener
             }
-            is ChannelClickListeners.ChannelClickClickListener -> {
+            is ChannelClickListeners.ChannelClickListener -> {
                 channelClickListener = listener
             }
-            is ChannelClickListeners.ChannelClickLongClickListener -> {
+            is ChannelClickListeners.ChannelLongClickListener -> {
                 channelLongClickListener = listener
             }
             is ChannelClickListeners.AvatarClickListener -> {

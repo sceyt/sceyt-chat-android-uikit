@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val channelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
+    private var getChannelsJog: Job? = null
 
     var searchQuery = ""
         private set
@@ -44,34 +46,40 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         LOAD, SEARCH
     }
 
-    fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null) {
+    fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
         //Reset search if any
         searchQuery = query
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
-        viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.loadChannels(offset, query, loadKey, false).collect {
+        getChannelsJog?.cancel()
+        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+            channelMiddleWare.loadChannels(offset, query, loadKey, ignoreDb).collect {
                 initPaginationResponse(it)
             }
         }
     }
 
-    fun searchChannels(offset: Int, query: List<String>, loadKey: LoadKeyData? = null, notifyFlow: NotifyFlow) {
+    fun searchChannels(offset: Int, limit: Int, query: List<String>, loadKey: LoadKeyData? = null,
+                       notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false) {
         if (notifyFlow == NotifyFlow.LOAD) {
             setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
             notifyPageLoadingState(false)
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.searchChannels(offset, query, loadKey, false).collect {
+        getChannelsJog?.cancel()
+        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+            channelMiddleWare.searchChannels(offset, limit, query, loadKey, onlyMine, ignoreDb).collect {
                 when (notifyFlow) {
                     // Notifies chanel list like getChannels
                     NotifyFlow.LOAD -> initPaginationResponse(it)
                     // Just notifies search flow
-                    NotifyFlow.SEARCH -> _searchChannelsFlow.value = it
+                    NotifyFlow.SEARCH -> {
+                        _loadChannelsFlow.value = PaginationResponse.Nothing()
+                        _searchChannelsFlow.value = it
+                    }
                 }
             }
         }
