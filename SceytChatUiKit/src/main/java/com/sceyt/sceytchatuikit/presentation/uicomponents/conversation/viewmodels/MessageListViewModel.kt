@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
@@ -446,7 +447,7 @@ class MessageListViewModel(
 
                 val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
                     isGroup = this@MessageListViewModel.isGroup
-                    files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
+                    files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
                     canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
                     messageReactions = initReactionsItems(this)
                 })

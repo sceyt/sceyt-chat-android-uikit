@@ -232,13 +232,13 @@ abstract class MessageDao {
         try {
             updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
         } catch (e: Exception) {
-            Log.i(TAG, "Couldn't updateAttachmentByMsgTid: ${e.message}")
+            Log.e(TAG, "Couldn't updateAttachmentByMsgTid: ${e.message}")
         }
         try {
             updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
                 transferData.progressPercent, transferData.state)
         } catch (e: Exception) {
-            Log.i(TAG, "Couldn't updateAttachmentPayLoadByMsgTid: ${e.message}")
+            Log.e(TAG, "Couldn't updateAttachmentPayLoadByMsgTid: ${e.message}")
         }
     }
 

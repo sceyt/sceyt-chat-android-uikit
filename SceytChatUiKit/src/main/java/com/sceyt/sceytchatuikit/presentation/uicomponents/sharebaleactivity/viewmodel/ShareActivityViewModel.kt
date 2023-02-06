@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
@@ -41,6 +42,9 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
     fun sendTextMessage(vararg channelIds: Long, body: String) = callbackFlow {
         trySend(State.Loading)
 
+        val links = body.extractLinks()
+        val isContainsLink = links.isNotEmpty()
+
         val count = AtomicInteger(0)
         withContext(Dispatchers.IO) {
             channelIds.forEach { channelId ->
@@ -48,11 +52,19 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
                     .setBody(body)
                     .setTid(ClientWrapper.generateTid())
                     .setType(MessageTypeEnum.Text.value())
+                    .apply {
+                        if (isContainsLink)
+                            setAttachments(arrayOf(Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
+                                .withTid(ClientWrapper.generateTid())
+                                .setName("")
+                                .setMetadata("")
+                                .build()))
+                    }
                     .build()
 
                 launch(Dispatchers.IO) {
                     messagesMiddleWare.sendMessageAsFlow(channelId, message).collect {
-                        if (it is SendMessageResult.Response) {
+                        if (it is SendMessageResult.Response || it is SendMessageResult.StartedSendingAttachment) {
                             val resultCount = count.addAndGet(1)
 
                             if (resultCount == channelIds.size)
@@ -65,8 +77,11 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
         awaitClose()
     }
 
+
     fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>, messageBody: String) = callbackFlow {
         trySend(State.Loading)
+        val links = messageBody.extractLinks()
+        val isContainsLink = links.isNotEmpty()
 
         withContext(Dispatchers.IO) {
             val paths = getPathFromFile(*uris.toTypedArray()).toMutableList()
@@ -88,7 +103,15 @@ class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
                 attachments.mapIndexed { index, attachment ->
                     val message = MessageBuilder(channelId)
                         .setBody(if (index == 0) messageBody else "")
-                        .setAttachments(arrayOf(attachment))
+                        .apply {
+                            if (index == 0 && isContainsLink) {
+                                setAttachments(arrayOf(attachment, Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
+                                    .withTid(ClientWrapper.generateTid())
+                                    .setName("")
+                                    .setMetadata("")
+                                    .build()))
+                            } else setAttachments(arrayOf(attachment))
+                        }
                         .setTid(ClientWrapper.generateTid())
                         .setType(MessageTypeEnum.Media.value())
                         .build()

@@ -8,6 +8,7 @@ import android.os.Parcelable
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -53,20 +54,20 @@ open class SceytShareActivity : SceytShareableActivity() {
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
                     binding.messageInput.isVisible = false
                     body = intent.getCharSequenceExtra(Intent.EXTRA_TEXT) as String
-                } else finish()
+                } else finishShareAction()
             }
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 if (uris != null && uris.isNotEmpty()) {
                     if (uris.size > 30)
-                        customToastSnackBar("You can share max 30 item")
+                        customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
                     for (uri in uris.take(30)) {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         sharedUris.add(uri)
                     }
-                } else finish()
+                } else finishShareAction()
             }
-            else -> finish()
+            else -> finishShareAction()
         }
     }
 
@@ -91,7 +92,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                     Loading -> SceytLoader.showLoading(this@SceytShareActivity)
                     Finish -> {
                         SceytLoader.hideLoading()
-                        finish()
+                        finishShareAction()
                     }
                 }
             }.launchIn(lifecycleScope)
@@ -105,7 +106,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                     Loading -> SceytLoader.showLoading(this@SceytShareActivity)
                     Finish -> {
                         SceytLoader.hideLoading()
-                        finish()
+                        finishShareAction()
                     }
                 }
             }.launchIn(lifecycleScope)
@@ -139,16 +140,8 @@ open class SceytShareActivity : SceytShareableActivity() {
             sharedUris.isNotEmpty() -> {
                 sendFilesMessage()
             }
-            else -> finish()
+            else -> finishShareAction()
         }
-    }
-
-    override fun finish() {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null)
-            startActivity(intent)
-
-        super.finish()
     }
 
     companion object {

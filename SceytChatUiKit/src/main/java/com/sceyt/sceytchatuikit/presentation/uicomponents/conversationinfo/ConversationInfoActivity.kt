@@ -470,10 +470,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onChannel(channel: SceytChannel) {
-        setChannelDetails(channel)
-        initButtons()
-        pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
-            (membersFragment as ChannelMembersFragment).updateChannel(channel)
+        lifecycleScope.launchWhenResumed {
+            setChannelDetails(channel)
+            initButtons()
+            pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
+                (membersFragment as ChannelMembersFragment).updateChannel(channel)
+            }
         }
     }
 
