@@ -52,12 +52,11 @@ class SendSharedAttachmentWorker(context: Context, workerParams: WorkerParameter
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
 
         return suspendCancellableCoroutine { continuation ->
-            if (tmpMessage.attachments.isNullOrEmpty().not()) {
-                tmpMessage.attachments?.forEach { attachment ->
-                    if (attachment.type == AttachmentTypeEnum.Link.value()) {
-                        continuation.safeResume(Pair(true, attachment.url))
-                        return@suspendCancellableCoroutine
-                    }
+            tmpMessage.attachments?.let { attachments ->
+                for (attachment in attachments) {
+                    if (attachment.type == AttachmentTypeEnum.Link.value())
+                        continue
+
                     val payload = payloads.find { it.messageTid == attachment.messageTid }
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
                         val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
@@ -75,7 +74,9 @@ class SendSharedAttachmentWorker(context: Context, workerParams: WorkerParameter
                         })
                     }
                 }
-            } else continuation.safeResume(Pair(false, null))
+            } ?: kotlin.run {
+                continuation.safeResume(Pair(false, null))
+            }
         }
     }
 

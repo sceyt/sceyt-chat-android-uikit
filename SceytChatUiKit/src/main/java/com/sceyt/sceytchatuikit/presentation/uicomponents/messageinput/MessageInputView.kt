@@ -150,7 +150,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun sendMessage() {
         val messageBody = binding.messageInput.text.toString().trim()
-        checkBodyIsLink()
 
         if (messageBody != "" || allAttachments.isNotEmpty()) {
             if (editMessage != null) {
@@ -168,14 +167,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             } else {
                 cancelReply {
+                    val link = getLinkAttachmentFromBody()
                     if (allAttachments.isNotEmpty()) {
                         val messages = arrayListOf<Message>()
                         allAttachments.forEachIndexed { index, attachment ->
+                            val attachments = arrayListOf(attachment)
                             val message = Message.MessageBuilder()
-                                .setAttachments(arrayOf(attachment))
+
                                 .setType(getMessageType(if (index == 0) messageBody else null, attachment))
                                 .apply {
                                     if (index == 0) {
+                                        if (link != null)
+                                            attachments.add(link)
+                                        setAttachments(attachments.toTypedArray())
                                         setBody(messageBody)
                                         replyMessage?.let {
                                             setParentMessageId(it.id)
@@ -192,8 +196,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         }
                         messageInputActionCallback?.sendMessages(messages)
                     } else {
+                        val attachment = if (link != null) arrayOf(link) else arrayOf()
                         val message = Message.MessageBuilder()
-                            .setAttachments(allAttachments.toTypedArray())
+                            .setAttachments(attachment)
                             .setType(getMessageType(messageBody))
                             .setBody(messageBody)
                             .apply {
@@ -215,19 +220,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun checkBodyIsLink(): Boolean {
+    private fun getLinkAttachmentFromBody(): Attachment? {
         val body = binding.messageInput.text.toString()
         val links = body.extractLinks()
         val isContainsLink = links.isNotEmpty()
         if (isContainsLink) {
-            val attachment = Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
+            return Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
                 .withTid(ClientWrapper.generateTid())
                 .setName("")
+                .setMetadata("")
                 .build()
-
-            allAttachments.add(attachment)
         }
-        return isContainsLink
+        return null
     }
 
     private fun handleAttachmentClick() {
@@ -330,12 +334,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     .into(binding.layoutReplyOrEditMessage.imageAttachment)
             }
             attachment.type == AttachmentTypeEnum.Voice.value() -> {
-                binding.layoutReplyOrEditMessage.imageAttachment.isVisible = false
+                binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
             }
             else -> binding.layoutReplyOrEditMessage.imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
         }
-
-        binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
     }
 
     private fun hideInputWithMessage(message: String, @DrawableRes startIcon: Int) {
@@ -364,8 +366,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             tvName.text = text
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
 
-            if (message.attachments.isNullOrEmpty().not())
+            if (message.attachments.isNullOrEmpty().not()) {
+                binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
                 loadReplyMessageImage(message.attachments[0])
+            } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
             tvMessageBody.text = if (message.isTextMessage())
                 message.body.trim()
@@ -454,6 +458,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun reset(clearInput: Boolean = true) {
         if (clearInput)
             binding.messageInput.text = null
+        cancelReply()
         editMessage = null
         replyMessage = null
         allAttachments.clear()

@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.data.models.*
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Displayed
@@ -183,7 +184,7 @@ internal class PersistenceMessagesLogicImpl(
         insertTmpMessageToDb(tmpMessage)
         messagesCache.add(tmpMessage)
 
-        if (message.attachments.isNullOrEmpty().not()) {
+        if (checkHasFileAttachments(message)) {
             SendAttachmentWorkManager.schedule(application, tmpMessage.tid)
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
@@ -205,8 +206,9 @@ internal class PersistenceMessagesLogicImpl(
 
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
 
-        if (message.attachments.isNullOrEmpty().not()) {
+        if (checkHasFileAttachments(message)) {
             SendAttachmentWorkManager.schedule(application, tmpMessage.tid)
+            trySend(SendMessageResult.StartedSendingAttachment)
         } else {
             messagesRepository.sendMessageAsFlow(channelId, message)
                 .onCompletion { channel.close() }
@@ -226,7 +228,7 @@ internal class PersistenceMessagesLogicImpl(
         insertTmpMessageToDb(tmpMessage)
         messagesCache.add(tmpMessage)
 
-        if (message.attachments.isNullOrEmpty().not()) {
+        if (checkHasFileAttachments(message)) {
             SendSharedAttachmentWorkManager.schedule(application, tmpMessage.tid)
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
@@ -253,6 +255,14 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         return tmpMessage
+    }
+
+    private fun checkHasFileAttachments(message: Message): Boolean {
+        if (message.attachments.isNullOrEmpty()) return false
+        message.attachments.forEach {
+            if (it.type != AttachmentTypeEnum.Link.value()) return true
+        }
+        return false
     }
 
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
@@ -301,7 +311,7 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMessages.isNotEmpty()) {
             pendingMessages.forEach {
                 val message = it.toMessage()
-                if (message.attachments.isNullOrEmpty().not()) {
+                if (checkHasFileAttachments(message)) {
                     SendAttachmentWorkManager.schedule(application, message.tid)
                 } else {
                     val response = messagesRepository.sendMessage(channelId, message)
@@ -316,7 +326,7 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMessages.isNotEmpty()) {
             pendingMessages.forEach {
                 val message = it.toMessage()
-                if (message.attachments.isNullOrEmpty().not()) {
+                if (checkHasFileAttachments(message)) {
                     SendAttachmentWorkManager.schedule(application, message.tid)
                 } else {
                     val response = messagesRepository.sendMessage(it.messageEntity.channelId, message)

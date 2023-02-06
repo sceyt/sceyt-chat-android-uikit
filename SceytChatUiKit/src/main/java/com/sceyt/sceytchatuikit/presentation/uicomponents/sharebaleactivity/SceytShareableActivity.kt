@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -115,7 +116,7 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
                 selectedChannels.add(channel.id)
                 channelsAdapter?.updateChannelSelectedState(true, channelItem)
                 isAdded = true
-            } else customToastSnackBar("You can share with maximum 5 chats")
+            } else customToastSnackBar(getString(R.string.sceyt_share_max_chats_count))
         }
         return isAdded
     }
@@ -124,8 +125,16 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
         channelsViewModel.getChannels(0, query)
     }
 
+    open fun finishShareAction() {
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        if (intent != null)
+            startActivity(intent)
+
+        super.finish()
+    }
+
     override fun onBackPressed() {
-        finish()
+        finishShareAction()
     }
 
     protected open fun enableNext(): Boolean {
