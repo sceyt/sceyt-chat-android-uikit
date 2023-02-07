@@ -94,7 +94,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
             TransferState.PendingUpload, TransferState.Uploading -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.state = TransferState.PauseUpload
                 //todo
-                //uploadNext()
+                uploadNext()
 
             }
             TransferState.PendingDownload, TransferState.Downloading -> {

@@ -286,7 +286,7 @@ class MessageListViewModel(
             PendingUpload, ErrorUpload, FilePathChanged -> {
                 transferData.state = Uploading
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
-                SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid)
+                SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
             }
             PendingDownload, ErrorDownload -> {
                 transferData.state = Downloading
@@ -308,7 +308,7 @@ class MessageListViewModel(
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
-                else SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid)
+                else SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
             }
             Uploading -> {
                 transferData.state = PauseUpload
@@ -452,7 +452,7 @@ class MessageListViewModel(
                     messageReactions = initReactionsItems(this)
                 })
 
-                if (pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+                if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
                         unreadLineMessage = it
                     })

@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
+import android.app.Application
 import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.work.WorkManager
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.GroupChannel
@@ -43,6 +45,7 @@ internal class PersistenceChannelsLogicImpl(
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
         private val messageDao: MessageDao,
+        private val application: Application,
         private val channelsCache: ChannelsCache) : PersistenceChannelsLogic {
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
@@ -417,6 +420,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
+            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
             channelsCache.clearedHistory(channelId)
@@ -428,8 +432,10 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long> {
         val response = channelsRepository.blockChannel(channelId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
+            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
             deleteChannelDb(channelId)
+        }
 
         return response
     }
@@ -437,8 +443,10 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun leaveChannel(channelId: Long): SceytResponse<Long> {
         val response = channelsRepository.leaveChannel(channelId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
+            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
             deleteChannelDb(channelId)
+        }
 
         return response
     }
@@ -446,8 +454,10 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun deleteChannel(channelId: Long): SceytResponse<Long> {
         val response = channelsRepository.deleteChannel(channelId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
+            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
             deleteChannelDb(channelId)
+        }
 
         return response
     }

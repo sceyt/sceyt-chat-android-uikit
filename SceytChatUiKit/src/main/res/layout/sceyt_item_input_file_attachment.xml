@@ -72,7 +72,7 @@
         android:id="@+id/closeBtn"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:layout_marginTop="-8dp"
+        android:layout_marginTop="-6.5dp"
         android:backgroundTint="@color/sceyt_color_green"
         app:layout_constraintEnd_toEndOf="@+id/imageCont"
         app:layout_constraintStart_toEndOf="@+id/imageCont"
