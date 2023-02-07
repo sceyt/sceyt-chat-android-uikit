@@ -14,7 +14,7 @@ class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
         val data = item.media
         binding.data = data
 
-        binding.tvDuration.isVisible = data.isWrongImage.not()
+        binding.tvDuration.isVisible = data.isWrong.not()
 
         Glide.with(itemView.context)
             .load(item.media.realPath)

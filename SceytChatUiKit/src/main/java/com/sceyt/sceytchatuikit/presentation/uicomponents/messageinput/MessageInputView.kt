@@ -31,6 +31,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -41,10 +42,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputStat
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Voice
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
@@ -173,7 +172,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         allAttachments.forEachIndexed { index, attachment ->
                             val attachments = arrayListOf(attachment)
                             val message = Message.MessageBuilder()
-
                                 .setType(getMessageType(if (index == 0) messageBody else null, attachment))
                                 .apply {
                                     if (index == 0) {
@@ -189,7 +187,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                             setParentMessageId(it)
                                             setReplyInThread(true)
                                         }
-                                    }
+                                    } else setAttachments(arrayOf(attachment))
                                 }.build()
 
                             messages.add(message)
@@ -293,10 +291,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun setupAttachmentsList() {
-        attachmentsAdapter = AttachmentsAdapter(allAttachments.map { AttachmentItem(it) } as ArrayList<AttachmentItem>) {
-            clickListeners.onRemoveAttachmentClick(it)
-        }
-
+        attachmentsAdapter = AttachmentsAdapter(allAttachments.map { AttachmentItem(it) }.toArrayList(),
+            AttachmentsViewHolderFactory(context).also {
+                it.setClickListener(AttachmentClickListeners.RemoveAttachmentClickListener { _, item ->
+                    clickListeners.onRemoveAttachmentClick(item)
+                })
+            })
         binding.rvAttachments.adapter = attachmentsAdapter
     }
 
@@ -333,7 +333,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     .error(placeHolder)
                     .into(binding.layoutReplyOrEditMessage.imageAttachment)
             }
-            attachment.type == AttachmentTypeEnum.Voice.value() -> {
+            attachment.type == AttachmentTypeEnum.Voice.value() || attachment.type == AttachmentTypeEnum.Link.value() -> {
                 binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
             }
             else -> binding.layoutReplyOrEditMessage.imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)

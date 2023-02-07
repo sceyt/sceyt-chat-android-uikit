@@ -150,5 +150,6 @@
     <string name="sceyt_write_a_message">Write a message</string>
     <string name="sceyt_shara_max_item_count">You can share max 30 item</string>
     <string name="sceyt_share_max_chats_count">You can share with maximum 5 chats</string>
+    <string name="sceyt_photo">Photo</string>
 
 </resources>

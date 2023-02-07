@@ -1,25 +1,24 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter
 
 import android.annotation.SuppressLint
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.databinding.SceytItemInputAttachmentBinding
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 
 class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
-                         private val viewCallbacks: AttachmentFileViewHolder.Callbacks) :
+                         private val factory: AttachmentsViewHolderFactory) :
         RecyclerView.Adapter<BaseViewHolder<AttachmentItem>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<AttachmentItem> {
-        val itemView = SceytItemInputAttachmentBinding.inflate(LayoutInflater.from(parent.context),
-            parent, false)
-        return AttachmentFileViewHolder(itemView, viewCallbacks)
+        return factory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<AttachmentItem>, position: Int) {
-        val attachment = attachments[position]
-        holder.bind(attachment)
+        holder.bind(attachments[position])
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return factory.getItemViewType(attachments[position])
     }
 
     override fun getItemCount(): Int {

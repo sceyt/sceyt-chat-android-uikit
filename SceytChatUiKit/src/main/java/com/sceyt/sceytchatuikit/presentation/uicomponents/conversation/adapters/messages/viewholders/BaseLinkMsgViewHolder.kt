@@ -10,12 +10,12 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytMessageLinkPreviewContainerBinding
 import com.sceyt.sceytchatuikit.extensions.setTextAndVisibility
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
                                      view: View,
-                                     messageListeners: MessageClickListenersImpl? = null,
+                                     messageListeners: MessageClickListeners.ClickListeners? = null,
                                      displayListItem: ((MessageListItem) -> Unit)? = null,
                                      senderNameBuilder: ((User) -> String)? = null)
     : BaseMsgViewHolder(view, messageListeners, displayListItem, senderNameBuilder) {

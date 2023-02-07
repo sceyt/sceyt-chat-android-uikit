@@ -249,13 +249,13 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                     }
 
                     val realPath = cursor.getString(columnDataIndex)
-                    val isWrongImage = !File(realPath).exists()
+                    val isWrong = !File(realPath).exists()
 
-                    val model = MediaModel(contentUri, realPath, isWrongImage)
+                    val model = MediaModel(contentUri, realPath, isWrong)
                     val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
                     mediaItem.media.selected = checkSelectedItems(mediaItem)
 
-                    if (isWrongImage)
+                    if (isWrong)
                         wrongImages.add(mediaItem)
                     else
                         items.add(mediaItem)
@@ -282,7 +282,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     data class MediaModel(val contentUri: Uri,
                           val realPath: String,
-                          val isWrongImage: Boolean) : BaseObservable() {
+                          val isWrong: Boolean) : BaseObservable() {
 
         var selected: Boolean = false
             @Bindable get

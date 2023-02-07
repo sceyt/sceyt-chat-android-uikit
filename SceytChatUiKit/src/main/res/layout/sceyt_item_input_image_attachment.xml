@@ -13,19 +13,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        app:cardCornerRadius="5dp"
+        app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/fileImage"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:scaleType="centerCrop"
-            app:srcCompat="@drawable/sceyt_ic_file"
-            tools:background="@color/sceyt_color_accent"
-            tools:padding="15dp" />
+            tools:src="@tools:sample/backgrounds/scenic"
+            tools:srcCompat="@drawable/sceyt_ic_file" />
 
     </androidx.cardview.widget.CardView>
 
@@ -33,8 +32,8 @@
         android:id="@+id/viewBgClose"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:layout_marginStart="38dp"
-        android:layout_marginBottom="38dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginBottom="47dp"
         android:background="@drawable/sceyt_bg_circle"
         android:backgroundTint="@color/sceyt_color_bg"
         app:layout_constraintBottom_toBottomOf="@id/imageCont"
@@ -44,30 +43,11 @@
         android:id="@+id/closeBtn"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="1dp"
         android:backgroundTint="@color/sceyt_color_green"
         app:layout_constraintBottom_toBottomOf="@id/viewBgClose"
         app:layout_constraintEnd_toEndOf="@+id/viewBgClose"
         app:layout_constraintStart_toStartOf="@id/viewBgClose"
         app:layout_constraintTop_toTopOf="@+id/viewBgClose"
         app:srcCompat="@drawable/sceyt_close_btn" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvDuration"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:background="@drawable/sceyt_bg_corners_20"
-        android:backgroundTint="@color/sceyt_progress_bg_color"
-        android:includeFontPadding="false"
-        android:paddingHorizontal="6dp"
-        android:paddingVertical="3dp"
-        android:textColor="@color/sceyt_color_white"
-        android:textSize="11sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:text="0:11"
-        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
