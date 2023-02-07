@@ -11,14 +11,14 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 
 class MessageVideoViewHolder(
         private val binding: SceytMessageVideoItemBinding,
-        private val messageListeners: MessageClickListenersImpl?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder(binding.root, needMediaDataCallback) {
 

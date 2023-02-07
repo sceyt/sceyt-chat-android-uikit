@@ -6,14 +6,13 @@ import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-open class ChannelMembersViewHolderFactory(context: Context) : SceytKoinComponent {
+open class ChannelMembersViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = MemberClickListenersImpl()
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder

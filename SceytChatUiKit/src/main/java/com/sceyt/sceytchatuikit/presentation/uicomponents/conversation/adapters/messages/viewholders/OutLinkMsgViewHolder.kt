@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
@@ -15,7 +15,7 @@ class OutLinkMsgViewHolder(
         private val binding: SceytItemOutLinkMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
-        private val messageListeners: MessageClickListenersImpl?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
         senderNameBuilder: ((User) -> String)?
 ) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
 
@@ -54,7 +54,7 @@ class OutLinkMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
 
-               // loadLinkPreview(item, layoutLinkPreview, messageBody)
+                // loadLinkPreview(item, layoutLinkPreview, messageBody)
             }
         }
     }

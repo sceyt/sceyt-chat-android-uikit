@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
@@ -15,7 +15,7 @@ class IncLinkMsgViewHolder(
         private val binding: SceytItemIncLinkMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
-        private val messageListeners: MessageClickListenersImpl?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
 ) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, senderNameBuilder) {

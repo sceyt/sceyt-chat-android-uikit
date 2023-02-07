@@ -47,7 +47,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -57,7 +57,7 @@ import kotlin.math.min
 
 
 abstract class BaseMsgViewHolder(private val view: View,
-                                 private val messageListeners: MessageClickListenersImpl? = null,
+                                 private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
                                  private val senderNameBuilder: ((User) -> String)? = null)
     : RecyclerView.ViewHolder(view) {
@@ -178,6 +178,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                         })
                         false
                     }
+                    attachment?.type == AttachmentTypeEnum.Link.value() -> false
                     else -> {
                         imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
                         true

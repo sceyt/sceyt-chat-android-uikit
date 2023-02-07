@@ -7,13 +7,13 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListenersImpl?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?
 ) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {

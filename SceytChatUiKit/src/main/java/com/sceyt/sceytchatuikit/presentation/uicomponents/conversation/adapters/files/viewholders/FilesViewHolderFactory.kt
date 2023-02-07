@@ -8,9 +8,9 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 
-class FilesViewHolderFactory(context: Context, private val messageListeners: MessageClickListenersImpl?,
+class FilesViewHolderFactory(context: Context, private val messageListeners: MessageClickListeners.ClickListeners?,
                              private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) {
 
     private val layoutInflater = LayoutInflater.from(context)
