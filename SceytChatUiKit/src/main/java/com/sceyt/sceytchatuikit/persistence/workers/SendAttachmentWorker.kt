@@ -21,12 +21,14 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
-object SendAttachmentWorkManager {
+object SendAttachmentWorkManager : SceytKoinComponent {
+
     const val MESSAGE_TID = "MESSAGE_TID"
 
-    fun schedule(context: Context, messageTid: Long) {
+    fun schedule(context: Context, messageTid: Long, channelId: Long?): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
+
 
         val networkConstraint = Constraints.Builder().apply {
             setRequiredNetworkType(NetworkType.CONNECTED)
@@ -34,11 +36,12 @@ object SendAttachmentWorkManager {
 
         val myWorkRequest = OneTimeWorkRequest.Builder(SendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
+            .apply { channelId?.let { addTag(channelId.toString()) } }
             .setInputData(dataBuilder.build())
             .setConstraints(networkConstraint)
             .build()
 
-        WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
+        return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
             .enqueue()
     }
 }

@@ -307,7 +307,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun checkIsExistAttachment(path: String?): Boolean {
-        return allAttachments.map { it.url }.contains(path)
+        return allAttachments.map { it.filePath }.contains(path)
     }
 
     private fun cancelReply(readyCb: (() -> Unit?)? = null) {

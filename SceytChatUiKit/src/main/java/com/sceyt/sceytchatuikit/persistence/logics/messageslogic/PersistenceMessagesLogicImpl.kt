@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import android.app.Application
 import android.util.Log
 import androidx.work.WorkManager
+import androidx.work.await
 import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -36,6 +37,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
@@ -59,6 +61,7 @@ internal class PersistenceMessagesLogicImpl(
         private val reactionDao: ReactionDao,
         private val persistenceChannelsLogic: PersistenceChannelsLogic,
         private val userDao: UserDao,
+        private val fileTransferService: FileTransferService,
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache
@@ -185,7 +188,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.add(tmpMessage)
 
         if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(application, tmpMessage.tid)
+            SendAttachmentWorkManager.schedule(application, tmpMessage.tid, channelId).await()
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
             onMessageSentResponse(channelId, response)
@@ -207,7 +210,7 @@ internal class PersistenceMessagesLogicImpl(
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
 
         if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(application, tmpMessage.tid)
+            SendAttachmentWorkManager.schedule(application, tmpMessage.tid, channelId).await()
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
             messagesRepository.sendMessageAsFlow(channelId, message)
@@ -294,6 +297,10 @@ internal class PersistenceMessagesLogicImpl(
             messagesCache.deleteMessage(message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
             WorkManager.getInstance(application).cancelAllWorkByTag(message.tid.toString())
+            message.attachments?.firstOrNull()?.let {
+                fileTransferService.pause(it.messageTid, it, it.transferState
+                        ?: TransferState.Uploading)
+            }
             return SceytResponse.Success(message.apply { state = MessageState.Deleted })
         }
         val response = messagesRepository.deleteMessage(channelId, message.id, onlyForMe)
@@ -312,7 +319,7 @@ internal class PersistenceMessagesLogicImpl(
             pendingMessages.forEach {
                 val message = it.toMessage()
                 if (checkHasFileAttachments(message)) {
-                    SendAttachmentWorkManager.schedule(application, message.tid)
+                    SendAttachmentWorkManager.schedule(application, message.tid, channelId)
                 } else {
                     val response = messagesRepository.sendMessage(channelId, message)
                     onMessageSentResponse(channelId, response)
@@ -327,7 +334,7 @@ internal class PersistenceMessagesLogicImpl(
             pendingMessages.forEach {
                 val message = it.toMessage()
                 if (checkHasFileAttachments(message)) {
-                    SendAttachmentWorkManager.schedule(application, message.tid)
+                    SendAttachmentWorkManager.schedule(application, message.tid, message.channelId).await()
                 } else {
                     val response = messagesRepository.sendMessage(it.messageEntity.channelId, message)
                     if (response is SceytResponse.Success) {
