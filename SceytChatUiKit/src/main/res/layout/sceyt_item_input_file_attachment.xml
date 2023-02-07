@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="8dp"
                 android:ellipsize="middle"
-                android:maxWidth="150dp"
+                android:maxWidth="120dp"
                 android:singleLine="true"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textSize="@dimen/mediumTextSize"

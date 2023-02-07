@@ -74,11 +74,11 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     open fun onInitialVoiceList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
-                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, _ ->
                     // voice message play functionality is handled in VoiceMessageViewHolder
                 })
-                getUserNameBuilder()
-                        ?: SceytKitConfig.userNameBuilder?.let { builder -> it.setUserNameBuilder(builder) }
+
+                it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
             })
             with((binding ?: return).rvVoice) {
                 adapter = mediaAdapter
