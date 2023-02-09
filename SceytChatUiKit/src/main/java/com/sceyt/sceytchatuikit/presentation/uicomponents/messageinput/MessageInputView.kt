@@ -4,11 +4,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +25,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
@@ -34,9 +35,12 @@ import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
+import com.sceyt.sceytchatuikit.persistence.mappers.getMessageTypeFromAttachments
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
+import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.RecordingListener
+import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytVoiceMessageRecorderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Text
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Voice
@@ -72,6 +76,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
     private var disabledInput: Boolean = false
+    private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -101,6 +106,30 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
         init()
         setupAttachmentsList()
+
+        post {
+            (parent as? ViewGroup)?.addView(SceytVoiceMessageRecorderView(context).apply {
+                layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+                setListener(object : RecordingListener {
+                    override fun onRecordingStarted() {
+                        binding.layoutInput.isInvisible = true
+                    }
+
+                    override fun onRecordingLocked() {
+                    }
+
+                    override fun onRecordingCompleted(shouldShowPreview: Boolean) {
+                        if (!shouldShowPreview)
+                            binding.layoutInput.isInvisible = false
+                    }
+
+                    override fun onRecordingCanceled() {
+                        binding.layoutInput.isInvisible = false
+                    }
+                })
+                voiceMessageRecorderView = this
+            })
+        }
     }
 
 
@@ -172,7 +201,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         allAttachments.forEachIndexed { index, attachment ->
                             val attachments = arrayListOf(attachment)
                             val message = Message.MessageBuilder()
-                                .setType(getMessageType(if (index == 0) messageBody else null, attachment))
+                                .setType(getMessageTypeFromAttachments(if (index == 0) messageBody else null, attachment))
                                 .apply {
                                     if (index == 0) {
                                         if (link != null)
@@ -197,7 +226,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         val attachment = if (link != null) arrayOf(link) else arrayOf()
                         val message = Message.MessageBuilder()
                             .setAttachments(attachment)
-                            .setType(getMessageType(messageBody))
+                            .setType(getMessageTypeFromAttachments(messageBody))
                             .setBody(messageBody)
                             .apply {
                                 replyMessage?.let {
@@ -266,21 +295,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun getMessageType(body: String?, vararg attachments: Attachment): String {
-        if (attachments.isNotEmpty() && attachments.size == 1) {
-            return if (attachments[0].type.isEqualsVideoOrImage())
-                MessageTypeEnum.Media.value()
-            else MessageTypeEnum.File.value()
-        }
-        return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
-    }
-
     private fun determineState() {
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
         val newState = if (showVoiceIcon) Voice else Text
         if (inputState != newState)
             onStateChanged(newState)
         inputState = newState
+        if (!showVoiceIcon) hideVoiceRecorder()
+        else showVoiceRecorder()
     }
 
     private fun addAttachments(attachments: List<Attachment>) {
@@ -376,7 +398,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             else message.toSceytUiMessage().getShowBody(context)
         }
     }
-
 
     internal fun editMessage(message: Message) {
         editMessage = message
@@ -475,6 +496,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
 
     fun getComposedMessage() = binding.messageInput.text
+
+    fun hideVoiceRecorder() {
+        voiceMessageRecorderView?.visibility = GONE
+        voiceMessageRecorderView?.forceStopRecording()
+    }
+
+    fun showVoiceRecorder() {
+        voiceMessageRecorderView?.visibility = VISIBLE
+    }
 
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)

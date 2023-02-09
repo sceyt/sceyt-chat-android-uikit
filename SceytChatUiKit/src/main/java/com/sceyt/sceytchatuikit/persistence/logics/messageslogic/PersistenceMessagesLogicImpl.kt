@@ -599,12 +599,13 @@ internal class PersistenceMessagesLogicImpl(
         return data
     }
 
-    private suspend fun getPendingMessagesAndAddToList(channelId: Long, list: ArrayList<MessageDb>): ArrayList<MessageDb> {
+    private suspend fun getPendingMessagesAndAddToList(channelId: Long, list: ArrayList<MessageDb>): List<MessageDb> {
         val pendingMessage = messageDao.getPendingMessages(channelId)
 
-        if (pendingMessage.isNotEmpty())
+        return if (pendingMessage.isNotEmpty()) {
             list.addAll(pendingMessage)
-        return list
+            list.sortedBy { it.messageEntity.createdAt }
+        } else list
     }
 
     private suspend fun saveMessagesToDb(list: List<SceytMessage>?) {
