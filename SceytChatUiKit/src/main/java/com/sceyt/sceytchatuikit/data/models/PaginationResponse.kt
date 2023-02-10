@@ -18,10 +18,10 @@ sealed class PaginationResponse<T> {
 
     /**
      * @param data is items from server.
-     * @param cacheData is items from database or from cash, include elements from start.
+     * @param cacheData is items from database or from cache, include elements from start.
      * @param loadKey is the the helper key, which has been set when request started.
      * @param offset is the offset, which has been set when request started.
-     * @param hasDiff is the difference between database/cash items and server items.
+     * @param hasDiff is the difference between database/cache items and server items.
      * @param hasNext shows, are items in server/database or not, to load next page.
      * @param hasPrev shows, are items in server/database or not, to load prev page.
      * @param loadType is pointed which type of request is was current request.

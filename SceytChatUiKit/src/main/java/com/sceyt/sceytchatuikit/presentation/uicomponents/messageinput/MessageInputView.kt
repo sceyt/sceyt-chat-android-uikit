@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
-import android.os.Environment
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -43,8 +42,8 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
-import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.RecordingListener
+import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytVoiceMessageRecorderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Text
@@ -259,7 +258,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun SceytVoiceMessageRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
             override fun onRecordingStarted() {
-                val directoryToSaveRecording = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)?.absolutePath + "/Sceyt Audio"
+                val directoryToSaveRecording = context.filesDir.path + "/Audio"
                 AudioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
             }
@@ -272,20 +271,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                             return@runOnMainThread
                         }
                         if (shouldShowPreview) {
-                            val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
-                            binding.voiceRecordPresenter.init(file, metadata, object : SceytRecordedVoicePresenter.RecordedVoicePresentListeners {
-                                override fun onDeleteVoiceRecord() {
-                                    file.deleteOnExit()
-                                    finishRecording()
-                                }
-
-                                override fun onSendVoiceMessage() {
-                                    tryToSendRecording(file, amplitudes.toIntArray(), duration)
-                                    finishRecording()
-                                }
-                            })
-                            voiceMessageRecorderView?.isVisible = false
-                            binding.voiceRecordPresenter.isVisible = true
+                            showRecordPreview(file, amplitudes, duration)
                         } else {
                             finishRecording()
                             tryToSendRecording(file, amplitudes.toIntArray(), duration)
@@ -298,6 +284,23 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 finishRecording()
             }
         })
+    }
+
+    private fun showRecordPreview(file: File, amplitudes: Array<Int>, duration: Int) {
+        val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
+        binding.voiceRecordPresenter.init(file, metadata, object : SceytRecordedVoicePresenter.RecordedVoicePresentListeners {
+            override fun onDeleteVoiceRecord() {
+                file.deleteOnExit()
+                finishRecording()
+            }
+
+            override fun onSendVoiceMessage() {
+                tryToSendRecording(file, amplitudes.toIntArray(), duration)
+                finishRecording()
+            }
+        })
+        voiceMessageRecorderView?.isVisible = false
+        binding.voiceRecordPresenter.isVisible = true
     }
 
     private fun getLinkAttachmentFromBody(): Attachment? {
@@ -354,7 +357,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (inputState != newState)
             onStateChanged(newState)
         inputState = newState
-        if (!showVoiceIcon) hideVoiceRecorder()
+        if (!showVoiceIcon) hideAndStopVoiceRecorder()
         else showVoiceRecorder()
     }
 
@@ -432,7 +435,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         voiceMessageRecorderView?.isVisible = true
     }
 
-    internal fun onStateChanged(newState: InputState) {
+    private fun showVoiceRecorder() {
+        voiceMessageRecorderView?.isVisible = true
+    }
+
+    private fun onStateChanged(newState: InputState) {
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
 
@@ -558,18 +565,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         else showInput()
     }
 
-    fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
-
-    fun getComposedMessage() = binding.messageInput.text
-
-    fun hideVoiceRecorder() {
-        voiceMessageRecorderView?.visibility = GONE
+    fun hideAndStopVoiceRecorder() {
+        voiceMessageRecorderView?.isVisible = false
         voiceMessageRecorderView?.forceStopRecording()
     }
 
-    fun showVoiceRecorder() {
-        voiceMessageRecorderView?.visibility = VISIBLE
-    }
+    fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
+
+    fun getComposedMessage() = binding.messageInput.text
 
     interface MessageInputActionCallback {
         fun sendMessage(message: Message)

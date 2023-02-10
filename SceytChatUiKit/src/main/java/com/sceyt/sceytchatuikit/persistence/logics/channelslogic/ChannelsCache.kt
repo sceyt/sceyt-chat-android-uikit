@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import java.util.*
 
 class ChannelsCache {
-    private var cashedData = hashMapOf<Long, SceytChannel>()
+    private var cachedData = hashMapOf<Long, SceytChannel>()
     private val lock = Any()
 
     companion object {
@@ -45,7 +45,7 @@ class ChannelsCache {
             return if (checkDifference)
                 putAndCheckHasDiff(list)
             else {
-                cashedData.putAll(list.associateBy { it.id })
+                cachedData.putAll(list.associateBy { it.id })
                 false
             }
         }
@@ -60,30 +60,30 @@ class ChannelsCache {
 
     fun clear() {
         synchronized(lock) {
-            cashedData.clear()
+            cachedData.clear()
         }
     }
 
     fun getSorted(): List<SceytChannel> {
         synchronized(lock) {
-            return cashedData.values.sortedWith(ChannelsComparatorBy()).map { it.clone() }
+            return cachedData.values.sortedWith(ChannelsComparatorBy()).map { it.clone() }
         }
     }
 
     fun get(channelId: Long): SceytChannel? {
         synchronized(lock) {
-            return cashedData[channelId]?.clone()
+            return cachedData[channelId]?.clone()
         }
     }
 
     fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
-                if (cashedData[it.id] == null) {
-                    cashedData[it.id] = it
+                if (cachedData[it.id] == null) {
+                    cachedData[it.id] = it
                     channelAdded(it)
                 } else {
-                    val oldMsg = cashedData[it.id]?.lastMessage
+                    val oldMsg = cachedData[it.id]?.lastMessage
                     if (putAndCheckHasDiff(it).hasDifference()) {
                         val needSort = checkNeedSortByLastMessage(oldMsg, it.lastMessage)
                         channelUpdated(it, needSort)
@@ -95,7 +95,7 @@ class ChannelsCache {
 
     fun updateLastMessage(channelId: Long, message: SceytMessage?) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 channel.lastMessage = message
                 channelUpdated(channel, needSort)
@@ -105,7 +105,7 @@ class ChannelsCache {
 
     fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 channel.lastMessage = message
                 channel.lastReadMessageId = message.id
@@ -116,7 +116,7 @@ class ChannelsCache {
 
     fun clearedHistory(channelId: Long) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 channel.lastMessage = null
                 channel.unreadMessageCount = 0
                 channelUpdated(channel, true)
@@ -126,7 +126,7 @@ class ChannelsCache {
 
     fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long = 0) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 if (muted) {
                     channel.muted = true
                     channel.muteExpireDate = Date(muteUntil)
@@ -139,7 +139,7 @@ class ChannelsCache {
 
     fun updateChannelSubjectAndAvatarUrl(channelId: Long, newSubject: String?, newUrl: String?) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 (channel as? SceytGroupChannel)?.let {
                     channel.subject = newSubject
                     channel.avatarUrl = newUrl
@@ -152,7 +152,7 @@ class ChannelsCache {
 
     fun addedMembers(channelId: Long, sceytMember: SceytMember) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 (channel as? SceytGroupChannel)?.let {
                     it.members = it.members.toArrayList().apply {
                         add(sceytMember)
@@ -165,7 +165,7 @@ class ChannelsCache {
 
     fun updateUnreadCount(channelId: Long, count: Int) {
         synchronized(lock) {
-            cashedData[channelId]?.let { channel ->
+            cachedData[channelId]?.let { channel ->
                 channel.unreadMessageCount = count.toLong()
                 channel.markedUsUnread = false
                 channelUpdated(channel, false)
@@ -175,7 +175,7 @@ class ChannelsCache {
 
     fun deleteChannel(id: Long) {
         synchronized(lock) {
-            cashedData.remove(id)
+            cachedData.remove(id)
             channelDeletedFlow_.tryEmit(id)
         }
     }
@@ -189,7 +189,7 @@ class ChannelsCache {
     }
 
     fun updateMembersCount(channel: SceytGroupChannel) {
-        cashedData[channel.id]?.let {
+        cachedData[channel.id]?.let {
             (it as? SceytGroupChannel)?.memberCount = channel.memberCount
             channelUpdated(it, false)
         } ?: upsertChannel(channel)
@@ -199,17 +199,17 @@ class ChannelsCache {
         var detectedDiff = false
         list.forEach {
             if (!detectedDiff) {
-                val old = cashedData[it.id]
+                val old = cachedData[it.id]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: true
             }
-            cashedData[it.id] = it
+            cachedData[it.id] = it
         }
         return detectedDiff
     }
 
     private fun putAndCheckHasDiff(channel: SceytChannel): ChannelItemPayloadDiff {
-        val old = cashedData[channel.id]
-        cashedData[channel.id] = channel
+        val old = cachedData[channel.id]
+        cachedData[channel.id] = channel
         return old?.diff(channel) ?: ChannelItemPayloadDiff.DEFAULT
     }
 

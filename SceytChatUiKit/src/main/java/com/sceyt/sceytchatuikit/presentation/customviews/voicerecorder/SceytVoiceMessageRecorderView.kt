@@ -211,6 +211,14 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         }
     }
 
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if (!hasWindowFocus && isRecording) {
+            isLocked = false
+            binding.stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
+        }
+    }
+
     private fun SceytRecordViewBinding.stopRecording(recordingBehaviour: RecordingBehaviour) {
         stopTrackingAction = true
         firstX = 0f
