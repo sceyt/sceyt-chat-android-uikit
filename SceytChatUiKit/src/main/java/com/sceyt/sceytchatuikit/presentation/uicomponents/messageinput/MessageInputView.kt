@@ -281,6 +281,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onRecordingCanceled() {
+                AudioRecorderHelper.cancelRecording {}
                 finishRecording()
             }
         })
