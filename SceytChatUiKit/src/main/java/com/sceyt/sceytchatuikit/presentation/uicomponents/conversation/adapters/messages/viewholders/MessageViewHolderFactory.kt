@@ -33,6 +33,8 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(parent)
             MessageViewTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(parent)
             MessageViewTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
+            MessageViewTypeEnum.IncVoice.ordinal -> createIncVoiceMsgViewHolder(parent)
+            MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -66,6 +68,19 @@ open class MessageViewHolderFactory(context: Context) {
         return OutLinkMsgViewHolder(
             SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, linkPreview, clickListeners, userNameBuilder)
+    }
+
+    open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncVoiceMsgViewHolder(
+            SceytItemIncVoiceBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback,
+        )
+    }
+
+    open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutVoiceMsgViewHolder(
+            SceytItemOutVoiceBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -123,16 +138,15 @@ open class MessageViewHolderFactory(context: Context) {
         val inc = message.incoming
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
-            message.attachments.isNullOrEmpty().not() -> {
+            !message.attachments.isNullOrEmpty() -> {
                 val attachment = message.attachments?.getOrNull(0)
-                if (attachment?.type == AttachmentTypeEnum.Link.value())
-                    if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
-                else if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
+                when (attachment?.type) {
+                    AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
+                    AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
+                }
             }
-            message.attachments.isNullOrEmpty() -> {
-                if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
-            }
-            else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
+            else -> if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
         }
         return type.ordinal
     }
@@ -168,6 +182,8 @@ open class MessageViewHolderFactory(context: Context) {
         OutLink,
         IncDeleted,
         OutDeleted,
+        IncVoice,
+        OutVoice,
         IncFiles,
         OutFiles,
         DateSeparator,

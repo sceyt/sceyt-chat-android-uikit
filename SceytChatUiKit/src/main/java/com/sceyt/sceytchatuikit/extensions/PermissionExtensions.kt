@@ -12,7 +12,7 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 
 @TargetApi(Build.VERSION_CODES.M)
-fun Activity.requestPermissionsSafely(permissions: Array<String>, requestCode: Int) {
+fun Activity.requestPermissionsSafety(permissions: Array<String>, requestCode: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         ActivityCompat.requestPermissions(this, permissions, requestCode)
     }
@@ -49,7 +49,7 @@ fun Context.hasOneOfPermissions(vararg permission: String): Boolean {
 }
 
 @TargetApi(Build.VERSION_CODES.M)
-fun Fragment.requestPermissionsSafely(permissions: Array<String>, requestCode: Int) {
+fun Fragment.requestPermissionsSafety(permissions: Array<String>, requestCode: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         ActivityCompat.requestPermissions(requireActivity(), permissions, requestCode)
     }

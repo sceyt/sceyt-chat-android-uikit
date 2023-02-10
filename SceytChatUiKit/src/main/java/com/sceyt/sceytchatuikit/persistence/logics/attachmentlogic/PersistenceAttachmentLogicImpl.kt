@@ -198,12 +198,12 @@ class PersistenceAttachmentLogicImpl(
                 hasDiff = attachmentsCache.addAll(it.map { data -> data.attachment }, true)
             }
 
-        val cashData = attachmentsCache.getSorted().map {
+        val cacheData = attachmentsCache.getSorted().map {
             AttachmentWithUserData(it, response.data?.second?.get(it.userId))
         }
 
         return PaginationResponse.ServerResponse(
-            data = mappedResponse, cacheData = cashData,
+            data = mappedResponse, cacheData = cacheData,
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }
