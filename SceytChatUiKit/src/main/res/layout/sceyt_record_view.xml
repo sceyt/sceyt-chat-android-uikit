@@ -172,18 +172,16 @@
         android:visibility="gone"
         app:cardCornerRadius="22dp"
         app:layout_constraintBottom_toTopOf="@+id/recording"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="gone">
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/lockViewStopButton"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="@drawable/sceyt_bg_circle"
             android:backgroundTint="@color/sceyt_color_white"
             android:scaleType="centerInside"
-            android:src="@drawable/sceyt_ic_stop_voice"
-            tools:ignore="ContentDescription" />
+            app:srcCompat="@drawable/sceyt_ic_stop_voice" />
 
     </androidx.cardview.widget.CardView>
 

@@ -5,6 +5,7 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -33,7 +34,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private val animJump by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_jump) }
     private val animJumpFast by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_jump_fast) }
     private var stopTrackingAction = false
-    private var isRecording = false
+    var isRecording = false
+        private set
     private var audioTotalTime = 0
     private var timerTask: TimerTask? = null
     private var audioTimer: Timer? = null
@@ -48,6 +50,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private var userBehaviour = UserBehaviour.NONE
     private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
+    private var colorAnimation: ValueAnimator? = null
 
     init {
         init()
@@ -58,6 +61,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         with(binding) {
             showDefaultRecordButton()
             setupRecorder()
+            setupStyle()
 
             btnCancel.setOnClickListener {
                 isLocked = false
@@ -97,7 +101,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                     }
                 }
                 ACTION_UP -> {
-                    stopRecording(RecordingBehaviour.RELEASED)
+                    if (isRecording)
+                        stopRecording(RecordingBehaviour.RELEASED)
                 }
                 ACTION_CANCEL -> {
                     stopRecording(RecordingBehaviour.CANCELED)
@@ -318,6 +323,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private val paddingRecording get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 15f, context.resources.displayMetrics)
 
     private fun SceytRecordViewBinding.showDefaultRecordButton() {
+        colorAnimation?.cancel()
         imageViewAudio.translationZ = 0.0f
         imageViewAudio.cardElevation = 0.0f
         imageAudio.background = null
@@ -329,31 +335,38 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun SceytRecordViewBinding.showRecordingRecordButton() {
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
-        imageAudio.setPadding(paddingRecording.toInt())
-        imageAudio.setBackgroundResource(R.drawable.sceyt_bg_circle)
-        imageAudio.setImageResource(R.drawable.sceyt_ic_voice)
-        imageAudio.setColorFilter(getCompatColor(R.color.sceyt_color_white))
+
+        with(imageAudio) {
+            setPadding(paddingRecording.toInt())
+            setBackgroundResource(R.drawable.sceyt_bg_circle)
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            setImageResource(R.drawable.sceyt_ic_voice)
+            setColorFilter(getCompatColor(R.color.sceyt_color_white))
+        }
     }
 
     private fun SceytRecordViewBinding.showRecordingLockedButton() {
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
-        imageAudio.setBackgroundResource(R.drawable.sceyt_bg_circle)
-        imageAudio.setImageResource(MessageInputViewStyle.sendMessageIcon)
-
-        imageAudio.setPadding(paddingRecording.toInt(),
-            paddingRecording.toInt(), (paddingRecording - 2).toInt(), paddingRecording.toInt()
-        )
+        with(imageAudio) {
+            setBackgroundResource(R.drawable.sceyt_bg_circle)
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            setImageResource(MessageInputViewStyle.sendMessageIcon)
+            setPadding(paddingRecording.toInt(), paddingRecording.toInt(),
+                (paddingRecording - 2).toInt(), paddingRecording.toInt())
+        }
     }
 
     private fun SceytRecordViewBinding.showDeleteRecordButton() {
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
-        imageAudio.setPadding(paddingRecording.toInt())
-        imageAudio.setBackgroundResource(R.drawable.sceyt_bg_circle)
-        imageAudio.setImageResource(R.drawable.sceyt_ic_delete)
-
-        animateColor(imageAudio, getCompatColor(SceytKitConfig.sceytColorAccent), getCompatColor(R.color.sceyt_color_red))
+        with(imageAudio) {
+            setPadding(paddingRecording.toInt())
+            setBackgroundResource(R.drawable.sceyt_bg_circle)
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            setImageResource(R.drawable.sceyt_ic_delete)
+            animateColor(this, getCompatColor(SceytKitConfig.sceytColorAccent), getCompatColor(R.color.sceyt_color_red))
+        }
     }
 
     private fun SceytRecordViewBinding.showRecordingFromDeleteButton() {
@@ -366,10 +379,15 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
-        val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
-        colorAnimation.duration = 200 // milliseconds
-        colorAnimation.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
-        colorAnimation.start()
+        colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
+        colorAnimation?.duration = 200 // milliseconds
+        colorAnimation?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
+        colorAnimation?.start()
+    }
+
+    private fun SceytRecordViewBinding.setupStyle() {
+        imageViewLockArrow.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        lockViewStopButton.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     fun setListener(listener: RecordingListener) {
