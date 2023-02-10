@@ -5,12 +5,13 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View.OnClickListener
 import android.widget.FrameLayout
-import android.widget.ImageView
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
-import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytRecordedVoicePresenterBinding
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
+import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
+import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
+import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
@@ -92,19 +93,6 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
             audioMetadata.tmb?.let { waveformSeekBar.setSampleFrom(it) }
             voiceRecordDuration.text = audioMetadata.dur.times(1000).toLong().durationToMinSecShort()
         }
-    }
-
-    private fun progressToMediaPlayerPosition(progress: Float, mediaDuration: Long): Long {
-        return ((progress * mediaDuration) / 100f).toLong()
-    }
-
-    private fun mediaPlayerPositionToSeekBarProgress(currentPosition: Long, mediaDuration: Long): Float {
-        return (currentPosition * 100f / mediaDuration)
-    }
-
-    private fun setPlayButtonIcon(playing: Boolean, imageView: ImageView) {
-        val iconRes = if (playing) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
-        imageView.setImageResource(iconRes)
     }
 
     private fun SceytRecordedVoicePresenterBinding.setupStyle() {
