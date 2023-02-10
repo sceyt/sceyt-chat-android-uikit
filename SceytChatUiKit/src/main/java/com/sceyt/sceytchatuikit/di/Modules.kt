@@ -89,7 +89,7 @@ internal val repositoryModule = module {
     factory<UsersRepository> { UsersRepositoryImpl() }
 }
 
-internal val cashModule = module {
+internal val cacheModule = module {
     single { MessagesCache() }
     single { ChannelsCache() }
     factory { AttachmentsCache() }

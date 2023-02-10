@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.media.audio;
 import static java.lang.Math.log10;
 
 import android.media.MediaRecorder;
+import android.util.Log;
 
 import com.sceyt.sceytchatuikit.media.DurationCallback;
 
@@ -38,6 +39,8 @@ public class AudioRecorderImpl implements AudioRecorder {
     @Override
     public boolean startRecording(Integer bitrate, DurationCallback durationCallback) {
         try {
+            Log.i("AudioRecorder", "startRecording");
+
 //            this.recordingInterface = recordingInterface;
 //            this.chatThreadData = chatThreadData;
             recording = true;
@@ -72,6 +75,7 @@ public class AudioRecorderImpl implements AudioRecorder {
 
     @Override
     public void stopRecording() {
+        Log.i("AudioRecorder", "stopRecording invoked: isRecording -> " + recording);
         if (recording) {
             stopTimer();
 

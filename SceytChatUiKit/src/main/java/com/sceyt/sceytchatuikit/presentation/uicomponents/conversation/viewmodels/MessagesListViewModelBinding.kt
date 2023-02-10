@@ -46,7 +46,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
     /** Send pending markers and pending messages when lifecycle come back onResume state,
-     * Also set update current chat Id in ChannelsCash*/
+     * Also set update current chat Id in ChannelsCache*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             ChannelsCache.currentChannelId = channel.id
