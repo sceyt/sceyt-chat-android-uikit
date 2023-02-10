@@ -53,7 +53,7 @@ object FileTransferHelper : SceytKoinComponent {
                 attachment.updateWithTransferData(transferData)
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
-                Log.e(this.TAG, "Couldn't download file " + it.message.toString())
+                Log.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
             }
         }
     }

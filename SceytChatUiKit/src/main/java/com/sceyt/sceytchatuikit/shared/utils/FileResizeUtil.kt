@@ -7,10 +7,8 @@ import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.media.ThumbnailUtils
 import android.net.Uri
-import android.util.Log
 import android.util.Size
 import androidx.exifinterface.media.ExifInterface
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.bitmapToByteArray
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -34,7 +32,7 @@ object FileResizeUtil {
             bmpFile.flush()
             bmpFile.close()
         } catch (e: java.lang.Exception) {
-            Log.i(TAG, e.message.toString())
+            e.printStackTrace()
         }
         return File(dest)
     }
@@ -65,6 +63,7 @@ object FileResizeUtil {
             retriever.release()
             time?.toLongOrNull()
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
         return timeInMilliSec
@@ -74,6 +73,7 @@ object FileResizeUtil {
         return try {
             getImageThumb(url, maxImageSize).bitmapToByteArray()
         } catch (ex: Exception) {
+            ex.printStackTrace()
             null
         }
     }
@@ -82,18 +82,23 @@ object FileResizeUtil {
         return try {
             getVideoThumb(url, maxImageSize).bitmapToByteArray()
         } catch (ex: Exception) {
+            ex.printStackTrace()
             null
         }
     }
 
     fun getVideoThumb(url: String, maxImageSize: Float): Bitmap? {
+        val retriever = MediaMetadataRetriever()
         return try {
-            val bitmap = MediaMetadataRetriever().apply {
+            val bitmap = retriever.apply {
                 setDataSource(url)
             }.getFrameAtTime(1000)
             createThumbFromBitmap(bitmap ?: return null, maxImageSize)
         } catch (ex: Exception) {
+            ex.printStackTrace()
             null
+        } finally {
+            retriever.release()
         }
     }
 
@@ -111,7 +116,8 @@ object FileResizeUtil {
             getVideoThumb(url, maxImageSize)?.let {
                 createFileFromBitmap(context, it)
             }
-        } catch (_: Exception) {
+        } catch (ex: Exception) {
+            ex.printStackTrace()
             null
         }
     }
@@ -122,7 +128,8 @@ object FileResizeUtil {
                 val bitmap = getOrientationCorrectedBitmap(it, url)
                 createFileFromBitmap(context, bitmap)
             }
-        } catch (_: Exception) {
+        } catch (ex: Exception) {
+            ex.printStackTrace()
             null
         }
     }
@@ -169,6 +176,7 @@ object FileResizeUtil {
             bitmap.recycle()
             File(fileDest)
         } catch (e: java.lang.Exception) {
+            e.printStackTrace()
             null
         }
     }
