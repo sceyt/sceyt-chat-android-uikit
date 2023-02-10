@@ -440,6 +440,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         voiceMessageRecorderView?.isVisible = true
     }
 
+    private fun hideAndStopVoiceRecorder() {
+        voiceMessageRecorderView?.isVisible = false
+        voiceMessageRecorderView?.forceStopRecording()
+    }
+
     private fun onStateChanged(newState: InputState) {
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
@@ -566,8 +571,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         else showInput()
     }
 
-    fun hideAndStopVoiceRecorder() {
-        voiceMessageRecorderView?.isVisible = false
+    fun stopRecording() {
         voiceMessageRecorderView?.forceStopRecording()
     }
 

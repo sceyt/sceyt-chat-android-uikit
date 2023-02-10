@@ -49,6 +49,8 @@ class OutFilesMsgViewHolder(
                     messageBody.text = body
                 } else messageBody.isVisible = false
 
+                if (!diff.hasDifference()) return
+
                 if (diff.edited || diff.statusChanged) {
                     setMessageDateDependAttachments(messageDate, message.files)
                     setMessageStatusAndDateText(message, messageDate)

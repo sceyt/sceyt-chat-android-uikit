@@ -29,6 +29,8 @@ class OutTextMsgViewHolder(
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
 
+        if (!diff.hasDifference()) return
+
         if (item is MessageListItem.MessageItem) {
             with(binding) {
                 val message = item.message
