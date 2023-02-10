@@ -95,6 +95,15 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
+        android:id="@+id/voiceRecordPresenter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewTop" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnJoin"
         android:layout_width="0dp"

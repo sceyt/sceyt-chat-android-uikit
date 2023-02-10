@@ -27,7 +27,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
 
     init {
         init()
-        ChannelViewHolderFactory.cashViews(context)
+        ChannelViewHolderFactory.cacheViews(context)
     }
 
     private fun init() {
@@ -157,6 +157,6 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        ChannelViewHolderFactory.clearCash()
+        ChannelViewHolderFactory.clearCache()
     }
 }

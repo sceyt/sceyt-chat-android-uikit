@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:background="@color/sceyt_color_bg"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingVertical="8dp">
+
+    <ImageView
+        android:id="@+id/delete_voice_record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:src="@drawable/sceyt_ic_cancel"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:background="@drawable/sceyt_bg_inc_message"
+        android:backgroundTint="#F0F2F5"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/icSendMessage"
+        app:layout_constraintStart_toEndOf="@id/delete_voice_record"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/play_voice_record"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:tint="@color/sceyt_color_gray_800"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sceyt_ic_play" />
+
+        <com.masoudss.lib.WaveformSeekBar
+            android:id="@+id/waveform_seek_bar"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/voice_record_duration"
+            app:layout_constraintStart_toEndOf="@id/play_voice_record"
+            app:layout_constraintTop_toTopOf="parent"
+            app:wave_background_color="#99757D8B"
+            app:wave_corner_radius="2dp"
+            app:wave_gap="1.5dp"
+            app:wave_gravity="center"
+            app:wave_max_progress="100"
+            app:wave_min_height="3dp"
+            app:wave_padding_left="2dp"
+            app:wave_padding_right="2dp"
+            app:wave_progress_color="@color/sceyt_color_gray_800"
+            app:wave_visible_progress="0"
+            app:wave_width="2dp" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/voice_record_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:includeFontPadding="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="00:00" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icSendMessage"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="14dp"
+        android:padding="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_send_message" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

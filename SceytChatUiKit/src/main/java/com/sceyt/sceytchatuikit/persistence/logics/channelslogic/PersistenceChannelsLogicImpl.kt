@@ -92,7 +92,7 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.updateMuteState(channelId, false)
                 }
             }
-            MarkedUsUnread -> updateChannelDbAndCash(data.channel?.toSceytUiChannel())
+            MarkedUsUnread -> updateChannelDbAndCache(data.channel?.toSceytUiChannel())
             Blocked -> deleteChannelDb(data.channelId ?: return)
             Hidden -> data.channelId?.let { deleteChannelDb(it) }
             UnHidden -> onChanelCreatedOrJoinedOrUnHidden(data.channel)
@@ -111,11 +111,11 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        updateChannelDbAndCash((data.channel ?: return).toSceytUiChannel())
+        updateChannelDbAndCache((data.channel ?: return).toSceytUiChannel())
     }
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        updateChannelDbAndCash((data.channel ?: return).toSceytUiChannel())
+        updateChannelDbAndCache((data.channel ?: return).toSceytUiChannel())
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
@@ -131,7 +131,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        updateChannelDbAndCash(data.first)
+        updateChannelDbAndCache(data.first)
     }
 
     override suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
@@ -166,7 +166,7 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    private suspend fun updateChannelDbAndCash(channel: SceytChannel?) {
+    private suspend fun updateChannelDbAndCache(channel: SceytChannel?) {
         channel ?: return
         channelDao.updateChannel(channel.toChannelEntity(myId))
         channelsCache.upsertChannel(channel)
@@ -268,7 +268,7 @@ internal class PersistenceChannelsLogicImpl(
                         val addedChannelsIds = syncedIds.minus(oldChannelsIds)
 
                         deletedChannels.forEach { deleteChannelDb(channelId = it) }
-                        upsertChannelsToCash(syncedChannels.filter { addedChannelsIds.contains(it.id) })
+                        upsertChannelsToCache(syncedChannels.filter { addedChannelsIds.contains(it.id) })
                     }
                     channel.close()
                 }
@@ -398,7 +398,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let {
                 messageDao.updateAllMessagesStatusAsRead(channelId)
-                updateChannelDbAndCash(it)
+                updateChannelDbAndCache(it)
             }
         }
 
@@ -410,7 +410,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success)
             response.data?.let {
-                updateChannelDbAndCash(it)
+                updateChannelDbAndCache(it)
             }
 
         return response
@@ -603,7 +603,7 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.deleteChannel(channelId)
     }
 
-    private fun upsertChannelsToCash(channels: List<SceytChannel>) {
+    private fun upsertChannelsToCache(channels: List<SceytChannel>) {
         if (channels.isEmpty()) return
         channelsCache.upsertChannel(*channels.toTypedArray())
     }

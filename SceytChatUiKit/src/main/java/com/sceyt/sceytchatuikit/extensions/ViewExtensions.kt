@@ -39,11 +39,11 @@ fun dpToPx(dp: Float): Int {
     return (dp * density).roundToInt()
 }
 
-fun View.screenWidthPx() = resources.configuration.screenWidthDp.dpToPx()
+fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 
-fun View.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+fun View.screenHeightPx() = resources.displayMetrics.heightPixels
 
-fun Fragment.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
 
 fun EditText.setMultiLineCapSentencesAndSendAction() {
     imeOptions = EditorInfo.IME_ACTION_SEND

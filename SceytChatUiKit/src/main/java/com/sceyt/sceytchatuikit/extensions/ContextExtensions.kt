@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.webkit.URLUtil
 import android.widget.EditText
@@ -35,6 +36,8 @@ import java.net.URL
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
+
+fun View.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(context, colorId)
 
 fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
     val res = resources
