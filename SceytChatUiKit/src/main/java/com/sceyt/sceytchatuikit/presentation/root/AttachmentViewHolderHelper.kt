@@ -9,6 +9,7 @@ import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
 
@@ -24,6 +25,7 @@ class AttachmentViewHolderHelper(itemView: View) {
     var imageSize: Size? = null
         private set
     var transferData: TransferData? = null
+        private set
 
 
     fun bind(item: AttachmentDataItem) {
@@ -61,5 +63,14 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     fun loadBlurThumb(thumb: Drawable? = blurredThumb, imageView: ImageView) {
         imageView.setImageDrawable(thumb)
+    }
+
+    fun updateTransferData(data: TransferData, item: AttachmentDataItem): Boolean {
+        if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
+        if (data.state == TransferState.ThumbLoaded) {
+            item.thumbPath = data.filePath
+        } else transferData = data
+
+        return true
     }
 }

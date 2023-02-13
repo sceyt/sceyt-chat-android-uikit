@@ -43,8 +43,8 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     }
 
     private fun updateState(data: TransferData) {
-        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.messageTid)) return
-        viewHolderHelper.transferData = data
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
         when (data.state) {
             TransferState.PendingUpload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)

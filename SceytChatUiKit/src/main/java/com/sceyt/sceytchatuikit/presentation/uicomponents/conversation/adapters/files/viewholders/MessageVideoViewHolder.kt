@@ -63,8 +63,8 @@ class MessageVideoViewHolder(
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        viewHolderHelper.transferData = data
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         val imageView = binding.videoViewController.getImageView()
         when (data.state) {
