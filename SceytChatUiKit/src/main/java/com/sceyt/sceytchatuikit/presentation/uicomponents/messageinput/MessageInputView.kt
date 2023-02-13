@@ -433,7 +433,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showInput() {
         binding.layoutCloseInput.root.isVisible = false
         binding.layoutInput.isVisible = true
-        voiceMessageRecorderView?.isVisible = true
+        determineState()
     }
 
     private fun showVoiceRecorder() {
