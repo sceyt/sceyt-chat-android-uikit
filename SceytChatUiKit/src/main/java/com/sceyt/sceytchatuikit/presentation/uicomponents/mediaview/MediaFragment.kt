@@ -31,7 +31,7 @@ class MediaFragment : Fragment() {
             if (it.type == FileType.Video) {
                 binding.videoView.visibility = View.VISIBLE
                 binding.imageView.visibility = View.GONE
-                binding.videoView.setVideoPath(it.path, true, true)
+                binding.videoView.setVideoPath(mediaPath = it.path, startPlay = true, isLooping = true)
 
             } else {
                 binding.imageView.visibility = View.VISIBLE
@@ -58,11 +58,6 @@ class MediaFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         setPlayingState(false)
-    }
-
-    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
-        super.setUserVisibleHint(isVisibleToUser)
-        setPlayingState(isVisibleToUser)
     }
 
     private fun setPlayingState(isVisibleToUser: Boolean) {

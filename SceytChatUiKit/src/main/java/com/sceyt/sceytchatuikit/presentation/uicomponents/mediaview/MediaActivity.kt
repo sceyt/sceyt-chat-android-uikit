@@ -12,18 +12,12 @@ import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.viewpager.widget.ViewPager.OnPageChangeListener
+import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.ActivityMediaBinding
-import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
-import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
-import com.sceyt.sceytchatuikit.extensions.getMimeType
-import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
-import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Forward
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Save
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.Share
+import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.ActionDialog.Action.*
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.io.File
 
@@ -33,6 +27,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private var requestPermissionLauncher: ActivityResultLauncher<String>? = null
     private var fileToSaveAfterPermission: MediaFile? = null
+
     override fun onStart() {
         super.onStart()
         requestPermissionLauncher = initPermissionLauncher { isGranted ->
@@ -93,7 +88,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }
 
         loadMediaDetail(mediaFiles[0])
-        binding.vpMedia.addOnPageChangeListener(object : OnPageChangeListener {
+        binding.vpMedia.registerOnPageChangeCallback(object : OnPageChangeCallback() {
             override fun onPageScrolled(
                     position: Int,
                     positionOffset: Float,
@@ -109,10 +104,9 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
             override fun onPageScrollStateChanged(state: Int) {
 
             }
-
         })
 
-        binding.vpMedia.adapter = MediaAdapter(supportFragmentManager, mediaFiles)
+        binding.vpMedia.adapter = MediaAdapter(this, mediaFiles)
         binding.toolbar.navigationShareIcon.setOnClickListener {
             showActionsDialog(mediaFiles[binding.vpMedia.currentItem])
         }

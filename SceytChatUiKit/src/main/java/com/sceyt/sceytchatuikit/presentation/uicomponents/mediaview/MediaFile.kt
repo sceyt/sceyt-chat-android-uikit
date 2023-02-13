@@ -1,4 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview
+
 class MediaFile(
         val title: String,
         val path: String,
