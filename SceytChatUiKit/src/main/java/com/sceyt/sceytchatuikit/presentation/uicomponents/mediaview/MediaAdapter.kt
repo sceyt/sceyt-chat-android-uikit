@@ -1,17 +1,15 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentStatePagerAdapter
+import androidx.viewpager2.adapter.FragmentStateAdapter
 
-class MediaAdapter(fm: FragmentManager, private val mediaFiles: ArrayList<MediaFile>) : FragmentStatePagerAdapter(fm) {
-
-    override fun getCount(): Int {
+class MediaAdapter(activity: AppCompatActivity, private val mediaFiles: ArrayList<MediaFile>) : FragmentStateAdapter(activity) {
+    override fun getItemCount(): Int {
         return mediaFiles.size
     }
 
-    override fun getItem(position: Int): Fragment {
+    override fun createFragment(position: Int): Fragment {
         return MediaFragment.newInstance(mediaFiles[position])
     }
-
 }

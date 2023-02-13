@@ -84,6 +84,7 @@ class ScalableVideoView @JvmOverloads constructor(
                 pause()
             }
         } catch (ex: IllegalStateException) {
+            ex.printStackTrace()
         }
     }
 
