@@ -97,8 +97,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     }
 
     private fun updateState(data: TransferData) {
-        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.file.messageTid)) return
-        viewHolderHelper.transferData = data
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
         when (data.state) {
             TransferState.PendingDownload -> needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))

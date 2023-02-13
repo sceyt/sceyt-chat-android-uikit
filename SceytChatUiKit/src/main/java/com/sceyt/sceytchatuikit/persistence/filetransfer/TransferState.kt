@@ -46,6 +46,8 @@ fun SceytCircularProgressView.getProgressWithState(state: TransferState, progres
         Uploaded, Downloaded -> {
             isVisible = false
         }
-        ThumbLoaded -> return
+        ThumbLoaded -> {
+            isVisible = false
+        }
     }
 }

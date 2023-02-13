@@ -55,8 +55,8 @@ class MessageFileViewHolder(
     }
 
     private fun updateState(data: TransferData) {
-        if (viewHolderHelper.isFileItemInitialized.not() || (data.messageTid != fileItem.sceytMessage.tid)) return
-        viewHolderHelper.transferData = data
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload, PauseUpload -> {
