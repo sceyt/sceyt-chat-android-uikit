@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo
 
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
-import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
@@ -24,4 +23,17 @@ sealed class ChannelFileItem : AttachmentDataItem {
     }
 
     object LoadingMoreItem : ChannelFileItem()
+
+    companion object {
+        fun ChannelFileItem.getData(): AttachmentWithUserData? {
+            return when (this) {
+                is File -> data
+                is Image -> data
+                is Link -> data
+                is Video -> data
+                is Voice -> data
+                is LoadingMoreItem -> null
+            }
+        }
+    }
 }

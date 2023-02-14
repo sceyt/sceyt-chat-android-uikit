@@ -10,7 +10,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemChannelLinkBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.glideRequestListener
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                      private val linkPreview: LinkPreviewHelper?,
                      private val clickListener: AttachmentClickListenersImpl)
-    : BaseChannelFileViewHolder(binding.root, {}) {
+    : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
 
 
     init {

@@ -537,6 +537,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     .setName(File(path).name)
                     .withTid(ClientWrapper.generateTid())
                     .setMetadata(metadata)
+                    .setCreatedAt(System.currentTimeMillis())
                     .setFileSize(getFileSize(path))
                     .setUpload(false)
                     .build()

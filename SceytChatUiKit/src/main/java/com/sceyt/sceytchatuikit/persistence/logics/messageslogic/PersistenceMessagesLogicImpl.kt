@@ -422,6 +422,11 @@ internal class PersistenceMessagesLogicImpl(
         return messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
+    override suspend fun attachmentSuccessfullySent(message: SceytMessage) {
+        messageDao.insertMessage(message.toMessageDb())
+        messagesCache.upsertNotifyUpdateAnyway(message)
+    }
+
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
 

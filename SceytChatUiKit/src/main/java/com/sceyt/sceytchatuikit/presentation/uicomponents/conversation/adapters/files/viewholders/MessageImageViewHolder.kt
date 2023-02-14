@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder(binding.root, needMediaDataCallback) {
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()

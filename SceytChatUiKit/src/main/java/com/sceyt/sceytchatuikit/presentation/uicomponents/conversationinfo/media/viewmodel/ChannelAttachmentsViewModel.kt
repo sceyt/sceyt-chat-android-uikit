@@ -101,6 +101,8 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
             item?.let { fileItem -> fileItems.add(fileItem) }
         }
 
+        fileItems.sortByDescending { it.file.createdAt }
+
         if (hasPrev)
             fileItems.add(ChannelFileItem.LoadingMoreItem)
 

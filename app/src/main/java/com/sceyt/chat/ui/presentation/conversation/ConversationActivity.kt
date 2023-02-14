@@ -108,19 +108,17 @@ open class ConversationActivity : AppCompatActivity() {
 
         setCustomMessageClickListener(object : MessageClickListenersImpl(binding.messagesListView) {
             override fun onAttachmentClick(view: View, item: FileListItem) {
-                println("AttachmentClick")
+                if (item.file.filePath.isNullOrBlank())
+                    return super.onAttachmentClick(view, item)
+
                 when (item) {
-                    is Image,
-                    is Video,
-                    -> {
-                        if (item.file.filePath.isNullOrBlank())
-                        //Do nothing if file is not ready to display or just call super.onAttachmentClick(view, item)
-                        else
-                            MediaActivity.openMediaView(this@ConversationActivity, item.file)
+                    is Image -> {
+                        MediaActivity.openMediaView(this@ConversationActivity, item.file, item.sceytMessage.from, channel.id)
                     }
-                    else -> {
-                        super.onAttachmentClick(view, item)
+                    is Video -> {
+                        MediaActivity.openMediaView(this@ConversationActivity, item.file, item.sceytMessage.from, channel.id)
                     }
+                    else -> return super.onAttachmentClick(view, item)
                 }
             }
 
