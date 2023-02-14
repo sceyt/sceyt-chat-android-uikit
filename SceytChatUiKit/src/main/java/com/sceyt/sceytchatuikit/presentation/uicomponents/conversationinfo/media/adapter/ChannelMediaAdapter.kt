@@ -6,28 +6,28 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 
 class ChannelMediaAdapter(
         private var attachments: ArrayList<ChannelFileItem>,
         private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,
-) : RecyclerView.Adapter<BaseChannelFileViewHolder>() {
+) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelFileViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: BaseChannelFileViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BaseFileViewHolder<ChannelFileItem>, position: Int) {
         holder.bind(attachments[position])
     }
 
-    override fun onViewAttachedToWindow(holder: BaseChannelFileViewHolder) {
+    override fun onViewAttachedToWindow(holder: BaseFileViewHolder<ChannelFileItem>) {
         super.onViewAttachedToWindow(holder)
         holder.onViewAttachedToWindow()
     }
 
-    override fun onViewDetachedFromWindow(holder: BaseChannelFileViewHolder) {
+    override fun onViewDetachedFromWindow(holder: BaseFileViewHolder<ChannelFileItem>) {
         super.onViewDetachedFromWindow(holder)
         holder.onViewDetachedFromWindow()
     }

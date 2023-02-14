@@ -115,6 +115,16 @@ class MessagesCache {
         }
     }
 
+    fun upsertNotifyUpdateAnyway(vararg message: SceytMessage) {
+        synchronized(lock) {
+            message.forEach {
+                val payLoad = getPayLoads(it)
+                cachedMessages[it.tid] = it
+                emitMessageUpdated(payLoad, it)
+            }
+        }
+    }
+
     private fun emitMessageUpdated(payLoads: List<AttachmentPayLoadEntity>?, vararg message: SceytMessage) {
         setPayloads(payLoads, message.toList())
         messageUpdatedFlow_.tryEmit(message.map { it.clone() })

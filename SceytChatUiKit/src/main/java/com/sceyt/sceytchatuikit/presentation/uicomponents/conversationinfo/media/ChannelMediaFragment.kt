@@ -23,6 +23,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem.Companion.getData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
@@ -103,8 +104,9 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 }
 
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    MediaActivity.openMediaView(requireContext(), item.file)
-//                    item.file.openFile(requireContext())
+                    item.getData()?.let { data ->
+                        MediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id)
+                    }
                 })
             })
             with((binding ?: return).rvFiles) {

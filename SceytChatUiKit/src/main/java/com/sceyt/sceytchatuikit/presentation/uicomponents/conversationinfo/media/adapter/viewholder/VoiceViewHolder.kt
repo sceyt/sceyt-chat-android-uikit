@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -25,7 +25,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
                       private val userNameBuilder: ((User) -> String)?,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
-    : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
+    : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     private var lastFilePath: String? = ""
 

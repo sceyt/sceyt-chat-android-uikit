@@ -445,12 +445,7 @@ class MessageListViewModel(
                 if (shouldShowDate(sceytMessage, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
-                val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
-                    isGroup = this@MessageListViewModel.isGroup
-                    files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
-                    canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
-                    messageReactions = initReactionsItems(this)
-                })
+                val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
@@ -469,6 +464,17 @@ class MessageListViewModel(
         }
 
         return messageItems
+    }
+
+
+    internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage?): SceytMessage {
+        return sceytMessage.apply {
+            isGroup = this@MessageListViewModel.isGroup
+            files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
+            if (prevMessage != null)
+                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+            messageReactions = initReactionsItems(this)
+        }
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {

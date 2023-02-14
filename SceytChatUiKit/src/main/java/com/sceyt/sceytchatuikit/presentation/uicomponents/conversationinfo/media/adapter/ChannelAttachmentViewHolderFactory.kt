@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
@@ -22,7 +22,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelFileViewHolder {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
         return when (viewType) {
             ItemType.Image.ordinal -> createImageViewHolder(parent)
             ItemType.Video.ordinal -> createVideoViewHolder(parent)
@@ -34,39 +34,39 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
         }
     }
 
-    open fun createImageViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+    open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return ImageViewHolder(
             SceytItemChannelImageBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
-    open fun createVideoViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+    open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return VideoViewHolder(
             SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
-    open fun createFileViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+    open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return FileViewHolder(
             SceytItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
-    open fun createVoiceViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+    open fun createVoiceViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return VoiceViewHolder(
             SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback, userNameBuilder = userNameBuilder)
     }
 
-    open fun createLinkViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+    open fun createLinkViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return LinkViewHolder(
             SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false), linkPreviewHelper,
             clickListeners)
     }
 
-    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelFileViewHolder {
+    open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
-        return object : BaseChannelFileViewHolder(binding.root, {}) {
+        return object : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
             override fun bind(item: ChannelFileItem) {
             }
         }

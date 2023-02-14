@@ -17,7 +17,7 @@ class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseFileViewHolder(binding.root, needMediaDataCallback) {
+) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()
