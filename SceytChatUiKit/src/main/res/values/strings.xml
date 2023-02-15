@@ -152,5 +152,6 @@
     <string name="sceyt_share_max_chats_count">You are allowed to send a message to a maximum of 5 chats.</string>
     <string name="sceyt_photo">Photo</string>
     <string name="slide_to_cancel">"\u003C Slide to cancel"</string>
+    <string name="sceyt_message_copied">Message copied</string>
 
 </resources>
