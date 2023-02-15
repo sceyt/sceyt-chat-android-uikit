@@ -179,14 +179,16 @@ class OutVoiceMsgViewHolder(
     }
 
     private fun updateState(data: TransferData) {
-        if (isMessageListItemInitialized.not() || messageListItem !is MessageItem) return
+        if (isMessageListItemInitialized.not()) return
+        val message = (messageListItem as? MessageItem)?.message ?: return
+        if ((data.messageTid != message.tid)) return
+
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload, PauseUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
             PendingDownload -> {
-                val message = (messageListItem as MessageItem).message
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(
                     (message.attachments ?: return)[0]))
             }

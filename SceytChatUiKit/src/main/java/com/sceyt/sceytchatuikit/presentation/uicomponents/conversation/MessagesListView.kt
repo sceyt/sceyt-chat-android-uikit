@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
@@ -36,6 +37,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Me
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -554,7 +556,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {
-        item.file.openFile(context)
+        when (item) {
+            is FileListItem.Image -> {
+                MediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+            }
+            is FileListItem.Video -> {
+                MediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+            }
+            else -> item.file.openFile(context)
+        }
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
@@ -579,6 +589,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     // Message popup events
     override fun onCopyMessageClick(message: SceytMessage) {
         context.setClipboard(message.body)
+        Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 
     override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
