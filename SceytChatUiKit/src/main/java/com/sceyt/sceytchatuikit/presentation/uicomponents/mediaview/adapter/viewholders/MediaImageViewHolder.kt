@@ -1,15 +1,16 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.viewholders
 
 import android.util.Size
-import com.sceyt.sceytchatuikit.databinding.ItemImageBinding
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
+import com.sceyt.sceytchatuikit.databinding.SceytMediaItemImageBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 
-class MediaImageViewHolder(private val binding: ItemImageBinding,
+class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
                            private val clickListeners: (MediaItem) -> Unit,
                            private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
 
@@ -78,6 +79,7 @@ class MediaImageViewHolder(private val binding: ItemImageBinding,
     override fun getThumbSize() = Size(itemView.width, itemView.height)
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 }

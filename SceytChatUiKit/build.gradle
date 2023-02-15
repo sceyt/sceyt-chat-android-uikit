@@ -127,4 +127,5 @@ dependencies {
     api supportDependencies.lightCompressor
     api supportDependencies.workRuntimeKtx
     api supportDependencies.waveSeekBar
+    implementation supportDependencies.photoView
 }

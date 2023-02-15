@@ -19,7 +19,6 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -38,8 +37,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -57,7 +54,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var enabledClickActions = true
 
     init {
-        TransferUpdateObserver.clearListeners()
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
 
         if (attrs != null) {
@@ -344,10 +340,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             foundAttachment?.let { attachment ->
                 attachment.updateWithTransferData(data)
                 foundAttachmentFiles?.updateWithTransferData(data)
-
-                withContext(Dispatchers.Main) {
-                    TransferUpdateObserver.update(data)
-                }
             }
         }
     }
@@ -358,10 +350,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val foundAttachmentFiles = (it.second as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
             foundAttachmentFiles?.let { listItem ->
                 listItem.thumbPath = data.filePath
-
-                withContext(Dispatchers.Main) {
-                    TransferUpdateObserver.update(data)
-                }
             }
         }
     }

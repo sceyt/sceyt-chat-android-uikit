@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.scalableVideoView
 
 import android.graphics.Matrix
-import com.sceyt.sceytchatuikit.videoview.scalableVideoView.Size
 
 class ScaleManager(private val mViewSize: Size, private val mVideoSize: Size) {
     fun getScaleMatrix(scalableType: ScalableType?): Matrix? {

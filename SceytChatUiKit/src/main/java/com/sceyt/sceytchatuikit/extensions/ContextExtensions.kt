@@ -82,6 +82,18 @@ fun Context.asComponentActivity(): ComponentActivity {
     }
 }
 
+fun Context.maybeComponentActivity(): ComponentActivity? {
+    return when (this) {
+        is ComponentActivity -> return this
+        is ContextWrapper -> {
+            if (baseContext is ComponentActivity)
+                baseContext as ComponentActivity
+            else null
+        }
+        else -> null
+    }
+}
+
 fun Context.asActivity(): Activity {
     return when (this) {
         is Activity -> return this

@@ -2,11 +2,12 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 
 import android.util.Size
 import androidx.core.view.isVisible
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
@@ -89,6 +90,7 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 }

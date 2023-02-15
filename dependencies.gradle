@@ -18,6 +18,8 @@ ext {
     constraint_layout_version = '2.1.4'
     coroutines_version = '1.6.0-native-mt'
 
+    photo_view_version = '2.3.0'
+
     datastore_version = '1.0.0'
 
     exo_player_media_version = '1.0.0-beta02'
@@ -106,5 +108,6 @@ ext {
             swipeRefreshLayout  : "androidx.swiperefreshlayout:swiperefreshlayout:$swipe_refresh_layout_version",
             workRuntimeKtx      : "androidx.work:work-runtime-ktx:$work_version",
             waveSeekBar         : "com.github.massoudss:waveformSeekBar:$wave_seek_bar_version",
+            photoView           : "com.github.chrisbanes:PhotoView:$photo_view_version",
     ]
 }

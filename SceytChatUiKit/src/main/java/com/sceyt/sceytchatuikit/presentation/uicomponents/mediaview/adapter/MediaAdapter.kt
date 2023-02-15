@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter
 
-import android.annotation.SuppressLint
+import android.media.MediaPlayer
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -12,6 +12,7 @@ class MediaAdapter(
         private var attachments: ArrayList<MediaItem>,
         private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
 ) : RecyclerView.Adapter<BaseFileViewHolder<MediaItem>>() {
+    private var mediaPlayers = mutableListOf<MediaPlayer>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
@@ -39,29 +40,11 @@ class MediaAdapter(
         return attachmentViewHolderFactory.getItemViewType(attachments[position])
     }
 
-
-    @SuppressLint("NotifyDataSetChanged")
-    fun addNewItems(items: List<MediaItem>) {
-        if (items.isEmpty()) return
-
-        attachments.addAll(items)
-        if (attachments.size == items.size)
-            notifyDataSetChanged()
-        else
-            notifyItemRangeInserted(attachments.size - items.size, items.size)
-    }
-
     fun getLastMediaItem() = attachments.last()
 
     fun getFirstMediaItem() = attachments.first()
 
     fun getData() = attachments
-
-    @SuppressLint("NotifyDataSetChanged")
-    fun clearData() {
-        attachments = arrayListOf()
-        notifyDataSetChanged()
-    }
 
     fun notifyUpdate(data: List<MediaItem>, recyclerView: RecyclerView) {
         val myDiffUtil = MediaDiffUtil(attachments, data)
@@ -70,7 +53,6 @@ class MediaAdapter(
         this.attachments.clear()
         this.attachments.addAll(data)
     }
-
 
     fun addPrevItems(data: List<MediaItem>) {
         if (data.isEmpty()) return
@@ -89,5 +71,13 @@ class MediaAdapter(
         if (data.isEmpty()) return
         attachments.addAll(data)
         notifyItemRangeInserted(attachments.size - data.size, data.size)
+    }
+
+    fun pauseAllVideos() {
+        mediaPlayers.forEach { it.pause() }
+    }
+
+    fun addMediaPlayer(mediaPlayer: MediaPlayer) {
+        mediaPlayers.add(mediaPlayer)
     }
 }

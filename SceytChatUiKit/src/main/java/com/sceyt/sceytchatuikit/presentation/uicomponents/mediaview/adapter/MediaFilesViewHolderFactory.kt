@@ -4,8 +4,8 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.databinding.ItemImageBinding
-import com.sceyt.sceytchatuikit.databinding.ItemVideoBinding
+import com.sceyt.sceytchatuikit.databinding.SceytMediaItemImageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytMediaItemVideoBinding
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.viewholders.MediaImageViewHolder
@@ -28,13 +28,13 @@ open class MediaFilesViewHolderFactory(context: Context) {
 
     open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder<MediaItem> {
         return MediaImageViewHolder(
-            ItemImageBinding.inflate(layoutInflater, parent, false), clickListeners,
+            SceytMediaItemImageBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder<MediaItem> {
         return MediaVideoViewHolder(
-            ItemVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
+            SceytMediaItemVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
             needMediaDataCallback = needMediaDataCallback)
     }
 

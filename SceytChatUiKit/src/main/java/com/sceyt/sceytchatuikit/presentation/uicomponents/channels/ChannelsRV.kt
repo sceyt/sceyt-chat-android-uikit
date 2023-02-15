@@ -61,7 +61,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
             if (isFirstItemDisplaying())
                 scrollToPosition(0)
 
-            context.asComponentActivity().lifecycleScope.launchWhenResumed {
+            context.maybeComponentActivity()?.lifecycleScope?.launchWhenResumed {
                 delay(500)
                 checkRichToEnd()
             }

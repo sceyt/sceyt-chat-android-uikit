@@ -108,9 +108,6 @@ open class ConversationActivity : AppCompatActivity() {
 
         setCustomMessageClickListener(object : MessageClickListenersImpl(binding.messagesListView) {
             override fun onAttachmentClick(view: View, item: FileListItem) {
-                if (item.file.filePath.isNullOrBlank())
-                    return super.onAttachmentClick(view, item)
-
                 when (item) {
                     is Image -> {
                         MediaActivity.openMediaView(this@ConversationActivity, item.file, item.sceytMessage.from, channel.id)
