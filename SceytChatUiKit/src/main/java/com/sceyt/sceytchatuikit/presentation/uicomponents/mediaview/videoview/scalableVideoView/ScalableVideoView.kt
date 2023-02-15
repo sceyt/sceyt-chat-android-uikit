@@ -13,9 +13,7 @@ import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import androidx.annotation.RawRes
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.videoview.scalableVideoView.Size
 import java.io.FileDescriptor
-import java.io.IOException
 
 class ScalableVideoView @JvmOverloads constructor(
         context: Context,
@@ -47,10 +45,8 @@ class ScalableVideoView @JvmOverloads constructor(
 
     init {
         if (attrs != null) {
-            val a =
-                    context.obtainStyledAttributes(attrs, R.styleable.ScalableVideoView, defStyle, 0)
-            val scaleType =
-                    a.getInt(R.styleable.ScalableVideoView_scalableType, ScalableType.NONE.ordinal)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.ScalableVideoView, defStyle, 0)
+            val scaleType = a.getInt(R.styleable.ScalableVideoView_scalableType, ScalableType.NONE.ordinal)
             a.recycle()
             mScalableType = ScalableType.values().getOrNull(scaleType) ?: ScalableType.NONE
         }

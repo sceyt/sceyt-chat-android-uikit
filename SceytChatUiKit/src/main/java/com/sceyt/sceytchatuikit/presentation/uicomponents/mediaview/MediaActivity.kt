@@ -1,9 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview
 
+import android.Manifest
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -11,26 +11,27 @@ import androidx.core.app.ShareCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SnapHelper
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.databinding.ActivityMediaBinding
+import com.sceyt.sceytchatuikit.databinding.SceytActivityMediaBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaFilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.OnMediaClickCallback
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.viewmodel.MediaViewModel
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -38,22 +39,28 @@ import java.io.File
 
 
 class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
-    lateinit var binding: ActivityMediaBinding
+    lateinit var binding: SceytActivityMediaBinding
     private val viewModel by viewModels<MediaViewModel>()
-    private var fileToSaveAfterPermission: MediaFile? = null
+    private var fileToSaveAfterPermission: MediaItem? = null
     private var channelId: Long = 0L
     private val mediaTypes = listOf(AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value())
     private var mediaAdapter: MediaAdapter? = null
+    private var currentItem: MediaItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMediaBinding.inflate(LayoutInflater.from(this))
+        binding = SceytActivityMediaBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
 
         getDataFromIntent()
         initPageWithData()
         initViews()
         initViewModel()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mediaAdapter?.pauseAllVideos()
     }
 
     private fun getDataFromIntent() {
@@ -83,12 +90,6 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
             }
 
         }.launchIn(lifecycleScope)
-
-        MessageEventsObserver.onTransferUpdatedFlow
-            .onEach {
-                TransferUpdateObserver.update(it)
-            }
-            .launchIn(lifecycleScope)
     }
 
     private fun initPageWithData() {
@@ -108,7 +109,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
             }
             if (mediaItem != null) {
                 mediaFiles.add(mediaItem)
-                loadMediaDetail(mediaItem.data.attachment, mediaItem.data.user)
+                loadMediaDetail(mediaItem)
             }
 
             setOrUpdateMediaAdapter(mediaFiles)
@@ -120,42 +121,37 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
                     viewModel.loadNearPrevAttachments(channelId, attachment.id, mediaTypes, 0)
             }
         }
-
-
-        /*   binding.vpMedia.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-               override fun onPageSelected(position: Int) {
-                   mediaAdapter?.getData()?.getOrNull(position)?.getData()?.let {
-                       loadMediaDetail(it.attachment, it.user)
-                   }
-               }
-           })
-   */
     }
 
     private fun initViews() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
+        binding.layoutToolbar.applySystemWindowInsetsPadding(applyTop = true)
 
         binding.root.post { toggleFullScreen(false) }
 
-        binding.toolbar.navigationShareIcon.setOnClickListener {
-            //showActionsDialog(mediaFiles[binding.vpMedia.currentItem])
+        binding.icShare.setOnClickListener {
+            currentItem?.let { item -> showActionsDialog(item) }
         }
 
-        binding.toolbar.navigationIcon.setOnClickListener {
+        binding.icBack.setOnClickListener {
             finish()
         }
     }
 
-    fun loadMediaDetail(media: SceytAttachment, user: User?) {
-        binding.toolbar.setTitle(user?.getPresentableName() ?: "")
-        binding.toolbar.setDate(DateTimeUtil.getDateTimeString(media.createdAt, "MM.dd.yy, HH:mm"))
+    private fun loadMediaDetail(item: MediaItem) {
+        currentItem = item
+        val name = item.data.user?.let {
+            SceytKitConfig.userNameBuilder?.invoke(it) ?: it.getPresentableName()
+        }
+        binding.tvTitle.text = name ?: ""
+        binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "MM.dd.yy, HH:mm")
     }
 
     override fun onMediaClick() {
-        binding.toolbar.visibility =
-                if (binding.toolbar.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-        toggleFullScreen(binding.toolbar.visibility == View.GONE)
+        with(binding.layoutToolbar) {
+            isVisible = !isVisible
+            toggleFullScreen(!isVisible)
+        }
     }
 
     private fun toggleFullScreen(isFullScreen: Boolean) {
@@ -178,35 +174,35 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    fun isShowMediaDetail() = binding.toolbar.visibility == View.VISIBLE
+    fun isShowMediaDetail() = binding.layoutToolbar.isVisible
 
     private fun setOrUpdateMediaAdapter(data: List<MediaItem>) {
         if (mediaAdapter == null) {
-            val snapHelper: SnapHelper = PagerSnapHelper()
-            snapHelper.attachToRecyclerView(binding.vpMedia)
-
             mediaAdapter = MediaAdapter(data.toArrayList(), MediaFilesViewHolderFactory(this).also {
                 it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
 
                 it.setClickListener { onMediaClick() }
             })
 
-            binding.vpMedia.apply {
+            binding.rvMedia.apply {
                 adapter = mediaAdapter
+                PagerSnapHelper().attachToRecyclerView(this)
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying()) {
                             if (viewModel.canLoadNext()) {
-                                viewModel.loadNextAttachments(channelId, mediaAdapter?.getLastMediaItem()?.data?.attachment?.id
-                                        ?: return, true,
+                                val attachmentId = mediaAdapter?.getLastMediaItem()?.data?.attachment?.id
+                                        ?: return
+                                viewModel.loadNextAttachments(channelId, attachmentId, true,
                                     mediaTypes, adapter?.itemCount ?: 1)
                             }
                         } else if (isFirstItemDisplaying()) {
                             if (viewModel.canLoadPrev()) {
-                                viewModel.loadPrevAttachments(channelId, mediaAdapter?.getFirstMediaItem()?.data?.attachment?.id
-                                        ?: return, true,
+                                val attachmentId = mediaAdapter?.getFirstMediaItem()?.data?.attachment?.id
+                                        ?: return
+                                viewModel.loadPrevAttachments(channelId, attachmentId, true,
                                     mediaTypes, adapter?.itemCount ?: 1)
                             }
                         }
@@ -214,25 +210,30 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
                     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                         super.onScrollStateChanged(recyclerView, newState)
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            val position = getFirstVisibleItemPosition()
+                            mediaAdapter?.getData()?.getOrNull(position)?.let {
+                                loadMediaDetail(it)
+                            }
+                        }
                     }
                 })
             }
-        } else mediaAdapter?.notifyUpdate(data, binding.vpMedia)
+        } else mediaAdapter?.notifyUpdate(data, binding.rvMedia)
     }
 
     private fun showActionsDialog(file: MediaItem) {
-        /* ActionDialog(this, file) {
-             when (it) {
-                 Save -> {
-                     fileToSaveAfterPermission = file
-                     if (checkAndAskPermissions(requestPermissionLauncher, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                         save(file)
-                     }
-                 }
-                 Share -> share(file)
-                 Forward -> forward(file)
-             }
-         }.show()*/
+        ActionDialog(this) {
+            when (it) {
+                ActionDialog.Action.Save -> {
+                    fileToSaveAfterPermission = file
+                    if (checkAndAskPermissions(requestPermissionLauncher, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                        save(file)
+                }
+                ActionDialog.Action.Share -> share(file)
+                ActionDialog.Action.Forward -> forward(file)
+            }
+        }.show()
     }
 
     private fun share(item: MediaItem) {
@@ -249,27 +250,25 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun forward(file: MediaFile) {
+    private fun forward(item: MediaItem) {
         // To do
         Toast.makeText(this@MediaActivity, "Coming soon!", Toast.LENGTH_SHORT).show()
     }
 
-    private fun save(file: MediaFile) {
-        /* val mimeType = getMimeTypeFrom(file)
+    private fun save(item: MediaItem) {
+        val file = item.file
+        val mimeType = getMimeTypeFrom(file)
 
-         var extension = File(file.path).extension
-         if (extension.isBlank()) extension = if (file.type == FileType.Image) "jpg" else "mp4"
-
-         saveToGallery(
-             context = this,
-             path = file.path,
-             name = "${file.title}.$extension",
-             mimeType = mimeType,
-         )?.let {
-             Toast.makeText(this, getString(R.string.sceyt_saved), Toast.LENGTH_LONG).show()
-         } ?: run {
-             Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_LONG).show()
-         }*/
+        saveToGallery(
+            context = this,
+            path = file.filePath.toString(),
+            name = file.name,
+            mimeType = mimeType,
+        )?.let {
+            Toast.makeText(this, getString(R.string.sceyt_saved), Toast.LENGTH_SHORT).show()
+        } ?: run {
+            Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun getMimeTypeFrom(file: SceytAttachment): String {
@@ -282,7 +281,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         if (isGranted) {
             fileToSaveAfterPermission?.let { save(it) }
         } else {
-            Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT).show()
         }
     }
 

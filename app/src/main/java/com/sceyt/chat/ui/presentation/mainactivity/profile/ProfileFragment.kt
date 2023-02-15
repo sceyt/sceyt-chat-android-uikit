@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
+import com.sceyt.sceytchatuikit.R as SceytKitR
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -87,14 +88,14 @@ class ProfileFragment : Fragment() {
             binding.switchNotifications.isChecked = it
         }
 
-        viewModel.logOutLiveData.observe(viewLifecycleOwner){
+        viewModel.logOutLiveData.observe(viewLifecycleOwner) {
             preference.setToken(null)
             preference.setUserName(null)
             LoginActivity.launch(requireContext())
             requireActivity().finish()
         }
 
-        viewModel.logOutErrorLiveData.observe(viewLifecycleOwner){
+        viewModel.logOutErrorLiveData.observe(viewLifecycleOwner) {
             customToastSnackBar(requireView(), it.toString())
         }
     }
@@ -167,7 +168,7 @@ class ProfileFragment : Fragment() {
             }).setTitle(getString(R.string.sign_out_title))
                 .setDescription(getString(R.string.sign_out_desc))
                 .setPositiveButtonTitle(getString(R.string.sign_out))
-                .setPositiveButtonTextColor(requireContext().getCompatColor(R.color.sceyt_color_red))
+                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_red))
                 .show()
         }
 

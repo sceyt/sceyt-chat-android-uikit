@@ -23,28 +23,6 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val fileTransferService: FileTransferService by inject()
 
-    private val _loadPrevFilesFlow = MutableSharedFlow<List<MediaItem>>(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val loadPrevFilesFlow: SharedFlow<List<MediaItem>> = _loadPrevFilesFlow
-
-    private val _loadNextFilesFlow = MutableSharedFlow<List<MediaItem>>(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val loadNextFilesFlow: SharedFlow<List<MediaItem>> = _loadNextFilesFlow
-
-    private val _loadNearFilesFlow = MutableSharedFlow<List<MediaItem>>(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val loadNearFilesFlow: SharedFlow<List<MediaItem>> = _loadNearFilesFlow
-
-
-    private val _loadServerFilesFlow = MutableSharedFlow<List<MediaItem>>(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val loadServerFilesFlow: SharedFlow<List<MediaItem>> = _loadServerFilesFlow
-
-
     private val _fileFilesFlow = MutableSharedFlow<PaginationResponse<AttachmentWithUserData>>(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -102,31 +80,14 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     private suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<AttachmentWithUserData>) {
-        withContext(Dispatchers.Main){ _fileFilesFlow.emit(response) }
+        withContext(Dispatchers.Main) { _fileFilesFlow.emit(response) }
         notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
     }
 
     private fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<AttachmentWithUserData>) {
         _fileFilesFlow.tryEmit(response)
-        when (response.data) {
-            is SceytResponse.Success -> {
-                if (response.hasDiff) {
-                    /*   val newMessages = mapToFileListItem(data = response.cacheData,
-                           hasPrev = response.hasPrev, hasNext = response.hasNext)*/
-
-                    //emitByLoadType(true, response.loadType, response.cacheData)
-                    //_loadNearFilesFlow.tryEmit(newMessages)
-                } /*else if (response.hasPrev.not())
-                    _loadPrevFilesFlow.tryEmit(emptyList())*/
-            }
-            is SceytResponse.Error -> {
-                /* if (hasNextDb.not())
-                     _loadPrevFilesFlow.tryEmit(emptyList())*/
-            }
-        }
         notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
     }
-
 
     fun mapToMediaItem(data: List<AttachmentWithUserData>?): List<MediaItem> {
         if (data.isNullOrEmpty()) return arrayListOf()

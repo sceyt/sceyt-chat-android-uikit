@@ -5,7 +5,7 @@ import android.net.Uri
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import com.sceyt.sceytchatuikit.databinding.VideoViewBinding
+import com.sceyt.sceytchatuikit.databinding.SceytVideoViewBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.VideoControllerView.MediaPlayerControl
 
@@ -15,8 +15,8 @@ class CustomVideoView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr), MediaPlayerControl {
-    private val binding = VideoViewBinding.inflate(LayoutInflater.from(context), this, true)
-
+    private val binding = SceytVideoViewBinding.inflate(LayoutInflater.from(context), this, true)
+    private var currentMediaPath: String? = null
 
     init {
         binding.controllerView.setAnchorView(binding.root)
@@ -25,7 +25,6 @@ class CustomVideoView @JvmOverloads constructor(
             binding.controllerView.reloadUI()
         }
     }
-
 
     private fun initPlayer(mediaPath: String?) {
         if (mediaPath == null) return
@@ -42,7 +41,6 @@ class CustomVideoView @JvmOverloads constructor(
         binding.videoView.setDataSource(context, uri)
     }
 
-
     private fun initPlayer(rawId: Int) {
         if (binding.videoView.isPlaying) {
             binding.videoView.reset()
@@ -54,14 +52,15 @@ class CustomVideoView @JvmOverloads constructor(
     }
 
     fun setVideoPath(mediaPath: String?, startPlay: Boolean = false, isLooping: Boolean = false) {
+        if (currentMediaPath == mediaPath) return
+        currentMediaPath = mediaPath
         initPlayer(mediaPath)
-        if (startPlay) {
-            binding.videoView.prepareAsync {
+        binding.videoView.prepareAsync {
+            if (startPlay)
                 binding.videoView.start()
-                binding.videoView.isLooping = isLooping
-                post {
-                    binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
-                }
+            binding.videoView.isLooping = isLooping
+            post {
+                binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
             }
         }
     }
@@ -121,6 +120,10 @@ class CustomVideoView @JvmOverloads constructor(
         binding.controllerView.setUserVisibleHint(isVisibleToUser)
     }
 
+    fun setPlayingListener(listener: VideoControllerView.PlayingListener) {
+        binding.controllerView.setPlayingListener(listener)
+    }
+
     override fun start() {
         binding.videoView.start()
     }
@@ -129,8 +132,11 @@ class CustomVideoView @JvmOverloads constructor(
         binding.videoView.pause()
     }
 
+    val mediaPlayer get() = binding.videoView.mediaPlayer
+
     override val duration: Int
         get() = binding.videoView.duration
+
     override val currentPosition: Int
         get() = binding.videoView.currentPosition
 
@@ -142,5 +148,4 @@ class CustomVideoView @JvmOverloads constructor(
         get() = binding.videoView.isPlaying
 
     override fun canPause(): Boolean = true
-
 }

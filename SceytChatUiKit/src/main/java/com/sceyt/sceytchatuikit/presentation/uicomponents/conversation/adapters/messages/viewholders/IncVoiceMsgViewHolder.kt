@@ -6,6 +6,7 @@ import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncVoiceBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -14,7 +15,6 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
@@ -95,7 +95,7 @@ class IncVoiceMsgViewHolder(
         lastFilePath = attachment.filePath
         loadProgress.release(attachment.progressPercent)
         attachment.toTransferData()?.let { updateState(it) }
-        setListener(attachment)
+        setListener()
 
         if (attachment.filePath.isNullOrBlank())
             needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(attachment))
@@ -226,9 +226,9 @@ class IncVoiceMsgViewHolder(
 
     private var lastFilePath: String? = ""
 
-    private fun setListener(attachment: SceytAttachment) {
-        val listenerKey = attachment.messageTid.toString()
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+    private fun setListener() {
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytItemIncVoiceBinding.setMessageItemStyle() {

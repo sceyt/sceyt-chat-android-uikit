@@ -12,9 +12,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
-import com.sceyt.sceytchatuikit.databinding.MediaControllerBinding
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.OnMediaClickCallback
+import com.sceyt.sceytchatuikit.databinding.SceytMediaControllerBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.applySystemWindowInsetsMargin
 import java.lang.ref.WeakReference
 import java.util.*
@@ -55,7 +53,7 @@ class VideoControllerView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr) {
-    private val binding = MediaControllerBinding.inflate(LayoutInflater.from(context), this, true)
+    private val binding = SceytMediaControllerBinding.inflate(LayoutInflater.from(context), this, true)
     var isShowing = false
         private set
     private var isDragging = false
@@ -73,6 +71,7 @@ class VideoControllerView @JvmOverloads constructor(
     val vc = ViewConfiguration.get(context)
     val mSlop = vc.scaledTouchSlop
     private var onMediaClickCallback: OnMediaClickCallback? = null
+    private var playingListener: PlayingListener? = null
 
 
     // There are two scenarios that can trigger the seekbar listener to trigger:
@@ -108,17 +107,17 @@ class VideoControllerView @JvmOverloads constructor(
                 // the progress bar's position.
                 return
             }
-            val duration = player!!.duration.toLong()
+            val duration = player?.duration?.toLong() ?: 0
             val newPosition = duration * progress / 1000L
-            player!!.seekTo(newPosition.toInt())
+            player?.seekTo(newPosition.toInt())
             if (player != null) binding.tvCurrentPosition.text = stringForTime(newPosition.toInt())
         }
 
         override fun onStopTrackingTouch(bar: SeekBar) {
             isDragging = false
-            val duration = player!!.duration.toLong()
+            val duration = player?.duration?.toLong() ?: 0
             val newPosition = duration * bar.progress / 100L
-            player!!.seekTo(newPosition.toInt())
+            player?.seekTo(newPosition.toInt())
             if (player != null) binding.tvCurrentPosition.text = stringForTime(newPosition.toInt())
             setProgress()
             updatePausePlay()
@@ -135,18 +134,9 @@ class VideoControllerView @JvmOverloads constructor(
     init {
         formatBuilder = StringBuilder()
         formatter = Formatter(formatBuilder, Locale.getDefault())
-        binding.btnPlayPause.setOnClickListener {
-            doPauseResume()
-            if (player != null) {
-                if (player!!.isPlaying) {
-                    binding.btnPlayPause.visibility = View.GONE
-                }
-            }
-        }
 
         binding.btnPlayPauseBottom.setOnClickListener {
             doPauseResume()
-            binding.btnPlayPause.visibility = View.GONE
         }
 
         binding.seekBar.setOnSeekBarChangeListener(seekListener)
@@ -157,26 +147,20 @@ class VideoControllerView @JvmOverloads constructor(
                 hide()
             } else {
                 show(sDefaultTimeout)
-                binding.btnPlayPause.visibility = View.GONE
             }
             onMediaClickCallback?.onMediaClick()
         }
 
-        onMediaClickCallback = context as OnMediaClickCallback
+        onMediaClickCallback = context as? OnMediaClickCallback
 
-        binding.btnPlayPauseBottom.applySystemWindowInsetsMargin(applyBottom = true)
+        binding.timerView.applySystemWindowInsetsMargin(applyBottom = true)
     }
 
     fun setUserVisibleHint(isVisibleToUser: Boolean) {
         if (isVisibleToUser) {
             show(0)
-            binding.btnPlayPause.visibility = View.GONE
         } else {
             hide()
-            if (!(context as MediaActivity).isShowMediaDetail()) {
-                binding.btnPlayPause.visibility = View.VISIBLE
-            }
-            binding.btnPlayPause.isSelected = false
         }
     }
 
@@ -198,8 +182,7 @@ class VideoControllerView @JvmOverloads constructor(
             return
         }
         try {
-            if (!player!!.canPause()) {
-                binding.btnPlayPause.isEnabled = false
+            if (player?.canPause()?.not() == true) {
                 binding.btnPlayPauseBottom.isEnabled = false
             }
         } catch (ex: IncompatibleClassChangeError) {
@@ -225,7 +208,6 @@ class VideoControllerView @JvmOverloads constructor(
             binding.btnPlayPauseBottom.visibility = View.VISIBLE
             binding.timerView.visibility = View.VISIBLE
             setProgress()
-            binding.btnPlayPause.requestFocus()
             binding.btnPlayPauseBottom.requestFocus()
             disableUnsupportedButtons()
             isShowing = true
@@ -242,7 +224,6 @@ class VideoControllerView @JvmOverloads constructor(
             return
         }
         try {
-            binding.btnPlayPause.visibility = View.GONE
             binding.btnPlayPauseBottom.visibility = View.GONE
             binding.timerView.visibility = View.GONE
             controllerHandler.removeMessages(SHOW_PROGRESS)
@@ -290,41 +271,46 @@ class VideoControllerView @JvmOverloads constructor(
         val keyCode = event.keyCode
         val uniqueDown = (event.repeatCount == 0
                 && event.action == KeyEvent.ACTION_DOWN)
-        if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || keyCode == KeyEvent.KEYCODE_SPACE) {
-            if (uniqueDown) {
-                doPauseResume()
+        when (keyCode) {
+            KeyEvent.KEYCODE_HEADSETHOOK, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
+                if (uniqueDown) {
+                    doPauseResume()
+                    show(sDefaultTimeout)
+                    binding.btnPlayPauseBottom.requestFocus()
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                if (uniqueDown && !player!!.isPlaying) {
+                    player!!.start()
+                    updatePausePlay()
+                    show(sDefaultTimeout)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_STOP, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                if (uniqueDown && player?.isPlaying == true) {
+                    player?.pause()
+                    updatePausePlay()
+                    show(sDefaultTimeout)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_MUTE -> {
+                // don't show the controls for volume adjustment
+                return super.dispatchKeyEvent(event)
+            }
+            KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_MENU -> {
+                if (uniqueDown) {
+                    hide()
+                }
+                return true
+            }
+            else -> {
                 show(sDefaultTimeout)
-                binding.btnPlayPause.requestFocus()
-                binding.btnPlayPauseBottom.requestFocus()
+                return super.dispatchKeyEvent(event)
             }
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY) {
-            if (uniqueDown && !player!!.isPlaying) {
-                player!!.start()
-                updatePausePlay()
-                show(sDefaultTimeout)
-            }
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP
-                || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE
-        ) {
-            if (uniqueDown && player!!.isPlaying) {
-                player!!.pause()
-                updatePausePlay()
-                show(sDefaultTimeout)
-            }
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) {
-            // don't show the controls for volume adjustment
-            return super.dispatchKeyEvent(event)
-        } else if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU) {
-            if (uniqueDown) {
-                hide()
-            }
-            return true
         }
-        show(sDefaultTimeout)
-        return super.dispatchKeyEvent(event)
     }
 
     private val pauseListener = OnClickListener {
@@ -337,26 +323,24 @@ class VideoControllerView @JvmOverloads constructor(
         if (player == null) {
             return
         }
-        binding.btnPlayPause.isSelected = player!!.isPlaying
-        binding.btnPlayPauseBottom.isSelected = player!!.isPlaying
+        binding.btnPlayPauseBottom.isSelected = player?.isPlaying == true
+        playingListener?.playing(player?.isPlaying == true)
     }
-
 
     private fun doPauseResume() {
         if (player == null) {
             return
         }
-        if (player!!.isPlaying) {
-            player!!.pause()
+        if (player?.isPlaying == true) {
+            player?.pause()
         } else {
-            player!!.start()
+            player?.start()
         }
         updatePausePlay()
     }
 
 
     override fun setEnabled(enabled: Boolean) {
-        binding.btnPlayPause.isEnabled = enabled
         binding.btnPlayPauseBottom.isEnabled = enabled
         binding.seekBar.isEnabled = enabled
         disableUnsupportedButtons()
@@ -375,6 +359,14 @@ class VideoControllerView @JvmOverloads constructor(
 
     fun reloadUI() {
         setProgress()
+    }
+
+    fun setPlayingListener(listener: PlayingListener) {
+        playingListener = listener
+    }
+
+    fun interface PlayingListener {
+        fun playing(playing: Boolean)
     }
 
     interface MediaPlayerControl {
@@ -417,7 +409,6 @@ class VideoControllerView @JvmOverloads constructor(
     }
 
     companion object {
-        private const val TAG = "VideoControllerView"
         private const val sDefaultTimeout = 3000
         private const val FADE_OUT = 1
         private const val SHOW_PROGRESS = 2

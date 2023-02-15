@@ -6,6 +6,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -79,7 +80,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun SceytRecordViewBinding.setupRecorder() {
         imageViewAudio.setOnTouchListener(OnTouchListener { view, motionEvent ->
             if (!context.hasPermissions(Manifest.permission.RECORD_AUDIO)) {
-                context.asComponentActivity().requestPermissionsSafety(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
+                context.asActivity().requestPermissionsSafety(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
                 return@OnTouchListener false
             }
 
@@ -152,7 +153,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun SceytRecordViewBinding.translateY(y: Float) {
         if (y < -lockOffset) {
             locked()
-            binding.imageViewAudio.translationY = 0f
+            imageViewAudio.translationY = 0f
             return
         }
         if (layoutLock.visibility != View.VISIBLE) {
@@ -240,7 +241,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             RecordingBehaviour.LOCKED -> {
                 lockViewContainer.visibility = View.VISIBLE
                 btnCancel.visibility = View.VISIBLE
-                binding.imageViewAudio.animate()
+                imageViewAudio.animate()
                     .translationX(0f)
                     .translationY(0f)
                     .setDuration(100)
@@ -265,7 +266,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
 
     private fun SceytRecordViewBinding.moveToInitialState() {
         isRecording = false
-        binding.imageViewAudio.animate().apply {
+        imageViewAudio.animate().apply {
             scaleX(1f)
             scaleY(1f)
             translationX(0f)
@@ -334,10 +335,13 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         colorAnimation?.cancel()
         imageViewAudio.translationZ = 0.0f
         imageViewAudio.cardElevation = 0.0f
-        imageAudio.background = null
-        imageAudio.setPadding(paddingNormal.toInt())
-        imageAudio.setImageResource(R.drawable.sceyt_ic_voice)
-        imageAudio.setColorFilter("#B2B6BE".toColorInt())
+        with(imageAudio) {
+            background = null
+            setPadding(paddingNormal.toInt())
+            backgroundTintList = ColorStateList.valueOf(Color.RED)
+            setImageResource(R.drawable.sceyt_ic_voice)
+            setColorFilter("#B2B6BE".toColorInt())
+        }
     }
 
     private fun SceytRecordViewBinding.showRecordingRecordButton() {
@@ -389,7 +393,9 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
         colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
         colorAnimation?.duration = 200 // milliseconds
-        colorAnimation?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
+        colorAnimation?.addUpdateListener { animator ->
+            view.backgroundTintList = ColorStateList.valueOf(animator.animatedValue as Int)
+        }
         colorAnimation?.start()
     }
 

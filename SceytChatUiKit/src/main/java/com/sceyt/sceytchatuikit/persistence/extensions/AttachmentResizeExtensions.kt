@@ -40,7 +40,7 @@ fun resizeImage(context: Context, path: String?, reqSize: Int = 600): Result<Str
 
 suspend fun Attachment.transcodeVideo(context: Context): Attachment {
     var transcodeAttachment = this
-    val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
+    val dest = File(context.cacheDir.toString() + UUID.randomUUID())
     val result = VideoTranscodeHelper.transcodeAsResult(context, destination = dest, uri = url)
     if (result.resultType == Success) {
         transcodeAttachment = Attachment.Builder(dest.path, url, type)
