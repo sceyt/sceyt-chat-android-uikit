@@ -8,7 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.databinding.ItemShareChannelBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewh
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 
-open class ShareableChannelViewHolder(private val binding: ItemShareChannelBinding,
+open class ShareableChannelViewHolder(private val binding: SceytItemShareChannelBinding,
                                       private val clickListener: ChannelClickListeners.ChannelClickListener,
                                       private val userNameBuilder: ((User) -> String)?) : BaseChannelViewHolder(binding.root) {
 

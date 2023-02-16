@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
+import java.util.*
 
 class ChooseAttachmentHelper {
     private lateinit var context: Context
@@ -292,14 +293,14 @@ class ChooseAttachmentHelper {
     private fun getPhotoFileUri(): Uri {
         val directory = File(context.filesDir, "Photos")
         if (!directory.exists()) directory.mkdir()
-        val file = File.createTempFile("Photo_${System.currentTimeMillis()}", ".jpg", directory)
+        val file = File.createTempFile("Photo_${UUID.randomUUID()}", ".jpg", directory)
         return context.getFileUriWithProvider(file).also { takePhotoPath = file.path }
     }
 
     private fun getVideoFileUri(): Uri {
         val directory = File(context.filesDir, "Videos")
         if (!directory.exists()) directory.mkdir()
-        val file = File.createTempFile("Video_${System.currentTimeMillis()}", ".mp4", directory)
+        val file = File.createTempFile("Video_${UUID.randomUUID()}", ".mp4", directory)
         return context.getFileUriWithProvider(file).also { takeVideoPath = file.path }
     }
 }

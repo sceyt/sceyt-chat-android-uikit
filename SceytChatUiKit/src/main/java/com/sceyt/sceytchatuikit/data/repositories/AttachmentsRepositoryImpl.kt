@@ -36,8 +36,9 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
     override suspend fun getNextAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>): SceytResponse<Pair<List<Attachment>, Map<String, User>>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(conversationId, types).loadNext(lastAttachmentId, object : AttachmentsCallback {
-                override fun onResult(attachments: MutableList<Attachment>, userMutableMap: MutableMap<String, User>) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments, userMutableMap)))
+                override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
+                    continuation.safeResume(SceytResponse.Success(Pair(attachments
+                            ?: listOf(), userMutableMap ?: mapOf())))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -50,8 +51,9 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
     override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>): SceytResponse<Pair<List<Attachment>, Map<String, User>>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(conversationId, types).loadNear(attachmentId, object : AttachmentsCallback {
-                override fun onResult(attachments: MutableList<Attachment>, userMutableMap: MutableMap<String, User>) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments, userMutableMap)))
+                override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
+                    continuation.safeResume(SceytResponse.Success(Pair(attachments
+                            ?: listOf(), userMutableMap ?: mapOf())))
                 }
 
                 override fun onError(e: SceytException?) {

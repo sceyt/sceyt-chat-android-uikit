@@ -181,8 +181,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             lifecycleOwner.lifecycleScope.launch {
                 val currentMessages = messagesListView.getData()?.filterIsInstance<MessageListItem.MessageItem>()?.map { item -> item.message }
-                val newMessages = currentMessages?.minus(it.second.toSet())
-                if (!newMessages.isNullOrEmpty()) {
+                        ?: arrayListOf()
+                val newMessages = it.second.minus(currentMessages.toSet())
+                if (newMessages.isNotEmpty()) {
                     val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = newMessages,
                         hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
@@ -360,11 +361,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onTransferUpdatedFlow.onEach {
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+    onTransferUpdatedFlow.observe(lifecycleOwner, Observer {
+        lifecycleOwner.lifecycleScope.launch {
             messagesListView.updateProgress(it)
         }
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    })
 
     onMessageReactionUpdatedFlow.onEach {
         messagesListView.updateReaction(it)

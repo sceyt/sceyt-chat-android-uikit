@@ -7,7 +7,7 @@
     <com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.scalableVideoView.ScalableVideoView
         android:id="@+id/videoView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_centerInParent="true"
         android:focusable="false"
         android:focusableInTouchMode="false"
@@ -19,6 +19,5 @@
         android:id="@+id/controllerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

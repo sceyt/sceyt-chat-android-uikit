@@ -5,7 +5,9 @@ import android.widget.ImageView
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
@@ -13,8 +15,7 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -25,7 +26,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
                       private val userNameBuilder: ((User) -> String)?,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
-    : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
+    : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     private var lastFilePath: String? = ""
 
@@ -124,6 +125,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     }
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 }

@@ -15,7 +15,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
 
     private val layoutInflater = LayoutInflater.from(context)
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<FileListItem> {
         return when (viewType) {
             FileViewType.File.ordinal -> {
                 MessageFileViewHolder(SceytMessageFileItemBinding.inflate(layoutInflater, parent, false),

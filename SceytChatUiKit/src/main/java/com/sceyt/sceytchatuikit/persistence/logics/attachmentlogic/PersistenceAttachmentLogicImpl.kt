@@ -136,13 +136,13 @@ class PersistenceAttachmentLogicImpl(
 
     private suspend fun getPrevAttachmentsDb(channelId: Long, lastAttachmentId: Long, types: List<String>): List<SceytAttachment> {
         val id = if (lastAttachmentId == 0L) Long.MAX_VALUE else lastAttachmentId
-        val messages = attachmentDao.getOldestThenAttachment(channelId, id, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
-        return messages.map { messageDb -> messageDb.toAttachment() }
+        val attachments = attachmentDao.getOldestThenAttachment(channelId, id, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
+        return attachments.map { attachmentDb -> attachmentDb.toAttachment() }.reversed()
     }
 
     private suspend fun getNextAttachmentsDb(channelId: Long, lastAttachmentId: Long, types: List<String>): List<SceytAttachment> {
-        val messages = attachmentDao.getNewestThenAttachment(channelId, lastAttachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
-        return messages.map { messageDb -> messageDb.toAttachment() }
+        val attachments = attachmentDao.getNewestThenAttachment(channelId, lastAttachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
+        return attachments.map { attachmentDb -> attachmentDb.toAttachment() }
     }
 
     private suspend fun getNearAttachmentsDb(channelId: Long, attachmentId: Long, types: List<String>): LoadNearData<AttachmentDb> {
@@ -154,7 +154,7 @@ class PersistenceAttachmentLogicImpl(
                                                        loadKey: LoadKeyData, offset: Int, ignoreDb: Boolean): PaginationResponse<AttachmentWithUserData> {
         var hasNext = false
         var hasPrev = false
-        var hasDiff = true
+        var hasDiff = false
         val response: SceytResponse<Pair<List<Attachment>, Map<String, User>>>
 
         when (loadType) {
@@ -190,9 +190,6 @@ class PersistenceAttachmentLogicImpl(
 
         val mappedResponse = handelServerResponse(conversationId, response)
 
-        if (loadType == LoadNear)
-            attachmentsCache.clear()
-
         if (mappedResponse is SceytResponse.Success)
             mappedResponse.data?.let {
                 hasDiff = attachmentsCache.addAll(it.map { data -> data.attachment }, true)
@@ -200,7 +197,7 @@ class PersistenceAttachmentLogicImpl(
 
         val cacheData = attachmentsCache.getSorted().map {
             AttachmentWithUserData(it, response.data?.second?.get(it.userId))
-        }
+        }.reversed()
 
         return PaginationResponse.ServerResponse(
             data = mappedResponse, cacheData = cacheData,

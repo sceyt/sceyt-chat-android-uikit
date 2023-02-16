@@ -6,6 +6,7 @@ import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -14,7 +15,6 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
@@ -84,7 +84,7 @@ class OutVoiceMsgViewHolder(
         attachment.toTransferData()?.let {
             updateState(it)
         }
-        setListener(attachment)
+        setListener()
 
         if (attachment.filePath.isNullOrBlank() && attachment.url != null)
             needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(attachment))
@@ -179,14 +179,16 @@ class OutVoiceMsgViewHolder(
     }
 
     private fun updateState(data: TransferData) {
-        if (isMessageListItemInitialized.not() || messageListItem !is MessageItem) return
+        if (isMessageListItemInitialized.not()) return
+        val message = (messageListItem as? MessageItem)?.message ?: return
+        if ((data.messageTid != message.tid)) return
+
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload, PauseUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
             PendingDownload -> {
-                val message = (messageListItem as MessageItem).message
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(
                     (message.attachments ?: return)[0]))
             }
@@ -213,9 +215,9 @@ class OutVoiceMsgViewHolder(
     }
 
 
-    private fun setListener(attachment: SceytAttachment) {
-        val listenerKey = attachment.messageTid.toString()
-        TransferUpdateObserver.setListener(listenerKey, ::updateState)
+    private fun setListener() {
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytItemOutVoiceBinding.setMessageItemStyle() {

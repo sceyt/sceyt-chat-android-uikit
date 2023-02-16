@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.UUID
 import kotlin.math.roundToInt
 
 object FileResizeUtil {
@@ -24,7 +25,7 @@ object FileResizeUtil {
         var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
             inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
         })
-        val dest = "${context.cacheDir}/" + System.currentTimeMillis().toString() + ".JPEG"
+        val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
         try {
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
             val bmpFile = FileOutputStream(dest)
@@ -168,7 +169,7 @@ object FileResizeUtil {
 
     fun createFileFromBitmap(context: Context, bitmap: Bitmap): File? {
         return try {
-            val fileDest = "${context.cacheDir}/" + System.currentTimeMillis() + ".JPEG"
+            val fileDest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(fileDest)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()

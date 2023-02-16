@@ -10,3 +10,11 @@ fun SceytAttachment.diff(other: SceytAttachment): AttachmentPayLoadDiff {
         progressPercentChanged = progressPercent != other.progressPercent,
     )
 }
+
+fun SceytAttachment.diffBetweenServerData(other: SceytAttachment): AttachmentPayLoadDiff {
+    return AttachmentPayLoadDiff(
+        filePathChanged = false,
+        urlChanged = url != other.url,
+        progressPercentChanged = false
+    )
+}

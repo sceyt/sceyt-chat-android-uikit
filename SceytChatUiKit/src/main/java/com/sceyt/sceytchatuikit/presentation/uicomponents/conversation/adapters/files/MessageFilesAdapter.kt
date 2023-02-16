@@ -62,7 +62,6 @@ class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
         files = list.toArrayList()
     }
 
-
     private fun observeToAppLifeCycle() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_DESTROY || event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP)

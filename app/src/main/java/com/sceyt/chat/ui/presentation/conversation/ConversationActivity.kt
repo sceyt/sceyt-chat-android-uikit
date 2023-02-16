@@ -20,9 +20,6 @@ import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.filetransfer.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem.Image
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem.Video
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
@@ -33,7 +30,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
@@ -107,23 +103,6 @@ open class ConversationActivity : AppCompatActivity() {
 
 
         setCustomMessageClickListener(object : MessageClickListenersImpl(binding.messagesListView) {
-            override fun onAttachmentClick(view: View, item: FileListItem) {
-                println("AttachmentClick")
-                when (item) {
-                    is Image,
-                    is Video,
-                    -> {
-                        if (item.file.filePath.isNullOrBlank())
-                        //Do nothing if file is not ready to display or just call super.onAttachmentClick(view, item)
-                        else
-                            MediaActivity.openMediaView(this@ConversationActivity, item.file)
-                    }
-                    else -> {
-                        super.onAttachmentClick(view, item)
-                    }
-                }
-            }
-
             override fun onReplyCountClick(view: View, item: MessageListItem.MessageItem) {
                 super.onReplyCountClick(view, item)
                 newInstance(this@ConversationActivity, channel, item.message)

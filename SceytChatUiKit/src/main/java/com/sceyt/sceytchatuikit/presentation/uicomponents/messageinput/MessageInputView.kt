@@ -358,6 +358,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (inputState != newState)
             onStateChanged(newState)
         inputState = newState
+
+        binding.icSendMessage.isVisible = !showVoiceIcon
         if (!showVoiceIcon) hideAndStopVoiceRecorder()
         else showVoiceRecorder()
     }
@@ -432,7 +434,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showInput() {
         binding.layoutCloseInput.root.isVisible = false
-        binding.layoutInput.isVisible = true
+        if (voiceMessageRecorderView?.isRecording == true)
+            binding.layoutInput.isInvisible = true
+        else
+            binding.layoutInput.isVisible = true
         determineState()
     }
 
@@ -537,6 +542,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     .setName(File(path).name)
                     .withTid(ClientWrapper.generateTid())
                     .setMetadata(metadata)
+                    .setCreatedAt(System.currentTimeMillis())
                     .setFileSize(getFileSize(path))
                     .setUpload(false)
                     .build()
