@@ -222,6 +222,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
+    MessagesCache.messagesClearedFlow.filter { it.first == channel.id }.onEach { pair ->
+        val date = pair.second
+        messagesListView.deleteAllMessagesBefore {
+            it.getMessageCreatedAt() <= date && (it !is MessageListItem.MessageItem ||
+                    it.message.deliveryStatus != DeliveryStatus.Pending)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
     loadMessagesFlow.onEach(::initMessagesResponse).launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelUpdatedEventFlow.onEach {

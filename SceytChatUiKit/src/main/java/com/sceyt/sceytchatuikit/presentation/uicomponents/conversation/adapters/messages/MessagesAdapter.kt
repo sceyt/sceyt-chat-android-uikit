@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
+import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -167,6 +168,17 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         messages.findIndexed { it is MessageListItem.DateSeparatorItem && it.msgTid == tid }?.let {
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
+        }
+    }
+
+    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
+        ArrayList(messages).forEach { item ->
+            if (predicate.test(item)) {
+                messages.findIndexed { it == item }?.let {
+                    messages.removeAt(it.first)
+                    notifyItemRemoved(it.first)
+                }
+            }
         }
     }
 

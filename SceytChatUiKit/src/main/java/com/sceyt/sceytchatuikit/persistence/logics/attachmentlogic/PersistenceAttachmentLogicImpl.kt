@@ -12,8 +12,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -24,6 +24,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getTid
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachment
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
@@ -32,15 +33,17 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import org.koin.core.component.inject
 
-class PersistenceAttachmentLogicImpl(
+internal class PersistenceAttachmentLogicImpl(
         private val messageDao: MessageDao,
         private val attachmentDao: AttachmentDao,
         private val userDao: UserDao,
         private val messagesCache: MessagesCache,
         private val attachmentsCache: AttachmentsCache,
-        private val attachmentsRepository: AttachmentsRepository,
-        private val messagesMiddleWare: PersistenceMessagesMiddleWare) : PersistenceAttachmentLogic {
+        private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
+
+    private val messagesLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
         return messageDao.getAllAttachmentPayLoadsByMsgTid(tid)
@@ -268,7 +271,7 @@ class PersistenceAttachmentLogicImpl(
     private suspend fun getAndCorrectAttachmentsData(conversationId: Long, messageIds: List<Long>, attachments: List<Attachment>): SceytResponse<List<SceytAttachment>> {
         return if (messageIds.isNotEmpty()) {
             val sceytAttachments = arrayListOf<SceytAttachment>()
-            when (val messagesResponse = messagesMiddleWare.loadMessagesById(conversationId, messageIds)) {
+            when (val messagesResponse = messagesLogic.loadMessagesById(conversationId, messageIds)) {
                 is SceytResponse.Success -> {
                     messagesResponse.data?.let { data ->
                         messageDao.insertMessages(data.map { it.toMessageDb() })

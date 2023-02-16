@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
+import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toAttachment
@@ -77,7 +78,7 @@ fun SceytMessage.toMessageDb(): MessageDb {
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
-        lastReactions = lastReactions?.map { it.toReactionDb(id) },
+        selfReactions = selfReactions?.map { it.toReactionDb(id) },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
     )
 }
@@ -115,7 +116,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             state = state,
             from = from?.toUser(),
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
-            lastReactions = lastReactions?.map { it.toReaction() }?.toTypedArray(),
+            selfReactions = selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionScores = reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             markerCount = markerCount?.toTypedArray(),
             selfMarkers = selfMarkers?.toTypedArray(),
@@ -159,7 +160,6 @@ private fun MessageEntity.toSceytMessage() = SceytMessage(
     state = state,
     from = null,
     attachments = emptyArray(),
-    lastReactions = emptyArray(),
     selfReactions = emptyArray(),
     reactionScores = emptyArray(),
     markerCount = markerCount?.toTypedArray(),
@@ -192,8 +192,7 @@ fun MessageDb.toMessage(): Message {
             state,
             from?.toUser(),
             attachments?.map { it.toSdkAttachment() }?.toTypedArray(),
-            lastReactions?.map { it.toReaction() }?.toTypedArray(),
-            emptyArray(),
+            selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             markerCount?.toTypedArray(),
             emptyArray(),
@@ -201,7 +200,8 @@ fun MessageDb.toMessage(): Message {
             parent?.toSceytMessage()?.toMessage(),
             replyInThread,
             replyCount,
-            messageEntity.displayCount
+            messageEntity.displayCount,
+            ForwardingDetails(id ?: 0, channelId, from?.toUser(), 0)
         )
     }
 }
@@ -230,7 +230,6 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         attachments = attachments?.map {
             it.toSceytAttachment(tid, TransferState.PendingDownload, 0f)
         }?.toTypedArray(),
-        lastReactions = lastReactions,
         selfReactions = selfReactions,
         reactionScores = reactionScores,
         markerCount = markerCount,
@@ -267,7 +266,6 @@ fun SceytMessage.toMessage(): Message {
         state,
         from,
         attachments?.map { it.toAttachment() }?.toTypedArray(),
-        lastReactions,
         selfReactions,
         reactionScores,
         markerCount,
@@ -276,5 +274,6 @@ fun SceytMessage.toMessage(): Message {
         parent?.toMessage(),
         replyInThread,
         replyCount,
-        displayCount)
+        displayCount,
+        ForwardingDetails(id, channelId, from, 0))
 }

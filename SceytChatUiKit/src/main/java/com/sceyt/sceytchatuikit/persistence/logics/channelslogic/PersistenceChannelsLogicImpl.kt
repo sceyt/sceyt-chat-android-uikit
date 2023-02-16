@@ -26,12 +26,14 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
@@ -39,6 +41,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.onCompletion
+import org.koin.core.component.inject
 
 internal class PersistenceChannelsLogicImpl(
         private val channelsRepository: ChannelsRepository,
@@ -46,7 +49,9 @@ internal class PersistenceChannelsLogicImpl(
         private val usersDao: UserDao,
         private val messageDao: MessageDao,
         private val application: Application,
-        private val channelsCache: ChannelsCache) : PersistenceChannelsLogic {
+        private val channelsCache: ChannelsCache) : PersistenceChannelsLogic, SceytKoinComponent {
+
+    private val messageLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
@@ -176,7 +181,7 @@ internal class PersistenceChannelsLogicImpl(
         initPendingLastMessageBeforeInsert(channel)
         val users = members.map { it.toUserEntity() }
         channel.lastMessage?.let {
-            it.lastReactions?.map { reaction -> reaction.user }?.let { it1 ->
+            it.selfReactions?.map { reaction -> reaction.user }?.let { it1 ->
                 (users as ArrayList).addAll(it1.map { user -> user.toUserEntity() })
             }
         }
@@ -213,6 +218,8 @@ internal class PersistenceChannelsLogicImpl(
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb))
+
+                messageLogic.onSyncedChannels(channels)
             }
 
             channel.close()
@@ -278,6 +285,7 @@ internal class PersistenceChannelsLogicImpl(
                             val savedChannels = saveChannelsToDb(it)
                             channelsCache.upsertChannel(*savedChannels.toTypedArray())
                             syncedChannels.addAll(it)
+                            messageLogic.onSyncedChannels(it)
                         }
                     }
                     trySend(response)
@@ -327,11 +335,6 @@ internal class PersistenceChannelsLogicImpl(
                     users.find { entity -> entity.id == user.id } ?: run {
                         users.add(user.toUserEntity())
                     }
-                }
-
-                //Add users from reactions
-                it.lastReactions?.let { lastReactions ->
-                    users.addAll(lastReactions.map { reaction -> reaction.user.toUserEntity() })
                 }
             }
         }
@@ -508,6 +511,7 @@ internal class PersistenceChannelsLogicImpl(
                 channel.toChannelEntity(myId).let {
                     channelDao.insertChannel(it)
                     channelsCache.upsertChannel(channel)
+                    messageLogic.onSyncedChannels(arrayListOf(channel))
                 }
             }
         }

@@ -52,6 +52,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
@@ -59,13 +60,14 @@ internal class PersistenceMessagesLogicImpl(
         private val messageDao: MessageDao,
         private val pendingMarkersDao: PendingMarkersDao,
         private val reactionDao: ReactionDao,
-        private val persistenceChannelsLogic: PersistenceChannelsLogic,
         private val userDao: UserDao,
         private val fileTransferService: FileTransferService,
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache
 ) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
+
+    private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -111,7 +113,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessageReactionUpdated(data: Message) {
         reactionDao.insertReactionsAndScores(
             messageId = data.id,
-            reactionsDb = data.lastReactions.map { it.toReactionEntity(data.id) },
+            reactionsDb = data.selfReactions.map { it.toReactionEntity(data.id) },
             scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
         messagesCache.messageUpdated(data.toSceytUiMessage())
     }
@@ -166,6 +168,15 @@ internal class PersistenceMessagesLogicImpl(
                 trySend(it)
             }
         awaitClose()
+    }
+
+    override suspend fun onSyncedChannels(channels: List<SceytChannel>) {
+        channels.forEach {
+            if (it.messagesDeletionDate > 0) {
+                messageDao.deleteAllMessagesLowerThenDateIgnorePending(it.id, it.messagesDeletionDate)
+                messagesCache.deleteAllMessagesLowerThenDate(it.id, it.messagesDeletionDate)
+            }
+        }
     }
 
     override suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>> {
@@ -387,7 +398,7 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.addReaction(channelId, messageId, scoreKey)
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
-                message.lastReactions?.let {
+                message.selfReactions?.let {
                     messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity(messageId) })
                 }
                 message.reactionScores?.let {
@@ -636,14 +647,6 @@ internal class PersistenceMessagesLogicImpl(
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
-
-        // Users which added reaction
-        val usersByReaction = list.flatMap {
-            it.lastReactions?.toMutableList() ?: mutableListOf()
-        }.map {
-            it.user.toUserEntity()
-        }
-        usersDb.addAll(usersByReaction)
 
         userDao.insertUsers(usersDb)
     }

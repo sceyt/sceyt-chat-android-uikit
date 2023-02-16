@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.util.Predicate
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -291,7 +292,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.reactionScores = data.reactionScores
-            message.lastReactions = data.lastReactions
             message.selfReactions = data.selfReactions
             message.messageReactions = data.messageReactions
             updateItem(it.first, it.second, oldMessage.diff(message))
@@ -346,7 +346,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private suspend fun updateThumb(data: TransferData, predicate: (SceytAttachment) -> Boolean) {
+    private fun updateThumb(data: TransferData, predicate: (SceytAttachment) -> Boolean) {
         Log.i(TAG, data.toString())
         messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val foundAttachmentFiles = (it.second as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
@@ -414,6 +414,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun clearData() {
         messagesRV.clearData()
         updateViewState(PageState.StateEmpty())
+    }
+
+    internal fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
+        messagesRV.deleteAllMessagesBefore(predicate)
     }
 
     internal fun setUnreadCount(unreadCount: Int) {

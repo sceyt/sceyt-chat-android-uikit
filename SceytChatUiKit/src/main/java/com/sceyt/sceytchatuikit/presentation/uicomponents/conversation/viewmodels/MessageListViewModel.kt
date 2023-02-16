@@ -480,7 +480,7 @@ class MessageListViewModel(
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         return message.reactionScores?.map {
             ReactionItem.Reaction(SceytReaction(it.key, it.score,
-                message.lastReactions?.find { reaction ->
+                message.selfReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user.id == SceytKitClient.myId
                 } != null), message)
         }?.sortedByDescending { it.reaction.score }

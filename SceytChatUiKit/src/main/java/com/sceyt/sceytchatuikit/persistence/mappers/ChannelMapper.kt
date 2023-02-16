@@ -39,7 +39,8 @@ fun SceytChannel.toChannelEntity(currentUserId: String?): ChannelEntity {
         myRole = myRole,
         lastDeliveredMessageId = lastDeliveredMessageId,
         lastReadMessageId = lastReadMessageId,
-        channelUrl = channelUrl
+        channelUrl = channelUrl,
+        messagesDeletionDate = messagesDeletionDate
     )
 }
 
@@ -87,7 +88,8 @@ fun Channel.toChannelEntity(): ChannelEntity {
         myRole = myRole.toRoleType(),
         channelUrl = channelUrl,
         lastDeliveredMessageId = lastDeliveredMessageId,
-        lastReadMessageId = lastReadMessageId
+        lastReadMessageId = lastReadMessageId,
+        messagesDeletionDate = messagesDeletionDate
     )
 }
 
@@ -113,7 +115,8 @@ fun ChannelDb.toChannel(): SceytChannel {
                     members = members?.map { it.toSceytMember() } ?: arrayListOf(),
                     memberCount = memberCount,
                     lastDeliveredMessageId = lastDeliveredMessageId,
-                    lastReadMessageId = lastReadMessageId
+                    lastReadMessageId = lastReadMessageId,
+                    messagesDeletionDate = messagesDeletionDate
                 )
             ChannelTypeEnum.Direct -> SceytDirectChannel(
                 id = id,
@@ -127,7 +130,8 @@ fun ChannelDb.toChannel(): SceytChannel {
                 peer = members?.firstOrNull()?.toSceytMember(),
                 markedUsUnread = markedUsUnread,
                 lastDeliveredMessageId = lastDeliveredMessageId,
-                lastReadMessageId = lastReadMessageId
+                lastReadMessageId = lastReadMessageId,
+                messagesDeletionDate = messagesDeletionDate
             )
         }
     }

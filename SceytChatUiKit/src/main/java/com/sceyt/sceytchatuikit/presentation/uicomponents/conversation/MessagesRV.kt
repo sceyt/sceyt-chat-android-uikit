@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.view.animation.AnimationUtils
+import androidx.core.util.Predicate
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -279,5 +280,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun clearData() {
         if (::mAdapter.isInitialized)
             mAdapter.clearData()
+    }
+
+    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
+        if (::mAdapter.isInitialized)
+            mAdapter.deleteAllMessagesBefore(predicate)
     }
 }

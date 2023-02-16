@@ -19,7 +19,8 @@ abstract class SceytChannel(open var id: Long,
                             open var markedUsUnread: Boolean,
                             open var lastDeliveredMessageId: Long,
                             open var lastReadMessageId: Long,
-                            open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
+                            open var channelType: ChannelTypeEnum,
+                            open var messagesDeletionDate: Long) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
     open val channelSubject = ""
