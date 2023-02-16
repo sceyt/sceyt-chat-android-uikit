@@ -46,6 +46,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     private val mediaTypes = listOf(AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value())
     private var mediaAdapter: MediaAdapter? = null
     private var currentItem: MediaItem? = null
+    private var reversed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +65,8 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun getDataFromIntent() {
-        channelId = intent.getLongExtra(SCEYT_CHANNEL_ID, 0L)
+        channelId = intent.getLongExtra(KEY_CHANNEL_ID, 0L)
+        reversed = intent.getBooleanExtra(KEY_REVERSED, false)
     }
 
     private fun initViewModel() {
@@ -74,8 +76,16 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
                     val data = viewModel.mapToMediaItem(it.data)
 
                     when (it.loadType) {
-                        LoadPrev -> mediaAdapter?.addPrevItems(data)
-                        LoadNext -> mediaAdapter?.addNextItems(data)
+                        LoadPrev -> {
+                            if (reversed) {
+                                mediaAdapter?.addNextItems(data.reversed())
+                            } else mediaAdapter?.addPrevItems(data)
+                        }
+                        LoadNext -> {
+                            if (reversed) {
+                                mediaAdapter?.addPrevItems(data.reversed())
+                            } else mediaAdapter?.addNextItems(data)
+                        }
                         LoadNear -> setOrUpdateMediaAdapter(data)
                         else -> return@onEach
                     }
@@ -93,8 +103,8 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initPageWithData() {
-        val attachment = intent?.extras?.getParcelable<SceytAttachment>(SCEYT_ATTACHMENTS)
-        val user = intent?.extras?.getSerializable(SCEYT_USER) as User?
+        val attachment = intent?.extras?.getParcelable<SceytAttachment>(KEY_ATTACHMENT)
+        val user = intent?.extras?.getSerializable(KEY_USER) as User?
 
         if (attachment == null) {
             viewModel.loadPrevAttachments(channelId, 0, false, mediaTypes, 0)
@@ -177,8 +187,9 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     fun isShowMediaDetail() = binding.layoutToolbar.isVisible
 
     private fun setOrUpdateMediaAdapter(data: List<MediaItem>) {
+        val newData = if (reversed) data.reversed() else data
         if (mediaAdapter == null) {
-            mediaAdapter = MediaAdapter(data.toArrayList(), MediaFilesViewHolderFactory(this).also {
+            mediaAdapter = MediaAdapter(newData.toArrayList(), MediaFilesViewHolderFactory(this).also {
                 it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
 
                 it.setClickListener { onMediaClick() }
@@ -192,20 +203,9 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying()) {
-                            if (viewModel.canLoadNext()) {
-                                val attachmentId = mediaAdapter?.getLastMediaItem()?.data?.attachment?.id
-                                        ?: return
-                                viewModel.loadNextAttachments(channelId, attachmentId, true,
-                                    mediaTypes, adapter?.itemCount ?: 1)
-                            }
-                        } else if (isFirstItemDisplaying()) {
-                            if (viewModel.canLoadPrev()) {
-                                val attachmentId = mediaAdapter?.getFirstMediaItem()?.data?.attachment?.id
-                                        ?: return
-                                viewModel.loadPrevAttachments(channelId, attachmentId, true,
-                                    mediaTypes, adapter?.itemCount ?: 1)
-                            }
-                        }
+                            onLastItemDisplaying()
+                        } else if (isFirstItemDisplaying())
+                            onFirstItemDisplaying()
                     }
 
                     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -219,7 +219,54 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
                     }
                 })
             }
-        } else mediaAdapter?.notifyUpdate(data, binding.rvMedia)
+        } else mediaAdapter?.notifyUpdate(newData, binding.rvMedia)
+    }
+
+    private fun onFirstItemDisplaying() {
+        if (reversed) {
+            checkAndLoadNext()
+        } else
+            checkAndLoadPrev()
+    }
+
+    private fun onLastItemDisplaying() {
+        if (reversed) {
+            checkAndLoadPrev()
+        } else
+            checkAndLoadNext()
+    }
+
+    private fun checkAndLoadPrev() {
+        if (viewModel.canLoadPrev()) {
+            val attachmentId = getRequestAttachmentId(true) ?: return
+            viewModel.loadPrevAttachments(channelId, attachmentId, true,
+                mediaTypes, mediaAdapter?.itemCount ?: 1)
+        }
+    }
+
+    private fun checkAndLoadNext() {
+        if (viewModel.canLoadNext()) {
+            val attachmentId = getRequestAttachmentId(false) ?: return
+            viewModel.loadNextAttachments(channelId, attachmentId, true,
+                mediaTypes, mediaAdapter?.itemCount ?: 1)
+        }
+    }
+
+    private fun getRequestAttachmentId(loadPrev: Boolean): Long? {
+        mediaAdapter?.let { adapter ->
+            val attachmentId = if (loadPrev) {
+                if (reversed)
+                    adapter.getLastMediaItem().data.attachment.id
+                else adapter.getFirstMediaItem().data.attachment.id
+            } else {
+                if (reversed)
+                    adapter.getFirstMediaItem().data.attachment.id
+                else adapter.getLastMediaItem().data.attachment.id
+            }
+
+            return attachmentId
+        }
+        return null
     }
 
     private fun showActionsDialog(file: MediaItem) {
@@ -286,15 +333,17 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     companion object {
-        private const val SCEYT_ATTACHMENTS = "sceyt_attachments"
-        private const val SCEYT_USER = "SCEYT_USER"
-        private const val SCEYT_CHANNEL_ID = "SCEYT_CHANNEL_ID"
+        private const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
+        private const val KEY_USER = "KEY_USER"
+        private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"
+        private const val KEY_REVERSED = "KEY_REVERSED"
 
-        fun openMediaView(context: Context, attachment: SceytAttachment, from: User?, channelId: Long) {
+        fun openMediaView(context: Context, attachment: SceytAttachment, from: User?, channelId: Long, reversed: Boolean = false) {
             context.launchActivity<MediaActivity> {
-                putExtra(SCEYT_ATTACHMENTS, attachment)
-                putExtra(SCEYT_USER, from)
-                putExtra(SCEYT_CHANNEL_ID, channelId)
+                putExtra(KEY_ATTACHMENT, attachment)
+                putExtra(KEY_USER, from)
+                putExtra(KEY_CHANNEL_ID, channelId)
+                putExtra(KEY_REVERSED, reversed)
             }
         }
     }

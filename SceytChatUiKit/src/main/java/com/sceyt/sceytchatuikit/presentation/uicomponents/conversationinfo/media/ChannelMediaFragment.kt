@@ -96,7 +96,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     item.getData()?.let { data ->
-                        MediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id)
+                        MediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id,true)
                     }
                 })
             })
