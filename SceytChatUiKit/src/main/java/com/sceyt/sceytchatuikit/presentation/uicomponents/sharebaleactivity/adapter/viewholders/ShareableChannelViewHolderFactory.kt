@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.databinding.ItemShareChannelBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
@@ -28,7 +28,7 @@ open class ShareableChannelViewHolderFactory(context: Context) {
     }
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
-        val binding = ItemShareChannelBinding.inflate(layoutInflater, parent, false)
+        val binding = SceytItemShareChannelBinding.inflate(layoutInflater, parent, false)
         return ShareableChannelViewHolder(binding, channelClickListenersImpl, userNameBuilder)
     }
 

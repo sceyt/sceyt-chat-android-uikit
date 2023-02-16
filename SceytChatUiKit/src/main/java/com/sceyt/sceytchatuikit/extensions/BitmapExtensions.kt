@@ -9,6 +9,7 @@ import java.io.File
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.*
 import kotlin.math.roundToInt
 
 fun getBitmapFromUrl(imageUrl: String?, isCircleImage: Boolean = true): Bitmap? {
@@ -99,7 +100,7 @@ fun ByteArray.decodeByteArrayToBitmap(): Bitmap? {
 }
 
 fun Bitmap.toFile(context: Context): File {
-    val dest = File(context.cacheDir.toString() + System.currentTimeMillis().toString())
+    val dest = File(context.cacheDir.toString() + UUID.randomUUID())
     compress(Bitmap.CompressFormat.JPEG, 100, dest.outputStream())
     return dest
 }

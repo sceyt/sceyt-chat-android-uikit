@@ -59,9 +59,9 @@ open class SceytShareActivity : SceytShareableActivity() {
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 if (uris != null && uris.isNotEmpty()) {
-                    if (uris.size > 30)
+                    if (uris.size > 20)
                         customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
-                    for (uri in uris.take(30)) {
+                    for (uri in uris.take(20)) {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         sharedUris.add(uri)
                     }

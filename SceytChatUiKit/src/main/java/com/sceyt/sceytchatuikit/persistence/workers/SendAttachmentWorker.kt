@@ -97,6 +97,9 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             ConnectionEventsObserver.awaitToConnectSceyt()
             val response = SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
             if (response is SceytResponse.Success) {
+                response.data?.let {
+                    messageLogic.attachmentSuccessfullySent(it)
+                }
                 Result.success()
             } else Result.retry()
         } else

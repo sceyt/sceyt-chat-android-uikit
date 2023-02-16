@@ -2,13 +2,17 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Environment
 import android.util.Base64
 import android.util.Base64OutputStream
 import android.webkit.MimeTypeMap
 import com.sceyt.chat.util.FileUtils
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 fun getMimeType(url: String?): String? {
     if (url.isNullOrBlank()) return null
@@ -72,4 +76,36 @@ fun Context.getPathFromFile(uri: Uri?): String? {
     } catch (ex: Exception) {
     }
     return null
+}
+
+fun saveToGallery(context: Context, path: String, name: String, mimeType: String): File? {
+    Environment.getExternalStoragePublicDirectory(
+        Environment.DIRECTORY_PICTURES
+    )?.let { parent ->
+        try {
+            val file = checkAndCreateNewFile(parent, name)
+            FileOutputStream(file).use { fileOutputStream ->
+                File(path).inputStream().use { inputStream ->
+                    inputStream.copyTo(fileOutputStream)
+                }
+            }
+            MediaScannerConnection.scanFile(
+                context, arrayOf(file.path), arrayOf(mimeType)
+            ) { _, _ -> }
+            return file
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return null
+        }
+    }
+    return null
+}
+
+fun checkAndCreateNewFile(parent: File, name: String): File {
+    var newFile = File(parent, name)
+    while (newFile.exists()) {
+        val newName = "${newFile.nameWithoutExtension}(1).${newFile.extension}"
+        newFile = File(parent, newName)
+    }
+    return newFile
 }

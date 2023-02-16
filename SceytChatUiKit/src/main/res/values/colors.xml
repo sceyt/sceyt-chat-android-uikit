@@ -22,7 +22,7 @@
     // Not themed colors
     <color name="colorAccent">#4F6AFF</color>
     <color name="sceyt_color_accent">#4F6AFF</color>
-    <color name="sceyt_color_black">#FFFFFFFF</color>
+    <color name="sceyt_color_black">#000000</color>
     <color name="sceyt_color_white">#FFFFFFFF</color>
     <color name="sceyt_color_hint">#9B9DA8</color>
     <color name="sceyt_color_green">#4BB34B</color>
@@ -39,8 +39,5 @@
     <color name="sceyt_progress_bg_color">#6617191C</color>
     <color name="sceyt_color_admin_role">#7A6EF6</color>
     <color name="sceyt_color_disabled">#BFBFC2</color>
-
-    <color name="sceyt_color_media_player_black">#000000</color>
-    <color name="sceyt_color_media_player_menu_text">#17191C</color>
 
 </resources>

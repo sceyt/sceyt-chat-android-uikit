@@ -103,7 +103,7 @@ class MessageListViewModel(
     val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
-    val onTransferUpdatedFlow: SharedFlow<TransferData>
+    val onTransferUpdatedFlow: LiveData<TransferData>
 
 
     // Chanel events
@@ -171,7 +171,7 @@ class MessageListViewModel(
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
 
-        onTransferUpdatedFlow = MessageEventsObserver.onTransferUpdatedFlow
+        onTransferUpdatedFlow = MessageEventsObserver.onTransferUpdatedLiveData
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
@@ -276,7 +276,7 @@ class MessageListViewModel(
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val defaultState = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
+        val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
             PendingUpload else PendingDownload
         val transferData = TransferData(
             item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
@@ -445,12 +445,7 @@ class MessageListViewModel(
                 if (shouldShowDate(sceytMessage, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
-                val messageItem = MessageListItem.MessageItem(sceytMessage.apply {
-                    isGroup = this@MessageListViewModel.isGroup
-                    files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
-                    canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
-                    messageReactions = initReactionsItems(this)
-                })
+                val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
@@ -469,6 +464,17 @@ class MessageListViewModel(
         }
 
         return messageItems
+    }
+
+
+    internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage?): SceytMessage {
+        return sceytMessage.apply {
+            isGroup = this@MessageListViewModel.isGroup
+            files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
+            if (prevMessage != null)
+                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+            messageReactions = initReactionsItems(this)
+        }
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {

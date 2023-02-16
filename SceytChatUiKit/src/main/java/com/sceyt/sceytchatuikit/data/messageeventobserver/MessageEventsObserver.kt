@@ -1,5 +1,7 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
@@ -9,11 +11,11 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object MessageEventsObserver {
@@ -47,10 +49,8 @@ object MessageEventsObserver {
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
 
-    private val onTransferUpdatedFlow_ = MutableSharedFlow<TransferData>(
-        extraBufferCapacity = 100,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onTransferUpdatedFlow: SharedFlow<TransferData> = onTransferUpdatedFlow_
+    private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
+    val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
 
 
     init {
@@ -97,6 +97,8 @@ object MessageEventsObserver {
     }
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
-        onTransferUpdatedFlow_.tryEmit(data)
+        runOnMainThread {
+            onTransferUpdatedLiveData_.value = data
+        }
     }
 }

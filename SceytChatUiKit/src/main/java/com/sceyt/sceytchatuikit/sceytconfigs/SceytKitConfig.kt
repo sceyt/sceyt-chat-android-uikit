@@ -1,12 +1,11 @@
 package com.sceyt.sceytchatuikit.sceytconfigs
 
 import androidx.annotation.ColorRes
-import androidx.annotation.IntDef
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.BR
+import com.sceyt.sceytchatuikit.R
 
 object SceytKitConfig {
     val SceytUITheme = ThemeConfig()

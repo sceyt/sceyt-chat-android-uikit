@@ -1,14 +1,15 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
 import android.content.res.ColorStateList
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelFileBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferUpdateObserver
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseChannelFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -16,7 +17,8 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class FileViewHolder(private val binding: SceytItemChannelFileBinding,
                      private val clickListeners: AttachmentClickListenersImpl,
-                     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseChannelFileViewHolder(binding.root, needMediaDataCallback) {
+                     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) :
+        BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.setupStyle()
@@ -45,7 +47,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     private fun updateState(data: TransferData) {
         if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
-        when (data.state) {
+       /* when (data.state) {
             TransferState.PendingUpload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
@@ -62,11 +64,12 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
                 binding.icFile.setImageResource(0)
             }
             TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
-        }
+        }*/
     }
 
     private fun setListener() {
-        TransferUpdateObserver.setListener(viewHolderHelper.listenerKey, ::updateState)
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytItemChannelFileBinding.setupStyle() {

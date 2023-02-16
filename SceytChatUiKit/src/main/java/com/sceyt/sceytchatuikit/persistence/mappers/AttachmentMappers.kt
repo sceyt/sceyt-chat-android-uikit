@@ -69,11 +69,11 @@ fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
     }
 }
 
-fun AttachmentDb.toAttachmentPayLoad(messageStatus: DeliveryStatus): AttachmentPayLoadEntity {
+fun AttachmentDb.toAttachmentPayLoad(messageStatus: DeliveryStatus, incoming: Boolean): AttachmentPayLoadEntity {
     return with(attachmentEntity) {
         AttachmentPayLoadEntity(
             messageTid = messageTid,
-            transferState = if (messageStatus == DeliveryStatus.Pending)
+            transferState = if (!incoming && messageStatus == DeliveryStatus.Pending)
                 TransferState.PendingUpload else TransferState.PendingDownload,
             progressPercent = 0f,
             url = url,

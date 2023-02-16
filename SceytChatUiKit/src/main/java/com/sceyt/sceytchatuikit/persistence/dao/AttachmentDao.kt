@@ -27,9 +27,6 @@ abstract class AttachmentDao {
     @Transaction
     open suspend fun getNearAttachments(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): LoadNearData<AttachmentDb> {
         val newest = getNewestThenMessageInclude(channelId, attachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2 + 1, types)
-        if (newest.isEmpty() || (newest.size == 1 && newest[0].attachmentEntity.id == attachmentId))
-            return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
-
         val newMessages = newest.take(SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 1)
 
         val oldest = getOldestThenAttachment(channelId, attachmentId, limit - newMessages.size, types)

@@ -13,9 +13,7 @@ import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import androidx.annotation.RawRes
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.videoview.scalableVideoView.Size
 import java.io.FileDescriptor
-import java.io.IOException
 
 class ScalableVideoView @JvmOverloads constructor(
         context: Context,
@@ -47,10 +45,8 @@ class ScalableVideoView @JvmOverloads constructor(
 
     init {
         if (attrs != null) {
-            val a =
-                    context.obtainStyledAttributes(attrs, R.styleable.ScalableVideoView, defStyle, 0)
-            val scaleType =
-                    a.getInt(R.styleable.ScalableVideoView_scalableType, ScalableType.NONE.ordinal)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.ScalableVideoView, defStyle, 0)
+            val scaleType = a.getInt(R.styleable.ScalableVideoView_scalableType, ScalableType.NONE.ordinal)
             a.recycle()
             mScalableType = ScalableType.values().getOrNull(scaleType) ?: ScalableType.NONE
         }
@@ -84,6 +80,7 @@ class ScalableVideoView @JvmOverloads constructor(
                 pause()
             }
         } catch (ex: IllegalStateException) {
+            ex.printStackTrace()
         }
     }
 
@@ -102,56 +99,77 @@ class ScalableVideoView @JvmOverloads constructor(
         matrix?.let { setTransform(it) }
     }
 
-    @Throws(IOException::class)
     fun setRawData(@RawRes id: Int) {
-        val afd = resources.openRawResourceFd(id)
-        setDataSource(afd)
+        try {
+            val afd = resources.openRawResourceFd(id)
+            setDataSource(afd)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
     fun setAssetData(assetName: String) {
-        val manager = context.assets
-        val afd = manager.openFd(assetName)
-        setDataSource(afd)
+        try {
+            val manager = context.assets
+            val afd = manager.openFd(assetName)
+            setDataSource(afd)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
     private fun setDataSource(afd: AssetFileDescriptor) {
-        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-        afd.close()
+        try {
+            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            afd.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
     fun setDataSource(path: String) {
-        reset()
-        mediaPlayer.setDataSource(path)
+        try {
+            reset()
+            mediaPlayer.setDataSource(path)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
-    fun setDataSource(
-            context: Context, uri: Uri,
-            headers: Map<String?, String?>?,
-    ) {
-        reset()
-        mediaPlayer.setDataSource(context, uri, headers)
+    fun setDataSource(context: Context, uri: Uri, headers: Map<String?, String?>?) {
+        try {
+            reset()
+            mediaPlayer.setDataSource(context, uri, headers)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
     fun setDataSource(context: Context, uri: Uri) {
-        reset()
-        mediaPlayer.setDataSource(context, uri)
+        try {
+            reset()
+            mediaPlayer.setDataSource(context, uri)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
     fun setDataSource(fd: FileDescriptor, offset: Long, length: Long) {
-        reset()
-        mediaPlayer.setDataSource(fd, offset, length)
+        try {
+            reset()
+            mediaPlayer.setDataSource(fd, offset, length)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @Throws(IOException::class)
     fun setDataSource(fd: FileDescriptor) {
-        reset()
-        mediaPlayer.setDataSource(fd)
+        try {
+            reset()
+            mediaPlayer.setDataSource(fd)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun setScalableType(scalableType: ScalableType) {
@@ -159,18 +177,22 @@ class ScalableVideoView @JvmOverloads constructor(
         scaleVideoSize(videoWidth, videoHeight)
     }
 
-    @JvmOverloads
-    @Throws(IOException::class, IllegalStateException::class)
     fun prepare(listener: OnPreparedListener? = null) {
-        mediaPlayer.setOnPreparedListener(listener)
-        mediaPlayer.prepare()
+        try {
+            mediaPlayer.setOnPreparedListener(listener)
+            mediaPlayer.prepare()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    @JvmOverloads
-    @Throws(IllegalStateException::class)
     fun prepareAsync(listener: OnPreparedListener? = null) {
-        mediaPlayer.setOnPreparedListener(listener)
-        mediaPlayer.prepareAsync()
+        try {
+            mediaPlayer.setOnPreparedListener(listener)
+            mediaPlayer.prepareAsync()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun setOnErrorListener(listener: OnErrorListener?) {

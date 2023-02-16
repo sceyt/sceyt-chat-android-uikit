@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.presentation.common.diffBetweenServerData
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -94,7 +94,7 @@ class AttachmentsCache {
         messages.forEach {
             if (!detectedDiff) {
                 val old = cachedAttachments[it.messageTid]
-                detectedDiff = old?.diff(it)?.hasDifference() ?: includeNotExistToDiff
+                detectedDiff = old?.diffBetweenServerData(it)?.hasDifference() ?: includeNotExistToDiff
             }
             cachedAttachments[it.messageTid] = it
         }
