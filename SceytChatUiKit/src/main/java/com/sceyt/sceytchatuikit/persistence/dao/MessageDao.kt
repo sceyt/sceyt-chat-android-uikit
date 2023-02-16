@@ -38,7 +38,7 @@ abstract class MessageDao {
         }
 
         //Insert reactions
-        messageDb.lastReactions?.let {
+        messageDb.selfReactions?.let {
             insertReactions(it.map { reactionDb -> reactionDb.reaction })
         }
 
@@ -68,7 +68,7 @@ abstract class MessageDao {
         }
 
         //Insert reactions
-        val reactions = messagesDb.flatMap { it.lastReactions ?: arrayListOf() }
+        val reactions = messagesDb.flatMap { it.selfReactions ?: arrayListOf() }
         if (reactions.isNotEmpty())
             insertReactions(reactions.map { it.reaction })
 
@@ -266,6 +266,9 @@ abstract class MessageDao {
 
     @Query("delete from messages where channelId =:channelId")
     abstract suspend fun deleteAllMessages(channelId: Long)
+
+    @Query("delete from messages where channelId =:channelId and createdAt <=:date and deliveryStatus != :ignoreStatus")
+    abstract suspend fun deleteAllMessagesLowerThenDateIgnorePending(channelId: Long, date: Long, ignoreStatus: DeliveryStatus = Pending)
 
     @Query("delete from messages where channelId =:channelId and deliveryStatus != :deliveryStatus")
     abstract suspend fun deleteAllMessagesExceptPending(channelId: Long, deliveryStatus: DeliveryStatus = Pending)

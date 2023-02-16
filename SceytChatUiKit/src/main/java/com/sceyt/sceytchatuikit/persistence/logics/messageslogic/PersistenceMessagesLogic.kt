@@ -37,6 +37,7 @@ internal interface PersistenceMessagesLogic {
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
+    suspend fun onSyncedChannels(channels: List<SceytChannel>)
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
     suspend fun sendMessage(channelId: Long, message: Message)
     suspend fun sendMessages(channelId: Long, messages: List<Message>)

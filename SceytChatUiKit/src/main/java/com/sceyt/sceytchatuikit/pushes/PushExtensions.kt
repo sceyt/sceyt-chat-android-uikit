@@ -42,8 +42,8 @@ fun getMessageBodyFromPushJson(messageJson: String?, channelId: Long?, from: Use
     return Message(messageId, messageId, channelId
             ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
         0L, true, true, transient, false, false, DeliveryStatus.Sent, MessageState.None,
-        from, attachmentArray.toTypedArray(), null, null, null, null, null,
-        null, null, false, 0, 0)
+        from, attachmentArray.toTypedArray(), null, null, null, null,
+        null, null, false, 0, 0, null)
 }
 
 @Throws(JSONException::class)
@@ -73,15 +73,15 @@ fun getChannelFromPushJson(channelJson: String?): Channel? {
     val channel: Channel = when (stringToEnum(type)) {
         ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, label, 0, 0,
             arrayOf(), null, 0, false, 0L, false,
-            0L, 0L)
+            0L, 0L, 0)
 
         ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, label, 0,
             0, arrayOf(), null, 0, membersCount.toLong(), false, 0,
-            false, 0, 0)
+            false, 0, 0, 0)
 
         ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", label, 0, 0,
             arrayOf(), null, 0, membersCount.toLong(), false, 0,
-            false, 0, 0)
+            false, 0, 0, 0)
     }
     return channel
 }

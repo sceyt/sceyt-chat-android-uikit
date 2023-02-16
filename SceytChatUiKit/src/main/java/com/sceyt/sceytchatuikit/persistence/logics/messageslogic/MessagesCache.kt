@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.removeAllIf
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
@@ -22,6 +23,12 @@ class MessagesCache {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val messageUpdatedFlow: SharedFlow<List<SceytMessage>> = messageUpdatedFlow_
+
+        private val messagesClearedFlow_ = MutableSharedFlow<Pair<Long, Long>>(
+            extraBufferCapacity = 30,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val messagesClearedFlow: SharedFlow<Pair<Long, Long>> = messagesClearedFlow_
     }
 
     /** Added messages like upsert, and check is differences between messages*/
@@ -102,6 +109,14 @@ class MessagesCache {
     fun deleteMessage(tid: Long) {
         synchronized(lock) {
             cachedMessages.remove(tid)
+        }
+    }
+
+    fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) {
+        synchronized(lock) {
+            if (cachedMessages.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending }) {
+                messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
+            }
         }
     }
 

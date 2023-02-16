@@ -28,5 +28,6 @@ data class ChannelEntity(
         var memberCount: Long,
         var lastDeliveredMessageId: Long,
         var lastReadMessageId: Long,
+        var messagesDeletionDate: Long,
         var myRole: RoleTypeEnum
 )

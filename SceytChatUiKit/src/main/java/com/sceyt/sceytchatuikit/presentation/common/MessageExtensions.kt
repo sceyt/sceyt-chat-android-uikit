@@ -87,8 +87,6 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
 
 fun Message.isTextMessage() = attachments.isNullOrEmpty()
 
-fun SceytMessage.isTextMessage() = attachments.isNullOrEmpty()
-
 fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     if (this == null) return null
 
@@ -107,8 +105,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
         replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
-        reactionsChanged = lastReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
-            other.lastReactions?.map { it.toReactionEntity(id) }
+        reactionsChanged = selfReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
+            other.selfReactions?.map { it.toReactionEntity(id) }
         ).not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
         filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
@@ -124,8 +122,8 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
         replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
-        reactionsChanged = lastReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
-            other.lastReactions?.map { it.toReactionEntity(id) }
+        reactionsChanged = selfReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
+            other.selfReactions?.map { it.toReactionEntity(id) }
         ).not(),
         showAvatarAndNameChanged = false,
         filesChanged = attachments.equalsIgnoreNull(other.attachments).not()

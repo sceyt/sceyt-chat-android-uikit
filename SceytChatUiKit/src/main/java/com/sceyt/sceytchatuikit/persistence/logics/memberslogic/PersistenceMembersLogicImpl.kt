@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -27,13 +28,15 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOA
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import org.koin.core.component.inject
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
-        private val channelsCache: ChannelsCache,
-        private val persistenceChannelsLogic: PersistenceChannelsLogic) : PersistenceMembersLogic {
+        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
+
+    private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         if (data.channel == null || data.members == null) return

@@ -28,7 +28,6 @@ open class SceytMessage(var id: Long,
                         var state: MessageState,
                         var from: User?,
                         var attachments: Array<SceytAttachment>?,
-                        var lastReactions: Array<Reaction>?,
                         var selfReactions: Array<Reaction>? = null,
                         var reactionScores: Array<ReactionScore>?,
                         var markerCount: Array<MarkerCount>?,
@@ -70,7 +69,6 @@ open class SceytMessage(var id: Long,
         state = message.state
         from = message.from
         attachments = message.attachments
-        lastReactions = message.lastReactions
         selfReactions = message.selfReactions
         reactionScores = message.reactionScores
         markerCount = message.markerCount
@@ -104,7 +102,6 @@ open class SceytMessage(var id: Long,
             state = state,
             from = from,
             attachments = attachments?.map(SceytAttachment::clone)?.toTypedArray(),
-            lastReactions = lastReactions,
             selfReactions = selfReactions,
             reactionScores = reactionScores,
             markerCount = markerCount,

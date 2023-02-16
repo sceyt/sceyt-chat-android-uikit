@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 
 
 fun Channel.toSceytUiChannel(): SceytChannel {
-    if (this is GroupChannel)
+    if (this is GroupChannel) {
         return SceytGroupChannel(
             id = id,
             createdAt = createdAt,
@@ -34,9 +34,10 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             members = members.map { it.toSceytMember() },
             memberCount = memberCount,
             lastDeliveredMessageId = lastDeliveredMessageId,
-            lastReadMessageId = lastReadMessageId
+            lastReadMessageId = lastReadMessageId,
+            messagesDeletionDate = messagesDeletionDate
         )
-    else {
+    } else {
         this as DirectChannel
         return SceytDirectChannel(
             id = id,
@@ -52,6 +53,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
             channelType = getChannelType(this),
+            messagesDeletionDate = messagesDeletionDate
         )
     }
 }
@@ -63,14 +65,14 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
             PrivateChannel(id, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId)
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate)
         }
         ChannelTypeEnum.Public -> {
             this as SceytGroupChannel
             PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId)
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate)
         }
         else -> throw RuntimeException("Channel is direct channel")
     }
