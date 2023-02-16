@@ -276,7 +276,7 @@ class MessageListViewModel(
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val defaultState = if (item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
+        val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
             PendingUpload else PendingDownload
         val transferData = TransferData(
             item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
