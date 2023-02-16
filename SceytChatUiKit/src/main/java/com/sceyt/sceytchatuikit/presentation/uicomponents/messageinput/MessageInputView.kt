@@ -80,6 +80,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
     private var disabledInput: Boolean = false
+    private var showingJoinButton: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
 
     var messageInputActionCallback: MessageInputActionCallback? = null
@@ -117,7 +118,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 setRecordingListener()
                 voiceMessageRecorderView = this
-                isVisible = !disabledInput
+                isVisible = !disabledInput && !showingJoinButton
             })
         }
     }
@@ -383,8 +384,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showHideJoinButton(show: Boolean) {
         if (disabledInput) return
+        showingJoinButton = show
         binding.btnJoin.isVisible = show
         binding.layoutInput.isVisible = show.not()
+        if (!show) determineState()
     }
 
     private fun checkIsExistAttachment(path: String?): Boolean {
@@ -448,6 +451,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun hideAndStopVoiceRecorder() {
         voiceMessageRecorderView?.isVisible = false
         voiceMessageRecorderView?.forceStopRecording()
+        binding.messageInput.requestFocus()
     }
 
     private fun onStateChanged(newState: InputState) {
