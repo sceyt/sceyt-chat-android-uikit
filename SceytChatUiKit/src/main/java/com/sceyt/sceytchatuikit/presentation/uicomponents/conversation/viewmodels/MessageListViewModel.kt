@@ -471,8 +471,7 @@ class MessageListViewModel(
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
             files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
-            if (prevMessage != null)
-                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+            canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
             messageReactions = initReactionsItems(this)
         }
     }
