@@ -60,10 +60,10 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="00:00" />
 
-        <SeekBar
+        <com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.CustomSeekBar
             android:id="@+id/seekBar"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginHorizontal="12dp"
             android:progressBackgroundTint="#757D8B"
             android:progressTint="@color/sceyt_color_white"
