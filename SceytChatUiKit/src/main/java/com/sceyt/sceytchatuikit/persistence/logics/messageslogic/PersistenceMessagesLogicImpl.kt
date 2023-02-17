@@ -91,6 +91,11 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
         launch {
+            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.first.id)
+            val message = data.second
+            if (channelDb != null && message.createdAt <= channelDb.messagesDeletionDate)
+                return@launch
+
             onMessage(data, false)
             persistenceChannelsLogic.onFcmMessage(data)
         }
