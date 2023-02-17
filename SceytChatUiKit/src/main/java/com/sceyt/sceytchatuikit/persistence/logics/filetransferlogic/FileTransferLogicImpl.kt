@@ -207,22 +207,22 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
             override fun onError(exception: SceytException?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Error(exception))
-                    sharedFilesPath.remove(task.attachment.filePath)
                 }
+                sharedFilesPath.remove(attachment.filePath)
             }
         }, object : UrlCallback {
             override fun onResult(p0: String?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Success(p0))
-                    sharedFilesPath.remove(task.attachment.filePath)
                 }
+                sharedFilesPath.remove(attachment.filePath)
             }
 
             override fun onError(exception: SceytException?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Error(exception))
-                    sharedFilesPath.remove(task.attachment.filePath)
                 }
+                sharedFilesPath.remove(attachment.filePath)
             }
         })
     }

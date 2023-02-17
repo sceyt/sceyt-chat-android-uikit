@@ -360,8 +360,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             onStateChanged(newState)
         inputState = newState
 
-        binding.icSendMessage.isVisible = !showVoiceIcon
-        if (!showVoiceIcon) hideAndStopVoiceRecorder()
+        binding.icSendMessage.isVisible = !showVoiceIcon && !disabledInput
+        if (!showVoiceIcon || disabledInput) hideAndStopVoiceRecorder()
         else showVoiceRecorder()
     }
 
@@ -383,10 +383,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showHideJoinButton(show: Boolean) {
-        if (disabledInput) return
         showingJoinButton = show
         binding.btnJoin.isVisible = show
-        binding.layoutInput.isVisible = show.not()
+        binding.layoutInput.isVisible = !disabledInput && !show
+        binding.layoutCloseInput.root.isVisible = disabledInput && !show
         if (!show) determineState()
     }
 
@@ -451,7 +451,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun hideAndStopVoiceRecorder() {
         voiceMessageRecorderView?.isVisible = false
         voiceMessageRecorderView?.forceStopRecording()
-        binding.messageInput.requestFocus()
+        if (!disabledInput)
+            binding.messageInput.requestFocus()
     }
 
     private fun onStateChanged(newState: InputState) {

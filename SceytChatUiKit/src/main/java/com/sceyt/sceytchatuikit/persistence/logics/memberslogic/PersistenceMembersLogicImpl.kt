@@ -52,6 +52,7 @@ internal class PersistenceMembersLogicImpl(
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
+                channelDao.deleteChannel(chatId)
                 channelsCache.deleteChannel(chatId)
             }
             ChannelMembersEventEnum.UnBlocked -> {
