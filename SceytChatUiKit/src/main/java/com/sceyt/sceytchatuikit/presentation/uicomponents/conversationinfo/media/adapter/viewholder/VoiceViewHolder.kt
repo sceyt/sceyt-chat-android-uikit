@@ -1,15 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
 import android.content.res.ColorStateList
-import android.widget.ImageView
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -58,12 +55,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
             } ?: ""
             tvDate.text = DateTimeUtil.getDateTimeString(attachment.createdAt, "dd.MM.yy • HH:mm")
 
-            with(tvDuration) {
-                fileItem.duration?.let {
-                    text = DateTimeUtil.secondsToTime(it)
-                    isVisible = true
-                } ?: run { isVisible = false }
-            }
+            setVoiceDuration()
 
             icFile.setOnClickListener {
                 AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
@@ -72,18 +64,21 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                     }
 
                     override fun onProgress(position: Long, duration: Long) {
+                        runOnMainThread {
+                            binding.tvDuration.text = position.durationToMinSecShort()
+                        }
                     }
 
                     override fun onSeek(position: Long) {
                     }
 
                     override fun onToggle(playing: Boolean) {
-                        binding.root.post { setPlayButtonIcon(playing, binding.icFile) }
+                        binding.root.post { setPlayingState(playing) }
                     }
 
                     override fun onStop() {
                         binding.root.post {
-                            setPlayButtonIcon(false, binding.icFile)
+                            setPlayingState(false)
                         }
                     }
 
@@ -119,9 +114,21 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
-    private fun setPlayButtonIcon(playing: Boolean, imageView: ImageView) {
+    private fun setPlayingState(playing: Boolean) {
         val iconRes = if (playing) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
-        imageView.setImageResource(iconRes)
+        binding.icFile.setImageResource(iconRes)
+
+        if (!playing)
+            setVoiceDuration()
+    }
+
+    private fun setVoiceDuration() {
+        with(binding.tvDuration) {
+            fileItem.duration?.let {
+                text = DateTimeUtil.secondsToTime(it)
+                isVisible = true
+            } ?: run { isVisible = false }
+        }
     }
 
     private fun setListener() {
