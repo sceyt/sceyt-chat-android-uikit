@@ -108,25 +108,26 @@ class VideoControllerView @JvmOverloads constructor(
                 return
             }
             val duration = player?.duration?.toLong() ?: 0
-            val newPosition = duration * progress / 1000L
+            val newPosition = duration * progress / 100L
             player?.seekTo(newPosition.toInt())
+            Log.i("sdfsfsdf",newPosition.toString())
             if (player != null) binding.tvCurrentPosition.text = stringForTime(newPosition.toInt())
         }
 
         override fun onStopTrackingTouch(bar: SeekBar) {
             isDragging = false
-            val duration = player?.duration?.toLong() ?: 0
-            val newPosition = duration * bar.progress / 100L
-            player?.seekTo(newPosition.toInt())
-            if (player != null) binding.tvCurrentPosition.text = stringForTime(newPosition.toInt())
-            setProgress()
-            updatePausePlay()
-            show(sDefaultTimeout)
+            /*  val duration = player?.duration?.toLong() ?: 0
+             val newPosition = duration * bar.progress / 100L
+             player?.seekTo(newPosition.toInt())
+             if (player != null) binding.tvCurrentPosition.text = stringForTime(newPosition.toInt())
+             //setProgress()
+             updatePausePlay()
+             show(sDefaultTimeout)
 
-            // Ensure that progress is properly updated in the future,
-            // the call to show() does not guarantee this because it is a
-            // no-op if we are already showing.
-            controllerHandler.sendEmptyMessage(SHOW_PROGRESS)
+             // Ensure that progress is properly updated in the future,
+             // the call to show() does not guarantee this because it is a
+             // no-op if we are already showing.
+             controllerHandler.sendEmptyMessage(SHOW_PROGRESS)*/
         }
     }
 
