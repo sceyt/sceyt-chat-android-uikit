@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
@@ -22,6 +23,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
@@ -50,8 +52,12 @@ internal class PersistenceMembersLogicImpl(
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
+                channelsCache.deleteChannel(chatId)
             }
-            ChannelMembersEventEnum.UnBlocked -> {}
+            ChannelMembersEventEnum.UnBlocked -> {
+                channelDao.updateChannel(data.channel.toChannelEntity())
+                channelsCache.upsertChannel(data.channel.toSceytUiChannel())
+            }
         }
     }
 

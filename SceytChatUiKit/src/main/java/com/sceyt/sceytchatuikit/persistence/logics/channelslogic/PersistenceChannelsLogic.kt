@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 internal interface PersistenceChannelsLogic {
     suspend fun onChannelEvent(data: ChannelEventData)
     suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
-    suspend fun onChannelMemberEvent(data: ChannelMembersEventData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)

@@ -119,10 +119,6 @@ internal class PersistenceChannelsLogicImpl(
         updateChannelDbAndCache((data.channel ?: return).toSceytUiChannel())
     }
 
-    override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        updateChannelDbAndCache((data.channel ?: return).toSceytUiChannel())
-    }
-
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         channelsCache.get(data.channel.id)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
