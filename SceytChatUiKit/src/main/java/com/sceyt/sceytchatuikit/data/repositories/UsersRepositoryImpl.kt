@@ -1,11 +1,13 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.models.user.UserListQueryByIds
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -33,6 +35,7 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "loadUsers error: ${e?.message}")
                 }
             })
         }
@@ -52,6 +55,7 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "loadMoreUsers error: ${e?.message}")
                 }
             })
         }
@@ -70,6 +74,7 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "getSceytUsersByIds error: ${e?.message}")
                 }
             })
         }
@@ -90,6 +95,7 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "getSceytUserById error: ${e?.message}")
                 }
             })
         }
