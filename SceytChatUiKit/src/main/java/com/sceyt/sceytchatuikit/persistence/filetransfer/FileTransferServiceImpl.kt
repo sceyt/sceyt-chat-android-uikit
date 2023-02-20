@@ -65,7 +65,7 @@ internal class FileTransferServiceImpl(private var application: Application,
 
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
         val workInfo = WorkManager.getInstance(application).getWorkInfosByTag(messageTid.toString())
-        if (workInfo.get().isEmpty() || workInfo.isCancelled)
+        if ((state == PauseUpload || state == ErrorUpload) && (workInfo.get().isEmpty() || workInfo.isCancelled) )
             SendAttachmentWorkManager.schedule(application, messageTid, null)
         else
             listeners.resume(messageTid, attachment, state)

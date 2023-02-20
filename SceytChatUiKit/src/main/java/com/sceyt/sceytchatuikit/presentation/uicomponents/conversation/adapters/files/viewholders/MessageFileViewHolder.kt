@@ -60,7 +60,7 @@ class MessageFileViewHolder(
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
-            PendingUpload, PauseUpload -> {
+            PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
             PendingDownload -> {
@@ -72,7 +72,7 @@ class MessageFileViewHolder(
             Uploaded, Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
             }
-            ErrorUpload, ErrorDownload, PauseDownload -> {
+            ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
             FilePathChanged, ThumbLoaded -> return
