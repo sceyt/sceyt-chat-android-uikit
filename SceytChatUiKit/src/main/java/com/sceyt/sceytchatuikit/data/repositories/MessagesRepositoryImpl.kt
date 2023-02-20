@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -12,6 +13,7 @@ import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -49,8 +51,10 @@ class MessagesRepositoryImpl : MessagesRepository {
                 override fun onError(e: SceytException?) {
                     if (replyInThread && lastMessageId == 0L)
                         continuation.safeResume(SceytResponse.Success(arrayListOf()))
-                    else
+                    else {
                         continuation.safeResume(SceytResponse.Error(e))
+                        Log.e(TAG, "getPrevMessages error: ${e?.message}")
+                    }
                 }
             })
         }
@@ -71,8 +75,10 @@ class MessagesRepositoryImpl : MessagesRepository {
                 override fun onError(e: SceytException?) {
                     if (replyInThread && lastMessageId == 0L)
                         continuation.safeResume(SceytResponse.Success(arrayListOf()))
-                    else
+                    else {
                         continuation.safeResume(SceytResponse.Error(e))
+                        Log.e(TAG, "getNextMessages error: ${e?.message}")
+                    }
                 }
             })
         }
@@ -93,8 +99,10 @@ class MessagesRepositoryImpl : MessagesRepository {
                 override fun onError(e: SceytException?) {
                     if (replyInThread && messageId == 0L)
                         continuation.safeResume(SceytResponse.Success(arrayListOf()))
-                    else
+                    else {
                         continuation.safeResume(SceytResponse.Error(e))
+                        Log.e(TAG, "getNearMessages error: ${e?.message}")
+                    }
                 }
             })
         }
@@ -115,6 +123,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "getMessagesByType error: ${e?.message}")
                 }
             })
         }
@@ -136,6 +145,7 @@ class MessagesRepositoryImpl : MessagesRepository {
             override fun onError(e: SceytException?) {
                 trySend(SceytResponse.Error(e))
                 channel.close()
+                Log.e(TAG, "loadAllMessagesAfter error: ${e?.message}")
             }
         })
 
@@ -152,6 +162,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "loadMessages error: ${error?.message}")
                 }
             })
         }
@@ -168,6 +179,7 @@ class MessagesRepositoryImpl : MessagesRepository {
             override fun onError(error: SceytException?) {
                 trySend(SendMessageResult.Response(SceytResponse.Error(error, data = tmpMessage?.toSceytUiMessage())))
                 channel.close()
+                Log.e(TAG, "sendMessageAsFlow error: ${error?.message}")
             }
         })
         trySend(SendMessageResult.TempMessage(tmpMessage.toSceytUiMessage()))
@@ -183,6 +195,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "sendMessage error: ${error?.message}")
                 }
             })
         }
@@ -197,6 +210,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(ex: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(ex))
+                    Log.e(TAG, "deleteMessage error: ${ex?.message}")
                 }
             })
         }
@@ -211,6 +225,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(ex: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(ex))
+                    Log.e(TAG, "editMessage error: ${ex?.message}")
                 }
             })
         }
@@ -225,6 +240,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "addReaction error: ${error?.message}")
                 }
             })
         }
@@ -239,6 +255,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "deleteReaction error: ${error?.message}")
                 }
             })
         }
@@ -253,6 +270,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "markAsRead error: ${error?.message}")
                 }
             })
         }
@@ -267,6 +285,7 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "markAsDelivered error: ${error?.message}")
                 }
             })
         }
