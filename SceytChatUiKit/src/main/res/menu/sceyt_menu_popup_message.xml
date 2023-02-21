@@ -21,6 +21,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/sceyt_forward"
+        android:icon="@drawable/sceyt_ic_forward"
+        android:title="@string/sceyt_forward"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/sceyt_reply_in_thread"
         android:icon="@drawable/sceyt_ic_reply_in_thread"
         android:title="@string/sceyt_reply_in_thread"

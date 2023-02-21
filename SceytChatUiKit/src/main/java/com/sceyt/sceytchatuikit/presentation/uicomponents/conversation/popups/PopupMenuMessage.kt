@@ -22,9 +22,13 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var m
         inflate(R.menu.sceyt_menu_popup_message)
         (menu as MenuBuilder).setOptionalIconsVisible(true)
 
+
+        val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending || message.deliveryStatus == DeliveryStatus.Failed
+
+        menu.findItem(R.id.sceyt_reply).isVisible = !statusPendingOrFailed
+        menu.findItem(R.id.sceyt_forward).isVisible = !statusPendingOrFailed
         menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank()
-        menu.findItem(R.id.sceyt_reply).isVisible = message.deliveryStatus != DeliveryStatus.Pending
-                && message.deliveryStatus != DeliveryStatus.Failed
+
 
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
 

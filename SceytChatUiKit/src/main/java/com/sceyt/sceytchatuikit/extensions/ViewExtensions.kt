@@ -130,32 +130,6 @@ fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000
     }
 }
 
-fun TextView.setTextViewDrawableColor(@ColorRes color: Int) {
-    for (drawable in compoundDrawables) {
-        if (drawable != null)
-            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
-    }
-    for (drawable in compoundDrawablesRelative) {
-        if (drawable != null)
-            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
-    }
-}
-
-fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
-    texts.forEach {
-        it.compoundDrawables.forEach { drawable ->
-            drawable?.let {
-                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-            }
-        }
-        it.compoundDrawablesRelative.forEach { drawable ->
-            drawable?.let {
-                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-            }
-        }
-    }
-}
-
 @Suppress("DEPRECATION")
 fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean,textWidth: Int): StaticLayout {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

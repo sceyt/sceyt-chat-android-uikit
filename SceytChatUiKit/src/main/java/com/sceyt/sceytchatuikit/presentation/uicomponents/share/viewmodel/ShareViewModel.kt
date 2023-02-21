@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel
+package com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel
 
 import android.app.Application
 import android.content.Context
@@ -35,7 +35,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.concurrent.atomic.AtomicInteger
 
-class ShareActivityViewModel : BaseViewModel(), SceytKoinComponent {
+class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     private val messagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val application by inject<Application>()
 

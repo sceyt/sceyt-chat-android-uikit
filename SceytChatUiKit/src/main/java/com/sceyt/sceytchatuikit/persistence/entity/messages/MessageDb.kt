@@ -21,5 +21,8 @@ data class MessageDb(
         val selfReactions: List<ReactionDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
-        val reactionsScores: List<ReactionScoreEntity>?
+        val reactionsScores: List<ReactionScoreEntity>?,
+
+        @Relation(parentColumn = "userId", entityColumn = "user_id")
+        val forwardingUser: UserEntity?
 )

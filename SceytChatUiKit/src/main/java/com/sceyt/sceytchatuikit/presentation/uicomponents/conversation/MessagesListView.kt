@@ -38,6 +38,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Me
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
@@ -179,6 +180,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
+                R.id.sceyt_forward -> messagePopupClickListeners.onForwardMessageClick(view, message)
                 R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
                 R.id.sceyt_reply -> messagePopupClickListeners.onReplyMessageClick(message)
                 R.id.sceyt_reply_in_thread -> messagePopupClickListeners.onReplyMessageInThreadClick(message)
@@ -604,6 +606,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onEditMessageClick(message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.EditMessage(message))
+    }
+
+    override fun onForwardMessageClick(view: View, message: SceytMessage) {
+        SceytForwardActivity.launch(context, message)
     }
 
     override fun onReactMessageClick(view: View, message: SceytMessage) {

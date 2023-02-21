@@ -1,14 +1,17 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
@@ -34,6 +37,7 @@ class OutTextMsgViewHolder(
         if (item is MessageListItem.MessageItem) {
             with(binding) {
                 val message = item.message
+                tvForwarded.isVisible = message.isForwarded
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
@@ -58,6 +62,7 @@ class OutTextMsgViewHolder(
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
+            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }
 }

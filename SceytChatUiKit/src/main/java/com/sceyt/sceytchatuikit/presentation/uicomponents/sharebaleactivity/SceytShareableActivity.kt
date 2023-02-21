@@ -125,16 +125,12 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
         channelsViewModel.getChannels(0, query)
     }
 
-    open fun finishShareAction() {
+    open fun finishSharingAction() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
         if (intent != null)
             startActivity(intent)
 
         super.finish()
-    }
-
-    override fun onBackPressed() {
-        finishShareAction()
     }
 
     protected open fun enableNext(): Boolean {

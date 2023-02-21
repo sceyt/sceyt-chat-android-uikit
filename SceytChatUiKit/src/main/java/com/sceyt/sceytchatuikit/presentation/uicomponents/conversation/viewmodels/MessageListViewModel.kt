@@ -276,7 +276,8 @@ class MessageListViewModel(
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending)
+        val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending
+                && !item.sceytMessage.isForwarded)
             PendingUpload else PendingDownload
         val transferData = TransferData(
             item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
@@ -492,6 +493,7 @@ class MessageListViewModel(
     }
 
     internal fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
+        if (!sceytMessage.incoming) return false
         return if (prevMessage == null)
             isGroup
         else {
