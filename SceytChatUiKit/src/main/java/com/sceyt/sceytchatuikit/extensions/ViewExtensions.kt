@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import android.content.res.Resources
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.text.InputType
+import android.text.*
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -153,4 +154,14 @@ fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
             }
         }
     }
+}
+
+@Suppress("DEPRECATION")
+fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean,textWidth: Int): StaticLayout {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        StaticLayout.Builder.obtain(title, 0, title.length, this, textWidth)
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setLineSpacing(0f, 1f)
+            .setIncludePad(includePadding).build()
+    } else StaticLayout(title, this, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, includePadding)
 }

@@ -35,11 +35,13 @@ class OutTextMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited || diff.bodyChanged)
-                    setMessageBody(messageBody, message)
-
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
+
+                if (diff.edited || diff.bodyChanged) {
+                    setMessageBody(messageBody, message)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
+                }
 
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
