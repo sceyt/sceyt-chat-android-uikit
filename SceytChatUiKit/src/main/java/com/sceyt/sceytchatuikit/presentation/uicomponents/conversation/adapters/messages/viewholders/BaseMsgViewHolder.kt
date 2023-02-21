@@ -127,7 +127,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub) {
-        if (message.parent == null || message.replyInThread || message.parent?.id == 0L) {
+        if (!message.isReplied) {
             viewStub.isVisible = false
             return
         }

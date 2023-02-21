@@ -16,16 +16,16 @@ import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel.State.Finish
-import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.viewmodel.ShareActivityViewModel.State.Loading
+import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel.State.Finish
+import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 open class SceytShareActivity : SceytShareableActivity() {
     private lateinit var binding: SceytActivityShareBinding
-    protected val viewModel: ShareActivityViewModel by viewModels()
+    protected val viewModel: ShareViewModel by viewModels()
     private val sharedUris = ArrayList<Uri>()
     private var body: String? = null
 
@@ -54,7 +54,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
                     binding.messageInput.isVisible = false
                     body = intent.getCharSequenceExtra(Intent.EXTRA_TEXT) as String
-                } else finishShareAction()
+                } else finishSharingAction()
             }
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
@@ -65,9 +65,9 @@ open class SceytShareActivity : SceytShareableActivity() {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         sharedUris.add(uri)
                     }
-                } else finishShareAction()
+                } else finishSharingAction()
             }
-            else -> finishShareAction()
+            else -> finishSharingAction()
         }
     }
 
@@ -92,7 +92,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                     Loading -> SceytLoader.showLoading(this@SceytShareActivity)
                     Finish -> {
                         SceytLoader.hideLoading()
-                        finishShareAction()
+                        finishSharingAction()
                     }
                 }
             }.launchIn(lifecycleScope)
@@ -106,7 +106,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                     Loading -> SceytLoader.showLoading(this@SceytShareActivity)
                     Finish -> {
                         SceytLoader.hideLoading()
-                        finishShareAction()
+                        finishSharingAction()
                     }
                 }
             }.launchIn(lifecycleScope)
@@ -140,7 +140,7 @@ open class SceytShareActivity : SceytShareableActivity() {
             sharedUris.isNotEmpty() -> {
                 sendFilesMessage()
             }
-            else -> finishShareAction()
+            else -> finishSharingAction()
         }
     }
 

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:layout_height="wrap_content">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/fileImage"
@@ -16,8 +16,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:src="@tools:sample/backgrounds/scenic"
-        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize18" />
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize18"
+        tools:src="@tools:sample/backgrounds/scenic" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"

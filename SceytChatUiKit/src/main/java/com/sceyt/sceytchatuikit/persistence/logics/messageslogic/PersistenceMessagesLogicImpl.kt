@@ -255,6 +255,23 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
+    override suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean> {
+        var areSentAllWithSuccessResult = true
+        messagesToSend.forEach {
+            val tmpMessage = it.toSceytUiMessage().apply {
+                createdAt = System.currentTimeMillis()
+                from = ClientWrapper.currentUser ?: User(preference.getUserId())
+            }
+            MessageEventsObserver.emitOutgoingMessage(tmpMessage)
+            insertTmpMessageToDb(tmpMessage)
+            messagesCache.add(tmpMessage)
+            val response = sendMessageWithUploadedAttachments(channelId, it)
+            if (response is SceytResponse.Error)
+                areSentAllWithSuccessResult = false
+        }
+        return SceytResponse.Success(areSentAllWithSuccessResult)
+    }
+
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         val response = messagesRepository.sendMessage(channelId, message)
         onMessageSentResponse(channelId, response)

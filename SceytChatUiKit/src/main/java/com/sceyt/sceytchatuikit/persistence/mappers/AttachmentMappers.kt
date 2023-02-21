@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import org.json.JSONObject
@@ -69,11 +70,12 @@ fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
     }
 }
 
-fun AttachmentDb.toAttachmentPayLoad(messageStatus: DeliveryStatus, incoming: Boolean): AttachmentPayLoadEntity {
+fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPayLoadEntity {
     return with(attachmentEntity) {
         AttachmentPayLoadEntity(
             messageTid = messageTid,
-            transferState = if (!incoming && messageStatus == DeliveryStatus.Pending)
+            transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == DeliveryStatus.Pending
+                    && messageStatus.forwardingDetailsDb == null)
                 TransferState.PendingUpload else TransferState.PendingDownload,
             progressPercent = 0f,
             url = url,

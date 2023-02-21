@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -31,11 +32,12 @@ data class MessageEntity(
         var state: MessageState,
         var fromId: String?,
         var markerCount: List<MarkerCount>?,
-    /*  var selfReactions: Array<Reaction>? = null,
-    var mentionedUsers: Array<User>?,*/
+    /*  var mentionedUsers: Array<User>?,*/
         var selfMarkers: List<String>?,
         var parentId: Long?,
         var replyInThread: Boolean,
         var replyCount: Long,
-        val displayCount: Short
+        val displayCount: Short,
+        @Embedded
+        val forwardingDetailsDb: ForwardingDetailsDb?
 )

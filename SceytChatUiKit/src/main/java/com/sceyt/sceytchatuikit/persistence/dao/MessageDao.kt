@@ -33,7 +33,7 @@ abstract class MessageDao {
         messageDb.attachments?.let { entities ->
             insertAttachments(entities.map { it.attachmentEntity })
             insertAttachmentPayLoads(entities.map {
-                it.toAttachmentPayLoad(messageDb.messageEntity.deliveryStatus, messageDb.messageEntity.incoming)
+                it.toAttachmentPayLoad(messageDb.messageEntity)
             })
         }
 
@@ -63,7 +63,7 @@ abstract class MessageDao {
         if (attachmentPairs.isNotEmpty()) {
             insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
             insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
-                pair.first.map { it.toAttachmentPayLoad(pair.second.messageEntity.deliveryStatus, pair.second.messageEntity.incoming) }
+                pair.first.map { it.toAttachmentPayLoad(pair.second.messageEntity) }
             })
         }
 
