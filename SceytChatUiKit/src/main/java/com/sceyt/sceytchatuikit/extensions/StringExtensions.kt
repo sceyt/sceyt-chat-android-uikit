@@ -8,6 +8,7 @@ import android.text.style.StyleSpan
 import android.util.Base64
 import android.util.Patterns
 import androidx.core.text.isDigitsOnly
+import java.lang.Character.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -82,4 +83,20 @@ fun String?.extractLinks(): Array<String> {
         links.add(url)
     }
     return links.toTypedArray()
+}
+
+fun String?.isRtl(): Boolean {
+    this ?: return false
+    for (char in this) {
+        when (getDirectionality(char)) {
+            DIRECTIONALITY_RIGHT_TO_LEFT,
+            DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC,
+            DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING,
+            DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE -> return true
+            DIRECTIONALITY_LEFT_TO_RIGHT,
+            DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING,
+            DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE -> return false
+        }
+    }
+    return false
 }

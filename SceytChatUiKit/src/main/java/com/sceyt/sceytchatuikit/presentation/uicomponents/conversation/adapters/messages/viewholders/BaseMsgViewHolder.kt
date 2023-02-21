@@ -7,18 +7,17 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
-import android.text.BidiFormatter
-import android.text.TextDirectionHeuristics
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.toColorInt
-import androidx.core.text.HtmlCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
@@ -65,6 +64,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected val context: Context by lazy { view.context }
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     private var recyclerViewReactions: RecyclerView? = null
+    protected var bodyMaxWidth = context.resources.getDimensionPixelSize(com.sceyt.sceytchatuikit.R.dimen.bodyMaxWidth)
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
@@ -102,10 +102,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     private var reactionsAdapter: ReactionsAdapter? = null
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
-        val space = getBodyStringSpase(message)
-        val textWithSpase = message.body + HtmlCompat.fromHtml(space, HtmlCompat.FROM_HTML_MODE_LEGACY)
-        val text = BidiFormatter.getInstance().unicodeWrap(textWithSpase, TextDirectionHeuristics.LOCALE)
-        messageBody.text = text
+        messageBody.text = message.body.trim()
     }
 
     @SuppressLint("SetTextI18n")
@@ -285,10 +282,37 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    private fun getBodyStringSpase(message: SceytMessage): String {
-        return if (message.incoming)
-            if (message.state == MessageState.Edited) MessagesStyle.INC_EDITED_SPACE else MessagesStyle.INC_DEFAULT_SPACE
-        else if (message.state == MessageState.Edited) MessagesStyle.OUT_EDITED_SPACE else MessagesStyle.OUT_DEFAULT_SPACE
+    protected fun setBodyTextPosition(currentView: TextView, nextView: View, parentLayout: ConstraintLayout, maxWidth: Int) {
+        currentView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        val currentViewWidth = currentView.measuredWidth
+        nextView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        val nextViewWidth = nextView.measuredWidth
+
+        val body = currentView.text.toString()
+        val constraintLayout: ConstraintLayout = parentLayout
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(constraintLayout)
+
+        constraintSet.clear(currentView.id, ConstraintSet.END)
+        constraintSet.clear(currentView.id, ConstraintSet.BOTTOM)
+
+        if (currentViewWidth + nextViewWidth > maxWidth) {
+            constraintSet.connect(currentView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, dpToPx(12f))
+
+            currentView.paint.getStaticLayout(body, currentView.includeFontPadding, maxWidth).apply {
+                if (lineCount > 1) {
+                    if (getLineMax(lineCount - 1) + nextViewWidth < maxWidth && !body.isRtl()) {
+                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
+                    } else
+                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
+                } else
+                    constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
+            }
+        } else {
+            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, dpToPx(5f))
+            constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
+        }
+        constraintSet.applyTo(constraintLayout)
     }
 
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {

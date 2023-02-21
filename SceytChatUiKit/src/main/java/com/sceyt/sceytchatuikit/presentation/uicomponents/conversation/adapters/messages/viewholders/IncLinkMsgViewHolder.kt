@@ -42,12 +42,12 @@ class IncLinkMsgViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited || diff.bodyChanged)
-                    setMessageBody(messageBody, message)
-
-                if (diff.edited || diff.statusChanged) {
+                if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
-                    setMessageDateDependAttachments(messageDate, message.files)
+
+                if (diff.edited || diff.bodyChanged) {
+                    setMessageBody(messageBody, message)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
                 }
 
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
