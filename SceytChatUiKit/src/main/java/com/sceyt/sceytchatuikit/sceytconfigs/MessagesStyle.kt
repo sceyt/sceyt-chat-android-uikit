@@ -72,6 +72,12 @@ object MessagesStyle {
     @DrawableRes
     var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_with_bg
 
+    @ColorRes
+    var selfReactionBackgroundColor = R.color.sceyt_self_reaction_color
+
+    @ColorRes
+    var selfReactionBorderColor = R.color.sceyt_color_divider
+
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
@@ -92,6 +98,8 @@ object MessagesStyle {
         downScrollerUnreadCountColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor, downScrollerUnreadCountColor)
         mediaLoaderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMediaLoaderColor, mediaLoaderColor)
         fileAttachmentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiFileAttachmentIcon, fileAttachmentIcon)
+        selfReactionBackgroundColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBackgroundColor, selfReactionBackgroundColor)
+        selfReactionBorderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBorderColor, selfReactionBorderColor)
         return this
     }
 }

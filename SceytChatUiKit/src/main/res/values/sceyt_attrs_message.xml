@@ -44,6 +44,9 @@
         <attr name="sceytUiMediaLoaderColor" format="reference" />
         <attr name="sceytUiFileAttachmentIcon" format="reference" />
 
+        <attr name="sceytUiSelfReactionBackgroundColor" format="reference" />
+        <attr name="sceytUiSelfReactionBorderColor" format="reference" />
+
 
     </declare-styleable>
 </resources>
