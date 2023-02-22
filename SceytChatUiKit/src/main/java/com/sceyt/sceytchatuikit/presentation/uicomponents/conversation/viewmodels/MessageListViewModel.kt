@@ -477,7 +477,7 @@ class MessageListViewModel(
         }
     }
 
-    private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
+    internal fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         return message.reactionScores?.map {
             ReactionItem.Reaction(SceytReaction(it.key, it.score,
                 message.selfReactions?.find { reaction ->

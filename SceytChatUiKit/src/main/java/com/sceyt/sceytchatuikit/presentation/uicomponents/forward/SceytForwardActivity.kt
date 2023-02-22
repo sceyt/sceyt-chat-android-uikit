@@ -94,7 +94,7 @@ open class SceytForwardActivity : SceytShareableActivity() {
     }
 
     companion object {
-        private const val FORWARD_MESSAGES_KEY = "FORWARD_MESSAGE_KEY"
+        const val FORWARD_MESSAGES_KEY = "FORWARD_MESSAGE_KEY"
 
         fun launch(context: Context, vararg message: SceytMessage) {
             context.launchActivity<SceytForwardActivity> {
