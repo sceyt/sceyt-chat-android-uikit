@@ -21,6 +21,16 @@
             android:screenOrientation="portrait"
             android:theme="@style/PreviewTheme" />
 
+        <activity
+            android:name=".presentation.uicomponents.forward.SceytForwardActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/DefaultFontTheme" />
+
+        <activity
+            android:name=".presentation.uicomponents.share.SceytShareActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/DefaultFontTheme" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

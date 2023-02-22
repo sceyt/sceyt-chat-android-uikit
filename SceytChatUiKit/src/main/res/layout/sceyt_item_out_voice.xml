@@ -27,6 +27,28 @@
         android:background="@drawable/sceyt_bg_out_message"
         android:paddingTop="2dp">
 
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvForwarded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="6dp"
+            android:drawableStart="@drawable/sceyt_ic_forward_14"
+            android:drawablePadding="5dp"
+            android:fontFamily="@font/roboto_medium"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:text="@string/forwarded_message"
+            android:textColor="@color/sceyt_color_accent"
+            android:textSize="@dimen/extraSmallTextSize"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
+            tools:visibility="visible" />
+
         <ViewStub
             android:id="@+id/viewReply"
             android:layout_width="match_parent"
@@ -38,7 +60,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
