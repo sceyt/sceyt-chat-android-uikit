@@ -13,7 +13,6 @@ import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
-import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
@@ -105,9 +104,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
         replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
-        reactionsChanged = selfReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
-            other.selfReactions?.map { it.toReactionEntity(id) }
-        ).not(),
+        reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
+                ?: other.reactionScores.isNullOrEmpty().not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
         filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
     )
@@ -122,9 +120,8 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
         replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
-        reactionsChanged = selfReactions?.map { it.toReactionEntity(id) }.equalsIgnoreNull(
-            other.selfReactions?.map { it.toReactionEntity(id) }
-        ).not(),
+        reactionsChanged = reactionScores?.equalsIgnoreNull(other.reactionScores)?.not()
+                ?: other.reactionScores.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
         filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
     )
