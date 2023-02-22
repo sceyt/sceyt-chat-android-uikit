@@ -218,7 +218,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messages.forEach {
             if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
                 messagesListView.messageEditedOrDeleted(it)
-            else messagesListView.updateMessage(it)
+            else messagesListView.updateMessage(it.apply { messageReactions = initReactionsItems(this) })
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 

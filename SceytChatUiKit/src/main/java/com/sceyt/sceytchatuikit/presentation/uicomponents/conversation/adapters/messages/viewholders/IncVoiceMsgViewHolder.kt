@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
@@ -64,6 +65,7 @@ class IncVoiceMsgViewHolder(
         if (item is MessageListItem.MessageItem) {
             with(binding) {
                 val message = item.message
+                tvForwarded.isVisible = message.isForwarded
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
@@ -239,6 +241,7 @@ class IncVoiceMsgViewHolder(
             tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
             playPauseButton.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
             seekBar.waveProgressColor = getCompatColor(SceytKitConfig.sceytColorAccent)
+            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }
 }

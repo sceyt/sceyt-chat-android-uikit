@@ -36,7 +36,8 @@ open class SceytMessage(var id: Long,
                         var parent: SceytMessage?,
                         var replyInThread: Boolean,
                         var replyCount: Long,
-                        val displayCount: Short) : Parcelable, Cloneable {
+                        val displayCount: Short,
+                        var forwardingDetails: ForwardingDetails?) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -50,6 +51,10 @@ open class SceytMessage(var id: Long,
 
     @IgnoredOnParcel
     var messageReactions: List<ReactionItem>? = null
+
+    val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L
+
+    val isReplied get() = parent != null && parent?.id != 0L && !replyInThread
 
     fun updateMessage(message: SceytMessage) {
         id = message.id
@@ -110,7 +115,8 @@ open class SceytMessage(var id: Long,
             parent = parent,
             replyInThread = replyInThread,
             replyCount = replyCount,
-            displayCount = displayCount)
+            displayCount = displayCount,
+            forwardingDetails = forwardingDetails)
     }
 
     override fun equals(other: Any?): Boolean {

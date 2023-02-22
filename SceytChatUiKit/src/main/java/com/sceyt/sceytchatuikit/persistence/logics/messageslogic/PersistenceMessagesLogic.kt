@@ -43,6 +43,7 @@ internal interface PersistenceMessagesLogic {
     suspend fun sendMessages(channelId: Long, messages: List<Message>)
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendSharedFileMessage(channelId: Long, message: Message)
+    suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean>
     suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage>
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()

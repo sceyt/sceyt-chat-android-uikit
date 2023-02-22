@@ -2,13 +2,11 @@ package com.sceyt.sceytchatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
-import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
+import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.*
 
@@ -35,7 +33,8 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     parentId = if (parent?.id == 0L) null else parent?.id,
     replyInThread = replyInThread,
     replyCount = replyCount,
-    displayCount = displayCount
+    displayCount = displayCount,
+    forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb()
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -43,32 +42,6 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
         msgId
     else tid
 }
-
-fun Message.toMessageEntity() = MessageEntity(
-    tid = getTid(id, tid, incoming),
-    id = id,
-    channelId = channelId,
-    to = to,
-    body = body,
-    type = type,
-    metadata = metadata,
-    createdAt = createdAt.time,
-    updatedAt = updatedAt.time,
-    incoming = incoming,
-    receipt = receipt,
-    isTransient = isTransient,
-    silent = silent,
-    direct = isDirect,
-    deliveryStatus = deliveryStatus,
-    state = state,
-    fromId = from?.id,
-    markerCount = markerCount?.toList(),
-    selfMarkers = selfMarkers?.toList(),
-    parentId = if (parent?.id == 0L) null else parent?.id,
-    replyInThread = replyInThread,
-    replyCount = replyCount,
-    displayCount = displayCount.toShort()
-)
 
 
 fun SceytMessage.toMessageDb(): MessageDb {
@@ -79,7 +52,8 @@ fun SceytMessage.toMessageDb(): MessageDb {
         parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
         selfReactions = selfReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
+        forwardingUser = forwardingDetails?.user?.toUserEntity()
     )
 }
 
@@ -123,13 +97,14 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             parent = parent?.toSceytMessage(),
             replyInThread = replyInThread,
             replyCount = replyCount,
-            displayCount = displayCount
+            displayCount = displayCount,
+            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
         )
     }
 }
 
 fun ParentMessageDb.toSceytMessage(): SceytMessage {
-    return messageEntity.toSceytMessage().apply {
+    return messageEntity.parentMessageToSceytMessage().apply {
         this.from = this@toSceytMessage.from?.toUser()
         this.attachments = this@toSceytMessage.attachments?.map { it.toAttachment() }?.toTypedArray()
     }
@@ -141,7 +116,7 @@ fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     })
 }
 
-private fun MessageEntity.toSceytMessage() = SceytMessage(
+private fun MessageEntity.parentMessageToSceytMessage() = SceytMessage(
     id = id ?: 0,
     tid = tid,
     channelId = channelId,
@@ -168,7 +143,8 @@ private fun MessageEntity.toSceytMessage() = SceytMessage(
     parent = null,
     replyInThread = replyInThread,
     replyCount = replyCount,
-    displayCount = displayCount
+    displayCount = displayCount,
+    forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null)
 )
 
 fun MessageDb.toMessage(): Message {
@@ -238,7 +214,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         parent = parent?.toSceytUiMessage(),
         replyInThread = replyInThread,
         replyCount = replyCount,
-        displayCount = displayCount.toShort()
+        displayCount = displayCount.toShort(),
+        forwardingDetails = forwardingDetails
     ).apply {
         isGroup?.let {
             this.isGroup = it
@@ -277,3 +254,16 @@ fun SceytMessage.toMessage(): Message {
         displayCount,
         ForwardingDetails(id, channelId, from, 0))
 }
+
+fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
+    messageId = messageId,
+    userId = user?.id,
+    hops = hops
+)
+
+
+fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: User?) = ForwardingDetails(
+    messageId, channelId,
+    user,
+    hops
+)

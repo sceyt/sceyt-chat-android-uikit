@@ -1,6 +1,9 @@
 package com.sceyt.sceytchatuikit.extensions
 
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.widget.TextView
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatTextView
@@ -40,5 +43,38 @@ fun TextView.setTextAndVisibility(title: String?) {
     } else {
         text = title
         isVisible = true
+    }
+}
+
+fun TextView.setTextAndDrawableColor(@ColorRes colorId: Int) {
+    if (colorId != 0) {
+        setTextColor(context.getCompatColor(colorId))
+        setTextViewDrawableColor(colorId)
+    }
+}
+
+fun TextView.setTextViewDrawableColor(@ColorRes color: Int) {
+    for (drawable in compoundDrawables) {
+        if (drawable != null)
+            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
+    }
+    for (drawable in compoundDrawablesRelative) {
+        if (drawable != null)
+            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
+    }
+}
+
+fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
+    texts.forEach {
+        it.compoundDrawables.forEach { drawable ->
+            drawable?.let {
+                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            }
+        }
+        it.compoundDrawablesRelative.forEach { drawable ->
+            drawable?.let {
+                drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+            }
+        }
     }
 }
