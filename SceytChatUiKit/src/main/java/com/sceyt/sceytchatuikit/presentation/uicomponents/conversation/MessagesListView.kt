@@ -321,7 +321,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal suspend fun updateProgress(data: TransferData) {
+    internal fun updateMessagesStatusByTid(status: DeliveryStatus, tid: Long) {
+        for ((index: Int, item: MessageListItem) in (messagesRV.getData()
+                ?: return).withIndex()) {
+            if (item is MessageItem) {
+                val oldMessage = item.message.clone()
+                if (item.message.tid == tid) {
+                    if (item.message.deliveryStatus < status)
+                        item.message.deliveryStatus = status
+                    updateItem(index, item, oldMessage.diff(item.message))
+                    break
+                }
+            }
+        }
+    }
+
+    internal fun updateProgress(data: TransferData) {
         Log.i(TAG, data.toString())
         messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {

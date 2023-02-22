@@ -219,6 +219,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         val reactions: List<ReactionItem>? = item.message.messageReactions
 
         if (reactions.isNullOrEmpty()) {
+            reactionsAdapter = null
             rvReactionsViewStub.isVisible = false
             return
         }

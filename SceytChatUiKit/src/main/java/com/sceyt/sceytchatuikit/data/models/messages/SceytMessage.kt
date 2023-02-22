@@ -85,6 +85,9 @@ open class SceytMessage(var id: Long,
         reactionScores?.toMutableSet()?.retainAll {
             it.key == ""
         }
+        // Update inner data
+        messageReactions = message.messageReactions
+        files = message.files
     }
 
     public override fun clone(): SceytMessage {
@@ -116,7 +119,10 @@ open class SceytMessage(var id: Long,
             replyInThread = replyInThread,
             replyCount = replyCount,
             displayCount = displayCount,
-            forwardingDetails = forwardingDetails)
+            forwardingDetails = forwardingDetails).also {
+            it.messageReactions = messageReactions
+            it.files = files
+        }
     }
 
     override fun equals(other: Any?): Boolean {
