@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
 import com.sceyt.sceytchatuikit.R
 import kotlin.math.abs
@@ -139,8 +140,21 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         } else 0f
     }
 
-    fun setReactionBackgroundColor(color: Int) {
+    fun setReactionBackgroundColor(@ColorInt color: Int) {
         reactionBackgroundColor = color
+        invalidate()
+    }
+
+    fun setReactionStrokeColor(@ColorInt color: Int) {
+        strokeColor = color
+        strokePaint.color = color
+        invalidate()
+    }
+
+    fun setReactionBgAndStrokeColor(@ColorInt bgColor: Int, @ColorInt colorStroke: Int) {
+        reactionBackgroundColor = bgColor
+        strokeColor = colorStroke
+        strokePaint.color = colorStroke
         invalidate()
     }
 

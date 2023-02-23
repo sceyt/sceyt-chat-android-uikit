@@ -79,28 +79,19 @@ class OutFilesMsgViewHolder(
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)
 
-        with(binding.rvFiles) {
-            setHasFixedSize(true)
-            if (itemDecorationCount == 0) {
-                val offset = ViewUtil.dpToPx(2f)
-                addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
-            }
+        initFilesRecyclerView(message, binding.rvFiles)
 
-            message.attachments?.firstOrNull()?.let {
-                if (it.type == AttachmentTypeEnum.File.value()) {
-                    setPadding(ViewUtil.dpToPx(8f))
-                } else {
-                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName)
-                        setPadding(paddingLeft, ViewUtil.dpToPx(4f), paddingRight, paddingBottom)
-                    else setPadding(0)
+        if (filedAdapter == null) {
+            with(binding.rvFiles) {
+                setHasFixedSize(true)
+
+                setRecycledViewPool(viewPoolFiles)
+                itemAnimator = null
+                adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
+                    filedAdapter = it
                 }
             }
-            setRecycledViewPool(viewPoolFiles)
-            itemAnimator = null
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
-                filedAdapter = it
-            }
-        }
+        } else filedAdapter?.notifyUpdate(attachments)
     }
 
     override fun onViewDetachedFromWindow() {

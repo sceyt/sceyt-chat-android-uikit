@@ -28,10 +28,7 @@ class ReactionViewHolderFactory(context: Context,
     }
 
     fun getItemViewType(position: Int, size: Int): Int {
-        return when {
-            position < size -> ReactionViewType.Reaction.ordinal
-            else -> ReactionViewType.Add.ordinal
-        }
+        return ReactionViewType.Reaction.ordinal
     }
 
     enum class ReactionViewType {

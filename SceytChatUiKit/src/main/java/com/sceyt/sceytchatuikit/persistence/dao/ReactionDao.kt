@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
 
@@ -22,6 +23,9 @@ abstract class ReactionDao {
 
     @Query("select * from ReactionScoreEntity where messageId =:messageId and reaction_key =:key")
     abstract fun getReactionScore(messageId: Long, key: String): ReactionScoreEntity?
+
+    @Query("select * from ReactionEntity where messageId =:messageId and fromId =:myId")
+    abstract suspend fun getSelfReactionsByMessageId(messageId: Long, myId: String): List<ReactionDb>
 
     @Update
     abstract fun updateReactionScore(reactionScore: ReactionScoreEntity)

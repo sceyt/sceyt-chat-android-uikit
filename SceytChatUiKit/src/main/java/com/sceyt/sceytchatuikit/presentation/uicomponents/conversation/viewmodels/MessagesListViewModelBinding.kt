@@ -215,10 +215,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     MessagesCache.messageUpdatedFlow.onEach { messages ->
-        messages.forEach {
-            if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
-                messagesListView.messageEditedOrDeleted(it)
-            else messagesListView.updateMessage(it.apply { messageReactions = initReactionsItems(this) })
+        viewModelScope.launch(Dispatchers.Default) {
+            messages.forEach {
+                val message = initMessageInfoData(it)
+                withContext(Dispatchers.Main) {
+                    if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
+                        messagesListView.messageEditedOrDeleted(message)
+                    else messagesListView.updateMessage(message)
+                }
+            }
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
@@ -299,19 +304,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             customToastSnackBar(messagesListView, it.message ?: "")
     })
 
-    addDeleteReactionLiveData.observe(lifecycleOwner, Observer {
-        when (it) {
-            is SceytResponse.Success -> {
-                it.data?.let { data ->
-                    messagesListView.updateReaction(data)
-                }
-            }
-            is SceytResponse.Error -> {
-                customToastSnackBar(messagesListView, it.message ?: "")
-            }
-        }
-    })
-
     onNewOutGoingMessageFlow.onEach {
         if (hasNext || hasNextDb) return@onEach
         viewModelScope.launch {
@@ -375,14 +367,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
-    onMessageReactionUpdatedFlow.onEach {
-        messagesListView.updateReaction(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
-    onMessageEditedOrDeletedFlow.onEach {
-        messagesListView.messageEditedOrDeleted(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
     onChannelEventFlow.onEach {
         when (it.eventType) {
             ClearedHistory -> messagesListView.clearData()
@@ -397,10 +381,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onOutGoingMessageStatusFlow.onEach {
-        val sceytUiMessage = it.second
-        sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
-        messagesListView.updateMessage(sceytUiMessage)
-        messagesListView.sortMessages()
+        messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     joinLiveData.observe(lifecycleOwner, Observer {
