@@ -147,12 +147,14 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
 
     fun setReactionStrokeColor(@ColorInt color: Int) {
         strokeColor = color
+        strokePaint.color = color
         invalidate()
     }
 
     fun setReactionBgAndStrokeColor(@ColorInt bgColor: Int, @ColorInt colorStroke: Int) {
         reactionBackgroundColor = bgColor
         strokeColor = colorStroke
+        strokePaint.color = colorStroke
         invalidate()
     }
 
