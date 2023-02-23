@@ -38,7 +38,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -78,9 +77,6 @@ class MessageListViewModel(
     private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
     val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
 
-    private val _addDeleteReactionLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
-    val addDeleteReactionLiveData: LiveData<SceytResponse<SceytMessage>> = _addDeleteReactionLiveData
-
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
 
@@ -99,8 +95,6 @@ class MessageListViewModel(
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
     val onNewThreadMessageFlow: Flow<SceytMessage>
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
-    val onMessageReactionUpdatedFlow: Flow<SceytMessage>
-    val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
     val onTransferUpdatedFlow: LiveData<TransferData>
@@ -123,26 +117,13 @@ class MessageListViewModel(
 
 
     init {
-        onMessageReactionUpdatedFlow = MessageEventsObserver.onMessageReactionUpdatedFlow
-            .filterNotNull()
-            .filter { it.channelId == channel.id || it.replyInThread != replyInThread }
-            .map {
-                it.toSceytUiMessage(isGroup).apply {
-                    messageReactions = initReactionsItems(this)
-                }
-            }
-        onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
-            .filterNotNull()
-            .filter { it.channelId == channel.id || it.replyInThread != replyInThread }
-            .map { it.toSceytUiMessage(isGroup) }
-
         onNewMessageFlow = persistenceMessageMiddleWare.getOnMessageFlow()
             .filter { it.first.id == channel.id && it.second.replyInThread == replyInThread }
-            .mapNotNull { it.second }
+            .mapNotNull { initMessageInfoData(it.second) }
 
         onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
             .filter { it.first.id == channel.id && it.second.replyInThread }
-            .mapNotNull { it.second }
+            .mapNotNull { initMessageInfoData(it.second) }
 
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
             .filter { it.channel.id == channel.id }
@@ -337,26 +318,14 @@ class MessageListViewModel(
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
-            _addDeleteReactionLiveData.postValue(response.apply {
-                if (this is SceytResponse.Success) {
-                    data?.let {
-                        it.messageReactions = initReactionsItems(it)
-                    }
-                }
-            })
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
-            _addDeleteReactionLiveData.postValue(response.apply {
-                if (this is SceytResponse.Success) {
-                    data?.let {
-                        it.messageReactions = initReactionsItems(it)
-                    }
-                }
-            })
+            notifyPageStateWithResponse(response)
         }
     }
 
@@ -446,7 +415,7 @@ class MessageListViewModel(
                 if (shouldShowDate(sceytMessage, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
-                val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage))
+                val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
@@ -468,11 +437,13 @@ class MessageListViewModel(
     }
 
 
-    internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage?): SceytMessage {
+    internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
+                                     initNameAndAvatar: Boolean = false): SceytMessage {
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
             files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
-            canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+            if (initNameAndAvatar)
+                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
             messageReactions = initReactionsItems(this)
         }
     }

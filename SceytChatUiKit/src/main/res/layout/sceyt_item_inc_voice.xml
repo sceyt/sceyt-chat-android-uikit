@@ -36,7 +36,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="false"
         android:layout_toEndOf="@+id/avatar"
-        android:background="@drawable/sceyt_bg_out_message"
+        android:background="@drawable/sceyt_bg_inc_message"
         android:paddingTop="2dp">
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -98,8 +98,9 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="@dimen/bodyMaxWidth"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
+            android:layout_marginHorizontal="10dp"
             android:layout_marginVertical="8dp"
+            android:paddingBottom="2dp"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
@@ -182,22 +183,22 @@
                 app:layout_constraintStart_toEndOf="@id/playPauseButton"
                 tools:text="00:00" />
 
-            <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
-                android:id="@+id/messageDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
-                app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
-                app:sceytDateStatusViewFirstStatus="false"
-                app:sceytDateStatusViewStatusIconMargin="5dp"
-                app:sceytDateStatusViewStatusIconSize="15dp"
-                tools:sceytDateStatusViewDateText="00:37"
-                tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
+            android:id="@+id/messageDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="2dp"
+            android:paddingHorizontal="8dp"
+            app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
+            app:layout_constraintEnd_toEndOf="@id/layoutDetails"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
+            app:sceytDateStatusViewFirstStatus="false"
+            app:sceytDateStatusViewStatusIconSize="15dp"
+            tools:sceytDateStatusViewDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

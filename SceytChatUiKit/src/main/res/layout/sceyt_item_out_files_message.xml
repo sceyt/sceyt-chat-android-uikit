@@ -95,7 +95,7 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
-            tools:itemCount="3"
+            tools:itemCount="1"
             tools:listitem="@layout/sceyt_message_file_item" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView

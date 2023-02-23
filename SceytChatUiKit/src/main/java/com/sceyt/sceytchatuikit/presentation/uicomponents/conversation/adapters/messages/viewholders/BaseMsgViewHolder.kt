@@ -21,6 +21,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
+import androidx.core.view.setPadding
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -52,6 +53,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
+import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 import kotlin.math.min
 
 
@@ -219,6 +221,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         val reactions: List<ReactionItem>? = item.message.messageReactions
 
         if (reactions.isNullOrEmpty()) {
+            reactionsAdapter = null
             rvReactionsViewStub.isVisible = false
             return
         }
@@ -278,6 +281,25 @@ abstract class BaseMsgViewHolder(private val view: View,
             (layoutParams as ViewGroup.MarginLayoutParams).apply {
                 setMargins(0, marginTop, marginEndBottom.first, marginEndBottom.second)
                 marginEnd = marginEndBottom.first
+            }
+        }
+    }
+
+    protected fun initFilesRecyclerView(message: SceytMessage, rvFiles: RecyclerView) {
+        with(rvFiles) {
+            if (itemDecorationCount == 0) {
+                val offset = ViewUtil.dpToPx(2f)
+                addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
+            }
+
+            message.attachments?.firstOrNull()?.let {
+                if (it.type == AttachmentTypeEnum.File.value()) {
+                    setPadding(ViewUtil.dpToPx(8f))
+                } else {
+                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName)
+                        setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
+                    else setPadding(0)
+                }
             }
         }
     }

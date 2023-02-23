@@ -59,7 +59,15 @@ class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
         val myDiffUtil = MyDiffUtil(files, list)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesTo(this)
-        files = list.toArrayList()
+        val thumbs = files.map { Pair(it.thumbPath, it.file.messageTid) }
+        files = list.map {
+            if (it !is FileListItem.LoadingMoreItem) {
+                thumbs.find { longPair -> longPair.second == it.file.messageTid }?.let { pair ->
+                    it.thumbPath = pair.first
+                }
+            }
+            it
+        }.toArrayList()
     }
 
     private fun observeToAppLifeCycle() {

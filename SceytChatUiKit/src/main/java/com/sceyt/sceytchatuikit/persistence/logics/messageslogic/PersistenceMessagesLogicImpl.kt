@@ -10,6 +10,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -116,14 +117,19 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun onMessageReactionUpdated(data: Message) {
+        val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
         reactionDao.insertReactionsAndScores(
             messageId = data.id,
-            reactionsDb = data.selfReactions.map { it.toReactionEntity(data.id) },
+            reactionsDb = selfReactions.map { it.reaction },
             scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
-        messagesCache.messageUpdated(data.toSceytUiMessage())
+        val message = messageDao.getMessageById(data.id)?.toSceytMessage()
+                ?: data.toSceytUiMessage()
+        messagesCache.messageUpdated(message)
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
+        val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
+        data.selfReactions = selfReactions.map { it.toReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity())
         messagesCache.messageUpdated(data)
         if (data.state == MessageState.Deleted)
