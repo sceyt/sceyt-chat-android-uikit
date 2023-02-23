@@ -2,10 +2,8 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
-import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncFilesMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -18,8 +16,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
-import com.sceyt.sceytchatuikit.shared.utils.ViewUtil.dpToPx
 
 class IncFilesMsgViewHolder(
         private val binding: SceytItemIncFilesMessageBinding,
@@ -88,28 +84,20 @@ class IncFilesMsgViewHolder(
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)
 
-        with(binding.rvFiles) {
-            setHasFixedSize(true)
-            if (itemDecorationCount == 0) {
-                val offset = dpToPx(2f)
-                addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
-            }
+        initFilesRecyclerView(message, binding.rvFiles)
 
-            message.attachments?.firstOrNull()?.let {
-                if (it.type == AttachmentTypeEnum.File.value()) {
-                    setPadding(dpToPx(8f))
-                } else {
-                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName)
-                        setPadding(0, dpToPx(4f), 0, 0)
-                    else setPadding(0)
+        if (filedAdapter == null) {
+            with(binding.rvFiles) {
+                setHasFixedSize(true)
+
+                setRecycledViewPool(viewPoolFiles)
+                itemAnimator = null
+                adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
+                    filedAdapter = it
                 }
             }
-            setRecycledViewPool(viewPoolFiles)
-            itemAnimator = null
-            adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
-                filedAdapter = it
-            }
-        }
+        } else filedAdapter?.notifyUpdate(attachments)
+
     }
 
     override fun onViewDetachedFromWindow() {
