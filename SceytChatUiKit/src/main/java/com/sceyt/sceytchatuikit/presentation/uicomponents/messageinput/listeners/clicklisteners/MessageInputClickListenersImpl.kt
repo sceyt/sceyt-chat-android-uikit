@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listener
 
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CloseReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.JoinClickListener

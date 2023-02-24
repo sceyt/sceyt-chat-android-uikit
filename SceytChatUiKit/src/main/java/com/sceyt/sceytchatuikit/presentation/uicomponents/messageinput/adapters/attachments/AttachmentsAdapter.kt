@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup

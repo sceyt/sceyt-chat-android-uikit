@@ -28,8 +28,9 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
-    abstract fun userDao(): UserDao
     abstract fun messageDao(): MessageDao
+    abstract fun membersDao(): MembersDao
+    abstract fun userDao(): UserDao
     abstract fun reactionDao(): ReactionDao
     abstract fun pendingMarkersDao(): PendingMarkersDao
     abstract fun attachmentsDao(): AttachmentDao
