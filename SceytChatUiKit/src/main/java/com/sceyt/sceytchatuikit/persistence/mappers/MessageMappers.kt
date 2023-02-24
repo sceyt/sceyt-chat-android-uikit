@@ -29,6 +29,7 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     state = state,
     fromId = from?.id,
     markerCount = markerCount?.toList(),
+    mentionedUsersIds = mentionedUsers?.map { it.id },
     selfMarkers = selfMarkers?.toList(),
     parentId = if (parent?.id == 0L) null else parent?.id,
     replyInThread = replyInThread,
@@ -53,7 +54,8 @@ fun SceytMessage.toMessageDb(): MessageDb {
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
         selfReactions = selfReactions?.map { it.toReactionDb(id) },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
-        forwardingUser = forwardingDetails?.user?.toUserEntity()
+        forwardingUser = forwardingDetails?.user?.toUserEntity(),
+        mentionedUsers = null
     )
 }
 

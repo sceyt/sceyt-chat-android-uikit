@@ -1,10 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
-import androidx.room.ColumnInfo
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
@@ -32,7 +28,7 @@ data class MessageEntity(
         var state: MessageState,
         var fromId: String?,
         var markerCount: List<MarkerCount>?,
-    /*  var mentionedUsers: Array<User>?,*/
+        var mentionedUsersIds: List<String>?,
         var selfMarkers: List<String>?,
         var parentId: Long?,
         var replyInThread: Boolean,

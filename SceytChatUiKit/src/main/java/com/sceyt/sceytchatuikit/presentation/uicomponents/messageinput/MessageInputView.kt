@@ -57,6 +57,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -229,6 +230,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                             setParentMessageId(it)
                                             setReplyInThread(true)
                                         }
+                                        checkAndAddMentionedUsers(this)
                                     } else setAttachments(arrayOf(attachment))
                                 }.build()
 
@@ -250,6 +252,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                     setParentMessageId(it)
                                     setReplyInThread(true)
                                 }
+                                checkAndAddMentionedUsers(this)
                             }.build()
 
                         messageInputActionCallback?.sendMessage(message)
@@ -258,6 +261,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
         }
+    }
+
+    private fun checkAndAddMentionedUsers(builder: Message.MessageBuilder) {
+        val mentionedUsers = binding.messageInput.objects
+        if (mentionedUsers.isEmpty()) return
+
+        MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
+            builder.setMetadata(it)
+        }
+        builder.setMentionedUserIds(mentionedUsers.map { it.id }.toTypedArray())
+        builder.setMentionedUsers(mentionedUsers.map { it.user }.toTypedArray())
     }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
@@ -479,7 +493,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        binding.messageInput.appendObjectSyncAsync(MentionUserData(it.id, it.getPresentableName()))
+                        if (binding.messageInput.objects.find { data -> data.id == it.id } != null)
+                            return@setUserClickListener
+                        binding.messageInput.appendObjectSyncAsync(MentionUserData(it))
                     }
                 }
             })
