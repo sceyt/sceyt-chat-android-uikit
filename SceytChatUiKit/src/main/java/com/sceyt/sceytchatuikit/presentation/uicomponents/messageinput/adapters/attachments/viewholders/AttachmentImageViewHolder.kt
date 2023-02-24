@@ -1,9 +1,9 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders
 
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputImageAttachmentBinding
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 
 class AttachmentImageViewHolder(private val binding: SceytItemInputImageAttachmentBinding,

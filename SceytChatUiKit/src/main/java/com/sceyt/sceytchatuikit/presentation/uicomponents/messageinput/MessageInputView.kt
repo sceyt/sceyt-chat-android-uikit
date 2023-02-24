@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
@@ -48,9 +49,9 @@ import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytVoic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Text
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Voice
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
@@ -82,6 +83,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var disabledInput: Boolean = false
     private var showingJoinButton: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
+    private var mentionUserContainer: MentionUserContainer? = null
+
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -134,6 +137,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     return@doOnTextChanged
 
                 determineState()
+                checkNeedMentionUsers(text.toString())
                 messageInputActionCallback?.typing(text.isNullOrBlank().not())
                 typingJob?.cancel()
                 typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
@@ -167,6 +171,20 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onJoinClick()
             }
         }
+    }
+
+    private fun checkNeedMentionUsers(inputText: String) {
+        if (inputText.isEmpty()) {
+            setMentionList(emptyList())
+            return
+        }
+
+        val lastWord = inputText.split(" ").last()
+        if (lastWord.startsWith("@")) {
+            val mentionText = lastWord.removePrefix("@")
+           eventListeners.onMentionUsersListener(mentionText)
+        } else
+            setMentionList(emptyList())
     }
 
     private fun sendMessage() {
@@ -239,7 +257,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
         }
     }
-
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
@@ -595,6 +612,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
+        fun mention(query: String)
         fun join()
     }
 
@@ -620,6 +638,32 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
         selectFileTypePopupClickListeners = listener
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        mentionUserContainer?.onInputSizeChanged(h)
+    }
+
+    fun setMentionList(data: List<SceytMember>) {
+        if (data.isEmpty() && mentionUserContainer == null) return
+        initMentionUsersContainer()
+        mentionUserContainer?.setMentionList(data)
+    }
+
+    private fun initMentionUsersContainer() {
+        if (mentionUserContainer == null)
+            (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
+                mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
+                    setUserClickListener {
+                        binding.messageInput.append(it.user.getPresentableName())
+                        binding.messageInput.setSelection(binding.messageInput.text?.length?:0)
+                        /* binding.messageInput.text = binding.messageInput.text?.insert(it.user.getPresentableName().toString(), binding.messageInput.selectionStart)
+                         binding.messageInput.setSelection(binding.messageInput.selectionStart + it.name.length)
+                         binding.rvMentionsUsers.isVisible = false*/
+                    }
+                }
+            })
     }
 
     override fun onSendMsgClick(view: View) {
@@ -695,5 +739,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         val iconResId = if (state == Voice) R.drawable.sceyt_ic_voice
         else MessageInputViewStyle.sendMessageIcon
         binding.icSendMessage.setImageResource(iconResId)
+    }
+
+    override fun onMentionUsersListener(query: String) {
+        messageInputActionCallback?.mention(query)
     }
 }

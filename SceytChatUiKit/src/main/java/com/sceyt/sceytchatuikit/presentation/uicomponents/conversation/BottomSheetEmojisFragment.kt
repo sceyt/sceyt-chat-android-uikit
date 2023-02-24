@@ -20,7 +20,7 @@ class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : Bo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme);
+        setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

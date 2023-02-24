@@ -203,6 +203,14 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.loadChannelMembers(channelId, offset, role)
     }
 
+    override suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember> {
+        return membersLogic.loadChannelMembersByIds(channelId, *ids)
+    }
+
+    override suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember> {
+        return membersLogic.loadChannelMembersByDisplayName(channelId, name)
+    }
+
     override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
         return membersLogic.blockUnBlockUser(userId, block)
     }
