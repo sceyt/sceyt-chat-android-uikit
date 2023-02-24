@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.widget.ImageView
 import com.google.gson.Gson
-import com.google.gson.JsonParseException
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
@@ -24,7 +23,8 @@ fun SceytAttachment.getMetadataFromAttachment(): AudioMetadata {
         } else {
             result
         }
-    } catch (ex: JsonParseException) {
+    } catch (ex: Exception) {
+        ex.printStackTrace()
         null
     } ?: AudioMetadata(intArrayOf(0), 0)
 }

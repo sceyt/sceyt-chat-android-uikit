@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.text.Editable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,7 @@ import androidx.annotation.DrawableRes
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.gson.Gson
@@ -55,6 +56,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -132,12 +134,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             determineState()
             post { onStateChanged(inputState) }
 
-            messageInput.doOnTextChanged { text, _, _, _ ->
+            messageInput.doAfterTextChanged { text ->
                 if (voiceMessageRecorderView?.isRecording == true)
-                    return@doOnTextChanged
+                    return@doAfterTextChanged
 
                 determineState()
-                checkNeedMentionUsers(text.toString())
+                checkNeedMentionUsers(text)
                 messageInputActionCallback?.typing(text.isNullOrBlank().not())
                 typingJob?.cancel()
                 typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
@@ -173,16 +175,16 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun checkNeedMentionUsers(inputText: String) {
-        if (inputText.isEmpty()) {
+    private fun checkNeedMentionUsers(inputText: Editable?) {
+        if (inputText.isNullOrBlank() || inputText.last() == ' ') {
             setMentionList(emptyList())
             return
         }
 
-        val lastWord = inputText.split(" ").last()
-        if (lastWord.startsWith("@")) {
+        val lastWord = inputText.split(" ").lastOrNull { it.length == 1 }
+        if (lastWord?.startsWith("@") == true) {
             val mentionText = lastWord.removePrefix("@")
-           eventListeners.onMentionUsersListener(mentionText)
+            eventListeners.onMentionUsersListener(mentionText)
         } else
             setMentionList(emptyList())
     }
@@ -472,6 +474,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             binding.messageInput.requestFocus()
     }
 
+    private fun initMentionUsersContainer() {
+        if (mentionUserContainer == null)
+            (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
+                mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
+                    setUserClickListener {
+                        binding.messageInput.appendObjectSyncAsync(MentionUserData(it.id, it.getPresentableName()))
+                    }
+                }
+            })
+    }
+
     private fun onStateChanged(newState: InputState) {
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
@@ -640,30 +653,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         selectFileTypePopupClickListeners = listener
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        mentionUserContainer?.onInputSizeChanged(h)
-    }
-
     fun setMentionList(data: List<SceytMember>) {
         if (data.isEmpty() && mentionUserContainer == null) return
         initMentionUsersContainer()
         mentionUserContainer?.setMentionList(data)
     }
 
-    private fun initMentionUsersContainer() {
-        if (mentionUserContainer == null)
-            (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
-                mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
-                    setUserClickListener {
-                        binding.messageInput.append(it.user.getPresentableName())
-                        binding.messageInput.setSelection(binding.messageInput.text?.length?:0)
-                        /* binding.messageInput.text = binding.messageInput.text?.insert(it.user.getPresentableName().toString(), binding.messageInput.selectionStart)
-                         binding.messageInput.setSelection(binding.messageInput.selectionStart + it.name.length)
-                         binding.rvMentionsUsers.isVisible = false*/
-                    }
-                }
-            })
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        mentionUserContainer?.onInputSizeChanged(h)
     }
 
     override fun onSendMsgClick(view: View) {
