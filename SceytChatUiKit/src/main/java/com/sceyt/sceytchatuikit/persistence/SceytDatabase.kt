@@ -18,12 +18,13 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
     UserEntity::class,
     UserChatLink::class,
     MessageEntity::class,
+    MentionUserMessageLink::class,
     AttachmentEntity::class,
     ReactionEntity::class,
     ReactionScoreEntity::class,
     PendingMarkersEntity::class,
     AttachmentPayLoadEntity::class
-], version = 14, exportSchema = false)
+], version = 15, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {

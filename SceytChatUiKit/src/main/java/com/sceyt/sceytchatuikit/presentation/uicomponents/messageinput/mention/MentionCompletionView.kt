@@ -19,7 +19,7 @@ class MentionCompletionView : TokenCompleteTextView<MentionUserData> {
 
     override fun getViewForObject(obj: MentionUserData): View {
         val token = MentionUserView(context)
-        token.text = obj.toString()
+        token.text = obj.getMentionedName()
         return token
     }
 
