@@ -96,6 +96,9 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             reactionScores = reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             markerCount = markerCount?.toTypedArray(),
             selfMarkers = selfMarkers?.toTypedArray(),
+            mentionedUsers = mentionedUsers?.map {
+                it.user?.toUser() ?: User(it.link.userId)
+            }?.toTypedArray(),
             parent = parent?.toSceytMessage(),
             replyInThread = replyInThread,
             replyCount = replyCount,

@@ -880,6 +880,23 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         if (text != null && isFocused) setSelection(text.length)
     }
 
+
+    protected fun initWithObjects(list: List<T>) {
+        if (list.isEmpty()) return
+        for (obj in list) {
+            buildSpanForObject(obj)?.also {
+                val ssb = tokenizer?.wrapTokenValue(tokenToString(it.token)) ?: return
+                val editable = text ?: return
+                internalEditInProgress = true
+                editable.indexOf(ssb.toString(), 0, true).takeIf { index -> index != -1 }?.let { index ->
+                    editable.setSpan(it, index, index + ssb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                internalEditInProgress = false
+            }
+        }
+    }
+
+
     /**
      * Append a token object to the object list. Object will be added on the main thread.
      *
