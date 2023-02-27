@@ -87,7 +87,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val data = inputData
         val messageTid = data.getLong(SendAttachmentWorkManager.MESSAGE_TID, 0)
 
-        val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
+        val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage)

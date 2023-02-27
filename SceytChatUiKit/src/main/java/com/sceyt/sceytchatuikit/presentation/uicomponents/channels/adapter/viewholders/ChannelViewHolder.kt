@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -133,7 +134,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setString("$fromText${body.trim()}")
+                .setSpannableString(MentionUserHelper.buildWithMentionedUsers(context, body, message.metadata,
+                    message.mentionedUsers, enableClick = false))
+                .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
                 .build()

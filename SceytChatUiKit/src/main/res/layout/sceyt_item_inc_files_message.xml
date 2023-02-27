@@ -92,7 +92,7 @@
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytClickableTextView
             android:id="@+id/messageBody"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

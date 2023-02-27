@@ -58,6 +58,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -87,7 +88,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var showingJoinButton: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
-
+    private val mentionUserDebounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -180,17 +181,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun checkNeedMentionUsers(inputText: Editable?) {
-        if (inputText.isNullOrBlank() || inputText.last() == ' ') {
-            setMentionList(emptyList())
-            return
-        }
+        mentionUserDebounceHelper.submit {
+            if (inputText.isNullOrBlank() || inputText.last() == ' ') {
+                setMentionList(emptyList())
+                return@submit
+            }
 
-        val lastWord = inputText.split(" ").lastOrNull { it.length == 1 }
-        if (lastWord?.startsWith("@") == true) {
-            val mentionText = lastWord.removePrefix("@")
-            eventListeners.onMentionUsersListener(mentionText)
-        } else
-            setMentionList(emptyList())
+            val lastWord = inputText.split(" ").lastOrNull()
+            if (lastWord?.startsWith("@") == true) {
+                val mentionText = lastWord.removePrefix("@")
+                eventListeners.onMentionUsersListener(mentionText)
+            } else
+                setMentionList(emptyList())
+        }
     }
 
     private fun sendMessage() {

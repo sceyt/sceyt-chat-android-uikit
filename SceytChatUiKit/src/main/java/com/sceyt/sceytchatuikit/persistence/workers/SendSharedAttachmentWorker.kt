@@ -84,7 +84,7 @@ class SendSharedAttachmentWorker(context: Context, workerParams: WorkerParameter
         val data = inputData
         val messageTid = data.getLong(SendSharedAttachmentWorkManager.MESSAGE_TID, 0)
 
-        val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
+        val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage)

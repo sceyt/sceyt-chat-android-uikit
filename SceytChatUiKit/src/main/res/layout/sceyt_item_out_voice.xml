@@ -64,7 +64,6 @@
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/messageBody"
             android:layout_width="@dimen/bodyMaxWidth"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
