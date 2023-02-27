@@ -23,6 +23,10 @@ class MentionCompletionView : TokenCompleteTextView<MentionUserData> {
         return token
     }
 
+    fun setMentionUsers(mentionUsers: List<MentionUserData>) {
+        initWithObjects(mentionUsers)
+    }
+
     override fun selectionChanges(selStart: Int, selEnd: Int) {
 
     }

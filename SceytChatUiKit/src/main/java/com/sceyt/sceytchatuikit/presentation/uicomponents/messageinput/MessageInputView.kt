@@ -94,9 +94,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         set(value) {
             field = value
             if (value != null) {
-                binding.messageInput.setText(editMessage?.body)
-                binding.messageInput.text?.let { text -> binding.messageInput.setSelection(text.length) }
-                context.showSoftInput(binding.messageInput)
+                with(binding) {
+                    messageInput.setText(value.body)
+                    messageInput.text?.let { text -> messageInput.setSelection(text.length) }
+                    messageInput.setMentionUsers(value.mentionedUsers.map { MentionUserData(SceytMember(it)) })
+                    context.showSoftInput(messageInput)
+                }
             }
         }
 
@@ -202,6 +205,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
                 editMessage?.body = messageBody
                 editMessage?.let {
+                    checkAndAddMentionedUsers(it)
+                }
+                editMessage?.let {
                     cancelReply {
                         messageInputActionCallback?.sendEditMessage(it.toSceytUiMessage())
                         reset()
@@ -230,9 +236,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                             setParentMessageId(it)
                                             setReplyInThread(true)
                                         }
-                                        checkAndAddMentionedUsers(this)
                                     } else setAttachments(arrayOf(attachment))
-                                }.build()
+                                }.build().apply {
+                                    if (index == 0) checkAndAddMentionedUsers(this)
+                                }
 
                             messages.add(message)
                         }
@@ -252,9 +259,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                     setParentMessageId(it)
                                     setReplyInThread(true)
                                 }
-                                checkAndAddMentionedUsers(this)
                             }.build()
 
+                        checkAndAddMentionedUsers(message)
                         messageInputActionCallback?.sendMessage(message)
                     }
                     reset()
@@ -263,15 +270,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun checkAndAddMentionedUsers(builder: Message.MessageBuilder) {
+    private fun checkAndAddMentionedUsers(builder: Message) {
         val mentionedUsers = binding.messageInput.objects
         if (mentionedUsers.isEmpty()) return
 
         MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
-            builder.setMetadata(it)
+            builder.metadata = it
         }
-        builder.setMentionedUserIds(mentionedUsers.map { it.id }.toTypedArray())
-        builder.setMentionedUsers(mentionedUsers.map { it.user }.toTypedArray())
+        builder.mentionedUsers = mentionedUsers.map { it.user }.toTypedArray()
     }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
