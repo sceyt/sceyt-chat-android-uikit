@@ -1078,7 +1078,11 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         val ssb = tokenizer?.wrapTokenValue(tokenToString(tokenSpan.token)) ?: return
         val editable = text ?: return
         internalEditInProgress = true
-        editable.delete(editable.length - 1, editable.length)
+
+        val lastIndex = editable.lastIndexOf("@")
+        if (lastIndex == -1) return
+
+        editable.replace(lastIndex, editable.length, "")
         editable.append(ssb)
         editable.setSpan(
             tokenSpan,

@@ -45,6 +45,6 @@ interface PersistenceMessagesMiddleWare {
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
-    suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
+    suspend fun getMessageDbById(messageId: Long): SceytMessage?
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

@@ -324,8 +324,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
     }
 
-    override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? {
-        return messagesLogic.getMessageFromDbById(messageId)
+    override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
+        return messagesLogic.getMessageDbById(messageId)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
