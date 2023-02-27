@@ -38,7 +38,7 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
                 setMargins(0, 0, 0, view.height)
             }
             background = ContextCompat.getDrawable(context, R.drawable.sceyt_bg_mention_users)
-            layoutManager = MaxHeightLinearLayoutManager(context, screenHeightPx() / 2)
+            layoutManager = MaxHeightLinearLayoutManager(context, (screenHeightPx() * 0.4f).toInt())
             recyclerView = this
         })
         return this

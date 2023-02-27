@@ -60,6 +60,7 @@ ext {
     retrofit_version = '2.9.0'
     room_version = '2.4.3'
 
+    sceyt_sdk_version = '0.0.2-SNAPSHOT'
     sdp_version = '1.1.0'
     ssp_version = '1.1.0'
     swipe_refresh_layout_version = '1.1.0'
@@ -104,6 +105,7 @@ ext {
             roomCompiler         : "androidx.room:room-compiler:$room_version",
             roomKtx              : "androidx.room:room-ktx:$room_version",
             roomRuntime          : "androidx.room:room-runtime:$room_version",
+            sceytSdk             : "com.sceyt:sceyt-chat-android-sdk:$sceyt_sdk_version",
             sdp                  : "com.intuit.sdp:sdp-android:$sdp_version",
             ssp                  : "com.intuit.ssp:ssp-android:$ssp_version",
             swipeRefreshLayout   : "androidx.swiperefreshlayout:swiperefreshlayout:$swipe_refresh_layout_version",
