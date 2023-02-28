@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -9,9 +9,9 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemInputFileAttachmentBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputImageAttachmentBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputVideoAttachmentBinding
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.viewholders.AttachmentFileViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.viewholders.AttachmentImageViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.viewholders.AttachmentVideoViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders.AttachmentFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders.AttachmentImageViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders.AttachmentVideoViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.userNameBuilder

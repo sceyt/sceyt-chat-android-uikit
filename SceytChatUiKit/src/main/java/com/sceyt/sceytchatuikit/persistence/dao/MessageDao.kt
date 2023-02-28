@@ -26,7 +26,7 @@ abstract class MessageDao {
 
         //Delete reactions before insert
         messageDb.messageEntity.id?.let {
-            deleteMessageReactionsAndScores(listOf(it))
+            deleteMessageReactionsAndScoresChunked(listOf(it))
         }
 
         //Insert attachments
@@ -46,6 +46,9 @@ abstract class MessageDao {
         messageDb.reactionsScores?.let {
             insertReactionScores(it)
         }
+
+        //Inset mentioned users links
+        insertMentionedUsersMessageLinks(messageDb.messageEntity)
     }
 
     @Transaction
@@ -56,7 +59,7 @@ abstract class MessageDao {
         deleteAttachmentsChunked(messagesDb.map { it.messageEntity.tid })
 
         //Delete reactions before insert
-        deleteMessageReactionsAndScores(messagesDb.mapNotNull { it.messageEntity.id })
+        deleteMessageReactionsAndScoresChunked(messagesDb.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
         val attachmentPairs = messagesDb.map { Pair(it.attachments ?: arrayListOf(), it) }
@@ -76,6 +79,9 @@ abstract class MessageDao {
         val reactionScores = messagesDb.flatMap { it.reactionsScores ?: arrayListOf() }
         if (reactionScores.isNotEmpty())
             insertReactionScores(reactionScores)
+
+        //Inset mentioned users links
+        insertMentionedUsersMessageLinks(*messagesDb.map { it.messageEntity }.toTypedArray())
     }
 
     @Transaction
@@ -115,6 +121,20 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
+
+    private suspend fun insertMentionedUsersMessageLinks(vararg messageEntity: MessageEntity) {
+        val entities = messageEntity.flatMap { entity ->
+            entity.mentionedUsersIds?.map {
+                MentionUserMessageLink(messageTid = entity.tid, userId = it)
+            } ?: arrayListOf()
+        }
+        if (entities.isEmpty()) return
+
+        insertMentionedUsersMessageLinks(entities)
+    }
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
@@ -284,7 +304,7 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun deleteMessageReactionsAndScores(messageIdes: List<Long>) {
+    open suspend fun deleteMessageReactionsAndScoresChunked(messageIdes: List<Long>) {
         messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
     }
 

@@ -54,8 +54,8 @@ internal interface PersistenceMessagesLogic {
     suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
-    suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
-    suspend fun getMessageFromDbByTid(tid: Long): SceytMessage?
+    suspend fun getMessageDbById(messageId: Long): SceytMessage?
+    suspend fun getMessageDbByTid(tid: Long): SceytMessage?
     suspend fun attachmentSuccessfullySent(message: SceytMessage)
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

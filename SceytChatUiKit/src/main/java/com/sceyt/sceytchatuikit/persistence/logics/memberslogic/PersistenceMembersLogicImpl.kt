@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
@@ -35,6 +36,7 @@ import org.koin.core.component.inject
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
+        private val membersDao: MembersDao,
         private val usersDao: UserDao,
         private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
 
@@ -63,7 +65,7 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override suspend fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
-        channelDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
+        membersDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
     }
 
     override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
@@ -99,9 +101,17 @@ internal class PersistenceMembersLogicImpl(
 
     private suspend fun getMembersDb(channelId: Long, offset: Int, role: String?, limit: Int): List<SceytMember> {
         val data = if (!role.isNullOrBlank())
-            channelDao.getChannelMembersWithRole(channelId, limit = limit, offset = offset, role)
-        else channelDao.getChannelMembers(channelId, limit, offset)
+            membersDao.getChannelMembersWithRole(channelId, limit = limit, offset = offset, role)
+        else membersDao.getChannelMembers(channelId, limit, offset)
         return data.map { memberEntity -> memberEntity.toSceytMember() }
+    }
+
+    override suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember> {
+        return membersDao.getChannelMembersByDisplayName(channelId, name).map { it.toSceytMember() }
+    }
+
+    override suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember> {
+        return membersDao.getChannelMembersByIds(channelId, *ids).map { it.toSceytMember() }
     }
 
     private suspend fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {
@@ -136,7 +146,7 @@ internal class PersistenceMembersLogicImpl(
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
-                channelDao.updateOwner(channelId = channelId, newOwnerId = member.id)
+                membersDao.updateOwner(channelId = channelId, newOwnerId = member.id)
                 channelsCache.upsertChannel(response.data)
             }
         }
@@ -207,5 +217,9 @@ internal class PersistenceMembersLogicImpl(
         }
 
         return response
+    }
+
+    override suspend fun getMembersCountDb(channelId: Long): Int {
+        return membersDao.getMembersCount(channelId)
     }
 }

@@ -11,7 +11,7 @@ def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
 
 def getVersionName = { ->
-    return "1.6.3"
+    return "1.6.5"
 }
 
 def getArtifactId = { ->
@@ -92,15 +92,15 @@ android {
 
 
 dependencies {
-    implementation project(':SceytSDK')
     implementation project(':AXEmojiView')
 
-    api supportDependencies.coreKtx
     api supportDependencies.appCompat
     api supportDependencies.material
     api supportDependencies.constraintlayout
     api supportDependencies.recyclerView
     api supportDependencies.fragmentKtx
+    api supportDependencies.coreKtx
+    api supportDependencies.sceytSdk
     api supportDependencies.lifecycleRuntime
     api supportDependencies.liveEvent
     api supportDependencies.glide

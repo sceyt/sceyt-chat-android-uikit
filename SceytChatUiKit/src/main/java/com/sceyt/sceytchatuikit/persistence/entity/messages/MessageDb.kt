@@ -24,5 +24,8 @@ data class MessageDb(
         val reactionsScores: List<ReactionScoreEntity>?,
 
         @Relation(parentColumn = "userId", entityColumn = "user_id")
-        val forwardingUser: UserEntity?
+        val forwardingUser: UserEntity?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
+        val mentionedUsers: List<MentionUserDb>?
 )

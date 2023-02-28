@@ -13,4 +13,7 @@ data class ParentMessageDb(
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = AttachmentEntity::class)
         val attachments: List<AttachmentDb>?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
+        val mentionedUsers: List<MentionUserDb>?
 )

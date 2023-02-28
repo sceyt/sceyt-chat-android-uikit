@@ -6,6 +6,7 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -439,6 +440,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
+    loadChannelMembersIfNeeded()
 
     onChannelUpdatedEventFlow.onEach {
         messageInputView.checkIsParticipant(it)
@@ -513,6 +515,15 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
         override fun typing(typing: Boolean) {
             sendTypingEvent(typing)
+        }
+
+        override fun mention(query: String) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
+                withContext(Dispatchers.Main) {
+                    messageInputView.setMentionList(result.filter { it.id != myId })
+                }
+            }
         }
 
         override fun join() {

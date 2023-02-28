@@ -24,7 +24,7 @@ object ViewUtil {
         return (dp * density).roundToInt()
     }
 
-    fun expandHeight(v: View, from: Int = 0, duration: Long, endListener: (() -> Unit)? = null) {
+    fun expandHeight(v: View, from: Int = 0, duration: Long, endListener: (() -> Unit)? = null): ValueAnimator {
         v.measure(
             View.MeasureSpec.makeMeasureSpec(v.rootView.width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(v.rootView.height, View.MeasureSpec.AT_MOST)
@@ -42,6 +42,7 @@ object ViewUtil {
         heightAnimator.duration = duration
         heightAnimator.start()
         v.isVisible = true
+        return heightAnimator
     }
 
     fun expandHeightUnspecified(v: View, duration: Long) {
@@ -67,7 +68,7 @@ object ViewUtil {
         widthAnimator.start()
     }
 
-    fun collapseHeight(v: View, duration: Long, to: Int = 0, endListener: (() -> Unit)? = null) {
+    fun collapseHeight(v: View, duration: Long, to: Int = 0, endListener: (() -> Unit)? = null): ValueAnimator {
         val initialHeight = v.measuredHeight
         val heightAnimator = ValueAnimator.ofInt(to, initialHeight)
         heightAnimator.addUpdateListener { animation ->
@@ -80,6 +81,7 @@ object ViewUtil {
         }
         heightAnimator.duration = duration
         heightAnimator.start()
+        return heightAnimator
     }
 
 

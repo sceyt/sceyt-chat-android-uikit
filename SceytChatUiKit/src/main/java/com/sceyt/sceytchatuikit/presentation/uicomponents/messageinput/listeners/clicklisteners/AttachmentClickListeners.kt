@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 import android.view.View
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 
 sealed interface AttachmentClickListeners {
     fun interface RemoveAttachmentClickListener : AttachmentClickListeners {

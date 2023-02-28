@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -48,6 +49,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -104,7 +106,13 @@ abstract class BaseMsgViewHolder(private val view: View,
     private var reactionsAdapter: ReactionsAdapter? = null
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
-        messageBody.text = message.body.trim()
+        if (!MentionUserHelper.containsMentionsUsers(message))
+            messageBody.text = message.body.trim()
+        else {
+            messageBody.movementMethod = LinkMovementMethod.getInstance()
+            messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, message.body.trim(),
+                message.metadata, message.mentionedUsers, enableClick = true)
+        }
     }
 
     @SuppressLint("SetTextI18n")
