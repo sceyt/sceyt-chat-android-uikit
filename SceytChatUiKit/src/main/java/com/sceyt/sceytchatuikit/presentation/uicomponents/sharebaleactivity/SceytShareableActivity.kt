@@ -52,8 +52,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
-        var data = channelsViewModel.mapToChannelItem(data = response.data, hasNext = response.hasNext)
-        data = filterOnlyAppropriateChannels(data)
+        val filteredData = filterOnlyAppropriateChannels(response.data)
+        val data = channelsViewModel.mapToChannelItem(data = filteredData, hasNext = response.hasNext)
         if (response.offset == 0) {
             setChannelsList(data)
         } else addNewChannels(data)
@@ -88,11 +88,11 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
         channelsAdapter?.addList(data as MutableList<ChannelListItem>)
     }
 
-    protected fun filterOnlyAppropriateChannels(data: List<ChannelListItem>): List<ChannelListItem> {
+    protected fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
         val filtered = data.filter {
-            (it is ChannelListItem.ChannelItem && (it.channel.channelType == ChannelTypeEnum.Public &&
-                    (it.channel.getMyRole()?.name != RoleTypeEnum.Owner.toString() && it.channel.getMyRole()?.name != RoleTypeEnum.Admin.toString()))
-                    || (it is ChannelListItem.ChannelItem && (it.channel.isPeerDeleted() || it.channel.isPeerBlocked())))
+            ((it.channelType == ChannelTypeEnum.Public && (it.getMyRole()?.name != RoleTypeEnum.Owner.toString() &&
+                    it.getMyRole()?.name != RoleTypeEnum.Admin.toString()))
+                    || ((it.isPeerDeleted() || it.isPeerBlocked())))
         }
 
         return data.minus(filtered.toSet())
