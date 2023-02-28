@@ -65,7 +65,6 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
             Glide.with(root.context)
                 .load(if (data.favicon.isNullOrBlank().not()) data.favicon else data.imageUrl)
                 .placeholder(R.drawable.sceyt_ic_link_with_background)
-                .override(icLinkImage.width)
                 .listener(glideRequestListener { success ->
                     if (success) {
                         icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
