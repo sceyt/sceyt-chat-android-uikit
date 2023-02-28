@@ -36,7 +36,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -441,10 +440,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
-
-    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-        SceytKitClient.getMembersMiddleWare().loadChannelMembers(channel.id, 0, null).collect()
-    }
+    loadChannelMembersIfNeeded()
 
     onChannelUpdatedEventFlow.onEach {
         messageInputView.checkIsParticipant(it)

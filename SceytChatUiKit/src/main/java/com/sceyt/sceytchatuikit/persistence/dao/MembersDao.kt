@@ -33,6 +33,9 @@ interface MembersDao {
             "and links.user_id in (:ids) order by user_id")
     suspend fun getChannelMembersByIds(channelId: Long, vararg ids: String): List<ChanelMemberDb>
 
+    @Query("select count(*) from UserChatLink where chat_id =:channelId")
+    suspend fun getMembersCount(channelId: Long): Int
+
     @Query("update UserChatLink set role =:role where chat_id =:channelId and user_id =:userId")
     suspend fun updateMemberRole(channelId: Long, userId: String, role: String)
 
