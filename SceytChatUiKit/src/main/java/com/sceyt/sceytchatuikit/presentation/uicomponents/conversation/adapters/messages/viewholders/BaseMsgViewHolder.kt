@@ -304,7 +304,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 if (it.type == AttachmentTypeEnum.File.value()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
-                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName)
+                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank())
                         setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
                     else setPadding(0)
                 }
