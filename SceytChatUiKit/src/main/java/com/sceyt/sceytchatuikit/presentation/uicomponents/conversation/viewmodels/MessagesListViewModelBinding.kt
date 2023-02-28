@@ -518,6 +518,9 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
 
         override fun mention(query: String) {
+            if (channel.channelType == ChannelTypeEnum.Direct)
+                return
+
             viewModelScope.launch(Dispatchers.IO) {
                 val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
                 withContext(Dispatchers.Main) {

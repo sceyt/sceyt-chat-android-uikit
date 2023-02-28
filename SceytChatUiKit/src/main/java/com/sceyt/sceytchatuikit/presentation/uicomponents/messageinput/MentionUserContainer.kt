@@ -57,7 +57,7 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
                 adapter = mentionUsersAdapter
                 itemAnimator = null
                 if (itemDecorationCount == 0)
-                    addItemDecoration(FirstItemDecoration(20))
+                    addItemDecoration(FirstLastItemDecoration(20))
             }
         } else mentionUsersAdapter?.notifyUpdate(users)
 
@@ -91,7 +91,7 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
         }
     }
 
-    class FirstItemDecoration(private val verticalPadding: Int) : RecyclerView.ItemDecoration() {
+    class FirstLastItemDecoration(private val verticalPadding: Int) : RecyclerView.ItemDecoration() {
 
         override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
             super.getItemOffsets(outRect, view, parent, state)
@@ -99,6 +99,9 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
 
             if (position == 0)
                 outRect.top = verticalPadding
+
+            if (position == parent.adapter?.itemCount?.minus(1))
+                outRect.bottom = verticalPadding
         }
     }
 }
