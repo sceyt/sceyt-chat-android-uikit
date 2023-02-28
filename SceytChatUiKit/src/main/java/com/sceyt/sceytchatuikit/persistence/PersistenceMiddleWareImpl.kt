@@ -235,6 +235,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.deleteMember(channelId, memberId)
     }
 
+    override suspend fun getMembersCountDb(channelId: Long): Int {
+        return membersLogic.getMembersCountDb(channelId)
+    }
+
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
                                           loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey, ignoreDb)
