@@ -1,11 +1,11 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders
 
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputVideoAttachmentBinding
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil

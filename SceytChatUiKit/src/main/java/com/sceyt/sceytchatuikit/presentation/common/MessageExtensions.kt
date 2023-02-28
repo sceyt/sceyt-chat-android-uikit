@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import java.io.File
@@ -66,7 +67,9 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 fun SceytMessage.getShowBody(context: Context): String {
     return when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> body.trim()
+        attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
+            MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, metadata, mentionedUsers).toString()
+        }
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
         else -> context.getString(R.string.sceyt_file)
     }

@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.text.Editable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,7 @@ import androidx.annotation.DrawableRes
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.gson.Gson
@@ -25,6 +26,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
@@ -48,12 +50,15 @@ import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytVoic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Text
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputState.Voice
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapter.AttachmentsViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -82,15 +87,20 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var disabledInput: Boolean = false
     private var showingJoinButton: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
+    private var mentionUserContainer: MentionUserContainer? = null
+    private val mentionUserDebounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
         set(value) {
             field = value
             if (value != null) {
-                binding.messageInput.setText(editMessage?.body)
-                binding.messageInput.text?.let { text -> binding.messageInput.setSelection(text.length) }
-                context.showSoftInput(binding.messageInput)
+                with(binding) {
+                    messageInput.setText(value.body)
+                    messageInput.text?.let { text -> messageInput.setSelection(text.length) }
+                    messageInput.setMentionUsers(value.mentionedUsers.map { MentionUserData(SceytMember(it)) })
+                    context.showSoftInput(messageInput)
+                }
             }
         }
 
@@ -129,11 +139,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             determineState()
             post { onStateChanged(inputState) }
 
-            messageInput.doOnTextChanged { text, _, _, _ ->
+            messageInput.doAfterTextChanged { text ->
                 if (voiceMessageRecorderView?.isRecording == true)
-                    return@doOnTextChanged
+                    return@doAfterTextChanged
 
                 determineState()
+                checkNeedMentionUsers(text)
                 messageInputActionCallback?.typing(text.isNullOrBlank().not())
                 typingJob?.cancel()
                 typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
@@ -169,6 +180,22 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    private fun checkNeedMentionUsers(inputText: Editable?) {
+        mentionUserDebounceHelper.submit {
+            if (inputText.isNullOrBlank() || inputText.last() == ' ') {
+                setMentionList(emptyList())
+                return@submit
+            }
+
+            val lastWord = inputText.split(" ").lastOrNull()
+            if (lastWord?.startsWith("@") == true) {
+                val mentionText = lastWord.removePrefix("@")
+                eventListeners.onMentionUsersListener(mentionText)
+            } else
+                setMentionList(emptyList())
+        }
+    }
+
     private fun sendMessage() {
         val messageBody = binding.messageInput.text.toString().trim()
 
@@ -180,6 +207,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     return
                 }
                 editMessage?.body = messageBody
+                editMessage?.let {
+                    checkAndAddMentionedUsers(it)
+                }
                 editMessage?.let {
                     cancelReply {
                         messageInputActionCallback?.sendEditMessage(it.toSceytUiMessage())
@@ -210,7 +240,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                             setReplyInThread(true)
                                         }
                                     } else setAttachments(arrayOf(attachment))
-                                }.build()
+                                }.build().apply {
+                                    if (index == 0) checkAndAddMentionedUsers(this)
+                                }
 
                             messages.add(message)
                         }
@@ -232,6 +264,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                                 }
                             }.build()
 
+                        checkAndAddMentionedUsers(message)
                         messageInputActionCallback?.sendMessage(message)
                     }
                     reset()
@@ -240,6 +273,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    private fun checkAndAddMentionedUsers(builder: Message) {
+        val mentionedUsers = binding.messageInput.objects
+        if (mentionedUsers.isEmpty()) return
+
+        MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
+            builder.metadata = it
+        }
+        builder.mentionedUsers = mentionedUsers.map { it.user }.toTypedArray()
+    }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
@@ -455,6 +497,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             binding.messageInput.requestFocus()
     }
 
+    private fun initMentionUsersContainer() {
+        if (mentionUserContainer == null)
+            (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
+                mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
+                    setUserClickListener {
+                        if (binding.messageInput.objects.find { data -> data.id == it.id } != null)
+                            return@setUserClickListener
+                        binding.messageInput.appendObjectSyncAsync(MentionUserData(it))
+                    }
+                }
+            })
+    }
+
     private fun onStateChanged(newState: InputState) {
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
@@ -595,6 +650,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
+        fun mention(query: String)
         fun join()
     }
 
@@ -620,6 +676,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
         selectFileTypePopupClickListeners = listener
+    }
+
+    fun setMentionList(data: List<SceytMember>) {
+        if (data.isEmpty() && mentionUserContainer == null) return
+        initMentionUsersContainer()
+        mentionUserContainer?.setMentionList(data)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        mentionUserContainer?.onInputSizeChanged(h)
     }
 
     override fun onSendMsgClick(view: View) {
@@ -695,5 +762,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         val iconResId = if (state == Voice) R.drawable.sceyt_ic_voice
         else MessageInputViewStyle.sendMessageIcon
         binding.icSendMessage.setImageResource(iconResId)
+    }
+
+    override fun onMentionUsersListener(query: String) {
+        messageInputActionCallback?.mention(query)
     }
 }

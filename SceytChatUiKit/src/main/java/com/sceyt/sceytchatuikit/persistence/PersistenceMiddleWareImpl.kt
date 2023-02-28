@@ -203,6 +203,14 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.loadChannelMembers(channelId, offset, role)
     }
 
+    override suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember> {
+        return membersLogic.loadChannelMembersByIds(channelId, *ids)
+    }
+
+    override suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember> {
+        return membersLogic.loadChannelMembersByDisplayName(channelId, name)
+    }
+
     override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
         return membersLogic.blockUnBlockUser(userId, block)
     }
@@ -225,6 +233,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         return membersLogic.deleteMember(channelId, memberId)
+    }
+
+    override suspend fun getMembersCountDb(channelId: Long): Int {
+        return membersLogic.getMembersCountDb(channelId)
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
@@ -316,8 +328,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
     }
 
-    override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? {
-        return messagesLogic.getMessageFromDbById(messageId)
+    override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
+        return messagesLogic.getMessageDbById(messageId)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

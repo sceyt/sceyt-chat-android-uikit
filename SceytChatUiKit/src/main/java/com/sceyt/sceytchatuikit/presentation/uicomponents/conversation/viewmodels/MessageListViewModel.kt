@@ -30,6 +30,7 @@ import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
@@ -46,6 +47,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -62,6 +64,7 @@ class MessageListViewModel(
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
+    private val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val application: Application by inject()
     private val syncManager: SceytSyncManager by inject()
@@ -394,6 +397,16 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.markChannelAsRead(channelId)
             _channelLiveData.postValue(response)
+        }
+    }
+
+    fun loadChannelMembersIfNeeded() {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (channel is SceytGroupChannel) {
+                val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+                if ((channel as SceytGroupChannel).memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+                    persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
+            }
         }
     }
 

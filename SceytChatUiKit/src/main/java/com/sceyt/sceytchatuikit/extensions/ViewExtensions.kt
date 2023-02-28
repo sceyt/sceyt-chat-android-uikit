@@ -2,8 +2,6 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.annotation.SuppressLint
 import android.content.res.Resources
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -12,9 +10,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.TextView
-import androidx.annotation.ColorInt
-import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
@@ -131,7 +126,7 @@ fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000
 }
 
 @Suppress("DEPRECATION")
-fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean,textWidth: Int): StaticLayout {
+fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, textWidth: Int): StaticLayout {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         StaticLayout.Builder.obtain(title, 0, title.length, this, textWidth)
             .setAlignment(Layout.Alignment.ALIGN_NORMAL)

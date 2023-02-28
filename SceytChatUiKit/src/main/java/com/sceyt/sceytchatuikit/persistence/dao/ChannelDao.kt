@@ -4,7 +4,6 @@ import androidx.room.*
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
@@ -62,23 +61,10 @@ interface ChannelDao {
         return getChannelsById(links.map { it.chatId })
     }
 
-    @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
-    suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
-
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:channelTypeEnum")
     suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
-
-    @Transaction
-    @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id  where chat_id =:channelId " +
-            "order by user_id limit :limit offset :offset")
-    suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
-
-    @Transaction
-    @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id  where chat_id =:channelId " +
-            "and role=:role order by user_id limit :limit offset :offset")
-    suspend fun getChannelMembersWithRole(channelId: Long, limit: Int, offset: Int, role: String): List<ChanelMemberDb>
 
     @Query("select chat_id from channels where chat_id not in (:ids)")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
@@ -108,23 +94,6 @@ interface ChannelDao {
 
     @Query("update channels set muted =:muted, muteExpireDate =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
-
-    @Query("update UserChatLink set role =:role where chat_id =:channelId and user_id =:userId")
-    suspend fun updateMemberRole(channelId: Long, userId: String, role: String)
-
-    @Transaction
-    suspend fun updateOwner(channelId: Long, oldOwnerId: String, newOwnerId: String) {
-        updateMemberRole(channelId, oldOwnerId, RoleTypeEnum.Member.toString())
-        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
-    }
-
-    @Transaction
-    suspend fun updateOwner(channelId: Long, newOwnerId: String) {
-        getChannelOwner(channelId)?.let {
-            updateMemberRole(channelId, it, RoleTypeEnum.Member.toString())
-        }
-        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
-    }
 
     @Query("delete from channels where chat_id =:channelId")
     suspend fun deleteChannel(channelId: Long)

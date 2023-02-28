@@ -48,7 +48,7 @@ class IncFilesMsgViewHolder(
                 val body = message.body.trim()
                 if (body.isNotBlank()) {
                     messageBody.isVisible = true
-                    messageBody.text = body
+                    setMessageBody(messageBody, message)
                 } else messageBody.isVisible = false
 
                 if (!diff.hasDifference()) return

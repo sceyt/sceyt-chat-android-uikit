@@ -9,6 +9,10 @@ sealed interface InputEventsListener {
         fun onInputStateChanged(sendImage: ImageView, state: InputState)
     }
 
+    fun interface MentionUsersListener : InputEventsListener {
+        fun onMentionUsersListener(query: String)
+    }
+
     /** Use this if you want to implement all callbacks */
-    interface InputEventListeners : InputStateListener
+    interface InputEventListeners : InputStateListener, MentionUsersListener
 }

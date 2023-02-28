@@ -61,8 +61,6 @@ class OutVoiceMsgViewHolder(
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, binding.messageDate)
-                if (diff.edited || diff.statusChanged)
-                    setMessageStatusAndDateText(message, binding.messageDate)
 
                 if (diff.replyCountChanged)
                     setReplyCount(binding.tvReplyCount, toReplyLine, item)

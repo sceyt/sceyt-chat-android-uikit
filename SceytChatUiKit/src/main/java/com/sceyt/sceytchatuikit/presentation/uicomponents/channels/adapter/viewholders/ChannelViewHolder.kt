@@ -11,9 +11,11 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -25,6 +27,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -64,6 +67,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 val url = channel.iconUrl
 
                 setUnreadCount(channel.unreadMessageCount, binding.unreadMessagesCount)
+                setMentionUserSymbol(channel.unreadMessageCount, channel.lastMessage, binding.icMention)
 
                 diff.run {
                     if (!hasDifference()) return@run
@@ -133,7 +137,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setString("$fromText${body.trim()}")
+                .setSpannableString(MentionUserHelper.buildWithMentionedUsers(context, body, message.metadata,
+                    message.mentionedUsers, enableClick = false))
+                .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
                 .build()
@@ -191,6 +197,15 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
+    open fun setMentionUserSymbol(unreadCount: Long?, message: SceytMessage?, icMention: ImageView) {
+        if (unreadCount == null || unreadCount == 0L) {
+            icMention.isVisible = false
+            return
+        }
+        val isMentionedMe = message?.mentionedUsers?.any { it.id == SceytKitClient.myId } ?: false
+        icMention.isVisible = isMentionedMe
+    }
+
     open fun setChannelMarkedUsUnread(channel: SceytChannel, unreadMessagesCount: TextView) {
         if (channel.unreadMessageCount == 0L) {
             if (channel.markedUsUnread)
@@ -231,6 +246,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
             lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))
             unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
+            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
             onlineStatus.setIndicatorColor(getCompatColorByTheme(ChannelStyle.onlineStatusColor))
             dateStatus.buildStyle()
                 .setStatusIconSize(ChannelStyle.statusIconSize)
