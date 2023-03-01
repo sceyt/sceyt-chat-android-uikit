@@ -1,12 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
 import android.content.Context
+import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.View
 import androidx.annotation.ColorRes
 import com.google.gson.Gson
@@ -79,7 +81,9 @@ object MentionUserHelper {
 
             val newBody = SpannableStringBuilder(body)
             data.entries.sortedByDescending { it.value.loc }.forEach {
-                setNewBodyWithName(mentionUsers, newBody, it)
+                val name = setNewBodyWithName(mentionUsers, newBody, it)
+                newBody.setSpan(StyleSpan(Typeface.BOLD),
+                    it.value.loc, it.value.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             SpannableString.valueOf(newBody)

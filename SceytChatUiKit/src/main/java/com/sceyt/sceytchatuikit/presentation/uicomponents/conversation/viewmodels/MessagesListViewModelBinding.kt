@@ -61,7 +61,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    markChannelAsRead(channel.id)
+    if (channel.markedUsUnread)
+        markChannelAsRead(channel.id)
 
     if (channel.lastReadMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
             || channel.lastReadMessageId == channel.lastMessage?.id)
