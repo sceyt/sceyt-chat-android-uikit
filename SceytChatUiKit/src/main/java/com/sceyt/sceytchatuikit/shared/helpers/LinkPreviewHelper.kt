@@ -42,9 +42,9 @@ class LinkPreviewHelper {
                     .get()
 
                 val elements = doc.getElementsByTag("meta")
-                var title = doc.select("meta[property=og:title]").attr("content")
+                var title = doc.title()
                 if (title.isNullOrBlank()) {
-                    title = doc.title()
+                    title = doc.select("meta[property=og:title]").attr("content")
                 }
                 previewMetaData.title = title
 
@@ -110,13 +110,18 @@ class LinkPreviewHelper {
                 if (src.isNotEmpty()) {
                     previewMetaData.favicon = resolveURL(url, src)
                 } else {
-                    src = doc.select("link[rel=icon]").attr("href")
+                    src = doc.select("link[rel~=icon]").lastOrNull()?.attr("href") ?: ""
                     if (src.isNotEmpty()) {
                         previewMetaData.favicon = resolveURL(url, src)
                     } else {
-                        src = doc.select("link[rel=shortcut icon]").attr("href")
+                        src = doc.select("link[rel=icon]").attr("href")
                         if (src.isNotEmpty()) {
                             previewMetaData.favicon = resolveURL(url, src)
+                        } else {
+                            src = doc.select("link[rel=shortcut icon]").attr("href")
+                            if (src.isNotEmpty()) {
+                                previewMetaData.favicon = resolveURL(url, src)
+                            }
                         }
                     }
                 }
