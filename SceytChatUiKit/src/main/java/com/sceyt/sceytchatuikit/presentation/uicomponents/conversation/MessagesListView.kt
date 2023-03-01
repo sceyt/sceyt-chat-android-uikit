@@ -55,7 +55,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
-    private var enabledClickActions = true
+    var enabledClickActions = true
+        private set
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
@@ -97,13 +98,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         defaultClickListeners = object : MessageClickListenersImpl() {
             override fun onMessageLongClick(view: View, item: MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onMessageLongClick(view, item)
+                clickListeners.onMessageLongClick(view, item)
             }
 
             override fun onAvatarClick(view: View, item: MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onAvatarClick(view, item)
+                clickListeners.onAvatarClick(view, item)
             }
 
             override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
@@ -111,23 +110,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onReplyCountClick(view: View, item: MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onReplyCountClick(view, item)
+                clickListeners.onReplyCountClick(view, item)
             }
 
             override fun onAddReactionClick(view: View, message: SceytMessage) {
-                if (enabledClickActions)
-                    clickListeners.onAddReactionClick(view, message)
+                clickListeners.onAddReactionClick(view, message)
             }
 
             override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-                if (enabledClickActions)
-                    clickListeners.onReactionClick(view, item)
+                clickListeners.onReactionClick(view, item)
             }
 
             override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-                if (enabledClickActions)
-                    clickListeners.onReactionLongClick(view, item)
+                clickListeners.onReactionLongClick(view, item)
             }
 
             override fun onAttachmentClick(view: View, item: FileListItem) {
@@ -135,8 +130,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
-                if (enabledClickActions)
-                    clickListeners.onAttachmentLongClick(view, item)
+                clickListeners.onAttachmentLongClick(view, item)
             }
 
             override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
@@ -206,7 +200,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             reactionClickListeners.onRemoveReaction(reaction)
         else
             reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
-
     }
 
     private fun onAttachmentLoaderClick(item: FileListItem) {
@@ -549,7 +542,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Click events
     override fun onMessageLongClick(view: View, item: MessageItem) {
-        showMessageActionsPopup(view, item.message)
+        if (enabledClickActions)
+            showMessageActionsPopup(view, item.message)
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
@@ -565,15 +559,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAddReactionClick(view: View, message: SceytMessage) {
-        showAddEmojiDialog(message)
+        if (enabledClickActions)
+            showAddEmojiDialog(message)
     }
 
     override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        onReactionClick(item)
+        if (enabledClickActions)
+            onReactionClick(item)
     }
 
     override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-        showReactionActionsPopup(view, item)
+        if (enabledClickActions)
+            showReactionActionsPopup(view, item)
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {

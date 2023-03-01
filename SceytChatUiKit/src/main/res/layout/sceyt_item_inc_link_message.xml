@@ -130,15 +130,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="2dp"
+            android:layout_marginBottom="5dp"
             android:paddingStart="0dp"
-            android:paddingEnd="8dp"
+            android:paddingEnd="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="parent"
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewStatusIconSize="15dp"
+            app:sceytDateStatusViewStatusIconSize="15.5dp"
             tools:sceytDateStatusViewDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

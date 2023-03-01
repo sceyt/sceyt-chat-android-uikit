@@ -284,7 +284,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             setHighlighted(needHighlight)
             val marginEndBottom = if (needHighlight) Pair(25, 25) else {
                 //Set the value which is set in xml
-                Pair(dpToPx(5f), dpToPx(2f))
+                Pair(dpToPx(5f), dpToPx(5f))
             }
             (layoutParams as ViewGroup.MarginLayoutParams).apply {
                 setMargins(0, marginTop, marginEndBottom.first, marginEndBottom.second)
@@ -339,7 +339,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
             }
         } else {
-            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, dpToPx(5f))
+            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, dpToPx(12f))
             constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
         }
         constraintSet.applyTo(constraintLayout)

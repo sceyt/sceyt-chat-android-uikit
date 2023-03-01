@@ -101,15 +101,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="2dp"
-            android:paddingHorizontal="8dp"
+            android:layout_marginBottom="5dp"
+            android:paddingHorizontal="5dp"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/rvFiles"
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconMargin="5dp"
-            app:sceytDateStatusViewStatusIconSize="15dp"
+            app:sceytDateStatusViewStatusIconSize="15.5dp"
             tools:sceytDateStatusViewDateText="00:37"
             tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
 
