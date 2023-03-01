@@ -24,6 +24,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -51,6 +52,9 @@ internal class PersistenceMembersLogicImpl(
                 channelDao.insertUserChatLinks(data.members.map {
                     UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
+                channelDao.getChannelById(chatId)?.let {
+                    channelsCache.upsertChannel(it.toChannel())
+                }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
