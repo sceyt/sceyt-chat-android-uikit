@@ -532,7 +532,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
             tvMessageBody.text = if (message.isTextMessage())
-                message.body.trim()
+                MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
             else message.toSceytUiMessage().getShowBody(context)
         }
     }

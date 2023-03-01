@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import android.content.Context
+import android.text.SpannableString
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -64,15 +65,16 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
     return deliveryStatus == DeliveryStatus.Read
 }
 
-fun SceytMessage.getShowBody(context: Context): String {
-    return when {
+fun SceytMessage.getShowBody(context: Context): SpannableString {
+    val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, metadata, mentionedUsers).toString()
+            MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, metadata, mentionedUsers)
         }
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
         else -> context.getString(R.string.sceyt_file)
     }
+    return SpannableString(body)
 }
 
 fun SceytAttachment?.getShowName(context: Context, body: String): String {
