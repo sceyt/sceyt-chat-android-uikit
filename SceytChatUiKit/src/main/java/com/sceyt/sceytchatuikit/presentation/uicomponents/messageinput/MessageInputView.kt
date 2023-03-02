@@ -17,10 +17,10 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.gson.Gson
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
@@ -558,7 +558,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun checkIsParticipant(channel: SceytChannel) {
         when (channel.channelType) {
             ChannelTypeEnum.Public -> {
-                if (channel.toGroupChannel().members.find { it.id == preferences.getUserId() } == null) {
+                if (channel.toGroupChannel().lastActiveMembers.find { it.id == preferences.getUserId() } == null) {
                     showHideJoinButton(true)
                 } else showHideJoinButton(false)
             }

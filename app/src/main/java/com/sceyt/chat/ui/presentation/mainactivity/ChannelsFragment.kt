@@ -10,8 +10,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.Types
 import com.sceyt.chat.connectivity_change.NetworkMonitor
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity

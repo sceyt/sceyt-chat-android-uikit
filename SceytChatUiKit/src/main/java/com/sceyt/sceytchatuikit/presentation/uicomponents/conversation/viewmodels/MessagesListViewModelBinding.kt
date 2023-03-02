@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
 import androidx.lifecycle.*
-import com.sceyt.chat.Types
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -375,7 +375,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (it.eventType) {
             ClearedHistory -> messagesListView.clearData()
             Left -> {
-                val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
                 if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
                     messagesListView.context.asActivity().finish()
             }
@@ -487,14 +487,14 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         when (it.eventType) {
             Left -> {
                 if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
                     if (leftUser == myId)
                         messageInputView.onChannelLeft()
                 }
             }
             Joined -> {
                 if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
+                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
                     if (leftUser == myId)
                         messageInputView.joinSuccess()
                 }

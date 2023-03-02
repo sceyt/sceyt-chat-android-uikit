@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
 import android.os.Parcelable
+import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
@@ -11,6 +12,8 @@ abstract class SceytChannel(open var id: Long,
                             open var createdAt: Long,
                             open var updatedAt: Long,
                             open var unreadMessageCount: Long,
+                            open var unreadMentionCount: Long,
+                            open var unreadReactionCount: Long,
                             open var lastMessage: SceytMessage?,
                             open var label: String?,
                             open var metadata: String?,
@@ -20,7 +23,8 @@ abstract class SceytChannel(open var id: Long,
                             open var lastDeliveredMessageId: Long,
                             open var lastReadMessageId: Long,
                             open var channelType: ChannelTypeEnum,
-                            open var messagesDeletionDate: Long) : Parcelable, Cloneable {
+                            open var messagesDeletionDate: Long,
+                            open var lastMessages: List<SceytMessage>?) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
     open val channelSubject = ""

@@ -61,7 +61,8 @@ internal class PersistenceChannelsLogicImpl(
                 data.channelId?.let { channelId -> deleteChannelDb(channelId) }
             }
             Left -> {
-                val leftUser = (data.channel as? GroupChannel)?.members?.getOrNull(0)?.id ?: return
+                val leftUser = (data.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                        ?: return
                 data.channelId?.let { channelId ->
                     if (leftUser == myId) {
                         deleteChannelDb(channelId)
@@ -79,7 +80,7 @@ internal class PersistenceChannelsLogicImpl(
                 data.channel?.let { channel ->
                     val sceytChannel = channel.toSceytUiChannel()
                     initPendingLastMessageBeforeInsert(sceytChannel)
-                    channelDao.insertChannel(sceytChannel.toChannelEntity(myId))
+                    channelDao.insertChannel(sceytChannel.toChannelEntity())
                     channelsCache.upsertChannel(sceytChannel)
                 }
             }
@@ -107,7 +108,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun onChanelCreatedOrJoinedOrUnHidden(channel: Channel?) {
         channel?.let {
-            val members = if (it is GroupChannel) it.members else arrayListOf((it as DirectChannel).peer)
+            val members = if (it is GroupChannel) it.lastActiveMembers else arrayListOf((it as DirectChannel).peer)
             val sceytChannel = channel.toSceytUiChannel()
             insertChannel(sceytChannel, *members.map { member -> member.toSceytMember() }.toTypedArray())
             channelsCache.add(sceytChannel)
@@ -142,7 +143,7 @@ internal class PersistenceChannelsLogicImpl(
             channelDao.updateLastMessage(it.channelEntity.id, dataMessage.id, dataMessage.createdAt)
         } ?: run {
             // Insert channel from push data
-            channelDao.insertChannel(dataChannel.toChannelEntity(myId))
+            channelDao.insertChannel(dataChannel.toChannelEntity())
         }
     }
 
@@ -168,7 +169,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun updateChannelDbAndCache(channel: SceytChannel?) {
         channel ?: return
-        channelDao.updateChannel(channel.toChannelEntity(myId))
+        channelDao.updateChannel(channel.toChannelEntity())
         channelsCache.upsertChannel(channel)
     }
 
@@ -181,7 +182,7 @@ internal class PersistenceChannelsLogicImpl(
             }
         }
         usersDao.insertUsers(members.map { it.toUserEntity() })
-        channelDao.insertChannelAndLinks(channel.toChannelEntity(myId), members.map {
+        channelDao.insertChannelAndLinks(channel.toChannelEntity(), members.map {
             UserChatLink(userId = it.id, chatId = channel.id, role = it.role.name)
         })
     }
@@ -356,7 +357,7 @@ internal class PersistenceChannelsLogicImpl(
         }
 
         initPendingLastMessageBeforeInsert(*list.toTypedArray())
-        channelDao.insertChannelsAndLinks(list.map { it.toChannelEntity(myId) }, links)
+        channelDao.insertChannelsAndLinks(list.map { it.toChannelEntity() }, links)
         return list
     }
 
@@ -503,7 +504,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { channel ->
                 initPendingLastMessageBeforeInsert(channel)
-                channel.toChannelEntity(myId).let {
+                channel.toChannelEntity().let {
                     channelDao.insertChannel(it)
                     channelsCache.upsertChannel(channel)
                     messageLogic.onSyncedChannels(arrayListOf(channel))
@@ -531,7 +532,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.editChannel(channelId, data)
         if (response is SceytResponse.Success) {
             response.data?.let {
-                channelDao.updateChannel(it.toChannelEntity(myId))
+                channelDao.updateChannel(it.toChannelEntity())
                 channelsCache.upsertChannel(it)
             }
         }

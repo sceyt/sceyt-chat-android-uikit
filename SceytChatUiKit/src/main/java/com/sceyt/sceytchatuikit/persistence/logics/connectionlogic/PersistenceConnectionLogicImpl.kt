@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.connectionlogic
 
-import com.sceyt.chat.ClientWrapper
-import com.sceyt.chat.Types
+import com.sceyt.chat.models.Types
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionStateData

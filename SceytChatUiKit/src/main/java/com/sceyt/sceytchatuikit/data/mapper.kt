@@ -21,6 +21,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             createdAt = createdAt,
             updatedAt = updatedAt,
             unreadMessageCount = unreadMessageCount,
+            unreadMentionCount = unreadMentionCount,
+            unreadReactionCount = unreadReactionCount,
             lastMessage = lastMessage?.toSceytUiMessage(true),
             label = label,
             metadata = metadata,
@@ -31,11 +33,13 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             subject = subject,
             avatarUrl = avatarUrl,
             channelUrl = getChannelUrl(),
-            members = members.map { it.toSceytMember() },
+            members = lastActiveMembers.map { it.toSceytMember() },
             memberCount = memberCount,
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
-            messagesDeletionDate = messagesDeletionDate
+            messagesDeletionDate = messagesDeletionDate,
+            role = myRole(),
+            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
         )
     } else {
         this as DirectChannel
@@ -44,6 +48,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             createdAt = createdAt,
             updatedAt = updatedAt,
             unreadMessageCount = unreadMessageCount,
+            unreadMentionCount = unreadMentionCount,
+            unreadReactionCount = unreadReactionCount,
             lastMessage = lastMessage?.toSceytUiMessage(false),
             label = label,
             metadata = metadata,
@@ -53,7 +59,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
             channelType = getChannelType(this),
-            messagesDeletionDate = messagesDeletionDate
+            messagesDeletionDate = messagesDeletionDate,
+            lastMessages = lastMessages?.map { it.toSceytUiMessage() }
         )
     }
 }
@@ -62,17 +69,18 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
     return when (channelType) {
         ChannelTypeEnum.Private -> {
             this as SceytGroupChannel
-            PrivateChannel(id, subject, metadata, avatarUrl,
+            PrivateChannel(
+                id, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate)
+                lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null, lastMessages?.map { it.toMessage() }?.toTypedArray())
         }
         ChannelTypeEnum.Public -> {
             this as SceytGroupChannel
             PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate)
+                lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null, lastMessages?.map { it.toMessage() }?.toTypedArray())
         }
         else -> throw RuntimeException("Channel is direct channel")
     }
