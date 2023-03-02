@@ -561,13 +561,13 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         }
     }
 
-    override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection {
+    /*override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection {
         val superConn = super.onCreateInputConnection(outAttrs)
         val conn = TokenInputConnection(superConn, true)
         outAttrs.imeOptions = outAttrs.imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION.inv()
         outAttrs.imeOptions = outAttrs.imeOptions or EditorInfo.IME_FLAG_NO_EXTRACT_UI
         return conn
-    }
+    }*/
 
     /**
      * Create a token and hide the keyboard when the user sends the DONE IME action
@@ -585,24 +585,25 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        val handled = super.onKeyUp(keyCode, event)
-        if (shouldFocusNext) {
-            shouldFocusNext = false
-            handleDone()
-        }
-        return handled
+         val handled = super.onKeyUp(keyCode, event)
+         if (shouldFocusNext) {
+             shouldFocusNext = false
+             handleDone()
+         }
+         return handled
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        var handled = false
-        when (keyCode) {
-            KeyEvent.KEYCODE_TAB, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> if (event?.hasNoModifiers() == true) {
-                shouldFocusNext = true
-                handled = true
-            }
-            KeyEvent.KEYCODE_DEL -> handled = !canDeleteSelection(1) || deleteSelectedObject()
-        }
-        return handled || super.onKeyDown(keyCode, event)
+        /* var handled = false
+         when (keyCode) {
+             KeyEvent.KEYCODE_TAB, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> if (event?.hasNoModifiers() == true) {
+                 shouldFocusNext = true
+                 handled = true
+             }
+             KeyEvent.KEYCODE_DEL -> handled = !canDeleteSelection(1) || deleteSelectedObject()
+         }
+         return handled ||*/
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun deleteSelectedObject(): Boolean {
