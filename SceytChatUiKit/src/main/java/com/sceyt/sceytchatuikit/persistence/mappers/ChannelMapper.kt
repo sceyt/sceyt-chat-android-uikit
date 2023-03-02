@@ -12,11 +12,11 @@ import java.util.*
 
 fun SceytChannel.toChannelEntity(): ChannelEntity {
     var memberCount = 1L
-    val myRole: String
+    val myRole: String?
     var channelUrl: String? = null
     if (isGroup) {
         memberCount = (this as SceytGroupChannel).memberCount
-        myRole = role.name
+        myRole = role?.name
         channelUrl = this.channelUrl
     } else myRole = RoleTypeEnum.Owner.toString()
 
@@ -57,15 +57,14 @@ fun Channel.toChannelEntity(): ChannelEntity {
     var subject = ""
     val avatarUrl: String
     var channelUrl: String? = null
-    val myRole: String
-
+    val myRole: String?//Todo need refactor
 
     if (this is GroupChannel) {
         memberCount = this.memberCount
         subject = this.subject
         avatarUrl = this.avatarUrl
         channelUrl = this.getChannelUrl()
-        myRole = myRole().name
+        myRole = myRole()?.name
     } else {
         this as DirectChannel
         avatarUrl = this.peer.avatarURL
@@ -125,7 +124,7 @@ fun ChannelDb.toChannel(): SceytChannel {
                     lastReadMessageId = lastReadMessageId,
                     messagesDeletionDate = messagesDeletionDate,
                     lastMessages = emptyList(),
-                    role = Role(role)
+                    role = role?.let { Role(it) }
                 )
             ChannelTypeEnum.Direct -> SceytDirectChannel(
                 id = id,

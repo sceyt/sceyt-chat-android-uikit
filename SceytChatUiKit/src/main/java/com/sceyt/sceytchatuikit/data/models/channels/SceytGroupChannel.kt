@@ -24,7 +24,7 @@ class SceytGroupChannel(
         override var channelType: ChannelTypeEnum,
         override var messagesDeletionDate: Long,
         override var lastMessages: List<SceytMessage>?,
-        var role: Role,
+        var role: Role?,
         var subject: String?,
         var avatarUrl: String?,
         var channelUrl: String?,

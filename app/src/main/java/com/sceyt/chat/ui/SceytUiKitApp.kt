@@ -50,7 +50,7 @@ class SceytUiKitApp : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateDisconnect)
+                    if (!ConnectionEventsObserver.isConnected)
                         connect()
                 }
                 Lifecycle.Event.ON_DESTROY, Lifecycle.Event.ON_PAUSE -> {
