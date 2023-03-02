@@ -5,9 +5,9 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message.MessageBuilder
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum

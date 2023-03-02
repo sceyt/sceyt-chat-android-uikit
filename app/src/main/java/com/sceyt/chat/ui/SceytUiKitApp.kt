@@ -13,12 +13,12 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
-import com.sceyt.chat.Types
 import com.sceyt.chat.models.SCTLogLevel
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver

@@ -135,11 +135,11 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
             val response = membersMiddleWare.addMembersToChannel(channelId, members)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch).toGroupChannel()
-                if (groupChannel.members.isNullOrEmpty()) return@launch
+                if (groupChannel.lastActiveMembers.isNullOrEmpty()) return@launch
 
                 _channelAddMemberLiveData.postValue(ChannelMembersEventData(
                     channel = groupChannel,
-                    members = groupChannel.members,
+                    members = groupChannel.lastActiveMembers,
                     eventType = ChannelMembersEventEnum.Added
                 ))
             }

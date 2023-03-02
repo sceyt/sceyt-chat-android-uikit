@@ -1,7 +1,0 @@
-configurations.maybeCreate("default")
-//artifacts.add("default", file('SceytSDK-debug.aar'))
-artifacts.add("default", file('SceytSDK-release.aar'))
-
-task clean(type: Delete) {
-    delete project.buildDir
-}

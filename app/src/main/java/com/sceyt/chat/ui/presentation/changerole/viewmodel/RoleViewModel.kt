@@ -3,9 +3,9 @@ package com.sceyt.chat.ui.presentation.changerole.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.ui.presentation.changerole.adapter.RoleItem
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers

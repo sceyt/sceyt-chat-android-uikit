@@ -6,11 +6,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
-import com.sceyt.chat.Types
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent

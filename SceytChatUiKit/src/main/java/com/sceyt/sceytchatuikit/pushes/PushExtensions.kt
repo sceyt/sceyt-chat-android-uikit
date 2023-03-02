@@ -72,16 +72,16 @@ fun getChannelFromPushJson(channelJson: String?): Channel? {
     val membersCount = channelJsonObject.getInt("MembersCount")
     val channel: Channel = when (stringToEnum(type)) {
         ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, label, 0, 0,
-            arrayOf(), null, 0, false, 0L, false,
-            0L, 0L, 0)
+           null, null, 0L, 0,0, false, 0,false,
+            0L, 0L, 0,null,null)
 
         ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, label, 0,
-            0, arrayOf(), null, 0, membersCount.toLong(), false, 0,
-            false, 0, 0, 0)
+            0, arrayOf(), null, 0,0,0, membersCount.toLong(), false, 0,
+            false, 0, 0, 0,null,null)
 
         ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", label, 0, 0,
-            arrayOf(), null, 0, membersCount.toLong(), false, 0,
-            false, 0, 0, 0)
+            arrayOf(), null, 0,0,0, membersCount.toLong(), false, 0,
+            false, 0, 0, 0,null,null)
     }
     return channel
 }

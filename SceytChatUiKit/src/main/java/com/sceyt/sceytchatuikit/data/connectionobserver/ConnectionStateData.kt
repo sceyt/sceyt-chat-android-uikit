@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.data.connectionobserver
 
-import com.sceyt.chat.Types
 import com.sceyt.chat.models.Status
+import com.sceyt.chat.models.Types
 
 data class ConnectionStateData(
         val state: Types.ConnectState,

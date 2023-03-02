@@ -357,11 +357,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         val groupChannel = (eventData.channel as? GroupChannel) ?: return
         when (eventData.eventType) {
             Left -> {
-                groupChannel.members?.forEach {
+                groupChannel.lastActiveMembers?.forEach {
                     removeMember(it.id)
                 }
             }
-            Joined, Invited -> addMembers(groupChannel.members)
+            Joined, Invited -> addMembers(groupChannel.lastActiveMembers)
             else -> return
         }
     }

@@ -1,9 +1,9 @@
 package com.sceyt.sceytchatuikit.persistence.logics.userslogic
 
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
