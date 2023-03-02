@@ -54,6 +54,9 @@ internal class PersistenceMembersLogicImpl(
                 })
                 channelDao.getChannelById(chatId)?.let {
                     channelsCache.upsertChannel(it.toChannel())
+                } ?: run {
+                    channelDao.insertChannel(data.channel.toChannelEntity())
+                    channelsCache.add(data.channel.toSceytUiChannel())
                 }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {

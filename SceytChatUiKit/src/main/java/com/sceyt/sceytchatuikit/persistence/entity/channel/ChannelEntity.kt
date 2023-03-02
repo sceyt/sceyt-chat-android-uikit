@@ -30,5 +30,5 @@ data class ChannelEntity(
         var lastDeliveredMessageId: Long,
         var lastReadMessageId: Long,
         var messagesDeletionDate: Long,
-        var role: String
+        var role: String?
 )
