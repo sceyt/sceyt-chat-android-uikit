@@ -23,15 +23,17 @@ class OutLinkMsgViewHolder(
 ) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
 
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
 
-        binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
-            return@setOnLongClickListener true
-        }
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
 
-        binding.layoutDetails.setOnClickListener {
-            messageListeners?.onLinkClick(it, messageListItem as MessageListItem.MessageItem)
+            root.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 

@@ -24,7 +24,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private var innerPaddingHorizontal = 0
     private var strokeColor = "#CDCDCF".toColorInt()
     private var countTetColor = Color.BLACK
-    private var strikeWidth = 3
+    private var strikeWidth = 0
     private var cornerRadius = 30
     private var smileTextSize = 40
     private var countTextSize = 30
@@ -33,6 +33,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private var mCountMargin = 0
     private var reactionBackgroundColor: Int = 0
     private var counterTextMinWidth = 0
+    private var enableStroke: Boolean = true
 
     init {
         attrs?.let {
@@ -48,7 +49,8 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             countTextSize = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewCountTextSize, countTextSize)
             countTetColor = a.getColor(R.styleable.SceytReactionView_sceytReactionViewCountTextColor, countTetColor)
             strokeColor = a.getColor(R.styleable.SceytReactionView_sceytReactionViewStrokeColor, strokeColor)
-            strikeWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeWidth, strikeWidth)
+            enableStroke = a.getBoolean(R.styleable.SceytReactionView_sceytReactionViewEnableStroke, enableStroke)
+            strikeWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeWidth, 0)
             cornerRadius = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeCornerRadius, cornerRadius)
             smileTitle = a.getString(R.styleable.SceytReactionView_sceytReactionViewSmileText)
                     ?: smileTitle
@@ -115,7 +117,8 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
                 countTextPaint)
         }
 
-        canvas.drawRoundRect(rectF, cornerRadius.toFloat(), cornerRadius.toFloat(), strokePaint)
+        if (enableStroke)
+            canvas.drawRoundRect(rectF, cornerRadius.toFloat(), cornerRadius.toFloat(), strokePaint)
     }
 
     private fun getInnerPaddingVertical(): Int {

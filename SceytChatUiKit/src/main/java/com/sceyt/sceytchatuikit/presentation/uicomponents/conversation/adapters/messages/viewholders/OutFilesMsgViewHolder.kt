@@ -32,11 +32,17 @@ class OutFilesMsgViewHolder(
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
 
-        binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
-            return@setOnLongClickListener true
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            root.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 
