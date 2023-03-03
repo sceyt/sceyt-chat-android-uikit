@@ -10,10 +10,12 @@ import android.view.animation.AnimationUtils
 import android.view.animation.LayoutAnimationController
 import android.widget.PopupWindow
 import androidx.core.view.marginBottom
+import androidx.core.view.marginTop
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytPopupAddReactionBinding
 import com.sceyt.sceytchatuikit.extensions.screenWidthPx
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import java.lang.Integer.max
 
 class PopupReactions(private var context: Context) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
@@ -38,10 +40,15 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         isFocusable = true
         setAdapter(reversed, defaultClickListener)
 
-        binding.cardView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-        val xPos = if (reversed) context.screenWidthPx() else 0
-        val yPos = y - binding.cardView.measuredHeight - binding.cardView.marginBottom
-        showAtLocation(anchorView, Gravity.NO_GRAVITY, xPos, yPos)
+        with(binding.cardView) {
+            measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+
+            val minYPos = measuredHeight + marginBottom + marginTop
+            val xPos = if (reversed) context.screenWidthPx() else 0
+            val yPos = max(minYPos, y - measuredHeight - marginBottom)
+
+            showAtLocation(anchorView, Gravity.NO_GRAVITY, xPos, yPos)
+        }
     }
 
     private fun setAdapter(reversed: Boolean, clickListener: PopupReactionsAdapter.OnItemClickListener) {
