@@ -38,6 +38,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Me
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactions
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -97,6 +99,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
         defaultClickListeners = object : MessageClickListenersImpl() {
+            override fun onMessageClick(view: View, item: MessageItem) {
+                clickListeners.onMessageClick(view, item)
+            }
+
             override fun onMessageLongClick(view: View, item: MessageItem) {
                 clickListeners.onMessageLongClick(view, item)
             }
@@ -541,6 +547,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
 
     // Click events
+    override fun onMessageClick(view: View, item: MessageItem) {
+        if (enabledClickActions)
+            PopupReactions(context).showPopup(view, !item.message.incoming, object : PopupReactionsAdapter.OnItemClickListener {
+                override fun onReactionClick(reaction: String) {
+                    onAddReaction(item.message, reaction)
+                }
+
+                override fun onAddClick() {
+                    onAddReactionClick(view, item.message)
+                }
+            })
+    }
+
     override fun onMessageLongClick(view: View, item: MessageItem) {
         if (enabledClickActions)
             showMessageActionsPopup(view, item.message)

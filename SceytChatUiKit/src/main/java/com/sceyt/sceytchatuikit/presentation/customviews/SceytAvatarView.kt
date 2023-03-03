@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -96,7 +97,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun getAvatarRandomColor(): Int {
-        val colors = UserStyle.avatarColors
+        val colors = SceytKitConfig.avatarColors
         val md = MessageDigest.getInstance("MD5")
         val name = fullName ?: ""
         val h = BigInteger(1, md.digest(name.toByteArray(Charsets.UTF_16))).toString(16).padStart(32, '0').takeLast(6)

@@ -25,7 +25,11 @@ class IncTextMsgViewHolder(
         with(binding) {
             setMessageItemStyle()
 
-            layoutDetails.setOnLongClickListener {
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
             }
