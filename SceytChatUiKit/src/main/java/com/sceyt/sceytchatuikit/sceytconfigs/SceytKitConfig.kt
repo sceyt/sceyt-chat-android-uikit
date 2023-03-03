@@ -26,7 +26,7 @@ object SceytKitConfig {
 
     var userNameBuilder: ((User) -> String)? = null
 
-    var fastReactions = arrayListOf("\uD83D\uDE00", "\uD83E\uDD29", "\uD83D\uDE03", "\uD83D\uDE05", "\uD83D\uDC4C\uD83C\uDFFB", "\uD83D\uDE0D")
+    var fastReactions = arrayListOf("\uD83D\uDE0E", "\uD83D\uDE02", "\uD83D\uDC4C\uD83C\uDFFB", "\uD83D\uDE0D", "\uD83D\uDC4D\uD83C\uDFFB", "\uD83D\uDE0F")
 
     var avatarColors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
 
