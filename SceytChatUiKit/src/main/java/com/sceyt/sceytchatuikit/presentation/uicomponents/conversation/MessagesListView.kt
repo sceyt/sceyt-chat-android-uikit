@@ -23,6 +23,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -60,6 +61,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
+
     var enabledClickActions = true
         private set
 
@@ -94,6 +96,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             })
 
         initClickListeners()
+        addKeyBoardListener()
     }
 
     private fun initClickListeners() {
@@ -158,6 +161,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         scrollDownIcon.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
+        }
+    }
+
+    private fun addKeyBoardListener() {
+        context.maybeComponentActivity()?.let {
+            KeyboardEventListener(it) { isOpen ->
+                if (!isOpen) {
+                    reactionsPopupWindow?.dismiss()
+                    reactionsPopupWindow = null
+                }
+            }
         }
     }
 
