@@ -1,20 +1,24 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups
 
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemPopupAddReactionBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemPopupReactionBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class PopupReactionsAdapter(private var data: List<String>,
-                            private var listener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<String>>() {
+class PopupReactionsAdapter(private var data: List<ReactionItem>,
+                            private var listener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<ReactionItem>>() {
 
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<String> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ReactionItem> {
         return if (viewType == ItemType.ADD.ordinal)
             AddViewHolder(SceytItemPopupAddReactionBinding.inflate(LayoutInflater.from(parent.context), parent, false))
         else
@@ -22,22 +26,28 @@ class PopupReactionsAdapter(private var data: List<String>,
     }
 
     override fun getItemCount(): Int {
-        return data.size + 1
+        return data.size
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<String>, position: Int) {
-        holder.bind(data.getOrNull(position) ?: "")
+    override fun onBindViewHolder(holder: BaseViewHolder<ReactionItem>, position: Int) {
+        holder.bind(data[position])
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position < data.size)
-            return ItemType.REACTION.ordinal
-        else ItemType.ADD.ordinal
+        return when {
+            data[position] is ReactionItem.Reaction -> ItemType.REACTION.ordinal
+            else -> ItemType.ADD.ordinal
+        }
     }
 
-    inner class ViewHolder(val binding: SceytItemPopupReactionBinding) : BaseViewHolder<String>(binding.root) {
-        override fun bind(item: String) {
-            binding.emojiView.setSmileText(item)
+    inner class ViewHolder(val binding: SceytItemPopupReactionBinding) : BaseViewHolder<ReactionItem>(binding.root) {
+        override fun bind(item: ReactionItem) {
+            val reaction = (item as ReactionItem.Reaction).reaction
+            binding.emojiView.setSmileText(reaction.key)
+            if (item.reaction.containsSelf)
+                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(R.color.sceyt_color_gray))
+            else
+                binding.emojiView.setReactionBackgroundColor(Color.WHITE)
 
             binding.root.setOnClickListener {
                 listener.onReactionClick(item)
@@ -45,12 +55,12 @@ class PopupReactionsAdapter(private var data: List<String>,
         }
     }
 
-    inner class AddViewHolder(val binding: SceytItemPopupAddReactionBinding) : BaseViewHolder<String>(binding.root) {
+    inner class AddViewHolder(val binding: SceytItemPopupAddReactionBinding) : BaseViewHolder<ReactionItem>(binding.root) {
         init {
             binding.setupStyle()
         }
 
-        override fun bind(item: String) {
+        override fun bind(item: ReactionItem) {
             binding.root.setOnClickListener {
                 listener.onAddClick()
             }
@@ -66,7 +76,7 @@ class PopupReactionsAdapter(private var data: List<String>,
     }
 
     interface OnItemClickListener {
-        fun onReactionClick(reaction: String)
+        fun onReactionClick(reaction: ReactionItem.Reaction)
         fun onAddClick()
     }
 }
