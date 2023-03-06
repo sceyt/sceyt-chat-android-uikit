@@ -21,9 +21,9 @@ import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.filetransfer.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageActionsViewClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessagePopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bind
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
@@ -109,9 +109,9 @@ open class ConversationActivity : AppCompatActivity() {
             }
         })
 
-        setCustomMessagePopupClickListener(object : MessagePopupClickListenersImpl(binding.messagesListView) {
-            override fun onReactMessageClick(view: View, message: SceytMessage) {
-                super.onReactMessageClick(view, message)
+        setCustomMessageActionsViewClickListener(object : MessageActionsViewClickListenersImpl(binding.messagesListView) {
+            override fun onReactMessageClick(message: SceytMessage) {
+                super.onReactMessageClick(message)
                 println("React")
             }
 

@@ -46,6 +46,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessageActionBridge
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -71,6 +72,7 @@ class MessageListViewModel(
     private val fileTransferService: FileTransferService by inject()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
+    internal val messageActionBridge by lazy { MessageActionBridge() }
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
@@ -245,6 +247,10 @@ class MessageListViewModel(
 
     fun prepareToEditMessage(message: SceytMessage) {
         _onEditMessageCommandLiveData.postValue(message)
+    }
+
+    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
+        messageActionBridge.showMessageActions(event.message, event.popupWindow)
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
@@ -494,6 +500,9 @@ class MessageListViewModel(
             }
             is MessageCommandEvent.EditMessage -> {
                 prepareToEditMessage(event.message)
+            }
+            is MessageCommandEvent.ShowHideMessageActions -> {
+                prepareToShowMessageActions(event)
             }
             is MessageCommandEvent.Reply -> {
                 prepareToReplyMessage(event.message)

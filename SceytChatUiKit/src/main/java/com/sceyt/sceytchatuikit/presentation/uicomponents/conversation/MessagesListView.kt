@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
@@ -47,17 +48,18 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
-        MessagePopupClickListeners.PopupClickListeners, ReactionPopupClickListeners.PopupClickListeners {
+        MessageActionsViewClickListeners.ActionsViewClickListeners, ReactionPopupClickListeners.PopupClickListeners {
 
     private var messagesRV: MessagesRV
     private var scrollDownIcon: ScrollToDownView
     private var pageStateView: PageStateView? = null
     private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
-    private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
+    internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
     private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
+    private var reactionsPopupWindow: PopupWindow? = null
     var enabledClickActions = true
         private set
 
@@ -96,7 +98,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun initClickListeners() {
         clickListeners = MessageClickListenersImpl(this)
-        messagePopupClickListeners = MessagePopupClickListenersImpl(this)
+        messageActionsViewClickListeners = MessageActionsViewClickListenersImpl(this)
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
         defaultClickListeners = object : MessageClickListenersImpl() {
@@ -159,6 +161,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
+        return PopupReactions(context).showPopup(view, message, object : PopupReactionsAdapter.OnItemClickListener {
+            override fun onReactionClick(reaction: ReactionItem.Reaction) {
+                this@MessagesListView.onReactionClick(reaction)
+            }
+
+            override fun onAddClick() {
+                onAddReactionClick(view, message)
+            }
+        }).also { reactionsPopupWindow = it }
+    }
+
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
         val popup = PopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view)
         popup.inflate(R.menu.sceyt_menu_popup_reacton)
@@ -180,13 +194,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
-                R.id.sceyt_forward -> messagePopupClickListeners.onForwardMessageClick(view, message)
-                R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
-                R.id.sceyt_reply -> messagePopupClickListeners.onReplyMessageClick(message)
-                R.id.sceyt_reply_in_thread -> messagePopupClickListeners.onReplyMessageInThreadClick(message)
-                R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message, false)
+                R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
+                R.id.sceyt_forward -> messageActionsViewClickListeners.onForwardMessageClick(message)
+                R.id.sceyt_react -> messageActionsViewClickListeners.onReactMessageClick(message)
+                R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
+                R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
+                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessageClick(message)
+                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, false)
             }
             false
         }
@@ -216,7 +230,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
-                onReactionClick(this, ReactionItem.Reaction(SceytReaction(emoji.unicode), message))
+                onReactionClick(ReactionItem.Reaction(SceytReaction(emoji.unicode), message))
             }).show(it, null)
         }
     }
@@ -527,16 +541,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners.setListener(listener)
     }
 
-    fun setMessagePopupClickListener(listener: MessagePopupClickListeners) {
-        messagePopupClickListeners.setListener(listener)
+    fun setMessagePopupClickListener(listener: MessageActionsViewClickListeners) {
+        messageActionsViewClickListeners.setListener(listener)
     }
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
         clickListeners = listener
     }
 
-    fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
-        messagePopupClickListeners = listener
+    fun setCustomMessageActionsViewClickListener(listener: MessageActionsViewClickListenersImpl) {
+        messageActionsViewClickListeners = listener
     }
 
     fun enableDisableClickActions(enabled: Boolean, force: Boolean) {
@@ -549,21 +563,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
-        if (enabledClickActions)
-            PopupReactions(context).showPopup(view, item.message, object : PopupReactionsAdapter.OnItemClickListener {
-                override fun onReactionClick(reaction: ReactionItem.Reaction) {
-                    this@MessagesListView.onReactionClick(reaction)
-                }
-
-                override fun onAddClick() {
-                    onAddReactionClick(view, item.message)
-                }
-            })
+        if (enabledClickActions) {
+            if (reactionsPopupWindow == null)
+                showModifyReactionsPopup(view, item.message)
+            else reactionsPopupWindow = null
+        }
     }
 
     override fun onMessageLongClick(view: View, item: MessageItem) {
-        if (enabledClickActions)
-            showMessageActionsPopup(view, item.message)
+        if (enabledClickActions) {
+            val popup = showModifyReactionsPopup(view, item.message)
+            messageCommandEventListener?.invoke(MessageCommandEvent.ShowHideMessageActions(item.message, show = true, popupWindow = popup))
+        }
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
@@ -640,12 +651,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.EditMessage(message))
     }
 
-    override fun onForwardMessageClick(view: View, message: SceytMessage) {
+    override fun onForwardMessageClick(message: SceytMessage) {
         SceytForwardActivity.launch(context, message)
     }
 
-    override fun onReactMessageClick(view: View, message: SceytMessage) {
-        onAddReactionClick(view, message)
+    override fun onReactMessageClick(message: SceytMessage) {
+        onAddReactionClick(this, message)
     }
 
     override fun onReplyMessageClick(message: SceytMessage) {

@@ -44,6 +44,8 @@ import kotlinx.coroutines.withContext
 
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
+    messageActionBridge.setMessagesListView(messagesListView)
+
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
     /** Send pending markers and pending messages when lifecycle come back onResume state,
@@ -541,6 +543,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 fun MessageListViewModel.bind(headerView: ConversationHeaderView,
                               replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
+
+    messageActionBridge.setHeaderView(headerView)
 
     if (replyInThread)
         headerView.setReplyMessage(channel, replyInThreadMessage)
