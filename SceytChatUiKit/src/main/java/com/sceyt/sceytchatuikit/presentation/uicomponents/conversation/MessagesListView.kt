@@ -17,6 +17,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -215,7 +216,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
-                onAddReaction(message, emoji.unicode)
+                onReactionClick(this, ReactionItem.Reaction(SceytReaction(emoji.unicode), message))
             }).show(it, null)
         }
     }
@@ -549,9 +550,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
         if (enabledClickActions)
-            PopupReactions(context).showPopup(view, !item.message.incoming, object : PopupReactionsAdapter.OnItemClickListener {
-                override fun onReactionClick(reaction: String) {
-                    onAddReaction(item.message, reaction)
+            PopupReactions(context).showPopup(view, item.message, object : PopupReactionsAdapter.OnItemClickListener {
+                override fun onReactionClick(reaction: ReactionItem.Reaction) {
+                    this@MessagesListView.onReactionClick(reaction)
                 }
 
                 override fun onAddClick() {

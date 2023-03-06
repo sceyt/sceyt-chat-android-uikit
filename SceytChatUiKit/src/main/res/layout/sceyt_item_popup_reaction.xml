@@ -4,14 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="5dp">
+    android:padding="1dp">
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytReactionView
         android:id="@+id/emojiView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:sceytReactionViewEnableStroke="false"
+        app:sceytReactionViewInnerPadding="4dp"
         app:sceytReactionViewSmileTextSize="25sp"
+        app:sceytReactionViewStrokeCornerRadius="30dp"
         tools:sceytReactionViewSmileText="😍" />
 
 </FrameLayout>

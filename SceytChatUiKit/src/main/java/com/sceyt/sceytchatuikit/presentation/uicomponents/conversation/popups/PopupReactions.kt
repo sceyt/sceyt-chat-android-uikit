@@ -12,8 +12,11 @@ import android.widget.PopupWindow
 import androidx.core.view.marginBottom
 import androidx.core.view.marginTop
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.databinding.SceytPopupAddReactionBinding
 import com.sceyt.sceytchatuikit.extensions.screenWidthPx
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.lang.Integer.max
 
@@ -22,8 +25,10 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     private val defaultClickListener: PopupReactionsAdapter.OnItemClickListener by lazy { initClickListener() }
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
-    fun showPopup(anchorView: View, reversed: Boolean, clickListener: PopupReactionsAdapter.OnItemClickListener) {
+    fun showPopup(anchorView: View, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener) {
         this.clickListener = clickListener
+
+        val reversed = !message.incoming
         val location = IntArray(2)
         anchorView.getLocationOnScreen(location)
         val y = location[1]
@@ -38,7 +43,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         isOutsideTouchable = true
         isFocusable = true
-        setAdapter(reversed, defaultClickListener)
+        setAdapter(reversed, message, defaultClickListener)
 
         with(binding.cardView) {
             measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
@@ -51,8 +56,12 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         }
     }
 
-    private fun setAdapter(reversed: Boolean, clickListener: PopupReactionsAdapter.OnItemClickListener) {
-        val adapter = PopupReactionsAdapter(SceytKitConfig.fastReactions, clickListener)
+    private fun setAdapter(reversed: Boolean, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener) {
+        val reactions = SceytKitConfig.fastReactions.map {
+            val containsSelf = message.selfReactions?.map { reaction -> reaction.key }?.contains(it) == true
+            ReactionItem.Reaction(SceytReaction(it, containsSelf = containsSelf), message)
+        } + ReactionItem.AddItem(message)
+        val adapter = PopupReactionsAdapter(reactions, clickListener)
         binding.rvEmoji.adapter = adapter
         binding.rvEmoji.layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_animation_linear_scale).apply {
             order = if (reversed) LayoutAnimationController.ORDER_REVERSE else LayoutAnimationController.ORDER_NORMAL
@@ -61,7 +70,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
 
     private fun initClickListener(): PopupReactionsAdapter.OnItemClickListener {
         return object : PopupReactionsAdapter.OnItemClickListener {
-            override fun onReactionClick(reaction: String) {
+            override fun onReactionClick(reaction: ReactionItem.Reaction) {
                 dismiss()
                 clickListener?.onReactionClick(reaction)
             }

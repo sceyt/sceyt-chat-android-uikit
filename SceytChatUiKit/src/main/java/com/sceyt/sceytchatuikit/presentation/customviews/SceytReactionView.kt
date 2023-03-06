@@ -50,7 +50,8 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             countTetColor = a.getColor(R.styleable.SceytReactionView_sceytReactionViewCountTextColor, countTetColor)
             strokeColor = a.getColor(R.styleable.SceytReactionView_sceytReactionViewStrokeColor, strokeColor)
             enableStroke = a.getBoolean(R.styleable.SceytReactionView_sceytReactionViewEnableStroke, enableStroke)
-            strikeWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeWidth, 0)
+            if (enableStroke)
+                strikeWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeWidth, 0)
             cornerRadius = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytReactionViewStrokeCornerRadius, cornerRadius)
             smileTitle = a.getString(R.styleable.SceytReactionView_sceytReactionViewSmileText)
                     ?: smileTitle
@@ -186,7 +187,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             return
         }
 
-        val countTextWidth = max(countTextBoundsRect.width(), counterTextMinWidth)
+        val countTextWidth = if (countTitle.isBlank()) 0 else max(countTextBoundsRect.width(), counterTextMinWidth)
         val width = 2 * getInnerPaddingHorizontal() + smileTextBoundsRect.width() + countTextWidth + mCountMargin + 2 * strikeWidth
         val height = 2 * getInnerPaddingVertical() + smileTextBoundsRect.height().coerceAtLeast(countTextBoundsRect.height()) + 2 * strikeWidth
         setMeasuredDimension(width, height)
