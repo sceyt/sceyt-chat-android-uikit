@@ -1,18 +1,17 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 
-import android.view.View
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 
-open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopupClickListeners.PopupClickListeners {
-    private var defaultListeners: MessagePopupClickListeners.PopupClickListeners = view
-    private var copyMessageListener: MessagePopupClickListeners.CopyMessage? = null
-    private var deleteMessageListener: MessagePopupClickListeners.DeleteMessage? = null
-    private var editMessageListener: MessagePopupClickListeners.EditMessage? = null
-    private var forwardMessageListener: MessagePopupClickListeners.ForwardMessage? = null
-    private var reactMessageListener: MessagePopupClickListeners.ReactMessage? = null
-    private var replyMessageListener: MessagePopupClickListeners.ReplyMessage? = null
-    private var replyInThreadMessageListener: MessagePopupClickListeners.ReplyInThreadMessage? = null
+open class MessageActionsViewClickListenersImpl(view: MessagesListView) : MessageActionsViewClickListeners.ActionsViewClickListeners {
+    private var defaultListeners: MessageActionsViewClickListeners.ActionsViewClickListeners = view
+    private var copyMessageListener: MessageActionsViewClickListeners.CopyMessage? = null
+    private var deleteMessageListener: MessageActionsViewClickListeners.DeleteMessage? = null
+    private var editMessageListener: MessageActionsViewClickListeners.EditMessage? = null
+    private var forwardMessageListener: MessageActionsViewClickListeners.ForwardMessage? = null
+    private var reactMessageListener: MessageActionsViewClickListeners.ReactMessage? = null
+    private var replyMessageListener: MessageActionsViewClickListeners.ReplyMessage? = null
+    private var replyInThreadMessageListener: MessageActionsViewClickListeners.ReplyInThreadMessage? = null
 
     override fun onCopyMessageClick(message: SceytMessage) {
         defaultListeners.onCopyMessageClick(message)
@@ -29,14 +28,14 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
         editMessageListener?.onEditMessageClick(message)
     }
 
-    override fun onReactMessageClick(view: View, message: SceytMessage) {
-        defaultListeners.onReactMessageClick(view, message)
-        reactMessageListener?.onReactMessageClick(view, message)
+    override fun onReactMessageClick(message: SceytMessage) {
+        defaultListeners.onReactMessageClick(message)
+        reactMessageListener?.onReactMessageClick(message)
     }
 
-    override fun onForwardMessageClick(view: View, message: SceytMessage) {
-        defaultListeners.onForwardMessageClick(view, message)
-        forwardMessageListener?.onForwardMessageClick(view, message)
+    override fun onForwardMessageClick(message: SceytMessage) {
+        defaultListeners.onForwardMessageClick(message)
+        forwardMessageListener?.onForwardMessageClick(message)
     }
 
     override fun onReplyMessageClick(message: SceytMessage) {
@@ -49,9 +48,9 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
         replyInThreadMessageListener?.onReplyMessageInThreadClick(message)
     }
 
-    fun setListener(listener: MessagePopupClickListeners) {
+    fun setListener(listener: MessageActionsViewClickListeners) {
         when (listener) {
-            is MessagePopupClickListeners.PopupClickListeners -> {
+            is MessageActionsViewClickListeners.ActionsViewClickListeners -> {
                 copyMessageListener = listener
                 deleteMessageListener = listener
                 editMessageListener = listener
@@ -60,25 +59,25 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
                 replyMessageListener = listener
                 replyInThreadMessageListener = listener
             }
-            is MessagePopupClickListeners.CopyMessage -> {
+            is MessageActionsViewClickListeners.CopyMessage -> {
                 copyMessageListener = listener
             }
-            is MessagePopupClickListeners.DeleteMessage -> {
+            is MessageActionsViewClickListeners.DeleteMessage -> {
                 deleteMessageListener = listener
             }
-            is MessagePopupClickListeners.EditMessage -> {
+            is MessageActionsViewClickListeners.EditMessage -> {
                 editMessageListener = listener
             }
-            is MessagePopupClickListeners.ForwardMessage -> {
+            is MessageActionsViewClickListeners.ForwardMessage -> {
                 forwardMessageListener = listener
             }
-            is MessagePopupClickListeners.ReactMessage -> {
+            is MessageActionsViewClickListeners.ReactMessage -> {
                 reactMessageListener = listener
             }
-            is MessagePopupClickListeners.ReplyMessage -> {
+            is MessageActionsViewClickListeners.ReplyMessage -> {
                 replyMessageListener = listener
             }
-            is MessagePopupClickListeners.ReplyInThreadMessage -> {
+            is MessageActionsViewClickListeners.ReplyInThreadMessage -> {
                 replyInThreadMessageListener = listener
             }
         }

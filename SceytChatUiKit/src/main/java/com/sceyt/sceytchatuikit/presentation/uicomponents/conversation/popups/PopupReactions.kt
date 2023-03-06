@@ -25,7 +25,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     private val defaultClickListener: PopupReactionsAdapter.OnItemClickListener by lazy { initClickListener() }
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
-    fun showPopup(anchorView: View, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener) {
+    fun showPopup(anchorView: View, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
         this.clickListener = clickListener
 
         val reversed = !message.incoming
@@ -42,7 +42,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         animationStyle = if (reversed) R.style.SceytReactionPopupAnimationReversed else R.style.SceytReactionPopupAnimationNormal
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         isOutsideTouchable = true
-        isFocusable = true
+        isFocusable = false
         setAdapter(reversed, message, defaultClickListener)
 
         with(binding.cardView) {
@@ -54,6 +54,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
 
             showAtLocation(anchorView, Gravity.NO_GRAVITY, xPos, yPos)
         }
+        return this
     }
 
     private fun setAdapter(reversed: Boolean, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener) {
