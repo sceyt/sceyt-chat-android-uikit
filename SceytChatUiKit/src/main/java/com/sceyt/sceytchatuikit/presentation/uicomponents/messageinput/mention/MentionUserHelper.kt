@@ -74,7 +74,7 @@ object MentionUserHelper {
 
     fun buildOnlyNamesWithMentionedUsers(body: String, metaData: String?,
                                          mentionUsers: Array<User>?): SpannableString {
-        metaData ?: return SpannableString(body)
+        if (metaData.isNullOrBlank()) return SpannableString(body)
         return try {
             val empMapType = object : TypeToken<Map<String, MentionUserMetaDataPayLoad>>() {}.type
             val data: Map<String, MentionUserMetaDataPayLoad> = Gson().fromJson(metaData, empMapType)

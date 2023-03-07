@@ -7,5 +7,5 @@ sealed class ReactionItem {
     data class Reaction(val reaction: SceytReaction,
                         val message: SceytMessage) : ReactionItem()
 
-    data class AddItem(val message: SceytMessage) : ReactionItem()
+    data class Other(val message: SceytMessage) : ReactionItem()
 }

@@ -174,6 +174,13 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         requestLayout()
     }
 
+    fun setSmileText(smileText: String, disableCount: Boolean) {
+        smileTitle = smileText
+        if (disableCount) countTitle = ""
+        init()
+        requestLayout()
+    }
+
     fun setCountAndSmile(count: Number, smileText: String) {
         countTitle = count.toString()
         smileTitle = smileText

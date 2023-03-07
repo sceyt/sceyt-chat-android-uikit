@@ -473,7 +473,7 @@ class MessageListViewModel(
                 message.selfReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user.id == SceytKitClient.myId
                 } != null), message)
-        }?.sortedByDescending { it.reaction.score }
+        }
     }
 
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {

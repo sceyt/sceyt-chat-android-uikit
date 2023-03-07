@@ -61,7 +61,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         val reactions = SceytKitConfig.fastReactions.map {
             val containsSelf = message.selfReactions?.map { reaction -> reaction.key }?.contains(it) == true
             ReactionItem.Reaction(SceytReaction(it, containsSelf = containsSelf), message)
-        } + ReactionItem.AddItem(message)
+        } + ReactionItem.Other(message)
         val adapter = PopupReactionsAdapter(reactions, clickListener)
         binding.rvEmoji.adapter = adapter
         binding.rvEmoji.layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_animation_linear_scale).apply {

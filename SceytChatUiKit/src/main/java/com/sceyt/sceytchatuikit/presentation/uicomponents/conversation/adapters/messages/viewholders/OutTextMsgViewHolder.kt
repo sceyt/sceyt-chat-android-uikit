@@ -57,7 +57,7 @@ class OutTextMsgViewHolder(
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
+                    setOrUpdateReactions(item, rvReactions, viewPool, layoutDetails)
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
