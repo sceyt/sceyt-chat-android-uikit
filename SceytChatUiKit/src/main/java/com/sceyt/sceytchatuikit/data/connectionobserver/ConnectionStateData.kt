@@ -1,11 +1,11 @@
 package com.sceyt.sceytchatuikit.data.connectionobserver
 
-import com.sceyt.chat.models.Status
-import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.ConnectionState
+import com.sceyt.chat.models.SceytException
 
 data class ConnectionStateData(
-        val state: Types.ConnectState,
-        val status: Status? = null
+        val state: ConnectionState?,
+        val exception: SceytException? = null
 ) {
     override fun equals(other: Any?): Boolean {
         return other is ConnectionStateData && state == other.state
