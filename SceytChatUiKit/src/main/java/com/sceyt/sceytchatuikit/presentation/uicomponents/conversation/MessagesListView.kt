@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -184,7 +186,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAddClick() {
                 onAddReactionClick(view, message)
             }
-        }).also { reactionsPopupWindow = it }
+        }).also {
+            reactionsPopupWindow = it
+            it.setOnDismissListener {
+                Handler(Looper.getMainLooper()).postDelayed({ reactionsPopupWindow = null }, 100)
+            }
+        }
     }
 
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
