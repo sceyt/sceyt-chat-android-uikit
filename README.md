@@ -1,7 +1,10 @@
-# SceytChat Android SDK
+# SceytChat Android UIKit
 
-The SceytChat Android SDK provides developers with a powerful and flexible chat interface that can be easily integrated into Android apps. With SceytChat, you can easily add one-to-one and group chat functionality to your app. It comes packed with a wide range of features, including message threading, media and file sharing, reactions, user mentions, message search, user and channel blocking, message forwarding and replies, and many more.
+Sceyt Chat UIKit is a collection of customizable UI components that allows developers to quickly and easily create beautiful and functional chat interfaces for their messaging applications. The UIKit includes a wide range of components, such as message bubbles, avatars, message input fields, and more.
 
+With Sceyt Chat UIKit, developers can customize the look and feel of their chat interface to match the branding and design of their messaging application. The components are built to be easy to use and integrate seamlessly with the Sceyt Chat SDK for Android.
+
+In addition to the UI components, the Sceyt Chat UIKit also includes pre-built functionality such as typing indicators, read receipts, message reactions and many more. This helps to streamline the development process, allowing developers to focus on building a great user experience rather than on implementing basic chat functionality.
 ## Table of contents
 
 * [Requirements](#requirements)
@@ -35,7 +38,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```python
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-sdk:1.0.0'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.0.0'
 }
 ```
 
@@ -44,92 +47,38 @@ dependencies {
 4. Add the following permissions to your app's AndroidManifest.xml file:
 
 ```php
-<uses-permission android:name="android.permission.INTERNET"/>
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+ <uses-permission android:name="android.permission.INTERNET" />
+ <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+ <uses-permission android:name="android.permission.CAMERA" />
+ <uses-permission android:name="android.permission.RECORD_AUDIO" />
+ <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
 
 ## Usage
 
-1. To use the SceytChat Android SDK, you will need to initialize it with your Sceyt application credentials. The initialization requires the following parameters:
+1. To use the SceytChat Android UIKit, you will need to initialize it with your Sceyt application credentials. The initialization requires the following parameters:
 
-    `apiUrl:` The base URL of the Sceyt chat API.
+    `host:` The base URL of the Sceyt chat API.
 
     `appId:` The ID of your Sceyt chat application.
 
-    `context:` The Android context of your application.
+    `clientId:` The ID of current device.
+   
+    `enableDatabase:` Enables UIKit database persistence.
 
 ```kotlin
     class MyApplication : Application() {
     
         override fun onCreate() {
-            super.onCreate()
-    
-            // Initialize the SceytChat SDK with your credentials
-            val apiUrl = "https://us-ohio-api.sceyt.com" // replace with your Sceyt application API URL
-            val appId = "8lwox2ge93" // replace with your Sceyt application ID
-    
-            var chatClient = ChatClient.setup(apiUrl, appId, applicationContext)
+           super.onCreate()
+           
+           chatClient = SceytUIKitInitializer(this).initialize(
+                   clientId = UUID.randomUUID().toString(),
+                   appId = "8lwox2ge93",
+                   host = "https://us-ohio-api.sceyt.com",
+                   enableDatabase = true)
         }
     }
-```
-2. After calling the setup method on the ChatClient object, you can register a ClientListener to be notified when certain events occur,
-   such as when the connection to Sceyt is successful, 
-   where "listenerName" is used to identify the listener.
-   For example:
-
-```kotlin
-    chatClient.addClientListener("listenerName", object : ClientListener {
-    
-        override fun onChangedConnectStatus(connectState: Types.ConnectState, status: Status) {
-            // Called when the connection status changes.
-        }
-    
-        override fun onTokenWillExpire(expireTime: Long) {
-            // Called when the token is about to expire.
-        }
-    
-        override fun onTokenExpired() {
-            // Called when the token has expired.
-        }
-    })
-```
-3. You can then use the connect method of the ChatClient instance to connect to the Sceyt chat server, where the token is a JWT token
-   signed with your application's private key. Sceyt verifies the token by the public key of the application.
-
-```kotlin
-  chatClient.connect(token)
-```
-
-4. After connecting to Sceyt, you can create, for example,
-   a direct channel with a user using the CreateDirectChannelRequest builder and a User object with the user's ID.
-   Specify a ChannelCallback to handle the results. Here's an example:
-
-```kotlin    
-    val userId = "someUserId"
-    
-    CreateDirectChannelRequest(User(userId)).execute(object : ChannelCallback {
-    
-        override fun onResult(channel: Channel) {
-            // The channel has been created successfully.
-        }
-    
-        override fun onError(e: SceytException) {
-            // An error occurred while creating the channel.
-        }
-    })
-```
-
-5. Now you can send a message to the Created channel using its ID, like this:
-
-```kotlin
-    ChannelOperator.build(channel.id).sendMessage(message, object : MessageCallback {
-        override fun onResult(message: Message) {
-            // The message has been sent successfully.
-        }
-        override fun onError(e: SceytException?) {
-            // An error occurred while sending the message.
-        }
-    })
 ```
 
 ## Proguard
@@ -149,4 +98,4 @@ These rules will ensure that all classes in the specified packages and their sub
 
 ## License
 
-See the [LICENSE](LICENSE) file for details.
+[MIT License](LICENSE).
