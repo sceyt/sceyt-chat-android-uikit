@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.connectionlogic
 
-import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
@@ -22,12 +22,12 @@ internal class PersistenceConnectionLogicImpl(
         private val usersRepository: UsersRepository) : PersistenceConnectionLogic, CoroutineScope {
 
     init {
-        if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected)
-            launch { onChangedConnectStatus(ConnectionStateData(Types.ConnectState.StateConnected)) }
+        if (ConnectionEventsObserver.connectionState == ConnectionState.StateConnected)
+            launch { onChangedConnectStatus(ConnectionStateData(ConnectionState.StateConnected)) }
     }
 
     override suspend fun onChangedConnectStatus(state: ConnectionStateData) {
-        if (state.state == Types.ConnectState.StateConnected) {
+        if (state.state == ConnectionState.StateConnected) {
             preference.setUserId(ClientWrapper.currentUser?.id)
             insertCurrentUser()
             SceytPresenceChecker.startPresenceCheck()

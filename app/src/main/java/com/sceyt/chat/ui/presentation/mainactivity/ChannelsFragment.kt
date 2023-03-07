@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.connectivity_change.NetworkMonitor
-import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.FragmentChannelsBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
@@ -77,7 +77,7 @@ class ChannelsFragment : Fragment() {
 
         lifecycleScope.launch {
             ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect {
-                setupConnectionStatus(it.state)
+                it.state?.let { it1 -> setupConnectionStatus(it1) }
             }
         }
 
@@ -126,15 +126,15 @@ class ChannelsFragment : Fragment() {
         }
     }
 
-    private fun setupConnectionStatus(status: Types.ConnectState) {
+    private fun setupConnectionStatus(state: ConnectionState) {
         val title = if (!NetworkMonitor.isOnline())
             getString(R.string.waiting_for_network_title)
-        else when (status) {
-            Types.ConnectState.StateFailed -> getString(R.string.connecting_title)
-            Types.ConnectState.StateDisconnect -> getString(R.string.connecting_title)
-            Types.ConnectState.StateReconnecting,
-            Types.ConnectState.StateConnecting -> getString(R.string.connecting_title)
-            Types.ConnectState.StateConnected -> getString(R.string.channels)
+        else when (state) {
+            ConnectionState.StateFailed -> getString(R.string.connecting_title)
+            ConnectionState.StateDisconnected -> getString(R.string.connecting_title)
+            ConnectionState.StateReconnecting,
+            ConnectionState.StateConnecting -> getString(R.string.connecting_title)
+            ConnectionState.StateConnected -> getString(R.string.channels)
         }
         binding.title.text = title
     }
