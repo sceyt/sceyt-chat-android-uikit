@@ -15,8 +15,8 @@
     <item name="sceyt_delete_message" type="id" />
     <item name="sceyt_copy_message" type="id" />
     <item name="sceyt_react" type="id" />
-    <item name="sceyt_replay" type="id" />
-    <item name="sceyt_replay_in_thread" type="id" />
+    <item name="sceyt_reply" type="id" />
+    <item name="sceyt_reply_in_thread" type="id" />
 
     <!-- Reaction popup ids-->
     <item name="sceyt_remove" type="id" />

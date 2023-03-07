@@ -6,7 +6,9 @@ import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 
 class MessageConverter {
     @TypeConverter
@@ -22,6 +24,18 @@ class MessageConverter {
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
 
     @TypeConverter
+    fun selfMarkerTypeEnumToTnt(value: SelfMarkerTypeEnum) = value.ordinal
+
+    @TypeConverter
+    fun intToSelfMarkerTypeEnum(value: Int) = value.toEnum<SelfMarkerTypeEnum>()
+
+    @TypeConverter
+    fun transferStateEnumToTnt(value: TransferState?) = value?.ordinal
+
+    @TypeConverter
+    fun intToTransferStateTypeEnum(value: Int?) = value?.toEnum<TransferState>()
+
+    @TypeConverter
     fun stringToMarkerCount(json: String?): List<MarkerCount>? {
         val type = object : TypeToken<List<MarkerCount>?>() {}.type
         return Gson().fromJson(json, type)
@@ -33,7 +47,7 @@ class MessageConverter {
             return null
 
         val gson = Gson()
-        val type = object : TypeToken<List<MarkerCount>?>() {}.type
+        val type = object : TypeToken<List<MarkerCount>>() {}.type
         return gson.toJson(obj, type)
     }
 }

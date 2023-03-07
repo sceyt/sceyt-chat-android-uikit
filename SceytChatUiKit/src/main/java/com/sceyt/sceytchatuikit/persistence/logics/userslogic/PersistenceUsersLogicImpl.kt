@@ -1,19 +1,21 @@
 package com.sceyt.sceytchatuikit.persistence.logics.userslogic
 
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 internal class PersistenceUsersLogicImpl(
         private val userDao: UserDao,
@@ -26,14 +28,16 @@ internal class PersistenceUsersLogicImpl(
         val response = userRepository.getSceytUsersByIds(ids)
 
         if (response is SceytResponse.Success) {
-            response.data?.let {
-                it.forEach { user ->
-                    userDao.updateUser(user.toUserEntity())
-                }
+            response.data?.let { users ->
+                userDao.updateUsers(users.map { it.toUserEntity() })
             }
         }
 
         return response
+    }
+
+    override suspend fun getUserDbById(id: String): User? {
+        return userDao.getUserById(id)?.toUser()
     }
 
     override suspend fun getCurrentUser(): User? {
@@ -44,6 +48,12 @@ internal class PersistenceUsersLogicImpl(
         return preference.getUserId()?.let {
             userDao.getUserById(it)?.toUser()
         } ?: clientUser
+    }
+
+    override fun getCurrentUserAsFlow(): Flow<User> {
+        (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
+            return userDao.getUserByIdAsFlow(it).filterNotNull().map { entity -> entity.toUser() }
+        } ?: return emptyFlow()
     }
 
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
@@ -68,13 +78,30 @@ internal class PersistenceUsersLogicImpl(
         val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
             ClientWrapper.setPresence(presence, status) {
                 if (it.isOk)
-                    continuation.resume(SceytResponse.Success(true))
-                else continuation.resume(SceytResponse.Error(it.error))
+                    continuation.safeResume(SceytResponse.Success(true))
+                else continuation.safeResume(SceytResponse.Error(it.error))
             }
         }
 
         if (response is SceytResponse.Success)
             preference.getUserId()?.let { userDao.updateUserStatus(it, status) }
+
+        return response
+    }
+
+    override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
+        val status = ClientWrapper.currentUser.presence.status
+        val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
+            ClientWrapper.setPresence(PresenceState.Online, if (status.isNullOrBlank())
+                SceytKitConfig.presenceStatusText else status) {
+                if (it.isOk) {
+                    continuation.safeResume(SceytResponse.Success(true))
+                } else continuation.safeResume(SceytResponse.Error(it.error))
+            }
+        }
+
+        if (response is SceytResponse.Success)
+            updateCurrentUser()
 
         return response
     }
@@ -89,5 +116,13 @@ internal class PersistenceUsersLogicImpl(
 
     override suspend fun unMuteNotifications(): SceytResponse<Boolean> {
         return profileRepo.unMuteNotifications()
+    }
+
+    private suspend fun updateCurrentUser() {
+        (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
+            val response = userRepository.getSceytUserById(it)
+            if (response is SceytResponse.Success)
+                response.data?.toUserEntity()?.let { entity -> userDao.insertUser(entity) }
+        }
     }
 }

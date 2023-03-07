@@ -1,131 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.appbar.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="?android:attr/actionBarSize"
-    android:animateLayoutChanges="true">
+    android:layout_height="wrap_content"
+    android:background="@color/sceyt_color_bg">
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icBack"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="12dp"
-        android:background="?selectableItemBackgroundBorderless"
-        android:padding="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_arrow_back" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutToolbar"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="25dp"
-        android:layout_marginEnd="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/icBack"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
-            android:id="@+id/avatar"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintHeight_percent=".75"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:fontFamily="@font/roboto_medium"
-            android:singleLine="true"
-            android:textColor="@color/sceyt_color_text_themed"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toTopOf="@+id/layoutSubTitle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/avatar"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed"
-            tools:text="Title" />
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:contentInsetStart="0dp"
+        android:contentInsetLeft="0dp"
+        android:contentInsetEnd="0dp"
+        android:contentInsetRight="0dp"
+        app:contentInsetEnd="0dp"
+        app:contentInsetLeft="0dp"
+        app:contentInsetRight="0dp"
+        app:contentInsetStart="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layoutSubTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:animateLayoutChanges="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/title"
-            app:layout_constraintStart_toEndOf="@+id/avatar"
-            app:layout_constraintStart_toStartOf="@+id/title"
-            app:layout_constraintTop_toBottomOf="@+id/title">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true">
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/subTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:textColor="@color/sceyt_color_gray_400"
-                android:textSize="13sp"
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icBack"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="12dp"
+                android:background="?selectableItemBackgroundBorderless"
+                android:padding="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="SubTitle" />
+                app:srcCompat="@drawable/sceyt_ic_arrow_back" />
 
-            <TextView
-                android:id="@+id/tvTyping"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="middle"
-                android:singleLine="true"
-                android:text="@string/sceyt_typing"
-                android:textColor="@color/sceyt_color_gray_400"
-                android:textSize="13sp"
-                app:layout_constrainedWidth="true"
-                app:layout_constraintEnd_toStartOf="@+id/lottieTyping"
-                app:layout_constraintHorizontal_bias="0"
-                app:layout_constraintHorizontal_chainStyle="packed"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/lottieTyping"
-                android:layout_width="20dp"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layoutToolbar"
+                android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_marginStart="6dp"
-                android:paddingTop="3dp"
-                app:layout_constraintBottom_toBottomOf="@+id/tvTyping"
+                android:background="?selectableItemBackground"
+                android:paddingStart="16dp"
+                android:paddingEnd="12dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/tvTyping"
-                app:layout_constraintTop_toTopOf="@+id/tvTyping"
-                app:lottie_autoPlay="true"
-                app:lottie_loop="true"
-                app:lottie_rawRes="@raw/sceyt_typing" />
+                app:layout_constraintStart_toEndOf="@+id/icBack"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.constraintlayout.widget.Group
-                android:id="@+id/groupTyping"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:constraint_referenced_ids="lottieTyping,tvTyping" />
+                <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+                    android:id="@+id/avatar"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:background="?selectableItemBackgroundBorderless"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintHeight_percent=".75"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="12dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:singleLine="true"
+                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toTopOf="@+id/layoutSubTitle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/avatar"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    tools:text="Title" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layoutSubTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/title"
+                    app:layout_constraintStart_toEndOf="@+id/avatar"
+                    app:layout_constraintStart_toStartOf="@+id/title"
+                    app:layout_constraintTop_toBottomOf="@+id/title">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/subTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="marquee"
+                        android:freezesText="true"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:singleLine="true"
+                        android:textColor="@color/sceyt_color_gray_400"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="SubTitle" />
+
+                    <TextView
+                        android:id="@+id/tvTyping"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="middle"
+                        android:singleLine="true"
+                        android:text="@string/sceyt_typing"
+                        android:textColor="@color/sceyt_color_gray_400"
+                        android:textSize="13sp"
+                        app:layout_constrainedWidth="true"
+                        app:layout_constraintEnd_toStartOf="@+id/lottieTyping"
+                        app:layout_constraintHorizontal_bias="0"
+                        app:layout_constraintHorizontal_chainStyle="packed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.airbnb.lottie.LottieAnimationView
+                        android:id="@+id/lottieTyping"
+                        android:layout_width="20dp"
+                        android:layout_height="0dp"
+                        android:layout_marginStart="6dp"
+                        android:paddingTop="3dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/tvTyping"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toEndOf="@+id/tvTyping"
+                        app:layout_constraintTop_toTopOf="@+id/tvTyping"
+                        app:lottie_autoPlay="true"
+                        app:lottie_loop="true"
+                        app:lottie_rawRes="@raw/sceyt_typing" />
+
+                    <androidx.constraintlayout.widget.Group
+                        android:id="@+id/groupTyping"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        app:constraint_referenced_ids="lottieTyping,tvTyping" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.appcompat.widget.Toolbar>
 
     <View
-        android:id="@+id/view2"
+        android:id="@+id/toolbarUnderline"
         android:layout_width="match_parent"
-        android:layout_height=".5dp"
+        android:layout_height="1dp"
         android:background="@color/sceyt_color_divider"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.appbar.AppBarLayout>
+

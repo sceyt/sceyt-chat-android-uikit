@@ -3,22 +3,18 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
-import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
-    private val preference: SceytSharedPreference by inject()
-    private val sceytDatabase: SceytDatabase by inject()
     private val usersMiddleWare: PersistenceUsersMiddleWare by inject()
 
     private val _currentUserLiveData = MutableLiveData<User>()
@@ -35,6 +31,12 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val _editProfileErrorLiveData = MutableLiveData<String?>()
     val editProfileErrorLiveData: LiveData<String?> = _editProfileErrorLiveData
+
+    private val _logOutLiveData = MutableLiveData<Boolean>()
+    val logOutLiveData: LiveData<Boolean> = _logOutLiveData
+
+    private val _logOutErrorLiveData = MutableLiveData<String>()
+    val logOutErrorLiveData: LiveData<String> = _logOutErrorLiveData
 
     fun getCurrentUser() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -102,9 +104,12 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     fun logout() {
-        ChatClient.getClient().disconnect()
-        preference.clear()
-        sceytDatabase.clearAllTables()
-        //todo unregister push token
+        viewModelScope.launch(Dispatchers.IO) {
+            SceytKitClient.logOut { success, errorMessage ->
+                if (success)
+                    _logOutLiveData.postValue(true)
+                else _logOutErrorLiveData.postValue(errorMessage)
+            }
+        }
     }
 }

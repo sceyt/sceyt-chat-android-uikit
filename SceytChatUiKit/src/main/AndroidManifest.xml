@@ -1,19 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sceyt.sceytchatuikit">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <application android:requestLegacyExternalStorage="true">
+    <application
+        android:allowBackup="false"
+        android:requestLegacyExternalStorage="true">
 
         <activity
             android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".presentation.uicomponents.mediaview.MediaActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/PreviewTheme" />
+
+        <activity
+            android:name=".presentation.uicomponents.forward.SceytForwardActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/DefaultFontTheme" />
+
+        <activity
+            android:name=".presentation.uicomponents.share.SceytShareActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/DefaultFontTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -24,6 +40,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <service
+            android:name=".services.SceytFirebaseMessageReceiver"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
     </application>
 

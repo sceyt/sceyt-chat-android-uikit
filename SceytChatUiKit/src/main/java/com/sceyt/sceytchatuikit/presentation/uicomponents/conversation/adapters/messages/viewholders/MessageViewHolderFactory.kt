@@ -6,36 +6,42 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
-import com.sceyt.sceytchatuikit.extensions.isLink
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 open class MessageViewHolderFactory(context: Context) {
 
-    private val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
-    private val viewPoolReactions = RecyclerView.RecycledViewPool()
-    private val viewPoolFiles = RecyclerView.RecycledViewPool()
+    protected val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
+    protected val viewPoolReactions = RecyclerView.RecycledViewPool()
+    protected val viewPoolFiles = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
-    private var displayedListener: ((SceytMessage) -> Unit)? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    private var displayedListener: ((MessageListItem) -> Unit)? = null
+    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return when (viewType) {
-            MessageTypeEnum.IncText.ordinal -> createIncTextMsgViewHolder(parent)
-            MessageTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(parent)
-            MessageTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(parent)
-            MessageTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
-            MessageTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
-            MessageTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
-            MessageTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
-            MessageTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
-            MessageTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
-            MessageTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
+            MessageViewTypeEnum.IncText.ordinal -> createIncTextMsgViewHolder(parent)
+            MessageViewTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(parent)
+            MessageViewTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(parent)
+            MessageViewTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
+            MessageViewTypeEnum.IncVoice.ordinal -> createIncVoiceMsgViewHolder(parent)
+            MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(parent)
+            MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
+            MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
+            MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
+            MessageViewTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
+            MessageViewTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
+            MessageViewTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
+            MessageViewTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
     }
@@ -64,22 +70,35 @@ open class MessageViewHolderFactory(context: Context) {
             viewPoolReactions, linkPreview, clickListeners, userNameBuilder)
     }
 
+    open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncVoiceMsgViewHolder(
+            SceytItemIncVoiceBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback,
+        )
+    }
+
+    open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutVoiceMsgViewHolder(
+            SceytItemOutVoiceBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncFilesMsgViewHolder(
             SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder)
+            viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutFilesMsgViewHolder(
             SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder)
+            viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncDeletedMsgViewHolder(
             SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
-            userNameBuilder)
+            userNameBuilder, displayedListener)
     }
 
     open fun createOutDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -93,6 +112,12 @@ open class MessageViewHolderFactory(context: Context) {
         )
     }
 
+    open fun createUnreadMessagesViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return UnreadMessagesSeparatorViewHolder(
+            SceytItemUnreadMessagesSeparatorBinding.inflate(layoutInflater, parent, false)
+        )
+    }
+
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return LoadingMoreMessagesViewHolder(
             SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
@@ -102,22 +127,26 @@ open class MessageViewHolderFactory(context: Context) {
     open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
             is MessageListItem.MessageItem -> getMessageType(item.message)
-            is MessageListItem.DateSeparatorItem -> return MessageTypeEnum.DateSeparator.ordinal
-            is MessageListItem.LoadingMoreItem -> return MessageTypeEnum.Loading.ordinal
+            is MessageListItem.DateSeparatorItem -> MessageViewTypeEnum.DateSeparator.ordinal
+            is MessageListItem.UnreadMessagesSeparatorItem -> MessageViewTypeEnum.UnreadMessagesSeparator.ordinal
+            is MessageListItem.LoadingPrevItem -> MessageViewTypeEnum.Loading.ordinal
+            is MessageListItem.LoadingNextItem -> MessageViewTypeEnum.Loading.ordinal
         }
     }
 
     open fun getMessageType(message: SceytMessage): Int {
         val inc = message.incoming
         val type = when {
-            message.state == MessageState.Deleted -> if (inc) MessageTypeEnum.IncDeleted else MessageTypeEnum.OutDeleted
-            message.attachments.isNullOrEmpty() -> {
-                if (message.body.isLink())
-                    if (inc) MessageTypeEnum.IncLink else MessageTypeEnum.OutLink
-                else
-                    if (inc) MessageTypeEnum.IncText else MessageTypeEnum.OutText
+            message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
+            !message.attachments.isNullOrEmpty() -> {
+                val attachment = message.attachments?.getOrNull(0)
+                when (attachment?.type) {
+                    AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
+                    AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
+                }
             }
-            else -> if (inc) MessageTypeEnum.IncFiles else MessageTypeEnum.OutFiles
+            else -> if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
         }
         return type.ordinal
     }
@@ -126,7 +155,7 @@ open class MessageViewHolderFactory(context: Context) {
         clickListeners.setListener(listener)
     }
 
-    fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
+    fun setMessageDisplayedListener(listener: (MessageListItem) -> Unit) {
         displayedListener = listener
     }
 
@@ -134,20 +163,31 @@ open class MessageViewHolderFactory(context: Context) {
         userNameBuilder = builder
     }
 
+    fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
+        needMediaDataCallback = callback
+    }
+
+    protected fun getNeedMediaDataCallback() = needMediaDataCallback
+
     protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners
 
     protected fun getDisplayedListener() = displayedListener
 
-    enum class MessageTypeEnum {
+    protected fun getUserNameBuilder() = userNameBuilder
+
+    enum class MessageViewTypeEnum {
         IncText,
         OutText,
         IncLink,
         OutLink,
         IncDeleted,
         OutDeleted,
+        IncVoice,
+        OutVoice,
         IncFiles,
         OutFiles,
         DateSeparator,
+        UnreadMessagesSeparator,
         Loading
     }
 }

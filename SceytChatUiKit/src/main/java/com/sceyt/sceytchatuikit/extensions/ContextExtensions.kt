@@ -1,10 +1,7 @@
 package com.sceyt.sceytchatuikit.extensions
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.Intent
+import android.content.*
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
@@ -15,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.webkit.URLUtil
 import android.widget.EditText
@@ -25,16 +23,18 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.security.AccessController.getContext
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
+
+fun View.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(context, colorId)
 
 fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
     val res = resources
@@ -58,7 +58,14 @@ fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Bool
     return createConfigurationContext(configuration)?.getCompatDrawable(drawableId)
 }
 
-fun Context.getCompatDrawable(@DrawableRes drawableId: Int) = ContextCompat.getDrawable(this, drawableId)
+fun Context.getCompatDrawable(@DrawableRes drawableId: Int): Drawable? {
+    return try {
+        ContextCompat.getDrawable(this, drawableId)
+    } catch (e: Exception) {
+        Log.i(TAG, e.message.toString())
+        null
+    }
+}
 
 fun Context.asComponentActivity(): ComponentActivity {
     return when (this) {
@@ -72,6 +79,18 @@ fun Context.asComponentActivity(): ComponentActivity {
     }
 }
 
+fun Context.maybeComponentActivity(): ComponentActivity? {
+    return when (this) {
+        is ComponentActivity -> return this
+        is ContextWrapper -> {
+            if (baseContext is ComponentActivity)
+                baseContext as ComponentActivity
+            else null
+        }
+        else -> null
+    }
+}
+
 fun Context.asActivity(): Activity {
     return when (this) {
         is Activity -> return this
@@ -81,6 +100,18 @@ fun Context.asActivity(): Activity {
             else throw RuntimeException("Context should be Activity but was $this")
         }
         else -> throw RuntimeException("Context should be Activity but was $this")
+    }
+}
+
+fun Context.asFragmentActivity(): FragmentActivity {
+    return when (this) {
+        is FragmentActivity -> return this
+        is ContextWrapper -> {
+            if (baseContext is FragmentActivity)
+                baseContext as FragmentActivity
+            else throw RuntimeException("Context should be FragmentActivity but was $this")
+        }
+        else -> throw RuntimeException("Context should be FragmentActivity but was $this")
     }
 }
 
@@ -145,11 +176,10 @@ fun Context.hideKeyboard(view: EditText?) {
 }
 
 fun Context.setClipboard(text: String) {
-    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-    val clip = ClipData.newPlainText("Copied Text", text)
-    clipboard.setPrimaryClip(clip)
+    val clipboard = ContextCompat.getSystemService(this, ClipboardManager::class.java)
+    val clip = ClipData.newPlainText("label", text)
+    clipboard?.setPrimaryClip(clip)
 }
-
 
 fun Context.isNightTheme(): Boolean {
     return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

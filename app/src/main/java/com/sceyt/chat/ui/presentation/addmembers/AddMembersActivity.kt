@@ -14,10 +14,12 @@ import com.sceyt.chat.ui.presentation.addmembers.adapters.SelectedUsersAdapter
 import com.sceyt.chat.ui.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.ui.presentation.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
 import com.sceyt.chat.ui.presentation.addmembers.viewmodel.UsersViewModel
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class AddMembersActivity : AppCompatActivity() {
@@ -26,6 +28,7 @@ class AddMembersActivity : AppCompatActivity() {
     private lateinit var usersAdapter: SelectableUsersAdapter
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
     private var selectedUsers = arrayListOf<SceytMember>()
+    private var memberType: MemberTypeEnum = MemberTypeEnum.Member
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,10 +39,18 @@ class AddMembersActivity : AppCompatActivity() {
 
         statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
+        getIntentExtra()
         initViewModel()
         initViews()
+        initStringsWithMemberType()
         setupUsersList(arrayListOf())
         viewModel.loadUsers(isLoadMore = false)
+    }
+
+    private fun getIntentExtra() {
+        intent?.getIntExtra(MEMBER_TYPE, memberType.ordinal)?.let { ordinal ->
+            memberType = MemberTypeEnum.values().getOrNull(ordinal) ?: memberType
+        }
     }
 
     private fun initViewModel() {
@@ -60,7 +71,7 @@ class AddMembersActivity : AppCompatActivity() {
             viewModel.loadUsers(query, false)
         }
 
-        binding.toolbar.setBackClickListener {
+        binding.toolbar.setNavigationIconClickListener {
             super.onBackPressed()
         }
 
@@ -73,6 +84,16 @@ class AddMembersActivity : AppCompatActivity() {
                 intent.putParcelableArrayListExtra(SELECTED_USERS, selectedUsers)
                 setResult(RESULT_OK, intent)
                 finish()
+            }
+        }
+    }
+
+    private fun initStringsWithMemberType() {
+        with(binding) {
+            when (memberType) {
+                MemberTypeEnum.Member -> toolbar.setTitle(getString(R.string.sceyt_add_members))
+                MemberTypeEnum.Subscriber -> toolbar.setTitle(getString(R.string.sceyt_add_subscribers))
+                MemberTypeEnum.Admin -> toolbar.setTitle(getString(R.string.sceyt_add_admins))
             }
         }
     }
@@ -95,7 +116,7 @@ class AddMembersActivity : AppCompatActivity() {
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (recyclerView.isLastItemDisplaying() && viewModel.loadingItems.get().not() && viewModel.hasNext)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
                         viewModel.loadUsers(binding.toolbar.getQuery(), true)
                 }
             })
@@ -154,9 +175,12 @@ class AddMembersActivity : AppCompatActivity() {
 
     companion object {
         const val SELECTED_USERS = "selectedUsers"
+        const val MEMBER_TYPE = "memberType"
 
-        fun newInstance(context: Context): Intent {
-            return Intent(context, AddMembersActivity::class.java)
+        fun newInstance(context: Context, memberType: MemberTypeEnum = MemberTypeEnum.Member): Intent {
+            return Intent(context, AddMembersActivity::class.java).apply {
+                putExtra(MEMBER_TYPE, memberType.ordinal)
+            }
         }
     }
 }

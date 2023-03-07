@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.settings.Settings
@@ -9,14 +10,14 @@ import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chat.sceyt_callbacks.UserCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 internal class ProfileRepositoryImpl : ProfileRepository {
 
     override suspend fun updateProfile(firstName: String?, lastName: String?, avatarUri: String?): SceytResponse<User> {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             User.setProfileRequest().apply {
                 avatarUri?.let { uri ->
                     setAvatar(uri)
@@ -25,11 +26,12 @@ internal class ProfileRepositoryImpl : ProfileRepository {
                 setLastName(lastName ?: "")
             }.execute(object : UserCallback {
                 override fun onResult(user: User) {
-                    continuation.resume(SceytResponse.Success(user))
+                    continuation.safeResume(SceytResponse.Success(user))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "updateProfile error: ${e?.message}")
                 }
             })
         }
@@ -39,11 +41,12 @@ internal class ProfileRepositoryImpl : ProfileRepository {
         return suspendCancellableCoroutine { continuation ->
             ChatClient.getClient().unMute(object : ActionCallback {
                 override fun onSuccess() {
-                    continuation.resume(SceytResponse.Success(false))
+                    continuation.safeResume(SceytResponse.Success(false))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "unMuteNotifications error: ${e?.message}")
                 }
             })
         }
@@ -53,11 +56,12 @@ internal class ProfileRepositoryImpl : ProfileRepository {
         return suspendCancellableCoroutine { continuation ->
             ChatClient.getClient().mute(muteUntil, object : ActionCallback {
                 override fun onSuccess() {
-                    continuation.resume(SceytResponse.Success(true))
+                    continuation.safeResume(SceytResponse.Success(true))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "muteNotifications error: ${e?.message}")
                 }
             })
         }
@@ -67,8 +71,8 @@ internal class ProfileRepositoryImpl : ProfileRepository {
         return suspendCancellableCoroutine { continuation ->
             ChatClient.getClient().getSettings {
                 if (it != null)
-                    continuation.resume(SceytResponse.Success(it))
-                else continuation.resume(SceytResponse.Error())
+                    continuation.safeResume(SceytResponse.Success(it))
+                else continuation.safeResume(SceytResponse.Error())
             }
         }
     }
@@ -83,11 +87,12 @@ internal class ProfileRepositoryImpl : ProfileRepository {
             }, object : UrlCallback {
 
                 override fun onResult(url: String) {
-                    continuation.resume(SceytResponse.Success(url))
+                    continuation.safeResume(SceytResponse.Success(url))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "uploadAvatar error: ${e?.message}")
                 }
             })
         }

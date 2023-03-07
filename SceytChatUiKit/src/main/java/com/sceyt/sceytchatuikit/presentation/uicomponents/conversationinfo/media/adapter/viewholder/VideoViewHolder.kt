@@ -1,18 +1,22 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
+import android.util.Size
 import androidx.core.view.isVisible
-import com.bumptech.glide.Glide
-import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
-import com.sceyt.sceytchatuikit.databinding.ItemChannelVideoBinding
-import com.sceyt.sceytchatuikit.extensions.glideCustomTarget
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import java.io.File
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
-class VideoViewHolder(private val binding: ItemChannelVideoBinding,
-                      private val clickListeners: AttachmentClickListenersImpl) : BaseFileViewHolder(binding.root) {
+class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
+                      private val clickListeners: AttachmentClickListenersImpl,
+                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
+    : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.root.setOnClickListener {
@@ -20,57 +24,73 @@ class VideoViewHolder(private val binding: ItemChannelVideoBinding,
         }
     }
 
-    override fun bind(item: FileListItem) {
-        with(binding) {
-            videoViewController.setImageThumb(null)
-            parentLayout.clipToOutline = true
-            videoView.isVisible = false
-            binding.videoViewController.showPlayPauseButtons(!item.fileLoadData.loading)
-        }
+    override fun bind(item: ChannelFileItem) {
         super.bind(item)
+        setVideoDuration()
+
+        setListener()
+
+        viewHolderHelper.transferData?.let {
+            updateState(it, true)
+            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+        }
+
+        if (fileItem.thumbPath.isNullOrBlank())
+            requestThumb()
     }
 
-    private fun ItemChannelVideoBinding.updateDownloadState(data: FileLoadData, file: File?) {
-        groupLoading.isVisible = data.loading
-        binding.videoViewController.showPlayPauseButtons(!data.loading)
-        if (data.loading) {
-            loadProgress.progress = data.progressPercent.toInt()
-            videoViewController.setImageThumb(null)
-        }
-        if (file != null) {
-            val mediaPath = file.path
-            initializePlayer(mediaPath)
+    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
-            with(binding) {
-                Glide.with(itemView.context)
-                    .load(file)
-                    .override(videoView.width, videoView.height)
-                    .into(glideCustomTarget {
-                        if (it != null) {
-                            videoViewController.setImageThumb(it)
-                        }
-                    })
+        when (data.state) {
+            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+                viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
+            }
+            TransferState.PendingDownload -> {
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                viewHolderHelper.loadBlurThumb(imageView = binding.image)
+            }
+            TransferState.Downloading -> {
+                if (isOnBind)
+                    viewHolderHelper.loadBlurThumb(imageView = binding.image)
+            }
+            TransferState.Uploading -> {
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
+            }
+            TransferState.Downloaded, TransferState.Uploaded -> {
+                viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
+            }
+            TransferState.PauseDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.image)
+            }
+            TransferState.ErrorDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.image)
+            }
+            TransferState.FilePathChanged -> {
+                requestThumb()
+            }
+            TransferState.ThumbLoaded -> {
+                viewHolderHelper.loadThumb(data.filePath, binding.image)
             }
         }
     }
 
-    private fun ItemChannelVideoBinding.updateUploadState(data: FileLoadData) {
-        groupLoading.isVisible = data.loading
-        binding.videoViewController.showPlayPauseButtons(!data.loading)
-        if (data.loading)
-            loadProgress.progress = data.progressPercent.toInt()
+    private fun setVideoDuration() {
+        with(binding.tvDuration) {
+            fileItem.duration?.let {
+                text = DateTimeUtil.secondsToTime(it)
+                isVisible = true
+            } ?: run { isVisible = false }
+        }
     }
 
-    private fun initializePlayer(mediaPath: String) {
-        binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
-        (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
-    }
 
-    override fun updateUploadingState(data: FileLoadData) {
-        binding.updateUploadState(data)
-    }
+    override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
-    override fun updateDownloadingState(data: FileLoadData, file: File?) {
-        binding.updateDownloadState(data, file)
+    private fun setListener() {
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 }

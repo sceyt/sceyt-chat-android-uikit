@@ -12,7 +12,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsItemComparatorBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -27,7 +27,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
 
     init {
         init()
-        ChannelViewHolderFactory.cashViews(context)
+        ChannelViewHolderFactory.cacheViews(context)
     }
 
     private fun init() {
@@ -61,7 +61,7 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
             if (isFirstItemDisplaying())
                 scrollToPosition(0)
 
-            context.asComponentActivity().lifecycleScope.launchWhenResumed {
+            context.maybeComponentActivity()?.lifecycleScope?.launchWhenResumed {
                 delay(500)
                 checkRichToEnd()
             }
@@ -84,7 +84,8 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     fun deleteChannel(id: Long) {
-        mAdapter.deleteChannel(id)
+        if (::mAdapter.isInitialized)
+            mAdapter.deleteChannel(id)
     }
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
@@ -141,24 +142,21 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
         sortAndUpdate(sortChannelsBy, data)
     }
 
+    fun hideLoadingMore() {
+        if (::mAdapter.isInitialized) mAdapter.removeLoading()
+    }
+
     fun getViewHolderFactory() = viewHolderFactory
 
     private fun sortAndUpdate(sortChannelsBy: SceytKitConfig.ChannelSortType, data: List<ChannelListItem>) {
-        val hasLoading = data.findLast { it is ChannelListItem.LoadingMoreItem } != null
-        val sortedList = ArrayList(data.filterIsInstance<ChannelListItem.ChannelItem>().map { it.channel })
-            .sortedWith(ChannelsComparatorBy(sortChannelsBy))
-
-        val newList: ArrayList<ChannelListItem> = ArrayList(sortedList.map { ChannelListItem.ChannelItem(it) })
-        if (hasLoading)
-            newList.add(ChannelListItem.LoadingMoreItem)
-
+        val sortedList = data.sortedWith(ChannelsItemComparatorBy(sortChannelsBy))
         awaitAnimationEnd {
-            post { setData(newList) }
+            post { setData(sortedList) }
         }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        ChannelViewHolderFactory.clearCash()
+        ChannelViewHolderFactory.clearCache()
     }
 }

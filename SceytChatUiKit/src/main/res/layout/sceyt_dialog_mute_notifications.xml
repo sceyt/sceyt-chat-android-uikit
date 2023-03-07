@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingVertical="10dp">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mute_chat"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize"
+        android:textStyle="bold" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/muteOneHour"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:background="?selectableItemBackground"
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mute_for_1_hour"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/muteTwoHour"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mute_for_8_hours"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/muteForever"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mute_forever"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize" />
+
+</androidx.appcompat.widget.LinearLayoutCompat>

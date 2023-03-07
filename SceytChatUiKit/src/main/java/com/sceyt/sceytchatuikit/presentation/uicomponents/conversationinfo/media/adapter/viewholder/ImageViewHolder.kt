@@ -1,18 +1,20 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
-import androidx.core.view.isVisible
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
-import com.sceyt.sceytchatuikit.databinding.ItemChannelImageBinding
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import android.util.Size
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelImageBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import java.io.File
 
-class ImageViewHolder(private val binding: ItemChannelImageBinding,
-                      private val clickListeners: AttachmentClickListenersImpl) : BaseFileViewHolder(binding.root) {
+class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
+                      private val clickListeners: AttachmentClickListenersImpl,
+                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) :
+        BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.root.setOnClickListener {
@@ -20,35 +22,65 @@ class ImageViewHolder(private val binding: ItemChannelImageBinding,
         }
     }
 
-    override fun bind(item: FileListItem) {
-        binding.icImage.setImageResource(R.color.sceyt_color_gray)
+    override fun bind(item: ChannelFileItem) {
         super.bind(item)
+        setListener()
+
+        viewHolderHelper.transferData?.let {
+            updateState(it, true)
+            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+        }
+
+        if (fileItem.thumbPath.isNullOrBlank())
+            requestThumb()
     }
 
-    private fun ItemChannelImageBinding.updateDownloadState(data: FileLoadData, file: File?) {
-        groupLoading.isVisible = data.loading
-        loadProgress.progress = data.progressPercent.toInt()
-        if (file != null) {
-            Glide.with(itemView.context)
-                .load(file)
-                .placeholder(R.color.sceyt_color_gray)
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .override(root.width, root.height)
-                .into(icImage)
+
+    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
+        when (data.state) {
+            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            TransferState.Uploading -> {
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            TransferState.Uploaded -> {
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            TransferState.PendingDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+            }
+            TransferState.Downloading -> {
+                if (isOnBind)
+                    viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+            }
+            TransferState.Downloaded -> {
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            TransferState.PauseDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+            }
+            TransferState.ErrorDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+            }
+            TransferState.FilePathChanged -> {
+                requestThumb()
+            }
+            TransferState.ThumbLoaded -> {
+                viewHolderHelper.loadThumb(data.filePath, binding.fileImage)
+            }
         }
     }
 
-    private fun ItemChannelImageBinding.updateUploadState(data: FileLoadData) {
-        groupLoading.isVisible = data.loading
-        if (data.loading)
-            loadProgress.progress = data.progressPercent.toInt()
-    }
+    override fun getThumbSize() = Size(itemView.width, itemView.height)
 
-    override fun updateUploadingState(data: FileLoadData) {
-        binding.updateUploadState(data)
-    }
-
-    override fun updateDownloadingState(data: FileLoadData, file: File?) {
-        binding.updateDownloadState(data, file)
+    private fun setListener() {
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
     }
 }

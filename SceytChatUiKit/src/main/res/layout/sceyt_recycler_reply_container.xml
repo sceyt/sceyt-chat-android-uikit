@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@id/viewReply"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="2.1dp"
+        android:layout_height="0dp"
+        android:background="@drawable/sceyt_bg_corners_10"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imageAttachment"
+        android:layout_width="0dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="6dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toEndOf="@+id/view"
+        app:layout_constraintTop_toTopOf="@+id/view"
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5"
+        tools:src="@tools:sample/backgrounds/scenic"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/roboto_medium"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/extraSmallTextSize"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/imageAttachment"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Henry Willian" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icMsgBodyStartIcon"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="6dp"
+        android:adjustViewBounds="true"
+        android:padding=".5dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/tvMessageBody"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toStartOf="@+id/tvMessageBody"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/imageAttachment"
+        app:layout_constraintStart_toStartOf="@+id/tvName"
+        app:layout_constraintTop_toTopOf="@+id/tvMessageBody" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvMessageBody"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="2"
+        android:textColor="@color/sceyt_color_black_themed"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/icMsgBodyStartIcon"
+        app:layout_constraintTop_toBottomOf="@+id/tvName"
+        tools:text="Waitifor." />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

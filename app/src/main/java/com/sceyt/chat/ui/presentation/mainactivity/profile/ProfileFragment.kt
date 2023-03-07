@@ -15,10 +15,9 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.presentation.login.LoginActivity
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
@@ -26,6 +25,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
+import com.sceyt.sceytchatuikit.R as SceytKitR
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -87,6 +87,17 @@ class ProfileFragment : Fragment() {
             muted = it
             binding.switchNotifications.isChecked = it
         }
+
+        viewModel.logOutLiveData.observe(viewLifecycleOwner) {
+            preference.setToken(null)
+            preference.setUserName(null)
+            LoginActivity.launch(requireContext())
+            requireActivity().finish()
+        }
+
+        viewModel.logOutErrorLiveData.observe(viewLifecycleOwner) {
+            customToastSnackBar(requireView(), it.toString())
+        }
     }
 
     private fun FragmentProfileBinding.initViews() {
@@ -106,8 +117,7 @@ class ProfileFragment : Fragment() {
                 MuteNotificationDialog(requireContext()) {
                     val until = when (it) {
                         MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                        MuteTypeEnum.Mute2Hour -> TimeUnit.HOURS.toMillis(2)
-                        MuteTypeEnum.Mute1Day -> TimeUnit.DAYS.toMillis(1)
+                        MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
                         MuteTypeEnum.MuteForever -> 0L
                     }
                     viewModel.muteNotifications(until)
@@ -155,15 +165,10 @@ class ProfileFragment : Fragment() {
         signOut.setOnClickListener {
             SceytDialog(requireContext(), positiveClickListener = {
                 viewModel.logout()
-                preference.setToken(null)
-                preference.setUserName(null)
-                SceytKitClient.clearData()
-                LoginActivity.launch(requireContext())
-                requireActivity().finish()
             }).setTitle(getString(R.string.sign_out_title))
                 .setDescription(getString(R.string.sign_out_desc))
                 .setPositiveButtonTitle(getString(R.string.sign_out))
-                .setPositiveButtonTextColor(requireContext().getCompatColor(R.color.sceyt_color_red))
+                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_red))
                 .show()
         }
 

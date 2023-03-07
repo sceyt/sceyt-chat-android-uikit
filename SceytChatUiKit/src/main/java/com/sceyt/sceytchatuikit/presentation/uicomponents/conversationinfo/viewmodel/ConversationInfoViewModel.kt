@@ -4,9 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.toGroupChannel
+import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -15,7 +21,6 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
-    // Todo di
     private val channelsMiddleWare by inject<PersistenceChanelMiddleWare>()
     private val membersMiddleWare by inject<PersistenceMembersMiddleWare>()
 
@@ -40,11 +45,17 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
 
+    private val _joinLiveData = MutableLiveData<SceytChannel>()
+    val joinLiveData: LiveData<SceytChannel> = _joinLiveData
+
+    private val _channelAddMemberLiveData = MutableLiveData<ChannelMembersEventData>()
+    val channelAddMemberLiveData: LiveData<ChannelMembersEventData> = _channelAddMemberLiveData
+
 
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.getChannelFromServer(id)
-            notifyResponseAndPageState(_channelLiveData, response)
+            notifyResponseAndPageState(_channelLiveData, response, showError = false)
         }
     }
 
@@ -55,9 +66,9 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun clearHistory(channelId: Long) {
+    fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.clearHistory(channelId)
+            val response = channelsMiddleWare.clearHistory(channelId, forEveryone)
             notifyResponseAndPageState(_clearHistoryLiveData, response)
         }
     }
@@ -108,6 +119,32 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.unMuteChannel(channelId)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
+        }
+    }
+
+    fun joinChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsMiddleWare.join(channelId)
+            notifyResponseAndPageState(_joinLiveData, response)
+        }
+    }
+
+    fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val members = users.map { it.toMember() }
+            val response = membersMiddleWare.addMembersToChannel(channelId, members)
+            if (response is SceytResponse.Success) {
+                val groupChannel = (response.data ?: return@launch).toGroupChannel()
+                if (groupChannel.lastActiveMembers.isNullOrEmpty()) return@launch
+
+                _channelAddMemberLiveData.postValue(ChannelMembersEventData(
+                    channel = groupChannel,
+                    members = groupChannel.lastActiveMembers,
+                    eventType = ChannelMembersEventEnum.Added
+                ))
+            }
+
+            notifyPageStateWithResponse(response)
         }
     }
 }

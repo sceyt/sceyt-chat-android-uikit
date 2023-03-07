@@ -1,23 +1,25 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.*
+import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.persistence.entity.ChanelMember
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertChannel(channel: ChannelEntity): Long
+    suspend fun insertChannel(channel: ChannelEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertChannels(channel: List<ChannelEntity>)
+    suspend fun insertChannels(channel: List<ChannelEntity>)
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertChannelsAndLinks(channels: List<ChannelEntity>, userChatLinks: List<UserChatLink>)
+    suspend fun insertChannelsAndLinks(channels: List<ChannelEntity>, userChatLinks: List<UserChatLink>)
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -27,73 +29,86 @@ interface ChannelDao {
     fun insertUserChatLinks(userChatLinks: List<UserChatLink>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUserChatLink(userChatLink: UserChatLink): Long
+    suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where myRole is null or myRole !=:ignoreRole " +
+    @Query("select * from channels where role !=:ignoreRole " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
+    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels where subject LIKE '%' || :query || '%' " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
 
+    @RawQuery
+    suspend fun searchChannelsRaw(query: SimpleSQLiteQuery): List<ChannelDb>
+
     @Transaction
     @Query("select * from channels where chat_id =:id")
-    fun getChannelById(id: Long): ChannelDb?
-
-    @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
-    fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
+    suspend fun getChannelById(id: Long): ChannelDb?
 
     @Transaction
-    @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id where chat_id =:channelId " +
-            "order by user_id limit :limit offset :offset")
-    fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMember>
+    @Query("select * from channels where chat_id in (:ids)")
+    suspend fun getChannelsById(ids: List<Long>): List<ChannelDb>
+
+    @Query("select * from UserChatLink where user_id =:userId")
+    suspend fun getUserChannelLinksByPeerId(userId: String): List<UserChatLink>
+
+    @Transaction
+    suspend fun getChannelByPeerId(peerId: String): List<ChannelDb> {
+        val links = getUserChannelLinksByPeerId(peerId)
+        return getChannelsById(links.map { it.chatId })
+    }
+
+    @Transaction
+    @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
+            "where link.user_id =:peerId and type =:channelTypeEnum")
+    suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
+
+    @Query("select chat_id from channels where chat_id not in (:ids)")
+    suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
+
+    @Query("select chat_id from channels")
+    suspend fun getAllChannelsIds(): List<Long>
+
+    @Transaction
+    @Query("select sum(unreadMessageCount) from channels")
+    fun getTotalUnreadCountAsFlow(): Flow<Int?>
 
     @Update
-    fun updateChannel(channelEntity: ChannelEntity)
+    suspend fun updateChannel(channelEntity: ChannelEntity)
 
     @Query("update channels set subject =:subject, avatarUrl =:avatarUrl where chat_id= :channelId")
-    fun updateChannelSubjectAndAvatarUrl(channelId: Long, subject: String?, avatarUrl: String?)
+    suspend fun updateChannelSubjectAndAvatarUrl(channelId: Long, subject: String?, avatarUrl: String?)
 
     @Query("update channels set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt where chat_id= :channelId")
-    fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
+    suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
+
+    @Query("update channels set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
+            "lastReadMessageId =:lastMessageId where chat_id= :channelId")
+    suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
 
     @Query("update channels set unreadMessageCount =:count, markedUsUnread = 0 where chat_id= :channelId")
-    fun clearUnreadCount(channelId: Long, count: Int)
+    suspend fun updateUnreadCount(channelId: Long, count: Int)
 
     @Query("update channels set muted =:muted, muteExpireDate =:muteUntil where chat_id =:channelId")
-    fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
-
-    @Query("update UserChatLink set role =:role where chat_id =:channelId and user_id =:userId")
-    fun updateMemberRole(channelId: Long, userId: String, role: String)
-
-    @Transaction
-    fun updateOwner(channelId: Long, oldOwnerId: String, newOwnerId: String) {
-        updateMemberRole(channelId, oldOwnerId, RoleTypeEnum.Member.toString())
-        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
-    }
-
-    @Transaction
-    fun updateOwner(channelId: Long, newOwnerId: String) {
-        getChannelOwner(channelId)?.let {
-            updateMemberRole(channelId, it, RoleTypeEnum.Member.toString())
-        }
-        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
-    }
+    suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
     @Query("delete from channels where chat_id =:channelId")
-    fun deleteChannel(channelId: Long)
+    suspend fun deleteChannel(channelId: Long)
 
     @Query("delete from UserChatLink where chat_id =:channelId and user_id in (:userIds)")
-    fun deleteUserChatLinks(channelId: Long, vararg userIds: String)
+    suspend fun deleteUserChatLinks(channelId: Long, vararg userIds: String)
 
     @Query("delete from UserChatLink where chat_id =:channelId")
-    fun deleteChatLinks(channelId: Long)
+    suspend fun deleteChatLinks(channelId: Long)
+
+    @Query("delete from UserChatLink where chat_id =:channelId and user_id != :exceptUserId")
+    suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
 
     @Transaction
-    fun deleteChannelAndLinks(channelId: Long) {
+    suspend fun deleteChannelAndLinks(channelId: Long) {
         deleteChannel(channelId)
         deleteChatLinks(channelId)
     }

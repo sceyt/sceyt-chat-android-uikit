@@ -2,16 +2,17 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.content.res.ColorStateList
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
-        senderNameBuilder: ((User) -> String)?
-) : BaseMsgViewHolder(binding.root, senderNameBuilder = senderNameBuilder) {
+        senderNameBuilder: ((User) -> String)?,
+        displayedListener: ((MessageListItem) -> Unit)?
+) : BaseMsgViewHolder(binding.root, senderNameBuilder = senderNameBuilder, displayedListener = displayedListener) {
 
     init {
         binding.setMessageItemStyle()

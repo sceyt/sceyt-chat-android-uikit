@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="tinyTextSize">10sp</dimen>
+    <dimen name="tinyTextSize">11sp</dimen>
     <dimen name="extraSmallTextSize">12sp</dimen>
     <dimen name="smallTextSize">14sp</dimen>
     <dimen name="mediumTextSize">16sp</dimen>
@@ -8,5 +8,7 @@
     <dimen name="largeTextSize">20sp</dimen>
     <dimen name="extraLargeTextSize">22sp</dimen>
     <dimen name="superLargeTextSize">24sp</dimen>
-    <dimen name="bodyMaxWidth">250dp</dimen>
+    <dimen name="bodyMaxWidth">270dp</dimen>
+    <dimen name="replayContainerMaxWidth">135dp</dimen>
+    <dimen name="messageProgressSize">50dp</dimen>
 </resources>

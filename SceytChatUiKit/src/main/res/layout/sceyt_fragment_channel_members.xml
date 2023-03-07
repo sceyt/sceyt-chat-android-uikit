@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sceyt_color_bg">
+
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytSearchableToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytSearchableToolbarEnableSearch="false"
+        app:sceytSearchableToolbarTitle="@string/sceyt_members" />
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:elevation="0dp">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/layoutAddMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:gravity="center_vertical"
+                android:paddingVertical="7dp"
+                app:layout_scrollFlags="scroll|enterAlways">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/icAddMembers"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/sceyt_ic_add_members_bg"
+                    app:layout_constraintBottom_toBottomOf="@+id/addMembers"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/addMembers"
+                    app:srcCompat="@drawable/sceyt_ic_add_members" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/addMembers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:lines="1"
+                    android:paddingHorizontal="15dp"
+                    android:text="@string/sceyt_add_members"
+                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textSize="@dimen/mediumTextSize"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/icAddMembers" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMembers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutAddMembers"
+            tools:listitem="@layout/sceyt_item_channel_members" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

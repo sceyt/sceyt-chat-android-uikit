@@ -8,8 +8,10 @@ sealed class MessageListItem {
         var linkPreviewData: LinkPreviewHelper.PreviewMetaData? = null
     }
 
-    data class DateSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
-    object LoadingMoreItem : MessageListItem()
+    data class DateSeparatorItem(val createdAt: Long, val msgTid: Long) : MessageListItem()
+    data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
+    object LoadingPrevItem : MessageListItem()
+    object LoadingNextItem : MessageListItem()
 
     override fun equals(other: Any?): Boolean {
         return when {
@@ -19,9 +21,13 @@ sealed class MessageListItem {
                 other.message == message
             }
             other is DateSeparatorItem && this is DateSeparatorItem -> {
-                other.createdAt == createdAt && other.msgId == msgId
+                other.createdAt == createdAt && other.msgTid == msgTid
             }
-            other is LoadingMoreItem && this is LoadingMoreItem -> true
+            other is UnreadMessagesSeparatorItem && this is UnreadMessagesSeparatorItem -> {
+                other.msgId == msgId
+            }
+            other is LoadingPrevItem && this is LoadingPrevItem -> true
+            other is LoadingNextItem && this is LoadingNextItem -> true
             else -> false
         }
     }
@@ -30,9 +36,13 @@ sealed class MessageListItem {
         return when (this) {
             is MessageItem -> message.createdAt
             is DateSeparatorItem -> createdAt
-            is LoadingMoreItem -> 0
+            is UnreadMessagesSeparatorItem -> createdAt
+            is LoadingPrevItem -> 0
+            is LoadingNextItem -> Long.MAX_VALUE
         }
     }
+
+    var highlighted = false
 
     override fun hashCode(): Int {
         return javaClass.hashCode()

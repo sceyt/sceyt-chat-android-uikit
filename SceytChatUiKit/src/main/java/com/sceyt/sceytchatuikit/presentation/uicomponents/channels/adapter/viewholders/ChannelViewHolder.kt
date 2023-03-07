@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders
 
+import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.widget.ImageView
@@ -14,39 +15,41 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
-import com.sceyt.sceytchatuikit.presentation.common.setMessageDateAndStatusIcon
+import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
-                             private val userNameBuilder: ((User) -> String)? = null) : BaseChannelViewHolder(binding.root) {
+                             private val userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder) : BaseChannelViewHolder(binding.root) {
 
 
     init {
         with(binding) {
             setChannelItemStyle()
 
-            root.setOnClickListener {
+            root.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
                 listeners.onChannelClick(channelItem as ChannelListItem.ChannelItem)
             }
 
-            parentLayout.setOnLongClickListener {
+            parentLayout.setOnLongClickListenerAvailable(ChannelsAdapter.longClickAvailableData) {
                 listeners.onChannelLongClick(it, (channelItem as ChannelListItem.ChannelItem))
-                return@setOnLongClickListener true
             }
 
-            avatar.setOnClickListener {
+            avatar.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
                 listeners.onAvatarClick((channelItem as ChannelListItem.ChannelItem))
             }
         }
@@ -60,6 +63,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 val channel = item.channel
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
+
+                setUnreadCount(channel.unreadMessageCount, binding.unreadMessagesCount)
+                setMentionUserSymbol(channel.unreadMentionCount, channel.unreadMessageCount, binding.icMention)
 
                 diff.run {
                     if (!hasDifference()) return@run
@@ -79,14 +85,14 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     if (lastMessageChanged)
                         setLastMessagedText(channel, binding.lastMessage)
 
-                    if (unreadCountChanged)
-                        setUnreadCount(channel.unreadMessageCount, binding.unreadMessagesCount)
-
                     if (onlineStateChanged)
                         setOnlineStatus(channel, binding.onlineStatus)
 
                     if (markedUsUnreadChanged)
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
+
+                    if (typingStateChanged)
+                        setTypingState(channel, binding.lastMessage)
                 }
             }
             ChannelListItem.LoadingMoreItem -> Unit
@@ -112,6 +118,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         if (message.state == MessageState.Deleted) {
             textView.text = context.getString(R.string.sceyt_message_was_deleted)
             textView.setTypeface(null, Typeface.ITALIC)
+            binding.dateStatus.setStatusIcon(null)
         } else {
             val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
                 context.getString(R.string.sceyt_attachment) else message.body
@@ -119,7 +126,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val fromText = if (message.incoming) {
                 val from = channel.lastMessage?.from
                 val userFirstName = from?.let {
-                    userNameBuilder?.invoke(from) ?: from.getPresentableFirstName()
+                    userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
                 }
                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
                     "${userFirstName}: "
@@ -128,7 +135,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setString("$fromText${body.trim()}")
+                .setSpannableString(MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, message.metadata, message.mentionedUsers))
+                .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
                 .build()
@@ -141,7 +149,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
             (channel as? SceytDirectChannel)?.peer?.user?.let { from ->
-                userNameBuilder?.invoke(from) ?: from.getPresentableFirstName()
+                userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }
     }
@@ -155,11 +163,14 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
-        binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
+        if (channel is SceytDirectChannel && channel.isPeerDeleted()) {
+            binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+        } else
+            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
     }
 
     open fun setLastMessageStatus(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
-        channel.lastMessage.setMessageDateAndStatusIcon(dateStatusView, getDateTxt(channel), false)
+        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, getDateTxt(channel), false)
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
@@ -183,6 +194,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
+    open fun setMentionUserSymbol(unreadMentionCount: Long, unreadCount: Long, icMention: ImageView) {
+        icMention.isVisible = unreadMentionCount > 0 && unreadCount > 0
+    }
+
     open fun setChannelMarkedUsUnread(channel: SceytChannel, unreadMessagesCount: TextView) {
         if (channel.unreadMessageCount == 0L) {
             if (channel.markedUsUnread)
@@ -192,6 +207,21 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 }
             else unreadMessagesCount.isVisible = false
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    open fun setTypingState(channel: SceytChannel, textView: TextView) {
+        val data = channel.typingData ?: return
+        if (data.typing) {
+            textView.setTypeface(null, Typeface.ITALIC)
+            if (channel.isGroup) {
+                val name = userNameBuilder?.invoke(data.member.user)
+                        ?: data.member.getPresentableFirstName()
+                textView.text = "$name ${context.getString(R.string.sceyt_typing_)}"
+            } else
+                textView.text = context.getString(R.string.sceyt_typing_)
+
+        } else setLastMessagedText(channel, textView)
     }
 
     protected fun getDateTxt(channel: SceytChannel?): String {
@@ -208,6 +238,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
             lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))
             unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
+            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
             onlineStatus.setIndicatorColor(getCompatColorByTheme(ChannelStyle.onlineStatusColor))
             dateStatus.buildStyle()
                 .setStatusIconSize(ChannelStyle.statusIconSize)

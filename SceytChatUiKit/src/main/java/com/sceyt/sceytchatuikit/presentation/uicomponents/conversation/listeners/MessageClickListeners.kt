@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listener
 
 import android.view.View
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -16,8 +17,12 @@ sealed interface MessageClickListeners {
         fun onAvatarClick(view: View, item: MessageListItem.MessageItem)
     }
 
-    fun interface ReplayCountClickListener : MessageClickListeners {
-        fun onReplayCountClick(view: View, item: MessageListItem.MessageItem)
+    fun interface ReplyMessageContainerClickListener : MessageClickListeners {
+        fun onReplyMessageContainerClick(view: View, item: MessageListItem.MessageItem)
+    }
+
+    fun interface ReplyCountClickListener : MessageClickListeners {
+        fun onReplyCountClick(view: View, item: MessageListItem.MessageItem)
     }
 
     fun interface AddReactionClickListener : MessageClickListeners {
@@ -40,8 +45,16 @@ sealed interface MessageClickListeners {
         fun onAttachmentLongClick(view: View, item: FileListItem)
     }
 
+    fun interface AttachmentLoaderClickListener : MessageClickListeners {
+        fun onAttachmentLoaderClick(view: View, item: FileListItem)
+    }
+
     fun interface LinkClickListener : MessageClickListeners {
         fun onLinkClick(view: View, item: MessageListItem.MessageItem)
+    }
+
+    fun interface ScrollToDownClickListener : MessageClickListeners {
+        fun onScrollToDownClick(view: ScrollToDownView)
     }
 
     /** Use this if you want to implement all callbacks */
@@ -49,10 +62,13 @@ sealed interface MessageClickListeners {
             LinkClickListener,
             MessageLongClickListener,
             AvatarClickListener,
-            ReplayCountClickListener,
+            ReplyMessageContainerClickListener,
+            ReplyCountClickListener,
             AddReactionClickListener,
             ReactionClickListener,
             ReactionLongClickListener,
             AttachmentClickListener,
-            AttachmentLongClickListener
+            AttachmentLongClickListener,
+            ScrollToDownClickListener,
+            AttachmentLoaderClickListener
 }

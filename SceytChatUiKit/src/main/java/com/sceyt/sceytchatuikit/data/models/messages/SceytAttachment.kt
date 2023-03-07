@@ -1,19 +1,38 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 import android.os.Parcelable
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytAttachment(
+        val id: Long?,
         val tid: Long,
+        val messageId: Long,
+        val messageTid: Long,
+        var userId: String?,
         val name: String,
         val type: String,
-        val metadata: String?,
-        val fileSize: Long,
-        val url: String
+        var metadata: String?,
+        var fileSize: Long,
+        val createdAt: Long,
+        var url: String?,
+        var filePath: String?,
+        var transferState: TransferState?,
+        var progressPercent: Float?
+
 ) : Parcelable, Cloneable {
 
     public override fun clone(): SceytAttachment {
-        return SceytAttachment(tid, name, type, metadata, fileSize, url)
+        return SceytAttachment(id, tid, messageId, messageTid, userId, name, type, metadata, fileSize,
+            createdAt, url, filePath, transferState, progressPercent)
+    }
+
+    fun updateWithTransferData(data: TransferData) {
+        transferState = data.state
+        progressPercent = data.progressPercent
+        url = data.url
+        filePath = data.filePath
     }
 }

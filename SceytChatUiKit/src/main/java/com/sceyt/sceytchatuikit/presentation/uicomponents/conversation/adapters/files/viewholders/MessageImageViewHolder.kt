@@ -1,20 +1,27 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import androidx.core.view.isVisible
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.sceytchatuikit.data.models.messages.FileLoadData
+import android.util.Size
+import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import java.io.File
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 
 class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
-        private val messageListeners: MessageClickListenersImpl?) : BaseFileViewHolder(binding.root) {
+        private val messageListeners: MessageClickListeners.ClickListeners?,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
+        binding.setupStyle()
+
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
         }
@@ -23,36 +30,79 @@ class MessageImageViewHolder(
             messageListeners?.onAttachmentLongClick(it, fileItem)
             return@setOnLongClickListener true
         }
-    }
 
-    override fun bind(item: FileListItem) {
-        binding.fileImage.setImageBitmap(null)
-        super.bind(item)
-    }
-
-    private fun SceytMessageImageItemBinding.updateDownloadState(data: FileLoadData, file: File?) {
-        groupLoading.isVisible = data.loading
-        loadProgress.progress = data.progressPercent.toInt()
-        if (file != null) {
-            Glide.with(itemView.context)
-                .load(file)
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .override(root.width, root.height)
-                .into(fileImage)
+        binding.loadProgress.setOnClickListener {
+            messageListeners?.onAttachmentLoaderClick(it, fileItem)
         }
     }
 
-    private fun SceytMessageImageItemBinding.updateUploadState(data: FileLoadData) {
-        groupLoading.isVisible = data.loading
-        if (data.loading)
-            loadProgress.progress = data.progressPercent.toInt()
+    override fun bind(item: FileListItem) {
+        super.bind(item)
+
+        setListener()
+
+        binding.loadProgress.release(item.file.progressPercent)
+        viewHolderHelper.transferData?.let {
+            updateState(it, true)
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+        }
+
+        if (fileItem.thumbPath.isNullOrBlank())
+            requestThumb()
     }
 
-    override fun updateUploadingState(data: FileLoadData) {
-        binding.updateUploadState(data)
+    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
+        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        when (data.state) {
+            PendingUpload, ErrorUpload, PauseUpload -> {
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            Uploading -> {
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            Uploaded -> {
+                viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+            }
+            PendingDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+            }
+            Downloading -> {
+                if (isOnBind)
+                    viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+            }
+            Downloaded -> {
+                if (fileItem.thumbPath.isNullOrBlank())
+                    viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
+                else viewHolderHelper.loadThumb(fileItem.thumbPath, binding.fileImage)
+            }
+            PauseDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+            }
+            ErrorDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
+            }
+            FilePathChanged -> {
+                requestThumb()
+            }
+            ThumbLoaded -> {
+                viewHolderHelper.loadThumb(data.filePath, binding.fileImage)
+            }
+        }
     }
 
-    override fun updateDownloadingState(data: FileLoadData, file: File?) {
-        binding.updateDownloadState(data, file)
+    override fun getThumbSize() = Size(1080, 1080)
+
+    private fun setListener() {
+        MessageEventsObserver.onTransferUpdatedLiveData
+            .observe(context.asComponentActivity(), ::updateState)
+    }
+
+    private fun SceytMessageImageItemBinding.setupStyle() {
+        loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))
     }
 }

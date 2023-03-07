@@ -4,7 +4,7 @@
 
     <data>
 
-        <import type="com.sceyt.chat.ui.R" />
+        <import type="com.sceyt.sceytchatuikit.R" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

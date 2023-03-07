@@ -1,7 +1,8 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
@@ -10,6 +11,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -46,14 +49,24 @@ object MessageEventsObserver {
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
 
+    private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
+    val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
+
+
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
                 onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
+            }
 
-                ClientWrapper.markMessagesAsReceived(channel.id, longArrayOf(message.id)) { _, _ ->
-                }
+            override fun onDirectMessage(p0: Message?) {
+            }
+
+            override fun onMessageComposing(p0: String?, p1: String?) {
+            }
+
+            override fun onMessagePaused(p0: String?, p1: String?) {
             }
 
             override fun onMessageDeleted(message: Message?) {
@@ -83,7 +96,9 @@ object MessageEventsObserver {
         onOutGoingMessageStatusFlow_.tryEmit(Pair(channelId, message))
     }
 
-    fun emitMessageEditedOrDeletedByMe(message: Message) {
-        onMessageEditedOrDeletedFlow_.tryEmit(message)
+    fun emitAttachmentTransferUpdate(data: TransferData) {
+        runOnMainThread {
+            onTransferUpdatedLiveData_.value = data
+        }
     }
 }

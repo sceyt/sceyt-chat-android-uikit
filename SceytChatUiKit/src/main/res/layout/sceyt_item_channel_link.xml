@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:paddingBottom="12dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icLinkImage"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/sceyt_bg_corners_8"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_link_with_background" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvLinkName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:ellipsize="middle"
+        android:fontFamily="@font/roboto_medium"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/tvLinkUrl"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/icLinkImage"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Netlify"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvLinkUrl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_gray_800"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="@+id/icLinkImage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/icLinkImage"
+        app:layout_constraintTop_toBottomOf="@+id/tvLinkName"
+        tools:text="https://www.youtube.com/watch?v=sLxN" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

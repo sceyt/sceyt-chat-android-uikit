@@ -1,24 +1,30 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
 import android.os.Parcelable
+import com.sceyt.chat.models.role.Role
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import kotlinx.parcelize.IgnoredOnParcel
-import kotlinx.parcelize.Parcelize
 import java.util.*
 
-@Parcelize
-open class SceytChannel(open var id: Long,
-                        open var createdAt: Long,
-                        open var updatedAt: Long,
-                        open var unreadMessageCount: Long,
-                        open var lastMessage: SceytMessage?,
-                        open var label: String?,
-                        open var metadata: String?,
-                        open var muted: Boolean,
-                        open var muteExpireDate: Date?,
-                        open var markedUsUnread: Boolean,
-                        open var channelType: ChannelTypeEnum) : Parcelable, Cloneable {
+abstract class SceytChannel(open var id: Long,
+                            open var createdAt: Long,
+                            open var updatedAt: Long,
+                            open var unreadMessageCount: Long,
+                            open var unreadMentionCount: Long,
+                            open var unreadReactionCount: Long,
+                            open var lastMessage: SceytMessage?,
+                            open var label: String?,
+                            open var metadata: String?,
+                            open var muted: Boolean,
+                            open var muteExpireDate: Date?,
+                            open var markedUsUnread: Boolean,
+                            open var lastDeliveredMessageId: Long,
+                            open var lastReadMessageId: Long,
+                            open var channelType: ChannelTypeEnum,
+                            open var messagesDeletionDate: Long,
+                            open var lastMessages: List<SceytMessage>?) : Parcelable, Cloneable {
 
     @IgnoredOnParcel
     open val channelSubject = ""
@@ -28,6 +34,8 @@ open class SceytChannel(open var id: Long,
 
     @IgnoredOnParcel
     open val isGroup = false
+
+    var typingData: ChannelTypingEventData? = null
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {
@@ -64,17 +72,5 @@ open class SceytChannel(open var id: Long,
         return result
     }
 
-    public override fun clone(): SceytChannel {
-        return SceytChannel(id = id,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            unreadMessageCount = unreadMessageCount,
-            lastMessage = lastMessage?.clone(),
-            label = label,
-            metadata = metadata,
-            muted = muted,
-            muteExpireDate = muteExpireDate,
-            markedUsUnread = markedUsUnread,
-            channelType = channelType)
-    }
+    public abstract override fun clone(): SceytChannel
 }

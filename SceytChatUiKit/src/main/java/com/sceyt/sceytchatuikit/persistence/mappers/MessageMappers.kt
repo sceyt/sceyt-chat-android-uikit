@@ -1,16 +1,19 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
+import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
+import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.*
 
 fun SceytMessage.toMessageEntity() = MessageEntity(
-    id = id,
     tid = getTid(id, tid, incoming),
+    id = id,
     channelId = channelId,
     to = to,
     body = body,
@@ -22,14 +25,18 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     receipt = receipt,
     isTransient = isTransient,
     silent = silent,
+    direct = direct,
     deliveryStatus = deliveryStatus,
     state = state,
     fromId = from?.id,
     markerCount = markerCount?.toList(),
+    mentionedUsersIds = mentionedUsers?.map { it.id },
     selfMarkers = selfMarkers?.toList(),
-    parentId = parent?.id,
+    parentId = if (parent?.id == 0L) null else parent?.id,
     replyInThread = replyInThread,
-    replyCount = replyCount
+    replyCount = replyCount,
+    displayCount = displayCount,
+    forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb()
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -38,30 +45,6 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
     else tid
 }
 
-fun Message.toMessageEntity() = MessageEntity(
-    id = id,
-    tid = getTid(id, tid, incoming),
-    channelId = channelId,
-    to = to,
-    body = body,
-    type = type,
-    metadata = metadata,
-    createdAt = createdAt.time,
-    updatedAt = updatedAt.time,
-    incoming = incoming,
-    receipt = receipt,
-    isTransient = isTransient,
-    silent = silent,
-    deliveryStatus = deliveryStatus,
-    state = state,
-    fromId = from?.id,
-    markerCount = markerCount?.toList(),
-    selfMarkers = selfMarkers?.toList(),
-    parentId = parent?.id,
-    replyInThread = replyInThread,
-    replyCount = replyCount
-)
-
 
 fun SceytMessage.toMessageDb(): MessageDb {
     val tid = getTid(id, tid, incoming)
@@ -69,21 +52,23 @@ fun SceytMessage.toMessageDb(): MessageDb {
         messageEntity = toMessageEntity(),
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
-        lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+        attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
+        selfReactions = selfReactions?.map { it.toReactionDb(id) },
+        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
+        forwardingUser = forwardingDetails?.user?.toUserEntity(),
+        mentionedUsers = null
     )
 }
 
-fun Message.toMessageDb(): MessageDb {
+fun SceytMessage.toAttachmentPayLoad(): AttachmentPayLoadEntity? {
     val tid = getTid(id, tid, incoming)
-    return MessageDb(
-        messageEntity = toMessageEntity(),
-        from = from?.toUserEntity(),
-        parent = parent?.toSceytUiMessage()?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentEntity(id, tid) },
-        lastReactions = lastReactions?.map { it.toReactionDb(id) },
-        reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) }
+    val attachment = attachments?.getOrNull(0) ?: return null
+    return AttachmentPayLoadEntity(
+        messageTid = tid,
+        transferState = attachment.transferState,
+        progressPercent = attachment.progressPercent,
+        url = attachment.url,
+        filePath = attachment.filePath
     )
 }
 
@@ -103,32 +88,45 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             receipt = receipt,
             isTransient = isTransient,
             silent = silent,
+            direct = direct,
             deliveryStatus = deliveryStatus,
             state = state,
             from = from?.toUser(),
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
-            lastReactions = lastReactions?.map { it.toReaction() }?.toTypedArray(),
+            selfReactions = selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionScores = reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             markerCount = markerCount?.toTypedArray(),
             selfMarkers = selfMarkers?.toTypedArray(),
+            mentionedUsers = mentionedUsers?.map {
+                it.user?.toUser() ?: User(it.link.userId)
+            }?.toTypedArray(),
             parent = parent?.toSceytMessage(),
             replyInThread = replyInThread,
-            replyCount = replyCount
+            replyCount = replyCount,
+            displayCount = displayCount,
+            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
         )
     }
 }
 
 fun ParentMessageDb.toSceytMessage(): SceytMessage {
-    return messageEntity.toSceytMessage().apply {
-        this.from = this@toSceytMessage.from?.toUser()
-    }
+    return messageEntity.parentMessageToSceytMessage(
+        attachments = this@toSceytMessage.attachments?.map { it.toAttachment() }?.toTypedArray(),
+        from = this@toSceytMessage.from?.toUser(),
+        mentionedUsers = mentionedUsers?.map {
+            it.user?.toUser() ?: User(it.link.userId)
+        }?.toTypedArray()
+    )
 }
 
 fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
-    return ParentMessageDb(toMessageEntity(), from?.toUserEntity())
+    return ParentMessageDb(toMessageEntity(), from?.toUserEntity(), attachments?.map {
+        it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
+    }, null)
 }
 
-private fun MessageEntity.toSceytMessage() = SceytMessage(
+private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAttachment>?,
+                                                      from: User?, mentionedUsers: Array<User>?) = SceytMessage(
     id = id ?: 0,
     tid = tid,
     channelId = channelId,
@@ -142,19 +140,21 @@ private fun MessageEntity.toSceytMessage() = SceytMessage(
     receipt = receipt,
     isTransient = isTransient,
     silent = silent,
+    direct = direct,
     deliveryStatus = deliveryStatus,
     state = state,
-    from = null,
-    attachments = emptyArray(),
-    lastReactions = emptyArray(),
+    from = from,
+    attachments = attachments,
     selfReactions = emptyArray(),
     reactionScores = emptyArray(),
     markerCount = markerCount?.toTypedArray(),
     selfMarkers = selfMarkers?.toTypedArray(),
-    mentionedUsers = emptyArray(),
+    mentionedUsers = mentionedUsers,
     parent = null,
     replyInThread = replyInThread,
-    replyCount = replyCount
+    replyCount = replyCount,
+    displayCount = displayCount,
+    forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null)
 )
 
 fun MessageDb.toMessage(): Message {
@@ -173,28 +173,31 @@ fun MessageDb.toMessage(): Message {
             receipt,
             isTransient,
             silent,
+            direct,
             deliveryStatus,
             state,
             from?.toUser(),
             attachments?.map { it.toSdkAttachment() }?.toTypedArray(),
-            lastReactions?.map { it.toReaction() }?.toTypedArray(),
-            emptyArray(),
+            selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             markerCount?.toTypedArray(),
             emptyArray(),
             emptyArray(),
             parent?.toSceytMessage()?.toMessage(),
             replyInThread,
-            replyCount
+            replyCount,
+            messageEntity.displayCount,
+            ForwardingDetails(id ?: 0, channelId, from?.toUser(), 0)
         )
     }
 }
 
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
+    val tid = getTid(id, tid, incoming)
     return SceytMessage(
         id = id,
-        tid = getTid(id, tid, incoming),
+        tid = tid,
         channelId = channelId,
         to = to,
         body = body,
@@ -206,11 +209,13 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         receipt = receipt,
         isTransient = isTransient,
         silent = silent,
+        direct = isDirect,
         deliveryStatus = deliveryStatus,
         state = state,
         from = from,
-        attachments = attachments.map { it.toSceytAttachment() }.toTypedArray(),
-        lastReactions = lastReactions,
+        attachments = attachments?.map {
+            it.toSceytAttachment(tid, TransferState.PendingDownload, 0f)
+        }?.toTypedArray(),
         selfReactions = selfReactions,
         reactionScores = reactionScores,
         markerCount = markerCount,
@@ -218,7 +223,9 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         mentionedUsers = mentionedUsers,
         parent = parent?.toSceytUiMessage(),
         replyInThread = replyInThread,
-        replyCount = replyCount
+        replyCount = replyCount,
+        displayCount = displayCount.toShort(),
+        forwardingDetails = forwardingDetails
     ).apply {
         isGroup?.let {
             this.isGroup = it
@@ -241,11 +248,11 @@ fun SceytMessage.toMessage(): Message {
         receipt,
         isTransient,
         silent,
+        direct,
         deliveryStatus,
         state,
         from,
-        attachments?.map { it.toSceytAttachment() }?.toTypedArray(),
-        lastReactions,
+        attachments?.map { it.toAttachment() }?.toTypedArray(),
         selfReactions,
         reactionScores,
         markerCount,
@@ -253,5 +260,20 @@ fun SceytMessage.toMessage(): Message {
         mentionedUsers,
         parent?.toMessage(),
         replyInThread,
-        replyCount)
+        replyCount,
+        displayCount,
+        ForwardingDetails(id, channelId, from, 0))
 }
+
+fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
+    messageId = messageId,
+    userId = user?.id,
+    hops = hops
+)
+
+
+fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: User?) = ForwardingDetails(
+    messageId, channelId,
+    user,
+    hops
+)

@@ -6,8 +6,9 @@
     android:layout_height="wrap_content">
 
     <View
+        android:id="@+id/viewTop"
         android:layout_width="match_parent"
-        android:layout_height=".5dp"
+        android:layout_height="1dp"
         android:background="@color/sceyt_color_divider"
         app:layout_constraintBottom_toTopOf="@+id/rvAttachments"
         app:layout_constraintTop_toTopOf="parent" />
@@ -19,51 +20,50 @@
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:listitem="@layout/sceyt_item_input_attachment" />
-
-    <View
-        android:id="@+id/view3"
-        android:layout_width="match_parent"
-        android:layout_height=".5dp"
-        android:background="@color/sceyt_color_divider"
-        app:layout_constraintBottom_toTopOf="@+id/layoutReplayMessage" />
+        tools:listitem="@layout/sceyt_item_input_image_attachment" />
 
     <include
-        android:id="@+id/layoutReplayMessage"
-        layout="@layout/sceyt_replay_message_container"
+        android:id="@+id/layoutReplyOrEditMessage"
+        layout="@layout/sceyt_reply_edit_message_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/rvAttachments" />
 
+    <View
+        android:id="@+id/view3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/sceyt_color_divider"
+        app:layout_constraintBottom_toTopOf="@+id/layoutInput" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop=".5dp"
+        android:layout_marginTop="1dp"
         android:background="@color/sceyt_color_dialog_bg_themed"
         android:paddingVertical="12dp"
-        app:layout_constraintTop_toBottomOf="@+id/layoutReplayMessage">
+        app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage">
 
-        <androidx.appcompat.widget.AppCompatEditText
+        <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionCompletionView
             android:id="@+id/messageInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
             android:background="@null"
+            android:gravity="center_vertical"
             android:hint="@string/sceyt_message"
             android:includeFontPadding="false"
-            android:inputType="textMultiLine"
+            android:inputType="textMultiLine|textCapSentences"
             android:maxLines="3"
-            android:gravity="center_vertical"
             android:minHeight="24dp"
             android:textColor="@color/sceyt_color_black_themed"
             android:textColorHint="@color/sceyt_color_hint"
@@ -77,8 +77,8 @@
             android:id="@+id/icAddAttachments"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:padding="2dp"
             android:layout_marginStart="14dp"
+            android:padding="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@drawable/sceyt_ic_upload_file" />
@@ -87,22 +87,45 @@
             android:id="@+id/icSendMessage"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:padding="2dp"
             android:layout_marginEnd="14dp"
+            android:padding="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_send_message" />
+            app:srcCompat="@drawable/sceyt_ic_voice" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
+        android:id="@+id/voiceRecordPresenter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewTop" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnJoin"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_accent"
+        android:background="@color/sceyt_gallery_item_default_color"
+        android:gravity="center"
+        android:paddingVertical="16dp"
         android:text="@string/sceyt_join"
-        android:textColor="@color/sceyt_color_white"
-        android:textSize="@dimen/smallTextSize"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/mediumTextSize"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewTop" />
+
+    <include
+        android:id="@+id/layoutCloseInput"
+        layout="@layout/sceyt_disable_message_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -17,19 +17,23 @@ sealed interface MessagePopupClickListeners {
         fun onEditMessageClick(message: SceytMessage)
     }
 
+    fun interface ForwardMessage : MessagePopupClickListeners {
+        fun onForwardMessageClick(view: View, message: SceytMessage)
+    }
+
     fun interface ReactMessage : MessagePopupClickListeners {
         fun onReactMessageClick(view: View, message: SceytMessage)
     }
 
-    fun interface ReplayMessage : MessagePopupClickListeners {
-        fun onReplayMessageClick(message: SceytMessage)
+    fun interface ReplyMessage : MessagePopupClickListeners {
+        fun onReplyMessageClick(message: SceytMessage)
     }
 
-    fun interface ReplayInThreadMessage : MessagePopupClickListeners {
-        fun onReplayMessageInThreadClick(message: SceytMessage)
+    fun interface ReplyInThreadMessage : MessagePopupClickListeners {
+        fun onReplyMessageInThreadClick(message: SceytMessage)
     }
 
     /** Use this if you want to implement all callbacks */
-    interface PopupClickListeners : CopyMessage, DeleteMessage, EditMessage, ReactMessage,
-            ReplayMessage, ReplayInThreadMessage
+    interface PopupClickListeners : CopyMessage, DeleteMessage, EditMessage, ForwardMessage,
+            ReactMessage, ReplyMessage, ReplyInThreadMessage
 }

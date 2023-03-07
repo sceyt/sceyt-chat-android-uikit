@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layoutToolbar"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/actionBarSize">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icBack"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="12dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:padding="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_arrow_back" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/roboto_medium"
+        android:padding="10dp"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/bigTextSize"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imvRightMenu"
+        app:layout_constraintStart_toEndOf="@+id/icBack"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Title" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imvRightMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvTitle"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/underline"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/sceyt_color_divider"
+        app:layout_constraintBottom_toBottomOf="@+id/layoutToolbar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

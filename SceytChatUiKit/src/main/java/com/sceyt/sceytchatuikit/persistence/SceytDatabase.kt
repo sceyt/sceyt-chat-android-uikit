@@ -6,32 +6,33 @@ import androidx.room.TypeConverters
 import com.sceyt.sceytchatuikit.persistence.converters.ChannelConverter
 import com.sceyt.sceytchatuikit.persistence.converters.ListStringConverter
 import com.sceyt.sceytchatuikit.persistence.converters.MessageConverter
-import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
-import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
-import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
-import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.dao.*
+import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 
 @Database(entities = [
     ChannelEntity::class,
     UserEntity::class,
     UserChatLink::class,
     MessageEntity::class,
+    MentionUserMessageLink::class,
     AttachmentEntity::class,
     ReactionEntity::class,
-    ReactionScoreEntity::class
-], version = 1, exportSchema = false)
+    ReactionScoreEntity::class,
+    PendingMarkersEntity::class,
+    AttachmentPayLoadEntity::class
+], version = 17, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
-    abstract fun userDao(): UserDao
     abstract fun messageDao(): MessageDao
+    abstract fun membersDao(): MembersDao
+    abstract fun userDao(): UserDao
     abstract fun reactionDao(): ReactionDao
+    abstract fun pendingMarkersDao(): PendingMarkersDao
+    abstract fun attachmentsDao(): AttachmentDao
 }

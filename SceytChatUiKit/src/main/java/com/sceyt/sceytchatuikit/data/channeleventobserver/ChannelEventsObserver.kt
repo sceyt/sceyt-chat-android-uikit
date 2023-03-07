@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 object ChannelEventsObserver {
 
     private val onTotalUnreadChangedFlow_ = MutableSharedFlow<ChannelUnreadCountUpdatedEventData>(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val onTotalUnreadChangedFlow: SharedFlow<ChannelUnreadCountUpdatedEventData> = onTotalUnreadChangedFlow_.asSharedFlow()
@@ -54,20 +54,24 @@ object ChannelEventsObserver {
 
 
     private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 30,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
 
 
     init {
-        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener() {
+        ChatClient.getClient().addChannelListener(TAG,object : ChannelListener {
             override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
                 val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
                 onTotalUnreadChangedFlow_.tryEmit(data)
-                Log.i("totalUnreadCountUpdated", "${channel?.unreadMessageCount}  $totalUnreadChannelCount  $totalUnreadMessageCount")
+                Log.i("totalUnreadCountUpdated", "${channel?.unreadMessageCount}  $totalUnreadChannelCount  $totalUnreadMessageCount  ${channel?.lastReadMessageId}")
             }
 
-            override fun onClearedHistory(channel: Channel?) {
+            override fun onDeleteAllMessagesForMe(channel: Channel?) {
+                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
+            }
+
+            override fun onDeleteAllMessagesForEveryone(channel: Channel?) {
                 onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
             }
 
@@ -161,12 +165,14 @@ object ChannelEventsObserver {
                 onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Added))
             }
 
-            override fun onDeliveryReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel?.id, from, DeliveryStatus.Delivered, messageIds))
+            override fun onDeliveryReceiptReceived(channel: Channel, from: User?, messageIds: MutableList<Long>) {
+                Log.i("messageMarker","onDeliveryEvent from msgs -> $messageIds")
+                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Delivered, messageIds))
             }
 
-            override fun onReadReceiptReceived(channel: Channel?, from: User?, messageIds: MutableList<Long>) {
-                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel?.id, from, DeliveryStatus.Read, messageIds))
+            override fun onReadReceiptReceived(channel: Channel, from: User?, messageIds: MutableList<Long>) {
+                Log.i("messageMarker","onReadEvent from msgs -> $messageIds")
+                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Read, messageIds))
             }
         })
     }

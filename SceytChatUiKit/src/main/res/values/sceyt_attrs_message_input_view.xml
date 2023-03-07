@@ -7,7 +7,6 @@
         <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
         <attr name="sceytMessageInputTextColor" format="reference" />
         <attr name="sceytMessageInputHintTextColor" format="reference" />
-        <attr name="sceytMessageInputHorizontalLineColor" format="reference" />
         <attr name="sceytMessageInputUserNameTextColor" format="reference" />
     </declare-styleable>
 </resources>

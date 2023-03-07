@@ -1,10 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatImageView
@@ -30,7 +32,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private var mediaPath: String? = null
     private var player: ExoPlayer? = null
     private var playerView: PlayerView? = null
-    private var onPlayPauseClick: ((play: Boolean) -> Unit)? = null
+    private var onPlayPauseClick: ((view: View, play: Boolean) -> Unit)? = null
     private var showPlayPauseButton = true
     private var playPauseButtonSize = 130
 
@@ -66,7 +68,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
             if (isPlaying) {
                 player?.pause()
                 playPauseItem.setImageDrawable(playDrawable)
-                onPlayPauseClick?.invoke(false)
+                onPlayPauseClick?.invoke(it, false)
             } else {
                 if (!isInitializesPlayer)
                     initPlayer(mediaPath)
@@ -75,7 +77,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                 player?.prepare()
                 player?.play()
                 playPauseItem.setImageDrawable(pauseDrawable)
-                onPlayPauseClick?.invoke(true)
+                onPlayPauseClick?.invoke(it, true)
             }
             isPlaying = !isPlaying
         }
@@ -144,6 +146,36 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         imageThumb?.isVisible = true
     }
 
+    fun getImageView(): ImageView {
+        if (imageThumb == null) {
+            imageThumb = AppCompatImageView(context).also {
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            addView(imageThumb, 0)
+        }
+        return imageThumb!!
+    }
+
+    private fun checkAndAddImage() {
+        if (imageThumb == null) {
+            imageThumb = AppCompatImageView(context).also {
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            addView(imageThumb, 0)
+        }
+    }
+
+    fun setBitmapImageThumb(bitmap: Bitmap?) {
+        if (imageThumb == null) {
+            imageThumb = AppCompatImageView(context).also {
+                it.setImageBitmap(bitmap)
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            addView(imageThumb, 0)
+        } else imageThumb?.setImageBitmap(bitmap)
+        imageThumb?.isVisible = true
+    }
+
     fun setPlayerViewAndPath(playerView: PlayerView?, mediaPath: String?) {
         this.playerView = playerView
         this.mediaPath = mediaPath
@@ -154,7 +186,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         playPauseItem.isVisible = show
     }
 
-    fun setPlayPauseClickListener(listener: (Boolean) -> Unit) {
+    fun setPlayPauseClickListener(listener: (view: View, play: Boolean) -> Unit) {
         onPlayPauseClick = listener
     }
 
@@ -164,4 +196,11 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         player = null
         setInitialState()
     }
+
+    fun pause() {
+        player?.pause()
+        playPauseItem.setImageDrawable(playDrawable)
+    }
+
+    fun getPlayPauseImageView() = playPauseItem
 }

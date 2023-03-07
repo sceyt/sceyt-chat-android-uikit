@@ -1,9 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
@@ -26,14 +23,17 @@ data class MessageEntity(
         var receipt: Boolean,
         var isTransient: Boolean,
         var silent: Boolean,
+        var direct: Boolean,
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
         var markerCount: List<MarkerCount>?,
-    /*  var selfReactions: Array<Reaction>? = null,
-    var mentionedUsers: Array<User>?,*/
+        var mentionedUsersIds: List<String>?,
         var selfMarkers: List<String>?,
         var parentId: Long?,
         var replyInThread: Boolean,
-        var replyCount: Long
+        var replyCount: Long,
+        val displayCount: Short,
+        @Embedded
+        val forwardingDetailsDb: ForwardingDetailsDb?
 )

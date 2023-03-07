@@ -23,19 +23,21 @@ open class SceytMessage(var id: Long,
                         var receipt: Boolean,
                         var isTransient: Boolean,
                         var silent: Boolean,
+                        var direct: Boolean,
                         var deliveryStatus: DeliveryStatus,
                         var state: MessageState,
                         var from: User?,
                         var attachments: Array<SceytAttachment>?,
-                        var lastReactions: Array<Reaction>?,
-                        var selfReactions: Array<Reaction>? = null,
+                        var selfReactions: Array<Reaction>?,
                         var reactionScores: Array<ReactionScore>?,
                         var markerCount: Array<MarkerCount>?,
                         var selfMarkers: Array<String>?,
-                        var mentionedUsers: Array<User>? = null,
+                        var mentionedUsers: Array<User>?,
                         var parent: SceytMessage?,
                         var replyInThread: Boolean,
-                        var replyCount: Long) : Parcelable, Cloneable {
+                        var replyCount: Long,
+                        val displayCount: Short,
+                        var forwardingDetails: ForwardingDetails?) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -50,6 +52,10 @@ open class SceytMessage(var id: Long,
     @IgnoredOnParcel
     var messageReactions: List<ReactionItem>? = null
 
+    val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L
+
+    val isReplied get() = parent != null && parent?.id != 0L && !replyInThread
+
     fun updateMessage(message: SceytMessage) {
         id = message.id
         tid = message.tid
@@ -58,7 +64,7 @@ open class SceytMessage(var id: Long,
         body = message.body
         type = message.type
         metadata = message.metadata
-        createdAt = message.createdAt
+        //createdAt = message.createdAt
         updatedAt = message.updatedAt
         incoming = message.incoming
         receipt = message.receipt
@@ -68,7 +74,6 @@ open class SceytMessage(var id: Long,
         state = message.state
         from = message.from
         attachments = message.attachments
-        lastReactions = message.lastReactions
         selfReactions = message.selfReactions
         reactionScores = message.reactionScores
         markerCount = message.markerCount
@@ -80,6 +85,9 @@ open class SceytMessage(var id: Long,
         reactionScores?.toMutableSet()?.retainAll {
             it.key == ""
         }
+        // Update inner data
+        messageReactions = message.messageReactions
+        files = message.files
     }
 
     public override fun clone(): SceytMessage {
@@ -97,11 +105,11 @@ open class SceytMessage(var id: Long,
             receipt = receipt,
             isTransient = isTransient,
             silent = silent,
+            direct = direct,
             deliveryStatus = deliveryStatus,
             state = state,
             from = from,
             attachments = attachments?.map(SceytAttachment::clone)?.toTypedArray(),
-            lastReactions = lastReactions,
             selfReactions = selfReactions,
             reactionScores = reactionScores,
             markerCount = markerCount,
@@ -109,15 +117,20 @@ open class SceytMessage(var id: Long,
             mentionedUsers = mentionedUsers,
             parent = parent,
             replyInThread = replyInThread,
-            replyCount = replyCount)
+            replyCount = replyCount,
+            displayCount = displayCount,
+            forwardingDetails = forwardingDetails).also {
+            it.messageReactions = messageReactions
+            it.files = files
+        }
     }
 
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is SceytMessage) return false
 
-        return if (other.deliveryStatus != DeliveryStatus.Pending)
-            other.id == id
-        else other.tid == tid
+        return if (deliveryStatus == DeliveryStatus.Pending || other.deliveryStatus == DeliveryStatus.Pending)
+            other.tid == tid
+        else other.id == id
     }
 
     override fun hashCode(): Int {

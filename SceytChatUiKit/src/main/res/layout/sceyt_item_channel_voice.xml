@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icFile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:background="@drawable/sceyt_bg_circle"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_play" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvFileName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/tvDuration"
+        app:layout_constraintStart_toEndOf="@+id/icFile"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="Annual Meeting" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvDate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/sceyt_color_gray_400"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toEndOf="@+id/tvFileName"
+        app:layout_constraintStart_toStartOf="@+id/tvFileName"
+        app:layout_constraintTop_toBottomOf="@+id/tvFileName"
+        android:text="16.09.22 • 21:00" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="02:34" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

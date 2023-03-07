@@ -1,11 +1,19 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
-internal enum class MessageTypeEnum {
-    Loading,
+enum class MessageTypeEnum {
     Text,
-    Deleted,
-    SingleVideoOrImage,
-    Attachments;
+    Media,
+    File,
+    Link,
+    System;
 
-    var incoming = false
+    fun value(): String {
+        return when (this) {
+            Text -> "text"
+            Media -> "media"
+            File -> "file"
+            Link -> "link"
+            System -> "system"
+        }
+    }
 }

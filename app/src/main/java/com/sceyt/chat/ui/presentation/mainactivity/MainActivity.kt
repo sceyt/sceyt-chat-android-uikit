@@ -2,13 +2,18 @@ package com.sceyt.chat.ui.presentation.mainactivity
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.toColorInt
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.databinding.ActivityMainBinding
 import com.sceyt.chat.ui.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.ui.presentation.mainactivity.profile.ProfileFragment
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 
 class MainActivity : AppCompatActivity() {
@@ -25,6 +30,17 @@ class MainActivity : AppCompatActivity() {
 
         setPagerAdapter()
         setBottomNavClickListeners()
+
+        SceytKitClient.getChannelsMiddleWare().getTotalUnreadCount().onEach {
+            binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
+                number = it
+                isVisible = it > 0
+                maxCharacterCount = 3
+                backgroundColor = "#FA4C56".toColorInt()
+                verticalOffset = 10
+                horizontalOffset = 10
+            }
+        }.launchIn(lifecycleScope)
     }
 
     override fun onBackPressed() {
