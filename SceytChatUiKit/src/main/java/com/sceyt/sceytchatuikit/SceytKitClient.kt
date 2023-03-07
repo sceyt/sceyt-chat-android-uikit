@@ -6,8 +6,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
@@ -93,7 +93,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private fun setListener() {
         ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
             when (it.state) {
-                Types.ConnectState.StateConnected -> {
+                ConnectionState.StateConnected -> {
                     notifyState(true, null)
 
                     ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
@@ -110,13 +110,13 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                     }
                     sceytSyncManager.startSync()
                 }
-                Types.ConnectState.StateFailed -> {
-                    notifyState(false, it.status?.error?.message)
+                ConnectionState.StateFailed -> {
+                    notifyState(false, it.exception?.message)
                 }
-                Types.ConnectState.StateDisconnect -> {
-                    if (it.status?.error?.code == 40102)
+                ConnectionState.StateDisconnected -> {
+                    if (it.exception?.code == 40102)
                         onTokenExpired_.tryEmit(Unit)
-                    else notifyState(false, it.status?.error?.message)
+                    else notifyState(false, it.exception?.message)
                 }
                 else -> {}
             }

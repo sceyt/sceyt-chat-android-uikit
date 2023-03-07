@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
 import androidx.lifecycle.*
-import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -51,7 +51,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             ChannelsCache.currentChannelId = channel.id
-            if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateConnected) {
+            if (ConnectionEventsObserver.connectionState == ConnectionState.StateConnected) {
                 if (pendingDisplayMsgIds.isNotEmpty()) {
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
                     pendingDisplayMsgIds.clear()
@@ -201,7 +201,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
-        if (stateData.state == Types.ConnectState.StateConnected) {
+        if (stateData.state == ConnectionState.StateConnected) {
             val message = messagesListView.getLastMessageBy {
                 // First tying to get last read message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
