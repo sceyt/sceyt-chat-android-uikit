@@ -253,4 +253,27 @@ object DateTimeUtil {
         }
         return text.trim()
     }
+
+    fun millisecondsToTime(milliseconds: Long): String {
+        val hours = TimeUnit.MILLISECONDS.toHours(milliseconds)
+        val minutes =
+            TimeUnit.MILLISECONDS.toMinutes(milliseconds) - TimeUnit.HOURS.toMinutes(hours)
+        val seconds =
+            TimeUnit.MILLISECONDS.toSeconds(milliseconds) - TimeUnit.MINUTES.toSeconds(minutes)
+
+        return if (hours > 0)
+            if (hours > 9)
+                String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            else
+                String.format("%d:%02d:%02d", hours, minutes, seconds)
+        else
+            if (minutes > 9)
+                String.format("%02d:%02d", minutes, seconds)
+            else
+                String.format("%d:%02d", minutes, seconds)
+    }
+
+    fun secondsToTime(seconds: Long): String {
+        return millisecondsToTime(seconds * 1000)
+    }
 }

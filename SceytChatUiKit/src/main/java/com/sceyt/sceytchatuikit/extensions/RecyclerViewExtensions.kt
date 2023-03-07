@@ -74,6 +74,15 @@ fun RecyclerView.getFirstVisibleItemPosition(): Int {
     return RecyclerView.NO_POSITION
 }
 
+fun RecyclerView.getLastVisibleItemPosition(): Int {
+    if (adapter?.itemCount != 0) {
+        val position = (layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+        if (position != RecyclerView.NO_POSITION)
+            return position
+    }
+    return RecyclerView.NO_POSITION
+}
+
 fun RecyclerView.lastCompletelyVisibleItemPosition(): Int {
     if (adapter?.itemCount != 0) {
         val position = (layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
@@ -92,9 +101,9 @@ fun RecyclerView.lastVisibleItemPosition(): Int {
     return RecyclerView.NO_POSITION
 }
 
-fun RecyclerView.checkIsNotCompletelyVisibleItem(position: Int): Boolean {
-    return ((layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition() > position
-            || (layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition() < position)
+fun RecyclerView.checkIsNotVisibleItem(position: Int): Boolean {
+    return ((layoutManager as LinearLayoutManager).findFirstVisibleItemPosition() > position
+            || (layoutManager as LinearLayoutManager).findLastVisibleItemPosition() < position)
 }
 
 
@@ -113,16 +122,24 @@ fun RecyclerView.addPagerSnapHelper() {
 }
 
 fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, callback: (Int) -> Unit) {
-    if (!checkIsNotCompletelyVisibleItem(position)) {
+    if (!checkIsNotVisibleItem(position)) {
         if (delay)
             Handler(Looper.getMainLooper()).postDelayed({ callback.invoke(scrollState) }, 100)
         else callback.invoke(scrollState)
     } else {
         addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                    callback.invoke(scrollState)
+                    removeOnScrollListener(this)
+                }
+            }
+
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    callback.invoke(newState)
+                if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                    callback.invoke(scrollState)
                     removeOnScrollListener(this)
                 }
             }
@@ -191,7 +208,7 @@ fun RecyclerView.runWhenReady(action: () -> Unit) {
 }
 
 fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
-    recyclerView.adapter?.let { adapter->
+    recyclerView.adapter?.let { adapter ->
         recyclerView.runWhenReady {
             dispatchUpdatesTo(adapter)
         }

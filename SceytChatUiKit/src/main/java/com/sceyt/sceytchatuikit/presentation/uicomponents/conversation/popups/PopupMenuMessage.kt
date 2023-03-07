@@ -10,16 +10,29 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 
-class PopupMenuMessage(private val context: Context, anchor: View, private var incoming: Boolean) : PopupMenu(context, anchor) {
+class PopupMenuMessage(private val context: Context, anchor: View, private var message: SceytMessage) : PopupMenu(context, anchor) {
 
     @SuppressLint("RestrictedApi")
     override fun show() {
         inflate(R.menu.sceyt_menu_popup_message)
         (menu as MenuBuilder).setOptionalIconsVisible(true)
+
+
+        val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending || message.deliveryStatus == DeliveryStatus.Failed
+
+        menu.findItem(R.id.sceyt_reply).isVisible = !statusPendingOrFailed
+        menu.findItem(R.id.sceyt_forward).isVisible = !statusPendingOrFailed
+        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank()
+
+
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
-        if (incoming) {
+
+        if (message.incoming) {
             deleteMessageItem.isVisible = false
             menu.findItem(R.id.sceyt_edit_message)?.isVisible = false
         } else

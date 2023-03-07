@@ -14,12 +14,18 @@ data class MessageDb(
         @Relation(parentColumn = "parentId", entityColumn = "message_id", entity = MessageEntity::class)
         val parent: ParentMessageDb?,
 
-        @Relation(parentColumn = "tid", entityColumn = "messageTid")
-        val attachments: List<AttachmentEntity>?,
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = AttachmentEntity::class)
+        val attachments: List<AttachmentDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId", entity = ReactionEntity::class)
-        val lastReactions: List<ReactionDb>?,
+        val selfReactions: List<ReactionDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
-        val reactionsScores: List<ReactionScoreEntity>?
+        val reactionsScores: List<ReactionScoreEntity>?,
+
+        @Relation(parentColumn = "userId", entityColumn = "user_id")
+        val forwardingUser: UserEntity?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
+        val mentionedUsers: List<MentionUserDb>?
 )

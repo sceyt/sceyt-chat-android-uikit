@@ -1,32 +1,27 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.hasDiff
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
@@ -36,11 +31,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -49,9 +44,11 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private var channelsRV: ChannelsRV
     private var pageStateView: PageStateView? = null
+    private var defaultClickListeners: ChannelClickListenersImpl
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
-    private var channelEventListener: ((ChannelEvent) -> Unit)? = null
+    private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
+    private val debounceHelper by lazy { DebounceHelper(300) }
 
     init {
 
@@ -78,7 +75,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             it.setEmptySearchStateView(ChannelStyle.emptySearchState)
         })
 
-        channelsRV.setChannelListener(object : ChannelClickListeners.ClickListeners {
+        defaultClickListeners = object : ChannelClickListenersImpl() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
                 clickListeners.onChannelClick(item)
             }
@@ -90,159 +87,54 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
                 clickListeners.onAvatarClick(item)
             }
-        })
+        }
+        channelsRV.setChannelListener(defaultClickListeners)
     }
 
     internal fun setChannelsList(channels: List<ChannelListItem>) {
         channelsRV.setData(channels)
     }
 
-    internal fun updateChannelsWithServerData(data: List<ChannelListItem>, offset: Int, hasNext: Boolean, lifecycleOwner: LifecycleOwner) {
-        val channels = ArrayList(channelsRV.getData() as? ArrayList ?: arrayListOf())
-        if (data.isEmpty() && offset == 0) {
-            channelsRV.setData(data)
-            return
-        }
-        if (channels.isEmpty()) {
-            channels.addAll(data)
-            channelsRV.setData(channels)
-        } else {
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                // Update UI channels if exist, or add new channels
-                data.forEach { dataItem ->
-
-                    channels.findIndexed {
-                        it is ChannelListItem.ChannelItem &&
-                                dataItem is ChannelListItem.ChannelItem &&
-                                it.channel.id == dataItem.channel.id
-                                || it is ChannelListItem.LoadingMoreItem
-                    }?.let {
-                        channels[it.first] = dataItem
-                    } ?: run {
-                        channels.add(dataItem)
-                    }
-                }
-
-                if (!hasNext)
-                    channels.remove(ChannelListItem.LoadingMoreItem)
-
-                withContext(Dispatchers.Main) {
-                    channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, channels)
-                }
-            }
-        }
-    }
-
     internal fun addNewChannels(channels: List<ChannelListItem>) {
         channelsRV.addNewChannels(channels)
     }
 
-    internal fun updateLastMessage(message: SceytMessage, checkId: Boolean, unreadCount: Long? = null): Boolean {
-        channelsRV.getChannelIndexed(message.channelId)?.let { pair ->
-            val channel = pair.second.channel
-            if (message.channelId == channel.id) {
-                val oldChannel = channel.clone()
-                if (!checkId || channel.lastMessage?.id == message.id)
-                    channel.lastMessage = message
+    internal fun addNewChannelAndSort(channelItem: ChannelListItem.ChannelItem) {
+        channelsRV.getData()?.let {
+            if (it.contains(channelItem)) return
+            val newData = ArrayList(it).also { items -> items.add(channelItem) }
+            channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, newData)
+        } ?: channelsRV.setData(arrayListOf(channelItem))
 
-                unreadCount?.let { count ->
-                    channel.unreadMessageCount = count
-                }
-                channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                sortChannelsBy(SceytKitConfig.sortChannelsBy)
-                return true
-            }
-        }
-        return false
+        pageStateView?.updateState(PageState.Nothing)
     }
 
-    internal fun updateLastMessageStatus(status: MessageStatusChangeData) {
-        context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val channelId = status.channelId ?: return@launch
-            channelsRV.getChannelIndexed(channelId)?.let { pair ->
-                val channel = pair.second.channel
-                channel.lastMessage?.let {
-                    if (status.messageIds.contains(it.id)) {
-                        val oldChannel = channel.clone()
-                        if (it.deliveryStatus < status.status) {
-                            it.deliveryStatus = status.status
-                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    internal fun updateOutgoingLastMessageStatus(channelId: Long, sceytMessage: SceytMessage) {
-        context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            channelsRV.getChannelIndexed(channelId)?.let { pair ->
-                val channel = pair.second.channel
-                val oldChannel = channel.clone()
-
-                channel.lastMessage?.let {
-                    if (sceytMessage.tid == it.tid) {
-                        channel.lastMessage = sceytMessage
-                        channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                    }
-                } ?: run {
-                    channel.lastMessage = sceytMessage
-                    channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                }
-            }
-        }
-    }
-
-    internal fun channelCleared(channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.lastMessage = null
-            channel.unreadMessageCount = 0
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-            sortChannelsBy(SceytKitConfig.sortChannelsBy)
-        }
-    }
-
-    internal fun updateMuteState(muted: Boolean, channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.muted = muted
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
-    }
-
-    internal fun channelUpdated(channel: SceytChannel?) {
-        channelsRV.getChannelIndexed(channel?.id ?: return)?.let { pair ->
+    internal fun channelUpdated(channel: SceytChannel?): ChannelItemPayloadDiff? {
+        channelsRV.getChannelIndexed(channel?.id ?: return null)?.let { pair ->
             val channelItem = pair.second
             val oldChannel = channelItem.channel.clone()
             channelItem.channel = channel
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
+            val diff = oldChannel.diff(channel)
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+            return diff
+        }
+        return null
+    }
+
+    internal fun onTyping(data: ChannelTypingEventData) {
+        channelsRV.getChannelIndexed(data.channel.id)?.let { pair ->
+            val channelItem = pair.second
+            val oldChannel = channelItem.channel.clone()
+            channelItem.channel.typingData = data
+            val diff = oldChannel.diff(channelItem.channel)
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
         }
     }
 
     internal fun deleteChannel(channelId: Long?) {
         channelsRV.deleteChannel(channelId ?: return)
-    }
-
-    internal fun markedChannelAsRead(channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.unreadMessageCount = 0
-            channel.markedUsUnread = false
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
-    }
-
-    internal fun markedChannelAsUnRead(channelId: Long?) {
-        channelsRV.getChannelIndexed(channelId ?: return)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.markedUsUnread = true
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-        }
+        if (channelsRV.getData().isNullOrEmpty())
+            pageStateView?.updateState(PageState.StateEmpty())
     }
 
     internal fun userBlocked(data: List<User>?) {
@@ -252,15 +144,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }?.let {
                 (it.channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
             }
-        }
-    }
-
-    internal fun muteUnMuteChannel(channelId: Long, muted: Boolean) {
-        channelsRV.getChannelIndexed(channelId)?.let { pair ->
-            val channel = pair.second.channel
-            val oldChannel = channel.clone()
-            channel.muted = muted
-            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
         }
     }
 
@@ -286,10 +169,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         } catch (ex: ConcurrentModificationException) {
             Log.e(TAG, ex.message.toString())
         }
-    }
-
-    private fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
-        channelsRV.sortBy(sortBy)
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
@@ -327,8 +206,25 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     /**
      * @param listener From listening events connected with channel.
      */
-    internal fun setChannelEvenListener(listener: (ChannelEvent) -> Unit) {
-        channelEventListener = listener
+    internal fun setChannelCommandEvenListener(listener: (ChannelEvent) -> Unit) {
+        channelCommandEventListener = listener
+    }
+
+    internal fun getData() = channelsRV.getData()
+
+    internal fun hideLoadingMore() {
+        channelsRV.hideLoadingMore()
+    }
+
+    fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
+        debounceHelper.submit { channelsRV.sortBy(sortBy) }
+    }
+
+    /**
+     * Cancel last sort channels job.
+     * */
+    fun cancelLastSort(): Boolean {
+        return debounceHelper.cancelLastDebounce()
     }
 
     /**
@@ -343,7 +239,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
         clickListeners = listener
-        channelsRV.getViewHolderFactory().setChannelListener(listener)
     }
 
     /**
@@ -361,7 +256,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         channelsRV.setViewHolderFactory(factory.also {
-            it.setChannelListener(clickListeners)
+            it.setChannelListener(defaultClickListeners)
         })
     }
 
@@ -377,13 +272,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        val updateChannel = item.channel.clone().apply {
-            unreadMessageCount = 0
-            markedUsUnread = false
-        }
-        Handler(Looper.getMainLooper()).postDelayed({
-            channelUpdated(updateChannel)
-        }, 300)
+        // Need open your conversation page
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
@@ -391,36 +280,37 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
-        showChannelActionsPopup(view, item)
+        if (item.channel.checkIsMemberInChannel())
+            showChannelActionsPopup(view, item)
     }
 
 
     // Channel Popup callbacks
     override fun onMarkAsReadClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.MarkAsRead(channel))
     }
 
     override fun onMarkAsUnReadClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.MarkAsUnRead(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.MarkAsUnRead(channel))
     }
 
     override fun onLeaveChannelClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
     }
 
     override fun onClearHistoryClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.ClearHistory(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.ClearHistory(channel))
     }
 
     override fun onBlockChannelClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.BlockChannel(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.BlockChannel(channel))
     }
 
     override fun onBlockUserClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.BlockUser(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.BlockUser(channel))
     }
 
     override fun onUnBlockUserClick(channel: SceytChannel) {
-        channelEventListener?.invoke(ChannelEvent.UnBlockUser(channel))
+        channelCommandEventListener?.invoke(ChannelEvent.UnBlockUser(channel))
     }
 }

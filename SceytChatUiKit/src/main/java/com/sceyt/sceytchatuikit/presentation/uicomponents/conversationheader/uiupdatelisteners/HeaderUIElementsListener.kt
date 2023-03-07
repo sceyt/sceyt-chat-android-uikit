@@ -8,17 +8,17 @@ import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 sealed interface HeaderUIElementsListener {
 
     fun interface TitleListener : HeaderUIElementsListener {
-        fun onTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean)
+        fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean)
     }
 
-    fun interface SubjectListener : HeaderUIElementsListener {
-        fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean)
+    fun interface SubTitleListener : HeaderUIElementsListener {
+        fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean)
     }
 
     fun interface AvatarListener : HeaderUIElementsListener {
-        fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replayInThread: Boolean)
+        fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean)
     }
 
     /** Use this if you want to implement all callbacks */
-    interface ElementsListeners : TitleListener, SubjectListener, AvatarListener
+    interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener
 }

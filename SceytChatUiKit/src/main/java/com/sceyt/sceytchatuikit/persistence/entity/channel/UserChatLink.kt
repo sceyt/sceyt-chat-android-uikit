@@ -13,5 +13,5 @@ data class UserChatLink(
         var userId: String,
         @ColumnInfo(name = "chat_id", index = true)
         var chatId: Long,
-        var role: String,
+        var role: String
 )

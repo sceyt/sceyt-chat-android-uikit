@@ -1,7 +1,14 @@
 package com.sceyt.sceytchatuikit.extensions
 
+import android.graphics.Typeface
 import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.StyleSpan
+import android.util.Base64
+import android.util.Patterns
 import androidx.core.text.isDigitsOnly
+import java.lang.Character.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -45,4 +52,51 @@ fun String?.isLink(): Boolean {
 
 fun CharSequence?.isNotNullOrBlank(): Boolean {
     return isNullOrBlank().not()
+}
+
+fun CharSequence?.setBoldSpan(from: Int, to: Int): SpannableStringBuilder {
+    val str = SpannableStringBuilder(this)
+    str.setSpan(StyleSpan(Typeface.BOLD), from, to, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    return str
+}
+
+fun CharSequence?.firstCharToUppercase(): CharSequence? {
+    if (this == null || isNullOrBlank()) return this
+    return replaceRange(0, 1, first().uppercase())
+}
+
+fun String?.toByteArraySafety(): ByteArray? {
+    this ?: return null
+    return try {
+        Base64.decode(this, Base64.NO_WRAP)
+    } catch (e: Exception) {
+        null
+    }
+}
+
+fun String?.extractLinks(): Array<String> {
+    this ?: return emptyArray()
+    val links = ArrayList<String>()
+    val m = Patterns.WEB_URL.matcher(this)
+    while (m.find()) {
+        val url = m.group()
+        links.add(url)
+    }
+    return links.toTypedArray()
+}
+
+fun String?.isRtl(): Boolean {
+    this ?: return false
+    for (char in this) {
+        when (getDirectionality(char)) {
+            DIRECTIONALITY_RIGHT_TO_LEFT,
+            DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC,
+            DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING,
+            DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE -> return true
+            DIRECTIONALITY_LEFT_TO_RIGHT,
+            DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING,
+            DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE -> return false
+        }
+    }
+    return false
 }

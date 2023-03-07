@@ -29,7 +29,7 @@ class UsersViewModel : BaseViewModel() {
     val createChannelLiveData: LiveData<SceytChannel> = _createChannelLiveData
 
     fun loadUsers(query: String = "", isLoadMore: Boolean) {
-        loadingItems.set(true)
+        loadingNextItems.set(true)
         viewModelScope.launch(Dispatchers.IO) {
             val response = if (isLoadMore)
                 usersRepository.loadMoreUsers()
@@ -44,7 +44,7 @@ class UsersViewModel : BaseViewModel() {
                 else _usersLiveData.postValue(mapToUserItems(response.data, hasNext))
             }
             notifyPageStateWithResponse(response, isLoadMore, empty, searchQuery = query)
-            loadingItems.set(false)
+            loadingNextItems.set(false)
         }
     }
 

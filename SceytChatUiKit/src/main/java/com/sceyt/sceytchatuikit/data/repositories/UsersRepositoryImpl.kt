@@ -1,14 +1,16 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.models.user.UserListQueryByIds
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class UsersRepositoryImpl : UsersRepository {
     private lateinit var usersQuery: UserListQuery
@@ -25,14 +27,15 @@ class UsersRepositoryImpl : UsersRepository {
             userListQuery.loadNext(object : UsersCallback {
                 override fun onResult(users: MutableList<User>?) {
                     if (users.isNullOrEmpty())
-                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                        continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else {
-                        continuation.resume(SceytResponse.Success(users))
+                        continuation.safeResume(SceytResponse.Success(users))
                     }
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "loadUsers error: ${e?.message}")
                 }
             })
         }
@@ -44,14 +47,15 @@ class UsersRepositoryImpl : UsersRepository {
             usersQuery.loadNext(object : UsersCallback {
                 override fun onResult(users: MutableList<User>?) {
                     if (users.isNullOrEmpty())
-                        continuation.resume(SceytResponse.Success(arrayListOf()))
+                        continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else {
-                        continuation.resume(SceytResponse.Success(users))
+                        continuation.safeResume(SceytResponse.Success(users))
                     }
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "loadMoreUsers error: ${e?.message}")
                 }
             })
         }
@@ -65,11 +69,33 @@ class UsersRepositoryImpl : UsersRepository {
 
             builder.load(object : UsersCallback {
                 override fun onResult(users: MutableList<User>) {
-                    continuation.resume(SceytResponse.Success(users))
+                    continuation.safeResume(SceytResponse.Success(users))
                 }
 
                 override fun onError(e: SceytException?) {
-                    continuation.resume(SceytResponse.Error(e))
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "getSceytUsersByIds error: ${e?.message}")
+                }
+            })
+        }
+    }
+
+    override suspend fun getSceytUserById(id: String): SceytResponse<User> {
+        return suspendCancellableCoroutine { continuation ->
+            val builder = UserListQueryByIds.Builder()
+                .setIds(listOf(id))
+                .build()
+
+            builder.load(object : UsersCallback {
+                override fun onResult(users: MutableList<User>) {
+                    if (users.isNotEmpty())
+                        continuation.safeResume(SceytResponse.Success(users[0]))
+                    else continuation.safeResume(SceytResponse.Error(SceytException(0, "User not found")))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    Log.e(TAG, "getSceytUserById error: ${e?.message}")
                 }
             })
         }

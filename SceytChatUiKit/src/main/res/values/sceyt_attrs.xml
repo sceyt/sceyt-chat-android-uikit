@@ -6,15 +6,15 @@
         <attr name="sceytAvatarViewFullName" format="string" />
         <attr name="sceytAvatarViewIsGroup" format="boolean" />
         <attr name="sceytAvatarViewTextSize" format="dimension|integer" />
-        <attr name="sceytAvatarBackgroundColor" format="color|reference" />
+        <attr name="sceytAvatarColor" format="color|reference" />
         <attr name="sceytAvatarDefaultIcon" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="SceytToReplayLineView">
-        <attr name="sceytToReplayLineViewToLeft" format="boolean" />
-        <attr name="sceytToReplayLineViewStrokeColor" format="reference|color" />
-        <attr name="sceytToReplayLineViewConnectedViewTop" format="reference" />
-        <attr name="sceytToReplayLineViewConnectedViewBottom" format="reference" />
+    <declare-styleable name="SceytToReplyLineView">
+        <attr name="sceytToReplyLineViewToLeft" format="boolean" />
+        <attr name="sceytToReplyLineViewStrokeColor" format="reference|color" />
+        <attr name="sceytToReplyLineViewConnectedViewTop" format="reference" />
+        <attr name="sceytToReplyLineViewConnectedViewBottom" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="SceytDateStatusView">
@@ -25,6 +25,7 @@
         <attr name="sceytDateStatusViewDateTextColor" format="reference|color" />
         <attr name="sceytDateStatusViewDateText" format="string" />
         <attr name="sceytDateStatusViewFirstStatus" format="boolean" />
+        <attr name="sceytDateStatusViewHighlighted" format="boolean" />
         <attr name="android:paddingStart" format="dimension" />
         <attr name="android:paddingEnd" format="dimension" />
         <attr name="android:paddingBottom" format="dimension" />
@@ -57,5 +58,61 @@
         <attr name="sceytVideoControllerPlayIcon" format="reference" />
         <attr name="sceytVideoControllerPauseIcon" format="reference" />
 
+    </declare-styleable>
+
+    <declare-styleable name="SceytCircularProgressView">
+        <attr name="progressColor" format="color"/>
+        <attr name="trackColor" format="color"/>
+        <attr name="progress" format="float"/>
+        <attr name="minProgress" format="float"/>
+        <attr name="roundedProgress" format="boolean"/>
+        <attr name="trackThickness" format="dimension"/>
+        <attr name="centerIcon" format="reference"/>
+        <attr name="iconTint" format="color"/>
+        <attr name="rotateAnimEnabled" format="boolean"/>
+        <attr name="backgroundColor" format="color"/>
+        <attr name="iconSizeInPercent" format="float"/>
+
+    </declare-styleable>
+
+    <declare-styleable name="SceytCustomToolbar">
+        <attr name="title" format="string" />
+        <attr name="navigationIcon" format="reference" />
+        <attr name="navigationEndIcon" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="ScalableVideoView">
+        <attr name="scalableType">
+            <enum name="none" value="0" />
+
+            <enum name="fitXY" value="1" />
+            <enum name="fitStart" value="2" />
+            <enum name="fitCenter" value="3" />
+            <enum name="fitEnd" value="4" />
+
+            <enum name="leftTop" value="5" />
+            <enum name="leftCenter" value="6" />
+            <enum name="leftBottom" value="7" />
+            <enum name="centerTop" value="8" />
+            <enum name="center" value="9" />
+            <enum name="centerBottom" value="10" />
+            <enum name="rightTop" value="11" />
+            <enum name="rightCenter" value="12" />
+            <enum name="rightBottom" value="13" />
+
+            <enum name="leftTopCrop" value="14" />
+            <enum name="leftCenterCrop" value="15" />
+            <enum name="leftBottomCrop" value="16" />
+            <enum name="centerTopCrop" value="17" />
+            <enum name="centerCrop" value="18" />
+            <enum name="centerBottomCrop" value="19" />
+            <enum name="rightTopCrop" value="20" />
+            <enum name="rightCenterCrop" value="21" />
+            <enum name="rightBottomCrop" value="22" />
+
+            <enum name="startInside" value="23" />
+            <enum name="centerInside" value="24" />
+            <enum name="endInside" value="25" />
+        </attr>
     </declare-styleable>
 </resources>

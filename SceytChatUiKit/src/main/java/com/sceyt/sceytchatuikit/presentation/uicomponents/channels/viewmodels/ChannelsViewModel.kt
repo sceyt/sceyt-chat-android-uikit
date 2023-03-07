@@ -1,156 +1,135 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val channelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
-    internal val preference: SceytSharedPreference by inject()
+    private var getChannelsJog: Job? = null
 
-    internal var searchQuery = ""
+    var searchQuery = ""
+        private set
 
-    private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<ChannelListItem>>(PaginationResponse.Nothing())
-    val loadChannelsFlow: StateFlow<PaginationResponse<ChannelListItem>> = _loadChannelsFlow
+    private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
+    val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
 
-    private val _markAsReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val markAsReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsReadLiveData
-
-    private val _markAsUnReadLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val markAsUnReadLiveData: LiveData<SceytResponse<SceytChannel>> = _markAsUnReadLiveData
-
-    private val _blockChannelLiveData = MutableLiveData<SceytResponse<Long>>()
-    val blockChannelLiveData: LiveData<SceytResponse<Long>> = _blockChannelLiveData
-
-    private val _clearHistoryLiveData = MutableLiveData<SceytResponse<Long>>()
-    val clearHistoryLiveData: LiveData<SceytResponse<Long>> = _clearHistoryLiveData
-
-    private val _deleteChannelLiveData = MutableLiveData<SceytResponse<Long>>()
-    val deleteChannelLiveData: LiveData<SceytResponse<Long>> = _deleteChannelLiveData
-
-    private val _leaveChannelLiveData = MutableLiveData<SceytResponse<Long>>()
-    val leaveChannelLiveData: LiveData<SceytResponse<Long>> = _leaveChannelLiveData
+    private val _searchChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
+    val searchChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _searchChannelsFlow
 
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
-    val blockUserLiveData: LiveData<SceytResponse<List<User>>> = _blockUserLiveData
+    val blockUserLiveData = _blockUserLiveData.asLiveData()
 
-    private val _muteUnMuteLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val muteUnMuteLiveData: LiveData<SceytResponse<SceytChannel>> = _muteUnMuteLiveData
-
-    val onNewMessageFlow: Flow<Pair<SceytChannel, SceytMessage>>
-    val onOutGoingMessageFlow: Flow<SceytMessage>
-    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
-    val onMessageStatusFlow: Flow<MessageStatusChangeData>
-    val onMessageEditedOrDeletedFlow: Flow<SceytMessage>
-    val onChannelEventFlow: Flow<com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData>
-
-    init {
-        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
-
-        onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
-
-        onNewMessageFlow = MessageEventsObserver.onMessageFlow.filter {
-            !it.second.replyInThread
-        }
-
-        onOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow.filter {
-            !it.replyInThread
-        }
-
-        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
-
-        onMessageEditedOrDeletedFlow = MessageEventsObserver.onMessageEditedOrDeletedFlow
-            .filterNotNull()
-            .map { it.toSceytUiMessage() }
+    enum class NotifyFlow {
+        LOAD, SEARCH
     }
 
-
-    fun getChannels(offset: Int, query: String = searchQuery) {
+    fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
+        //Reset search if any
         searchQuery = query
-        setPagingLoadingStarted()
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
-        viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.loadChannels(offset, query).collect {
-                initResponse(it)
+        getChannelsJog?.cancel()
+        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+            channelMiddleWare.loadChannels(offset, query, loadKey, ignoreDb).collect {
+                initPaginationResponse(it)
             }
         }
     }
 
-    private fun initResponse(it: PaginationResponse<SceytChannel>) {
-        when (it) {
+    fun searchChannels(offset: Int, limit: Int, query: List<String>, loadKey: LoadKeyData? = null,
+                       notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false) {
+        if (notifyFlow == NotifyFlow.LOAD) {
+            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+
+            notifyPageLoadingState(false)
+        }
+
+        getChannelsJog?.cancel()
+        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+            channelMiddleWare.searchChannels(offset, limit, query, loadKey, onlyMine, ignoreDb).collect {
+                when (notifyFlow) {
+                    // Notifies chanel list like getChannels
+                    NotifyFlow.LOAD -> initPaginationResponse(it)
+                    // Just notifies search flow
+                    NotifyFlow.SEARCH -> {
+                        _loadChannelsFlow.value = PaginationResponse.Nothing()
+                        _searchChannelsFlow.value = it
+                    }
+                }
+            }
+        }
+    }
+
+    private fun initPaginationResponse(response: PaginationResponse<SceytChannel>) {
+        when (response) {
             is PaginationResponse.DBResponse -> {
-                if (it.data.isNotEmpty()) {
-                    _loadChannelsFlow.value = PaginationResponse.DBResponse(mapToChannelItem(it.data, it.hasNext), it.offset)
-                    notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty(), searchQuery)
+                if (!checkIgnoreDatabasePagingResponse(response)) {
+                    _loadChannelsFlow.value = response
+                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
             is PaginationResponse.ServerResponse -> {
-                if (it.data is SceytResponse.Success) {
-                    _loadChannelsFlow.value = PaginationResponse.ServerResponse(
-                        SceytResponse.Success(mapToChannelItem(it.data.data, it.hasNext)), offset = it.offset, dbData = arrayListOf())
-                }
-                notifyPageStateWithResponse(it.data, it.offset > 0, it.data.data.isNullOrEmpty(), searchQuery)
+                _loadChannelsFlow.value = response
+                notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
             }
-            is PaginationResponse.Nothing -> return
-            is PaginationResponse.ServerResponse2 -> TODO()
+            else -> return
         }
-
-        pagingResponseReceived(it)
+        pagingResponseReceived(response)
     }
 
-    private fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
+    internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
+        val channelItems: List<ChannelListItem>
 
-        val channelItems: List<ChannelListItem> = data.map { item -> ChannelListItem.ChannelItem(item) }
-        if (hasNext)
-            (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+        withContext(Dispatchers.Default) {
+            channelItems = data.map { item -> ChannelListItem.ChannelItem(item) }
+
+            if (hasNext)
+                (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+        }
         return channelItems
     }
 
-    fun markAsRead(channelId: Long) {
+    fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsRead(channelId)
-            _markAsReadLiveData.postValue(response)
+            channelMiddleWare.markChannelAsRead(channelId)
         }
     }
 
-    fun markAsUnRead(channelId: Long) {
+    fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsUnRead(channelId)
-            _markAsUnReadLiveData.postValue(response)
+            channelMiddleWare.markChannelAsUnRead(channelId)
         }
     }
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.blockAndLeaveChannel(channelId)
-            _blockChannelLiveData.postValue(response)
+            channelMiddleWare.blockAndLeaveChannel(channelId)
         }
     }
 
@@ -168,47 +147,48 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun clearHistory(channelId: Long) {
+    fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.clearHistory(channelId)
-            _clearHistoryLiveData.postValue(response)
+            channelMiddleWare.clearHistory(channelId, forEveryone)
         }
     }
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.deleteChannel(channelId)
-            _deleteChannelLiveData.postValue(response)
+            channelMiddleWare.deleteChannel(channelId)
         }
     }
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.leaveChannel(channelId)
-            _leaveChannelLiveData.postValue(response)
+            channelMiddleWare.leaveChannel(channelId)
         }
     }
 
-    fun muteChannel(channelId: Long) {
+    fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.muteChannel(channelId, 0)
-            _muteUnMuteLiveData.postValue(response)
+            channelMiddleWare.muteChannel(channelId, muteUntil)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.unMuteChannel(channelId)
-            _muteUnMuteLiveData.postValue(response)
+            channelMiddleWare.unMuteChannel(channelId)
         }
     }
 
-    internal fun onChannelEvent(event: ChannelEvent) {
+    fun hideChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            channelMiddleWare.hideChannel(channelId)
+        }
+    }
+
+    internal fun onChannelCommandEvent(event: ChannelEvent) {
         when (event) {
-            is ChannelEvent.MarkAsRead -> markAsRead(event.channel.id)
-            is ChannelEvent.MarkAsUnRead -> markAsUnRead(event.channel.id)
+            is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
+            is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
             is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
-            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id)
+            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id, event.channel.channelType == ChannelTypeEnum.Public)
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
             is ChannelEvent.BlockUser -> {
                 if (event.channel.channelType == ChannelTypeEnum.Direct)

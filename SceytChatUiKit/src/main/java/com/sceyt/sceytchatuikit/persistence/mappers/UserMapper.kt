@@ -5,10 +5,10 @@ import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.persistence.entity.ChanelMember
+import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 
-fun ChanelMember.toSceytMember() = SceytMember(
+fun ChanelMemberDb.toSceytMember() = SceytMember(
     role = Role(link.role),
     user = user.toUser()
 )

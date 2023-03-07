@@ -2,23 +2,35 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.util.Predicate
+import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.diff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
@@ -26,6 +38,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Me
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -33,13 +47,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         MessagePopupClickListeners.PopupClickListeners, ReactionPopupClickListeners.PopupClickListeners {
 
     private var messagesRV: MessagesRV
+    private var scrollDownIcon: ScrollToDownView
     private var pageStateView: PageStateView? = null
+    private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     private lateinit var messagePopupClickListeners: MessagePopupClickListenersImpl
     private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
-    private var enabledClickActions = true
+    var enabledClickActions = true
+        private set
 
     init {
         setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
@@ -57,6 +74,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
+        addView(ScrollToDownView(context).also { toDownView ->
+            scrollDownIcon = toDownView
+            messagesRV.setScrollDownControllerListener { show ->
+                scrollDownIcon.isVisible = show
+            }
+        })
+
         if (!isInEditMode)
             addView(PageStateView(context).also {
                 pageStateView = it
@@ -72,52 +96,60 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagePopupClickListeners = MessagePopupClickListenersImpl(this)
         reactionClickListeners = ReactionPopupClickListenersImpl(this)
 
-        messagesRV.setMessageListener(object : MessageClickListeners.ClickListeners {
-            override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onMessageLongClick(view, item)
+        defaultClickListeners = object : MessageClickListenersImpl() {
+            override fun onMessageLongClick(view: View, item: MessageItem) {
+                clickListeners.onMessageLongClick(view, item)
             }
 
-            override fun onAvatarClick(view: View, item: MessageListItem.MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onAvatarClick(view, item)
+            override fun onAvatarClick(view: View, item: MessageItem) {
+                clickListeners.onAvatarClick(view, item)
             }
 
-            override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onReplayCountClick(view, item)
+            override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
+                clickListeners.onReplyMessageContainerClick(view, item)
+            }
+
+            override fun onReplyCountClick(view: View, item: MessageItem) {
+                clickListeners.onReplyCountClick(view, item)
             }
 
             override fun onAddReactionClick(view: View, message: SceytMessage) {
-                if (enabledClickActions)
-                    clickListeners.onAddReactionClick(view, message)
+                clickListeners.onAddReactionClick(view, message)
             }
 
             override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-                if (enabledClickActions)
-                    clickListeners.onReactionClick(view, item)
+                clickListeners.onReactionClick(view, item)
             }
 
             override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-                if (enabledClickActions)
-                    clickListeners.onReactionLongClick(view, item)
+                clickListeners.onReactionLongClick(view, item)
             }
 
             override fun onAttachmentClick(view: View, item: FileListItem) {
-                if (enabledClickActions)
-                    clickListeners.onAttachmentClick(view, item)
+                clickListeners.onAttachmentClick(view, item)
             }
 
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
-                if (enabledClickActions)
-                    clickListeners.onAttachmentLongClick(view, item)
+                clickListeners.onAttachmentLongClick(view, item)
             }
 
-            override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
-                if (enabledClickActions)
-                    clickListeners.onLinkClick(view, item)
+            override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+                clickListeners.onAttachmentLoaderClick(view, item)
             }
-        })
+
+            override fun onLinkClick(view: View, item: MessageItem) {
+                clickListeners.onLinkClick(view, item)
+            }
+
+            override fun onScrollToDownClick(view: ScrollToDownView) {
+                clickListeners.onScrollToDownClick(view)
+            }
+        }
+        messagesRV.setMessageListener(defaultClickListeners)
+
+        scrollDownIcon.setOnClickListener {
+            clickListeners.onScrollToDownClick(it as ScrollToDownView)
+        }
     }
 
     private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction) {
@@ -138,13 +170,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message.incoming)
+        val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messagePopupClickListeners.onEditMessageClick(message)
+                R.id.sceyt_forward -> messagePopupClickListeners.onForwardMessageClick(view, message)
                 R.id.sceyt_react -> messagePopupClickListeners.onReactMessageClick(view, message)
-                R.id.sceyt_replay -> messagePopupClickListeners.onReplayMessageClick(message)
-                R.id.sceyt_replay_in_thread -> messagePopupClickListeners.onReplayMessageInThreadClick(message)
+                R.id.sceyt_reply -> messagePopupClickListeners.onReplyMessageClick(message)
+                R.id.sceyt_reply_in_thread -> messagePopupClickListeners.onReplyMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messagePopupClickListeners.onCopyMessageClick(message)
                 R.id.sceyt_delete_message -> messagePopupClickListeners.onDeleteMessageClick(message, false)
             }
@@ -157,13 +190,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         reactionEventListener?.invoke(ReactionEvent.AddReaction(message, key))
     }
 
+    private fun onReplyMessageContainerClick(item: MessageItem) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToReplyMessage(item.message))
+    }
+
     private fun onReactionClick(reaction: ReactionItem.Reaction) {
         val containsSelf = reaction.reaction.containsSelf
         if (containsSelf)
             reactionClickListeners.onRemoveReaction(reaction)
         else
             reactionClickListeners.onAddReaction(reaction.message, reaction.reaction.key)
+    }
 
+    private fun onAttachmentLoaderClick(item: FileListItem) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(item))
     }
 
     private fun showAddEmojiDialog(message: SceytMessage) {
@@ -174,35 +214,50 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun getLastMessage() = messagesRV.getLastMsg()
+    private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
+        (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(message, diff)
+                ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
+    }
 
-    internal fun setMessagesList(data: List<MessageListItem>) {
-        messagesRV.setData(data)
+    internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
+        messagesRV.setData(data, force)
     }
 
     internal fun addNextPageMessages(data: List<MessageListItem>) {
         messagesRV.addNextPageMessages(data)
     }
 
+    internal fun addPrevPageMessages(data: List<MessageListItem>) {
+        messagesRV.addPrevPageMessages(data)
+    }
+
     internal fun addNewMessages(vararg data: MessageListItem) {
         if (data.isEmpty()) return
-        messagesRV.addNewMessages(*data)
+        messagesRV.awaitAnimationEnd {
+            messagesRV.addNewMessages(*data)
+        }
     }
 
     internal fun updateMessage(message: SceytMessage) {
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
-            if (item is MessageListItem.MessageItem && (item.message.id == message.id ||
+            if (item is MessageItem && ((message.id != 0L && item.message.id == message.id) ||
                             (item.message.id == 0L && item.message.tid == message.tid))) {
                 val oldMessage = item.message.clone()
-
-                item.message.apply {
-                    updateMessage(message)
-                    deliveryStatus = message.deliveryStatus
-                }
-                messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                item.message.updateMessage(message)
+                updateItem(index, item, oldMessage.diff(item.message))
                 break
             }
         }
+    }
+
+    internal fun getMessageById(messageId: Long): MessageItem? {
+        return messagesRV.getData()?.find { it is MessageItem && it.message.id == messageId }?.let {
+            (it as MessageItem)
+        }
+    }
+
+    internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
+        return messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == messageId }
     }
 
     internal fun sortMessages() {
@@ -210,27 +265,31 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == updateMessage.id }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+        if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
+            messagesRV.deleteMessageByTid(updateMessage.tid)
+            if (messagesRV.isEmpty())
+                pageStateView?.updateState(PageState.StateEmpty())
+            return
+        }
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.updateMessage(updateMessage)
-            if (message.state == MessageState.Deleted)
+            if (message.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
                 messagesRV.adapter?.notifyItemChanged(it.first)
-            else {
-                messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
-            }
+            else
+                updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
     internal fun updateReaction(data: SceytMessage) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.id == data.id }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == data.id }?.let {
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.reactionScores = data.reactionScores
-            message.lastReactions = data.lastReactions
             message.selfReactions = data.selfReactions
             message.messageReactions = data.messageReactions
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
@@ -242,12 +301,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         ids.forEach { id ->
             for ((index: Int, item: MessageListItem) in (messagesRV.getData()
                     ?: return).withIndex()) {
-                if (item is MessageListItem.MessageItem) {
+                if (item is MessageItem) {
                     val oldMessage = item.message.clone()
                     if (item.message.id == id) {
                         if (item.message.deliveryStatus < status)
                             item.message.deliveryStatus = status
-                        messagesRV.adapter?.notifyItemChanged(index, oldMessage.diff(item.message))
+                        updateItem(index, item, oldMessage.diff(item.message))
                         break
                     }
                 }
@@ -255,51 +314,103 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun updateMessagesStatusByTid(status: DeliveryStatus, tid: Long) {
+        for ((index: Int, item: MessageListItem) in (messagesRV.getData()
+                ?: return).withIndex()) {
+            if (item is MessageItem) {
+                val oldMessage = item.message.clone()
+                if (item.message.tid == tid) {
+                    if (item.message.deliveryStatus < status)
+                        item.message.deliveryStatus = status
+                    updateItem(index, item, oldMessage.diff(item.message))
+                    break
+                }
+            }
+        }
+    }
+
+    internal fun updateProgress(data: TransferData) {
+        Log.i(TAG, data.toString())
+        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+            val predicate: (SceytAttachment) -> Boolean = when (data.state) {
+                TransferState.Uploading, TransferState.PendingUpload, TransferState.PauseUpload, TransferState.Uploaded -> { attachment ->
+                    attachment.messageTid == data.messageTid
+                }
+                else -> { attachment ->
+                    attachment.url == data.url
+                }
+            }
+
+            if (data.state == TransferState.ThumbLoaded) {
+                updateThumb(data, predicate)
+                return
+            }
+
+            val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
+            val foundAttachmentFiles = (it.second as MessageItem).message.files?.map { item -> item.file }?.find(predicate)
+
+            foundAttachment?.let { attachment ->
+                attachment.updateWithTransferData(data)
+                foundAttachmentFiles?.updateWithTransferData(data)
+            }
+        }
+    }
+
+    private fun updateThumb(data: TransferData, predicate: (SceytAttachment) -> Boolean) {
+        Log.i(TAG, data.toString())
+        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+            val foundAttachmentFiles = (it.second as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
+            foundAttachmentFiles?.let { listItem ->
+                listItem.thumbPath = data.filePath
+            }
+        }
+    }
+
     internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData()?.findIndexed { it is MessageListItem.MessageItem && it.message.tid == tid }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.deliveryStatus = DeliveryStatus.Failed
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
-    internal fun updateReplayCount(replayedMessage: SceytMessage?) {
+    internal fun updateReplyCount(replyMessage: SceytMessage?) {
         messagesRV.getData()?.findIndexed {
-            it is MessageListItem.MessageItem && it.message.id == replayedMessage?.parent?.id
+            it is MessageItem && it.message.id == replyMessage?.parent?.id
         }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.replyCount++
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
-    internal fun newReplayMessage(messageId: Long?) {
+    internal fun newReplyMessage(messageId: Long?) {
         messagesRV.getData()?.findIndexed {
-            it is MessageListItem.MessageItem && it.message.id == messageId
+            it is MessageItem && it.message.id == messageId
         }?.let {
-            val message = (it.second as MessageListItem.MessageItem).message
+            val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.replyCount++
-            messagesRV.adapter?.notifyItemChanged(it.first, oldMessage.diff(message))
+            updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
-    internal fun setMessageDisplayedListener(listener: (SceytMessage) -> Unit) {
+    internal fun setMessageDisplayedListener(listener: (MessageListItem) -> Unit) {
         messagesRV.setMessageDisplayedListener(listener)
     }
 
-    internal fun setNeedLoadMoreMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setNeedLoadMoreMessagesListener(listener)
+    internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        messagesRV.setNeedLoadNextMessagesListener(listener)
     }
 
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setRichToStartListener(listener)
-    }
-
-    internal fun setRichToPrefetchDistanceListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToPrefetchDistanceListener(listener)
     }
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
@@ -315,13 +426,25 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateViewState(PageState.StateEmpty())
     }
 
-    fun hideLoadingMore() {
-        messagesRV.hideLoadingItem()
+    internal fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
+        messagesRV.deleteAllMessagesBefore(predicate)
+    }
+
+    internal fun setUnreadCount(unreadCount: Int) {
+        scrollDownIcon.setUnreadCount(unreadCount)
+    }
+
+    fun hideLoadingPrev() {
+        messagesRV.hideLoadingPrevItem()
+    }
+
+    fun hideLoadingNext() {
+        messagesRV.hideLoadingNextItem()
     }
 
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
-            it.setMessageListener(clickListeners)
+            it.setMessageListener(defaultClickListeners)
         })
     }
 
@@ -329,7 +452,68 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
     }
 
+    fun setNeedDownloadListener(callBack: (NeedMediaInfoData) -> Unit) {
+        messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
+    }
+
+    fun scrollToMessage(msgId: Long, highlight: Boolean) {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                    if (highlight)
+                        it.second.highlighted = true
+                    messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition(position)
+                if (highlight) {
+                    messagesRV.awaitToScrollFinish(position, callback = {
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    })
+                }
+            }
+        }
+    }
+
+    fun scrollToUnReadMessage() {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                    messagesRV.scrollToPosition(it.first)
+                }
+            }
+        }
+    }
+
+    fun scrollToLastMessage() {
+        MessagesAdapter.awaitUpdating {
+            messagesRV.awaitAnimationEnd {
+                messagesRV.scrollToPosition((messagesRV.getData()
+                        ?: return@awaitAnimationEnd).size - 1)
+            }
+        }
+    }
+
+    fun getData() = messagesRV.getData()
+
+
+    fun getFirstMessage() = messagesRV.getFirstMsg()
+
+    fun getLastMessage() = messagesRV.getLastMsg()
+
+    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getFirstMessageBy(predicate)
+
+    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getLastMessageBy(predicate)
+
     fun getMessagesRecyclerView() = messagesRV
+
+    fun isLastCompletelyItemDisplaying() = messagesRV.isLastCompletelyItemDisplaying()
 
     // Click listeners
     fun setMessageClickListener(listener: MessageClickListeners) {
@@ -342,58 +526,88 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
         clickListeners = listener
-        messagesRV.getViewHolderFactory().setMessageListener(listener)
     }
 
     fun setCustomMessagePopupClickListener(listener: MessagePopupClickListenersImpl) {
         messagePopupClickListeners = listener
     }
 
-    fun enableDisableClickActions(enabled: Boolean) {
-        enabledClickActions = enabled
+    fun enableDisableClickActions(enabled: Boolean, force: Boolean) {
+        if (force)
+            enabledClickActions = enabled
+        else if (enabledClickActions)
+            enabledClickActions = enabled
     }
+
 
     // Click events
-    override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
-        showMessageActionsPopup(view, item.message)
+    override fun onMessageLongClick(view: View, item: MessageItem) {
+        if (enabledClickActions)
+            showMessageActionsPopup(view, item.message)
     }
 
-    override fun onAvatarClick(view: View, item: MessageListItem.MessageItem) {
+    override fun onAvatarClick(view: View, item: MessageItem) {
 
     }
 
-    override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-        onReplayMessageInThreadClick(item.message)
+    override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
+        onReplyMessageContainerClick(item)
+    }
+
+    override fun onReplyCountClick(view: View, item: MessageItem) {
+        onReplyMessageInThreadClick(item.message)
     }
 
     override fun onAddReactionClick(view: View, message: SceytMessage) {
-        showAddEmojiDialog(message)
+        if (enabledClickActions)
+            showAddEmojiDialog(message)
     }
 
     override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        onReactionClick(item)
+        if (enabledClickActions)
+            onReactionClick(item)
     }
 
     override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-        showReactionActionsPopup(view, item)
+        if (enabledClickActions)
+            showReactionActionsPopup(view, item)
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {
-        item.openFile(context)
+        when (item) {
+            is FileListItem.Image -> {
+                MediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+            }
+            is FileListItem.Video -> {
+                MediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+            }
+            else -> item.file.openFile(context)
+        }
     }
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
-        showMessageActionsPopup(view, item.sceytMessage)
+        clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
     }
 
-    override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
-        context.openLink(item.message.body)
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+        onAttachmentLoaderClick(item)
+    }
+
+    override fun onLinkClick(view: View, item: MessageItem) {
+        item.message.attachments?.firstOrNull()?.let {
+            context.openLink(it.url)
+        }
+    }
+
+    override fun onScrollToDownClick(view: ScrollToDownView) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
     }
 
 
     // Message popup events
     override fun onCopyMessageClick(message: SceytMessage) {
         context.setClipboard(message.body)
+        Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 
     override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
@@ -406,15 +620,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.EditMessage(message))
     }
 
+    override fun onForwardMessageClick(view: View, message: SceytMessage) {
+        SceytForwardActivity.launch(context, message)
+    }
+
     override fun onReactMessageClick(view: View, message: SceytMessage) {
         onAddReactionClick(view, message)
     }
 
-    override fun onReplayMessageClick(message: SceytMessage) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.Replay(message))
+    override fun onReplyMessageClick(message: SceytMessage) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
     }
 
-    override fun onReplayMessageInThreadClick(message: SceytMessage) {
+    override fun onReplyMessageInThreadClick(message: SceytMessage) {
         // Override and add your logic if you
     }
 

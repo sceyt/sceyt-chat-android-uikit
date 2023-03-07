@@ -9,9 +9,10 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
     private var copyMessageListener: MessagePopupClickListeners.CopyMessage? = null
     private var deleteMessageListener: MessagePopupClickListeners.DeleteMessage? = null
     private var editMessageListener: MessagePopupClickListeners.EditMessage? = null
+    private var forwardMessageListener: MessagePopupClickListeners.ForwardMessage? = null
     private var reactMessageListener: MessagePopupClickListeners.ReactMessage? = null
-    private var replayMessageListener: MessagePopupClickListeners.ReplayMessage? = null
-    private var replayInThreadMessageListener: MessagePopupClickListeners.ReplayInThreadMessage? = null
+    private var replyMessageListener: MessagePopupClickListeners.ReplyMessage? = null
+    private var replyInThreadMessageListener: MessagePopupClickListeners.ReplyInThreadMessage? = null
 
     override fun onCopyMessageClick(message: SceytMessage) {
         defaultListeners.onCopyMessageClick(message)
@@ -33,14 +34,19 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
         reactMessageListener?.onReactMessageClick(view, message)
     }
 
-    override fun onReplayMessageClick(message: SceytMessage) {
-        defaultListeners.onReplayMessageClick(message)
-        replayMessageListener?.onReplayMessageClick(message)
+    override fun onForwardMessageClick(view: View, message: SceytMessage) {
+        defaultListeners.onForwardMessageClick(view, message)
+        forwardMessageListener?.onForwardMessageClick(view, message)
     }
 
-    override fun onReplayMessageInThreadClick(message: SceytMessage) {
-        defaultListeners.onReplayMessageInThreadClick(message)
-        replayInThreadMessageListener?.onReplayMessageInThreadClick(message)
+    override fun onReplyMessageClick(message: SceytMessage) {
+        defaultListeners.onReplyMessageClick(message)
+        replyMessageListener?.onReplyMessageClick(message)
+    }
+
+    override fun onReplyMessageInThreadClick(message: SceytMessage) {
+        defaultListeners.onReplyMessageInThreadClick(message)
+        replyInThreadMessageListener?.onReplyMessageInThreadClick(message)
     }
 
     fun setListener(listener: MessagePopupClickListeners) {
@@ -49,9 +55,10 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
                 copyMessageListener = listener
                 deleteMessageListener = listener
                 editMessageListener = listener
+                forwardMessageListener = listener
                 reactMessageListener = listener
-                replayMessageListener = listener
-                replayInThreadMessageListener = listener
+                replyMessageListener = listener
+                replyInThreadMessageListener = listener
             }
             is MessagePopupClickListeners.CopyMessage -> {
                 copyMessageListener = listener
@@ -62,14 +69,17 @@ open class MessagePopupClickListenersImpl(view: MessagesListView) : MessagePopup
             is MessagePopupClickListeners.EditMessage -> {
                 editMessageListener = listener
             }
+            is MessagePopupClickListeners.ForwardMessage -> {
+                forwardMessageListener = listener
+            }
             is MessagePopupClickListeners.ReactMessage -> {
                 reactMessageListener = listener
             }
-            is MessagePopupClickListeners.ReplayMessage -> {
-                replayMessageListener = listener
+            is MessagePopupClickListeners.ReplyMessage -> {
+                replyMessageListener = listener
             }
-            is MessagePopupClickListeners.ReplayInThreadMessage -> {
-                replayInThreadMessageListener = listener
+            is MessagePopupClickListeners.ReplyInThreadMessage -> {
+                replyInThreadMessageListener = listener
             }
         }
     }

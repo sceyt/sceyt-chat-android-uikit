@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="10dp">
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
@@ -22,8 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/avatar"
-        android:background="@drawable/sceyt_bg_inc_message"
-        android:paddingTop="4dp">
+        android:background="@drawable/sceyt_bg_inc_message">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
@@ -31,6 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
+            android:fontFamily="@font/roboto_medium"
             android:singleLine="true"
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
@@ -40,7 +41,8 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
-            tools:text="Henry Willian" />
+            tools:text="Henry Willian"
+            tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/messageBody"
@@ -48,7 +50,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="12dp"
             android:layout_marginBottom="8dp"
             android:text="@string/sceyt_message_was_deleted"
             android:textColor="@color/sceyt_color_gray_400"
@@ -64,14 +66,14 @@
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:layout_marginBottom="2dp"
+            android:layout_marginEnd="11dp"
+            android:layout_marginBottom="5dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/layoutDetails"
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewStatusIconSize="16dp"
+            app:sceytDateStatusViewStatusIconSize="15.5dp"
             tools:sceytDateStatusViewDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

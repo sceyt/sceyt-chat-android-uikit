@@ -55,6 +55,6 @@ class ReactionsAdapter(
     }
 
     override fun getItemCount(): Int {
-        return currentList.size + 1
+        return currentList.size
     }
 }

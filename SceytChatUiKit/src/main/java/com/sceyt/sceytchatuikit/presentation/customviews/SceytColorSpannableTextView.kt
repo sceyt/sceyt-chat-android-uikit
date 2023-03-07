@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 import android.content.Context
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import androidx.annotation.ColorRes
@@ -42,16 +43,28 @@ class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, at
             return this
         }
 
+        fun setSpannableString(text: SpannableString): BuildSpannable {
+            spanString = SpannableString(text)
+            return this
+        }
+
+        fun append(text: String): BuildSpannable {
+            if (text.isEmpty()) return this
+            spanString = SpannableString(TextUtils.concat(text, spanString))
+            return this
+        }
+
         fun setFlag(flag: Int): BuildSpannable {
             this.flag = flag
             return this
         }
 
-        fun build() {
+        fun build(): SpannableString {
             if (fromIndex < toIndex)
                 spanString.setSpan(ForegroundColorSpan(context.getCompatColorByTheme(spanColorId)), fromIndex, toIndex, flag)
             setSpannableText(spanString)
             buildSpannable = this
+            return spanString
         }
     }
 

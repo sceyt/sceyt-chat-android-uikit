@@ -2,7 +2,10 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.annotation.SuppressLint
 import android.content.res.Resources
-import android.text.InputType
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.text.*
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -13,6 +16,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
+import com.sceyt.sceytchatuikit.shared.utils.ViewEnabledUtils
 import kotlinx.coroutines.*
 import kotlin.math.roundToInt
 
@@ -30,11 +35,11 @@ fun dpToPx(dp: Float): Int {
     return (dp * density).roundToInt()
 }
 
-fun View.screenWidthPx() = resources.configuration.screenWidthDp.dpToPx()
+fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 
-fun View.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+fun View.screenHeightPx() = resources.displayMetrics.heightPixels
 
-fun Fragment.screenHeightPx() = resources.configuration.screenHeightDp.dpToPx()
+fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
 
 fun EditText.setMultiLineCapSentencesAndSendAction() {
     imeOptions = EditorInfo.IME_ACTION_SEND
@@ -86,4 +91,46 @@ fun SwitchCompat.setOnlyClickable() {
             callOnClick()
         return@setOnTouchListener true
     }
+}
+
+fun View.setOnClickListenerAvailable(clockAvailableData: ClickAvailableData, disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+    setOnClickListener {
+        if (clockAvailableData.isAvailable) {
+            clockAvailableData.isAvailable = false
+            onClickCallBack.invoke(it)
+            Handler(Looper.getMainLooper()).postDelayed({
+                clockAvailableData.isAvailable = true
+            }, disableDuration)
+        }
+    }
+}
+
+fun View.setOnLongClickListenerAvailable(clockAvailableData: ClickAvailableData, disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+    setOnLongClickListener {
+        if (clockAvailableData.isAvailable) {
+            clockAvailableData.isAvailable = false
+            onClickCallBack.invoke(it)
+            Handler(Looper.getMainLooper()).postDelayed({
+                clockAvailableData.isAvailable = true
+            }, disableDuration)
+        }
+        return@setOnLongClickListener true
+    }
+}
+
+fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+    setOnClickListener {
+        ViewEnabledUtils.disableClickViewForWhile(it, disableDuration)
+        onClickCallBack.invoke(it)
+    }
+}
+
+@Suppress("DEPRECATION")
+fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, textWidth: Int): StaticLayout {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        StaticLayout.Builder.obtain(title, 0, title.length, this, textWidth)
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setLineSpacing(0f, 1f)
+            .setIncludePad(includePadding).build()
+    } else StaticLayout(title, this, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, includePadding)
 }

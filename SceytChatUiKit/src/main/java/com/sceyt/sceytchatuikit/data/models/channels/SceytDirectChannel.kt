@@ -12,22 +12,34 @@ class SceytDirectChannel(
         override var createdAt: Long,
         override var updatedAt: Long,
         override var unreadMessageCount: Long,
+        override var unreadMentionCount: Long,
+        override var unreadReactionCount: Long,
         override var lastMessage: SceytMessage?,
         override var muted: Boolean,
         override var markedUsUnread: Boolean,
+        override var lastDeliveredMessageId: Long,
+        override var lastReadMessageId: Long,
         override var channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
+        override var messagesDeletionDate: Long,
+        override var lastMessages: List<SceytMessage>?,
         var peer: SceytMember?,
 ) : SceytChannel(id = id,
     createdAt = createdAt,
     updatedAt = updatedAt,
     unreadMessageCount = unreadMessageCount,
+    unreadMentionCount = unreadMentionCount,
+    unreadReactionCount = unreadReactionCount,
     lastMessage = lastMessage,
     label = label,
     metadata = metadata,
     muted = muted,
     muteExpireDate = null,
     markedUsUnread = markedUsUnread,
-    channelType = channelType) {
+    lastDeliveredMessageId = lastDeliveredMessageId,
+    lastReadMessageId = lastReadMessageId,
+    channelType = channelType,
+    messagesDeletionDate = messagesDeletionDate,
+    lastMessages = lastMessages) {
 
     override val channelSubject: String
         get() = peer?.getPresentableName() ?: ""
@@ -45,11 +57,17 @@ class SceytDirectChannel(
             createdAt = createdAt,
             updatedAt = updatedAt,
             unreadMessageCount = unreadMessageCount,
+            unreadMentionCount = unreadMentionCount,
+            unreadReactionCount = unreadReactionCount,
             lastMessage = lastMessage?.clone(),
             markedUsUnread = markedUsUnread,
             muted = muted,
             channelType = channelType,
-            peer = peer?.copy())
+            peer = peer?.copy(),
+            lastDeliveredMessageId = lastDeliveredMessageId,
+            lastReadMessageId = lastReadMessageId,
+            messagesDeletionDate = messagesDeletionDate,
+            lastMessages = lastMessages)
     }
 }
 

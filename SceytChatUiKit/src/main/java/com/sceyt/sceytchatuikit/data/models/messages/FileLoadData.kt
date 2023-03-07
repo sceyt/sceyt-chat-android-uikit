@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 class FileLoadData(val loadId: String) {
-    var progressPercent: Float = 1f
+    var progressPercent: Float = 2f
     var loading: Boolean = false
     var success: Boolean = true
     var position = 0

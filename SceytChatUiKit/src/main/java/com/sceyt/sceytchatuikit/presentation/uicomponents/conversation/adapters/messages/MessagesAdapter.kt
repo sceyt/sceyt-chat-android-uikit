@@ -2,13 +2,14 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
+import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
@@ -22,8 +23,8 @@ import kotlinx.coroutines.withContext
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
         RecyclerView.Adapter<BaseMsgViewHolder>() {
-    private val mLoadingItem by lazy { MessageListItem.LoadingMoreItem }
-    private var updateJob: Job? = null
+    private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
+    private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
@@ -58,23 +59,34 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         holder.onViewDetachedFromWindow()
     }
 
-    fun getSkip() = messages.filterIsInstance<MessageListItem.MessageItem>().size
+    fun getSkip() = messages.filterIsInstance<MessageItem>().size
 
-    fun getFirstMessageItem() = messages.find { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
+    fun getFirstMessageItem() = messages.find { it is MessageItem } as? MessageItem
 
-    fun getLastMessageItem() = messages.findLast { it is MessageListItem.MessageItem } as? MessageListItem.MessageItem
+    fun getLastMessageItem() = messages.findLast { it is MessageItem } as? MessageItem
 
-    fun removeLoading() {
-        if (messages.remove(mLoadingItem))
+    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean) = messages.find(predicate)
+
+    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean) = messages.findLast(predicate)
+
+    fun removeLoadingPrev() {
+        if (messages.remove(loadingPrevItem))
             notifyItemRemoved(0)
     }
 
+    fun removeLoadingNext() {
+        messages.findIndexed { it is MessageListItem.LoadingNextItem }?.let {
+            if (messages.remove(loadingNextItem))
+                notifyItemRemoved(it.first)
+        }
+    }
+
     private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
-        if (newItem is MessageListItem.MessageItem && prevItem is MessageListItem.MessageItem) {
+        if (newItem is MessageItem && prevItem is MessageItem) {
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
-                prevMessage.canShowAvatarAndName = prevMessage.from?.id != newItem.message.from?.id
+                prevMessage.canShowAvatarAndName = prevMessage.incoming && prevMessage.from?.id != newItem.message.from?.id
                 notifyItemChanged(prevIndex, Unit)
             }
 
@@ -89,20 +101,28 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         }
     }
 
-    fun addNextPageMessagesList(items: List<MessageListItem>) {
-        removeLoading()
+    fun addPrevPageMessagesList(items: List<MessageListItem>) {
+        removeLoadingPrev()
         if (items.isEmpty()) return
 
         val firstItem = getFirstMessageItem()
-        val dateItem = messages.find { it is MessageListItem.DateSeparatorItem && it.msgId == firstItem?.message?.id }
+        val dateItem = messages.find { it is MessageListItem.DateSeparatorItem && it.msgTid == firstItem?.message?.tid }
         messages.addAll(0, items)
         notifyItemRangeInserted(0, items.size)
         updateDateAndState(items.last(), firstItem, dateItem)
     }
 
+    fun addNextPageMessagesList(items: List<MessageListItem>) {
+        if (items.isEmpty()) return
+        val filteredItems = items.minus(messages.toSet())
+        removeLoadingNext()
+        addNewMessages(filteredItems)
+    }
+
     fun addNewMessages(items: List<MessageListItem>) {
         if (items.isEmpty()) return
         val filteredItems = items.minus(messages.toSet())
+        if (filteredItems.isEmpty()) return
 
         messages.addAll(filteredItems)
         notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
@@ -115,27 +135,20 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
 
             withContext(Dispatchers.Main) {
-                val isLastItemVisible = recyclerView.isLastItemDisplaying()
                 productDiffResult.dispatchUpdatesToSafety(recyclerView)
-
-                this@MessagesAdapter.messages.clear()
-                this@MessagesAdapter.messages.addAll(messages)
-
-                if (isLastItemVisible)
-                    recyclerView.scrollToPosition(itemCount - 1)
+                this@MessagesAdapter.messages = SyncArrayList(messages)
             }
         }
-
     }
 
     fun getData() = messages
 
     fun needTopOffset(position: Int): Boolean {
         try {
-            val prevItem = (messages.getOrNull(position - 1) as? MessageListItem.MessageItem)
-            val currentItem = (messages.getOrNull(position) as? MessageListItem.MessageItem)
-            if (prevItem != null && currentItem != null)
-                return prevItem.message.incoming != currentItem.message.incoming
+            val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
+            val current = (messages.getOrNull(position) as? MessageItem)?.message
+            if (prev != null && current != null)
+                return prev.incoming != current.incoming || prev.type == MessageTypeEnum.System.value()
         } catch (_: Exception) {
         }
         return true
@@ -145,6 +158,28 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     fun clearData() {
         messages.clear()
         notifyDataSetChanged()
+    }
+
+    fun deleteMessageByTid(tid: Long) {
+        messages.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
+            messages.removeAt(it.first)
+            notifyItemRemoved(it.first)
+        }
+        messages.findIndexed { it is MessageListItem.DateSeparatorItem && it.msgTid == tid }?.let {
+            messages.removeAt(it.first)
+            notifyItemRemoved(it.first)
+        }
+    }
+
+    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
+        ArrayList(messages).forEach { item ->
+            if (predicate.test(item)) {
+                messages.findIndexed { it == item }?.let {
+                    messages.removeAt(it.first)
+                    notifyItemRemoved(it.first)
+                }
+            }
+        }
     }
 
     fun sort(recyclerView: RecyclerView) {
@@ -158,6 +193,18 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             productDiffResult.dispatchUpdatesToSafety(recyclerView)
             if (isLastItemVisible)
                 recyclerView.scrollToPosition(itemCount - 1)
+        }
+    }
+
+    companion object {
+        private var updateJob: Job? = null
+
+        fun awaitUpdating(cb: () -> Unit) {
+            if (updateJob == null || updateJob?.isCompleted == true || updateJob?.isCompleted == true)
+                cb.invoke()
+            else {
+                updateJob?.invokeOnCompletion { cb.invoke() }
+            }
         }
     }
 }

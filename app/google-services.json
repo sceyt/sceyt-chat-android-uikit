@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "324675278450",
+    "project_id": "sceyttest-ac3bc",
+    "storage_bucket": "sceyttest-ac3bc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324675278450:android:df5e65fadfb01b06ec94eb",
+        "android_client_info": {
+          "package_name": "com.sceyt.chat.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324675278450-om9pmso850c3jvo7u2icrq4qfn1t063v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3smft0V3TFHPtJcxTkRZHJh7f6RJXW-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324675278450-om9pmso850c3jvo7u2icrq4qfn1t063v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324675278450:android:bf0a8f736c8e2de6ec94eb",
+        "android_client_info": {
+          "package_name": "com.sceyt.chat.ui"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324675278450-om9pmso850c3jvo7u2icrq4qfn1t063v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3smft0V3TFHPtJcxTkRZHJh7f6RJXW-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324675278450-om9pmso850c3jvo7u2icrq4qfn1t063v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

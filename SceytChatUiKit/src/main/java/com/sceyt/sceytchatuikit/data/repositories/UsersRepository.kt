@@ -7,4 +7,5 @@ interface UsersRepository {
     suspend fun loadUsers(query: String): SceytResponse<List<User>>
     suspend fun loadMoreUsers(): SceytResponse<List<User>>
     suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<User>>
+    suspend fun getSceytUserById(id: String): SceytResponse<User>
 }

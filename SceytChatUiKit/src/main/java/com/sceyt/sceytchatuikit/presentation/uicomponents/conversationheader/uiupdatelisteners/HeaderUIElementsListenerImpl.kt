@@ -9,36 +9,36 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUIElementsListener.ElementsListeners {
     private var defaultListeners: HeaderUIElementsListener.ElementsListeners = view
     private var titleListener: HeaderUIElementsListener.TitleListener? = null
-    private var subjectListener: HeaderUIElementsListener.SubjectListener? = null
+    private var subTitleListener: HeaderUIElementsListener.SubTitleListener? = null
     private var avatarListener: HeaderUIElementsListener.AvatarListener? = null
 
-    override fun onTitle(titleTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
-        defaultListeners.onTitle(titleTextView, channel, replayMessage, replayInThread)
-        titleListener?.onTitle(titleTextView, channel, replayMessage, replayInThread)
+    override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+        defaultListeners.onTitle(titleTextView, channel, replyMessage, replyInThread)
+        titleListener?.onTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onSubject(subjectTextView: TextView, channel: SceytChannel, replayMessage: SceytMessage?, replayInThread: Boolean) {
-        defaultListeners.onSubject(subjectTextView, channel, replayMessage, replayInThread)
-        subjectListener?.onSubject(subjectTextView, channel, replayMessage, replayInThread)
+    override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+        defaultListeners.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
+        subTitleListener?.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replayInThread: Boolean) {
-        defaultListeners.onAvatar(avatar, channel, replayInThread)
-        avatarListener?.onAvatar(avatar, channel, replayInThread)
+    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean) {
+        defaultListeners.onAvatar(avatar, channel, replyInThread)
+        avatarListener?.onAvatar(avatar, channel, replyInThread)
     }
 
     fun setListener(listener: HeaderUIElementsListener) {
         when (listener) {
             is HeaderUIElementsListener.ElementsListeners -> {
                 titleListener = listener
-                subjectListener = listener
+                subTitleListener = listener
                 avatarListener = listener
             }
             is HeaderUIElementsListener.TitleListener -> {
                 titleListener = listener
             }
-            is HeaderUIElementsListener.SubjectListener -> {
-                subjectListener = listener
+            is HeaderUIElementsListener.SubTitleListener -> {
+                subTitleListener = listener
             }
             is HeaderUIElementsListener.AvatarListener -> {
                 avatarListener = listener

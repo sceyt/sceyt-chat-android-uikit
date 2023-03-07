@@ -7,28 +7,41 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventDat
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
+import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import org.koin.core.component.inject
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
-        private val usersDao: UserDao) : PersistenceMembersLogic {
+        private val membersDao: MembersDao,
+        private val usersDao: UserDao,
+        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
+
+    private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         if (data.channel == null || data.members == null) return
@@ -39,28 +52,39 @@ internal class PersistenceMembersLogicImpl(
                 channelDao.insertUserChatLinks(data.members.map {
                     UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
+                channelDao.getChannelById(chatId)?.let {
+                    channelsCache.upsertChannel(it.toChannel())
+                } ?: run {
+                    channelDao.insertChannel(data.channel.toChannelEntity())
+                    channelsCache.add(data.channel.toSceytUiChannel())
+                }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
+                channelDao.deleteChannel(chatId)
+                channelsCache.deleteChannel(chatId)
             }
-            ChannelMembersEventEnum.UnBlocked -> {}
+            ChannelMembersEventEnum.UnBlocked -> {
+                channelDao.updateChannel(data.channel.toChannelEntity())
+                channelsCache.upsertChannel(data.channel.toSceytUiChannel())
+            }
         }
     }
 
     override suspend fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
-        channelDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
+        membersDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
     }
 
-    override suspend fun loadChannelMembers(channelId: Long, offset: Int): Flow<PaginationResponse<SceytMember>> {
+    override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         val normalizedOffset = offset / CHANNELS_MEMBERS_LOAD_SIZE * CHANNELS_MEMBERS_LOAD_SIZE
         Log.i(TAG, "normalizedOffset  old->$offset normalized-> $normalizedOffset")
         return callbackFlow {
-            val dbMembers = getMembersDb(channelId, normalizedOffset, CHANNELS_MEMBERS_LOAD_SIZE)
+            val dbMembers = getMembersDb(channelId, normalizedOffset, role, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
             if (dbMembers.isNotEmpty())
-                trySend(PaginationResponse.DBResponse(dbMembers, normalizedOffset, hasNextDb))
+                trySend(PaginationResponse.DBResponse(dbMembers, null, normalizedOffset, hasNextDb))
 
-            val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset)
+            val response = channelsRepository.loadChannelMembers(channelId, normalizedOffset, role)
 
             if (response is SceytResponse.Success) {
                 saveMembersToDb(channelId, response.data)
@@ -68,22 +92,36 @@ internal class PersistenceMembersLogicImpl(
                 getRemovedItemsAndDeleteFromDb(channelId, dbMembers, response.data)
 
                 // Get new updated items from DB
-                val updatedMembers = getMembersDb(channelId, 0, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
+                val updatedMembers = getMembersDb(channelId, 0, role, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
                 val hasNextServer = response.data?.size == CHANNELS_MEMBERS_LOAD_SIZE
-                trySend(PaginationResponse.ServerResponse(response, updatedMembers, normalizedOffset, hasNextServer))
+                trySend(PaginationResponse.ServerResponse(data = response, cacheData = updatedMembers, loadKey = null,
+                    normalizedOffset, hasDiff = true, hasNext = hasNextServer, hasPrev = false,
+                    LoadNext, false))
             } else
-                trySend(PaginationResponse.ServerResponse(response, arrayListOf(), 0))
+                trySend(PaginationResponse.ServerResponse(response, arrayListOf(), null, 0,
+                    hasDiff = false, hasNext = false, hasPrev = false, loadType = LoadNext, ignoredDb = false))
 
+            channel.close()
             awaitClose()
         }
     }
 
-    private fun getMembersDb(channelId: Long, offset: Int, limit: Int): List<SceytMember> {
-        return channelDao.getChannelMembers(channelId, limit = limit, offset = offset)
-            .map { memberEntity -> memberEntity.toSceytMember() }
+    private suspend fun getMembersDb(channelId: Long, offset: Int, role: String?, limit: Int): List<SceytMember> {
+        val data = if (!role.isNullOrBlank())
+            membersDao.getChannelMembersWithRole(channelId, limit = limit, offset = offset, role)
+        else membersDao.getChannelMembers(channelId, limit, offset)
+        return data.map { memberEntity -> memberEntity.toSceytMember() }
     }
 
-    private fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {
+    override suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember> {
+        return membersDao.getChannelMembersByDisplayName(channelId, name).map { it.toSceytMember() }
+    }
+
+    override suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember> {
+        return membersDao.getChannelMembersByIds(channelId, *ids).map { it.toSceytMember() }
+    }
+
+    private suspend fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {
         if (list.isNullOrEmpty()) return
 
         val links = arrayListOf<UserChatLink>()
@@ -98,7 +136,8 @@ internal class PersistenceMembersLogicImpl(
         channelDao.insertUserChatLinks(links)
     }
 
-    private fun getRemovedItemsAndDeleteFromDb(channelId: Long, dbMembers: List<SceytMember>, serverResponse: List<SceytMember>?): List<SceytMember> {
+    private suspend fun getRemovedItemsAndDeleteFromDb(channelId: Long, dbMembers: List<SceytMember>,
+                                                       serverResponse: List<SceytMember>?): List<SceytMember> {
         serverResponse ?: return emptyList()
         val removedItems: List<SceytMember> = dbMembers.minus(serverResponse.toSet())
         if (removedItems.isNotEmpty()) {
@@ -114,14 +153,15 @@ internal class PersistenceMembersLogicImpl(
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
-                channelDao.updateOwner(channelId = channelId, newOwnerId = member.id)
+                membersDao.updateOwner(channelId = channelId, newOwnerId = member.id)
+                channelsCache.upsertChannel(response.data)
             }
         }
         return response
     }
 
-    override suspend fun changeChannelMemberRole(channelId: Long, member: SceytMember): SceytResponse<SceytChannel> {
-        val response = channelsRepository.changeChannelMemberRole(channelId, member.toMember())
+    override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {
+        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map { it.toMember() }.toTypedArray())
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.let { members ->
@@ -145,6 +185,7 @@ internal class PersistenceMembersLogicImpl(
             channelDao.insertUserChatLinks(members.map {
                 UserChatLink(userId = it.id, chatId = channelId, role = it.role.name)
             })
+            (response.data as? SceytGroupChannel)?.let { channelsCache.updateMembersCount(it) }
         }
         return response
     }
@@ -152,8 +193,10 @@ internal class PersistenceMembersLogicImpl(
     override suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.blockAndDeleteMember(channelId, memberId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
+            (response.data as? SceytGroupChannel)?.let { channelsCache.updateMembersCount(it) }
+        }
 
         return response
     }
@@ -161,8 +204,10 @@ internal class PersistenceMembersLogicImpl(
     override suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.deleteMember(channelId, memberId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
+            (response.data as? SceytGroupChannel)?.let { channelsCache.updateMembersCount(it) }
+        }
 
         return response
     }
@@ -173,9 +218,15 @@ internal class PersistenceMembersLogicImpl(
         } else
             channelsRepository.unblockUser(userId)
 
-        if (response is SceytResponse.Success)
+        if (response is SceytResponse.Success) {
             usersDao.blockUnBlockUser(userId, block)
+            persistenceChannelsLogic.blockUnBlockUser(userId, block)
+        }
 
         return response
+    }
+
+    override suspend fun getMembersCountDb(channelId: Long): Int {
+        return membersDao.getMembersCount(channelId)
     }
 }

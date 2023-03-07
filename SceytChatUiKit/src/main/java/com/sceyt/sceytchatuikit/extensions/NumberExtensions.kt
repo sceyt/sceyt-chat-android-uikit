@@ -4,6 +4,8 @@ import android.content.res.Resources
 import android.util.DisplayMetrics
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 import kotlin.math.pow
@@ -70,3 +72,11 @@ internal fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
  * Fetches the current system display metrics based on [Resources].
  */
 internal fun displayMetrics(): DisplayMetrics = Resources.getSystem().displayMetrics
+
+private val timeFormatter: SimpleDateFormat = SimpleDateFormat("m:ss", Locale.ENGLISH).apply {
+    timeZone = TimeZone.getTimeZone("UTC")
+}
+
+fun Long.durationToMinSecShort(): String {
+    return timeFormatter.format(Date(this))
+}

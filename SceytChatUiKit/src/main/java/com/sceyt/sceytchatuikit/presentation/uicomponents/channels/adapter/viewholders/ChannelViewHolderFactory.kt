@@ -21,10 +21,11 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 open class ChannelViewHolderFactory(context: Context) {
-    private val layoutInflater = LayoutInflater.from(context)
-    private val channelClickListenersImpl = ChannelClickListenersImpl()
+    protected val layoutInflater = LayoutInflater.from(context)
+    protected val channelClickListenersImpl = ChannelClickListenersImpl()
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-    private var userNameBuilder: ((User) -> String)? = null
+    var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+        private set
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -36,11 +37,11 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding: SceytItemChannelBinding = if (cachedViews.isNullOrEmpty()) {
-            cashViews(parent.context)
+            cacheViews(parent.context)
             SceytItemChannelBinding.inflate(layoutInflater, parent, false)
         } else {
             if (cachedViews!!.size < SceytKitConfig.CHANNELS_LOAD_SIZE / 2)
-                cashViews(parent.context, SceytKitConfig.CHANNELS_LOAD_SIZE / 2)
+                cacheViews(parent.context, SceytKitConfig.CHANNELS_LOAD_SIZE / 2)
 
             cachedViews!!.pop().also {
                 it.root.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -73,12 +74,12 @@ open class ChannelViewHolderFactory(context: Context) {
     companion object {
         private lateinit var asyncLayoutInflater: AsyncLayoutInflater
         private var cachedViews: Stack<SceytItemChannelBinding>? = Stack<SceytItemChannelBinding>()
-        private var cashJob: Job? = null
+        private var cacheJob: Job? = null
 
-        fun cashViews(context: Context, count: Int = SceytKitConfig.CHANNELS_LOAD_SIZE) {
+        fun cacheViews(context: Context, count: Int = SceytKitConfig.CHANNELS_LOAD_SIZE) {
             asyncLayoutInflater = AsyncLayoutInflater(context)
 
-            cashJob = (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {
+            cacheJob = (context as? AppCompatActivity)?.lifecycleScope?.launch(Dispatchers.IO) {
                 for (i in 0..count) {
                     asyncLayoutInflater.inflate(R.layout.sceyt_item_channel, null) { view, _, _ ->
                         cachedViews?.push(SceytItemChannelBinding.bind(view))
@@ -87,8 +88,8 @@ open class ChannelViewHolderFactory(context: Context) {
             }
         }
 
-        fun clearCash() {
-            cashJob?.cancel()
+        fun clearCache() {
+            cacheJob?.cancel()
             cachedViews?.clear()
             cachedViews = null
         }

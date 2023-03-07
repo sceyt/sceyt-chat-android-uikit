@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/video"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:drawableTop="@drawable/sceyt_ic_video_24"
+        android:drawablePadding="10dp"
+        android:gravity="center"
+        android:minWidth="50dp"
+        android:text="@string/sceyt_video_small_case"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp"
+        android:visibility="visible"
+        app:iconSize="@dimen/_34sdp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:drawableTop="@drawable/sceyt_ic_phone_24"
+        android:drawablePadding="10dp"
+        android:gravity="center"
+        android:minWidth="50dp"
+        android:text="@string/sceyt_audio"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/muteUnMute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:drawableTop="@drawable/sceyt_ic_muted_channel"
+        android:drawablePadding="10dp"
+        android:gravity="center"
+        android:minWidth="50dp"
+        android:text="@string/sceyt_mute"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:drawableTop="@drawable/sceyt_ic_more_24"
+        android:drawablePadding="10dp"
+        android:gravity="center"
+        android:minWidth="50dp"
+        android:text="@string/sceyt_more"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp" />
+
+</androidx.appcompat.widget.LinearLayoutCompat>

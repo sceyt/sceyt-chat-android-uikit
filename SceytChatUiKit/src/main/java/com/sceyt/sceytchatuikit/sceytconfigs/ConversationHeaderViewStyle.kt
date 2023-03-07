@@ -15,11 +15,15 @@ object ConversationHeaderViewStyle {
     @ColorRes
     var subTitleColor: Int = R.color.sceyt_color_gray_400
 
+    @ColorRes
+    var underlineColor: Int = R.color.sceyt_color_divider
+
 
     internal fun updateWithAttributes(typedArray: TypedArray): ConversationHeaderViewStyle {
         backIcon = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderBackIcon, backIcon)
         titleColor = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderTitleColor, titleColor)
         subTitleColor = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderSubTitleColor, subTitleColor)
+        underlineColor = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderUnderlineColor, underlineColor)
         return this
     }
 }

@@ -6,10 +6,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.databinding.SceytItemAddReactionBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemReactionBinding
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 
 class ReactionViewHolderFactory(context: Context,
-                                private val messageListeners: MessageClickListenersImpl?) {
+                                private val messageListeners: MessageClickListeners.ClickListeners?) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
@@ -28,10 +28,7 @@ class ReactionViewHolderFactory(context: Context,
     }
 
     fun getItemViewType(position: Int, size: Int): Int {
-        return when {
-            position < size -> ReactionViewType.Reaction.ordinal
-            else -> ReactionViewType.Add.ordinal
-        }
+        return ReactionViewType.Reaction.ordinal
     }
 
     enum class ReactionViewType {

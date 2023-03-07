@@ -1,212 +1,413 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.*
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageState
+import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.SceytKitClient.myId
+import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
-    val pendingDisplayMsgIds by lazy { arrayListOf<Long>() }
+    val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
-    loadMessages(0, 0)
-
+    /** Send pending markers and pending messages when lifecycle come back onResume state,
+     * Also set update current chat Id in ChannelsCache*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (pendingDisplayMsgIds.isNotEmpty()) {
-                markMessageAsDisplayed(*pendingDisplayMsgIds.toLongArray())
-                pendingDisplayMsgIds.clear()
+            ChannelsCache.currentChannelId = channel.id
+            if (ConnectionEventsObserver.connectionState == ConnectionState.StateConnected) {
+                if (pendingDisplayMsgIds.isNotEmpty()) {
+                    markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
+                    pendingDisplayMsgIds.clear()
+                }
+                sendPendingMessages()
             }
         }
     }
 
-    messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
+    if (channel.markedUsUnread)
+        markChannelAsRead(channel.id)
 
-    lifecycleOwner.lifecycleScope.launch {
-        loadMessagesFlow.collect { response ->
-            when (response) {
-                is PaginationResponse.DBResponse -> {
-                    if (response.offset == 0) {
-                        messagesListView.setMessagesList(mapToMessageListItem(response.data, response.hasNext))
-                    } else
-                        messagesListView.addNextPageMessages(mapToMessageListItem(response.data, response.hasNext))
+    if (channel.lastReadMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
+            || channel.lastReadMessageId == channel.lastMessage?.id)
+        loadPrevMessages(0, 0)
+    else {
+        pinnedLastReadMessageId = channel.lastReadMessageId
+        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue))
+    }
+
+    messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
+
+    messagesListView.setNeedDownloadListener {
+        needMediaInfo(it)
+    }
+
+    fun checkEnableDisableActions(channel: SceytChannel) {
+        messagesListView.enableDisableClickActions(
+            enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
+                    && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true), false)
+    }
+
+    checkEnableDisableActions(channel)
+
+    fun getCompareMessage(loadType: PaginationResponse.LoadType, offset: Int): SceytMessage? {
+        if (offset == 0) return null
+        return if (loadType == LoadNext)
+            messagesListView.getLastMessage()?.message
+        else messagesListView.getFirstMessage()?.message
+    }
+
+    fun checkToHildeLoadingMoreItemByLoadType(loadType: PaginationResponse.LoadType) {
+        when {
+            loadType == LoadPrev && !hasPrevDb -> messagesListView.hideLoadingPrev()
+            loadType == LoadNext && !hasNextDb -> messagesListView.hideLoadingNext()
+            loadType == LoadNear -> {
+                if (!hasPrevDb)
+                    messagesListView.hideLoadingPrev()
+                if (!hasNextDb)
+                    messagesListView.hideLoadingNext()
+            }
+        }
+    }
+
+    fun checkToScrollAfterResponse(response: PaginationResponse<SceytMessage>) {
+        val loadKey = response.getLoadKey() ?: return
+        when (loadKey.key) {
+            LoadKeyType.ScrollToUnreadMessage.longValue -> {
+                messagesListView.scrollToUnReadMessage()
+            }
+            LoadKeyType.ScrollToLastMessage.longValue -> {
+                messagesListView.scrollToLastMessage()
+            }
+            LoadKeyType.ScrollToMessageById.longValue -> {
+                messagesListView.scrollToMessage(loadKey.value, true)
+            }
+        }
+    }
+
+    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
+        if (response.offset == 0) {
+            messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
+                hasNext = response.hasNext, hasPrev = response.hasPrev))
+        } else {
+            val compareMessage = getCompareMessage(response.loadType, response.offset)
+            when (response.loadType) {
+                LoadPrev -> {
+                    messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
+                        hasNext = response.hasNext, hasPrev = response.hasPrev))
                 }
-                is PaginationResponse.ServerResponse2 -> {
-                    when (response.data) {
-                        is SceytResponse.Success -> {
-                            if (response.hasDiff) {
-                                val newMessages = mapToMessageListItem(response.cashData, response.hasNext)
-                                messagesListView.setMessagesList(newMessages)
-                            } else
-                                if (response.hasNext.not())
-                                    messagesListView.hideLoadingMore()
+                LoadNext -> {
+                    messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
+                        hasNext = response.hasNext, hasPrev = response.hasPrev, compareMessage))
+                }
+                LoadNear, LoadNewest -> {
+                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
+                        hasPrev = response.hasPrev), true)
+                }
+            }
+        }
+        checkToScrollAfterResponse(response)
+    }
+
+    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytMessage>) {
+        when (response.data) {
+            is SceytResponse.Success -> {
+                if (response.hasDiff) {
+                    val newMessages = mapToMessageListItem(data = response.cacheData,
+                        hasNext = response.hasNext,
+                        hasPrev = response.hasPrev)
+                    messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+                } else
+                    checkToHildeLoadingMoreItemByLoadType(response.loadType)
+
+                checkToScrollAfterResponse(response)
+            }
+            is SceytResponse.Error -> checkToHildeLoadingMoreItemByLoadType(response.loadType)
+        }
+    }
+
+    suspend fun initMessagesResponse(response: PaginationResponse<SceytMessage>) {
+        when (response) {
+            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
+            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
+            else -> return
+        }
+    }
+
+    ChannelsCache.channelDeletedFlow
+        .filter { it == channel.id }
+        .onEach {
+            messagesListView.context.asActivity().finish()
+        }.launchIn(lifecycleOwner.lifecycleScope)
+
+    SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner, Observer {
+        if (it.first.id == channel.id) {
+            channel = it.first
+
+            if (pinnedLastReadMessageId == 0L && channel.lastReadMessageId != 0L && channel.lastReadMessageId != channel.lastMessage?.id)
+                pinnedLastReadMessageId = channel.lastReadMessageId
+
+            lifecycleOwner.lifecycleScope.launch {
+                val currentMessages = messagesListView.getData()?.filterIsInstance<MessageListItem.MessageItem>()?.map { item -> item.message }
+                        ?: arrayListOf()
+                val newMessages = it.second.minus(currentMessages.toSet())
+                if (newMessages.isNotEmpty()) {
+                    val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
+                    messagesListView.addNextPageMessages(mapToMessageListItem(data = newMessages,
+                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
+                    if (isLastDisplaying)
+                        messagesListView.scrollToLastMessage()
+
+                    messagesListView.sortMessages()
+                }
+            }
+        }
+    })
+
+    ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
+        if (stateData.state == ConnectionState.StateConnected) {
+            val message = messagesListView.getLastMessageBy {
+                // First tying to get last read message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
+            } ?: messagesListView.getFirstMessageBy {
+                // Next tying to get fist sent message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
+            } ?: messagesListView.getFirstMessageBy {
+                // Next tying to get fist delivered message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
+            }
+            (message as? MessageListItem.MessageItem)?.let {
+                syncConversationMessagesAfter(it.message.id)
+            }
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    MessagesCache.messageUpdatedFlow.onEach { messages ->
+        viewModelScope.launch(Dispatchers.Default) {
+            messages.forEach {
+                val message = initMessageInfoData(it)
+                withContext(Dispatchers.Main) {
+                    if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
+                        messagesListView.messageEditedOrDeleted(message)
+                    else messagesListView.updateMessage(message)
+                }
+            }
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    MessagesCache.messagesClearedFlow.filter { it.first == channel.id }.onEach { pair ->
+        val date = pair.second
+        messagesListView.deleteAllMessagesBefore {
+            it.getMessageCreatedAt() <= date && (it !is MessageListItem.MessageItem ||
+                    it.message.deliveryStatus != DeliveryStatus.Pending)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(lifecycleOwner.lifecycleScope)
+
+    onChannelUpdatedEventFlow.onEach {
+        channel = it
+        messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
+        checkEnableDisableActions(channel)
+        if (channel.lastMessage == null)
+            messagesListView.clearData()
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onScrollToLastMessageLiveData.observe(lifecycleOwner, Observer {
+        viewModelScope.launch(Dispatchers.Default) {
+            channel.lastMessage?.id?.let { lastMsgId ->
+                messagesListView.getMessageIndexedById(lastMsgId)?.let {
+                    withContext(Dispatchers.Main) {
+                        messagesListView.scrollToLastMessage()
+                    }
+                } ?: run {
+                    loadNewestMessages(LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
+                    markChannelAsRead(channel.id)
+                }
+            }
+        }
+    })
+
+    onScrollToReplyMessageLiveData.observe(lifecycleOwner, Observer {
+        it.parent?.id?.let { parentId ->
+            viewModelScope.launch(Dispatchers.Default) {
+                messagesListView.getMessageIndexedById(parentId)?.let {
+                    withContext(Dispatchers.Main) {
+                        it.second.highlighted = true
+                        messagesListView.scrollToPositionAndHighlight(it.first, true)
+                    }
+                } /*?: run {
+                    loadNearMessages(parentId, LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageById.longValue,
+                        value = parentId))
+                }*/
+            }
+        }
+    })
+
+    markAsReadLiveData.observe(lifecycleOwner, Observer {
+        if (it is SceytResponse.Success) {
+            val data = it.data ?: return@Observer
+            viewModelScope.launch(Dispatchers.Default) {
+                messagesListView.getData()?.forEach { listItem ->
+                    (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
+                        if (data.messageIds.contains(message.id)) {
+                            message.selfMarkers = message.selfMarkers?.toMutableSet()?.apply {
+                                add(SelfMarkerTypeEnum.Displayed.value())
+                            }?.toTypedArray()
                         }
-                        else -> if (!hasNextDb) messagesListView.hideLoadingMore()
                     }
                 }
-                else -> return@collect
             }
         }
-    }
+    })
 
-    messageEditedDeletedLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                it.data?.let { data -> messagesListView.messageEditedOrDeleted(data) }
+    messageEditedDeletedLiveData.observe(lifecycleOwner, Observer {
+        if (it is SceytResponse.Success) {
+            if (it.data?.deliveryStatus == DeliveryStatus.Pending ||
+                    it.data?.deliveryStatus == DeliveryStatus.Failed) {
+                messagesListView.messageEditedOrDeleted(it.data)
             }
-            is SceytResponse.Error -> {
-                if (it.data?.deliveryStatus == DeliveryStatus.Pending ||
-                        it.data?.deliveryStatus == DeliveryStatus.Failed) {
-                    messagesListView.messageEditedOrDeleted(it.data)
-                } else
-                    customToastSnackBar(messagesListView, it.message ?: "")
-            }
-        }
-    }
+        } else
+            customToastSnackBar(messagesListView, it.message ?: "")
+    })
 
-    addDeleteReactionLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                it.data?.let { data ->
-                    messagesListView.updateReaction(data)
-                }
-            }
-            is SceytResponse.Error -> {
-                customToastSnackBar(messagesListView, it.message ?: "")
-            }
-        }
-    }
-
-    onNewOutgoingMessageLiveData.observe(lifecycleOwner) {
-        val initMessage = mapToMessageListItem(
-            data = arrayListOf(it),
-            hasNext = false,
-            lastMessage = messagesListView.getLastMessage())
-
-        messagesListView.addNewMessages(*initMessage.toTypedArray())
-        messagesListView.updateViewState(PageState.Nothing)
-    }
-
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messagesListView.enableDisableClickActions(!replayInThread && it.checkIsMemberInChannel(myId))
-    }
-
-    fun checkStateAndMarkAsRead(message: SceytMessage) {
-        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED)
-            markMessageAsDisplayed(message.id)
-        else pendingDisplayMsgIds.add(message.id)
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onNewMessageFlow.collect {
+    onNewOutGoingMessageFlow.onEach {
+        if (hasNext || hasNextDb) return@onEach
+        viewModelScope.launch {
             val initMessage = mapToMessageListItem(
                 data = arrayListOf(it),
                 hasNext = false,
-                lastMessage = messagesListView.getLastMessage())
+                hasPrev = false,
+                compareMessage = messagesListView.getLastMessage()?.message)
 
             messagesListView.addNewMessages(*initMessage.toTypedArray())
             messagesListView.updateViewState(PageState.Nothing)
-
-            checkStateAndMarkAsRead(it)
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onNewThreadMessageFlow.collect {
-            messagesListView.updateReplayCount(it)
-        }
-    }
+    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
+        checkEnableDisableActions(it)
+    })
 
-    lifecycleOwner.lifecycleScope.launch {
-        onOutGoingThreadMessageFlow.collect {
-            messagesListView.newReplayMessage(it.parent?.id)
-        }
-    }
+    fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
+        (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
+            if (!message.incoming || message.selfMarkers?.contains(SelfMarkerTypeEnum.Displayed.value()) == true)
+                return
 
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageStatusFlow.collect {
-            messagesListView.updateMessagesStatus(it.status, it.messageIds)
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageReactionUpdatedFlow.collect {
-            messagesListView.updateReaction(it)
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onMessageEditedOrDeletedFlow.collect {
-            messagesListView.messageEditedOrDeleted(it)
-        }
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelEventFlow.collect {
-            when (it.eventType) {
-                ClearedHistory -> messagesListView.clearData()
-                Left -> {
-                    val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                    if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
-                        messagesListView.context.asActivity().finish()
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                pendingDisplayMsgIds.add(message.id)
+                sendDisplayedHelper.submit {
+                    markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                    pendingDisplayMsgIds.clear()
                 }
-                Deleted -> messagesListView.context.asActivity().finish()
-                else -> return@collect
+            } else pendingDisplayMsgIds.add(message.id)
+        }
+    }
+
+    onNewMessageFlow.onEach {
+        if (hasNext || hasNextDb) return@onEach
+        val initMessage = mapToMessageListItem(
+            data = arrayListOf(it),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = messagesListView.getLastMessage()?.message)
+
+        messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.updateViewState(PageState.Nothing)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onNewThreadMessageFlow.onEach {
+        messagesListView.updateReplyCount(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onOutGoingThreadMessageFlow.onEach {
+        messagesListView.newReplyMessage(it.parent?.id)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onMessageStatusFlow.onEach {
+        messagesListView.updateMessagesStatus(it.status, it.messageIds)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onTransferUpdatedFlow.observe(lifecycleOwner, Observer {
+        lifecycleOwner.lifecycleScope.launch {
+            messagesListView.updateProgress(it)
+        }
+    })
+
+    onChannelEventFlow.onEach {
+        when (it.eventType) {
+            ClearedHistory -> messagesListView.clearData()
+            Left -> {
+                val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
+                    messagesListView.context.asActivity().finish()
             }
+            Deleted -> messagesListView.context.asActivity().finish()
+            else -> return@onEach
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onOutGoingMessageStatusFlow.collect {
-            val sceytUiMessage = it.second
-            sceytUiMessage.canShowAvatarAndName = shouldShowAvatarAndName(sceytUiMessage, messagesListView.getLastMessage()?.message)
-            messagesListView.updateMessage(sceytUiMessage)
-            messagesListView.sortMessages()
-        }
-    }
+    onOutGoingMessageStatusFlow.onEach {
+        messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    joinLiveData.observe(lifecycleOwner) {
+    joinLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
+                checkEnableDisableActions(channel)
             }
         }
-    }
+    })
 
-    channelLiveData.observe(lifecycleOwner) {
+    channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
-                messagesListView.enableDisableClickActions(!replayInThread && channel.checkIsMemberInChannel(myId))
+                checkEnableDisableActions(channel)
+                messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
             }
         }
-    }
+    })
 
-    pageStateLiveData.observe(lifecycleOwner) {
+    pageStateLiveData.observe(lifecycleOwner, Observer {
         messagesListView.updateViewState(it, false)
-    }
+    })
 
     messagesListView.setMessageCommandEventListener {
         onMessageCommandEvent(it)
@@ -216,10 +417,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         onReactionEvent(it)
     }
 
-    messagesListView.setNeedLoadMoreMessagesListener { offset, message ->
-        if (canLoadMore()) {
-            val lastMessageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
-            loadMessages(lastMessageId, offset)
+    messagesListView.setNeedLoadPrevMessagesListener { offset, message ->
+        if (canLoadPrev()) {
+            val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
+            loadPrevMessages(messageId, offset)
+        }
+    }
+
+    messagesListView.setNeedLoadNextMessagesListener { offset, message ->
+        if (canLoadNext()) {
+            val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
+            loadNextMessages(messageId, offset)
         }
     }
 
@@ -229,88 +437,99 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 }
 
 fun MessageListViewModel.bind(messageInputView: MessageInputView,
-                              replayInThreadMessage: SceytMessage?,
+                              replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
 
-    messageInputView.setReplayInThreadMessageId(replayInThreadMessage?.id)
+    messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     getChannel(channel.id)
+    loadChannelMembersIfNeeded()
 
-    /* pageStateLiveData.observe(lifecycleOwner) {
-         if (it is PageState.StateError)
-             customToastSnackBar(messageInputView, it.errorMessage.toString())
-     }*/
+    onChannelUpdatedEventFlow.onEach {
+        messageInputView.checkIsParticipant(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    channelLiveData.observe(lifecycleOwner) {
+    pageStateLiveData.observe(lifecycleOwner, Observer {
+        if (it is PageState.StateError && it.showMessage)
+            customToastSnackBar(messageInputView, it.errorMessage.toString())
+    })
+
+    channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
-            channel = it.data ?: return@observe
+            channel = it.data ?: return@Observer
             messageInputView.checkIsParticipant(channel)
         }
-    }
+    })
 
-    joinLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            messageInputView.joinSuccess()
-            (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
-        }
-
-        notifyPageStateWithResponse(it)
-    }
-
-    onEditMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.message = it.toMessage()
-    }
-
-    onReplayMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.replayMessage(it.toMessage())
-    }
-
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messageInputView.checkIsParticipant(channel)
-    }
-
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelEventFlow.collect {
-            when (it.eventType) {
-                Left -> {
-                    if (channel.channelType == ChannelTypeEnum.Public) {
-                        val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                        if (leftUser == myId)
-                            messageInputView.onChannelLeft()
-                    }
-                }
-                Joined -> {
-                    if (channel.channelType == ChannelTypeEnum.Public) {
-                        val leftUser = (it.channel as? GroupChannel)?.members?.getOrNull(0)?.id
-                        if (leftUser == myId)
-                            messageInputView.joinSuccess()
-                    }
-                }
-                else -> return@collect
+    joinLiveData.observe(lifecycleOwner, Observer {
+        when (it) {
+            is SceytResponse.Success -> {
+                messageInputView.joinSuccess()
+                (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
             }
+            is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
         }
-    }
+    })
+
+    onEditMessageCommandLiveData.observe(lifecycleOwner, Observer {
+        messageInputView.editMessage(it.toMessage())
+    })
+
+    onReplyMessageCommandLiveData.observe(lifecycleOwner, Observer {
+        messageInputView.replyMessage(it.toMessage())
+    })
+
+    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
+        messageInputView.checkIsParticipant(channel)
+    })
+
+    onChannelEventFlow.onEach {
+        when (it.eventType) {
+            Left -> {
+                if (channel.channelType == ChannelTypeEnum.Public) {
+                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                    if (leftUser == myId)
+                        messageInputView.onChannelLeft()
+                }
+            }
+            Joined -> {
+                if (channel.channelType == ChannelTypeEnum.Public) {
+                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                    if (leftUser == myId)
+                        messageInputView.joinSuccess()
+                }
+            }
+            else -> return@onEach
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
-            messageInputView.cancelReplay {
-                this@bind.sendMessage(message)
-            }
+            this@bind.sendMessage(message)
         }
 
-        override fun sendReplayMessage(message: Message, parent: Message?) {
-            messageInputView.cancelReplay {
-                this@bind.sendReplayMessage(message, parent)
-            }
+        override fun sendMessages(message: List<Message>) {
+            this@bind.sendMessages(message)
         }
 
         override fun sendEditMessage(message: SceytMessage) {
             this@bind.editMessage(message)
-            messageInputView.cancelReplay()
         }
 
         override fun typing(typing: Boolean) {
             sendTypingEvent(typing)
+        }
+
+        override fun mention(query: String) {
+            if (channel.channelType == ChannelTypeEnum.Direct)
+                return
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
+                withContext(Dispatchers.Main) {
+                    messageInputView.setMentionList(result.filter { it.id != myId })
+                }
+            }
         }
 
         override fun join() {
@@ -320,49 +539,50 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 }
 
 fun MessageListViewModel.bind(headerView: ConversationHeaderView,
-                              replayInThreadMessage: SceytMessage?,
+                              replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
 
-    if (replayInThread)
-        headerView.setReplayMessage(channel, replayInThreadMessage)
+    if (replyInThread)
+        headerView.setReplyMessage(channel, replyInThreadMessage)
     else
         headerView.setChannel(channel)
 
     if (channel is SceytDirectChannel)
         SceytPresenceChecker.addNewUserToPresenceCheck((channel as SceytDirectChannel).peer?.id)
 
-    lifecycleOwner.lifecycleScope.launch {
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().collect {
-            headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
-        }
-    }
+    SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
+        headerView.onPresenceUpdate(it.map { presenceUser -> presenceUser.user })
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    lifecycleOwner.lifecycleScope.launch {
-        onChannelTypingEventFlow.collectLatest {
-            headerView.onTyping(it)
-        }
-    }
+    ChannelsCache.channelUpdatedFlow
+        .filter { it.channel.id == channel.id }
+        .onEach { headerView.setChannel(it.channel) }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        if (!replayInThread)
+    onChannelTypingEventFlow.onEach {
+        headerView.onTyping(it)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner, Observer {
+        if (!replyInThread)
             headerView.setChannel(channel)
-    }
+    })
 
-    joinLiveData.observe(lifecycleOwner) {
-        if (!replayInThread)
+    joinLiveData.observe(lifecycleOwner, Observer {
+        if (!replyInThread)
             getChannel(channel.id)
-    }
+    })
 
-    channelLiveData.observe(lifecycleOwner) {
+    channelLiveData.observe(lifecycleOwner, Observer {
         if (it is SceytResponse.Success) {
-            channel = it.data ?: return@observe
-            if (!replayInThread)
+            channel = it.data ?: return@Observer
+            if (!replyInThread)
                 headerView.setChannel(it.data)
         }
-    }
+    })
 }
 
-
+@Suppress("unused")
 fun bindViewFromJava(viewModel: MessageListViewModel, messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     viewModel.bind(messagesListView, lifecycleOwner)
 }

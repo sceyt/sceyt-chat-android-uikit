@@ -13,14 +13,16 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
-import com.sceyt.chat.Types
+import com.sceyt.chat.models.SCTLogLevel
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.extensions.TAG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,10 +50,10 @@ class SceytUiKitApp : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    if (ConnectionEventsObserver.connectionState == Types.ConnectState.StateDisconnect)
+                    if (!ConnectionEventsObserver.isConnected)
                         connect()
                 }
-                Lifecycle.Event.ON_DESTROY -> {
+                Lifecycle.Event.ON_DESTROY, Lifecycle.Event.ON_PAUSE -> {
                     SceytKitClient.disconnect()
                 }
                 else -> {}
@@ -62,9 +64,11 @@ class SceytUiKitApp : Application() {
     private fun initSceyt() {
         chatClient = SceytUIKitInitializer(this).initialize(
             clientId = UUID.randomUUID().toString(),
-            appId = "89p65954oj",
-            host = "https://us-ohio-api.sceyt.com/",
+            appId = "8lwox2ge93",
+            host = "https://us-ohio-api.sceyt.com",
             enableDatabase = true)
+
+        ChatClient.setSceytLogLevel(SCTLogLevel.Info, null)
     }
 
     private fun setNetworkListeners() {
@@ -119,11 +123,12 @@ class SceytUiKitApp : Application() {
 
         getTokenByUserName(userName, {
             (it.get("token") as? String)?.let { token ->
-                SceytKitClient.connect(token, userName) { success, errorMessage ->
+                SceytKitClient.addListener(TAG) { success, errorMessage ->
                     successLiveData.postValue(success)
                     if (!success)
                         Log.e("sceytConnectError", errorMessage.toString())
                 }
+                SceytKitClient.connect(token, userName)
             }
         }, {
             successLiveData.postValue(false)

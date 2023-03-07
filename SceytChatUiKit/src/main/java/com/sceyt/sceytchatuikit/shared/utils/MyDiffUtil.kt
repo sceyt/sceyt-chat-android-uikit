@@ -23,4 +23,8 @@ class MyDiffUtil<T>(private var oldList: List<T>, private var newList: List<T>) 
         val newMessage = newList[newItemPosition]
         return oldMessage?.equals(newMessage) ?: false
     }
+
+    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
+        return Any()
+    }
 }

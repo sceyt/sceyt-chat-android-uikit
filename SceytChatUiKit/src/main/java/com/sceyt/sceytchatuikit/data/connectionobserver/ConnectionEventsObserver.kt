@@ -1,19 +1,24 @@
 package com.sceyt.sceytchatuikit.data.connectionobserver
 
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.ClientWrapper
-import com.sceyt.chat.Types
+import com.sceyt.chat.models.ConnectionState
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.Status
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.sceyt_listeners.ClientListener
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object ConnectionEventsObserver {
-    val connectionState get() = ClientWrapper.connectState ?: Types.ConnectState.StateDisconnect
+    val connectionState get() = ClientWrapper.connectionState ?: ConnectionState.StateDisconnected
+    val isConnected get() = connectionState == ConnectionState.StateConnected
 
-    private val onChangedConnectStatusFlow_: MutableSharedFlow<Pair<Types.ConnectState, Status?>> = MutableSharedFlow(
+    private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onChangedConnectStatusFlow = onChangedConnectStatusFlow_.asSharedFlow()
@@ -30,8 +35,11 @@ object ConnectionEventsObserver {
 
     init {
         ChatClient.getClient().addClientListener(TAG, object : ClientListener {
-            override fun onChangedConnectStatus(connectStatus: Types.ConnectState, status: Status?) {
-                onChangedConnectStatusFlow_.tryEmit(Pair(connectStatus, status))
+            override fun onConnectionStateChanged(
+                state: ConnectionState?,
+                exception: SceytException?
+            ) {
+                onChangedConnectStatusFlow_.tryEmit(ConnectionStateData(state, exception))
             }
 
             override fun onTokenWillExpire(expireTime: Long) {
@@ -44,5 +52,20 @@ object ConnectionEventsObserver {
         })
     }
 
-    internal fun init() {}
+    suspend fun awaitToConnectSceyt(): Boolean {
+        if (isConnected)
+            return true
+
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        return suspendCancellableCoroutine { continuation ->
+            scope.launch {
+                onChangedConnectStatusFlow.collect {
+                    if (it.state == ConnectionState.StateConnected) {
+                        continuation.safeResume(true)
+                        scope.cancel()
+                    }
+                }
+            }
+        }
+    }
 }

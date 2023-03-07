@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listener
 import android.view.View
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -11,13 +12,16 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
     private var messageLongClickListener: MessageClickListeners.MessageLongClickListener? = null
     private var avatarClickListener: MessageClickListeners.AvatarClickListener? = null
-    private var replayCountClickListener: MessageClickListeners.ReplayCountClickListener? = null
+    private var replyMessageContainerClickListener: MessageClickListeners.ReplyMessageContainerClickListener? = null
+    private var replyCountClickListener: MessageClickListeners.ReplyCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
     private var reactionLongClickListener: MessageClickListeners.ReactionLongClickListener? = null
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
+    private var attachmentLoaderClickListener: MessageClickListeners.AttachmentLoaderClickListener? = null
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
+    private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
 
 
     internal constructor()
@@ -36,9 +40,14 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         avatarClickListener?.onAvatarClick(view, item)
     }
 
-    override fun onReplayCountClick(view: View, item: MessageListItem.MessageItem) {
-        defaultListeners?.onReplayCountClick(view, item)
-        replayCountClickListener?.onReplayCountClick(view, item)
+    override fun onReplyMessageContainerClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onReplyMessageContainerClick(view, item)
+        replyMessageContainerClickListener?.onReplyMessageContainerClick(view, item)
+    }
+
+    override fun onReplyCountClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onReplyCountClick(view, item)
+        replyCountClickListener?.onReplyCountClick(view, item)
     }
 
     override fun onAddReactionClick(view: View, message: SceytMessage) {
@@ -66,9 +75,19 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         attachmentLongClickListener?.onAttachmentLongClick(view, item)
     }
 
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
+        defaultListeners?.onAttachmentLoaderClick(view, item)
+        attachmentLoaderClickListener?.onAttachmentLoaderClick(view, item)
+    }
+
     override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {
         defaultListeners?.onLinkClick(view, item)
         linkClickListener?.onLinkClick(view, item)
+    }
+
+    override fun onScrollToDownClick(view: ScrollToDownView) {
+        defaultListeners?.onScrollToDownClick(view)
+        scrollToDownClickListener?.onScrollToDownClick(view)
     }
 
     fun setListener(listener: MessageClickListeners) {
@@ -76,13 +95,16 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             is MessageClickListeners.ClickListeners -> {
                 messageLongClickListener = listener
                 avatarClickListener = listener
-                replayCountClickListener = listener
+                replyMessageContainerClickListener = listener
+                replyCountClickListener = listener
                 addReactionClickListener = listener
                 reactionClickListener = listener
                 reactionLongClickListener = listener
                 attachmentClickListener = listener
                 attachmentLongClickListener = listener
                 linkClickListener = listener
+                scrollToDownClickListener = listener
+                attachmentLoaderClickListener = listener
             }
             is MessageClickListeners.MessageLongClickListener -> {
                 messageLongClickListener = listener
@@ -90,8 +112,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             is MessageClickListeners.AvatarClickListener -> {
                 avatarClickListener = listener
             }
-            is MessageClickListeners.ReplayCountClickListener -> {
-                replayCountClickListener = listener
+            is MessageClickListeners.ReplyMessageContainerClickListener -> {
+                replyMessageContainerClickListener = listener
+            }
+            is MessageClickListeners.ReplyCountClickListener -> {
+                replyCountClickListener = listener
             }
             is MessageClickListeners.AddReactionClickListener -> {
                 addReactionClickListener = listener
@@ -108,8 +133,14 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
             is MessageClickListeners.AttachmentLongClickListener -> {
                 attachmentLongClickListener = listener
             }
+            is MessageClickListeners.AttachmentLoaderClickListener -> {
+                attachmentLoaderClickListener = listener
+            }
             is MessageClickListeners.LinkClickListener -> {
                 linkClickListener = listener
+            }
+            is MessageClickListeners.ScrollToDownClickListener -> {
+                scrollToDownClickListener = listener
             }
         }
     }

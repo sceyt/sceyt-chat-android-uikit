@@ -5,14 +5,20 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 
 
 class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
                       private var viewHolderFactory: ChannelViewHolderFactory) :
         RecyclerView.Adapter<BaseChannelViewHolder>() {
+
+    companion object {
+        val clickAvailableData by lazy { ClickAvailableData(true) }
+        val longClickAvailableData by lazy { ClickAvailableData(true) }
+    }
 
     private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
 
@@ -46,7 +52,7 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
         holder.onViewDetachedFromWindow()
     }
 
-    private fun removeLoading() {
+    fun removeLoading() {
         if (channels.remove(mLoadingItem))
             notifyItemRemoved(channels.lastIndex + 1)
     }
