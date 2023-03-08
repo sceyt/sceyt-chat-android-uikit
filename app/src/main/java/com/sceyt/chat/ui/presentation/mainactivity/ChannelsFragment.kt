@@ -130,11 +130,11 @@ class ChannelsFragment : Fragment() {
         val title = if (!NetworkMonitor.isOnline())
             getString(R.string.waiting_for_network_title)
         else when (state) {
-            ConnectionState.StateFailed -> getString(R.string.connecting_title)
-            ConnectionState.StateDisconnected -> getString(R.string.connecting_title)
-            ConnectionState.StateReconnecting,
-            ConnectionState.StateConnecting -> getString(R.string.connecting_title)
-            ConnectionState.StateConnected -> getString(R.string.channels)
+            ConnectionState.Failed -> getString(R.string.connecting_title)
+            ConnectionState.Disconnected -> getString(R.string.connecting_title)
+            ConnectionState.Reconnecting,
+            ConnectionState.Connecting -> getString(R.string.connecting_title)
+            ConnectionState.Connected -> getString(R.string.channels)
         }
         binding.title.text = title
     }

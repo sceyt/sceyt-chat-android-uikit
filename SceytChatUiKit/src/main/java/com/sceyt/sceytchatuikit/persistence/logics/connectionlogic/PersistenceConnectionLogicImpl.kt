@@ -22,12 +22,12 @@ internal class PersistenceConnectionLogicImpl(
         private val usersRepository: UsersRepository) : PersistenceConnectionLogic, CoroutineScope {
 
     init {
-        if (ConnectionEventsObserver.connectionState == ConnectionState.StateConnected)
-            launch { onChangedConnectStatus(ConnectionStateData(ConnectionState.StateConnected)) }
+        if (ConnectionEventsObserver.connectionState == ConnectionState.Connected)
+            launch { onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected)) }
     }
 
     override suspend fun onChangedConnectStatus(state: ConnectionStateData) {
-        if (state.state == ConnectionState.StateConnected) {
+        if (state.state == ConnectionState.Connected) {
             preference.setUserId(ClientWrapper.currentUser?.id)
             insertCurrentUser()
             SceytPresenceChecker.startPresenceCheck()
