@@ -3,12 +3,14 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Size
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
 import com.sceyt.sceytchatuikit.R
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 
 class SceytReactionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -33,7 +35,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private var mCountMargin = 0
     private var reactionBackgroundColor: Int = 0
     private var counterTextMinWidth = 0
-    private var enableStroke: Boolean = true
+    private var enableStroke: Boolean = false
 
     init {
         attrs?.let {
@@ -100,10 +102,25 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             style = Paint.Style.FILL
         })
 
+        var toCenterX = 0
+        var toCenterY = 0
+
+        val size = getSize()
+
+        if (width > size.width) {
+            val diff = (width - getSize().width) / 2
+            toCenterX = diff
+        }
+
+        if (height > size.height) {
+            val diff = (height - getSize().height) / 2
+            toCenterY = diff
+        }
+
         if (smileTitle.isNotBlank()) {
             canvas.drawText(smileTitle,
-                -smileTextBoundsRect.left.toFloat() + strikeWidth + getInnerPaddingHorizontal(),
-                abs(smileTextBoundsRect.top) + getTopFormSmileText() + strikeWidth + getInnerPaddingVertical(),
+                -smileTextBoundsRect.left.toFloat() + strikeWidth + getInnerPaddingHorizontal() + toCenterX,
+                abs(smileTextBoundsRect.top) + getTopFormSmileText() + strikeWidth + getInnerPaddingVertical() + toCenterY,
                 smileTextPaint)
         }
 
@@ -113,8 +130,8 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
                 diff / 2
             } else 0
             canvas.drawText(countTitle,
-                (countDiffX - countTextBoundsRect.left + smileTextBoundsRect.right + mCountMargin + getInnerPaddingHorizontal()).toFloat(),
-                abs(countTextBoundsRect.top) + getTopFormCountText() + getInnerPaddingVertical() + strikeWidth,
+                (countDiffX - countTextBoundsRect.left + smileTextBoundsRect.right + mCountMargin + getInnerPaddingHorizontal()).toFloat() + toCenterX,
+                abs(countTextBoundsRect.top) + getTopFormCountText() + getInnerPaddingVertical() + strikeWidth + toCenterY,
                 countTextPaint)
         }
 
@@ -162,6 +179,12 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         invalidate()
     }
 
+    fun setCountTextColor(@ColorInt color: Int) {
+        countTetColor = color
+        countTextPaint.color = color
+        invalidate()
+    }
+
     fun setCount(count: Number) {
         countTitle = count.toString()
         init()
@@ -188,15 +211,45 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         requestLayout()
     }
 
+    private fun getSize(): Size {
+        val countTextWidth = if (countTitle.isBlank()) 0 else max(countTextBoundsRect.width(), counterTextMinWidth)
+        val width = 2 * getInnerPaddingHorizontal() + smileTextBoundsRect.width() + countTextWidth + mCountMargin + 2 * strikeWidth
+        val height = 2 * getInnerPaddingVertical() + smileTextBoundsRect.height().coerceAtLeast(countTextBoundsRect.height()) + 2 * strikeWidth
+        return Size(width, height)
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         if (countTitle.isBlank() && smileTitle.isBlank()) {
             setMeasuredDimension(0, 0)
             return
         }
 
-        val countTextWidth = if (countTitle.isBlank()) 0 else max(countTextBoundsRect.width(), counterTextMinWidth)
-        val width = 2 * getInnerPaddingHorizontal() + smileTextBoundsRect.width() + countTextWidth + mCountMargin + 2 * strikeWidth
-        val height = 2 * getInnerPaddingVertical() + smileTextBoundsRect.height().coerceAtLeast(countTextBoundsRect.height()) + 2 * strikeWidth
+        val size = getSize()
+        val desiredWidth = size.width
+        val desiredHeight = size.height
+
+        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+        //Measure Width
+        val width: Int = when (widthMode) {
+            //Must be this size
+            MeasureSpec.EXACTLY -> widthSize
+            //Can't be bigger than...
+            MeasureSpec.AT_MOST -> min(desiredWidth, widthSize)
+            //Be whatever you want
+            else -> desiredWidth
+        }
+
+        //Measure Height
+        val height: Int = when (heightMode) {
+            MeasureSpec.EXACTLY -> heightSize
+            MeasureSpec.AT_MOST -> min(desiredHeight, heightSize)
+            else -> desiredHeight
+        }
+
         setMeasuredDimension(width, height)
     }
 }
