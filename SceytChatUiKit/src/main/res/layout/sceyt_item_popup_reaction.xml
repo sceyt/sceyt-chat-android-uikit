@@ -10,6 +10,7 @@
         android:id="@+id/emojiView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="?selectableItemBackgroundBorderless"
         app:sceytReactionViewEnableStroke="false"
         app:sceytReactionViewInnerPadding="4dp"
         app:sceytReactionViewSmileTextSize="25sp"
