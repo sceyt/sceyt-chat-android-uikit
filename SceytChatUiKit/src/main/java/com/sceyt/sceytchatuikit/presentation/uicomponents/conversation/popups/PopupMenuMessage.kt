@@ -10,6 +10,7 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.view.GravityCompat
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -21,6 +22,7 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var m
     override fun show() {
         inflate(R.menu.sceyt_menu_popup_message)
         (menu as MenuBuilder).setOptionalIconsVisible(true)
+        gravity = if (message.incoming) GravityCompat.START else GravityCompat.END
 
 
         val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending || message.deliveryStatus == DeliveryStatus.Failed

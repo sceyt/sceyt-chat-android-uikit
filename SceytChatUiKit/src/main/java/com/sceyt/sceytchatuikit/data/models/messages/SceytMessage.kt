@@ -50,7 +50,7 @@ open class SceytMessage(var id: Long,
     var files: List<FileListItem>? = null
 
     @IgnoredOnParcel
-    var messageReactions: List<ReactionItem>? = null
+    var messageReactions: List<ReactionItem.Reaction>? = null
 
     val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L
 

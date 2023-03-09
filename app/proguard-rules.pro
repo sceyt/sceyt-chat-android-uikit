@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Keep all necessary classes in 'com.sceyt.chat' package and its subpackages
+
+-keep class com.sceyt.chat.models.** { *; }
+-keep class com.sceyt.chat.wrapper.** { *; }
+-keep class com.sceyt.chat.callback.** { *; }

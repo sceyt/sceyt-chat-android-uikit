@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object ConnectionEventsObserver {
-    val connectionState get() = ClientWrapper.connectionState ?: ConnectionState.StateDisconnected
-    val isConnected get() = connectionState == ConnectionState.StateConnected
+    val connectionState get() = ClientWrapper.connectionState ?: ConnectionState.Disconnected
+    val isConnected get() = connectionState == ConnectionState.Connected
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
         extraBufferCapacity = 1,
@@ -60,7 +60,7 @@ object ConnectionEventsObserver {
         return suspendCancellableCoroutine { continuation ->
             scope.launch {
                 onChangedConnectStatusFlow.collect {
-                    if (it.state == ConnectionState.StateConnected) {
+                    if (it.state == ConnectionState.Connected) {
                         continuation.safeResume(true)
                         scope.cancel()
                     }

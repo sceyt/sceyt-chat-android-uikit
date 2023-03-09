@@ -24,7 +24,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
+import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
@@ -46,6 +46,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessageActionBridge
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -71,6 +72,7 @@ class MessageListViewModel(
     private val fileTransferService: FileTransferService by inject()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
+    internal val messageActionBridge by lazy { MessageActionBridge() }
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
@@ -245,6 +247,10 @@ class MessageListViewModel(
 
     fun prepareToEditMessage(message: SceytMessage) {
         _onEditMessageCommandLiveData.postValue(message)
+    }
+
+    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
+        messageActionBridge.showMessageActions(event.message, event.popupWindow)
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
@@ -454,20 +460,20 @@ class MessageListViewModel(
                                      initNameAndAvatar: Boolean = false): SceytMessage {
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
-            files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
+            files = attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(this) }
             if (initNameAndAvatar)
-                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+                canShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
             messageReactions = initReactionsItems(this)
         }
     }
 
-    internal fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
+    private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         return message.reactionScores?.map {
-            ReactionItem.Reaction(SceytReaction(it.key, it.score,
+            ReactionItem.Reaction(ReactionData(it.key, it.score,
                 message.selfReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user.id == SceytKitClient.myId
                 } != null), message)
-        }?.sortedByDescending { it.reaction.score }
+        }
     }
 
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
@@ -476,7 +482,7 @@ class MessageListViewModel(
         else !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
-    internal fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
+    private fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
         if (!sceytMessage.incoming) return false
         return if (prevMessage == null)
             isGroup
@@ -494,6 +500,9 @@ class MessageListViewModel(
             }
             is MessageCommandEvent.EditMessage -> {
                 prepareToEditMessage(event.message)
+            }
+            is MessageCommandEvent.ShowHideMessageActions -> {
+                prepareToShowMessageActions(event)
             }
             is MessageCommandEvent.Reply -> {
                 prepareToReplyMessage(event.message)

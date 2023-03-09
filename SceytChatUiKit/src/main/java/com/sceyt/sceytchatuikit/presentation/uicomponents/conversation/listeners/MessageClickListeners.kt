@@ -9,6 +9,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 
 sealed interface MessageClickListeners {
 
+    fun interface MessageClickListener : MessageClickListeners {
+        fun onMessageClick(view: View, item: MessageListItem.MessageItem)
+    }
+
     fun interface MessageLongClickListener : MessageClickListeners {
         fun onMessageLongClick(view: View, item: MessageListItem.MessageItem)
     }
@@ -59,8 +63,9 @@ sealed interface MessageClickListeners {
 
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
-            LinkClickListener,
+            MessageClickListener,
             MessageLongClickListener,
+            LinkClickListener,
             AvatarClickListener,
             ReplyMessageContainerClickListener,
             ReplyCountClickListener,

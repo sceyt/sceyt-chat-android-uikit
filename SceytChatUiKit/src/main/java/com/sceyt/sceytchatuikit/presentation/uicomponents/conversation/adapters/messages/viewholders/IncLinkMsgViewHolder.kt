@@ -24,15 +24,17 @@ class IncLinkMsgViewHolder(
 ) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, senderNameBuilder) {
 
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
 
-        binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
-            return@setOnLongClickListener true
-        }
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
 
-        binding.layoutDetails.setOnClickListener {
-            messageListeners?.onLinkClick(it, messageListItem as MessageListItem.MessageItem)
+            root.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 
@@ -61,7 +63,7 @@ class IncLinkMsgViewHolder(
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
+                    setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply)

@@ -2,10 +2,15 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.content.Context
 import android.graphics.drawable.ColorDrawable
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
@@ -35,7 +40,10 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -45,7 +53,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private val binding: SceytConversationHeaderViewBinding
     private var clickListeners = HeaderClickListenersImpl(this)
     private var eventListeners = HeaderEventsListenerImpl(this)
-    private var uiElementsListeners = HeaderUIElementsListenerImpl(this)
+    internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
     private val typingUsers by lazy { mutableSetOf<SceytMember>() }
@@ -58,6 +66,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var enablePresence: Boolean = true
+    private var isShowingMessageActions = false
+
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -74,20 +84,23 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun init() {
-        binding.setUpStyle()
+        with(binding) {
+            setUpStyle()
+            layoutToolbarRoot.layoutTransition?.setDuration(200)
 
-        post { binding.subTitle.isSelected = true }
+            post { subTitle.isSelected = true }
 
-        binding.icBack.setOnClickListener {
-            clickListeners.onBackClick(it)
-        }
+            icBack.setOnClickListener {
+                clickListeners.onBackClick(it)
+            }
 
-        binding.avatar.setOnClickListener {
-            clickListeners.onAvatarClick(it)
-        }
+            avatar.setOnClickListener {
+                clickListeners.onAvatarClick(it)
+            }
 
-        binding.layoutToolbar.setOnClickListener {
-            clickListeners.onToolbarClick(it)
+            layoutToolbarDetails.setOnClickListener {
+                clickListeners.onToolbarClick(it)
+            }
         }
     }
 
@@ -213,7 +226,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun updateTypingTitleEveryTwoSecond() {
         updateTypingJob?.cancel()
-        updateTypingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
+        updateTypingJob = MainScope().launch {
             while (true) {
                 typingUsers.toList().forEach {
                     binding.tvTyping.text = initTypingTitle(it)
@@ -277,6 +290,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
+    private fun hideMessageActions() {
+        binding.toolBarMessageActions.isVisible = false
+        binding.layoutToolbarDetails.isVisible = true
+        isShowingMessageActions = false
+    }
+
     internal fun onTyping(data: ChannelTypingEventData) {
         eventListeners.onTypingEvent(data)
     }
@@ -286,10 +305,6 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     fun isTyping() = isTyping
-
-    fun isGroup() = isGroup
-
-    fun isReplyInThread() = isReplyInThread
 
     fun getChannel() = if (::channel.isInitialized) channel else null
 
@@ -342,6 +357,28 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
+    fun showMessageActions(message: SceytMessage, @MenuRes resId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
+        val menu: Menu?
+        with(binding) {
+            menu = toolBarMessageActions.setupMenuWithMessage(resId, message)
+            toolBarMessageActions.isVisible = true
+            layoutToolbarDetails.isVisible = false
+            isShowingMessageActions = true
+            toolBarMessageActions.setMenuItemClickListener {
+                listener?.invoke(it)
+                hideMessageActions()
+            }
+
+            reactionsPopupWindow?.setOnDismissListener {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (!toolBarMessageActions.handledClick && !toolBarMessageActions.isOverflowMenuShowing)
+                        hideMessageActions()
+                }, 100)
+            }
+        }
+        return menu
+    }
+
     fun enableDisableToShowPresence(enable: Boolean) {
         enablePresence = enable
     }
@@ -371,6 +408,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         setAvatar(avatar, channel, replyInThread)
     }
 
+    override fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
+        return showMessageActions(message, menuResId, reactionsPopupWindow, listener)
+    }
+
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
@@ -383,6 +424,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onBackClick(view: View) {
-        context.asActivity().onBackPressed()
+        if (isShowingMessageActions)
+            hideMessageActions()
+        else
+            context.asActivity().onBackPressed()
     }
 }

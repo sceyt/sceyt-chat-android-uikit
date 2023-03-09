@@ -43,6 +43,7 @@
         <attr name="sceytReactionViewSmileTextSize" format="integer|dimension" />
         <attr name="sceytReactionViewCountTextColor" format="color|reference" />
         <attr name="sceytReactionViewCountTextMargin" format="integer|dimension" />
+        <attr name="sceytReactionViewEnableStroke" format="boolean" />
         <attr name="sceytReactionViewStrokeColor" format="color|reference" />
         <attr name="sceytReactionViewStrokeWidth" format="integer|dimension" />
         <attr name="sceytReactionViewStrokeCornerRadius" format="integer|dimension" />
