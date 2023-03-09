@@ -6,7 +6,6 @@ plugins {
 }
 
 apply plugin: 'maven-publish'
-//apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"
 
 def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
