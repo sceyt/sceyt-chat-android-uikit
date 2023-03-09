@@ -44,6 +44,8 @@ import kotlinx.coroutines.withContext
 
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
+    messageActionBridge.setMessagesListView(messagesListView)
+
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 
     /** Send pending markers and pending messages when lifecycle come back onResume state,
@@ -51,7 +53,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             ChannelsCache.currentChannelId = channel.id
-            if (ConnectionEventsObserver.connectionState == ConnectionState.StateConnected) {
+            if (ConnectionEventsObserver.connectionState == ConnectionState.Connected) {
                 if (pendingDisplayMsgIds.isNotEmpty()) {
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
                     pendingDisplayMsgIds.clear()
@@ -201,7 +203,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
-        if (stateData.state == ConnectionState.StateConnected) {
+        if (stateData.state == ConnectionState.Connected) {
             val message = messagesListView.getLastMessageBy {
                 // First tying to get last read message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
@@ -541,6 +543,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 fun MessageListViewModel.bind(headerView: ConversationHeaderView,
                               replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
+
+    messageActionBridge.setHeaderView(headerView)
 
     if (replyInThread)
         headerView.setReplyMessage(channel, replyInThreadMessage)

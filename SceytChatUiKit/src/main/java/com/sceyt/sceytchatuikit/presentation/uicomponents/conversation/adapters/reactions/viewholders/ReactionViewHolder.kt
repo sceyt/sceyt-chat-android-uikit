@@ -1,12 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders
 
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemReactionBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class ReactionViewHolder(private val binding: SceytItemReactionBinding,
                          private val messageListeners: MessageClickListeners.ClickListeners?) : RecyclerView.ViewHolder(binding.root) {
@@ -19,17 +16,13 @@ class ReactionViewHolder(private val binding: SceytItemReactionBinding,
         }
     }
 
-    fun bind(data: ReactionItem) {
+    fun bind(data: ReactionItem, shouldShowCount: Boolean) {
         if (data !is ReactionItem.Reaction) return
         reactionItem = data
-
-        with(binding.reactionView) {
-            setCountAndSmile(data.reaction.score, data.reaction.key)
-            if (data.reaction.containsSelf) {
-                setReactionBgAndStrokeColor(getCompatColor(MessagesStyle.selfReactionBackgroundColor),
-                    getCompatColor(MessagesStyle.selfReactionBorderColor))
-            } else
-                setReactionBgAndStrokeColor(0, getCompatColor(R.color.sceyt_color_divider))
-        }
+        if (shouldShowCount) {
+            val count = data.message.reactionScores?.sumOf { it.score } ?: 0
+            binding.reactionView.setCountAndSmile(count, data.reaction.key)
+        } else
+            binding.reactionView.setSmileText(data.reaction.key, true)
     }
 }

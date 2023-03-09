@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 rootProject.name = "SceytUiKit"
 
 include ':app'
-include ':AXEmojiView'
 include ':SceytChatUiKit'

@@ -4,15 +4,15 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class SceytReaction(
+data class ReactionData(
         var key: String,
         val score: Long = 1,
         val containsSelf: Boolean = false) : Parcelable {
 
     override fun equals(other: Any?): Boolean {
-        return ((other as? SceytReaction) ?: return true).run {
-            key == this@SceytReaction.key && score == this@SceytReaction.score
-                    && containsSelf == this@SceytReaction.containsSelf
+        return ((other as? ReactionData) ?: return true).run {
+            key == this@ReactionData.key && score == this@ReactionData.score
+                    && containsSelf == this@ReactionData.containsSelf
         }
     }
 

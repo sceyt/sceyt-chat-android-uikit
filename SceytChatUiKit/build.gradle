@@ -11,7 +11,7 @@ def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
 
 def getVersionName = { ->
-    return "1.6.13"
+    return "1.6.14"
 }
 
 def getArtifactId = { ->
@@ -92,8 +92,6 @@ android {
 
 
 dependencies {
-    implementation project(':AXEmojiView')
-
     api supportDependencies.appCompat
     api supportDependencies.material
     api supportDependencies.constraintlayout
@@ -105,7 +103,6 @@ dependencies {
     api supportDependencies.liveEvent
     api supportDependencies.glide
     api supportDependencies.glideTransformations
-    implementation supportDependencies.axEmojiGoogleProvider
     api supportDependencies.ion
     api supportDependencies.firebaseBom
     api supportDependencies.firebaseMessaging

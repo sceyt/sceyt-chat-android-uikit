@@ -21,11 +21,17 @@ class OutTextMsgViewHolder(
 ) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
 
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
 
-        binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
-            return@setOnLongClickListener true
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            root.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 
@@ -51,7 +57,7 @@ class OutTextMsgViewHolder(
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
+                    setOrUpdateReactions(item, rvReactions, viewPool, layoutDetails)
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)

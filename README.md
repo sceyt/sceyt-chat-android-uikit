@@ -29,6 +29,7 @@ Before using the SceytChat Android SDK, you will need the following:
 allprojects {
     repositories {
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 ```
