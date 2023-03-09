@@ -24,7 +24,16 @@ abstract class ReactionDao {
     @Query("select * from ReactionScoreEntity where messageId =:messageId and reaction_key =:key")
     abstract fun getReactionScore(messageId: Long, key: String): ReactionScoreEntity?
 
-    @Query("select * from ReactionEntity where messageId =:messageId and fromId =:myId")
+    @Transaction
+    @Query("select * from ReactionEntity where messageId =:messageId")
+    abstract suspend fun getReactionsByMsgId(messageId: Long): List<ReactionDb>
+
+    @Transaction
+    @Query("select * from ReactionEntity where messageId =:messageId and reaction_key =:key")
+    abstract suspend fun getReactionsByMsgIdAndKey(messageId: Long, key: String): List<ReactionDb>
+
+    @Transaction
+    @Query("select * from ReactionEntity where messageId =:messageId and fromId =:myId ")
     abstract suspend fun getSelfReactionsByMessageId(messageId: Long, myId: String): List<ReactionDb>
 
     @Update

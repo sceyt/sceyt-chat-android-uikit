@@ -25,7 +25,11 @@ class IncTextMsgViewHolder(
         with(binding) {
             setMessageItemStyle()
 
-            layoutDetails.setOnLongClickListener {
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
             }
@@ -56,7 +60,7 @@ class IncTextMsgViewHolder(
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
+                    setOrUpdateReactions(item, rvReactions, viewPool, layoutDetails)
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)

@@ -50,6 +50,10 @@ class IncVoiceMsgViewHolder(
             AudioPlayerHelper.setPlaybackSpeed(lastFilePath, nextPlaybackSpeed.value)
         }
 
+        binding.root.setOnClickListener {
+            messageListeners.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+        }
+
         binding.root.setOnLongClickListener {
             messageListeners.onMessageLongClick(
                 view = it,
