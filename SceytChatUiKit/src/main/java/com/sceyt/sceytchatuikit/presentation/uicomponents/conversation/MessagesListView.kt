@@ -18,9 +18,10 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -41,6 +42,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.BottomSheetReactionsInfoFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactions
@@ -180,7 +182,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
         return PopupReactions(context).showPopup(view, message, object : PopupReactionsAdapter.OnItemClickListener {
             override fun onReactionClick(reaction: ReactionItem.Reaction) {
-                this@MessagesListView.onReactionClick(reaction)
+                this@MessagesListView.onAddOrRemoveReaction(reaction)
             }
 
             override fun onAddClick() {
@@ -236,7 +238,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToReplyMessage(item.message))
     }
 
-    private fun onReactionClick(reaction: ReactionItem.Reaction) {
+    private fun onAddOrRemoveReaction(reaction: ReactionItem.Reaction) {
         val containsSelf = reaction.reaction.containsSelf
         if (containsSelf)
             reactionClickListeners.onRemoveReaction(reaction)
@@ -251,7 +253,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
-                onReactionClick(ReactionItem.Reaction(SceytReaction(emoji.unicode), message))
+                onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji.unicode), message))
             }).show(it, null)
         }
     }
@@ -616,8 +618,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        if (enabledClickActions)
-            onReactionClick(item)
+        if (item.message.selfReactions.isNullOrEmpty()) return
+        context.getFragmentManager()?.let {
+            BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
+                fragment.setClickListener { reaction ->
+                    if (reaction.user?.id == SceytKitClient.myId)
+                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message))
+                }
+            }.show(it, null)
+        }
     }
 
     override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {

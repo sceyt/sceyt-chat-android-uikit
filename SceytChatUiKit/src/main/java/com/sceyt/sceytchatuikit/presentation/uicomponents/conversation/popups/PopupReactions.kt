@@ -13,7 +13,7 @@ import androidx.core.view.marginBottom
 import androidx.core.view.marginTop
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
+import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.databinding.SceytPopupAddReactionBinding
 import com.sceyt.sceytchatuikit.extensions.screenWidthPx
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -60,7 +60,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     private fun setAdapter(reversed: Boolean, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener) {
         val reactions = SceytKitConfig.fastReactions.map {
             val containsSelf = message.selfReactions?.map { reaction -> reaction.key }?.contains(it) == true
-            ReactionItem.Reaction(SceytReaction(it, containsSelf = containsSelf), message)
+            ReactionItem.Reaction(ReactionData(it, containsSelf = containsSelf), message)
         } + ReactionItem.Other(message)
         val adapter = PopupReactionsAdapter(reactions, clickListener)
         binding.rvEmoji.adapter = adapter

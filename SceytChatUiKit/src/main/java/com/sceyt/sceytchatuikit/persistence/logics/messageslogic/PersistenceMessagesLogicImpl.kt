@@ -4,10 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.work.WorkManager
 import androidx.work.await
-import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.message.*
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
@@ -459,6 +456,13 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun getMessageDbByTid(tid: Long): SceytMessage? {
         return messageDao.getMessageByTid(tid)?.toSceytMessage()
+    }
+
+    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction> {
+        return if (key.isEmpty())
+            reactionDao.getReactionsByMsgId(messageId).map { it.toReaction() }
+        else
+            reactionDao.getReactionsByMsgIdAndKey(messageId, key).map { it.toReaction() }
     }
 
     override suspend fun attachmentSuccessfullySent(message: SceytMessage) {

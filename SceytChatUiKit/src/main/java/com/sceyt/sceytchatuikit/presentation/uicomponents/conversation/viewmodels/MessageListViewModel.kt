@@ -24,7 +24,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
+import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
@@ -469,7 +469,7 @@ class MessageListViewModel(
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         return message.reactionScores?.map {
-            ReactionItem.Reaction(SceytReaction(it.key, it.score,
+            ReactionItem.Reaction(ReactionData(it.key, it.score,
                 message.selfReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user.id == SceytKitClient.myId
                 } != null), message)
