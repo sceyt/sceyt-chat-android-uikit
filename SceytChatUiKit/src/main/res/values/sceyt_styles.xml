@@ -104,15 +104,15 @@
         <item name="colorControlHighlight">@color/sceyt_color_accent</item>
     </style>
 
-    <style name="WaafiTabLayout" parent="Theme.AppCompat">
-        <item name="tabTextAppearance">@style/TabTextAppearance</item>
+    <style name="SceytTabLayout" parent="Theme.AppCompat">
+        <item name="tabTextAppearance">@style/SceytTabTextAppearance</item>
         <item name="tabIndicatorFullWidth">true</item>
         <item name="tabTextColor">@color/sceyt_color_text_themed</item>
         <item name="tabIndicatorColor">@color/sceyt_color_accent</item>
     </style>
 
 
-    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
+    <style name="SceytTabTextAppearance" parent="TextAppearance.Design.Tab">
         <item name="textAllCaps">false</item>
         <item name="fontFamily">@font/roboto_medium</item>
         <item name="android:textSize">16sp</item>

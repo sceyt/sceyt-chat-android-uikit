@@ -144,7 +144,7 @@
                         app:layout_constraintEnd_toStartOf="@+id/icQr"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/divider2"
-                        tools:text="waafi.com/join/tkngt56-VG-DI..." />
+                        tools:text="sceyt.com/join/tkngt56-VG-DI..." />
 
                     <androidx.appcompat.widget.AppCompatImageView
                         android:id="@+id/icQr"
@@ -352,7 +352,7 @@
                 app:tabMaxWidth="100dp"
                 app:tabMinWidth="100dp"
                 app:tabSelectedTextColor="@color/sceyt_color_text_themed"
-                app:tabTextAppearance="@style/TabTextAppearance"
+                app:tabTextAppearance="@style/SceytTabTextAppearance"
                 app:tabTextColor="@color/sceyt_color_gray_400" />
 
             <View
