@@ -460,14 +460,14 @@ class MessageListViewModel(
                                      initNameAndAvatar: Boolean = false): SceytMessage {
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
-            files = sceytMessage.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(sceytMessage) }
+            files = attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(this) }
             if (initNameAndAvatar)
-                canShowAvatarAndName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+                canShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
             messageReactions = initReactionsItems(this)
         }
     }
 
-    internal fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
+    private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         return message.reactionScores?.map {
             ReactionItem.Reaction(SceytReaction(it.key, it.score,
                 message.selfReactions?.find { reaction ->
@@ -482,7 +482,7 @@ class MessageListViewModel(
         else !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
-    internal fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
+    private fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
         if (!sceytMessage.incoming) return false
         return if (prevMessage == null)
             isGroup
