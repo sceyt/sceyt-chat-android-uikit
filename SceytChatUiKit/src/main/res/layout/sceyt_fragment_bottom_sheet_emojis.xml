@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <View
         android:layout_width="0dp"
@@ -10,16 +11,17 @@
         android:layout_marginVertical="10dp"
         android:background="@drawable/sceyt_bg_corners_20"
         android:backgroundTint="@color/sceyt_color_divider"
-        app:layout_constraintBottom_toTopOf="@+id/emojiPopupLayout"
+        app:layout_constraintBottom_toTopOf="@+id/rvEmojes"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent=".1" />
 
-    <com.emojiview.emojiview.view.AXEmojiPopupLayout
-        android:id="@+id/emojiPopupLayout"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvEmojes"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        tools:listitem="@layout/item_emoji"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:.7" />
 
