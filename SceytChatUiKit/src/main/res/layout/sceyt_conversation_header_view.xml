@@ -20,6 +20,7 @@
         app:contentInsetStart="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutToolbarRoot"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:animateLayoutChanges="true">
@@ -37,7 +38,7 @@
                 app:srcCompat="@drawable/sceyt_ic_arrow_back" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/layoutToolbar"
+                android:id="@+id/layoutToolbarDetails"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="?selectableItemBackground"
@@ -143,6 +144,16 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.MessageActionToolbar
+                android:id="@+id/toolBarMessageActions"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/icBack"
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

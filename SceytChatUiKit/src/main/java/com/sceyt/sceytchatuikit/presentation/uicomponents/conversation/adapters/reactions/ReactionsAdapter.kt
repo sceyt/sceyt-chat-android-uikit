@@ -4,54 +4,41 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.AddReactionViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 
 class ReactionsAdapter(
         private val viewHolderFactory: ReactionViewHolderFactory
-) : ListAdapter<ReactionItem, RecyclerView.ViewHolder>(REACTIONS_DIFF_UTIL) {
+) : ListAdapter<ReactionItem.Reaction, RecyclerView.ViewHolder>(REACTIONS_DIFF_UTIL) {
 
     companion object {
-        val REACTIONS_DIFF_UTIL = object : DiffUtil.ItemCallback<ReactionItem>() {
-            override fun areItemsTheSame(oldItem: ReactionItem, newItem: ReactionItem): Boolean {
-                if (oldItem is ReactionItem.AddItem) return true
-                if (newItem is ReactionItem.AddItem) return true
-                return ((oldItem as ReactionItem.Reaction).reaction.key == (newItem as ReactionItem.Reaction).reaction.key)
+        val REACTIONS_DIFF_UTIL = object : DiffUtil.ItemCallback<ReactionItem.Reaction>() {
+            override fun areItemsTheSame(oldItem: ReactionItem.Reaction, newItem: ReactionItem.Reaction): Boolean {
+                return oldItem.reaction.key == newItem.reaction.key
             }
 
-            override fun areContentsTheSame(oldItem: ReactionItem, newItem: ReactionItem): Boolean {
-                return oldItem == newItem
+            override fun areContentsTheSame(oldItem: ReactionItem.Reaction, newItem: ReactionItem.Reaction): Boolean {
+                return oldItem.reaction.key == newItem.reaction.key
             }
 
-            override fun getChangePayload(oldItem: ReactionItem, newItem: ReactionItem): Any {
-                return newItem
+            override fun getChangePayload(oldItem: ReactionItem.Reaction, newItem: ReactionItem.Reaction): Any {
+                return Any()
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return viewHolderFactory.createViewHolder(parent, viewType)
+        return viewHolderFactory.createViewHolder(parent)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (getItemViewType(position)) {
-            ReactionViewHolderFactory.ReactionViewType.Reaction.ordinal -> {
-                (holder as ReactionViewHolder).bind(currentList[position])
-            }
-            ReactionViewHolderFactory.ReactionViewType.Add.ordinal -> {
-                (holder as AddReactionViewHolder).bind(ReactionItem.AddItem(
-                    ((currentList[0] as? ReactionItem.Reaction))?.message ?: return))
-            }
-        }
+        val shouldShowCount = (currentList.size > 1 || (currentList.getOrNull(0)?.reaction?.score
+                ?: 0) > 1) && position == currentList.size - 1
+        (holder as ReactionViewHolder).bind(currentList[position], shouldShowCount)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
         super.onBindViewHolder(holder, position, payloads)
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return viewHolderFactory.getItemViewType(position, currentList.size)
     }
 
     override fun getItemCount(): Int {

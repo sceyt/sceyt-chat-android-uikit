@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 
 open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
+    private var messageClickListener: MessageClickListeners.MessageClickListener? = null
     private var messageLongClickListener: MessageClickListeners.MessageLongClickListener? = null
     private var avatarClickListener: MessageClickListeners.AvatarClickListener? = null
     private var replyMessageContainerClickListener: MessageClickListeners.ReplyMessageContainerClickListener? = null
@@ -28,6 +29,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
     constructor(view: MessagesListView) {
         defaultListeners = view
+    }
+
+    override fun onMessageClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onMessageClick(view, item)
+        messageClickListener?.onMessageClick(view, item)
     }
 
     override fun onMessageLongClick(view: View, item: MessageListItem.MessageItem) {
@@ -93,6 +99,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
+                messageClickListener = listener
                 messageLongClickListener = listener
                 avatarClickListener = listener
                 replyMessageContainerClickListener = listener
@@ -105,6 +112,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 linkClickListener = listener
                 scrollToDownClickListener = listener
                 attachmentLoaderClickListener = listener
+            }
+            is MessageClickListeners.MessageClickListener -> {
+                messageClickListener = listener
             }
             is MessageClickListeners.MessageLongClickListener -> {
                 messageLongClickListener = listener

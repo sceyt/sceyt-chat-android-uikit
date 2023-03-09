@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.message.Reaction
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
@@ -56,6 +57,7 @@ internal interface PersistenceMessagesLogic {
     suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage>
     suspend fun getMessageDbById(messageId: Long): SceytMessage?
     suspend fun getMessageDbByTid(tid: Long): SceytMessage?
+    suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction>
     suspend fun attachmentSuccessfullySent(message: SceytMessage)
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

@@ -2,10 +2,8 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
-import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -18,8 +16,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
-import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
 class OutFilesMsgViewHolder(
         private val binding: SceytItemOutFilesMessageBinding,
@@ -32,11 +28,17 @@ class OutFilesMsgViewHolder(
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
 
-        binding.layoutDetails.setOnLongClickListener {
-            messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
-            return@setOnLongClickListener true
+            root.setOnClickListener {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            root.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 

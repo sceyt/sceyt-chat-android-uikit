@@ -12,7 +12,5 @@ object UserStyle {
     @DrawableRes
     var deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user
 
-    var avatarColors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
-
     var userPresenceDateFormat = UserPresenceDateFormatter()
 }

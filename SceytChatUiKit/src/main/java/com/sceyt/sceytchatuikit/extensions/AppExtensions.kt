@@ -59,6 +59,12 @@ fun View.hideSoftInput() {
     inputMethodManager.hideSoftInputFromWindow(windowToken, 0)
 }
 
+fun Activity.isKeyboardOpen(): Boolean {
+    val rootView = findViewById<View>(android.R.id.content)
+    val heightDiff3: Int = getRootView().rootView.height - rootView.height
+    return (heightDiff3 > dpToPx(200f))
+}
+
 fun customToastSnackBar(view: View?, message: String) {
     try {
         view?.let {

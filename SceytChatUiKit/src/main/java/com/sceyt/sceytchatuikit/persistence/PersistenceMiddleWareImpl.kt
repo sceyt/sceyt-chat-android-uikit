@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.settings.Settings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -330,6 +331,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
         return messagesLogic.getMessageDbById(messageId)
+    }
+
+    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction> {
+        return messagesLogic.getMessageReactionsDbByKey(messageId, key)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

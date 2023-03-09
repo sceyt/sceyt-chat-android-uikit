@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.extensions
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.res.Resources
 import android.os.Build
 import android.os.Handler
@@ -38,6 +39,10 @@ fun dpToPx(dp: Float): Int {
 fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 
 fun View.screenHeightPx() = resources.displayMetrics.heightPixels
+
+fun Context.screenWidthPx() = resources.displayMetrics.widthPixels
+
+fun Context.screenHeightPx() = resources.displayMetrics.heightPixels
 
 fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
 

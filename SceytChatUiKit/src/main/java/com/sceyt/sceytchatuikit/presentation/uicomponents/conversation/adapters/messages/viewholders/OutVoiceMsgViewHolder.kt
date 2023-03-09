@@ -44,11 +44,17 @@ class OutVoiceMsgViewHolder(
         }
 
     init {
-        binding.setMessageItemStyle()
+        with(binding) {
+            setMessageItemStyle()
 
-        binding.root.setOnLongClickListener {
-            messageListeners.onMessageLongClick(it, messageListItem as MessageItem)
-            return@setOnLongClickListener true
+            root.setOnClickListener {
+                messageListeners.onMessageClick(it, messageListItem as MessageItem)
+            }
+
+            root.setOnLongClickListener {
+                messageListeners.onMessageLongClick(it, messageListItem as MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 
