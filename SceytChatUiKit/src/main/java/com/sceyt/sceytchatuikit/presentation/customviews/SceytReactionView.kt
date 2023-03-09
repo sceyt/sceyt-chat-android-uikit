@@ -236,7 +236,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         //Measure Width
         val width: Int = when (widthMode) {
             //Must be this size
-            MeasureSpec.EXACTLY -> widthSize
+            MeasureSpec.EXACTLY -> desiredWidth
             //Can't be bigger than...
             MeasureSpec.AT_MOST -> min(desiredWidth, widthSize)
             //Be whatever you want
@@ -245,7 +245,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
 
         //Measure Height
         val height: Int = when (heightMode) {
-            MeasureSpec.EXACTLY -> heightSize
+            MeasureSpec.EXACTLY -> desiredHeight
             MeasureSpec.AT_MOST -> min(desiredHeight, heightSize)
             else -> desiredHeight
         }

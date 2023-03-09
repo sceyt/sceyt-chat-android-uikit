@@ -253,7 +253,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment(emojiListener = { emoji ->
-                onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji.unicode), message))
+                onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji), message))
             }).show(it, null)
         }
     }
