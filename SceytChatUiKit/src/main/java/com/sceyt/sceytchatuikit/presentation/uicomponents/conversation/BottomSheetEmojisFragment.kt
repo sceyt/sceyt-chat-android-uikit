@@ -4,18 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import com.emojiview.emojiview.AXEmojiManager
-import com.emojiview.emojiview.AXEmojiTheme
-import com.emojiview.emojiview.emoji.Emoji
-import com.emojiview.emojiview.listener.OnEmojiActions
-import com.emojiview.emojiview.view.AXSingleEmojiView
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.GoogleEmojiData
+import com.sceyt.sceytchatuikit.databinding.ItemEmojiBinding
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentBottomSheetEmojisBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.dismissSafety
 
-class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : BottomSheetDialogFragment() {
+class BottomSheetEmojisFragment(private val emojiListener: (String) -> Unit) : BottomSheetDialogFragment() {
     private lateinit var mBinding: SceytFragmentBottomSheetEmojisBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,29 +33,41 @@ class BottomSheetEmojisFragment(private val emojiListener: (Emoji) -> Unit) : Bo
     }
 
     private fun initEmojis() {
-        AXEmojiManager.setEmojiViewTheme(AXEmojiTheme().apply {
-            backgroundColor = requireContext().getCompatColor(R.color.sceyt_color_dialog_bg_themed)
-            variantPopupBackgroundColor = requireContext().getCompatColor(R.color.sceyt_color_dialog_bg_themed)
-            categoryColor = requireContext().getCompatColor(R.color.sceyt_color_dialog_bg_themed)
-            titleColor = requireContext().getCompatColor(R.color.sceyt_color_text_themed)
-            dividerColor = requireContext().getCompatColor(R.color.sceyt_color_divider)
-            variantDividerColor = requireContext().getCompatColor(R.color.sceyt_color_divider)
-        })
-        mBinding.emojiPopupLayout.initPopupView(AXSingleEmojiView(requireContext()).apply {
-            onEmojiActionsListener = object : OnEmojiActions {
-                override fun onClick(view: View?, emoji: Emoji, fromRecent: Boolean, fromVariant: Boolean) {
-                    emojiListener(emoji)
-                    this@BottomSheetEmojisFragment.dismiss()
-                }
+        mBinding.rvEmojes.layoutManager = GridLayoutManager(requireContext(), 7)
+        mBinding.rvEmojes.adapter = EmojiAdapter()
+    }
 
-                override fun onLongClick(view: View?, emoji: Emoji, fromRecent: Boolean, fromVariant: Boolean): Boolean {
-                    return true
+    inner class EmojiAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        val data :List<String> = mutableListOf<String>().apply {
+            GoogleEmojiData.data.forEach {
+                addAll(it)
+            }
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            val binding = ItemEmojiBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            return EmojiViewHolder(binding)
+        }
+
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            (holder as EmojiViewHolder).bind(data[position])
+        }
+
+        override fun getItemCount(): Int {
+            return data.size
+        }
+
+        inner class EmojiViewHolder(val binding: ItemEmojiBinding) : RecyclerView.ViewHolder(binding.root) {
+
+            fun bind(emoji: String) {
+                binding.tvReaction.setSmileText(emoji)
+
+                binding.root.setOnClickListener {
+                    emojiListener(emoji)
+                    dismissSafety()
                 }
             }
-            // From emoji variants
-            editText = EditText(requireContext())
-        })
-
-        mBinding.emojiPopupLayout.show()
+        }
     }
 }
+
