@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'kotlin-parcelize'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -47,6 +48,8 @@ dependencies {
     implementation project(':AXEmojiView')
 
     implementation supportDependencies.coreKtx
+    implementation supportDependencies.firebaseMessaging
+    implementation supportDependencies.firebaseBom
     implementation supportDependencies.appCompat
     implementation supportDependencies.material
     implementation supportDependencies.constraintlayout
