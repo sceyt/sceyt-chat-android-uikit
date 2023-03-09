@@ -53,7 +53,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             ChannelsCache.currentChannelId = channel.id
-            if (ConnectionEventsObserver.connectionState == ConnectionState.StateConnected) {
+            if (ConnectionEventsObserver.connectionState == ConnectionState.Connected) {
                 if (pendingDisplayMsgIds.isNotEmpty()) {
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
                     pendingDisplayMsgIds.clear()
@@ -203,7 +203,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     })
 
     ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
-        if (stateData.state == ConnectionState.StateConnected) {
+        if (stateData.state == ConnectionState.Connected) {
             val message = messagesListView.getLastMessageBy {
                 // First tying to get last read message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read

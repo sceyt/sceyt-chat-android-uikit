@@ -93,7 +93,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private fun setListener() {
         ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
             when (it.state) {
-                ConnectionState.StateConnected -> {
+                ConnectionState.Connected -> {
                     notifyState(true, null)
 
                     ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
@@ -110,10 +110,10 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                     }
                     sceytSyncManager.startSync()
                 }
-                ConnectionState.StateFailed -> {
+                ConnectionState.Failed -> {
                     notifyState(false, it.exception?.message)
                 }
-                ConnectionState.StateDisconnected -> {
+                ConnectionState.Disconnected -> {
                     if (it.exception?.code == 40102)
                         onTokenExpired_.tryEmit(Unit)
                     else notifyState(false, it.exception?.message)
