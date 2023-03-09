@@ -2,8 +2,6 @@ package com.sceyt.sceytchatuikit
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
-import com.emojiview.emojiview.AXEmojiManager
-import com.emojiview.emojiview.provider.AXGoogleEmojiProvider
 import com.sceyt.chat.ChatClient
 import com.sceyt.sceytchatuikit.di.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -19,7 +17,6 @@ class SceytUIKitInitializer(private val application: Application) {
         //Set static flags before calling setup
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         val chatClient = ChatClient.initialize(application, host, appId, clientId)
-        AXEmojiManager.install(application, AXGoogleEmojiProvider(application))
         initKoin(enableDatabase)
         initTheme()
         return chatClient

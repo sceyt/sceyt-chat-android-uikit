@@ -14,7 +14,6 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SCTLogLevel
-import com.sceyt.chat.models.Types
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
