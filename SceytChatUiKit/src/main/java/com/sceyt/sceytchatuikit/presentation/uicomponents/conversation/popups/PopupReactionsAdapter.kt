@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemPopupAddReactionBinding
@@ -47,7 +46,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
             if (item.reaction.containsSelf)
                 binding.emojiView.setReactionBackgroundColor(context.getCompatColor(R.color.sceyt_color_gray))
             else
-                binding.emojiView.setReactionBackgroundColor(Color.WHITE)
+                binding.emojiView.setReactionBackgroundColor(Color.TRANSPARENT)
 
             binding.root.setOnClickListener {
                 listener.onReactionClick(item)

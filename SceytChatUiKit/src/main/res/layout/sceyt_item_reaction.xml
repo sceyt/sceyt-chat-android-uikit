@@ -11,6 +11,7 @@
     app:sceytReactionViewCountTextSize="12sp"
     app:sceytReactionViewEnableStroke="false"
     app:sceytReactionViewInnerPaddingHorizontal="2dp"
+    android:background="?selectableItemBackgroundBorderless"
     app:sceytReactionViewInnerPaddingVertical="2dp"
     app:sceytReactionViewSmileTextSize="17sp"
     app:sceytReactionViewStrokeCornerRadius="30dp"
