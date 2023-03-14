@@ -33,4 +33,8 @@ class ViewPagerAdapterReactedUsers(fragment: Fragment,
             notifyItemInserted(fragments.lastIndex)
         }
     }
+
+    fun updateAllReactionsFragment() {
+        fragments.firstOrNull()?.update()
+    }
 }

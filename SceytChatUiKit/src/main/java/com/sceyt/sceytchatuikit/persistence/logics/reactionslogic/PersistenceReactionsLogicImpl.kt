@@ -34,7 +34,7 @@ internal class PersistenceReactionsLogicImpl(
 
         when (data.eventType) {
             ReactionUpdateEventEnum.ADD -> reactionDao.insertReaction(data.reaction.toReactionEntity(messageId))
-            ReactionUpdateEventEnum.REMOVE -> reactionDao.deleteReactionByIds(data.reaction.id)
+            ReactionUpdateEventEnum.REMOVE -> reactionDao.deleteReaction(messageId, data.reaction.key, data.reaction.user.id)
         }
         reactionDao.insertReactionScores(data.message.reactionScores.map { it.toReactionScoreEntity(messageId) })
 
