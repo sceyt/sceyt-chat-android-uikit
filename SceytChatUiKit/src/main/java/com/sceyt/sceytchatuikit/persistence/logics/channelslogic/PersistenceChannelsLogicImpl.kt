@@ -636,7 +636,7 @@ internal class PersistenceChannelsLogicImpl(
             whereQuery += "or "
             whereQuery += "((${globOrUserId}) and channels.type == 0)) "
             if (onlyMine)
-                whereQuery += "and channels.myRole != ${RoleTypeEnum.None.ordinal}"
+                whereQuery += "and channels.role != ${RoleTypeEnum.None.ordinal}"
 
             val finalQuery =
                     "select * from channels " +
