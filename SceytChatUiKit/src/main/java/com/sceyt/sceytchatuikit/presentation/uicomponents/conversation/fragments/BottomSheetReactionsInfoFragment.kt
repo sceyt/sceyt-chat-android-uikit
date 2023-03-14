@@ -70,6 +70,10 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
             .filter { it.message.id == message.id }
             .onEach { eventData ->
                 message = eventData.message.toSceytUiMessage()
+                if (message.reactionScores.isNullOrEmpty()) {
+                    dismissSafety()
+                    return@onEach
+                }
                 val reactionScore = eventData.message.reactionScores.find { it.key == eventData.reaction.key }
                         ?: ReactionScore(eventData.reaction.key, eventData.reaction.score.toLong())
                 when (eventData.eventType) {
