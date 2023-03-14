@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
 
 fun Reaction.toReactionEntity(messageId: Long) = ReactionEntity(
+    id = id,
     messageId = messageId,
     key = key,
     score = score,
@@ -28,7 +29,7 @@ fun ReactionScore.toReactionScoreEntity(messageId: Long) = ReactionScoreEntity(
 
 fun ReactionDb.toReaction(): Reaction {
     with(reaction) {
-        return Reaction(key, score, reason, updateAt, from?.toUser())
+        return Reaction(id, key, score, reason, updateAt, from?.toUser())
     }
 }
 

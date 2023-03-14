@@ -15,6 +15,7 @@ object SceytKitConfig {
     var USERS_LOAD_SIZE = 30
     var MESSAGES_LOAD_SIZE = 30
     var ATTACHMENTS_LOAD_SIZE = 30
+    var REACTIONS_LOAD_SIZE = 30
 
     var enableDarkMode = true
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode

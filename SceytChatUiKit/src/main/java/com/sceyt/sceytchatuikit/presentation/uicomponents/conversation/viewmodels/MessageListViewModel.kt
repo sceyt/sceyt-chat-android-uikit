@@ -29,15 +29,12 @@ import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
-import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
-import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -63,8 +60,9 @@ class MessageListViewModel(
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
-    private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
+    private val persistenceAttachmentsMiddleWare: PersistenceAttachmentsMiddleWare by inject()
+    private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
     private val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val application: Application by inject()
@@ -305,7 +303,7 @@ class MessageListViewModel(
                 transferData.state = PauseUpload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
                 viewModelScope.launch(Dispatchers.IO) {
-                    attachmentLogic.updateAttachmentWithTransferData(transferData)
+                    persistenceAttachmentsMiddleWare.updateAttachmentWithTransferData(transferData)
                 }
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
@@ -313,7 +311,7 @@ class MessageListViewModel(
                 transferData.state = PauseDownload
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
                 viewModelScope.launch(Dispatchers.IO) {
-                    attachmentLogic.updateAttachmentWithTransferData(transferData)
+                    persistenceAttachmentsMiddleWare.updateAttachmentWithTransferData(transferData)
                 }
                 MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
             }
@@ -326,14 +324,14 @@ class MessageListViewModel(
 
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.addReaction(channel.id, message.id, scoreKey)
+            val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey)
             notifyPageStateWithResponse(response)
         }
     }
 
     fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
+            val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
             notifyPageStateWithResponse(response)
         }
     }

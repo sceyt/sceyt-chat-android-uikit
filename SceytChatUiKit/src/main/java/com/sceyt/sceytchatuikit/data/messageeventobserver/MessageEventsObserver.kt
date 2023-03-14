@@ -25,7 +25,7 @@ object MessageEventsObserver {
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 
 
-    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
+    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<ReactionUpdateEventData> = MutableSharedFlow(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
@@ -78,11 +78,13 @@ object MessageEventsObserver {
             }
 
             override fun onReactionAdded(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedFlow_.tryEmit(message)
+                if (message == null || reaction == null) return
+                onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.ADD))
             }
 
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedFlow_.tryEmit(message)
+                if (message == null || reaction == null) return
+                onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.REMOVE))
             }
         })
     }
