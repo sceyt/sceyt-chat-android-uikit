@@ -231,36 +231,6 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).addReactionWithMessageId(messageId, scoreKey, 1, "", false, object : MessageCallback {
-                override fun onResult(message: Message?) {
-                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
-                }
-
-                override fun onError(error: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(error))
-                    Log.e(TAG, "addReaction error: ${error?.message}")
-                }
-            })
-        }
-    }
-
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).deleteReactionWithMessageId(messageId, scoreKey, object : MessageCallback {
-                override fun onResult(message: Message?) {
-                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
-                }
-
-                override fun onError(error: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(error))
-                    Log.e(TAG, "deleteReaction error: ${error?.message}")
-                }
-            })
-        }
-    }
-
     override suspend fun markAsRead(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).markMessagesAsRead(id, object : MessageMarkCallback {

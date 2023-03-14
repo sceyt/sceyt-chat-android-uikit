@@ -618,7 +618,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        if (item.message.selfReactions.isNullOrEmpty()) return
         context.getFragmentManager()?.let {
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
