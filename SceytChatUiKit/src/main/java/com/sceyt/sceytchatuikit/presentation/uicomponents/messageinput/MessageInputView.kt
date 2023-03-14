@@ -187,7 +187,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 return@submit
             }
 
-            val lastWord = inputText.split(" ").lastOrNull()
+            val lastWord = inputText.toString().replace("\n", " ").split(" ").lastOrNull()
             if (lastWord?.startsWith("@") == true) {
                 val mentionText = lastWord.removePrefix("@")
                 eventListeners.onMentionUsersListener(mentionText)
