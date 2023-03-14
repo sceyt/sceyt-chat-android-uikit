@@ -161,6 +161,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
             }
         }
         binding.viewPager.registerOnPageChangeCallback(pagerCallback!!)
+        headerAdapter?.setSelected(binding.viewPager.currentItem)
     }
 
     private fun createReactedUsersFragment(key: String, messageId: Long): FragmentReactedUsers {
