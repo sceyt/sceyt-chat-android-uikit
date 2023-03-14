@@ -104,6 +104,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
     }
 
     fun setSelected(position: Int) {
+        if (data.isEmpty() || position !in (0 until data.size)) return
         data.findIndexed { it.selected }?.let {
             it.second.selected = false
             notifyItemChanged(it.first, Any())
