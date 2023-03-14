@@ -58,7 +58,7 @@ abstract class ReactionDao {
     abstract suspend fun deleteAllReactionScoresByMessageId(messageId: Long)
 
     @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")
-    protected abstract suspend fun deleteReaction(messageId: Long, key: String, fromId: String)
+    abstract suspend fun deleteReaction(messageId: Long, key: String, fromId: String)
 
     @Query("delete from ReactionEntity where id in (:ids)")
     abstract suspend fun deleteReactionByIds(vararg ids: Long)

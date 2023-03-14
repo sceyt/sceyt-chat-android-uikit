@@ -88,6 +88,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
                     }
                 }
                 headerAdapter?.updateAppItem(eventData.message.reactionScores.sumOf { it.score })
+                pagerAdapter?.updateAllReactionsFragment()
                 registerOnPageChangeCallback()
             }.launchIn(lifecycleScope)
     }
