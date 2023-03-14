@@ -10,6 +10,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
@@ -70,14 +71,13 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         })
     }
 
-    @Throws(IllegalStateException::class)
     @JvmStatic
     fun handleRemoteMessage(remoteMessage: RemoteMessage): Boolean {
         if (!remoteMessage.isValid()) {
             return false
         }
 
-        val triple = getDataFromJson(remoteMessage)
+        val triple = getDataFromRemoteMessage(remoteMessage)
         val channel = triple.second
         val message = triple.third
 
@@ -86,14 +86,13 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         return true
     }
 
-    @Throws(IllegalStateException::class)
     @JvmStatic
     fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?>? {
         if (!remoteMessage.isValid()) {
             return null
         }
 
-        val triple = getDataFromJson(remoteMessage)
+        val triple = getDataFromRemoteMessage(remoteMessage)
         val channel = triple.second
         val message = triple.third
         if (channel != null && message != null)
@@ -101,11 +100,15 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         return triple
     }
 
-    private fun getDataFromJson(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?> {
-        val u = getUserFromPushJson(remoteMessage.data["user"])
-        val c = getChannelFromPushJson(remoteMessage.data["channel"])
-        val m = getMessageBodyFromPushJson(remoteMessage.data["message"], c?.id, u)
-        return Triple(u, c, m)
+    fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?> {
+        val user = getUserFromPushJson(remoteMessage.data["user"])
+        val channel = getChannelFromPushJson(remoteMessage.data["channel"])
+        val message = getMessageBodyFromPushJson(remoteMessage.data["message"], channel?.id, user)
+        return Triple(user, channel, message)
+    }
+
+    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionScore? {
+        return getReactionScoreFromPushJson(remoteMessage.data["reaction"])
     }
 
     @Throws(IllegalStateException::class)
