@@ -8,6 +8,7 @@
     android:background="@drawable/sceyt_bg_corners_20"
     android:backgroundTint="@color/sceyt_color_white"
     android:elevation="1dp"
+    android:layoutDirection="ltr"
     android:orientation="horizontal"
     android:paddingHorizontal="6dp"
     android:paddingVertical="2dp"
