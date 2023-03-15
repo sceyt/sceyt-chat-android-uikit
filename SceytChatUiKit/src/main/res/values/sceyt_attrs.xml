@@ -26,6 +26,7 @@
         <attr name="sceytDateStatusViewDateText" format="string" />
         <attr name="sceytDateStatusViewFirstStatus" format="boolean" />
         <attr name="sceytDateStatusViewHighlighted" format="boolean" />
+        <attr name="sceytDateStatusViewIgnoreRtl" format="boolean" />
         <attr name="android:paddingStart" format="dimension" />
         <attr name="android:paddingEnd" format="dimension" />
         <attr name="android:paddingBottom" format="dimension" />

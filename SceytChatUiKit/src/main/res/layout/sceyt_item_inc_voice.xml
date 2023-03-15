@@ -69,7 +69,7 @@
             android:fontFamily="@font/roboto_medium"
             android:includeFontPadding="false"
             android:singleLine="true"
-            android:text="@string/forwarded_message"
+            android:text="@string/sceyt_forwarded_message"
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"

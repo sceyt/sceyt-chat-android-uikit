@@ -71,7 +71,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
         @SuppressLint("SetTextI18n")
         override fun bind(item: ReactionHeaderItem) {
             with(binding.tvAll) {
-                text = "${itemView.getString(R.string.all)} ${(item as ReactionHeaderItem.All).count}"
+                text = "${itemView.getString(R.string.sceyt_all)} ${(item as ReactionHeaderItem.All).count}"
 
                 if (item.selected) {
                     background = GradientDrawable().apply {

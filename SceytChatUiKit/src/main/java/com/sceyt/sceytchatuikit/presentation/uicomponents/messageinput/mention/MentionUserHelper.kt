@@ -22,6 +22,7 @@ import kotlin.collections.set
 
 
 object MentionUserHelper {
+    private var userNameBuilder = SceytKitConfig.userNameBuilder
 
     fun initMentionMetaData(body: String, mentionUsers: List<MentionUserData>): String {
         if (body.isEmpty() || mentionUsers.isEmpty()) return ""
@@ -123,7 +124,7 @@ object MentionUserHelper {
                                    item: Map.Entry<String, MentionUserMetaDataPayLoad>): String {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.key }
         var name = mentionUser?.let { user ->
-            SceytKitConfig.userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            userNameBuilder?.invoke(user) ?: user.getPresentableName()
         } ?: item.key
         name = "@$name"
 
@@ -134,6 +135,10 @@ object MentionUserHelper {
 
         newBody.replace(item.value.loc, end, name)
         return name
+    }
+
+    fun setCustomUserNameBuilder(userNameBuilder: (User) -> String) {
+        this.userNameBuilder = userNameBuilder
     }
 
     data class MentionUserMetaDataPayLoad(
