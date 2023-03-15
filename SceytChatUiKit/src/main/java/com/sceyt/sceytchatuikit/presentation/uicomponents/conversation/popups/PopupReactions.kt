@@ -12,9 +12,10 @@ import android.widget.PopupWindow
 import androidx.core.view.marginBottom
 import androidx.core.view.marginTop
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytPopupAddReactionBinding
+import com.sceyt.sceytchatuikit.extensions.isRtl
 import com.sceyt.sceytchatuikit.extensions.screenWidthPx
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -28,7 +29,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     fun showPopup(anchorView: View, message: SceytMessage, clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
         this.clickListener = clickListener
 
-        val reversed = !message.incoming
+        val reversed = !message.incoming && !context.isRtl()
         val location = IntArray(2)
         anchorView.getLocationOnScreen(location)
         val y = location[1]

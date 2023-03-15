@@ -127,6 +127,8 @@ fun Activity.recreateWithoutAnim() {
     overridePendingTransition(0, 0)
 }
 
+fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+
 fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
     window.statusBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
 

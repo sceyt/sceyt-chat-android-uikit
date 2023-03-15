@@ -112,7 +112,6 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         // Initialise TextChangedListeners
         addListeners()
         setTextIsSelectable(false)
-        isLongClickable = false
 
         //In theory, get the soft keyboard to not supply suggestions. very unreliable
         inputType = inputType or

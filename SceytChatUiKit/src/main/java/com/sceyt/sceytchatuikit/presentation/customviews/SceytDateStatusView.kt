@@ -108,8 +108,8 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         if (statusDrawable != null) {
             initStatsIconSize(statusDrawable!!)
 
-            val left = textBoundsRect.right + mMargin - textBoundsRect.left + paddingStart
-            val top = getTopFormIcon() + paddingTop
+            val left = textBoundsRect.right + mMargin - textBoundsRect.left
+            val top = getTopFormIcon()
             val sizeDiff = getStatusIconWidthHeightDiff()
             val widthDiff = sizeDiff.first
             val heightDiff = sizeDiff.second
@@ -126,12 +126,12 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         statusDrawable?.let {
             initStatsIconSize(it)
 
-            val left = paddingStart
+            val left = 0
             val sizeDiff = getStatusIconWidthHeightDiff()
             val widthDiff = sizeDiff.first
             val heightDiff = sizeDiff.second
 
-            val top = getTopFormIcon() + paddingTop
+            val top = getTopFormIcon()
             iconBoundsRect.set(left + widthDiff, top + heightDiff,
                 left + widthIcon + widthDiff, top + heightIcon + heightDiff)
         }
@@ -171,6 +171,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         super.onDraw(canvas)
         if (firstStatusIcon) {
             //Draw status icon
+            canvas.translate(paddingStart.toFloat(), paddingTop.toFloat())
             statusDrawable?.let {
                 it.bounds = iconBoundsRect
                 it.draw(canvas)
@@ -179,16 +180,17 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
             initText(dateText)
             val staticLayout = getStaticLayout()
             canvas.translate((Integer.max(iconBoundsRect.right, mIconSize) + mMargin).toFloat(),
-                (height - staticLayout.height) / 2f)
+                ((height + paddingTop - paddingBottom) - staticLayout.height) / 2f - paddingTop.toFloat())
             staticLayout.draw(canvas)
         } else {
             //Draw text
             initText(dateText)
             val staticLayout = getStaticLayout()
             canvas.save()
-            canvas.translate(paddingStart.toFloat(), (height - staticLayout.height) / 2f)
+            canvas.translate(paddingStart.toFloat(), ((height + paddingTop - paddingBottom) - staticLayout.height) / 2f)
             staticLayout.draw(canvas)
             canvas.restore()
+            canvas.translate(paddingStart.toFloat(), paddingTop.toFloat())
             //Draw status icon
             statusDrawable?.let {
                 it.bounds = iconBoundsRect

@@ -20,6 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:clipToPadding="false"
+            android:layoutDirection="ltr"
             android:orientation="horizontal"
             android:paddingHorizontal="7dp"
             android:paddingVertical="2dp"
