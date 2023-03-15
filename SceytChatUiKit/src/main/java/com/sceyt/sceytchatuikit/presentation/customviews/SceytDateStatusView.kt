@@ -14,6 +14,7 @@ import androidx.annotation.ColorRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.extensions.isRtl
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import kotlin.math.absoluteValue
 import kotlin.math.min
@@ -39,7 +40,9 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     private var mMinHeightSize = 0
     private var isHighlighted = false
     private var isEdited = false
+    private var ignoreRtl: Boolean = false
     private lateinit var paddings: IntArray
+    private val showFirstStatus get() = firstStatusIcon or (!ignoreRtl && context.isRtl())
 
     init {
         attrs?.let {
@@ -52,6 +55,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
             statusIconMargin = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIconMargin, statusIconMargin)
             statusIconSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIconSize, 0)
             firstStatusIcon = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewFirstStatus, firstStatusIcon)
+            ignoreRtl = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewIgnoreRtl, ignoreRtl)
             isHighlighted = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewHighlighted, isHighlighted)
             getPaddingsFromAttr(a)
             a.recycle()
@@ -96,7 +100,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         setHighlightedState(isHighlighted)
 
         checkSizesAndMargins()
-        if (firstStatusIcon)
+        if (showFirstStatus)
             measureViewsFirstStatus()
         else measureViewsFirstText()
     }
@@ -169,7 +173,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (firstStatusIcon) {
+        if (showFirstStatus) {
             //Draw status icon
             canvas.translate(paddingStart.toFloat(), paddingTop.toFloat())
             statusDrawable?.let {

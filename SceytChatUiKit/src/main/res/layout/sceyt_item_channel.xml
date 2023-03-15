@@ -101,6 +101,7 @@
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="13sp"
             app:sceytDateStatusViewFirstStatus="true"
+            app:sceytDateStatusViewIgnoreRtl="true"
             app:sceytDateStatusViewStatusIconMargin="4dp"
             app:sceytDateStatusViewStatusIconSize="16dp"
             tools:sceytDateStatusViewDateText="12:28"

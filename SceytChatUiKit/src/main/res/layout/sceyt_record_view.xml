@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:includeFontPadding="false"
-            android:text="@string/slide_to_cancel"
+            android:text="@string/sceyt_slide_to_cancel"
             android:textColor="#898f9d"
             android:textSize="16sp"
             android:visibility="gone"
