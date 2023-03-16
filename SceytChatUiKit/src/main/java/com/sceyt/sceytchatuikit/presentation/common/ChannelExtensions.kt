@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 
 fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
+            || lastMessage?.state != other.lastMessage?.state
     val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
             && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
     return ChannelItemPayloadDiff(
@@ -49,5 +50,5 @@ fun SceytChannel.isPeerDeleted(): Boolean {
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {
-    return (this is SceytDirectChannel) && peer?.user?.blocked==true
+    return (this is SceytDirectChannel) && peer?.user?.blocked == true
 }
