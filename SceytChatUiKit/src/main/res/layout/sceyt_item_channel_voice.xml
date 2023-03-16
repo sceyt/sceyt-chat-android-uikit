@@ -20,7 +20,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
         android:ellipsize="middle"
@@ -29,21 +29,24 @@
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/tvDuration"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/icFile"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="Annual Meeting" />
+        tools:text="Annual Meeting" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDate"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
         android:layout_marginTop="2dp"
         android:textColor="@color/sceyt_color_gray_400"
         android:textSize="13sp"
-        app:layout_constraintEnd_toEndOf="@+id/tvFileName"
-        app:layout_constraintStart_toStartOf="@+id/tvFileName"
+        app:layout_constraintEnd_toStartOf="@+id/tvDuration"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/icFile"
         app:layout_constraintTop_toBottomOf="@+id/tvFileName"
-        android:text="16.09.22 • 21:00" />
+        tools:text="16.09.22 • 21:00" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"
@@ -54,6 +57,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="02:34" />
+        tools:text="02:34" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
