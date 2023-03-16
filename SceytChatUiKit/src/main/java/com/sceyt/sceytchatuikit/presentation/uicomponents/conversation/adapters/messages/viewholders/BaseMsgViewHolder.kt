@@ -323,7 +323,10 @@ abstract class BaseMsgViewHolder(private val view: View,
                 Pair(dpToPx(5f), dpToPx(5f))
             }
             (layoutParams as ViewGroup.MarginLayoutParams).apply {
-                setMargins(0, marginTop, marginEndBottom.first, marginEndBottom.second)
+                val isRtl = context.isRtl()
+                val left = if (isRtl) marginEndBottom.first else 0
+                val right = if (isRtl) 0 else marginEndBottom.first
+                setMargins(left, marginTop, right, marginEndBottom.second)
                 marginEnd = marginEndBottom.first
             }
         }
@@ -367,8 +370,8 @@ abstract class BaseMsgViewHolder(private val view: View,
 
             currentView.paint.getStaticLayout(body, currentView.includeFontPadding, maxWidth).apply {
                 if (lineCount > 1) {
-                    val bodyIsRtl= body.isRtl()
-                    val appIsRtl= context.isRtl()
+                    val bodyIsRtl = body.isRtl()
+                    val appIsRtl = context.isRtl()
                     if (getLineMax(lineCount - 1) + nextViewWidth < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
                         constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
                     } else
