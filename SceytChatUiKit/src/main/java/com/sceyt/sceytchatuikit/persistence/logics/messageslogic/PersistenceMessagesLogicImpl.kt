@@ -40,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
@@ -69,6 +70,7 @@ internal class PersistenceMessagesLogicImpl(
 ) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
+    private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -271,6 +273,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         val response = messagesRepository.sendMessage(channelId, message)
         onMessageSentResponse(channelId, response)
+        response.data?.let { persistenceAttachmentLogic.updateForwardedAttachments(it) }
         return response
     }
 

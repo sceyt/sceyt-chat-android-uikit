@@ -128,7 +128,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
                 if (attachment.id == null || attachment.id == 0L)
                     viewModel.loadPrevAttachments(channelId, 0, false, mediaTypes, 0)
                 else
-                    viewModel.loadNearPrevAttachments(channelId, attachment.id, mediaTypes, 0)
+                    viewModel.loadNearAttachments(channelId, attachment.id, mediaTypes, 0)
             }
         }
     }

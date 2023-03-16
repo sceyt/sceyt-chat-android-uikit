@@ -53,7 +53,7 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun loadNearPrevAttachments(channelId: Long, lastAttachmentId: Long, type: List<String>, offset: Int) {
+    fun loadNearAttachments(channelId: Long, lastAttachmentId: Long, type: List<String>, offset: Int) {
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNear)
 
         notifyPageLoadingState(false)
