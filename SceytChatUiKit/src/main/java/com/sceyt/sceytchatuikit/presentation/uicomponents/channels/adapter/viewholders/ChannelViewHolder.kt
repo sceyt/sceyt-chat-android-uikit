@@ -30,6 +30,8 @@ import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import java.text.NumberFormat
+import java.util.*
 
 open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private var listeners: ChannelClickListeners.ClickListeners,
@@ -185,8 +187,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             return
         }
         val title = if (unreadCount > 99L) {
-            "99+"
-        } else unreadCount.toString()
+            "${NumberFormat.getInstance(Locale.getDefault()).format(99)}+"
+        } else NumberFormat.getInstance(Locale.getDefault()).format(unreadCount)
 
         textView.apply {
             text = title
