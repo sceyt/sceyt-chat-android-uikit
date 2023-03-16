@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
+import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
@@ -37,6 +38,7 @@ import org.koin.core.component.inject
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
+        private val messageDao: MessageDao,
         private val membersDao: MembersDao,
         private val usersDao: UserDao,
         private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
@@ -60,9 +62,7 @@ internal class PersistenceMembersLogicImpl(
                 }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
-                channelDao.deleteChannel(chatId)
-                channelsCache.deleteChannel(chatId)
+                deleteChannelDb(chatId)
             }
             ChannelMembersEventEnum.UnBlocked -> {
                 channelDao.updateChannel(data.channel.toChannelEntity())
@@ -146,6 +146,12 @@ internal class PersistenceMembersLogicImpl(
             channelDao.deleteUserChatLinks(channelId, *removedItems.map { it.user.id }.toTypedArray())
         }
         return removedItems
+    }
+
+    private suspend fun deleteChannelDb(channelId: Long) {
+        channelDao.deleteChannelAndLinks(channelId)
+        messageDao.deleteAllMessages(channelId)
+        channelsCache.deleteChannel(channelId)
     }
 
     override suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel> {
