@@ -21,6 +21,8 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
     : FrameLayout(context, attrs, defStyleAttr) {
 
     private val binding: SceytRecordedVoicePresenterBinding
+    var isShowing = false
+        private set
 
     init {
         binding = SceytRecordedVoicePresenterBinding.inflate(LayoutInflater.from(context), this, true)
@@ -28,12 +30,14 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
     }
 
     fun init(file: File, audioMetadata: AudioMetadata, listener: RecordedVoicePresentListeners? = null) {
+        isShowing = true
         binding.apply {
             val onClickListener = OnClickListener {
                 when (it.id) {
                     deleteVoiceRecord.id -> {
-                        listener?.onDeleteVoiceRecord()
                         AudioPlayerHelper.stop(file.path)
+                        isShowing = false
+                        listener?.onDeleteVoiceRecord()
                     }
                     playVoiceRecord.id -> {
                         listener?.onPlayVoiceRecord()
@@ -83,6 +87,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                     }
                     icSendMessage.id -> {
                         AudioPlayerHelper.stop(file.path)
+                        isShowing = false
                         listener?.onSendVoiceMessage()
                     }
                 }

@@ -296,6 +296,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         voiceMessageRecorderView?.isVisible = true
         binding.voiceRecordPresenter.isVisible = false
         binding.messageInput.setText("")
+        determineState()
     }
 
     private fun SceytVoiceMessageRecorderView.setRecordingListener() {
@@ -397,6 +398,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun determineState() {
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
+                && !binding.voiceRecordPresenter.isShowing
         val newState = if (showVoiceIcon) Voice else Text
         if (inputState != newState)
             onStateChanged(newState)
