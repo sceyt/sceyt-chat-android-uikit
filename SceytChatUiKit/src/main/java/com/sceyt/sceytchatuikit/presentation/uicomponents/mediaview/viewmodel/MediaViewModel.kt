@@ -6,21 +6,25 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class MediaViewModel : BaseViewModel(), SceytKoinComponent {
-    private val attachmentLogic: PersistenceAttachmentLogic by inject()
+    private val messagesMiddleWare: PersistenceMessagesMiddleWare by inject()
+    private val attachmentsMiddleWare: PersistenceAttachmentsMiddleWare by inject()
     private val fileTransferService: FileTransferService by inject()
 
     private val _fileFilesFlow = MutableSharedFlow<PaginationResponse<AttachmentWithUserData>>(
@@ -35,7 +39,7 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            attachmentLogic.getPrevAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
+            attachmentsMiddleWare.getPrevAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
                 initPaginationResponse(response)
             }
         }
@@ -47,7 +51,7 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            attachmentLogic.getNextAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
+            attachmentsMiddleWare.getNextAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
                 initPaginationResponse(response)
             }
         }
@@ -59,7 +63,7 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
         notifyPageLoadingState(false)
 
         viewModelScope.launch(Dispatchers.IO) {
-            attachmentLogic.getNearAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
+            attachmentsMiddleWare.getNearAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
                 initPaginationResponse(response)
             }
         }
@@ -119,5 +123,13 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
                 }
             }
         }
+    }
+
+    fun getMessageById(messageId: Long) = callbackFlow {
+        messagesMiddleWare.getMessageDbById(messageId)?.let {
+            trySend(it)
+        } ?: trySend(null)
+        channel.close()
+        awaitClose()
     }
 }

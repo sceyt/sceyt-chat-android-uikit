@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -25,6 +26,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytActivityMediaBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaFilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
@@ -38,7 +40,7 @@ import kotlinx.coroutines.flow.onEach
 import java.io.File
 
 
-class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
+open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     lateinit var binding: SceytActivityMediaBinding
     private val viewModel by viewModels<MediaViewModel>()
     private var fileToSaveAfterPermission: MediaItem? = null
@@ -269,7 +271,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         return null
     }
 
-    private fun showActionsDialog(file: MediaItem) {
+    protected open fun showActionsDialog(file: MediaItem) {
         ActionDialog(this) {
             when (it) {
                 ActionDialog.Action.Save -> {
@@ -283,7 +285,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }.show()
     }
 
-    private fun share(item: MediaItem) {
+    protected open fun share(item: MediaItem) {
         val fileTypeTitle = if (item is MediaItem.Image) getString(R.string.sceyt_image) else getString(R.string.sceyt_video)
         item.file.filePath?.let { path ->
             File(path).let {
@@ -297,12 +299,13 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun forward(item: MediaItem) {
-        // To do
-        Toast.makeText(this@MediaActivity, "Coming soon!", Toast.LENGTH_SHORT).show()
+    protected open fun forward(item: MediaItem) {
+        viewModel.getMessageById(item.data.attachment.messageId).onEach {
+            it?.let { message -> SceytForwardActivity.launch(this, message) }
+        }.launchIn(viewModel.viewModelScope)
     }
 
-    private fun save(item: MediaItem) {
+    protected open fun save(item: MediaItem) {
         val file = item.file
         val mimeType = getMimeTypeFrom(file)
 
@@ -339,7 +342,7 @@ class MediaActivity : AppCompatActivity(), OnMediaClickCallback {
         private const val KEY_REVERSED = "KEY_REVERSED"
 
         fun openMediaView(context: Context, attachment: SceytAttachment, from: User?, channelId: Long, reversed: Boolean = false) {
-            context.launchActivity<MediaActivity> {
+            context.launchActivity<SceytMediaActivity> {
                 putExtra(KEY_ATTACHMENT, attachment)
                 putExtra(KEY_USER, from)
                 putExtra(KEY_CHANNEL_ID, channelId)
