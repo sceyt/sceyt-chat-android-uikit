@@ -301,7 +301,11 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open fun forward(item: MediaItem) {
         viewModel.getMessageById(item.data.attachment.messageId).onEach {
-            it?.let { message -> SceytForwardActivity.launch(this, message) }
+            it?.let { message ->
+                SceytForwardActivity.launch(this, message)
+            } ?: run {
+                customToastSnackBar("Couldn't forward this message")
+            }
         }.launchIn(viewModel.viewModelScope)
     }
 

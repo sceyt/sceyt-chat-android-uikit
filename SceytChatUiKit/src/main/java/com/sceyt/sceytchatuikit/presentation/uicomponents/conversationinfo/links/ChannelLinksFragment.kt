@@ -31,12 +31,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
-    private lateinit var channel: SceytChannel
-    private var binding: SceytFragmentChannelLinksBinding? = null
-    private var mediaAdapter: ChannelMediaAdapter? = null
-    private var pageStateView: PageStateView? = null
-    private val mediaType = listOf("link")
-    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var channel: SceytChannel
+    protected var binding: SceytFragmentChannelLinksBinding? = null
+    protected var mediaAdapter: ChannelMediaAdapter? = null
+    protected var pageStateView: PageStateView? = null
+    protected val mediaType = listOf("link")
+    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelLinksBinding.inflate(inflater, container, false).also {

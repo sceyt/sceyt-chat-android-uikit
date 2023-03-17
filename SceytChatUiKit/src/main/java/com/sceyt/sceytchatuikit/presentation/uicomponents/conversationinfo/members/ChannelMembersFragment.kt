@@ -50,12 +50,12 @@ import org.koin.core.component.inject
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
-    private var membersAdapter: ChannelMembersAdapter? = null
-    var binding: SceytFragmentChannelMembersBinding? = null
+    protected var membersAdapter: ChannelMembersAdapter? = null
+    protected var binding: SceytFragmentChannelMembersBinding? = null
         private set
-    lateinit var channel: SceytChannel
+    protected lateinit var channel: SceytChannel
         private set
-    lateinit var memberType: MemberTypeEnum
+    protected lateinit var memberType: MemberTypeEnum
         private set
     private var currentUserRole: Role? = null
 
