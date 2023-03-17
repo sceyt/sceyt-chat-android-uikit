@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.persistence.logics.reactionslogic
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventEnum.ADD
