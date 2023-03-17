@@ -10,7 +10,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 
@@ -59,7 +59,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             }
             binding.videoView.setUserVisibleHint(false)
         } else
-            binding.videoView.setUserVisibleHint((context as? MediaActivity)?.isShowMediaDetail()
+            binding.videoView.setUserVisibleHint((context as? SceytMediaActivity)?.isShowMediaDetail()
                     ?: false)
     }
 
