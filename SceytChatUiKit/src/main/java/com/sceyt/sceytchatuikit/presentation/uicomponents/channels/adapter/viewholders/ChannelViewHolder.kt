@@ -159,9 +159,11 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
         if (lastReaction.id > (channel.lastMessage?.id ?: 0)) {
             val toMessage = if (message != null) "\"${message.getShowBody(context)}\"" else itemView.getString(R.string.sceyt_message).lowercase()
-            val reactUserName = if (channel is SceytGroupChannel)
-                "${lastReaction.user?.getPresentableNameCheckDeleted(context)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
-            else itemView.getString(R.string.sceyt_reacted)
+            val reactUserName = if (channel is SceytGroupChannel) {
+                val name = SceytKitConfig.userNameBuilder?.invoke(lastReaction.user)
+                        ?: lastReaction.user?.getPresentableNameWithYou(context)
+                "$name ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
+            } else itemView.getString(R.string.sceyt_reacted)
 
             val text = "$reactUserName " +
                     "${lastReaction.key} ${itemView.getString(R.string.sceyt_to)} $toMessage"
