@@ -74,6 +74,7 @@
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:maxLines="2"
+        app:layout_constraintHorizontal_bias="0"
         android:textColor="@color/sceyt_color_black_themed"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"

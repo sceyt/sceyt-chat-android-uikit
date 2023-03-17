@@ -63,6 +63,7 @@
             android:id="@+id/tvDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="35dp"
             android:layout_marginEnd="10dp"
             android:fontFamily="@font/roboto_regular"
             android:lines="1"
@@ -72,7 +73,6 @@
             app:layout_constraintEnd_toStartOf="@+id/icShare"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@+id/icBack"
-            app:layout_constraintStart_toStartOf="@+id/tvTitle"
             app:layout_constraintTop_toBottomOf="@+id/tvTitle"
             tools:text="Description" />
 

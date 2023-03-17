@@ -81,15 +81,15 @@ fun getChannelFromPushJson(channelJson: String?): Channel? {
         val channel: Channel = when (stringToEnum(type)) {
             ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, label, 0, 0,
                 null, null, 0L, 0, 0, false, 0, false,
-                0L, 0L, 0, null, null)
+                0L, 0L, 0, null, null, null)
 
             ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, label, 0,
                 0, arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
-                false, 0, 0, 0, null, null)
+                false, 0, 0, 0, null, null, null)
 
             ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", label, 0, 0,
                 arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
-                false, 0, 0, 0, null, null)
+                false, 0, 0, 0, null, null, null)
         }
         channel
     } catch (e: Exception) {
@@ -117,7 +117,6 @@ fun getReactionScoreFromPushJson(json: String?): ReactionScore? {
         val jsonObject = JSONObject(json ?: return null)
         val key = jsonObject.getString("key")
         val score = jsonObject.getLong("score")
-        val reason = jsonObject.getString("reason")
         ReactionScore(key, score)
     } catch (e: Exception) {
         e.printStackTrace()

@@ -124,7 +124,8 @@ fun ChannelDb.toChannel(): SceytChannel {
                     lastReadMessageId = lastReadMessageId,
                     messagesDeletionDate = messagesDeletionDate,
                     lastMessages = emptyList(),
-                    role = role?.let { Role(it) }
+                    role = role?.let { Role(it) },
+                    userMessageReactions = usersReactions?.mapNotNull { it.toReaction() },
                 )
             ChannelTypeEnum.Direct -> SceytDirectChannel(
                 id = id,
@@ -142,7 +143,8 @@ fun ChannelDb.toChannel(): SceytChannel {
                 lastDeliveredMessageId = lastDeliveredMessageId,
                 lastReadMessageId = lastReadMessageId,
                 messagesDeletionDate = messagesDeletionDate,
-                lastMessages = emptyList()
+                lastMessages = emptyList(),
+                userMessageReactions = usersReactions?.mapNotNull { it.toReaction() },
             )
         }
     }

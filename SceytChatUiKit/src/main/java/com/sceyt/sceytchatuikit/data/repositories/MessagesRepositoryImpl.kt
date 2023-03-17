@@ -261,6 +261,23 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
+    override suspend fun getMessageById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).getMessagesById(longArrayOf(messageId), object : MessagesCallback {
+                override fun onResult(messages: MutableList<Message>?) {
+                    if (!messages.isNullOrEmpty())
+                        continuation.safeResume(SceytResponse.Success(messages.first().toSceytUiMessage()))
+                    else continuation.safeResume(SceytResponse.Error(SceytException(0, "Message not found")))
+                }
+
+                override fun onError(error: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(error))
+                    Log.e(TAG, "getMessageById error: ${error?.message}")
+                }
+            })
+        }
+    }
+
     override suspend fun sendTypingState(channelId: Long, typing: Boolean) {
         if (typing)
             ChannelOperator.build(channelId).startTyping()

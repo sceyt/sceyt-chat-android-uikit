@@ -56,7 +56,7 @@ fun SceytMessage.toMessageDb(): MessageDb {
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
-        reactions = selfReactions?.map { it.toReactionDb(id) },
+        reactions = selfReactions?.map { it.toReactionDb() },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
         forwardingUser = forwardingDetails?.user?.toUserEntity(),
         mentionedUsers = null

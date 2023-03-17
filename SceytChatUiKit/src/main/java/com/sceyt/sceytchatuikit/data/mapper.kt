@@ -40,6 +40,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             messagesDeletionDate = messagesDeletionDate,
             role = myRole(),
             lastMessages = lastMessages?.map { it.toSceytUiMessage() },
+            userMessageReactions = getUserMessageReactions()?.toList()
         )
     } else {
         this as DirectChannel
@@ -60,7 +61,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             lastReadMessageId = lastReadMessageId,
             channelType = getChannelType(this),
             messagesDeletionDate = messagesDeletionDate,
-            lastMessages = lastMessages?.map { it.toSceytUiMessage() }
+            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
+            userMessageReactions = getUserMessageReactions()?.toList()
         )
     }
 }
@@ -73,14 +75,16 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
                 id, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null, lastMessages?.map { it.toMessage() }?.toTypedArray())
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
+                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
         }
         ChannelTypeEnum.Public -> {
             this as SceytGroupChannel
             PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null, lastMessages?.map { it.toMessage() }?.toTypedArray())
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
+                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
         }
         else -> throw RuntimeException("Channel is direct channel")
     }

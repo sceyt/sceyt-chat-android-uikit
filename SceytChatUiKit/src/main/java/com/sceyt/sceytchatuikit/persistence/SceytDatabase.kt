@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.*
 import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
+import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 
@@ -22,9 +23,10 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
     AttachmentEntity::class,
     ReactionEntity::class,
     ReactionScoreEntity::class,
+    ChatUserReactionEntity::class,
     PendingMarkersEntity::class,
     AttachmentPayLoadEntity::class
-], version = 18, exportSchema = false)
+], version = 19, exportSchema = false)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
@@ -33,6 +35,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun membersDao(): MembersDao
     abstract fun userDao(): UserDao
     abstract fun reactionDao(): ReactionDao
+    abstract fun channelUsersReactionDao(): ChatUsersReactionDao
     abstract fun pendingMarkersDao(): PendingMarkersDao
     abstract fun attachmentsDao(): AttachmentDao
 }

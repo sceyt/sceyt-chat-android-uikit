@@ -329,6 +329,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.editMessage(channelId, message)
     }
 
+    override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        return messagesLogic.getMessageFromServerById(channelId, messageId)
+    }
+
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
         return messagesLogic.getMessageDbById(messageId)
     }

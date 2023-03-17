@@ -43,6 +43,7 @@ interface PersistenceMessagesMiddleWare {
     suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
     suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
+    suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun getMessageDbById(messageId: Long): SceytMessage?
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }
