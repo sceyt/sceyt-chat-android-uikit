@@ -29,11 +29,11 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
-    private var binding: FragmentEditChannelBinding? = null
+    protected var binding: FragmentEditChannelBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
-    private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
-    private var avatarUrl: String? = null
-    lateinit var channel: SceytChannel
+    protected val chooseAttachmentHelper = ChooseAttachmentHelper(this)
+    protected var avatarUrl: String? = null
+    protected lateinit var channel: SceytChannel
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

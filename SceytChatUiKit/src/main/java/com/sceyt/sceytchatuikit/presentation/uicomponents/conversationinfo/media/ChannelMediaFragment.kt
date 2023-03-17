@@ -32,12 +32,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
-    private lateinit var channel: SceytChannel
-    private var binding: SceytFragmentChannelMediaBinding? = null
-    private var mediaAdapter: ChannelMediaAdapter? = null
-    private val mediaType = listOf("image", "video")
-    private var pageStateView: PageStateView? = null
-    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var channel: SceytChannel
+    protected var binding: SceytFragmentChannelMediaBinding? = null
+    protected var mediaAdapter: ChannelMediaAdapter? = null
+    protected val mediaType = listOf("image", "video")
+    protected var pageStateView: PageStateView? = null
+    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
