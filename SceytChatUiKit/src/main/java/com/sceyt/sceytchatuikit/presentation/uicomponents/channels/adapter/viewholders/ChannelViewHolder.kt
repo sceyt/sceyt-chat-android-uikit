@@ -11,6 +11,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
@@ -157,16 +158,22 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
         val lastReaction = channel.userMessageReactions?.maxByOrNull { it.id } ?: return false
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
+
         if (lastReaction.id > (channel.lastMessage?.id ?: 0)) {
             val toMessage = if (message != null) "\"${message.getShowBody(context)}\"" else itemView.getString(R.string.sceyt_message).lowercase()
-            val reactUserName = if (channel is SceytGroupChannel) {
-                val name = SceytKitConfig.userNameBuilder?.invoke(lastReaction.user)
-                        ?: lastReaction.user?.getPresentableNameWithYou(context)
-                "$name ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
-            } else itemView.getString(R.string.sceyt_reacted)
+            val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
-            val text = "$reactUserName " +
-                    "${lastReaction.key} ${itemView.getString(R.string.sceyt_to)} $toMessage"
+            val reactUserName = when {
+                channel is SceytGroupChannel -> {
+                    val name = SceytKitConfig.userNameBuilder?.invoke(lastReaction.user)
+                            ?: lastReaction.user?.getPresentableNameWithYou(context)
+                    "$name ${reactedWord.lowercase()}"
+                }
+                lastReaction.user.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
+                else -> reactedWord
+            }
+
+            val text = "$reactUserName ${lastReaction.key} ${itemView.getString(R.string.sceyt_to)} $toMessage"
             textView.text = text
             textView.setTypeface(null, Typeface.NORMAL)
             return true
