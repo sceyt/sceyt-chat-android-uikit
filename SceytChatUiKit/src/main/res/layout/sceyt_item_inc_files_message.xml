@@ -97,6 +97,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
+            android:textAlignment="viewStart"
             android:layout_marginTop="4dp"
             android:autoLink="phone|web|email"
             android:textColor="@color/sceyt_color_text_themed"
