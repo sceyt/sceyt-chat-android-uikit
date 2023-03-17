@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.logics.reactionslogic
 
 import com.sceyt.chat.models.message.Reaction
+import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
@@ -13,9 +15,9 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepository
 import com.sceyt.sceytchatuikit.persistence.dao.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.*
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +30,6 @@ internal class PersistenceReactionsLogicImpl(
         private var reactionDao: ReactionDao,
         private var channelReactionsDao: ChatUsersReactionDao,
         private var channelDao: ChannelDao,
-        private val preference: SceytSharedPreference,
         private var channelsCache: ChannelsCache,
         private var messagesCache: MessagesCache) : PersistenceReactionsLogic {
 
@@ -116,8 +117,8 @@ internal class PersistenceReactionsLogicImpl(
             reactionDao.getReactionsByMsgIdAndKey(messageId, key).map { it.toReaction() }
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        val response = reactionsRepository.addReaction(channelId, messageId, scoreKey)
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
+        val response = reactionsRepository.addReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
                 message.selfReactions?.let {
@@ -127,21 +128,30 @@ internal class PersistenceReactionsLogicImpl(
                     messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
                 }
                 messagesCache.messageUpdated(message)
+
+                if (!message.incoming) {
+                    val reaction = message.selfReactions?.maxBy { it.id }
+                    if (reaction != null)
+                        handleChannelReaction(ReactionUpdateEventData(message.toMessage(), reaction, ADD), message)
+                }
             }
         }
         return response
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        val response = reactionsRepository.deleteReaction(channelId, messageId, scoreKey)
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
+        val response = reactionsRepository.deleteReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
             response.data?.let { message ->
-                message.reactionScores?.let {
-                    val fromId = preference.getUserId()
-                    if (fromId != null)
-                        reactionDao.deleteReactionAndScore(messageId, scoreKey, fromId)
+                SceytKitClient.myId?.let { fromId ->
+                    reactionDao.deleteReactionAndScore(messageId, key, fromId)
                 }
                 messagesCache.messageUpdated(message)
+
+                if (!message.incoming) {
+                    val reaction = Reaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser)
+                    handleChannelReaction(ReactionUpdateEventData(message.toMessage(), reaction, REMOVE), message)
+                }
             }
         }
         return response
