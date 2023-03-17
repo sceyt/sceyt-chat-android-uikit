@@ -147,5 +147,7 @@
     <string name="sceyt_forward_message">Forward message</string>
     <string name="sceyt_forwarded_message">Forwarded message</string>
     <string name="sceyt_all">All</string>
+    <string name="sceyt_reacted">Reacted</string>
+    <string name="sceyt_to">to</string>
 
 </resources>

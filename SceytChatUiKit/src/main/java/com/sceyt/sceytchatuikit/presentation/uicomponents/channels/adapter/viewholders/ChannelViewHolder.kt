@@ -14,8 +14,11 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
+import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
@@ -30,6 +33,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import okhttp3.internal.lowercase
 import java.text.NumberFormat
 import java.util.*
 
@@ -112,6 +116,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
+        if (checkHasLastReaction(channel, textView))
+            return
+
         val message = channel.lastMessage
         if (message == null) {
             textView.text = ""
@@ -145,6 +152,24 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             textView.setTypeface(null, Typeface.NORMAL)
         }
+    }
+
+    open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
+        val lastReaction = channel.userMessageReactions?.maxByOrNull { it.id } ?: return false
+        val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
+        if (lastReaction.id > (channel.lastMessage?.id ?: 0)) {
+            val toMessage = if (message != null) "\"${message.getShowBody(context)}\"" else itemView.getString(R.string.sceyt_message).lowercase()
+            val reactUserName = if (channel is SceytGroupChannel)
+                "${lastReaction.user?.getPresentableNameCheckDeleted(context)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
+            else itemView.getString(R.string.sceyt_reacted)
+
+            val text = "$reactUserName " +
+                    "${lastReaction.key} ${itemView.getString(R.string.sceyt_to)} $toMessage"
+            textView.text = text
+            textView.setTypeface(null, Typeface.NORMAL)
+            return true
+        }
+        return false
     }
 
     open fun setSubject(channel: SceytChannel, textView: TextView) {

@@ -119,6 +119,9 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 channel.lastMessage = null
                 channel.unreadMessageCount = 0
+                channel.unreadMentionCount = 0
+                channel.unreadReactionCount = 0
+                channel.userMessageReactions = null
                 channelUpdated(channel, true)
             }
         }

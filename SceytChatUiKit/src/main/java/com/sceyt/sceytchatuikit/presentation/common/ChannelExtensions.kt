@@ -14,12 +14,14 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state
+    val userReactionsChanged = userMessageReactions?.maxOfOrNull { it.id } != other.userMessageReactions?.maxOfOrNull { it.id }
+
     val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
             && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
     return ChannelItemPayloadDiff(
         subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
         avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
-        lastMessageChanged = lastMessageChanged,
+        lastMessageChanged = lastMessageChanged || userReactionsChanged,
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus || lastMessageChanged,
         unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
         muteStateChanged = muted != other.muted,

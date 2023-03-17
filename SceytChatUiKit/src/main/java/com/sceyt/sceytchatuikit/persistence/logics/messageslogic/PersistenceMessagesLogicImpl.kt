@@ -415,6 +415,9 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
+    override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        return messagesRepository.getMessageById(channelId, messageId)
+    }
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
         return messageDao.getMessageById(messageId)?.toSceytMessage()
