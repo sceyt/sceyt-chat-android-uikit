@@ -106,7 +106,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                         stopRecording(RecordingBehaviour.RELEASED)
                 }
                 ACTION_CANCEL -> {
-                    stopRecording(RecordingBehaviour.CANCELED)
+                    stopRecordAndShowPreviewIfNeeded()
                 }
                 ACTION_MOVE -> {
                     if (stopTrackingAction) {
@@ -203,6 +203,13 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         binding.stopRecording(RecordingBehaviour.CANCELED)
     }
 
+    private fun stopRecordAndShowPreviewIfNeeded() {
+        if (isRecording) {
+            isLocked = false
+            binding.stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
+        }
+    }
+
     fun forceStopRecording() {
         if (isRecording) {
             stopTrackingAction = true
@@ -214,10 +221,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
         super.onWindowFocusChanged(hasWindowFocus)
-        if (!hasWindowFocus && isRecording) {
-            isLocked = false
-            binding.stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
-        }
+        if (!hasWindowFocus)
+            stopRecordAndShowPreviewIfNeeded()
     }
 
     private fun SceytRecordViewBinding.stopRecording(recordingBehaviour: RecordingBehaviour) {

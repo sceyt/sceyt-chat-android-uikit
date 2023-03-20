@@ -52,7 +52,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
      * Also set update current chat Id in ChannelsCache*/
     lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            ChannelsCache.currentChannelId = channel.id
             if (ConnectionEventsObserver.connectionState == ConnectionState.Connected) {
                 if (pendingDisplayMsgIds.isNotEmpty()) {
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
@@ -61,6 +60,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 sendPendingMessages()
             }
         }
+    }
+
+    messagesListView.setOnWindowFocusChangeListener { hasFocus ->
+        if (hasFocus)
+            ChannelsCache.currentChannelId = channel.id
+        else ChannelsCache.currentChannelId = null
     }
 
     if (channel.markedUsUnread)

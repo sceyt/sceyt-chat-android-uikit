@@ -23,6 +23,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -65,6 +66,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
+    private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
 
     var enabledClickActions = true
         private set
@@ -479,6 +481,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         scrollDownIcon.setUnreadCount(unreadCount)
     }
 
+    internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {
+        onWindowFocusChangeListener = listener
+    }
+
     fun hideLoadingPrev() {
         messagesRV.hideLoadingPrevItem()
     }
@@ -584,6 +590,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             enabledClickActions = enabled
     }
 
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        onWindowFocusChangeListener?.invoke(hasWindowFocus)
+        if (!hasWindowFocus)
+            AudioPlayerHelper.stopAll()
+    }
 
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
