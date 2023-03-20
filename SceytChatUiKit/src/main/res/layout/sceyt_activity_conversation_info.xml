@@ -22,7 +22,6 @@
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
-                android:id="@+id/colla"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:contentScrim="@color/sceyt_color_bg"
@@ -113,6 +112,7 @@
                         android:layout_marginTop="4dp"
                         android:textColor="@color/sceyt_color_text_themed"
                         app:layout_constraintHorizontal_bias="0"
+                        app:layout_constrainedWidth="true"
                         android:textSize="16sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"

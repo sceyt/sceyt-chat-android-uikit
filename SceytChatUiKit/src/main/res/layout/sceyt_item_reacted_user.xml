@@ -26,6 +26,7 @@
         android:lines="1"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
+        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toStartOf="@+id/reaction"
         app:layout_constraintHorizontal_bias="0"
