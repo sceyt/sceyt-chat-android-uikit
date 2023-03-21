@@ -119,13 +119,17 @@ internal class PersistenceReactionsLogicImpl(
     override suspend fun addReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
         val response = reactionsRepository.addReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
-            response.data?.let { message ->
-                message.selfReactions?.let {
+            response.data?.let { resultMessage ->
+                resultMessage.selfReactions?.let {
                     messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
                 }
-                message.reactionScores?.let {
+                resultMessage.reactionScores?.let {
                     messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
                 }
+
+                val message = messageDao.getMessageById(messageId)?.toSceytMessage()
+                        ?: resultMessage
+
                 messagesCache.messageUpdated(message)
 
                 if (!message.incoming) {
@@ -141,10 +145,14 @@ internal class PersistenceReactionsLogicImpl(
     override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
         val response = reactionsRepository.deleteReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
-            response.data?.let { message ->
+            response.data?.let { resultMessage ->
                 SceytKitClient.myId?.let { fromId ->
                     reactionDao.deleteReactionAndScore(messageId, key, fromId)
                 }
+
+                val message = messageDao.getMessageById(messageId)?.toSceytMessage()
+                        ?: resultMessage
+
                 messagesCache.messageUpdated(message)
 
                 if (!message.incoming) {

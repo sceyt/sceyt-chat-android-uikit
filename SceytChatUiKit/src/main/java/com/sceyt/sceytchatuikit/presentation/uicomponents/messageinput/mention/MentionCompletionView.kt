@@ -23,7 +23,7 @@ class MentionCompletionView : TokenCompleteTextView<MentionUserData> {
         return token
     }
 
-    fun setMentionUsers(mentionUsers: List<MentionUserData>) {
+    fun setMentionUsers(mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
         initWithObjects(mentionUsers)
     }
 
