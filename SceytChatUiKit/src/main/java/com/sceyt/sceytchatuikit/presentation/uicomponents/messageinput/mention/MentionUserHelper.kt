@@ -18,7 +18,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -77,26 +76,6 @@ object MentionUserHelper {
                 it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         return SpannableString.valueOf(newBody)
-    }
-
-    fun buildToCopy(body: String, metaData: String?, mentionUsers: Array<User>?): SpannableString {
-        if (metaData.isNullOrBlank()) return SpannableString(body)
-        return try {
-            val data = getMentionData(metaData) ?: return SpannableString(body)
-
-            val newBody = SpannableStringBuilder(body)
-            data.sortedByDescending { it.loc }.forEach {
-                val name = setNewBodyWithName(mentionUsers, newBody, it)
-                val user = mentionUsers?.find { mentionUser -> mentionUser.id == it.id }
-                        ?: User(it.id)
-                newBody.setSpan(TokenCompleteTextView.CopySpan(SceytMember(User("f"))), it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-
-            SpannableString.valueOf(newBody)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            SpannableString(body)
-        }
     }
 
     fun containsMentionsUsers(message: SceytMessage): Boolean {

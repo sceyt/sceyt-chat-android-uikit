@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.text.*
-import android.text.style.CharacterStyle
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.util.Log
@@ -21,7 +20,6 @@ import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import androidx.annotation.UiThread
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView
-import kotlinx.parcelize.Parcelize
 import java.io.Serializable
 import java.lang.reflect.ParameterizedType
 import java.util.*
@@ -874,34 +872,6 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         }
     }
 
-    /* override fun onTextContextMenuItem(id: Int): Boolean {
-         if (id == android.R.id.paste) {
-             val clipboard = getSystemService(context, android.content.ClipboardManager::class.java)
-                     ?: return super.onTextContextMenuItem(id)
-
-             if (clipboard.hasPrimaryClip()) {
-                 val clipData = clipboard.primaryClip
-                 if (clipData != null && clipData.itemCount > 0) {
-                     val pasteText = clipData.getItemAt(0).text.toSpannable()
-                     val spans = text.getSpans(0, pasteText.length, CopySpan::class.java)
-
-
-                     val imagesSpans = spans.map {
-                         val token = it.token as T
-                         val start = pasteText.getSpanStart(it)
-                         val end = pasteText.getSpanEnd(it)
-                         ObjectDataIndexed(start, end, token)
-                     }
-
-                     super.onTextContextMenuItem(id)
-                     initWithObjects(imagesSpans)
-                     return true
-                 }
-             }
-         }
-         return super.onTextContextMenuItem(id)
-     }*/
-
     /**
      * Append a token object to the object list. May only be called from the main thread.
      *
@@ -1660,15 +1630,6 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
                 }
             }
             return super.setComposingText(fixedText, newCursorPosition)
-        }
-    }
-
-    @Parcelize
-    data class CopySpan<T : Parcelable>(
-            val token: T
-    ) : CharacterStyle(), Parcelable {
-        override fun updateDrawState(tp: TextPaint?) {
-            // Do nothing
         }
     }
 
