@@ -73,10 +73,10 @@ internal fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
  */
 internal fun displayMetrics(): DisplayMetrics = Resources.getSystem().displayMetrics
 
-private val timeFormatter: SimpleDateFormat = SimpleDateFormat("m:ss", Locale.ENGLISH).apply {
-    timeZone = TimeZone.getTimeZone("UTC")
-}
 
 fun Long.durationToMinSecShort(): String {
+    val timeFormatter = SimpleDateFormat("m:ss", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
     return timeFormatter.format(Date(this))
 }

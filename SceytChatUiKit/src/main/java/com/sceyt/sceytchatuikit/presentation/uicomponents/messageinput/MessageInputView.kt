@@ -498,6 +498,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showVoiceRecorder() {
         voiceMessageRecorderView?.isVisible = true
+        binding.messageInput.requestFocus()
     }
 
     private fun hideAndStopVoiceRecorder() {

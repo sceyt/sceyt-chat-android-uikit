@@ -70,7 +70,6 @@
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
             android:autoLink="phone|web|email"
-            android:textAlignment="viewStart"
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
