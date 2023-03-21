@@ -679,7 +679,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Message popup events
     override fun onCopyMessageClick(message: SceytMessage) {
-        context.setClipboard(message.body)
+        context.setClipboard(message.body.trim())
         Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 
