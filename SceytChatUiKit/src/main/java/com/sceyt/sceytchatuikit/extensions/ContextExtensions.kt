@@ -175,7 +175,7 @@ fun Context.hideKeyboard(view: EditText?) {
 
 }
 
-fun Context.setClipboard(text: String) {
+fun Context.setClipboard(text: CharSequence) {
     val clipboard = ContextCompat.getSystemService(this, ClipboardManager::class.java)
     val clip = ClipData.newPlainText("label", text)
     clipboard?.setPrimaryClip(clip)

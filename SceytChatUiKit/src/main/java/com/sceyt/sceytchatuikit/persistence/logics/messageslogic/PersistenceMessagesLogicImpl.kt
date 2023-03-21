@@ -99,9 +99,10 @@ internal class PersistenceMessagesLogicImpl(
             if (channelDb != null && message.createdAt <= channelDb.messagesDeletionDate)
                 return@launch
             val messageDb = messageDao.getMessageById(message.id)
-            if (messageDb == null)
+            if (messageDb == null) {
                 onMessage(data, false)
-            persistenceChannelsLogic.onFcmMessage(data)
+                persistenceChannelsLogic.onFcmMessage(data)
+            }
         }
     }
 
