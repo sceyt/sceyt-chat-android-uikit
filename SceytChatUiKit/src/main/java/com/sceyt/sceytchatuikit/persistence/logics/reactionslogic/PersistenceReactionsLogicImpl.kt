@@ -66,8 +66,9 @@ internal class PersistenceReactionsLogicImpl(
                 data.reaction.key, data.reaction.user.id)
         }
 
-        val channel = channelDao.getChannelById(message.channelId)
-        channel?.toChannel()?.let { channelsCache.upsertChannel(it) }
+        channelDao.getChannelById(message.channelId)?.toChannel()?.let {
+            channelsCache.upsertChannel(it)
+        }
     }
 
     override suspend fun loadReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<Reaction>> {

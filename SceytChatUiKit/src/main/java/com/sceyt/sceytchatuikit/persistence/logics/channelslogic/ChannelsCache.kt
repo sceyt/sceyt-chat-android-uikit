@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
+import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
@@ -35,6 +36,12 @@ class ChannelsCache {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
+
+        private val channelDraftMessageChangesFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelDraftMessageChangesFlow: SharedFlow<SceytChannel> = channelDraftMessageChangesFlow_
 
         var currentChannelId: Long? = null
     }
@@ -196,6 +203,13 @@ class ChannelsCache {
             (it as? SceytGroupChannel)?.memberCount = channel.memberCount
             channelUpdated(it, false)
         } ?: upsertChannel(channel)
+    }
+
+    fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
+        cachedData[channelId]?.let {
+            it.draftMessage = draftMessage
+            channelDraftMessageChangesFlow_.tryEmit(it.clone())
+        }
     }
 
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {

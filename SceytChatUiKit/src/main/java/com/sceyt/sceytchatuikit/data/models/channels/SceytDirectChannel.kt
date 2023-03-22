@@ -71,7 +71,9 @@ class SceytDirectChannel(
             lastReadMessageId = lastReadMessageId,
             messagesDeletionDate = messagesDeletionDate,
             lastMessages = lastMessages,
-            userMessageReactions = userMessageReactions)
+            userMessageReactions = userMessageReactions).also {
+            it.draftMessage = draftMessage
+        }
     }
 }
 

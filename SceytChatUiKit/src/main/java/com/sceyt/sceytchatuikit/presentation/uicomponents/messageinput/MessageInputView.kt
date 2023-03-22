@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -23,10 +25,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
@@ -135,6 +134,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 isVisible = !disabledInput && !showingJoinButton
             })
         }
+
+        Handler(Looper.getMainLooper()).postDelayed({ binding.messageInput.requestFocus() }, 500)
     }
 
     private fun init() {
@@ -149,12 +150,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
                 determineState()
                 checkNeedMentionUsers(text)
-                messageInputActionCallback?.typing(text.isNullOrBlank().not())
                 typingJob?.cancel()
                 typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
-                    messageInputActionCallback?.typing(text.isNullOrBlank().not())
+                    messageInputActionCallback?.typing(text.isNullOrBlank().not(), text, true)
                     delay(2000)
-                    messageInputActionCallback?.typing(false)
+                    messageInputActionCallback?.typing(false, text, false)
                 }
             }
 
@@ -305,6 +305,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.voiceRecordPresenter.isVisible = false
         binding.messageInput.setText("")
         determineState()
+        binding.messageInput.requestFocus()
     }
 
     private fun SceytVoiceMessageRecorderView.setRecordingListener() {
@@ -413,8 +414,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         inputState = newState
 
         binding.icSendMessage.isVisible = !showVoiceIcon && !disabledInput
-        if (!showVoiceIcon || disabledInput) hideAndStopVoiceRecorder()
-        else showVoiceRecorder()
+        if (!showVoiceIcon || disabledInput) {
+            hideAndStopVoiceRecorder()
+        } else showVoiceRecorder()
     }
 
     private fun addAttachments(attachments: List<Attachment>) {
@@ -498,14 +500,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showVoiceRecorder() {
         voiceMessageRecorderView?.isVisible = true
-        binding.messageInput.requestFocus()
     }
 
     private fun hideAndStopVoiceRecorder() {
         voiceMessageRecorderView?.isVisible = false
         voiceMessageRecorderView?.forceStopRecording()
-        if (!disabledInput)
-            binding.messageInput.requestFocus()
     }
 
     private fun initMentionUsersContainer() {
@@ -562,6 +561,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setReplyInThreadMessageId(messageId: Long?) {
         replyThreadMessageId = messageId
+    }
+
+    internal fun setDraftMessage(draftMessage: DraftMessage?) {
+        if (draftMessage == null || draftMessage.message.isNullOrEmpty())
+            return
+        binding.messageInput.setTextAndMoveSelectionEnd(draftMessage.message)
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -658,7 +663,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessage(message: Message)
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
-        fun typing(typing: Boolean)
+        fun typing(typing: Boolean, text: Editable?, updateDraft: Boolean)
         fun mention(query: String)
         fun join()
     }

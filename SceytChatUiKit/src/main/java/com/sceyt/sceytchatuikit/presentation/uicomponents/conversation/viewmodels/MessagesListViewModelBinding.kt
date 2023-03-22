@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
+import android.text.Editable
 import androidx.lifecycle.*
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.channel.GroupChannel
@@ -7,6 +8,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.SceytKitClient.getChannelsMiddleWare
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -449,6 +451,13 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
+
+    viewModelScope.launch(Dispatchers.IO) {
+        getChannelsMiddleWare().getChannelFromDb(channel.id)?.let {
+            withContext(Dispatchers.Main) { messageInputView.setDraftMessage(it.draftMessage) }
+        }
+    }
+
     getChannel(channel.id)
     loadChannelMembersIfNeeded()
 
@@ -523,8 +532,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             this@bind.editMessage(message)
         }
 
-        override fun typing(typing: Boolean) {
-            sendTypingEvent(typing)
+        override fun typing(typing: Boolean, text: Editable?, updateDraft: Boolean) {
+            sendTypingEvent(typing, text, updateDraft)
         }
 
         override fun mention(query: String) {

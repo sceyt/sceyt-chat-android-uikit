@@ -149,5 +149,6 @@
     <string name="sceyt_all">All</string>
     <string name="sceyt_reacted">Reacted</string>
     <string name="sceyt_to">to</string>
+    <string name="sceyt_draft">Draft</string>
 
 </resources>

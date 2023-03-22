@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
 import android.app.Application
+import android.text.Editable
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -23,8 +24,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.data.toSceytMember
@@ -38,12 +39,12 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessageActionBridge
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessageActionBridge
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -377,9 +378,11 @@ class MessageListViewModel(
         }
     }
 
-    fun sendTypingEvent(typing: Boolean) {
+    fun sendTypingEvent(typing: Boolean, text: Editable?, updateDraft: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(channel.id, typing)
+            if (updateDraft)
+                persistenceChanelMiddleWare.updateDraftMessage(channel.id, text?.toString())
         }
     }
 

@@ -20,7 +20,7 @@ data class ReactionEntity(
         var key: String,
         val score: Int,
         val reason: String,
-        val updateAt: Long,
+        val updatedAt: Long,
         @ColumnInfo(index = true)
         val fromId: String?
 )

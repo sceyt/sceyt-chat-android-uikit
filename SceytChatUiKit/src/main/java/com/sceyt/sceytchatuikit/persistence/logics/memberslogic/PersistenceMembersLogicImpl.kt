@@ -66,7 +66,9 @@ internal class PersistenceMembersLogicImpl(
             }
             ChannelMembersEventEnum.UnBlocked -> {
                 channelDao.updateChannel(data.channel.toChannelEntity())
-                channelsCache.upsertChannel(data.channel.toSceytUiChannel())
+                channelDao.getChannelById(chatId)?.let {
+                    channelsCache.upsertChannel(it.toChannel())
+                }
             }
         }
     }
@@ -160,7 +162,9 @@ internal class PersistenceMembersLogicImpl(
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
                 membersDao.updateOwner(channelId = channelId, newOwnerId = member.id)
-                channelsCache.upsertChannel(response.data)
+                channelDao.getChannelById(channelId)?.let {
+                    channelsCache.upsertChannel(it.toChannel())
+                }
             }
         }
         return response

@@ -204,6 +204,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.hideChannel(channelId)
     }
 
+    override suspend fun updateDraftMessage(channelId: Long, message: String?) {
+        channelLogic.updateDraftMessage(channelId, message)
+    }
+
     override fun getTotalUnreadCount(): Flow<Int> {
         return channelLogic.getTotalUnreadCount()
     }

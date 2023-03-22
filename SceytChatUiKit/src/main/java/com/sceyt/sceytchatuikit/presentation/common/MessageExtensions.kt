@@ -21,8 +21,8 @@ import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import java.io.File
 
-fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean) {
-    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
+fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
+    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         dateStatusView.setDateAndStatusIcon(dateText, null, edited, false)
         return
     }
