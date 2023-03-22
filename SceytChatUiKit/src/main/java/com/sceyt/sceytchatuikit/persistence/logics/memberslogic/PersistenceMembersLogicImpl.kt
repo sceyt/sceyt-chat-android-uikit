@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 import android.util.Log
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
@@ -25,10 +26,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
-import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
-import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -58,11 +56,21 @@ internal class PersistenceMembersLogicImpl(
                     channelsCache.upsertChannel(it.toChannel())
                 } ?: run {
                     channelDao.insertChannel(data.channel.toChannelEntity())
+                    data.channel.lastMessage?.toSceytUiMessage()?.toMessageDb()?.let {
+                        messageDao.insertMessage(it)
+                    }
                     channelsCache.add(data.channel.toSceytUiChannel())
                 }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                deleteChannelDb(chatId)
+                if (data.members.any { it.id == SceytKitClient.myId }) {
+                    deleteChannelDb(chatId)
+                } else {
+                    channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
+                    channelDao.getChannelById(chatId)?.let {
+                        channelsCache.upsertChannel(it.toChannel())
+                    }
+                }
             }
             ChannelMembersEventEnum.UnBlocked -> {
                 channelDao.updateChannel(data.channel.toChannelEntity())
