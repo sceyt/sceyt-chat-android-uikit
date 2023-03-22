@@ -195,6 +195,7 @@ class OutVoiceMsgViewHolder(
                 binding.playPauseButton.setImageResource(0)
             }
             PendingDownload -> {
+                binding.playPauseButton.setImageResource(0)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(
                     (message.attachments ?: return)[0]))
             }
