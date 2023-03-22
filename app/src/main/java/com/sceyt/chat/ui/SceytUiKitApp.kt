@@ -63,8 +63,8 @@ class SceytUiKitApp : Application() {
     private fun initSceyt() {
         chatClient = SceytUIKitInitializer(this).initialize(
             clientId = UUID.randomUUID().toString(),
-            appId = "lzkxqzdgrl",
-            host = "https://uk-london-south-api-2-staging.waafi.com",
+            appId = "8lwox2ge93",
+            host = "https://us-ohio-api.sceyt.com",
             enableDatabase = true)
 
         ChatClient.setSceytLogLevel(SCTLogLevel.Info, null)
@@ -138,7 +138,7 @@ class SceytUiKitApp : Application() {
 
     private fun getTokenByUserName(userName: String, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, context: Context) {
         val queue: RequestQueue = Volley.newRequestQueue(context)
-        val url = "https://hm25ehfh6i.execute-api.eu-central-1.amazonaws.com/load-test/user/genToken?user=$userName"
+        val url = "https://tlnig20qy7.execute-api.us-east-2.amazonaws.com/dev/user/genToken?user=$userName"
         val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null, listener, errorListener)
         queue.add(jsonObjectRequest)
     }
