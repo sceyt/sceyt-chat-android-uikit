@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -30,6 +31,7 @@ import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.*
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -56,6 +58,13 @@ fun Context.getCompatDrawableByTheme(@DrawableRes drawableId: Int?, isDark: Bool
     val configuration = Configuration(res.configuration)
     configuration.uiMode = if (isDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
     return createConfigurationContext(configuration)?.getCompatDrawable(drawableId)
+}
+
+fun Context.getStringByLocale(@StringRes colorId: Int, locale: Locale): String {
+    val res = resources
+    val configuration = Configuration(res.configuration)
+    configuration.setLocale(locale)
+    return createConfigurationContext(configuration)?.getString(colorId) ?: ""
 }
 
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int): Drawable? {
