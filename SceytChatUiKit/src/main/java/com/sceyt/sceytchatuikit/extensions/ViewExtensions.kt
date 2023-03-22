@@ -81,7 +81,7 @@ fun View.getLifecycleScope() = findViewTreeLifecycleOwner()?.lifecycleScope
 fun EditText.setTextAndMoveSelectionEnd(text: String?) {
     text?.let {
         setText(text)
-        setSelection(selectionEnd)
+        setSelection(text.length)
     }
 }
 

@@ -84,7 +84,9 @@ class SceytGroupChannel(
             messagesDeletionDate = messagesDeletionDate,
             lastMessages = lastMessages,
             role = role,
-            userMessageReactions = userMessageReactions)
+            userMessageReactions = userMessageReactions).also {
+            it.draftMessage = draftMessage
+        }
     }
 }
 

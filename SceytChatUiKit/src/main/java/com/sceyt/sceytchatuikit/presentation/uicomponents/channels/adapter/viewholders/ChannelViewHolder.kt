@@ -3,6 +3,9 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.view
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Typeface
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -86,8 +89,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     if (subjectChanged || avatarViewChanged)
                         setAvatar(channel, name, url, binding.avatar)
 
-                    if (lastMessageStatusChanged)
-                        setLastMessageStatus(channel, binding.dateStatus)
+                    if (lastMessageStatusChanged || lastMessageChanged)
+                        setLastMessageStatusAndDate(channel, binding.dateStatus)
 
                     if (lastMessageChanged)
                         setLastMessagedText(channel, binding.lastMessage)
@@ -118,6 +121,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
         if (checkHasLastReaction(channel, textView))
+            return
+
+        if (checkHasDraftMessage(channel, textView))
             return
 
         val message = channel.lastMessage
@@ -181,6 +187,18 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         return false
     }
 
+    open fun checkHasDraftMessage(channel: SceytChannel, textView: TextView): Boolean {
+        return if (channel.draftMessage != null) {
+            val draft = context.getString(R.string.sceyt_draft)
+            val text = SpannableStringBuilder("$draft: ${channel.draftMessage?.message}").apply {
+                setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            textView.text = text
+            textView.setTypeface(null, Typeface.NORMAL)
+            true
+        } else false
+    }
+
     open fun setSubject(channel: SceytChannel, textView: TextView) {
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
@@ -205,8 +223,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
     }
 
-    open fun setLastMessageStatus(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
-        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, getDateTxt(channel), false)
+    open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
+        val data = getDateData(channel)
+        val shouldShowStatus = data.second
+        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, data.first, false, shouldShowStatus)
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
@@ -260,13 +280,25 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         } else setLastMessagedText(channel, textView)
     }
 
-    protected fun getDateTxt(channel: SceytChannel?): String {
-        if (channel == null) return ""
-        val lastMsgCreatedAt = channel.lastMessage?.createdAt
-        return if (lastMsgCreatedAt != null && lastMsgCreatedAt != 0L)
-            DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt)
-        else
-            DateTimeUtil.getDateTimeStringCheckToday(context, channel.createdAt / 1000)
+    protected fun getDateData(channel: SceytChannel?): Pair<String, Boolean> {
+        if (channel == null) return Pair("", false)
+        var shouldShowStatus = true
+        val lastMsgCreatedAt = when {
+            channel.draftMessage != null -> {
+                shouldShowStatus = false
+                channel.draftMessage?.createdAt
+            }
+            channel.lastMessage != null -> {
+                val lastMessageCreatedAt = channel.lastMessage?.createdAt ?: 0L
+                val lastReactionCreatedAt = channel.userMessageReactions?.maxByOrNull { it.id }?.createdAt?.time
+                        ?: 0
+                if (lastReactionCreatedAt > lastMessageCreatedAt)
+                    lastReactionCreatedAt
+                else lastMessageCreatedAt
+            }
+            else -> channel.createdAt / 1000
+        }
+        return Pair(DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt), shouldShowStatus)
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {

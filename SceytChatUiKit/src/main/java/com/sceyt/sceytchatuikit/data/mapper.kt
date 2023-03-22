@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -150,3 +151,7 @@ fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
 fun Presence.hasDiff(other: Presence): Boolean {
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }
+
+fun DraftMessageEntity.toDraftMessage() = DraftMessage(
+    chatId, message, createdAt
+)

@@ -16,7 +16,7 @@ data class ChatUserReactionEntity(
         var key: String,
         val score: Int,
         val reason: String,
-        val updateAt: Long,
+        val createdAt: Long,
         @ColumnInfo(index = true)
         val fromId: String?
 )

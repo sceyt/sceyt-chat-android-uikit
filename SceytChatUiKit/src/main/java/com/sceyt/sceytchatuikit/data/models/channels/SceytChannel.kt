@@ -38,6 +38,8 @@ abstract class SceytChannel(open var id: Long,
 
     var typingData: ChannelTypingEventData? = null
 
+    open var draftMessage: DraftMessage? = null
+
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return when (this) {
             is SceytDirectChannel -> Pair(peer?.getPresentableName() ?: "", peer?.avatarUrl)

@@ -46,5 +46,6 @@ internal interface PersistenceChannelsLogic {
     suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
+    suspend fun updateDraftMessage(channelId: Long, message: String?)
     fun getTotalUnreadCount(): Flow<Int>
 }

@@ -14,7 +14,7 @@ fun Reaction.toReactionEntity() = ReactionEntity(
     key = key,
     score = score,
     reason = reason,
-    updateAt = updateAt.time,
+    updatedAt = createdAt.time,
     fromId = user.id
 )
 
@@ -31,14 +31,14 @@ fun ReactionScore.toReactionScoreEntity(messageId: Long) = ReactionScoreEntity(
 
 fun ReactionDb.toReaction(): Reaction {
     with(reaction) {
-        return Reaction(id, messageId, key, score, reason, updateAt, from?.toUser())
+        return Reaction(id, messageId, key, score, reason, updatedAt, from?.toUser())
     }
 }
 
 
 fun ChatUserReactionDb.toReaction(): Reaction {
     with(reaction) {
-        return Reaction(id, messageId, key, score, reason, updateAt, from?.toUser())
+        return Reaction(id, messageId, key, score, reason, createdAt, from?.toUser())
     }
 }
 
@@ -49,7 +49,7 @@ fun Reaction.toUserReactionsEntity(channelId: Long) = ChatUserReactionEntity(
     key = key,
     score = score,
     reason = reason,
-    updateAt = updateAt.time,
+    createdAt = createdAt.time,
     fromId = user.id
 )
 
