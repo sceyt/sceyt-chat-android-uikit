@@ -76,7 +76,7 @@
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/tvName"
+        app:layout_constraintEnd_toStartOf="@+id/icCancelReply"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="@+id/icReplyOrEdit"
         app:layout_constraintTop_toBottomOf="@+id/tvName"
