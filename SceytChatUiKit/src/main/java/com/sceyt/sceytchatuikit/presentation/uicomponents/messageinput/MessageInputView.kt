@@ -58,6 +58,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getAsObjectDataIndexed
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -65,7 +66,10 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
 
@@ -151,10 +155,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 determineState()
                 checkNeedMentionUsers(text)
                 typingJob?.cancel()
-                typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
-                    messageInputActionCallback?.typing(text.isNullOrBlank().not(), text, true)
+                typingJob = MainScope().launch {
+                    messageInputActionCallback?.typing(text.isNullOrBlank().not(), text)
+                    messageInputActionCallback?.updateDraftMessage(text, binding.messageInput.objectsIndexed)
                     delay(2000)
-                    messageInputActionCallback?.typing(false, text, false)
+                    messageInputActionCallback?.typing(false, text)
                 }
             }
 
@@ -566,7 +571,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun setDraftMessage(draftMessage: DraftMessage?) {
         if (draftMessage == null || draftMessage.message.isNullOrEmpty())
             return
-        binding.messageInput.setTextAndMoveSelectionEnd(draftMessage.message)
+        with(binding.messageInput) {
+            setTextAndMoveSelectionEnd(draftMessage.message)
+            if (!draftMessage.mentionUsers.isNullOrEmpty()) {
+                val data = getAsObjectDataIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
+                setMentionUsers(data)
+            }
+        }
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -663,7 +674,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessage(message: Message)
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
-        fun typing(typing: Boolean, text: Editable?, updateDraft: Boolean)
+        fun typing(typing: Boolean, text: Editable?)
+        fun updateDraftMessage(text: Editable?, mentionUserIds: List<ObjectDataIndexed<MentionUserData>>)
         fun mention(query: String)
         fun join()
     }

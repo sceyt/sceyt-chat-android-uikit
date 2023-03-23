@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.entity.channel
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
@@ -19,5 +20,5 @@ data class ChannelDb(
         val usersReactions: List<ChatUserReactionDb>?,
 
         @Relation(parentColumn = "chat_id", entityColumn = "chatId", entity = DraftMessageEntity::class)
-        val draftMessage: DraftMessageEntity?
+        val draftMessage: DraftMessageDb?
 )

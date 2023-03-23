@@ -188,9 +188,12 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun checkHasDraftMessage(channel: SceytChannel, textView: TextView): Boolean {
-        return if (channel.draftMessage != null) {
+        val draftMessage = channel.draftMessage
+        return if (draftMessage != null) {
             val draft = context.getString(R.string.sceyt_draft)
-            val text = SpannableStringBuilder("$draft: ${channel.draftMessage?.message}").apply {
+            val text = SpannableStringBuilder("$draft: ").apply {
+                append(MentionUserHelper.buildOnlyNamesWithMentionedUsers(
+                    draftMessage.message.toString(), draftMessage.metadata, draftMessage.mentionUsers?.toTypedArray()))
                 setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             textView.text = text

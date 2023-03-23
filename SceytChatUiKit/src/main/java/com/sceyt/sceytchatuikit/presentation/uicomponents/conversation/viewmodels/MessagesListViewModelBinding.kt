@@ -36,6 +36,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesL
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
@@ -532,8 +534,12 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             this@bind.editMessage(message)
         }
 
-        override fun typing(typing: Boolean, text: Editable?, updateDraft: Boolean) {
-            sendTypingEvent(typing, text, updateDraft)
+        override fun typing(typing: Boolean, text: Editable?) {
+            sendTypingEvent(typing, text)
+        }
+
+        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<ObjectDataIndexed<MentionUserData>>) {
+            this@bind.updateDraftMessage(text, mentionUserIds)
         }
 
         override fun mention(query: String) {

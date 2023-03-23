@@ -11,6 +11,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import kotlinx.coroutines.flow.Flow
 
 internal interface PersistenceChannelsLogic {
@@ -46,6 +48,6 @@ internal interface PersistenceChannelsLogic {
     suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
-    suspend fun updateDraftMessage(channelId: Long, message: String?)
+    suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>)
     fun getTotalUnreadCount(): Flow<Int>
 }

@@ -107,7 +107,7 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         if (initialized) return
 
         // Initialise variables
-        setTokenizer(CharacterTokenizer(listOf(',', ';'), ","))
+        setTokenizer(CharacterTokenizer(emptyList(), ""))
 
         // Initialise TextChangedListeners
         addListeners()
@@ -1476,7 +1476,7 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
                 out.writeString(parcelableClassName)
                 out.writeList(baseObjects)
             }
-            out.writeString(tokenizer!!.javaClass.canonicalName)
+            out.writeString(tokenizer?.javaClass?.canonicalName)
             out.writeParcelable(tokenizer, 0)
         }
 

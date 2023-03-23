@@ -45,6 +45,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -378,11 +380,15 @@ class MessageListViewModel(
         }
     }
 
-    fun sendTypingEvent(typing: Boolean, text: Editable?, updateDraft: Boolean) {
+    fun sendTypingEvent(typing: Boolean, text: Editable?) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(channel.id, typing)
-            if (updateDraft)
-                persistenceChanelMiddleWare.updateDraftMessage(channel.id, text?.toString())
+        }
+    }
+
+    fun updateDraftMessage(text: Editable?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(), mentionUsers)
         }
     }
 

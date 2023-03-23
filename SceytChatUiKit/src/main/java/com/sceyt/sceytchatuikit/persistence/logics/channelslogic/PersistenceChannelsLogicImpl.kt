@@ -34,9 +34,13 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -622,14 +626,16 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
     }
 
-    override suspend fun updateDraftMessage(channelId: Long, message: String?) {
+    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
         val draftMessage = if (message.isNullOrBlank()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
             null
         } else {
-            val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis())
+            val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
+                MentionUserHelper.initMentionMetaData(message, mentionUsers))
             draftMessageDao.insert(draftMessageEntity)
-            draftMessageEntity.toDraftMessage()
+            draftMessageDao.insertDraftMessageUserLinks(mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.token.id) })
+            draftMessageEntity.toDraftMessage(mentionUsers.map { it.token.user })
         }
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }

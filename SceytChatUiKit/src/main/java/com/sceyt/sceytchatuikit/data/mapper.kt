@@ -4,14 +4,17 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.Presence
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
@@ -152,6 +155,18 @@ fun Presence.hasDiff(other: Presence): Boolean {
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }
 
-fun DraftMessageEntity.toDraftMessage() = DraftMessage(
-    chatId, message, createdAt
+fun DraftMessageDb.toDraftMessage() = DraftMessage(
+    chatId = draftMessageEntity.chatId,
+    message = draftMessageEntity.message,
+    createdAt = draftMessageEntity.createdAt,
+    metadata = draftMessageEntity.metadata,
+    mentionUsers = users?.map { it.toUser() }
+)
+
+fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?) = DraftMessage(
+    chatId = chatId,
+    message = message,
+    createdAt = createdAt,
+    metadata = metadata,
+    mentionUsers = mentionUsers
 )

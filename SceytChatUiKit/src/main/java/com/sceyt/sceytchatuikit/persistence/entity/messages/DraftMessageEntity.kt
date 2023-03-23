@@ -9,4 +9,4 @@ data class DraftMessageEntity(
         val chatId: Long,
         val message: String?,
         var createdAt: Long,
-)
+        val metadata: String?)
