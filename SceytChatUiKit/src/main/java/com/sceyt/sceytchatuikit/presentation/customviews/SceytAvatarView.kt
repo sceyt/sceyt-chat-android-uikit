@@ -108,13 +108,13 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     @Suppress("DEPRECATION")
     private fun getStaticLayout(title: CharSequence): StaticLayout {
-        val textWidth = textPaint.measureText(title.toString()).toInt()
+        val width = Layout.getDesiredWidth(title, textPaint).toInt()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            StaticLayout.Builder.obtain(title, 0, title.length, textPaint, textWidth)
+            StaticLayout.Builder.obtain(title, 0, title.length, textPaint, width)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                 .setLineSpacing(0f, 1f)
                 .setIncludePad(false).build()
-        } else StaticLayout(title, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
+        } else StaticLayout(title, textPaint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
     }
 
     private fun loadAvatarImage(oldImageUrl: String?) {
