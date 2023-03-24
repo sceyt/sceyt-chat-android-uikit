@@ -24,7 +24,7 @@ interface MembersDao {
 
     @Transaction
     @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id and (firstName like :name || '%'" +
-            "or lastName like :name || '%') " +
+            "or lastName like :name || '%' or (firstName || ' ' || lastName) like :name || '%') " +
             "where chat_id =:channelId")
     suspend fun getChannelMembersByDisplayName(channelId: Long, name: String): List<ChanelMemberDb>
 

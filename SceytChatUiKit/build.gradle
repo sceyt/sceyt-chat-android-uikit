@@ -125,4 +125,5 @@ dependencies {
     api supportDependencies.workRuntimeKtx
     api supportDependencies.waveSeekBar
     api supportDependencies.photoView
+    api supportDependencies.emojiBundled
 }

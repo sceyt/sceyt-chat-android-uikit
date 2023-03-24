@@ -2,6 +2,8 @@ package com.sceyt.sceytchatuikit
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.emoji2.bundled.BundledEmojiCompatConfig
+import androidx.emoji2.text.EmojiCompat
 import com.sceyt.chat.ChatClient
 import com.sceyt.sceytchatuikit.di.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -19,6 +21,7 @@ class SceytUIKitInitializer(private val application: Application) {
         val chatClient = ChatClient.initialize(application, host, appId, clientId)
         initKoin(enableDatabase)
         initTheme()
+        EmojiCompat.init(BundledEmojiCompatConfig(application))
         return chatClient
     }
 

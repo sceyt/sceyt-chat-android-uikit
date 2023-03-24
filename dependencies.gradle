@@ -23,6 +23,7 @@ ext {
     datastore_version = '1.0.0'
 
     exo_player_media_version = '1.0.0-beta02'
+    emoji_bundled_version = '1.2.0'
 
     jsoup_version = '1.15.4'
     material_version = '1.9.0-alpha01'
@@ -60,7 +61,7 @@ ext {
     retrofit_version = '2.9.0'
     room_version = '2.4.3'
 
-    sceyt_sdk_version = '1.0.8-SNAPSHOT'
+    sceyt_sdk_version = '1.0.9-SNAPSHOT'
     sdp_version = '1.1.0'
     ssp_version = '1.1.0'
     swipe_refresh_layout_version = '1.1.0'
@@ -81,6 +82,7 @@ ext {
             datastorePreferences : "androidx.datastore:datastore-preferences:$datastore_version",
             exoPlayerMedia       : "androidx.media3:media3-exoplayer:$exo_player_media_version",
             exoPlayerUi          : "androidx.media3:media3-ui:$exo_player_media_version",
+            emojiBundled         : "androidx.emoji2:emoji2-bundled:$emoji_bundled_version",
             jsoup                : "org.jsoup:jsoup:$jsoup_version",
             firebaseMessaging    : "com.google.firebase:firebase-messaging:$firebase_messaging_version",
             firebaseBom          : "com.google.firebase:firebase-bom:$firebase_bom_version",

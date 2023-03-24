@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.toColorInt
+import androidx.emoji2.text.EmojiCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
@@ -87,12 +88,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         val firstChar = strings[0].run {
             String(Character.toChars(codePointAt(0)))
         }
-        return if (strings.size > 1) {
+        val text = if (strings.size > 1) {
             val secondChar = strings[1].run {
                 String(Character.toChars(codePointAt(0)))
             }
             "${firstChar}${secondChar}".uppercase()
         } else firstChar.uppercase()
+
+        return if (isInEditMode) text else EmojiCompat.get().process(text) ?: text
     }
 
     private fun getAvatarRandomColor(): Int {
