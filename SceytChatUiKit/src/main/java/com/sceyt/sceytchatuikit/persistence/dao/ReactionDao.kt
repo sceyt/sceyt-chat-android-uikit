@@ -24,6 +24,9 @@ abstract class ReactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertReactionScore(reactionScores:ReactionScoreEntity)
+
     @Query("select * from ReactionScoreEntity where messageId =:messageId and reaction_key =:key")
     abstract suspend fun getReactionScore(messageId: Long, key: String): ReactionScoreEntity?
 

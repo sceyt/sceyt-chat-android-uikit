@@ -5,15 +5,18 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
 import com.sceyt.chat.models.channel.PrivateChannel
 import com.sceyt.chat.models.channel.PublicChannel
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
@@ -67,7 +70,7 @@ fun getUserFromPushJson(userJson: String?): User? {
     }
 }
 
-fun getChannelFromPushJson(channelJson: String?): Channel? {
+fun getChannelFromPushJson(channelJson: String?, peer: User?): Channel? {
     channelJson ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
@@ -80,7 +83,7 @@ fun getChannelFromPushJson(channelJson: String?): Channel? {
         val membersCount = channelJsonObject.getInt("members_count")
         val channel: Channel = when (stringToEnum(type)) {
             ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, label, 0, 0,
-                null, null, 0L, 0, 0, false, 0, false,
+                Member(Role(RoleTypeEnum.Owner.name), peer), null, 0L, 0, 0, false, 0, false,
                 0L, 0L, 0, null, null, null)
 
             ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, label, 0,
