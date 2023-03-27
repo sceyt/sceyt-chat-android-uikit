@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -11,11 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -35,8 +32,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHe
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
@@ -77,15 +72,15 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onChannelClick(item)
+                clickListeners.onChannelClick(item.copy(channel = item.channel.clone()))
             }
 
             override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
-                clickListeners.onChannelLongClick(view, item)
+                clickListeners.onChannelLongClick(view, item.copy(channel = item.channel.clone()))
             }
 
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onAvatarClick(item)
+                clickListeners.onAvatarClick(item.copy(channel = item.channel.clone()))
             }
         }
         channelsRV.setChannelListener(defaultClickListeners)
@@ -149,26 +144,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateStateView(state: PageState) {
         pageStateView?.updateState(state, channelsRV.isEmpty(), enableErrorSnackBar = false)
-    }
-
-    internal suspend fun updateUsersPresenceIfNeeded(users: List<User>) {
-        try {
-            users.forEach {
-                channelsRV.getDirectChannelByUserIdIndexed(it.id)?.let { pair ->
-                    val channel = (pair.second.channel as SceytDirectChannel)
-                    val hasDiff = channel.peer?.user?.presence?.hasDiff(it.presence)
-                    if (hasDiff == true) {
-                        val oldChannel = channel.clone()
-                        channel.peer?.user = it
-                        withContext(Dispatchers.Main) {
-                            channelsRV.adapter?.notifyItemChanged(pair.first, oldChannel.diff(channel))
-                        }
-                    }
-                }
-            }
-        } catch (ex: ConcurrentModificationException) {
-            Log.e(TAG, ex.message.toString())
-        }
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {

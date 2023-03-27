@@ -276,16 +276,14 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    private fun setPresenceUpdated(users: List<User>) {
+    private fun setPresenceUpdated(user: User) {
         if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
         (channel as? SceytDirectChannel)?.let { directChannel ->
             val peer = directChannel.peer
-            if (users.contains(peer?.user)) {
-                users.find { user -> user.id == peer?.id }?.let {
-                    directChannel.peer?.user = it
-                    if (!isTyping)
-                        uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
-                }
+            if (user.id == peer?.user?.id) {
+                directChannel.peer?.user = user
+                if (!isTyping)
+                    uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
     }
@@ -300,8 +298,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         eventListeners.onTypingEvent(data)
     }
 
-    internal fun onPresenceUpdate(users: List<User>) {
-        eventListeners.onPresenceUpdateEvent(users)
+    internal fun onPresenceUpdate(user: User) {
+        eventListeners.onPresenceUpdateEvent(user)
     }
 
     fun isTyping() = isTyping
@@ -391,8 +389,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         setTyping(data)
     }
 
-    override fun onPresenceUpdateEvent(users: List<User>) {
-        setPresenceUpdated(users)
+    override fun onPresenceUpdateEvent(user: User) {
+        setPresenceUpdated(user)
     }
 
     //Ui elements listeners

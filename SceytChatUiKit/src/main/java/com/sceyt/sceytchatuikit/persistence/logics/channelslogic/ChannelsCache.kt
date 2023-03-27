@@ -1,9 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
-import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.hasDiff
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -77,6 +76,12 @@ class ChannelsCache {
         }
     }
 
+    fun getData(): List<SceytChannel> {
+        synchronized(lock) {
+            return cachedData.values.map { it.clone() }
+        }
+    }
+
     fun get(channelId: Long): SceytChannel? {
         synchronized(lock) {
             return cachedData[channelId]?.clone()
@@ -93,7 +98,7 @@ class ChannelsCache {
                     val oldMsg = cachedData[it.id]?.lastMessage
                     if (putAndCheckHasDiff(it).hasDifference()) {
                         val needSort = checkNeedSortByLastMessage(oldMsg, it.lastMessage)
-                        channelUpdated(it, needSort)
+                        channelUpdated(it, needSort, ChannelUpdatedType.Updated)
                     }
                 }
             }
@@ -105,7 +110,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 channel.lastMessage = message
-                channelUpdated(channel, needSort)
+                channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
     }
@@ -116,7 +121,7 @@ class ChannelsCache {
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 channel.lastMessage = message
                 channel.lastReadMessageId = message.id
-                channelUpdated(channel, needSort)
+                channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
     }
@@ -129,7 +134,7 @@ class ChannelsCache {
                 channel.unreadMentionCount = 0
                 channel.unreadReactionCount = 0
                 channel.userMessageReactions = null
-                channelUpdated(channel, true)
+                channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
             }
         }
     }
@@ -142,20 +147,7 @@ class ChannelsCache {
                     channel.muteExpireDate = Date(muteUntil)
                 } else channel.muted = false
 
-                channelUpdated(channel, false)
-            }
-        }
-    }
-
-    fun updateChannelSubjectAndAvatarUrl(channelId: Long, newSubject: String?, newUrl: String?) {
-        synchronized(lock) {
-            cachedData[channelId]?.let { channel ->
-                (channel as? SceytGroupChannel)?.let {
-                    channel.subject = newSubject
-                    channel.avatarUrl = newUrl
-
-                    channelUpdated(channel, false)
-                }
+                channelUpdated(channel, false, ChannelUpdatedType.MuteState)
             }
         }
     }
@@ -167,7 +159,7 @@ class ChannelsCache {
                     it.members = it.members.toArrayList().apply {
                         add(sceytMember)
                     }
-                    channelUpdated(channel, false)
+                    channelUpdated(channel, false, ChannelUpdatedType.Members)
                 }
             }
         }
@@ -178,7 +170,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 channel.unreadMessageCount = count.toLong()
                 channel.markedUsUnread = false
-                channelUpdated(channel, false)
+                channelUpdated(channel, false, ChannelUpdatedType.UnreadCount)
             }
         }
     }
@@ -190,8 +182,8 @@ class ChannelsCache {
         }
     }
 
-    private fun channelUpdated(channel: SceytChannel, needSort: Boolean) {
-        channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort))
+    private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
+        channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
     }
 
     private fun channelAdded(channel: SceytChannel) {
@@ -201,7 +193,7 @@ class ChannelsCache {
     fun updateMembersCount(channel: SceytGroupChannel) {
         cachedData[channel.id]?.let {
             (it as? SceytGroupChannel)?.memberCount = channel.memberCount
-            channelUpdated(it, false)
+            channelUpdated(it, false, ChannelUpdatedType.Members)
         } ?: upsertChannel(channel)
     }
 
@@ -209,6 +201,20 @@ class ChannelsCache {
         cachedData[channelId]?.let {
             it.draftMessage = draftMessage
             channelDraftMessageChangesFlow_.tryEmit(it.clone())
+        }
+    }
+
+    fun updateChannelPeer(id: Long, user: User) {
+        synchronized(lock) {
+            cachedData[id]?.let {
+                (it as? SceytDirectChannel)?.let { channel ->
+                    val oldUser = channel.peer?.user
+                    if (oldUser?.presence?.hasDiff(user.presence) == true) {
+                        channel.peer?.user = user
+                        channelUpdated(channel.clone(), false, ChannelUpdatedType.Presence)
+                    }
+                }
+            }
         }
     }
 
