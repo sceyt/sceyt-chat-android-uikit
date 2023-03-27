@@ -46,6 +46,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendSharedAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
+import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -92,16 +93,22 @@ internal class PersistenceMessagesLogicImpl(
             markMessagesAs(data.first.id, Received, message.id)
     }
 
-    override fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
+    override fun onFcmMessage(data: RemoteMessageData) {
         launch {
-            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.first.id)
-            val message = data.second
-            if (channelDb != null && message.createdAt <= channelDb.messagesDeletionDate)
+            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
+                    ?: return@launch)
+            val message = data.message
+            if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesDeletionDate)
                 return@launch
-            val messageDb = messageDao.getMessageById(message.id)
+
+            val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
             if (messageDb == null) {
-                onMessage(data, false)
+                onMessage(Pair(data.channel, data.message), false)
                 persistenceChannelsLogic.onFcmMessage(data)
+            }
+
+            data.reactionScore?.toReactionScoreEntity(message.id)?.let {
+                reactionDao.insertReactionScore(it)
             }
         }
     }
@@ -498,6 +505,8 @@ internal class PersistenceMessagesLogicImpl(
         var forceHasDiff = false
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
+
+        ConnectionEventsObserver.awaitToConnectSceyt()
 
         when (loadType) {
             LoadPrev -> {

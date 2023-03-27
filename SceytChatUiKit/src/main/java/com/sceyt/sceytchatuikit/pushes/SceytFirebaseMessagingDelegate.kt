@@ -7,11 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.ReactionScore
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_FCM_TOKEN
@@ -77,34 +73,35 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
             return false
         }
 
-        val triple = getDataFromRemoteMessage(remoteMessage)
-        val channel = triple.second
-        val message = triple.third
+        val data = getDataFromRemoteMessage(remoteMessage)
+        val channel = data.channel
+        val message = data.message
 
         if (channel != null && message != null)
-            messagesLogic.onFcmMessage(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage(channel is GroupChannel)))
+            messagesLogic.onFcmMessage(data)
         return true
     }
 
     @JvmStatic
-    fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?>? {
+    fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): RemoteMessageData? {
         if (!remoteMessage.isValid()) {
             return null
         }
 
-        val triple = getDataFromRemoteMessage(remoteMessage)
-        val channel = triple.second
-        val message = triple.third
+        val data = getDataFromRemoteMessage(remoteMessage)
+        val channel = data.channel
+        val message = data.message
         if (channel != null && message != null)
-            messagesLogic.onFcmMessage(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage(channel is GroupChannel)))
-        return triple
+            messagesLogic.onFcmMessage(data)
+        return data
     }
 
-    fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?> {
+    fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): RemoteMessageData {
         val user = getUserFromPushJson(remoteMessage.data["user"])
-        val channel = getChannelFromPushJson(remoteMessage.data["channel"])
-        val message = getMessageBodyFromPushJson(remoteMessage.data["message"], channel?.id, user)
-        return Triple(user, channel, message)
+        val channel = getChannelFromPushJson(remoteMessage.data["channel"], user)?.toSceytUiChannel()
+        val message = getMessageBodyFromPushJson(remoteMessage.data["message"], channel?.id, user)?.toSceytUiMessage()
+        val reactionScore = getReactionScoreFromRemoteMessage(remoteMessage)
+        return RemoteMessageData(channel, message, user, reactionScore)
     }
 
     fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionScore? {

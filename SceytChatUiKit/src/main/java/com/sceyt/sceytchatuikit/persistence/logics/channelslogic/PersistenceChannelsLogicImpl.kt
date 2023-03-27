@@ -41,6 +41,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
+import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -149,9 +150,9 @@ internal class PersistenceChannelsLogicImpl(
         updateChannelDbAndCache(data.first)
     }
 
-    override suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
-        val dataChannel = data.first
-        val dataMessage = data.second
+    override suspend fun onFcmMessage(data: RemoteMessageData) {
+        val dataChannel = data.channel ?: return
+        val dataMessage = data.message ?: return
         //Update channel last message if channel exist
         channelDao.getChannelById(dataChannel.id)?.let {
             channelDao.updateLastMessage(it.channelEntity.id, dataMessage.id, dataMessage.createdAt)
