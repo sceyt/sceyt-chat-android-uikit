@@ -88,10 +88,6 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.channelUpdated(sceytChannel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
-        channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
     ChannelEventsObserver.onChannelTypingEventFlow
         .filter { it.member.id != SceytKitClient.myId }
         .onEach {

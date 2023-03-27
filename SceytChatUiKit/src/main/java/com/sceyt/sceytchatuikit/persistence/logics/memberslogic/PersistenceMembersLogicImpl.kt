@@ -7,10 +7,12 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
@@ -28,10 +30,15 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
+import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
@@ -39,9 +46,31 @@ internal class PersistenceMembersLogicImpl(
         private val messageDao: MessageDao,
         private val membersDao: MembersDao,
         private val usersDao: UserDao,
-        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
+        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent, CoroutineScope {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
+
+    init {
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
+            launch(Dispatchers.IO) {
+                it.forEach { presenceUser ->
+                    channelsCache.getData().forEach { channel ->
+                        val user = presenceUser.user
+                        if (channel is SceytDirectChannel && channel.peer?.id == user.id) {
+                            val oldUser = channel.peer?.user
+                            if (oldUser?.presence?.hasDiff(user.presence) == true) {
+                                channel.peer?.user = user
+                                channelsCache.updateChannelPeer(channel.id, user)
+                            }
+                        }
+                    }
+                }
+            }
+        }.launchIn(this)
+    }
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         if (data.channel == null || data.members == null) return
