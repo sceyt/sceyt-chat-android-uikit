@@ -149,7 +149,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             post { onStateChanged(inputState) }
 
             messageInput.doAfterTextChanged { text ->
-                if (voiceMessageRecorderView?.isRecording == true)
+                if (isRecording())
                     return@doAfterTextChanged
 
                 determineState()
@@ -496,7 +496,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showInput() {
         binding.layoutCloseInput.root.isVisible = false
-        if (voiceMessageRecorderView?.isRecording == true)
+        if (isRecording())
             binding.layoutInput.isInvisible = true
         else
             binding.layoutInput.isVisible = true
@@ -667,6 +667,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
+
+    fun isRecording() = voiceMessageRecorderView?.isRecording == true
 
     fun getComposedMessage() = binding.messageInput.text
 
