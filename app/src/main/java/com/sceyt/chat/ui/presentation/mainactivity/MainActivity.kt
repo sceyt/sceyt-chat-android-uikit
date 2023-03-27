@@ -1,6 +1,7 @@
 package com.sceyt.chat.ui.presentation.mainactivity
 
 import android.os.Bundle
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
@@ -41,14 +42,14 @@ class MainActivity : AppCompatActivity() {
                 horizontalOffset = 10
             }
         }.launchIn(lifecycleScope)
-    }
 
-    override fun onBackPressed() {
-        if (binding.viewPager.currentItem > 0) {
-            binding.viewPager.setCurrentItem(0, false)
-            binding.bottomNavigationView.menu.findItem(R.id.channelsFragment).isChecked = true
-        } else
-            super.onBackPressed()
+        onBackPressedDispatcher.addCallback(this) {
+            if (binding.viewPager.currentItem > 0) {
+                binding.viewPager.setCurrentItem(0, false)
+                binding.bottomNavigationView.menu.findItem(R.id.channelsFragment).isChecked = true
+            } else
+                finish()
+        }
     }
 
     private fun setBottomNavClickListeners() {

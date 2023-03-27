@@ -534,8 +534,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             this@bind.editMessage(message)
         }
 
-        override fun typing(typing: Boolean, text: Editable?) {
-            sendTypingEvent(typing, text)
+        override fun typing(typing: Boolean) {
+            sendTypingEvent(typing)
         }
 
         override fun updateDraftMessage(text: Editable?, mentionUserIds: List<ObjectDataIndexed<MentionUserData>>) {

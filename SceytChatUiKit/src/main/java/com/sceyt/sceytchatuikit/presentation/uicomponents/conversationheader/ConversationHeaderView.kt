@@ -427,6 +427,6 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         if (isShowingMessageActions)
             hideMessageActions()
         else
-            context.asActivity().onBackPressed()
+            context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
     }
 }

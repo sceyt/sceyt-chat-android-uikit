@@ -81,7 +81,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
         val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
         memberType = MemberTypeEnum.values().getOrNull(type) ?: MemberTypeEnum.Member
         getCurrentUserRole()
@@ -116,7 +116,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             }
 
             toolbar.setNavigationIconClickListener {
-                requireActivity().onBackPressed()
+                requireActivity().finish()
             }
         }
     }

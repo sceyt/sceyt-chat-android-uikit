@@ -15,5 +15,5 @@ import androidx.room.ForeignKey
     )])
 data class DraftMessageUserLink(
         val chatId: Long,
-        @ColumnInfo(name = "user_id")
+        @ColumnInfo(name = "user_id", index = true)
         val userId: String)

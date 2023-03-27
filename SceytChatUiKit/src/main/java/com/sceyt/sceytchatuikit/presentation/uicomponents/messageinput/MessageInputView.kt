@@ -156,10 +156,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 checkNeedMentionUsers(text)
                 typingJob?.cancel()
                 typingJob = MainScope().launch {
-                    messageInputActionCallback?.typing(text.isNullOrBlank().not(), text)
+                    messageInputActionCallback?.typing(text.isNullOrBlank().not())
                     messageInputActionCallback?.updateDraftMessage(text, binding.messageInput.objectsIndexed)
                     delay(2000)
-                    messageInputActionCallback?.typing(false, text)
+                    messageInputActionCallback?.typing(false)
                 }
             }
 
@@ -459,7 +459,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         else {
             ViewUtil.collapseHeight(binding.layoutReplyOrEditMessage.root, to = 1, duration = 200) {
                 binding.layoutReplyOrEditMessage.root.isVisible = false
-                context.asComponentActivity().lifecycleScope.launchWhenResumed { readyCb?.invoke() }
+                context.asComponentActivity().lifecycleScope.launch { readyCb?.invoke() }
             }
         }
     }
@@ -674,7 +674,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessage(message: Message)
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
-        fun typing(typing: Boolean, text: Editable?)
+        fun typing(typing: Boolean)
         fun updateDraftMessage(text: Editable?, mentionUserIds: List<ObjectDataIndexed<MentionUserData>>)
         fun mention(query: String)
         fun join()

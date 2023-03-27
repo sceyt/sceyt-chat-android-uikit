@@ -4,6 +4,7 @@ import android.animation.LayoutTransition
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -45,6 +46,13 @@ class AddMembersActivity : AppCompatActivity() {
         initStringsWithMemberType()
         setupUsersList(arrayListOf())
         viewModel.loadUsers(isLoadMore = false)
+
+        onBackPressedDispatcher.addCallback(this) {
+            if (binding.toolbar.isSearchMode()) {
+                binding.toolbar.cancelSearchMode()
+                viewModel.loadUsers(isLoadMore = false)
+            } else finish()
+        }
     }
 
     private fun getIntentExtra() {
@@ -72,7 +80,7 @@ class AddMembersActivity : AppCompatActivity() {
         }
 
         binding.toolbar.setNavigationIconClickListener {
-            super.onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         binding.fabNext.setOnClickListener {
@@ -159,13 +167,6 @@ class AddMembersActivity : AppCompatActivity() {
         common.forEach {
             (it as? UserItem.User)?.chosen = true
         }
-    }
-
-    override fun onBackPressed() {
-        if (binding.toolbar.isSearchMode()) {
-            binding.toolbar.cancelSearchMode()
-            viewModel.loadUsers(isLoadMore = false)
-        } else super.onBackPressed()
     }
 
     override fun finish() {

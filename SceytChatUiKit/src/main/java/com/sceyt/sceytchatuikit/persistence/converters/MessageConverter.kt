@@ -37,7 +37,8 @@ class MessageConverter {
 
     @TypeConverter
     fun stringToMarkerCount(json: String?): List<MarkerCount>? {
-        val type = object : TypeToken<List<MarkerCount>?>() {}.type
+        json ?: return null
+        val type = object : TypeToken<List<MarkerCount>>() {}.type
         return Gson().fromJson(json, type)
     }
 
