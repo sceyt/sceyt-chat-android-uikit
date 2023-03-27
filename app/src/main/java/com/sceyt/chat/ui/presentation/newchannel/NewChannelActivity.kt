@@ -3,6 +3,7 @@ package com.sceyt.chat.ui.presentation.newchannel
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -41,6 +42,13 @@ class NewChannelActivity : AppCompatActivity() {
         initViews()
         setupUsersList(arrayListOf())
         viewModel.loadUsers(isLoadMore = false)
+
+        onBackPressedDispatcher.addCallback(this) {
+            if (binding.toolbar.isSearchMode()) {
+                binding.toolbar.cancelSearchMode()
+                viewModel.loadUsers(isLoadMore = false)
+            } else finish()
+        }
     }
 
     private fun initViewModel() {
@@ -73,7 +81,7 @@ class NewChannelActivity : AppCompatActivity() {
         }
 
         binding.toolbar.setNavigationIconClickListener {
-            super.onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
             overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
         }
 
@@ -103,7 +111,7 @@ class NewChannelActivity : AppCompatActivity() {
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
+            result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
                 createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members))
             }
         }
@@ -115,14 +123,9 @@ class NewChannelActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        if (binding.toolbar.isSearchMode()) {
-            binding.toolbar.cancelSearchMode()
-            viewModel.loadUsers(isLoadMore = false)
-        } else {
-            super.onBackPressed()
-            overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
-        }
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 
     companion object {

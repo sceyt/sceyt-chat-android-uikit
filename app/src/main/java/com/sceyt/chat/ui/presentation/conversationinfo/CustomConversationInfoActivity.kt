@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
@@ -57,7 +58,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             super.onAttach(context)
             addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
-                    result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
+                    result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
                         if (memberType == MemberTypeEnum.Admin) {
                             users.map { it.role = Role(RoleTypeEnum.Admin.toString()) }
                             changeRole(*users.toTypedArray())
@@ -71,7 +72,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.getParcelableArrayListExtra<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
+            result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
                 addMembers(users)
             }
         }

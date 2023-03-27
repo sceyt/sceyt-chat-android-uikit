@@ -380,7 +380,7 @@ class MessageListViewModel(
         }
     }
 
-    fun sendTypingEvent(typing: Boolean, text: Editable?) {
+    fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.sendTypingState(channel.id, typing)
         }

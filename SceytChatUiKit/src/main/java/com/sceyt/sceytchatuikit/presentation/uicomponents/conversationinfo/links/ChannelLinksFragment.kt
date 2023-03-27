@@ -12,10 +12,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelLinksBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.openLink
-import com.sceyt.sceytchatuikit.extensions.screenHeightPx
-import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -54,7 +51,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
     }
 
     private fun initViewModel() {

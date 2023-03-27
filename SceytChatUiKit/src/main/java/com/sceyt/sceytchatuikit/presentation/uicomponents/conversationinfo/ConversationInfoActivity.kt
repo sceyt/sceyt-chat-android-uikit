@@ -57,6 +57,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -87,7 +88,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
+        channel = requireNotNull(intent.parcelable(CHANNEL))
     }
 
     private fun initViewModel() {
@@ -193,7 +194,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun SceytActivityConversationInfoBinding.initViews() {
         icBack.setOnClickListener {
-            onBackPressed()
+            finish()
         }
 
         members.setOnClickListenerDisableClickViewForWhile {
@@ -470,7 +471,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onChannel(channel: SceytChannel) {
-        lifecycleScope.launchWhenResumed {
+        lifecycleScope.launch {
             setChannelDetails(channel)
             initButtons()
             pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
@@ -480,11 +481,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onLeaveChannel(channelId: Long) {
-        onBackPressed()
+        finish()
     }
 
     open fun onDeleteChannel(channelId: Long) {
-        onBackPressed()
+        finish()
     }
 
     open fun onMuteUnMuteChannel(sceytChannel: SceytChannel) {
@@ -656,8 +657,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         return (binding?.appbar?.height ?: 0)
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
+    override fun finish() {
+        super.finish()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }
 

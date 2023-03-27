@@ -1,8 +1,9 @@
 package com.sceyt.sceytchatuikit
 
 import android.app.Application
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
@@ -96,7 +97,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                 ConnectionState.Connected -> {
                     notifyState(true, null)
 
-                    ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
+                    ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
                         if (ConnectionEventsObserver.isConnected) {
                             launch(Dispatchers.IO) {
                                 persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)

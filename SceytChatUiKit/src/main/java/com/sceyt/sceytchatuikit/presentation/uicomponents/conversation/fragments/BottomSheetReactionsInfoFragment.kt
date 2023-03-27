@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventEnu
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytBottomShetReactionsInfoBinding
 import com.sceyt.sceytchatuikit.extensions.dismissSafety
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -62,7 +63,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
     }
 
     private fun getBundleArguments() {
-        message = requireNotNull(arguments?.getParcelable(MESSAGE_KEY))
+        message = requireNotNull(arguments?.parcelable(MESSAGE_KEY))
     }
 
     private fun observeToReactionsUpdate() {

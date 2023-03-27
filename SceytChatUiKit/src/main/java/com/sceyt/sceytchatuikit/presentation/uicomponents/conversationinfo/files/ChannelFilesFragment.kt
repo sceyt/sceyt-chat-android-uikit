@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelFilesBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -55,7 +56,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
     }
 
     private fun initViewModel() {

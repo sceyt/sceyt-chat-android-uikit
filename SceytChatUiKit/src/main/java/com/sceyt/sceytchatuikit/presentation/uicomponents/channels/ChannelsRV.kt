@@ -2,7 +2,9 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,6 +19,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewh
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : RecyclerView(context, attrs, defStyleAttr) {
@@ -61,9 +64,13 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
             if (isFirstItemDisplaying())
                 scrollToPosition(0)
 
-            context.maybeComponentActivity()?.lifecycleScope?.launchWhenResumed {
-                delay(500)
-                checkRichToEnd()
+            context.maybeComponentActivity()?.let {
+                it.lifecycleScope.launch {
+                    it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                        delay(500)
+                        checkRichToEnd()
+                    }
+                }
             }
         }
     }

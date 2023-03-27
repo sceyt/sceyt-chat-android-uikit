@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.databinding.FragmentEditChannelBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
@@ -53,7 +54,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(ChannelMembersFragment.CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(ChannelMembersFragment.CHANNEL))
     }
 
     private fun initViewModel() {
@@ -61,7 +62,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             SceytLoader.hideLoading()
             lifecycleScope.launch {
                 delay(100)
-                requireActivity().onBackPressed()
+                requireActivity().finish()
             }
         }
 
@@ -78,7 +79,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         tvDescription.doAfterTextChanged { checkSaveState() }
 
         layoutToolbar.navigationIcon.setOnClickListener {
-            requireActivity().onBackPressed()
+            requireActivity().finish()
         }
 
         icChangePhoto.setOnClickListener {
@@ -154,7 +155,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                 channelType = channel.channelType,
                 avatarEdited = isEditedAvatar)
             viewModel.saveChanges(channel.id, data)
-        } else requireActivity().onBackPressed()
+        } else requireActivity().finish()
     }
 
     private fun FragmentEditChannelBinding.setupStyle() {

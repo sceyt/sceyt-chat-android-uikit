@@ -27,7 +27,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
 
     private fun initMenu(message: SceytMessage) {
         menu.forEach {
-            it.icon.setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            it.icon?.setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         }
 
         setOnMenuItemClickListener {
