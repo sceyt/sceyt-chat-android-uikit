@@ -13,15 +13,14 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
+import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
@@ -103,16 +102,22 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
-        if (data.isNullOrEmpty()) return arrayListOf()
-        val channelItems: List<ChannelListItem>
+        return suspendCancellableCoroutine {
 
-        withContext(Dispatchers.Default) {
-            channelItems = data.map { item -> ChannelListItem.ChannelItem(item) }
+            val filteredChannels = data?.filter { channel -> !channel.isPeerDeleted() }
+                    ?: emptyList()
+
+            if (filteredChannels.isEmpty())
+                it.safeResume(emptyList())
+
+            val channelItems: List<ChannelListItem>
+            channelItems = filteredChannels.map { item -> ChannelListItem.ChannelItem(item) }
 
             if (hasNext)
                 (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+
+            it.safeResume(channelItems)
         }
-        return channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {

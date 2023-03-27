@@ -19,6 +19,17 @@ fun Double.footToCm(): Number {
     return (this * 30.48).roundToInt()
 }
 
+fun Number.roundUp(): Int {
+    return try {
+        DecimalFormat("#").apply {
+            roundingMode = RoundingMode.UP
+        }.format(this).toInt()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        0
+    }
+}
+
 fun Number.scale(scale: Int): Double {
     return toDouble().toBigDecimal().setScale(scale, RoundingMode.UP).toDouble()
 }

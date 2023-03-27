@@ -11,7 +11,7 @@ object SceytKitConfig {
     val SceytUITheme = ThemeConfig()
 
     var CHANNELS_LOAD_SIZE = 20
-    var CHANNELS_MEMBERS_LOAD_SIZE = 20
+    var CHANNELS_MEMBERS_LOAD_SIZE = 30
     var USERS_LOAD_SIZE = 30
     var MESSAGES_LOAD_SIZE = 30
     var ATTACHMENTS_LOAD_SIZE = 30

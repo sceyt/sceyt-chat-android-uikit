@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -108,7 +109,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     @Suppress("DEPRECATION")
     private fun getStaticLayout(title: CharSequence): StaticLayout {
-        val width = Layout.getDesiredWidth(title, textPaint).toInt()
+        val width = Layout.getDesiredWidth(title, textPaint).roundUp()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             StaticLayout.Builder.obtain(title, 0, title.length, textPaint, width)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
