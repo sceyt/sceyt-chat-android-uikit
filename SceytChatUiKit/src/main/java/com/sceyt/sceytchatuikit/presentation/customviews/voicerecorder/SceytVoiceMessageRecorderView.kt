@@ -19,6 +19,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.setPadding
+import androidx.lifecycle.*
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytRecordViewBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -73,6 +74,10 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                 isLocked = false
                 stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
             }
+        }
+
+        post {
+            context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
         }
     }
 
@@ -219,9 +224,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         }
     }
 
-    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
-        super.onWindowFocusChanged(hasWindowFocus)
-        if (!hasWindowFocus)
+    private val lifecycleEventObserver = LifecycleEventObserver { _, event ->
+        if (event != Lifecycle.Event.ON_RESUME && !hasWindowFocus())
             stopRecordAndShowPreviewIfNeeded()
     }
 

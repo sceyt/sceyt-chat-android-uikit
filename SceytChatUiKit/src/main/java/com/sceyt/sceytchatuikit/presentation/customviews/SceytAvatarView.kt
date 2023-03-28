@@ -84,11 +84,13 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         if (title.isBlank()) return ""
         val strings = title.trim().split(" ").filter { it.isNotBlank() }
         if (strings.isEmpty()) return ""
-        val data = strings[0].getFirstCharIsEmoji()
+        val data = if (isInEditMode)
+            Pair(strings[0].take(1), true) else strings[0].getFirstCharIsEmoji()
         val firstChar = data.first
         val isEmoji = data.second
         if (isEmoji)
-            return EmojiCompat.get().process(firstChar) ?: title.take(1)
+            return if (isInEditMode)
+                firstChar else EmojiCompat.get().process(firstChar) ?: title.take(1)
 
         val text = if (strings.size > 1) {
             val secondChar = strings[1].getFirstCharIsEmoji().first
