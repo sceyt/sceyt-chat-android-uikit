@@ -78,8 +78,6 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private fun init() {
         smileTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = smileTextSize.toFloat()
-            textAlign = Paint.Align.CENTER
-            colorFilter = null
         }
 
         countTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -130,7 +128,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
 
         if (smileTitle.isNotBlank()) {
             canvas.save()
-            canvas.translate(smileStaticLayout.width / 2f + strikeWidth + getInnerPaddingHorizontal() + toCenterX,
+            canvas.translate((strikeWidth + getInnerPaddingHorizontal() + toCenterX).toFloat(),
                 (height - smileStaticLayout.height) / 2f)
             smileStaticLayout.draw(canvas)
             canvas.restore()

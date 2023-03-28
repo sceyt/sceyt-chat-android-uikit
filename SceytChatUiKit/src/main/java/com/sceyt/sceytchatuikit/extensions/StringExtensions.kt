@@ -110,6 +110,9 @@ fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
         val emojiSpans = processed.getSpans(0, processed.length - 1, EmojiSpan::class.java)
         val emojiSpan = emojiSpans.getOrNull(0) ?: Pair(take(1), false)
         val spanStart = processed.getSpanStart(emojiSpan)
+        if (spanStart > 0)
+            return Pair(take(1), false)
+
         val spanEnd = processed.getSpanEnd(emojiSpan)
         return Pair(processed.subSequence(spanStart, spanEnd), true)
     } else Pair(take(1), false)

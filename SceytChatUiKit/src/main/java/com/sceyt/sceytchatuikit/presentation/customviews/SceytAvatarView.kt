@@ -1,9 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -63,13 +61,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun drawName(canvas: Canvas) {
-        textPaint.textAlign = Paint.Align.CENTER
         textPaint.textSize = if (textSize > 0) textSize.toFloat() else width * 0.38f
         textPaint.color = Color.WHITE
 
-        val xPos = (width / 2).toFloat()
-
         val staticLayout = getStaticLayout(getAvatarText(fullName ?: ""))
+
+        val xPos = (width - staticLayout.width) / 2f
         canvas.save()
         canvas.translate(xPos, (height - staticLayout.height) / 2f)
         staticLayout.draw(canvas)
@@ -91,14 +88,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         val firstChar = data.first
         val isEmoji = data.second
         if (isEmoji)
-            return firstChar.toString()
+            return EmojiCompat.get().process(firstChar) ?: title.take(1)
 
         val text = if (strings.size > 1) {
-            val secondChar = strings[1].getFirstCharIsEmoji()
+            val secondChar = strings[1].getFirstCharIsEmoji().first
             "${firstChar}${secondChar}".uppercase()
         } else firstChar.toString().uppercase()
 
-        return if (isInEditMode) text else EmojiCompat.get().process(text) ?: text
+        return if (isInEditMode) text else EmojiCompat.get().process(text) ?: title.take(1)
     }
 
     private fun getAvatarRandomColor(): Int {
