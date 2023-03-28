@@ -80,7 +80,7 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layoutSubTitle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="12dp"
                     android:animateLayoutChanges="true"

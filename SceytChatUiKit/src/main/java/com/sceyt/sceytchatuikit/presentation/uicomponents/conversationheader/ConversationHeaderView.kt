@@ -40,10 +40,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -100,6 +97,17 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             layoutToolbarDetails.setOnClickListener {
                 clickListeners.onToolbarClick(it)
+            }
+        }
+
+        updatePresenceEveryOneMin()
+    }
+
+    private fun updatePresenceEveryOneMin() {
+        context.asComponentActivity().lifecycleScope.launch {
+            while (isActive) {
+                delay(1000 * 60)
+                uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
     }

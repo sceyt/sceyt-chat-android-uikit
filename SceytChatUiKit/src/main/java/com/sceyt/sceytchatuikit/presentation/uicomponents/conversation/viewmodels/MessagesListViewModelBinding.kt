@@ -578,10 +578,11 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
-            if (it.eventType == ChannelUpdatedType.Presence)
+            if (it.eventType == ChannelUpdatedType.Presence) {
                 (it.channel as? SceytDirectChannel)?.peer?.user?.let { user ->
                     headerView.onPresenceUpdate(user)
                 } ?: headerView.setChannel(it.channel)
+            } else headerView.setChannel(it.channel)
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 

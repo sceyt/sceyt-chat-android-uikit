@@ -165,8 +165,6 @@ class OutVoiceMsgViewHolder(
                 runOnMainThread {
                     setPlayButtonIcon(false, binding.playPauseButton)
                     binding.seekBar.progress = 0f
-                    currentPlaybackSpeed = PlaybackSpeed.X1
-                    AudioPlayerHelper.setPlaybackSpeed(lastFilePath, PlaybackSpeed.X1.value)
                     binding.voiceDuration.text = audioMetadata.dur.times(1000L).durationToMinSecShort()
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
