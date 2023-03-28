@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.math.BigInteger
@@ -86,15 +87,16 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         if (title.isBlank()) return ""
         val strings = title.trim().split(" ").filter { it.isNotBlank() }
         if (strings.isEmpty()) return ""
-        val firstChar = strings[0].run {
-            String(Character.toChars(codePointAt(0)))
-        }
+        val data = strings[0].getFirstCharIsEmoji()
+        val firstChar = data.first
+        val isEmoji = data.second
+        if (isEmoji)
+            return firstChar.toString()
+
         val text = if (strings.size > 1) {
-            val secondChar = strings[1].run {
-                String(Character.toChars(codePointAt(0)))
-            }
+            val secondChar = strings[1].getFirstCharIsEmoji()
             "${firstChar}${secondChar}".uppercase()
-        } else firstChar.uppercase()
+        } else firstChar.toString().uppercase()
 
         return if (isInEditMode) text else EmojiCompat.get().process(text) ?: text
     }
