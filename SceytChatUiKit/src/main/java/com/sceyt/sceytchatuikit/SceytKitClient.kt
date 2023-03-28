@@ -96,12 +96,10 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
             when (it.state) {
                 ConnectionState.Connected -> {
                     notifyState(true, null)
-
-                    ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                        if (ConnectionEventsObserver.isConnected) {
-                            launch(Dispatchers.IO) {
+                    launch {
+                        ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            if (ConnectionEventsObserver.isConnected)
                                 persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
-                            }
                         }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
