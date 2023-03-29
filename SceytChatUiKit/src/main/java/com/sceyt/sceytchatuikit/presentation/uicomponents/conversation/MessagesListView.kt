@@ -254,10 +254,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
-            BottomSheetEmojisFragment(emojiListener = { emoji ->
-                val containsSelf = message.selfReactions?.find { reaction -> reaction.key == emoji } != null
-                onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message))
-            }).show(it, null)
+            BottomSheetEmojisFragment().also { fragment ->
+                fragment.setEmojiListener { emoji ->
+                    val containsSelf = message.selfReactions?.find { reaction -> reaction.key == emoji } != null
+                    onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message))
+                }
+            }.show(it, null)
         }
     }
 

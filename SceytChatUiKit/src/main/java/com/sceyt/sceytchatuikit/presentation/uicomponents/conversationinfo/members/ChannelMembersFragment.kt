@@ -57,7 +57,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         private set
     protected lateinit var memberType: MemberTypeEnum
         private set
-    private var currentUserRole: Role? = null
+    protected var currentUserRole: Role? = null
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
