@@ -1,20 +1,24 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
+import android.app.Dialog
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.GoogleEmojiData
-import com.sceyt.sceytchatuikit.databinding.ItemEmojiBinding
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentBottomSheetEmojisBinding
 import com.sceyt.sceytchatuikit.extensions.dismissSafety
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.vanniktech.emoji.EmojiTheming
+import com.vanniktech.emoji.search.NoSearchEmoji
 
-class BottomSheetEmojisFragment(private val emojiListener: (String) -> Unit) : BottomSheetDialogFragment() {
-    private lateinit var mBinding: SceytFragmentBottomSheetEmojisBinding
+class BottomSheetEmojisFragment : BottomSheetDialogFragment() {
+    private lateinit var binding: SceytFragmentBottomSheetEmojisBinding
+    private var emojiListener: ((String) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,8 +26,8 @@ class BottomSheetEmojisFragment(private val emojiListener: (String) -> Unit) : B
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        mBinding = SceytFragmentBottomSheetEmojisBinding.inflate(inflater, container, false)
-        return mBinding.root
+        binding = SceytFragmentBottomSheetEmojisBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -33,41 +37,35 @@ class BottomSheetEmojisFragment(private val emojiListener: (String) -> Unit) : B
     }
 
     private fun initEmojis() {
-        mBinding.rvEmojes.layoutManager = GridLayoutManager(requireContext(), 7)
-        mBinding.rvEmojes.adapter = EmojiAdapter()
+        binding.emojiView.setUp(
+            rootView = binding.root,
+            onEmojiClickListener = {
+                binding.emojiView.tearDown()
+                emojiListener?.invoke(it.unicode)
+                dismissSafety()
+            },
+            onEmojiBackspaceClickListener = null,
+            editText = null,
+            theming = EmojiTheming(backgroundColor = Color.TRANSPARENT,
+                primaryColor = requireContext().getCompatColor(R.color.sceyt_color_gray_400),
+                secondaryColor = requireContext().getCompatColor(SceytKitConfig.sceytColorAccent),
+                dividerColor = requireContext().getCompatColor(R.color.sceyt_color_divider),
+                Color.BLACK, Color.BLACK),
+            searchEmoji = NoSearchEmoji
+        )
     }
 
-    inner class EmojiAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        val data :List<String> = mutableListOf<String>().apply {
-            GoogleEmojiData.data.forEach {
-                addAll(it)
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return super.onCreateDialog(savedInstanceState).apply {
+            setOnShowListener {
+                val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                BottomSheetBehavior.from(bottomSheet).isDraggable = false
             }
         }
+    }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val binding = ItemEmojiBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return EmojiViewHolder(binding)
-        }
-
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            (holder as EmojiViewHolder).bind(data[position])
-        }
-
-        override fun getItemCount(): Int {
-            return data.size
-        }
-
-        inner class EmojiViewHolder(val binding: ItemEmojiBinding) : RecyclerView.ViewHolder(binding.root) {
-
-            fun bind(emoji: String) {
-                binding.tvReaction.setSmileText(emoji)
-
-                binding.root.setOnClickListener {
-                    emojiListener(emoji)
-                    dismissSafety()
-                }
-            }
-        }
+    fun setEmojiListener(listener: (String) -> Unit) {
+        emojiListener = listener
     }
 }
 

@@ -11,7 +11,7 @@ def githubProperties = new Properties()
 githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
 
 def getVersionName = { ->
-    return "1.6.14"
+    return "1.6.15"
 }
 
 def getArtifactId = { ->
@@ -126,4 +126,5 @@ dependencies {
     api supportDependencies.waveSeekBar
     api supportDependencies.photoView
     api supportDependencies.emojiBundled
+    api supportDependencies.vanniktechGoogleEmoji
 }
