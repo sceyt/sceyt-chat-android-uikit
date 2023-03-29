@@ -40,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.persistence.mappers.getMessageTypeFromAttachments
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
@@ -528,39 +529,45 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun replyMessage(message: Message) {
-        replyMessage = message
-        with(binding.layoutReplyOrEditMessage) {
-            isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
-            val name = userNameBuilder?.invoke(message.from) ?: message.from.getPresentableName()
-            val text = "${getString(R.string.sceyt_reply)} $name".run {
-                setBoldSpan(length - name.length, length)
+        checkIfRecordingAndConfirm {
+            editMessage = message
+            replyMessage = message
+            with(binding.layoutReplyOrEditMessage) {
+                isVisible = true
+                ViewUtil.expandHeight(root, 1, 200)
+                val name = userNameBuilder?.invoke(message.from)
+                        ?: message.from.getPresentableName()
+                val text = "${getString(R.string.sceyt_reply)} $name".run {
+                    setBoldSpan(length - name.length, length)
+                }
+                tvName.text = text
+                icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
+
+                if (message.attachments.isNullOrEmpty().not()) {
+                    binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
+                    loadReplyMessageImage(message.attachments[0])
+                } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
+
+                tvMessageBody.text = if (message.isTextMessage())
+                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                else message.toSceytUiMessage().getShowBody(context)
             }
-            tvName.text = text
-            icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
-
-            if (message.attachments.isNullOrEmpty().not()) {
-                binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
-                loadReplyMessageImage(message.attachments[0])
-            } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
-
-            tvMessageBody.text = if (message.isTextMessage())
-                MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
-            else message.toSceytUiMessage().getShowBody(context)
         }
     }
 
     internal fun editMessage(message: Message) {
-        editMessage = message
-        with(binding.layoutReplyOrEditMessage) {
-            isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
-            icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
-            layoutImage.isVisible = false
-            tvName.text = getString(R.string.sceyt_edit_message)
-            tvMessageBody.text = if (message.isTextMessage())
-                MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
-            else message.toSceytUiMessage().getShowBody(context)
+        checkIfRecordingAndConfirm {
+            editMessage = message
+            with(binding.layoutReplyOrEditMessage) {
+                isVisible = true
+                ViewUtil.expandHeight(root, 1, 200)
+                icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
+                layoutImage.isVisible = false
+                tvName.text = getString(R.string.sceyt_edit_message)
+                tvMessageBody.text = if (message.isTextMessage())
+                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                else message.toSceytUiMessage().getShowBody(context)
+            }
         }
     }
 
@@ -578,6 +585,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 setMentionUsers(data)
             }
         }
+        determineState()
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -612,6 +620,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun onChannelLeft() {
         showHideJoinButton(true)
+    }
+
+    fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
+        if (isRecording()) {
+            SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording, R.string.sceyt_stop_recording_desc, R.string.sceyt_discard) {
+                stopRecording()
+                onConfirm()
+            }
+        } else onConfirm()
     }
 
     fun createAttachmentWithPaths(vararg filePath: String, metadata: String = "", attachmentType: String? = null): MutableList<Attachment> {
