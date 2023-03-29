@@ -9,7 +9,7 @@ public class AudioPlayerHelper {
     private final static Executor playerExecutor = Executors.newSingleThreadScheduledExecutor();
     private static AudioPlayer currentPlayer;
 
-    private static final ConcurrentHashMap<String, OnAudioPlayer> playerCallbacks = new ConcurrentHashMap();
+    private static final ConcurrentHashMap<String, OnToggleCallback> playerToggleListeners = new ConcurrentHashMap<>();
 
 
     public interface OnAudioPlayer {
@@ -43,10 +43,8 @@ public class AudioPlayerHelper {
             currentPlayer.initialize();
 
             if (events != null) {
-                playerCallbacks.put(filePath, events);
                 events.onInitialized();
             }
-
         });
     }
 
@@ -87,6 +85,9 @@ public class AudioPlayerHelper {
         playerExecutor.execute(() -> {
             if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath)) {
                 currentPlayer.togglePlayPause();
+                for (OnToggleCallback callback : playerToggleListeners.values()) {
+                    callback.onToggle();
+                }
             }
         });
     }
@@ -99,4 +100,11 @@ public class AudioPlayerHelper {
         });
     }
 
+    public static void addToggleCallback(String key, OnToggleCallback callback) {
+        playerToggleListeners.put(key, callback);
+    }
+
+    public interface OnToggleCallback {
+        void onToggle();
+    }
 }

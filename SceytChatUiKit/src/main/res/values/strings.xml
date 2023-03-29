@@ -150,5 +150,8 @@
     <string name="sceyt_reacted">Reacted</string>
     <string name="sceyt_to">to</string>
     <string name="sceyt_draft">Draft</string>
+    <string name="sceyt_stop_recording">Discard voice message?</string>
+    <string name="sceyt_stop_recording_desc">Are you sure you want to stop recording and discard your voice message?</string>
+    <string name="sceyt_discard">Discard</string>
 
 </resources>

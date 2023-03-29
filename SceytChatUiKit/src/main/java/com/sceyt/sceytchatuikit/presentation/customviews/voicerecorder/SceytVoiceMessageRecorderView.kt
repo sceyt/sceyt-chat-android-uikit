@@ -23,6 +23,7 @@ import androidx.lifecycle.*
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytRecordViewBinding
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.util.*
@@ -78,6 +79,13 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
 
         post {
             context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
+        }
+
+        AudioPlayerHelper.addToggleCallback(TAG) {
+            runOnMainThread {
+                if (isRecording)
+                    stopRecordAndShowPreviewIfNeeded()
+            }
         }
     }
 
