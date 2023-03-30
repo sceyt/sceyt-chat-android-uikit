@@ -84,7 +84,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         AudioPlayerHelper.addToggleCallback(TAG) {
             runOnMainThread {
                 if (isRecording)
-                    stopRecordAndShowPreviewIfNeeded()
+                    forceStopRecording()
             }
         }
     }
