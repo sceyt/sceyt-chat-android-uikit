@@ -24,6 +24,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -51,6 +52,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.Po
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -182,7 +185,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
-        return PopupReactions(context).showPopup(view, message, object : PopupReactionsAdapter.OnItemClickListener {
+        val reactions = message.selfReactions?.map { it.key }?.toArrayList() ?: arrayListOf()
+        if (reactions.size < MAX_SELF_REACTIONS_SIZE)
+            reactions.addAll(SceytKitConfig.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
+
+        return PopupReactions(context).showPopup(view, message, reactions, object : PopupReactionsAdapter.OnItemClickListener {
             override fun onReactionClick(reaction: ReactionItem.Reaction) {
                 this@MessagesListView.onAddOrRemoveReaction(reaction)
             }
