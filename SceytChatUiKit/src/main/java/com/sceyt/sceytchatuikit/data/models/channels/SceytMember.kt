@@ -22,7 +22,7 @@ data class SceytMember(
     val id: String get() = user.id
 
     override fun equals(other: Any?): Boolean {
-        return other != null && other is SceytMember && other.id == id
+        return other != null && other is SceytMember && other.id == id && other.role == role
     }
 
     override fun hashCode(): Int {

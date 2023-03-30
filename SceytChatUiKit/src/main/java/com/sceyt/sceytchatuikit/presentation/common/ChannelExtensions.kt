@@ -16,6 +16,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
             || lastMessage?.state != other.lastMessage?.state
     val userReactionsChanged = userMessageReactions?.maxOfOrNull { it.id } != other.userMessageReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
+    val membersCountChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount
 
     val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
             && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
@@ -32,7 +33,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
         peerBlockedChanged = peerBlockedChanged,
         typingStateChanged = typingData != other.typingData,
-        membersChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount,
+        membersChanged = membersCountChanged || (this as? SceytGroupChannel)?.members != (other as? SceytGroupChannel)?.members,
         metadataUpdated = metadata != other.metadata)
 }
 
