@@ -530,7 +530,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun replyMessage(message: Message) {
         checkIfRecordingAndConfirm {
-            editMessage = message
             replyMessage = message
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
