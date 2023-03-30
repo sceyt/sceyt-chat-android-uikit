@@ -149,4 +149,7 @@
     <string name="sceyt_reacted">رد فعل</string>
     <string name="sceyt_to">ل</string>
     <string name="sceyt_draft">مسودة</string>
+    <string name="sceyt_stop_recording">الغاء  الرسالة الصوتية؟</string>
+    <string name="sceyt_stop_recording_desc">هل أنت متأكد من أنك تريد إيقاف التسجيل والغاء رسالتك الصوتية؟</string>
+    <string name="sceyt_discard">الغاء</string>
 </resources>

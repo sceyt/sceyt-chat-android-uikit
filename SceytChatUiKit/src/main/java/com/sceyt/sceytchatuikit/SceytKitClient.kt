@@ -106,8 +106,8 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                     launch(Dispatchers.IO) {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
+                        sceytSyncManager.startSync()
                     }
-                    sceytSyncManager.startSync()
                 }
                 ConnectionState.Failed -> {
                     notifyState(false, it.exception?.message)

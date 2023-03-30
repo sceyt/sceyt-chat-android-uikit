@@ -77,7 +77,7 @@ class SceytGroupChannel(
             subject = subject,
             avatarUrl = avatarUrl,
             channelUrl = channelUrl,
-            members = members.map { it.copy() },
+            members = members.map { it.clone() },
             memberCount = memberCount,
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,

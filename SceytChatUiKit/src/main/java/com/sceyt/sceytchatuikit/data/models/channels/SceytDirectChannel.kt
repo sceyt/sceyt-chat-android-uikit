@@ -66,7 +66,7 @@ class SceytDirectChannel(
             markedUsUnread = markedUsUnread,
             muted = muted,
             channelType = channelType,
-            peer = peer?.copy(),
+            peer = peer?.clone(),
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
             messagesDeletionDate = messagesDeletionDate,

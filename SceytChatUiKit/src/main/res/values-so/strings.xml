@@ -149,4 +149,7 @@
     <string name="sceyt_reacted">Ka falceliyay</string>
     <string name="sceyt_to">ku</string>
     <string name="sceyt_draft">Qabyo</string>
+    <string name="sceyt_stop_recording">Iska masax codkaan?</string>
+    <string name="sceyt_stop_recording_desc">Ma hubtaa in aad duubista codka joojisid kadibna aad tirtid?</string>
+    <string name="sceyt_discard">Iska masax</string>
 </resources>
