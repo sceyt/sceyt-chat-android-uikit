@@ -138,6 +138,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 voiceMessageRecorderView = this
                 isVisible = !disabledInput && !showingJoinButton
             })
+            determineState()
         }
 
         Handler(Looper.getMainLooper()).postDelayed({ binding.messageInput.requestFocus() }, 500)

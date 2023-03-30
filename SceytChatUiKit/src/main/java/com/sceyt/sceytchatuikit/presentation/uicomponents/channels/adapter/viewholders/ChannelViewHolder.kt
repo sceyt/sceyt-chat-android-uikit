@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.core.view.isVisible
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -162,6 +163,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
+        if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false
         val lastReaction = channel.userMessageReactions?.maxByOrNull { it.id } ?: return false
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
 
