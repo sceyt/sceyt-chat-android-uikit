@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:background="?selectableItemBackgroundBorderless"
         app:sceytReactionViewEnableStroke="false"
-        app:sceytReactionViewInnerPadding="4dp"
+        app:sceytReactionViewInnerPadding="4.5dp"
         app:sceytReactionViewSmileTextSize="25sp"
         app:sceytReactionViewStrokeCornerRadius="30dp"
         tools:sceytReactionViewSmileText="😍" />

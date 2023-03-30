@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.sceytconfigs
 
 import androidx.annotation.ColorRes
+import androidx.annotation.IntRange
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import com.sceyt.chat.models.user.User
@@ -16,6 +17,8 @@ object SceytKitConfig {
     var MESSAGES_LOAD_SIZE = 30
     var ATTACHMENTS_LOAD_SIZE = 30
     var REACTIONS_LOAD_SIZE = 30
+    @IntRange(from = 1, to = 6)
+    var MAX_SELF_REACTIONS_SIZE = 6
 
     var enableDarkMode = true
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
@@ -27,7 +30,7 @@ object SceytKitConfig {
 
     var userNameBuilder: ((User) -> String)? = null
 
-    var fastReactions = arrayListOf("\uD83D\uDE0E", "\uD83D\uDE02", "\uD83D\uDC4C\uD83C\uDFFB", "\uD83D\uDE0D", "\uD83D\uDC4D\uD83C\uDFFB", "\uD83D\uDE0F")
+    var defaultReactions = arrayListOf("\uD83D\uDE0E", "\uD83D\uDE02", "\uD83D\uDC4C\uD83C\uDFFB", "\uD83D\uDE0D", "\uD83D\uDC4D\uD83C\uDFFB", "\uD83D\uDE0F")
 
     var avatarColors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
 
