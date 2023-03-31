@@ -104,6 +104,21 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }.launchIn(lifecycleScope)
     }
 
+    private fun initViews() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        binding.layoutToolbar.applySystemWindowInsetsPadding(applyTop = true)
+
+        binding.root.post { toggleFullScreen(false) }
+
+        binding.icShare.setOnClickListener {
+            currentItem?.let { item -> showActionsDialog(item) }
+        }
+
+        binding.icBack.setOnClickListener {
+            finish()
+        }
+    }
+
     private fun initPageWithData() {
         val attachment = intent?.extras?.getParcelable<SceytAttachment>(KEY_ATTACHMENT)
         val user = intent?.extras?.getSerializable(KEY_USER) as User?
@@ -135,28 +150,13 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun initViews() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        binding.layoutToolbar.applySystemWindowInsetsPadding(applyTop = true)
-
-        binding.root.post { toggleFullScreen(false) }
-
-        binding.icShare.setOnClickListener {
-            currentItem?.let { item -> showActionsDialog(item) }
-        }
-
-        binding.icBack.setOnClickListener {
-            finish()
-        }
-    }
-
     private fun loadMediaDetail(item: MediaItem) {
         currentItem = item
         val name = item.data.user?.let {
             SceytKitConfig.userNameBuilder?.invoke(it) ?: it.getPresentableName()
         }
         binding.tvTitle.text = name ?: ""
-        binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "MM.dd.yy, HH:mm")
+        binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "dd.MM.yy, HH:mm")
     }
 
     override fun onMediaClick() {
