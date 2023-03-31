@@ -64,29 +64,29 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (data.eventType) {
-            Created, Joined -> {
-                onChanelCreatedOrJoinedOrUnHidden(data.channel)
-            }
-            Deleted -> {
-                data.channelId?.let { channelId -> deleteChannelDb(channelId) }
-            }
+            Created -> onChanelAdded(data.channel)
+            Joined -> onChanelJoined(data.channel)
+            Deleted -> data.channelId?.let { channelId -> deleteChannelDb(channelId) }
             Left -> {
                 val leftUser = (data.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
                         ?: return
                 data.channelId?.let { channelId ->
                     if (leftUser == myId) {
                         deleteChannelDb(channelId)
-                    } else
+                    } else {
                         channelDao.deleteUserChatLinks(channelId, leftUser)
+                        updateMembersCount(data.channel.id, data.channel.memberCount.toInt())
+                    }
                 }
             }
             ClearedHistory -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateLastMessage(channelId, null, null)
+                    messageDao.deleteAllMessages(channelId)
                     channelsCache.clearedHistory(channelId)
                 }
             }
-            Updated -> {
+            Updated, UnBlocked -> {
                 data.channel?.let { channel ->
                     val sceytChannel = channel.toSceytUiChannel()
                     initPendingLastMessageBeforeInsert(sceytChannel)
@@ -111,17 +111,29 @@ internal class PersistenceChannelsLogicImpl(
             MarkedUsUnread -> updateChannelDbAndCache(data.channel?.toSceytUiChannel())
             Blocked -> deleteChannelDb(data.channelId ?: return)
             Hidden -> data.channelId?.let { deleteChannelDb(it) }
-            UnHidden -> onChanelCreatedOrJoinedOrUnHidden(data.channel)
-            UnBlocked -> {
-                //Todo not implemented yet
-            }
-            Invited -> {
-                //Todo not implemented yet
-            }
+            UnHidden -> onChanelAdded(data.channel)
+            Invited -> onChanelJoined(data.channel)
         }
     }
 
-    private suspend fun onChanelCreatedOrJoinedOrUnHidden(channel: Channel?) {
+    private suspend fun onChanelJoined(channel: Channel?) {
+        if (channel !is GroupChannel) return
+        val joinedMember = channel.lastActiveMembers?.getOrNull(0)?.id ?: return
+        if (joinedMember == myId) {
+            onChanelAdded(channel)
+        } else updateMembersCount(channel.id, channel.memberCount.toInt())
+    }
+
+    private suspend fun updateMembersCount(channelId: Long, count: Int) {
+        channelDao.updateMemberCount(channelId, count)
+        channelDao.getChannelById(channelId)?.let { channel ->
+            val sceytChannel = channel.toChannel()
+            fillChannelsNeededInfo(sceytChannel)
+            channelsCache.upsertChannel(sceytChannel)
+        }
+    }
+
+    private suspend fun onChanelAdded(channel: Channel?) {
         channel?.let {
             val members = if (it is GroupChannel) it.lastActiveMembers else arrayListOf((it as DirectChannel).peer)
             val sceytChannel = channel.toSceytUiChannel()
