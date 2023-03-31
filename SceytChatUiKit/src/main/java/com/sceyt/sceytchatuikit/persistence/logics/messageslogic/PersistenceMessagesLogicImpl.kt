@@ -12,8 +12,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -110,15 +108,6 @@ internal class PersistenceMessagesLogicImpl(
             data.reactionScore?.toReactionScoreEntity(message.id)?.let {
                 reactionDao.insertReactionScore(it)
             }
-        }
-    }
-
-    override suspend fun onChannelEvent(data: ChannelEventData) {
-        when (data.eventType) {
-            Deleted, ClearedHistory, Left, Hidden -> {
-                data.channelId?.let { messageDao.deleteAllMessages(it) }
-            }
-            else -> return
         }
     }
 

@@ -89,11 +89,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var typingJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
-    private var disabledInput: Boolean = false
-    private var showingJoinButton: Boolean = false
+    private var disabledInputByGesture: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
     private val mentionUserDebounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
+    var isInputHidden = false
+        private set
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -136,9 +137,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 setRecordingListener()
                 voiceMessageRecorderView = this
-                isVisible = !disabledInput && !showingJoinButton
+                isVisible = canShowRecorderView()
             })
-            determineState()
         }
 
         Handler(Looper.getMainLooper()).postDelayed({ binding.messageInput.requestFocus() }, 500)
@@ -147,14 +147,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun init() {
         with(binding) {
             setUpStyle()
-            determineState()
+            determineInputState()
             post { onStateChanged(inputState) }
 
             messageInput.doAfterTextChanged { text ->
                 if (isRecording())
                     return@doAfterTextChanged
 
-                determineState()
+                determineInputState()
                 checkNeedMentionUsers(text)
                 typingJob?.cancel()
                 typingJob = MainScope().launch {
@@ -308,12 +308,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun finishRecording() {
         binding.layoutInput.isVisible = true
-        voiceMessageRecorderView?.isVisible = true
+        showVoiceRecorder()
         binding.voiceRecordPresenter.isVisible = false
         binding.messageInput.setText("")
-        determineState()
+        determineInputState()
         binding.messageInput.requestFocus()
     }
+
+    private fun canShowRecorderView() = !disabledInputByGesture && !isInputHidden && inputState == Voice
 
     private fun SceytVoiceMessageRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
@@ -412,7 +414,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun determineState() {
+    private fun determineInputState() {
+        if (!isEnabledInput())
+            return
+
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
                 && !binding.voiceRecordPresenter.isShowing
         val newState = if (showVoiceIcon) Voice else Text
@@ -420,17 +425,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             onStateChanged(newState)
         inputState = newState
 
-        binding.icSendMessage.isVisible = !showVoiceIcon && !disabledInput
-        if (!showVoiceIcon || disabledInput) {
-            hideAndStopVoiceRecorder()
-        } else showVoiceRecorder()
+        binding.icSendMessage.isVisible = !showVoiceIcon
+        if (showVoiceIcon) {
+            showVoiceRecorder()
+        } else hideAndStopVoiceRecorder()
     }
+
+    private fun isEnabledInput() = !disabledInputByGesture && !isInputHidden
 
     private fun addAttachments(attachments: List<Attachment>) {
         binding.rvAttachments.isVisible = true
         allAttachments.addAll(attachments)
         attachmentsAdapter.addItems(attachments.map { AttachmentItem(it) })
-        determineState()
+        determineInputState()
     }
 
     private fun setupAttachmentsList() {
@@ -444,11 +451,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showHideJoinButton(show: Boolean) {
-        showingJoinButton = show
+        isInputHidden = show
         binding.btnJoin.isVisible = show
-        binding.layoutInput.isVisible = !disabledInput && !show
-        binding.layoutCloseInput.root.isVisible = disabledInput && !show
-        if (!show) determineState()
+        binding.layoutInput.isVisible = !disabledInputByGesture && !show
+        binding.layoutCloseInput.root.isVisible = disabledInputByGesture && !show
+        voiceMessageRecorderView?.isVisible = canShowRecorderView()
     }
 
     private fun checkIsExistAttachment(path: String?): Boolean {
@@ -486,27 +493,33 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun hideInputWithMessage(message: String, @DrawableRes startIcon: Int) {
-        binding.layoutCloseInput.apply {
-            tvMessage.text = message
-            icStateIcon.setImageResource(startIcon)
-            root.isVisible = true
+        with(binding) {
+            layoutCloseInput.apply {
+                tvMessage.text = message
+                icStateIcon.setImageResource(startIcon)
+                root.isVisible = true
+            }
+            layoutInput.isInvisible = true
+            messageInput.setText("")
+            btnJoin.isVisible = false
+            rvAttachments.isVisible = false
+            hideAndStopVoiceRecorder()
         }
-        binding.layoutInput.isVisible = false
-        binding.btnJoin.isVisible = false
-        voiceMessageRecorderView?.isVisible = false
     }
 
     private fun showInput() {
-        binding.layoutCloseInput.root.isVisible = false
         if (isRecording())
             binding.layoutInput.isInvisible = true
         else
             binding.layoutInput.isVisible = true
-        determineState()
+
+        binding.layoutCloseInput.root.isVisible = false
+        determineInputState()
     }
 
     private fun showVoiceRecorder() {
-        voiceMessageRecorderView?.isVisible = true
+        if (canShowRecorderView())
+            voiceMessageRecorderView?.isVisible = true
     }
 
     private fun hideAndStopVoiceRecorder() {
@@ -585,7 +598,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 setMentionUsers(data)
             }
         }
-        determineState()
+        determineInputState()
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -602,15 +615,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         rvAttachments.isVisible = false
                         layoutReplyOrEditMessage.root.isVisible = false
                     }
-                    if (isBlockedPeer)
+                    isInputHidden = if (isBlockedPeer) {
                         hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
-                    else {
-                        if (disabledInput.not())
+                        true
+                    } else {
+                        if (disabledInputByGesture.not())
                             showInput()
+                        false
                     }
                 }
             }
-            else -> {}
+            else -> return
         }
     }
 
@@ -669,14 +684,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         replyMessage = null
         allAttachments.clear()
         attachmentsAdapter.clear()
-        determineState()
+        determineInputState()
     }
 
-    fun enableDisableInput(message: String, enable: Boolean, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
-        disabledInput = enable.not()
-        if (!enable)
-            hideInputWithMessage(message, startIcon)
-        else showInput()
+    fun disableInputWithMessage(message: String, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
+        disabledInputByGesture = true
+        hideInputWithMessage(message, startIcon)
+    }
+
+    fun enableInput() {
+        disabledInputByGesture = false
+        if (!isInputHidden)
+            showInput()
     }
 
     fun stopRecording() {
@@ -758,7 +777,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
-        determineState()
+        determineInputState()
     }
 
     override fun onJoinClick() {

@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
 import android.util.Log
+import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
@@ -81,6 +82,10 @@ internal class PersistenceMembersLogicImpl(
                 channelDao.insertUserChatLinks(data.members.map {
                     UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
+
+                if (data.eventType == ChannelMembersEventEnum.Added)
+                    channelDao.updateMemberCount(chatId, (data.channel as GroupChannel).memberCount.toInt())
+
                 channelDao.getChannelById(chatId)?.let {
                     channelsCache.upsertChannel(it.toChannel())
                 } ?: run {
@@ -96,6 +101,7 @@ internal class PersistenceMembersLogicImpl(
                     deleteChannelDb(chatId)
                 } else {
                     channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
+                    channelDao.updateMemberCount(chatId, (data.channel as GroupChannel).memberCount.toInt())
                     channelDao.getChannelById(chatId)?.let {
                         channelsCache.upsertChannel(it.toChannel())
                     }

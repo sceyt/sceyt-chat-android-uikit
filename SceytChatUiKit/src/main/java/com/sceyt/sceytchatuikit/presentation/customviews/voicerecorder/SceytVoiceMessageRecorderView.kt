@@ -298,8 +298,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         }
 
         icPoint.clearAnimation()
-        textViewTime.visibility = View.INVISIBLE
-        icPoint.visibility = View.INVISIBLE
+        textViewTime.visibility = View.GONE
+        icPoint.visibility = View.GONE
         lockViewContainer.visibility = View.GONE
         layoutEffect2.visibility = View.GONE
         layoutEffect1.visibility = View.GONE
