@@ -23,7 +23,7 @@ ext {
     datastore_version = '1.0.0'
 
     exo_player_media_version = '1.0.0'
-G    emoji_bundled_version = '1.4.0-alpha01'
+    emoji_bundled_version = '1.4.0-alpha01'
 
     jsoup_version = '1.15.4'
     material_version = '1.9.0-beta01'
