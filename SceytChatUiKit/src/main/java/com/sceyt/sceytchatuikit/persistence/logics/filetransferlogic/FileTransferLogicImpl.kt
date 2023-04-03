@@ -30,9 +30,9 @@ import kotlin.math.max
 internal class FileTransferLogicImpl(private val application: Application) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private var downloadingUrlMap = hashMapOf<String, String>()
-    private var thumbPaths = hashMapOf<String, String>()
-    private var preparingThumbsMap = hashMapOf<Long, Long>()
-    private var pendingUploadQue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
+    private var thumbPaths = hashMapOf<String, ThumbPathsData>()
+    private var preparingThumbsMap = hashMapOf<String, Long>()
+    private var pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
     private var currentUploadingAttachment: SceytAttachment? = null
     private var pausedTasksMap = hashMapOf<String, String>()
 
@@ -125,37 +125,41 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     }
 
     override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
-        if (preparingThumbsMap[messageTid] != null) return
-        preparingThumbsMap[messageTid] = messageTid
+        val thumbKey = getPreparingThumbKey(messageTid, size)
+        if (preparingThumbsMap[thumbKey] != null) return
+        preparingThumbsMap[thumbKey] = messageTid
         val task = fileTransferService.findOrCreateTransferTask(attachment)
-        thumbPaths[messageTid.toString()]?.let {
-            task.thumbCallback.onThumb(it)
-            preparingThumbsMap.remove(messageTid)
+        val readyThumb = thumbPaths[messageTid.toString()]
+        if (readyThumb != null && readyThumb.size == size) {
+            task.thumbCallback.onThumb(readyThumb.path)
+            preparingThumbsMap.remove(thumbKey)
             return
-        } ?: run {
+        } else {
             val result = getAttachmentThumbPath(application, attachment, size)
             if (result.isSuccess)
                 result.getOrNull()?.let { path ->
-                    thumbPaths[messageTid.toString()] = path
+                    thumbPaths[messageTid.toString()] = ThumbPathsData(messageTid, path, size)
                     task.thumbCallback.onThumb(path)
                 }
-            preparingThumbsMap.remove(messageTid)
+            preparingThumbsMap.remove(thumbKey)
         }
     }
+
+    private fun getPreparingThumbKey(messageTid: Long, size: Size) = "$messageTid$size"
 
     private fun checkAndUpload(attachment: SceytAttachment, task: TransferTask) {
         if (currentUploadingAttachment == null)
             uploadAttachment(attachment, task)
         else {
             if (currentUploadingAttachment?.filePath != attachment.filePath)
-                pendingUploadQue.add(Pair(attachment, task))
+                pendingUploadQueue.add(Pair(attachment, task))
         }
     }
 
     private fun uploadNext() {
         currentUploadingAttachment = null
-        if (pendingUploadQue.isEmpty()) return
-        pendingUploadQue.poll()?.let {
+        if (pendingUploadQueue.isEmpty()) return
+        pendingUploadQueue.poll()?.let {
             uploadAttachment(it.first, it.second)
         }
     }
@@ -269,4 +273,8 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
         downloadingUrlMap.clear()
         sharedFilesPath.clear()
     }
+
+    data class ThumbPathsData(val messageTid: Long,
+                              val path: String,
+                              val size: Size)
 }
