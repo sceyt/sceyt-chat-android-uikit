@@ -33,10 +33,7 @@ object ConnectionEventsObserver {
 
     init {
         ChatClient.getClient().addClientListener(TAG, object : ClientListener {
-            override fun onConnectionStateChanged(
-                state: ConnectionState?,
-                exception: SceytException?
-            ) {
+            override fun onConnectionStateChanged(state: ConnectionState?, exception: SceytException?) {
                 onChangedConnectStatusFlow_.tryEmit(ConnectionStateData(state, exception))
             }
 

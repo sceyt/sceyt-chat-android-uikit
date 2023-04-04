@@ -146,7 +146,7 @@ class MessageListViewModel(
 
         viewModelScope.launch {
             ChannelEventsObserver.onChannelMembersEventFlow
-                .filter { it.channel?.id == channel.id }
+                .filter { it.channel.id == channel.id }
                 .collect(::onChannelMemberEvent)
         }
 
@@ -158,7 +158,7 @@ class MessageListViewModel(
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
 
-        onTransferUpdatedFlow = MessageEventsObserver.onTransferUpdatedLiveData
+        onTransferUpdatedFlow = FileTransferHelper.onTransferUpdatedLiveData
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
@@ -277,17 +277,17 @@ class MessageListViewModel(
         when (val state = item.file.transferState ?: return) {
             PendingUpload, ErrorUpload, FilePathChanged -> {
                 transferData.state = Uploading
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
             }
             PendingDownload, ErrorDownload -> {
                 transferData.state = Downloading
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
             }
             PauseDownload -> {
                 transferData.state = Downloading
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
@@ -296,7 +296,7 @@ class MessageListViewModel(
             }
             PauseUpload -> {
                 transferData.state = Uploading
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
@@ -308,7 +308,7 @@ class MessageListViewModel(
                 viewModelScope.launch(Dispatchers.IO) {
                     persistenceAttachmentsMiddleWare.updateAttachmentWithTransferData(transferData)
                 }
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
             Downloading -> {
                 transferData.state = PauseDownload
@@ -316,11 +316,11 @@ class MessageListViewModel(
                 viewModelScope.launch(Dispatchers.IO) {
                     persistenceAttachmentsMiddleWare.updateAttachmentWithTransferData(transferData)
                 }
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
             Uploaded, Downloaded, ThumbLoaded -> {
                 transferData.state = state
-                MessageEventsObserver.emitAttachmentTransferUpdate(transferData)
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
         }
     }

@@ -14,7 +14,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.util.UUID
+import java.util.*
 import kotlin.math.roundToInt
 
 object FileResizeUtil {
@@ -29,7 +29,7 @@ object FileResizeUtil {
         try {
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
             val bmpFile = FileOutputStream(dest)
-            bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
+            bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
             bmpFile.flush()
             bmpFile.close()
         } catch (e: java.lang.Exception) {
@@ -146,6 +146,10 @@ object FileResizeUtil {
         val ratio = (maxImageSize / realImage.width).coerceAtMost(maxImageSize / realImage.height)
         val width = (ratio * realImage.width).roundToInt()
         val height = (ratio * realImage.height).roundToInt()
+
+        if (realImage.width < width || realImage.height < height)
+            return realImage
+
         return ThumbnailUtils.extractThumbnail(realImage, width, height)
     }
 
@@ -171,7 +175,7 @@ object FileResizeUtil {
         return try {
             val fileDest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(fileDest)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
             bmpFile.flush()
             bmpFile.close()
             bitmap.recycle()

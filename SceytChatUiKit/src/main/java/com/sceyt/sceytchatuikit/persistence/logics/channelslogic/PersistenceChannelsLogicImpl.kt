@@ -143,7 +143,9 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        updateChannelDbAndCache((data.channel ?: return).toSceytUiChannel())
+        data.channel ?: return
+        channelDao.updateUnreadCount(data.channel.id, data.channel.unreadMessageCount.toInt())
+        channelsCache.updateUnreadCount(data.channel.id, data.channel.unreadMessageCount.toInt())
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
