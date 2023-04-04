@@ -23,7 +23,6 @@ import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters.FragmentReactedUsers
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters.ReactionHeaderItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters.ReactionsHeaderAdapter
@@ -70,12 +69,12 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
         MessageEventsObserver.onMessageReactionUpdatedFlow
             .filter { it.message.id == message.id }
             .onEach { eventData ->
-                message = eventData.message.toSceytUiMessage()
+                message = eventData.message
                 if (message.reactionScores.isNullOrEmpty()) {
                     dismissSafety()
                     return@onEach
                 }
-                val reactionScore = eventData.message.reactionScores.find { it.key == eventData.reaction.key }
+                val reactionScore = eventData.message.reactionScores?.find { it.key == eventData.reaction.key }
                         ?: ReactionScore(eventData.reaction.key, eventData.reaction.score.toLong())
                 when (eventData.eventType) {
                     ReactionUpdateEventEnum.ADD -> {
@@ -92,7 +91,8 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
                         }
                     }
                 }
-                headerAdapter?.updateAppItem(eventData.message.reactionScores.sumOf { it.score })
+                headerAdapter?.updateAppItem(eventData.message.reactionScores?.sumOf { it.score }
+                        ?: 0)
                 pagerAdapter?.updateAllReactionsFragment()
                 registerOnPageChangeCallback()
             }.launchIn(lifecycleScope)

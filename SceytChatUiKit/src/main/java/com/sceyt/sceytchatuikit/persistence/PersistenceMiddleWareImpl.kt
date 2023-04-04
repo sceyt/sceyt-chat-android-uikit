@@ -33,7 +33,6 @@ import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembe
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import kotlinx.coroutines.CoroutineScope
@@ -112,10 +111,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         launch { reactionsLogic.onMessageReactionUpdated(data) }
     }
 
-    private fun onMessageEditedOrDeleted(data: Message?) {
-        data ?: return
+    private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
         launch {
-            val sceytMessage = data.toSceytUiMessage()
             messagesLogic.onMessageEditedOrDeleted(sceytMessage)
             channelLogic.onMessageEditedOrDeleted(sceytMessage)
         }

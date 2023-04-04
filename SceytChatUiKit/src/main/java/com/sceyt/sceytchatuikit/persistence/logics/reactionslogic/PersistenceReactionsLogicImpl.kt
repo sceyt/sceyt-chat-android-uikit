@@ -37,20 +37,18 @@ internal class PersistenceReactionsLogicImpl(
         reactionDao.deleteAllReactionScoresByMessageId(messageId)
         val existMessage = messageDao.existsMessageById(messageId)
         if (!existMessage)
-            messageDao.insertMessage(data.message.toSceytUiMessage().toMessageDb())
-
+            messageDao.insertMessage(data.message.toMessageDb())
 
         when (data.eventType) {
             ADD -> reactionDao.insertReaction(data.reaction.toReactionEntity())
             REMOVE -> reactionDao.deleteReaction(messageId, data.reaction.key, data.reaction.user.id)
         }
-        reactionDao.insertReactionScores(data.message.reactionScores.map { it.toReactionScoreEntity(messageId) })
+        data.message.reactionScores?.map { it.toReactionScoreEntity(messageId) }?.let {
+            reactionDao.insertReactionScores(it)
+        }
 
-        val message = messageDao.getMessageById(messageId)?.toSceytMessage()
-                ?: data.message.toSceytUiMessage()
-
+        val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
         messagesCache.messageUpdated(message)
-
         handleChannelReaction(data, message)
     }
 
@@ -136,7 +134,7 @@ internal class PersistenceReactionsLogicImpl(
                 if (!message.incoming) {
                     val reaction = message.selfReactions?.maxBy { it.id }
                     if (reaction != null)
-                        handleChannelReaction(ReactionUpdateEventData(message.toMessage(), reaction, ADD), message)
+                        handleChannelReaction(ReactionUpdateEventData(message, reaction, ADD), message)
                 }
             }
         }
@@ -158,7 +156,7 @@ internal class PersistenceReactionsLogicImpl(
 
                 if (!message.incoming) {
                     val reaction = Reaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser)
-                    handleChannelReaction(ReactionUpdateEventData(message.toMessage(), reaction, REMOVE), message)
+                    handleChannelReaction(ReactionUpdateEventData(message, reaction, REMOVE), message)
                 }
             }
         }

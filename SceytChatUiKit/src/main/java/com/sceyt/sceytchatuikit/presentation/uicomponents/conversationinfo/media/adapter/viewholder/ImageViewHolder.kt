@@ -1,9 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
 import android.util.Size
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -80,7 +80,6 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
     override fun getThumbSize() = Size(itemView.width, itemView.height)
 
     private fun setListener() {
-        MessageEventsObserver.onTransferUpdatedLiveData
-            .observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 }

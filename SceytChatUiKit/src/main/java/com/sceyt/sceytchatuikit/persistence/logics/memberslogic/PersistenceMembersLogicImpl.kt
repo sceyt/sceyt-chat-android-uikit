@@ -74,7 +74,6 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        if (data.channel == null || data.members == null) return
         val chatId = data.channel.id
         when (data.eventType) {
             ChannelMembersEventEnum.Role, ChannelMembersEventEnum.Added -> {
