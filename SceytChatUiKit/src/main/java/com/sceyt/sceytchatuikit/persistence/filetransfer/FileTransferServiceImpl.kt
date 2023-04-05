@@ -94,6 +94,10 @@ internal class FileTransferServiceImpl(private var application: Application,
     }
 
     override fun getTasks() = tasksMap
+
+    override fun clearPreparingThumbPaths() {
+        fileTransferLogic.clearPreparingThumbPaths()
+    }
 }
 
 fun interface TransferResultCallback {

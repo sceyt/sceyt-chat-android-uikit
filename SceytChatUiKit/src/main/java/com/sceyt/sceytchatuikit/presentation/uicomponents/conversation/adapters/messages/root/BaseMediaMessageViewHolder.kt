@@ -17,15 +17,17 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
 abstract class BaseMediaMessageViewHolder(
         val view: View,
         messageListeners: MessageClickListeners.ClickListeners?,
+        displayedListener: ((MessageListItem) -> Unit)? = null,
         senderNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(view, messageListeners, senderNameBuilder = senderNameBuilder) {
+) : BaseMsgViewHolder(view, messageListeners, displayedListener, senderNameBuilder) {
 
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
