@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
 import android.view.View
 import android.widget.TextView

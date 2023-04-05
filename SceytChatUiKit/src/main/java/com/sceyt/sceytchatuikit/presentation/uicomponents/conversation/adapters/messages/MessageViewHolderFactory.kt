@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -10,7 +10,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -35,6 +36,7 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
             MessageViewTypeEnum.IncVoice.ordinal -> createIncVoiceMsgViewHolder(parent)
             MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(parent)
+            MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -80,6 +82,12 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutVoiceMsgViewHolder(
             SceytItemOutVoiceBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createOutImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutImageMsgViewHolder(
+            SceytItemOutImageMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
@@ -143,6 +151,7 @@ open class MessageViewHolderFactory(context: Context) {
                 when (attachment?.type) {
                     AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutImage
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
@@ -184,6 +193,7 @@ open class MessageViewHolderFactory(context: Context) {
         OutDeleted,
         IncVoice,
         OutVoice,
+        OutImage,
         IncFiles,
         OutFiles,
         DateSeparator,

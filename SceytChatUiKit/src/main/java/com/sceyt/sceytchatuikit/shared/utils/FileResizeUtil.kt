@@ -46,6 +46,20 @@ object FileResizeUtil {
         return Size(options.outWidth, options.outHeight)
     }
 
+    fun getImageSizeOriented(uri: Uri): Size {
+        var size = getImageSize(uri)
+        try {
+            val exif = ExifInterface(uri.path ?: return size)
+            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                ExifInterface.ORIENTATION_ROTATE_270, ExifInterface.ORIENTATION_ROTATE_90 ->
+                    size = Size(size.height, size.width)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return size
+    }
+
     fun getVideoSize(path: String): Size {
         val metaRetriever = MediaMetadataRetriever()
         metaRetriever.setDataSource(path)
@@ -106,7 +120,8 @@ object FileResizeUtil {
     fun getImageThumb(url: String, maxImageSize: Float): Bitmap? {
         return try {
             val bitmap = BitmapFactory.decodeFile(url)
-            createThumbFromBitmap(bitmap, maxImageSize)
+            val orientation = getFileOrientation(url)
+            createThumbFromBitmap(bitmap, maxImageSize, orientation)
         } catch (ex: Exception) {
             null
         }
@@ -142,15 +157,23 @@ object FileResizeUtil {
         return Bitmap.createScaledBitmap(realImage, width, height, true)
     }
 
-    fun createThumbFromBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
-        val ratio = (maxImageSize / realImage.width).coerceAtMost(maxImageSize / realImage.height)
-        val width = (ratio * realImage.width).roundToInt()
-        val height = (ratio * realImage.height).roundToInt()
+    fun createThumbFromBitmap(realImage: Bitmap, maxImageSize: Float, orientation: Int? = 0): Bitmap {
+        var bitmap = realImage
+       /* if (orientation != null && orientation != 0) {
+            val matrix = Matrix()
+            matrix.setRotate(orientation.toFloat())
+            bitmap= Bitmap.createBitmap(realImage, 0, 0, realImage.width, realImage.height, matrix, true)
+        }*/
 
-        if (realImage.width < width || realImage.height < height)
-            return realImage
+        val ratio = (maxImageSize / bitmap.width).coerceAtMost(maxImageSize / bitmap.height)
+        val width = (ratio * bitmap.width).roundToInt()
+        val height = (ratio * bitmap.height).roundToInt()
 
-        return ThumbnailUtils.extractThumbnail(realImage, width, height)
+
+        if (bitmap.width < width || bitmap.height < height)
+            return bitmap
+
+        return ThumbnailUtils.extractThumbnail(bitmap, width, height)
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
