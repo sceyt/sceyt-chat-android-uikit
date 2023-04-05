@@ -198,7 +198,7 @@ abstract class MessageDao {
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
     abstract suspend fun getLastMessage(channelId: Long): MessageDb?
 
-    @Query("select exists(select * from messages where messageId =:messageId)")
+    @Query("select exists(select * from messages where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
 
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
