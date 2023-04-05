@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import com.sceyt.sceytchatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 
 class UnreadMessagesSeparatorViewHolder(
         binding: SceytItemUnreadMessagesSeparatorBinding

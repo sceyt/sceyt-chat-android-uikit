@@ -1,31 +1,35 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import android.util.Size
+import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
+
 class OutImageMsgViewHolder(
-        private val binding: SceytItemOutFilesMessageBinding,
+        private val binding: SceytItemOutImageMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         senderNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
-    private var filedAdapter: MessageFilesAdapter? = null
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -39,69 +43,115 @@ class OutImageMsgViewHolder(
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
             }
+
+            fileImage.setOnClickListener {
+                messageListeners?.onAttachmentClick(it, fileItem)
+            }
+
+            fileImage.setOnLongClickListener {
+                messageListeners?.onAttachmentLongClick(it, fileItem)
+                return@setOnLongClickListener true
+            }
+
+            loadProgress.setOnClickListener {
+                messageListeners?.onAttachmentLoaderClick(it, fileItem)
+            }
         }
     }
+
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
+        fileItem = (item as MessageListItem.MessageItem).message.files?.firstOrNull() ?: return
+        viewHolderHelper.bind(fileItem)
 
-        if (item is MessageListItem.MessageItem) {
-            with(binding) {
-                val message = item.message
-                tvForwarded.isVisible = message.isForwarded
+        with(binding) {
+            val message = item.message
+            tvForwarded.isVisible = message.isForwarded
 
-                val body = message.body.trim()
-                if (body.isNotBlank()) {
-                    messageBody.isVisible = true
-                    setMessageBody(messageBody, message)
-                } else messageBody.isVisible = false
+            val body = message.body.trim()
+            if (body.isNotBlank()) {
+                messageBody.isVisible = true
+                setMessageBody(messageBody, message)
+            } else messageBody.isVisible = false
 
-                if (!diff.hasDifference()) return
+            if (!diff.hasDifference()) return
 
-                if (diff.edited || diff.statusChanged) {
-                    setMessageDateDependAttachments(messageDate, message.files)
-                    setMessageStatusAndDateText(message, messageDate)
-                }
+            if (diff.edited || diff.statusChanged)
+                setMessageStatusAndDateText(message, messageDate)
 
-                if (diff.filesChanged)
-                    setFilesAdapter(message)
+            if (diff.replyCountChanged)
+                setReplyCount(tvReplyCount, toReplyLine, item)
 
-                if (diff.replyCountChanged)
-                    setReplyCount(tvReplyCount, toReplyLine, item)
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply)
 
-                if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
+            if (diff.filesChanged)
+                initFileMessage()
 
-                if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply)
+            if (diff.reactionsChanged)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
+
+            if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
+                initWidthsDependReactions(recyclerViewReactions, layoutDetails, message)
+        }
+    }
+
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
+        loadingProgressView.getProgressWithState(data.state, data.progressPercent)
+        when (data.state) {
+            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            }
+            TransferState.Uploading -> {
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            }
+            TransferState.Uploaded -> {
+                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            }
+            TransferState.PendingDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+            }
+            TransferState.Downloading -> {
+                if (isOnBind)
+                    viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+            }
+            TransferState.Downloaded -> {
+                if (fileItem.thumbPath.isNullOrBlank())
+                    viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+                else viewHolderHelper.loadThumb(fileItem.thumbPath, fileContainer)
+            }
+            TransferState.PauseDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+            }
+            TransferState.ErrorDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+            }
+            TransferState.FilePathChanged -> {
+                requestThumb()
+            }
+            TransferState.ThumbLoaded -> {
+                viewHolderHelper.loadThumb(data.filePath, fileContainer)
             }
         }
     }
 
-    private fun setFilesAdapter(message: SceytMessage) {
-        val attachments = ArrayList(message.files ?: return)
+    override val fileContainer: ImageView
+        get() = binding.fileImage
 
-        initFilesRecyclerView(message, binding.rvFiles)
+    override val loadingProgressView: SceytCircularProgressView
+        get() = binding.loadProgress
 
-        if (filedAdapter == null) {
-            with(binding.rvFiles) {
-                setHasFixedSize(true)
+    override val layoutDetails: ConstraintLayout
+        get() = binding.layoutDetails
 
-                setRecycledViewPool(viewPoolFiles)
-                itemAnimator = null
-                adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
-                    filedAdapter = it
-                }
-            }
-        } else filedAdapter?.notifyUpdate(attachments)
-    }
+    override fun getThumbSize() = Size(binding.fileImage.width, binding.fileImage.height)
 
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        filedAdapter?.onItemDetached()
-    }
-
-    private fun SceytItemOutFilesMessageBinding.setMessageItemStyle() {
+    private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
