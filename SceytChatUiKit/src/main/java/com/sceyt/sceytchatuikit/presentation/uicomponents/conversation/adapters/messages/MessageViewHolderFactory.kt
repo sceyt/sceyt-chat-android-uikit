@@ -36,6 +36,7 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
             MessageViewTypeEnum.IncVoice.ordinal -> createIncVoiceMsgViewHolder(parent)
             MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(parent)
+            MessageViewTypeEnum.IncImage.ordinal -> createIncImageMsgViewHolder(parent)
             MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
@@ -83,6 +84,12 @@ open class MessageViewHolderFactory(context: Context) {
         return OutVoiceMsgViewHolder(
             SceytItemOutVoiceBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createIncImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncImageMsgViewHolder(
+            SceytItemIncImageMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createOutImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -151,7 +158,7 @@ open class MessageViewHolderFactory(context: Context) {
                 when (attachment?.type) {
                     AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
-                    AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutImage
+                    AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
@@ -193,6 +200,7 @@ open class MessageViewHolderFactory(context: Context) {
         OutDeleted,
         IncVoice,
         OutVoice,
+        IncImage,
         OutImage,
         IncFiles,
         OutFiles,

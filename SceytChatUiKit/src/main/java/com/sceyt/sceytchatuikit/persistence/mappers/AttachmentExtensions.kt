@@ -73,7 +73,7 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
             var base64String: String? = null
             when (type) {
                 AttachmentTypeEnum.Image.value() -> {
-                    size = FileResizeUtil.getImageSize(Uri.parse(path))
+                    size = FileResizeUtil.getImageSizeOriented(Uri.parse(path))
                     FileResizeUtil.getImageThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
                         base64String = bytes.toBase64()
                     }

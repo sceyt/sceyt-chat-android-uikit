@@ -145,6 +145,10 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
         }
     }
 
+    override fun clearPreparingThumbPaths() {
+        preparingThumbsMap.clear()
+    }
+
     private fun getPreparingThumbKey(messageTid: Long, size: Size) = "$messageTid$size"
 
     private fun checkAndUpload(attachment: SceytAttachment, task: TransferTask) {
@@ -272,6 +276,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
         pausedTasksMap.clear()
         downloadingUrlMap.clear()
         sharedFilesPath.clear()
+        preparingThumbsMap.clear()
     }
 
     data class ThumbPathsData(val messageTid: Long,

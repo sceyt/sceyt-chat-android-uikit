@@ -8,4 +8,5 @@ interface FileTransferService : FileTransferListeners.Listeners {
     fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask
     fun findTransferTask(attachment: SceytAttachment): TransferTask?
     fun getTasks(): ConcurrentHashMap<String, TransferTask>
+    fun clearPreparingThumbPaths()
 }
