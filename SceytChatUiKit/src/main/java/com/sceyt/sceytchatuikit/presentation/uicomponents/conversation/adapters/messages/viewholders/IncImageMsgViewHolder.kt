@@ -63,7 +63,7 @@ class IncImageMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = (item as MessageListItem.MessageItem).message.files?.firstOrNull() ?: return
+        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
         viewHolderHelper.bind(fileItem)
 
         with(binding) {
