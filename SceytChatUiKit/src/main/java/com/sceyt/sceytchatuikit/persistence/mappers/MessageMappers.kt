@@ -206,7 +206,16 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         state = state,
         from = from,
         attachments = attachments?.map {
-            it.toSceytAttachment(tid, TransferState.PendingDownload, 0f)
+            val transferState: TransferState
+            val progress: Float
+            if (it.filePath != null) {
+                transferState = TransferState.Downloaded
+                progress = 100f
+            } else {
+                transferState = TransferState.PendingDownload
+                progress = 0f
+            }
+            it.toSceytAttachment(tid, transferState, progress)
         }?.toTypedArray(),
         selfReactions = selfReactions,
         reactionScores = reactionScores,

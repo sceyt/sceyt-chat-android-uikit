@@ -154,7 +154,9 @@ open class MessageViewHolderFactory(context: Context) {
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !message.attachments.isNullOrEmpty() -> {
-                val attachment = message.attachments?.getOrNull(0)
+                val attachment = if ((message.attachments?.size ?: 0) > 1) {
+                    message.attachments?.find { it.type != AttachmentTypeEnum.Link.value() }
+                } else message.attachments?.getOrNull(0)
                 when (attachment?.type) {
                     AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice

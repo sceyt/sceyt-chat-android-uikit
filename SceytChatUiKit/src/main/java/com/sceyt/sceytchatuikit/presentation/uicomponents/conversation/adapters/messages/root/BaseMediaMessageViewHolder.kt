@@ -8,6 +8,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.setPadding
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
@@ -72,6 +73,10 @@ abstract class BaseMediaMessageViewHolder(
             if (fileItem.file.filePath.isNullOrBlank()) return@post
             needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, getThumbSize()))
         }
+    }
+
+    protected fun getFileItem(item: MessageListItem.MessageItem): FileListItem? {
+        return item.message.files?.find { it.file.type != AttachmentTypeEnum.Link.value() }
     }
 
     open fun getThumbSize() = Size(itemView.width, itemView.height)
