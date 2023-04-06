@@ -5,12 +5,14 @@ import android.view.View
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.setPadding
+import androidx.core.view.marginLeft
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.setMargins
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -20,7 +22,6 @@ import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
 abstract class BaseMediaMessageViewHolder(
         val view: View,
@@ -58,13 +59,15 @@ abstract class BaseMediaMessageViewHolder(
             constraintSet.clone(layoutDetails)
             constraintSet.constrainMinHeight(fileContainer.id, height)
             constraintSet.constrainMinWidth(fileContainer.id, width)
+            constraintSet.applyTo(layoutDetails)
 
             val message = fileItem.sceytMessage
-            if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank())
-                fileContainer.setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
-            else fileContainer.setPadding(0)
-
-            constraintSet.applyTo(layoutDetails)
+            with(fileContainer) {
+                val defaultMargin = marginLeft
+                if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank()) {
+                    setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
+                } else setMargins(defaultMargin)
+            }
         }
     }
 

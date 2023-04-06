@@ -81,6 +81,9 @@ class IncImageMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
+            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                setMessageUserAvatarAndName(avatar, tvUserName, message)
+
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
