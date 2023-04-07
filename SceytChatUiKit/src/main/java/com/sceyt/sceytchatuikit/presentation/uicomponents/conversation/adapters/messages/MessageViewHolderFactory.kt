@@ -38,6 +38,8 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(parent)
             MessageViewTypeEnum.IncImage.ordinal -> createIncImageMsgViewHolder(parent)
             MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(parent)
+            MessageViewTypeEnum.IncVideo.ordinal -> TODO()
+            MessageViewTypeEnum.OutVideo.ordinal -> createOutVideoMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -95,6 +97,18 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createOutImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutImageMsgViewHolder(
             SceytItemOutImageMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createIncVideoMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncImageMsgViewHolder(
+            SceytItemIncImageMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createOutVideoMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutVideoMsgViewHolder(
+            SceytItemOutVideoMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
@@ -161,6 +175,7 @@ open class MessageViewHolderFactory(context: Context) {
                     AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
                     AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
+                    AttachmentTypeEnum.Video.value() -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutVideo
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
@@ -204,6 +219,8 @@ open class MessageViewHolderFactory(context: Context) {
         OutVoice,
         IncImage,
         OutImage,
+        IncVideo,
+        OutVideo,
         IncFiles,
         OutFiles,
         DateSeparator,

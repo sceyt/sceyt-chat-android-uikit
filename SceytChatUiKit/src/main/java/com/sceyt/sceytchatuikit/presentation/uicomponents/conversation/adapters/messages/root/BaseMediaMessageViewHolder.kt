@@ -2,9 +2,10 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.util.Size
 import android.view.View
-import android.widget.ImageView
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
@@ -22,6 +23,7 @@ import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 abstract class BaseMediaMessageViewHolder(
         val view: View,
@@ -82,9 +84,18 @@ abstract class BaseMediaMessageViewHolder(
         return item.message.files?.find { it.file.type != AttachmentTypeEnum.Link.value() }
     }
 
+    protected fun setVideoDuration(tvDuration: TextView) {
+        with(tvDuration) {
+            fileItem.duration?.let {
+                text = DateTimeUtil.secondsToTime(it)
+                isVisible = true
+            } ?: run { isVisible = false }
+        }
+    }
+
     open fun getThumbSize() = Size(itemView.width, itemView.height)
 
-    abstract val fileContainer: ImageView
+    abstract val fileContainer: View
 
     abstract val loadingProgressView: SceytCircularProgressView
 

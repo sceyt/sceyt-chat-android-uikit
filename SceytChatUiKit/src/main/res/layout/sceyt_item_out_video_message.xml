@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="10dp">
+
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
+        android:id="@+id/toReplyLine"
+        android:layout_width="10dp"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/layoutDetails"
+        android:layout_alignBottom="@+id/tvReplyCount"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="9dp"
+        android:visibility="gone"
+        app:sceytToReplyLineViewToLeft="true" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:background="@drawable/sceyt_bg_out_message">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvForwarded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginTop="7dp"
+            android:drawableStart="@drawable/sceyt_ic_forward_14"
+            android:drawablePadding="5dp"
+            android:fontFamily="@font/roboto_medium"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:text="@string/sceyt_forwarded_message"
+            android:textColor="@color/sceyt_color_accent"
+            android:textSize="@dimen/extraSmallTextSize"
+            android:visibility="gone"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
+            tools:visibility="visible" />
+
+        <ViewStub
+            android:id="@+id/viewReply"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="8dp"
+            android:layout="@layout/sceyt_recycler_reply_container"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
+            tools:visibility="visible" />
+
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytClickableTextView
+            android:id="@+id/messageBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="4dp"
+            android:autoLink="phone|web|email"
+            android:textColor="@color/sceyt_color_text_themed"
+            android:textSize="@dimen/mediumTextSize"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="@+id/layoutDetails"
+            app:layout_constraintTop_toBottomOf="@+id/viewReply"
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
+            tools:text="Lore ipsum  is the correct text which"
+            tools:visibility="visible" />
+
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytVideoControllerView
+            android:id="@+id/videoViewController"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/sceyt_rounded_video_background"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/messageBody"
+            app:sceytVideoControllerCornerSize="18dp"
+            app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize"
+            tools:layout_height="200dp"
+            tools:sceytVideoControllerImage="@tools:sample/backgrounds/scenic" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:background="@drawable/sceyt_bg_corners_20"
+            android:backgroundTint="@color/sceyt_progress_bg_color"
+            android:drawableStart="@drawable/sceyt_ic_video"
+            android:drawablePadding="5dp"
+            android:includeFontPadding="false"
+            android:paddingHorizontal="7dp"
+            android:paddingVertical="3dp"
+            android:textColor="@color/sceyt_color_white"
+            android:textSize="11sp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/videoViewController"
+            tools:text="0:11"
+            tools:visibility="visible" />
+
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+            android:id="@+id/loadProgress"
+            android:layout_width="@dimen/messageProgressSize"
+            android:layout_height="@dimen/messageProgressSize"
+            android:padding="3dp"
+            android:visibility="gone"
+            app:backgroundColor="@color/sceyt_progress_bg_color"
+            app:iconSizeInPercent="70"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:minProgress="2"
+            app:progressColor="@color/sceyt_color_white"
+            app:trackColor="@android:color/transparent" />
+
+        <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
+            android:id="@+id/messageDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="7dp"
+            android:layout_marginBottom="7dp"
+            android:paddingHorizontal="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
+            app:sceytDateStatusViewFirstStatus="false"
+            app:sceytDateStatusViewHighlighted="true"
+            app:sceytDateStatusViewStatusIconMargin="5dp"
+            app:sceytDateStatusViewStatusIconSize="15.5dp"
+            tools:sceytDateStatusViewDateText="00:37"
+            tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ViewStub
+        android:id="@+id/rvReactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layoutDetails"
+        android:layout_alignStart="@id/layoutDetails"
+        android:layout_marginTop="-5dp"
+        android:layout_marginBottom="2dp"
+        android:layout="@layout/sceyt_message_reactions_recycler_view"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvReplyCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rvReactions"
+        android:layout_marginEnd="2dp"
+        android:layout_toStartOf="@+id/toReplyLine"
+        android:includeFontPadding="false"
+        android:paddingVertical="4dp"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/tinyTextSize"
+        android:visibility="gone"
+        tools:text="34 reply" />
+
+</RelativeLayout>

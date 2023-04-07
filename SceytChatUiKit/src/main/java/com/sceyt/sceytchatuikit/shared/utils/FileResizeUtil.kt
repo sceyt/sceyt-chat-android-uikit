@@ -70,6 +70,21 @@ object FileResizeUtil {
         return Size(width, height)
     }
 
+    fun getVideoSizeOriented(path: String): Size {
+        val metaRetriever = MediaMetadataRetriever()
+        metaRetriever.setDataSource(path)
+        val rotation = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull()
+                ?: 0
+        val height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
+                ?: 0
+        val width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
+                ?: 0
+        if (rotation == 90 || rotation == 270)
+            return Size(height, width)
+
+        return Size(width, height)
+    }
+
     fun getVideoDuration(context: Context, path: String): Long? {
         val timeInMilliSec: Long? = try {
             val retriever = MediaMetadataRetriever()
@@ -159,11 +174,11 @@ object FileResizeUtil {
 
     fun createThumbFromBitmap(realImage: Bitmap, maxImageSize: Float, orientation: Int? = 0): Bitmap {
         var bitmap = realImage
-       /* if (orientation != null && orientation != 0) {
-            val matrix = Matrix()
-            matrix.setRotate(orientation.toFloat())
-            bitmap= Bitmap.createBitmap(realImage, 0, 0, realImage.width, realImage.height, matrix, true)
-        }*/
+        /* if (orientation != null && orientation != 0) {
+             val matrix = Matrix()
+             matrix.setRotate(orientation.toFloat())
+             bitmap= Bitmap.createBitmap(realImage, 0, 0, realImage.width, realImage.height, matrix, true)
+         }*/
 
         val ratio = (maxImageSize / bitmap.width).coerceAtMost(maxImageSize / bitmap.height)
         val width = (ratio * bitmap.width).roundToInt()
