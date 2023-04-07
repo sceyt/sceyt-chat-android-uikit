@@ -7,7 +7,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutVideoMessageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemIncVideoMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -22,13 +22,14 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class OutVideoMsgViewHolder(
-        private val binding: SceytItemOutVideoMessageBinding,
+class IncVideoMsgViewHolder(
+        private val binding: SceytItemIncVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
+        displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -80,6 +81,9 @@ class OutVideoMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
+            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                setMessageUserAvatarAndName(avatar, tvUserName, message)
+
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
@@ -94,6 +98,11 @@ class OutVideoMsgViewHolder(
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails, message)
+
+            if (item.message.canShowAvatarAndName)
+                avatar.setOnClickListener {
+                    messageListeners?.onAvatarClick(it, item)
+                }
         }
     }
 
@@ -158,9 +167,10 @@ class OutVideoMsgViewHolder(
 
     override fun getThumbSize() = Size(fileContainer.width, fileContainer.height)
 
-    private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
+    private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }
