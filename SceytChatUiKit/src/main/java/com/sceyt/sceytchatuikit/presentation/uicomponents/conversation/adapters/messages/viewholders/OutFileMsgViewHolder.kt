@@ -89,7 +89,7 @@ class OutFileMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initFileMessage(false)
+                initAttachment(false)
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)

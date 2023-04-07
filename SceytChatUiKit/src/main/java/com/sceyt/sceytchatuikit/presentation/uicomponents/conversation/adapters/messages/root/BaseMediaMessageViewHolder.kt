@@ -38,7 +38,7 @@ abstract class BaseMediaMessageViewHolder(
     private val maxSize by lazy { context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) }
     private val minSize = 300
 
-    protected fun initFileMessage(isImageOrVideo: Boolean) {
+    protected fun initAttachment(isImageOrVideo: Boolean) {
         setListener()
 
         loadingProgressView.release(fileItem.file.progressPercent)

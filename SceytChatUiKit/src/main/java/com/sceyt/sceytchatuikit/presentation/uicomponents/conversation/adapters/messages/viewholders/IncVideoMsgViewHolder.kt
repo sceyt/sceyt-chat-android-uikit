@@ -91,7 +91,7 @@ class IncVideoMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initFileMessage(true)
+                initAttachment(true)
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
