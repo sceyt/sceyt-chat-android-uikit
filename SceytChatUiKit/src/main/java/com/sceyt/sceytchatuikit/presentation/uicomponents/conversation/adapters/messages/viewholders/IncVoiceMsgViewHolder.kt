@@ -8,7 +8,7 @@ import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.databinding.SceytItemIncVoiceBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemIncVoiceMessageBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -29,7 +29,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class IncVoiceMsgViewHolder(
-        private val binding: SceytItemIncVoiceBinding,
+        private val binding: SceytItemIncVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners,
         displayedListener: ((MessageListItem) -> Unit)?,
@@ -97,7 +97,7 @@ class IncVoiceMsgViewHolder(
         }
     }
 
-    private fun SceytItemIncVoiceBinding.initVoiceMessage(item: MessageListItem.MessageItem) {
+    private fun SceytItemIncVoiceMessageBinding.initVoiceMessage(item: MessageListItem.MessageItem) {
         val attachment: SceytAttachment = item.message.attachments?.firstOrNull() ?: return
         lastFilePath = attachment.filePath
         loadProgress.release(attachment.progressPercent)
@@ -239,7 +239,7 @@ class IncVoiceMsgViewHolder(
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
-    private fun SceytItemIncVoiceBinding.setMessageItemStyle() {
+    private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
             tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))

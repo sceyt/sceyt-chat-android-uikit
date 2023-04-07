@@ -8,7 +8,7 @@ import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -30,7 +30,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class OutVoiceMsgViewHolder(
-        private val binding: SceytItemOutVoiceBinding,
+        private val binding: SceytItemOutVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners,
         senderNameBuilder: ((User) -> String)?,
@@ -83,7 +83,7 @@ class OutVoiceMsgViewHolder(
         }
     }
 
-    private fun SceytItemOutVoiceBinding.initVoiceMessage(item: MessageItem) {
+    private fun SceytItemOutVoiceMessageBinding.initVoiceMessage(item: MessageItem) {
         val attachment: SceytAttachment = item.message.attachments?.firstOrNull() ?: return
 
         lastFilePath = attachment.filePath
@@ -226,7 +226,7 @@ class OutVoiceMsgViewHolder(
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
-    private fun SceytItemOutVoiceBinding.setMessageItemStyle() {
+    private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
             playPauseButton.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))

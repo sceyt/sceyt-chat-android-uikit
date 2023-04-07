@@ -16,7 +16,8 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="9dp"
         android:visibility="gone"
-        app:sceytToReplyLineViewToLeft="true" />
+        app:sceytToReplyLineViewToLeft="true"
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutDetails"
@@ -46,6 +47,7 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:visibility="visible" />
 
         <ViewStub
@@ -59,43 +61,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:visibility="visible" />
-
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytClickableTextView
-            android:id="@+id/messageBody"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:layout_marginTop="4dp"
-            android:autoLink="phone|web|email"
-            android:textColor="@color/sceyt_color_text_themed"
-            android:textSize="@dimen/mediumTextSize"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-            app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            tools:text="Lore ipsum  is the correct text which"
-            tools:visibility="visible" />
-
-        <View
-            android:id="@+id/viewHandleClick"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="@+id/icFile"
-            app:layout_constraintTop_toTopOf="@+id/icFile" />
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icFile"
+            android:id="@+id/playPauseButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="center"
             android:layout_marginVertical="8dp"
             android:layout_marginStart="12dp"
+            android:background="@drawable/sceyt_bg_circle"
+            android:padding="12dp"
+            android:scaleType="center"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/messageBody"
-            app:srcCompat="@drawable/sceyt_ic_file_with_bg" />
+            app:layout_constraintTop_toBottomOf="@+id/viewReply"
+            app:srcCompat="@drawable/sceyt_ic_play" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
             android:id="@+id/loadProgress"
@@ -104,43 +85,63 @@
             android:padding="3dp"
             android:visibility="gone"
             app:iconSizeInPercent="70"
-            app:layout_constraintBottom_toBottomOf="@+id/icFile"
-            app:layout_constraintEnd_toEndOf="@id/icFile"
-            app:layout_constraintStart_toStartOf="@+id/icFile"
-            app:layout_constraintTop_toTopOf="@+id/icFile"
+            app:layout_constraintBottom_toBottomOf="@+id/playPauseButton"
+            app:layout_constraintEnd_toEndOf="@+id/playPauseButton"
+            app:layout_constraintStart_toStartOf="@+id/playPauseButton"
+            app:layout_constraintTop_toTopOf="@+id/playPauseButton"
             app:minProgress="2"
             app:progressColor="@color/sceyt_color_white"
-            app:trackColor="@android:color/transparent" />
+            app:trackColor="@android:color/transparent"
+            tools:visibility="visible" />
+
+        <com.masoudss.lib.WaveformSeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="12dp"
+            app:layout_constraintBottom_toTopOf="@id/voice_duration"
+            app:layout_constraintEnd_toStartOf="@id/playBackSpeed"
+            app:layout_constraintStart_toEndOf="@id/playPauseButton"
+            app:layout_constraintTop_toTopOf="@id/playPauseButton"
+            app:wave_background_color="#99757D8B"
+            app:wave_corner_radius="2dp"
+            app:wave_gap="1.5dp"
+            app:wave_gravity="center"
+            app:wave_max_progress="100"
+            app:wave_min_height="3dp"
+            app:wave_padding_left="2dp"
+            app:wave_padding_right="2dp"
+            app:wave_progress_color="#990253E3"
+            app:wave_visible_progress="0"
+            app:wave_width="2dp" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvFileName"
+            android:id="@+id/playBackSpeed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginEnd="12dp"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            android:textColor="@color/sceyt_color_text_themed"
-            android:textSize="@dimen/mediumTextSize"
+            android:background="@drawable/sceyt_bg_corners_20"
+            android:backgroundTint="@color/sceyt_color_white"
+            android:gravity="center"
+            android:minWidth="30sp"
+            android:paddingVertical="2dp"
+            android:textColor="@color/sceyt_color_gray_800"
+            android:textSize="12sp"
             android:textStyle="bold"
-            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toEndOf="@+id/icFile"
-            app:layout_constraintTop_toTopOf="@+id/icFile"
-            tools:text="Montagabold.pdf" />
+            app:layout_constraintTop_toTopOf="@id/seekBar"
+            tools:text="1x" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvFileSize"
+        <TextView
+            android:id="@+id/voice_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:includeFontPadding="false"
-            android:textColor="@color/sceyt_color_gray_400"
-            android:textSize="@dimen/tinyTextSize"
-            app:layout_constraintStart_toStartOf="@+id/tvFileName"
-            app:layout_constraintTop_toBottomOf="@+id/tvFileName"
-            tools:text="67 KB" />
+            android:layout_marginStart="12dp"
+            android:textColor="@color/sceyt_color_gray_800"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
+            app:layout_constraintStart_toEndOf="@id/playPauseButton"
+            tools:text="00:00" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
@@ -187,6 +188,7 @@
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/tinyTextSize"
         android:visibility="gone"
-        tools:text="34 reply" />
+        tools:text="34 reply"
+        tools:visibility="visible" />
 
 </RelativeLayout>

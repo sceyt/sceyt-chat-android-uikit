@@ -35,9 +35,9 @@
         <item name="android:background">@drawable/sceyt_bg_bottom_sheet_dialog</item>
     </style>
 
-    <style name="SceytShapeAppearanceOverlay.CornerSize18" parent="">
+    <style name="SceytShapeAppearanceOverlay.CornerSize17" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">18dp</item>
+        <item name="cornerSize">17dp</item>
     </style>
 
     <style name="SceytShapeAppearanceOverlay.CornerSize5" parent="">
