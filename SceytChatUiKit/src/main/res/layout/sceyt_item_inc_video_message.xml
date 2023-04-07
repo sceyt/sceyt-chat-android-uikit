@@ -157,7 +157,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/videoViewController"
             app:minProgress="2"
             app:progressColor="@color/sceyt_color_white"
             app:trackColor="@android:color/transparent" />
