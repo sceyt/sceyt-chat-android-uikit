@@ -40,6 +40,8 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(parent)
             MessageViewTypeEnum.IncVideo.ordinal -> createIncVideoMsgViewHolder(parent)
             MessageViewTypeEnum.OutVideo.ordinal -> createOutVideoMsgViewHolder(parent)
+            MessageViewTypeEnum.IncFile.ordinal -> createIncFileMsgViewHolder(parent)
+            MessageViewTypeEnum.OutFile.ordinal -> createOutFileMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -112,15 +114,27 @@ open class MessageViewHolderFactory(context: Context) {
             viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
+    open fun createIncFileMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncFileMsgViewHolder(
+            SceytItemIncFileMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createOutFileMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutFileMsgViewHolder(
+            SceytItemOutFileMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
-        return IncFilesMsgViewHolder(
-            SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
+        return IncAttachmentsMsgViewHolder(
+            SceytItemIncAttachmentsMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
-        return OutFilesMsgViewHolder(
-            SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
+        return OutAttachmentsMsgViewHolder(
+            SceytItemOutAttachmentsMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
@@ -168,6 +182,11 @@ open class MessageViewHolderFactory(context: Context) {
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !message.attachments.isNullOrEmpty() -> {
+                if ((message.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.size
+                                ?: 0) > 1) {
+                    return if (inc) MessageViewTypeEnum.IncFiles.ordinal else MessageViewTypeEnum.OutFiles.ordinal
+                }
+
                 val attachment = if ((message.attachments?.size ?: 0) > 1) {
                     message.attachments?.find { it.type != AttachmentTypeEnum.Link.value() }
                 } else message.attachments?.getOrNull(0)
@@ -176,6 +195,7 @@ open class MessageViewHolderFactory(context: Context) {
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
                     AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
                     AttachmentTypeEnum.Video.value() -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
+                    AttachmentTypeEnum.File.value() -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
@@ -221,6 +241,8 @@ open class MessageViewHolderFactory(context: Context) {
         OutImage,
         IncVideo,
         OutVideo,
+        IncFile,
+        OutFile,
         IncFiles,
         OutFiles,
         DateSeparator,

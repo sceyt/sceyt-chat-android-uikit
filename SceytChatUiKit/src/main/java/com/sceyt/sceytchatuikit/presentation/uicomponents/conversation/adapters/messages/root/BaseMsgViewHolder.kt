@@ -225,6 +225,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
+    /** @param layoutDetails when not null, that mean layout details will resize with reactions. */
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
                                        viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null): RecyclerView? {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)

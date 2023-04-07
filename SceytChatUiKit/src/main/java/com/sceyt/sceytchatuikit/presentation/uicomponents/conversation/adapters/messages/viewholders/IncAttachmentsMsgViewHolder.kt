@@ -5,7 +5,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemIncAttachmentsMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -18,14 +18,15 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class OutFilesMsgViewHolder(
-        private val binding: SceytItemOutFilesMessageBinding,
+class IncAttachmentsMsgViewHolder(
+        private val binding: SceytItemIncAttachmentsMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
+        displayedListener: ((MessageListItem) -> Unit)?,
         senderNameBuilder: ((User) -> String)?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
@@ -64,8 +65,8 @@ class OutFilesMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
                 }
 
-                if (diff.filesChanged)
-                    setFilesAdapter(message)
+                if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                    setMessageUserAvatarAndName(avatar, tvUserName, message)
 
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
@@ -73,8 +74,16 @@ class OutFilesMsgViewHolder(
                 if (diff.reactionsChanged)
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
+                if (diff.filesChanged)
+                    setFilesAdapter(message)
+
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply)
+
+                if (item.message.canShowAvatarAndName)
+                    avatar.setOnClickListener {
+                        messageListeners?.onAvatarClick(it, item)
+                    }
             }
         }
     }
@@ -95,6 +104,7 @@ class OutFilesMsgViewHolder(
                 }
             }
         } else filedAdapter?.notifyUpdate(attachments)
+
     }
 
     override fun onViewDetachedFromWindow() {
@@ -102,9 +112,10 @@ class OutFilesMsgViewHolder(
         filedAdapter?.onItemDetached()
     }
 
-    private fun SceytItemOutFilesMessageBinding.setMessageItemStyle() {
+    private fun SceytItemIncAttachmentsMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }
