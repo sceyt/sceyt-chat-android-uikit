@@ -43,11 +43,11 @@ class OutVideoMsgViewHolder(
                 return@setOnLongClickListener true
             }
 
-            binding.videoViewController.setOnClickListener {
+            videoViewController.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem)
             }
 
-            binding.videoViewController.setOnLongClickListener {
+            videoViewController.setOnLongClickListener {
                 messageListeners?.onAttachmentLongClick(it, fileItem)
                 return@setOnLongClickListener true
             }
