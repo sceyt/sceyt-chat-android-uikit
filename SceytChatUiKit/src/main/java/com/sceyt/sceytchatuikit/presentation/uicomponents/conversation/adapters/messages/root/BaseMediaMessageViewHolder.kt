@@ -38,7 +38,7 @@ abstract class BaseMediaMessageViewHolder(
     private val maxSize by lazy { context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) }
     private val minSize = 300
 
-    protected fun initFileMessage() {
+    protected fun initFileMessage(isImageOrVideo: Boolean) {
         setListener()
 
         loadingProgressView.release(fileItem.file.progressPercent)
@@ -48,23 +48,26 @@ abstract class BaseMediaMessageViewHolder(
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
-        if (fileItem.thumbPath.isNullOrBlank())
+        if (fileItem.thumbPath.isNullOrBlank() && isImageOrVideo)
             requestThumb()
 
-        setImageSize()
+        if (isImageOrVideo)
+            setImageSize()
     }
 
     private fun setImageSize() {
-        calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width ?: maxSize,
+        val container = fileContainer ?: return
+        calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
+                ?: maxSize,
             imageHeight = fileItem.size?.height ?: maxSize) { width, height ->
             val constraintSet = ConstraintSet()
             constraintSet.clone(layoutDetails)
-            constraintSet.constrainMinHeight(fileContainer.id, height)
-            constraintSet.constrainMinWidth(fileContainer.id, width)
+            constraintSet.constrainMinHeight(container.id, height)
+            constraintSet.constrainMinWidth(container.id, width)
             constraintSet.applyTo(layoutDetails)
 
             val message = fileItem.sceytMessage
-            with(fileContainer) {
+            with(container) {
                 val defaultMargin = marginLeft
                 if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank()) {
                     setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
@@ -95,7 +98,7 @@ abstract class BaseMediaMessageViewHolder(
 
     open fun getThumbSize() = Size(itemView.width, itemView.height)
 
-    abstract val fileContainer: View
+    open val fileContainer: View? = null
 
     abstract val loadingProgressView: SceytCircularProgressView
 

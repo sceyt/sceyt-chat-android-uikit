@@ -87,7 +87,7 @@ class OutImageMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initFileMessage()
+                initFileMessage(true)
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
