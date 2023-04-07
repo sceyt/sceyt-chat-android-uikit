@@ -79,7 +79,7 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
                     }
                 }
                 AttachmentTypeEnum.Video.value() -> {
-                    size = FileResizeUtil.getVideoSize(path)
+                    size = FileResizeUtil.getVideoSizeOriented(path)
                     durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
                     FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
                         base64String = bytes.toBase64()
