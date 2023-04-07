@@ -36,7 +36,7 @@ abstract class BaseMediaMessageViewHolder(
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     private val maxSize by lazy { context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) }
-    private val minSize = 300
+    private val minSize = maxSize / 3
 
     protected fun initAttachment(isImageOrVideo: Boolean) {
         setListener()
