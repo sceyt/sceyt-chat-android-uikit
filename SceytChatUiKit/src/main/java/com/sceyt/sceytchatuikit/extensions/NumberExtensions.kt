@@ -51,8 +51,8 @@ private fun getPow10(skip: Double): Double {
 }
 
 fun Long.toPrettySize(): String {
-    val sizeInKb = (this / 1024f).toDouble()
-    val sizeInMb = sizeInKb / 1024f
+    val sizeInKb = (this / 1000f).toDouble()
+    val sizeInMb = sizeInKb / 1000f
     val format = DecimalFormat("##.##")
     return when {
         sizeInMb >= 1 -> format.format(sizeInMb) + "MB"

@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize18"
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
         tools:src="@tools:sample/backgrounds/scenic" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView

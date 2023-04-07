@@ -59,6 +59,8 @@
         <attr name="sceytVideoControllerPlayPauseSize" format="integer|dimension" />
         <attr name="sceytVideoControllerPlayIcon" format="reference" />
         <attr name="sceytVideoControllerPauseIcon" format="reference" />
+        <attr name="sceytVideoControllerImage" format="reference" />
+        <attr name="sceytVideoControllerCornerSize" format="dimension" />
 
     </declare-styleable>
 

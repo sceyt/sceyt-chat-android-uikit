@@ -222,6 +222,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
         angle = calculateAngle(progress)
         transferring = true
         if (rotateAnimEnabled) rotate()
+        invalidate()
     }
 
     fun setProgress(@FloatRange(from = 0.0, to = 100.0) newProgress: Float) {

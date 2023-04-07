@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
@@ -68,7 +68,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected val context: Context by lazy { view.context }
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
-    private var recyclerViewReactions: RecyclerView? = null
+    protected var recyclerViewReactions: RecyclerView? = null
     protected var bodyMaxWidth = context.resources.getDimensionPixelSize(com.sceyt.sceytchatuikit.R.dimen.bodyMaxWidth)
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
@@ -225,6 +225,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
+    /** @param layoutDetails when not null, that mean layout details will resize with reactions. */
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
                                        viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null): RecyclerView? {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
@@ -280,7 +281,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         return recyclerViewReactions
     }
 
-    private fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?, message: SceytMessage) {
+    protected fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?, message: SceytMessage) {
         if (layoutDetails == null || rvReactions == null) return
 
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)

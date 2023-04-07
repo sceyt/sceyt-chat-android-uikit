@@ -29,6 +29,10 @@ class AttachmentViewHolderHelper(itemView: View) {
 
 
     fun bind(item: AttachmentDataItem) {
+        val thumb = if (item.thumbPath == null && isFileItemInitialized && fileItem.file.messageTid == item.file.messageTid)
+            fileItem.thumbPath else null
+        item.thumbPath = thumb
+
         fileItem = item
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         imageSize = item.size
