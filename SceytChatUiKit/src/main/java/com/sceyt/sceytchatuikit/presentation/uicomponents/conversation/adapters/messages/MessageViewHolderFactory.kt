@@ -79,14 +79,14 @@ open class MessageViewHolderFactory(context: Context) {
 
     open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncVoiceMsgViewHolder(
-            SceytItemIncVoiceBinding.inflate(layoutInflater, parent, false),
+            SceytItemIncVoiceMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback,
         )
     }
 
     open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutVoiceMsgViewHolder(
-            SceytItemOutVoiceBinding.inflate(layoutInflater, parent, false),
+            SceytItemOutVoiceMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 

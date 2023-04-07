@@ -92,7 +92,7 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
-            app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize18"
+            app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
             tools:layout_height="200dp"
             tools:src="@tools:sample/backgrounds/scenic" />
 
