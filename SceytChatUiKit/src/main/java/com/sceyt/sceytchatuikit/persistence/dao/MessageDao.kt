@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -271,15 +272,17 @@ abstract class MessageDao {
         updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
     }
 
-    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid")
-    abstract fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?)
+    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid and type !=:ignoreType")
+    abstract fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
 
     @Query("update AttachmentPayLoad set filePath =:filePath, url =:url," +
             "progressPercent= :progress, transferState =:state  where messageTid =:tid")
     abstract fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
 
-    @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata where messageTid =:msgTid")
-    abstract fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long, metadata: String?)
+    @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata " +
+            "where messageTid =:msgTid and type !=:ignoreType")
+    abstract fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long,
+                                                  metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
 
     @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
     abstract fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)

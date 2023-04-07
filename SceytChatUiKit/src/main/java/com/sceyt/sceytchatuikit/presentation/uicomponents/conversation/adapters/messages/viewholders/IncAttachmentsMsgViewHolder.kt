@@ -5,7 +5,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytItemIncFilesMessageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemIncAttachmentsMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -13,12 +13,13 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class IncFilesMsgViewHolder(
-        private val binding: SceytItemIncFilesMessageBinding,
+class IncAttachmentsMsgViewHolder(
+        private val binding: SceytItemIncAttachmentsMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
@@ -111,7 +112,7 @@ class IncFilesMsgViewHolder(
         filedAdapter?.onItemDetached()
     }
 
-    private fun SceytItemIncFilesMessageBinding.setMessageItemStyle() {
+    private fun SceytItemIncAttachmentsMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
             tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))

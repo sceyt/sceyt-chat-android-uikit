@@ -17,7 +17,8 @@ public class AudioPlayerHelper {
 
         void onProgress(long position, long duration);
 
-        void onSeek(long position);
+        default void onSeek(long position) {
+        }
 
         void onToggle(boolean playing);
 
@@ -25,7 +26,8 @@ public class AudioPlayerHelper {
 
         void onSpeedChanged(float speed);
 
-        void onError();
+        default void onError() {
+        }
     }
 
     public static void init(String filePath, OnAudioPlayer events) {

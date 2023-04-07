@@ -5,7 +5,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutFilesMessageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutAttachmentsMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -13,12 +13,13 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class OutFilesMsgViewHolder(
-        private val binding: SceytItemOutFilesMessageBinding,
+class OutAttachmentsMsgViewHolder(
+        private val binding: SceytItemOutAttachmentsMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
@@ -101,7 +102,7 @@ class OutFilesMsgViewHolder(
         filedAdapter?.onItemDetached()
     }
 
-    private fun SceytItemOutFilesMessageBinding.setMessageItemStyle() {
+    private fun SceytItemOutAttachmentsMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)

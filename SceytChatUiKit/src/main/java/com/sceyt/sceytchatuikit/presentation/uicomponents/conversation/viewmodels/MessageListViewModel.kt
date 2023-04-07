@@ -553,13 +553,17 @@ class MessageListViewModel(
         }
     }
 
+    internal fun clearPreparingThumbs() {
+        fileTransferService.clearPreparingThumbPaths()
+    }
+
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
-        val sceytMembers = eventData.members?.map { member -> member.toSceytMember() }
+        val sceytMembers = eventData.members.map { member -> member.toSceytMember() }
         val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
 
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
-                channelMembers.addAll(sceytMembers ?: return)
+                channelMembers.addAll(sceytMembers)
                 (channel as SceytGroupChannel).apply {
                     members = channelMembers
                     memberCount += sceytMembers.size
@@ -567,7 +571,7 @@ class MessageListViewModel(
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
             ChannelMembersEventEnum.Kicked -> {
-                channelMembers.removeAll(sceytMembers ?: return)
+                channelMembers.removeAll(sceytMembers)
                 (channel as SceytGroupChannel).apply {
                     members = channelMembers
                     memberCount -= sceytMembers.size

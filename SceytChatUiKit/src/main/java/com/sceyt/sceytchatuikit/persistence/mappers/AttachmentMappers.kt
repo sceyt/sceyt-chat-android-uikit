@@ -3,14 +3,12 @@ package com.sceyt.sceytchatuikit.persistence.mappers
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.Size
+import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
-import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
-import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
@@ -18,6 +16,8 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEnt
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataFromJson
 import org.json.JSONObject
 
 fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId: Long) = AttachmentDb(
@@ -105,10 +105,51 @@ fun SceytAttachment.toTransferData(): TransferData? {
     )
 }
 
-fun SceytAttachment.getInfoFromMetadata(callback: (size: Size?, blurredThumb: Bitmap?, duration: Long?) -> Unit) {
-    metadata?.getInfoFromMetadata(callback)
+fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
+    var size: Size? = null
+    var duration: Long? = null
+    var blurredThumbBitmap: Bitmap? = null
+    var audioMetadata: AudioMetadata? = null
+
+    try {
+        val jsonObject = JSONObject(metadata ?: return AttachmentDataFromJson())
+        when (type) {
+            AttachmentTypeEnum.File.value(), AttachmentTypeEnum.Link.value() -> {
+                return AttachmentDataFromJson()
+            }
+            AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
+                blurredThumbBitmap = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()?.decodeByteArrayToBitmap()
+
+                val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
+                val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
+                if (width != null && height != null)
+                    size = Size(width, height)
+            }
+            AttachmentTypeEnum.Voice.value() -> audioMetadata = getMetadataFromAttachment()
+        }
+
+        if (type == AttachmentTypeEnum.Video.value() || type == AttachmentTypeEnum.Voice.value())
+            duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
+
+    } catch (ex: Exception) {
+        Log.i(TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
+    }
+
+    return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
 }
 
+fun SceytAttachment.getMetadataFromAttachment(): AudioMetadata {
+    return try {
+        val result = Gson().fromJson(metadata, AudioMetadata::class.java)
+        if (result.tmb == null) {
+            // if thumb is null, should set it to an empty array
+            result.copy(tmb = intArrayOf(0))
+        } else result
+    } catch (ex: Exception) {
+        ex.printStackTrace()
+        null
+    } ?: AudioMetadata(intArrayOf(0), 0)
+}
 
 fun getAttachmentType(path: String?): AttachmentTypeEnum {
     return when (getMimeTypeTakeFirstPart(path)) {
@@ -116,27 +157,6 @@ fun getAttachmentType(path: String?): AttachmentTypeEnum {
         AttachmentTypeEnum.Video.value() -> AttachmentTypeEnum.Video
         else -> AttachmentTypeEnum.File
     }
-}
-
-private fun String?.getInfoFromMetadata(callback: (size: Size?, blurredThumb: Bitmap?, videoDuration: Long?) -> Unit) {
-    var base64Thumb: ByteArray? = null
-    var size: Size? = null
-    var duration: Long? = null
-    try {
-        val jsonObject = JSONObject(this ?: return)
-        jsonObject.getFromJsonObject(SceytConstants.Thumb)?.let {
-            base64Thumb = it.toByteArraySafety()
-        }
-        val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
-        val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
-        duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
-        if (width != null && height != null)
-            size = Size(width, height)
-    } catch (ex: Exception) {
-        Log.i(this?.TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
-    }
-
-    callback(size, base64Thumb?.decodeByteArrayToBitmap(), duration)
 }
 
 fun String?.getInfoFromMetadataByKey(key: String): String? {

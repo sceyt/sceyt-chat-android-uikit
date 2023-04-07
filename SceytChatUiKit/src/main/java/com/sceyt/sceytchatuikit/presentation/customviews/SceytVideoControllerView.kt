@@ -9,13 +9,13 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 
@@ -25,7 +25,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private val playPauseItem: ImageView
     private var playDrawable: Drawable?
     private var pauseDrawable: Drawable?
-    private var imageThumb: AppCompatImageView? = null
+    private var imageThumb: ShapeableImageView? = null
     private var isPlaying = false
     private var isEnded = false
     private var isInitializesPlayer = false
@@ -35,6 +35,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private var onPlayPauseClick: ((view: View, play: Boolean) -> Unit)? = null
     private var showPlayPauseButton = true
     private var playPauseButtonSize = 130
+    private var cornerSize = 0
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
@@ -45,6 +46,10 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_play)
         pauseDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerPauseIcon)
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_pause)
+        cornerSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytVideoControllerCornerSize, cornerSize)
+        a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerImage)?.let {
+            setImageThumb(it)
+        }
         a.recycle()
 
         playPauseItem = ImageView(context).apply {
@@ -135,44 +140,31 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         playPauseItem.setImageDrawable(playDrawable)
     }
 
-    fun setImageThumb(drawable: Drawable?) {
+    private fun checkAndAddImage() {
         if (imageThumb == null) {
-            imageThumb = AppCompatImageView(context).also {
-                it.setImageDrawable(drawable)
+            imageThumb = ShapeableImageView(context).also {
                 it.scaleType = ImageView.ScaleType.CENTER_CROP
+                if (cornerSize > 0)
+                    it.shapeAppearanceModel = it.shapeAppearanceModel.withCornerSize(cornerSize.toFloat())
             }
             addView(imageThumb, 0)
-        } else imageThumb?.setImageDrawable(drawable)
+        }
+    }
+
+    fun setImageThumb(drawable: Drawable?) {
+        checkAndAddImage()
+        imageThumb?.setImageDrawable(drawable)
         imageThumb?.isVisible = true
     }
 
     fun getImageView(): ImageView {
-        if (imageThumb == null) {
-            imageThumb = AppCompatImageView(context).also {
-                it.scaleType = ImageView.ScaleType.CENTER_CROP
-            }
-            addView(imageThumb, 0)
-        }
+        checkAndAddImage()
         return imageThumb!!
     }
 
-    private fun checkAndAddImage() {
-        if (imageThumb == null) {
-            imageThumb = AppCompatImageView(context).also {
-                it.scaleType = ImageView.ScaleType.CENTER_CROP
-            }
-            addView(imageThumb, 0)
-        }
-    }
-
     fun setBitmapImageThumb(bitmap: Bitmap?) {
-        if (imageThumb == null) {
-            imageThumb = AppCompatImageView(context).also {
-                it.setImageBitmap(bitmap)
-                it.scaleType = ImageView.ScaleType.CENTER_CROP
-            }
-            addView(imageThumb, 0)
-        } else imageThumb?.setImageBitmap(bitmap)
+        checkAndAddImage()
+        imageThumb?.setImageBitmap(bitmap)
         imageThumb?.isVisible = true
     }
 

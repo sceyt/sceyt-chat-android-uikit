@@ -50,6 +50,7 @@ import kotlinx.coroutines.withContext
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
+    clearPreparingThumbs()
 
     val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
 

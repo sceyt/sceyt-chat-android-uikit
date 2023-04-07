@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -10,7 +10,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -35,6 +36,12 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.IncLink.ordinal -> createIncLinkMsgViewHolder(parent)
             MessageViewTypeEnum.IncVoice.ordinal -> createIncVoiceMsgViewHolder(parent)
             MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(parent)
+            MessageViewTypeEnum.IncImage.ordinal -> createIncImageMsgViewHolder(parent)
+            MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(parent)
+            MessageViewTypeEnum.IncVideo.ordinal -> createIncVideoMsgViewHolder(parent)
+            MessageViewTypeEnum.OutVideo.ordinal -> createOutVideoMsgViewHolder(parent)
+            MessageViewTypeEnum.IncFile.ordinal -> createIncFileMsgViewHolder(parent)
+            MessageViewTypeEnum.OutFile.ordinal -> createOutFileMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -72,26 +79,62 @@ open class MessageViewHolderFactory(context: Context) {
 
     open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncVoiceMsgViewHolder(
-            SceytItemIncVoiceBinding.inflate(layoutInflater, parent, false),
+            SceytItemIncVoiceMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback,
         )
     }
 
     open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutVoiceMsgViewHolder(
-            SceytItemOutVoiceBinding.inflate(layoutInflater, parent, false),
+            SceytItemOutVoiceMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createIncImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncImageMsgViewHolder(
+            SceytItemIncImageMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createOutImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutImageMsgViewHolder(
+            SceytItemOutImageMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createIncVideoMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncVideoMsgViewHolder(
+            SceytItemIncVideoMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createOutVideoMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutVideoMsgViewHolder(
+            SceytItemOutVideoMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createIncFileMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return IncFileMsgViewHolder(
+            SceytItemIncFileMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
+    }
+
+    open fun createOutFileMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
+        return OutFileMsgViewHolder(
+            SceytItemOutFileMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
-        return IncFilesMsgViewHolder(
-            SceytItemIncFilesMessageBinding.inflate(layoutInflater, parent, false),
+        return IncAttachmentsMsgViewHolder(
+            SceytItemIncAttachmentsMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, viewPoolFiles, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
-        return OutFilesMsgViewHolder(
-            SceytItemOutFilesMessageBinding.inflate(layoutInflater, parent, false),
+        return OutAttachmentsMsgViewHolder(
+            SceytItemOutAttachmentsMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, viewPoolFiles, clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
@@ -139,10 +182,20 @@ open class MessageViewHolderFactory(context: Context) {
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !message.attachments.isNullOrEmpty() -> {
-                val attachment = message.attachments?.getOrNull(0)
+                if ((message.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.size
+                                ?: 0) > 1) {
+                    return if (inc) MessageViewTypeEnum.IncFiles.ordinal else MessageViewTypeEnum.OutFiles.ordinal
+                }
+
+                val attachment = if ((message.attachments?.size ?: 0) > 1) {
+                    message.attachments?.find { it.type != AttachmentTypeEnum.Link.value() }
+                } else message.attachments?.getOrNull(0)
                 when (attachment?.type) {
                     AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
+                    AttachmentTypeEnum.Video.value() -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
+                    AttachmentTypeEnum.File.value() -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
@@ -184,6 +237,12 @@ open class MessageViewHolderFactory(context: Context) {
         OutDeleted,
         IncVoice,
         OutVoice,
+        IncImage,
+        OutImage,
+        IncVideo,
+        OutVideo,
+        IncFile,
+        OutFile,
         IncFiles,
         OutFiles,
         DateSeparator,

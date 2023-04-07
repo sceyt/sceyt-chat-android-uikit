@@ -23,7 +23,7 @@ ext {
     datastore_version = '1.0.0'
 
     exo_player_media_version = '1.0.0'
-    emoji_bundled_version = '1.4.0-alpha01'
+    emoji_bundled_version = '1.4.0-beta01'
 
     jsoup_version = '1.15.4'
     material_version = '1.9.0-beta01'
@@ -32,7 +32,7 @@ ext {
     fragment_ktx_version = '1.5.6'
     firebase_core_version = '20.0.2'
     firebase_messaging_version = '23.1.2'
-    firebase_bom_version = '31.2.3'
+    firebase_bom_version = '31.4.0'
     firebase_crashlitics_version = '18.2.6'
     flex_box_version = "3.0.0"
 
