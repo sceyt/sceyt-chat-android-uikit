@@ -72,7 +72,7 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
                 requestThumb()
             }
             TransferState.ThumbLoaded -> {
-                viewHolderHelper.loadThumb(data.filePath, binding.image)
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.image)
             }
         }
     }

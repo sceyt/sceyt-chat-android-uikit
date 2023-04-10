@@ -46,7 +46,7 @@ class AttachmentViewHolderHelper(itemView: View) {
         return fileItem.file.messageTid.toString()
     }
 
-    fun loadThumb(path: String?, imageView: ImageView) {
+    fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {
         Glide.with(context.applicationContext)
             .load(path)
             .transition(DrawableTransitionOptions.withCrossFade())
@@ -57,8 +57,8 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     fun drawThumbOrRequest(imageView: ImageView, requestThumb: () -> Unit) {
         if (isFileItemInitialized.not()) return
-        if (fileItem.thumbPath != null)
-            loadThumb(fileItem.thumbPath, imageView)
+        if (!fileItem.thumbPath.isNullOrBlank())
+            drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
         else {
             loadBlurThumb(blurredThumb, imageView)
             requestThumb()
@@ -69,11 +69,26 @@ class AttachmentViewHolderHelper(itemView: View) {
         imageView.setImageDrawable(thumb)
     }
 
+    fun drawOriginalFile(imageView: ImageView) {
+        if (isFileItemInitialized.not()) return
+        if (!fileItem.file.filePath.isNullOrBlank())
+            drawImageWithBlurredThumb(fileItem.file.filePath, imageView)
+        else
+            loadBlurThumb(blurredThumb, imageView)
+    }
+
     fun updateTransferData(data: TransferData, item: AttachmentDataItem): Boolean {
         if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
         if (data.state == TransferState.ThumbLoaded) {
             item.thumbPath = data.filePath
-        } else transferData = data
+        } else {
+            try {
+                item.file.updateWithTransferData(data)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            transferData = data
+        }
 
         return true
     }

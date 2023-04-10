@@ -110,7 +110,7 @@ class MessageVideoViewHolder(
                 requestThumb()
             }
             ThumbLoaded -> {
-                viewHolderHelper.loadThumb(fileItem.thumbPath, imageView)
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
             }
         }
     }
