@@ -143,9 +143,11 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        data.channel ?: return
-        channelDao.updateUnreadCount(data.channel.id, data.channel.unreadMessageCount.toInt())
-        channelsCache.updateUnreadCount(data.channel.id, data.channel.unreadMessageCount.toInt())
+        /* Todo need refactoring after sdk update. Commented code is the right way to update unread count
+         data.channel ?: return
+         channelDao.updateUnreadCount(data.channel.id, data.channel.unreadMessageCount.toInt())
+         channelsCache.updateUnreadCount(data.channel.id, data.channel.unreadMessageCount.toInt())*/
+        updateChannelDbAndCache((data.channel ?: return).toSceytUiChannel())
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {

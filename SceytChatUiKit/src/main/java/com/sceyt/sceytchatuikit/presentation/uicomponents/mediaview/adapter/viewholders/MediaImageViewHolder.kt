@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.viewholders
 
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMediaItemImageBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
@@ -25,6 +26,8 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
 
         viewHolderHelper.transferData?.let {
             updateState(it, true)
+            binding.progress.release(it.progressPercent)
+
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
@@ -36,6 +39,8 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+
+        binding.progress.isVisible = data.state == TransferState.Downloading
 
         when (data.state) {
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
@@ -55,6 +60,8 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
+
+                binding.progress.setProgress(data.progressPercent)
             }
             TransferState.Downloaded -> {
                 viewHolderHelper.drawOriginalFile(binding.imageView)
