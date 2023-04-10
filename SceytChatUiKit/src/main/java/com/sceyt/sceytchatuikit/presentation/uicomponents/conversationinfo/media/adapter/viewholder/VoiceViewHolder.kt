@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
@@ -17,6 +18,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 
 class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
@@ -132,6 +135,8 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     }
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedFlow
+            .onEach(::updateState)
+            .launchIn(context.asComponentActivity().lifecycleScope)
     }
 }

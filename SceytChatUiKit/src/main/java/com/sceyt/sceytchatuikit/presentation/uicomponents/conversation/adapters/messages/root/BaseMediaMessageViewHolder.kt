@@ -7,6 +7,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
@@ -24,6 +25,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 abstract class BaseMediaMessageViewHolder(
         val view: View,
@@ -107,7 +110,9 @@ abstract class BaseMediaMessageViewHolder(
     abstract fun updateState(data: TransferData, isOnBind: Boolean = false)
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedFlow
+            .onEach(::updateState)
+            .launchIn(context.asComponentActivity().lifecycleScope)
     }
 
     private fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int, result: (scaleWidth: Int, scaleHeight: Int) -> Unit) {

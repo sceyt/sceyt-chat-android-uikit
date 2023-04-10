@@ -129,6 +129,7 @@
             android:layout_width="@dimen/messageProgressSize"
             android:layout_height="@dimen/messageProgressSize"
             android:padding="3dp"
+            android:visibility="gone"
             app:backgroundColor="@color/sceyt_progress_bg_color"
             app:iconSizeInPercent="70"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -137,7 +138,8 @@
             app:layout_constraintTop_toTopOf="@+id/fileImage"
             app:minProgress="2"
             app:progressColor="@color/sceyt_color_white"
-            app:trackColor="@android:color/transparent" />
+            app:trackColor="@android:color/transparent"
+            tools:visibility="visible" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
