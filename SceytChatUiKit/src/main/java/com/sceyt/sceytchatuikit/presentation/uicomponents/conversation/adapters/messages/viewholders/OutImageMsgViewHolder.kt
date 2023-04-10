@@ -123,7 +123,7 @@ class OutImageMsgViewHolder(
             TransferState.Downloaded -> {
                 if (fileItem.thumbPath.isNullOrBlank())
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
-                else viewHolderHelper.loadThumb(fileItem.thumbPath, fileContainer)
+                else viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
@@ -135,7 +135,7 @@ class OutImageMsgViewHolder(
                 requestThumb()
             }
             TransferState.ThumbLoaded -> {
-                viewHolderHelper.loadThumb(data.filePath, fileContainer)
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
         }
     }

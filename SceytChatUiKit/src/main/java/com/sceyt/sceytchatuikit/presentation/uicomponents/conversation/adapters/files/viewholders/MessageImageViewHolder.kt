@@ -78,7 +78,7 @@ class MessageImageViewHolder(
             Downloaded -> {
                 if (fileItem.thumbPath.isNullOrBlank())
                     viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
-                else viewHolderHelper.loadThumb(fileItem.thumbPath, binding.fileImage)
+                else viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
             PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
@@ -90,7 +90,7 @@ class MessageImageViewHolder(
                 requestThumb()
             }
             ThumbLoaded -> {
-                viewHolderHelper.loadThumb(data.filePath, binding.fileImage)
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
         }
     }

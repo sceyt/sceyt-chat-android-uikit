@@ -142,7 +142,7 @@ class OutVideoMsgViewHolder(
                 requestThumb()
             }
             TransferState.ThumbLoaded -> {
-                viewHolderHelper.loadThumb(fileItem.thumbPath, imageView)
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
             }
         }
     }

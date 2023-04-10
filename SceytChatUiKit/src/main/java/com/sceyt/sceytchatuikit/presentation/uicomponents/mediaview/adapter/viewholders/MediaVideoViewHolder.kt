@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.viewholders
 
-import android.util.Size
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMediaItemVideoBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
@@ -58,9 +57,14 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                 binding.videoView.pause()
             }
             binding.videoView.setUserVisibleHint(false)
-        } else
+        } else {
+            if (fileItem.file.filePath.isNotNullOrBlank()) {
+                binding.videoView.seekTo(0)
+                binding.videoView.start()
+            }
             binding.videoView.setUserVisibleHint((context as? SceytMediaActivity)?.isShowMediaDetail()
                     ?: false)
+        }
     }
 
     override fun onViewAttachedToWindow() {
@@ -80,7 +84,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
         when (data.state) {
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
-                viewHolderHelper.drawThumbOrRequest(binding.icThumb, ::requestThumb)
+                viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
             TransferState.PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
@@ -94,10 +98,10 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             }
             TransferState.Uploading -> {
                 if (isOnBind)
-                    viewHolderHelper.drawThumbOrRequest(binding.icThumb, ::requestThumb)
+                    viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
             TransferState.Downloaded, TransferState.Uploaded -> {
-                viewHolderHelper.drawThumbOrRequest(binding.icThumb, ::requestThumb)
+                viewHolderHelper.drawOriginalFile(binding.icThumb)
                 binding.videoView.setVideoPath(mediaPath = data.filePath, startPlay = itemView.hasWindowFocus(), isLooping = true)
             }
             TransferState.PauseDownload -> {
@@ -107,15 +111,11 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                 viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
             }
             TransferState.FilePathChanged -> {
-                requestThumb()
+                viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
-            TransferState.ThumbLoaded -> {
-                viewHolderHelper.loadThumb(data.filePath, binding.icThumb)
-            }
+            TransferState.ThumbLoaded -> Unit
         }
     }
-
-    override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
     private fun setListener() {
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
