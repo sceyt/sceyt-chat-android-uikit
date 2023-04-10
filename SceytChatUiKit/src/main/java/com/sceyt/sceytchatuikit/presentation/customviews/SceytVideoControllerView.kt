@@ -50,6 +50,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerImage)?.let {
             setImageThumb(it)
         }
+        val enablePlayPauseClick = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerEnablePlayPauseClick, true)
         a.recycle()
 
         playPauseItem = ImageView(context).apply {
@@ -62,7 +63,9 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         }
         playPauseItem.setImageDrawable(playDrawable)
         addView(playPauseItem)
-        setOnClickListeners()
+
+        if (enablePlayPauseClick)
+            setOnClickListeners()
     }
 
     private fun setOnClickListeners() {
