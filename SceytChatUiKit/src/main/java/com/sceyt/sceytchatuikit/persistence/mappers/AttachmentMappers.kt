@@ -61,8 +61,8 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
 
 fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
     with(attachmentEntity) {
-        return Attachment.Builder(filePath, url, type)
-            .setMetadata(metadata)
+        return Attachment.Builder(filePath ?: "", url ?: "", type)
+            .setMetadata(metadata ?: "")
             .setName(name)
             .withTid(tid)
             .setUpload(upload)
