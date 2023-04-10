@@ -61,6 +61,7 @@
         <attr name="sceytVideoControllerPauseIcon" format="reference" />
         <attr name="sceytVideoControllerImage" format="reference" />
         <attr name="sceytVideoControllerCornerSize" format="dimension" />
+        <attr name="sceytVideoControllerEnablePlayPauseClick" format="boolean" />
 
     </declare-styleable>
 
