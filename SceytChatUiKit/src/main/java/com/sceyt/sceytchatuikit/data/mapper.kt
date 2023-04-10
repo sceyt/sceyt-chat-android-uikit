@@ -132,13 +132,13 @@ fun SceytAttachment.toAttachment(): Attachment = Attachment(
     messageId,
     name,
     type,
-    metadata,
+    metadata ?: "",
     fileSize,
-    url,
+    url ?: "",
     createdAt,
     userId,
     tid,
-    filePath,
+    filePath ?: "",
     false,
 )
 
