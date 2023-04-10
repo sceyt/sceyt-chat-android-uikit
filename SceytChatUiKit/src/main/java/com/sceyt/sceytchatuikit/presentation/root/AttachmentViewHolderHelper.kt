@@ -82,14 +82,9 @@ class AttachmentViewHolderHelper(itemView: View) {
         if (data.state == TransferState.ThumbLoaded) {
             item.thumbPath = data.filePath
         } else {
-            try {
-                item.file.updateWithTransferData(data)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            fileItem.file.updateWithTransferData(data)
             transferData = data
         }
-
         return true
     }
 }

@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.util.Size
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -15,6 +16,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 
 class MessageVideoViewHolder(
@@ -127,7 +130,9 @@ class MessageVideoViewHolder(
     override fun getThumbSize() = Size(1080, 1080)
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedFlow
+            .onEach(::updateState)
+            .launchIn(context.asComponentActivity().lifecycleScope)
     }
 
     private fun initializePlayer(mediaPath: String?) {

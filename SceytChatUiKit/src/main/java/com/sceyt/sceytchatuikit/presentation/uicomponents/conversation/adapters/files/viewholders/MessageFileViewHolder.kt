@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -13,6 +14,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
@@ -80,8 +83,9 @@ class MessageFileViewHolder(
     }
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData
-            .observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedFlow
+            .onEach(::updateState)
+            .launchIn(context.asComponentActivity().lifecycleScope)
     }
 
     private fun SceytMessageFileItemBinding.setupStyle() {

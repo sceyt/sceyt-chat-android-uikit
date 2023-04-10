@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -37,9 +36,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -386,8 +385,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData) {
-        Log.i(TAG, data.toString())
-        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+        messagesRV.getData()?.find { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 TransferState.Uploading, TransferState.PendingUpload, TransferState.PauseUpload, TransferState.Uploaded -> { attachment ->
                     attachment.messageTid == data.messageTid
@@ -396,28 +394,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     attachment.url == data.url
                 }
             }
+            val foundAttachmentFile = (it as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
 
             if (data.state == TransferState.ThumbLoaded) {
-                updateThumb(data, predicate)
+                foundAttachmentFile?.let { listItem ->
+                    listItem.thumbPath = data.filePath
+                }
                 return
             }
 
-            val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
-            val foundAttachmentFiles = (it.second as MessageItem).message.files?.map { item -> item.file }?.find(predicate)
+            val foundAttachment = it.message.attachments?.find(predicate)
 
             foundAttachment?.let { attachment ->
                 attachment.updateWithTransferData(data)
-                foundAttachmentFiles?.updateWithTransferData(data)
-            }
-        }
-    }
-
-    private fun updateThumb(data: TransferData, predicate: (SceytAttachment) -> Boolean) {
-        Log.i(TAG, data.toString())
-        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
-            val foundAttachmentFiles = (it.second as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
-            foundAttachmentFiles?.let { listItem ->
-                listItem.thumbPath = data.filePath
+                foundAttachmentFile?.file?.updateWithTransferData(data)
             }
         }
     }

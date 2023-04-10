@@ -378,11 +378,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onTransferUpdatedFlow.observe(lifecycleOwner) {
-        lifecycleOwner.lifecycleScope.launch {
-            messagesListView.updateProgress(it)
+    onTransferUpdatedFlow.onEach { data ->
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            messagesListView.updateProgress(data)
         }
-    }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelEventFlow.onEach {
         when (it.eventType) {
