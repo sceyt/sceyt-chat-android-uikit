@@ -17,9 +17,6 @@ class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
     private lateinit var fileItem: AttachmentDataItem
     val isFileItemInitialized get() = this::fileItem.isInitialized
-
-    var listenerKey: String = ""
-        private set
     var blurredThumb: Drawable? = null
         private set
     var imageSize: Size? = null
@@ -36,14 +33,7 @@ class AttachmentViewHolderHelper(itemView: View) {
         fileItem = item
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         imageSize = item.size
-
-        listenerKey = getKey()
         transferData = item.file.toTransferData()
-    }
-
-    protected fun getKey(): String {
-        if (isFileItemInitialized.not()) return ""
-        return fileItem.file.messageTid.toString()
     }
 
     fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {
