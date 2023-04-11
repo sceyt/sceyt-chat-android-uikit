@@ -25,6 +25,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -112,6 +114,7 @@ abstract class BaseMediaMessageViewHolder(
     private fun setListener() {
         FileTransferHelper.onTransferUpdatedFlow
             .onEach(::updateState)
+            .flowOn(Dispatchers.Main)
             .launchIn(context.asComponentActivity().lifecycleScope)
     }
 
@@ -121,7 +124,7 @@ abstract class BaseMediaMessageViewHolder(
         var scaleHeight = defaultSize
 
         if (coefficient.isNaN()) {
-            result.invoke((scaleWidth * 0.8).toInt(), scaleHeight)
+            result.invoke(scaleWidth, scaleHeight)
             return
         } else {
             if (coefficient != 1.0) {

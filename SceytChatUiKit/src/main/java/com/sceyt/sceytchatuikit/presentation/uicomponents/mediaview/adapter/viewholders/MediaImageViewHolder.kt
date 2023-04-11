@@ -34,11 +34,7 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
-
-        if (fileItem.thumbPath.isNullOrBlank() && !fileItem.file.filePath.isNullOrBlank())
-            requestThumb()
     }
-
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (!viewHolderHelper.updateTransferData(data, fileItem)) return
