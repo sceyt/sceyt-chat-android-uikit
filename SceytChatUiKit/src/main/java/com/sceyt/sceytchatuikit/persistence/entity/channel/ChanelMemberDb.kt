@@ -9,5 +9,5 @@ data class ChanelMemberDb(
         val link: UserChatLink,
 
         @Relation(parentColumn = "user_id", entityColumn = "user_id")
-        val user: UserEntity,
+        val user: UserEntity?,
 )

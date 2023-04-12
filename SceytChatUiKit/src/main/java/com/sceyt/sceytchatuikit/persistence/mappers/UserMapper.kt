@@ -10,7 +10,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 
 fun ChanelMemberDb.toSceytMember() = SceytMember(
     role = Role(link.role),
-    user = user.toUser()
+    user = user?.toUser() ?: User(link.userId)
 )
 
 fun UserEntity.toUser() = User(
