@@ -135,7 +135,8 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun onChanelAdded(channel: Channel?) {
         channel?.let {
-            val members = if (it is GroupChannel) it.lastActiveMembers else arrayListOf((it as DirectChannel).peer)
+            val members = if (it is GroupChannel) it.lastActiveMembers
+                    ?: return else arrayListOf((it as? DirectChannel)?.peer ?: return)
             val sceytChannel = channel.toSceytUiChannel()
             insertChannel(sceytChannel, *members.map { member -> member.toSceytMember() }.toTypedArray())
             channelsCache.add(sceytChannel)
