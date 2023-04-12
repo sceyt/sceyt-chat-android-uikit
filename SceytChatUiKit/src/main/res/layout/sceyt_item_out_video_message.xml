@@ -22,14 +22,13 @@
         app:sceytToReplyLineViewToLeft="true"
         tools:visibility="visible" />
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/sceyt_bg_out_message"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="@drawable/sceyt_bg_out_message">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvForwarded"
@@ -63,6 +62,7 @@
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
             app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
@@ -162,15 +162,21 @@
         android:id="@+id/rvReactions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-        app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
         android:layout_marginTop="-5dp"
         android:layout_marginBottom="2dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+        app:layout_constraintHorizontal_bias="0"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:orientation="horizontal"
         android:paddingTop="4dp"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/tvReplyCount"
+        app:layout_constraintStart_toStartOf="@+id/layoutDetails"
+        app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
+        app:layout_constraintVertical_bias="0"
         tools:visibility="visible" />
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplyCount"
         android:layout_width="wrap_content"
