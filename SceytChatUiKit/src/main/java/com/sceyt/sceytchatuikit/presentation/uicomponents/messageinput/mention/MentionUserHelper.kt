@@ -134,10 +134,4 @@ object MentionUserHelper {
     fun setCustomUserNameBuilder(userNameBuilder: (User) -> String) {
         this.userNameBuilder = userNameBuilder
     }
-
-    data class MentionUserMetaDataPayLoad(
-            val id: String,
-            val loc: Int,
-            val len: Int
-    )
 }

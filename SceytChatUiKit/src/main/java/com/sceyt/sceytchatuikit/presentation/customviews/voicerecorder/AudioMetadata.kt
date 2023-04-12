@@ -1,7 +1,11 @@
 package com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder
 
+import com.google.gson.annotations.SerializedName
+
 data class AudioMetadata(
+        @SerializedName("tmb")
         val tmb: IntArray?,
+        @SerializedName("dur")
         val dur: Int,
 ) {
     override fun equals(other: Any?): Boolean {
