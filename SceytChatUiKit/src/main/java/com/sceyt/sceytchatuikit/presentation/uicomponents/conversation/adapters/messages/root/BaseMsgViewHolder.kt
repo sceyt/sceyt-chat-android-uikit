@@ -287,7 +287,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
         layoutDetails.measure(View.MeasureSpec.UNSPECIFIED, 0)
 
-        when {
+        /*when {
             rvReactions.measuredWidth > layoutDetails.measuredWidth -> {
                 layoutDetails.layoutParams.width = min((rvReactions.measuredWidth + dpToPx(8f)), bodyMaxWidth)
                 if (message.incoming.not())
@@ -311,7 +311,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     marginEnd = 0
                 }
             }
-        }
+        }*/
     }
 
     protected fun setMessageDateDependAttachments(messageDate: SceytDateStatusView, attachments: List<FileListItem>?) {
