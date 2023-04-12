@@ -10,8 +10,8 @@ import android.graphics.Typeface
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
 import android.view.ViewStub
-import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -287,31 +287,19 @@ abstract class BaseMsgViewHolder(private val view: View,
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
         layoutDetails.measure(View.MeasureSpec.UNSPECIFIED, 0)
 
-        /*when {
+        when {
             rvReactions.measuredWidth > layoutDetails.measuredWidth -> {
-                layoutDetails.layoutParams.width = min((rvReactions.measuredWidth + dpToPx(8f)), bodyMaxWidth)
-                if (message.incoming.not())
-                    (rvReactions.layoutParams as RelativeLayout.LayoutParams).apply {
-                        if (message.incoming) {
-                            addRule(RelativeLayout.ALIGN_START, R.id.layoutDetails)
-                            removeRule(RelativeLayout.ALIGN_PARENT_END)
-                        } else {
-                            removeRule(RelativeLayout.ALIGN_START)
-                            addRule(RelativeLayout.ALIGN_PARENT_END)
-                            addRule(RelativeLayout.ALIGN_START, R.id.layoutDetails)
-                        }
-                        marginEnd = dpToPx(8f)
-                    }
+                val margin = dpToPx(8f)
+                layoutDetails.layoutParams.width = min((rvReactions.measuredWidth + margin), bodyMaxWidth)
+                if (message.incoming.not()) {
+                    (rvReactions.layoutParams as MarginLayoutParams).marginEnd = margin
+                }
             }
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {
                 layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                (rvReactions.layoutParams as RelativeLayout.LayoutParams).apply {
-                    addRule(RelativeLayout.ALIGN_START, R.id.layoutDetails)
-                    removeRule(RelativeLayout.ALIGN_PARENT_END)
-                    marginEnd = 0
-                }
+                (rvReactions.layoutParams as MarginLayoutParams).marginEnd = 0
             }
-        }*/
+        }
     }
 
     protected fun setMessageDateDependAttachments(messageDate: SceytDateStatusView, attachments: List<FileListItem>?) {

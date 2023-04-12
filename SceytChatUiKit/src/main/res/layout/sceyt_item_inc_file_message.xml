@@ -224,6 +224,9 @@
         android:orientation="horizontal"
         android:paddingTop="4dp"
         android:visibility="gone"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="@id/layoutDetails"
         app:layout_constraintTop_toTopOf="@+id/spase"
         tools:visibility="visible" />

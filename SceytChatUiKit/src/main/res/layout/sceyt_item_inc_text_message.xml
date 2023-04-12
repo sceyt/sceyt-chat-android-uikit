@@ -94,7 +94,8 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
+            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
+            tools:visibility="visible" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytClickableTextView
             android:id="@+id/messageBody"
@@ -154,6 +155,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"
         android:layout_marginTop="-5dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
         android:layout_marginBottom="2dp"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:orientation="horizontal"
