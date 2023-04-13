@@ -127,22 +127,21 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
         val thumbKey = getPreparingThumbKey(messageTid, size)
         if (preparingThumbsMap[thumbKey] != null) return
-        preparingThumbsMap[thumbKey] = messageTid
         val task = fileTransferService.findOrCreateTransferTask(attachment)
-        val readyThumb = thumbPaths[messageTid.toString()]
-        if (readyThumb != null && readyThumb.size == size) {
+        val readyThumb = thumbPaths[thumbKey]
+        if (readyThumb != null) {
             task.thumbCallback.onThumb(readyThumb.path)
-            preparingThumbsMap.remove(thumbKey)
             return
         } else {
+            preparingThumbsMap[thumbKey] = messageTid
             val result = getAttachmentThumbPath(application, attachment, size)
             if (result.isSuccess)
                 result.getOrNull()?.let { path ->
-                    thumbPaths[messageTid.toString()] = ThumbPathsData(messageTid, path, size)
+                    thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
                     task.thumbCallback.onThumb(path)
                 }
-            preparingThumbsMap.remove(thumbKey)
         }
+        preparingThumbsMap.remove(thumbKey)
     }
 
     override fun clearPreparingThumbPaths() {

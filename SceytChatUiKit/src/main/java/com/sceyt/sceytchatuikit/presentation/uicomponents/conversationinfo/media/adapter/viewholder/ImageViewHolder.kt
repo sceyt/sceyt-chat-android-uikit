@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
 import android.util.Size
-import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
@@ -11,8 +10,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
                       private val clickListeners: AttachmentClickListenersImpl,
@@ -34,9 +31,6 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
-
-        if (fileItem.thumbPath.isNullOrBlank())
-            requestThumb()
     }
 
 
@@ -83,8 +77,6 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
     override fun getThumbSize() = Size(itemView.width, itemView.height)
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedFlow
-            .onEach(::updateState)
-            .launchIn(context.asComponentActivity().lifecycleScope)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 }
