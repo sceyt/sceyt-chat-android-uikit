@@ -89,8 +89,8 @@ class MessageListViewModel(
     private val _channelLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val channelLiveData: LiveData<SceytResponse<SceytChannel>> = _channelLiveData
 
-    private val _markAsReadLiveData = MutableLiveData<SceytResponse<MessageListMarker>>()
-    val markAsReadLiveData: LiveData<SceytResponse<MessageListMarker>> = _markAsReadLiveData
+    private val _markAsReadLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
+    val markAsReadLiveData: LiveData<List<SceytResponse<MessageListMarker>>> = _markAsReadLiveData
 
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
