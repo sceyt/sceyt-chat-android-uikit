@@ -15,7 +15,7 @@ object SceytKitConfig {
     var CHANNELS_MEMBERS_LOAD_SIZE = 30
     var USERS_LOAD_SIZE = 30
     var MESSAGES_LOAD_SIZE = 30
-    var ATTACHMENTS_LOAD_SIZE = 30
+    var ATTACHMENTS_LOAD_SIZE = 20
     var REACTIONS_LOAD_SIZE = 30
     @IntRange(from = 1, to = 6)
     var MAX_SELF_REACTIONS_SIZE = 6

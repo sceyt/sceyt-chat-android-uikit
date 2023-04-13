@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import android.util.Size
-import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -13,8 +12,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 
 class MessageImageViewHolder(
@@ -50,9 +47,6 @@ class MessageImageViewHolder(
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
-
-        if (fileItem.thumbPath.isNullOrBlank())
-            requestThumb()
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
@@ -101,9 +95,7 @@ class MessageImageViewHolder(
     override fun getThumbSize() = Size(1080, 1080)
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedFlow
-            .onEach(::updateState)
-            .launchIn(context.asComponentActivity().lifecycleScope)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytMessageImageItemBinding.setupStyle() {

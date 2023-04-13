@@ -26,9 +26,9 @@ class AttachmentViewHolderHelper(itemView: View) {
 
 
     fun bind(item: AttachmentDataItem) {
-        val thumb = if (item.thumbPath == null && isFileItemInitialized && fileItem.file.messageTid == item.file.messageTid)
-            fileItem.thumbPath else null
-        item.thumbPath = thumb
+        if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
+                && fileItem.file.messageTid == item.file.messageTid)
+            item.thumbPath = fileItem.thumbPath
 
         fileItem = item
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
@@ -70,7 +70,7 @@ class AttachmentViewHolderHelper(itemView: View) {
     fun updateTransferData(data: TransferData, item: AttachmentDataItem): Boolean {
         if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
         if (data.state == TransferState.ThumbLoaded) {
-            item.thumbPath = data.filePath
+            fileItem.thumbPath = data.filePath
         } else {
             fileItem.file.updateWithTransferData(data)
             transferData = data

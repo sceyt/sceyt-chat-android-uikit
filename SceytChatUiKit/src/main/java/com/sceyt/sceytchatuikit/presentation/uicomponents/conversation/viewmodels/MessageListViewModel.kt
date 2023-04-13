@@ -103,7 +103,7 @@ class MessageListViewModel(
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
-    val onTransferUpdatedFlow: Flow<TransferData>
+    val onTransferUpdatedLiveData: LiveData<TransferData>
 
 
     // Chanel events
@@ -158,7 +158,7 @@ class MessageListViewModel(
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
 
-        onTransferUpdatedFlow = FileTransferHelper.onTransferUpdatedFlow
+        onTransferUpdatedLiveData = FileTransferHelper.onTransferUpdatedLiveData
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
