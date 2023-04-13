@@ -392,11 +392,11 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return markMessagesAs(channelId, Received, *ids)
     }
 
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return markMessagesAs(channelId, Displayed, *ids)
     }
 
@@ -667,14 +667,20 @@ internal class PersistenceMessagesLogicImpl(
             markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): SceytResponse<MessageListMarker> {
-        addPendingMarkerToDb(channelId, status, *ids)
+    private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+        val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
+        ids.toList().chunked(50).forEach {
+            val typedArray = it.toLongArray()
+            addPendingMarkerToDb(channelId, status, *typedArray)
 
-        val response = if (status == Displayed)
-            messagesRepository.markAsRead(channelId, *ids)
-        else messagesRepository.markAsDelivered(channelId, *ids)
-        onMarkerResponse(channelId, response, status, *ids)
-        return response
+            val response = if (status == Displayed)
+                messagesRepository.markAsRead(channelId, *typedArray)
+            else messagesRepository.markAsDelivered(channelId, *typedArray)
+            onMarkerResponse(channelId, response, status, *typedArray)
+            responseList.add(response)
+        }
+
+        return responseList
     }
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long) {

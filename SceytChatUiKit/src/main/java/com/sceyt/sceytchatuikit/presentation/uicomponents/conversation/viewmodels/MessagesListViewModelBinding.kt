@@ -295,15 +295,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     markAsReadLiveData.observe(lifecycleOwner, Observer {
-        if (it is SceytResponse.Success) {
-            val data = it.data ?: return@Observer
-            viewModelScope.launch(Dispatchers.Default) {
-                messagesListView.getData()?.forEach { listItem ->
-                    (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
-                        if (data.messageIds.contains(message.id)) {
-                            message.selfMarkers = message.selfMarkers?.toMutableSet()?.apply {
-                                add(SelfMarkerTypeEnum.Displayed.value())
-                            }?.toTypedArray()
+        it.forEach { response ->
+            if (response is SceytResponse.Success) {
+                val data = response.data ?: return@Observer
+                viewModelScope.launch(Dispatchers.Default) {
+                    messagesListView.getData()?.forEach { listItem ->
+                        (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
+                            if (data.messageIds.contains(message.id)) {
+                                message.selfMarkers = message.selfMarkers?.toMutableSet()?.apply {
+                                    add(SelfMarkerTypeEnum.Displayed.value())
+                                }?.toTypedArray()
+                            }
                         }
                     }
                 }
@@ -378,11 +380,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onTransferUpdatedFlow.onEach { data ->
+    onTransferUpdatedLiveData.observe(lifecycleOwner) { data ->
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             messagesListView.updateProgress(data)
         }
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    }
 
     onChannelEventFlow.onEach {
         when (it.eventType) {

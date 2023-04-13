@@ -89,8 +89,8 @@ class MessageListViewModel(
     private val _channelLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val channelLiveData: LiveData<SceytResponse<SceytChannel>> = _channelLiveData
 
-    private val _markAsReadLiveData = MutableLiveData<SceytResponse<MessageListMarker>>()
-    val markAsReadLiveData: LiveData<SceytResponse<MessageListMarker>> = _markAsReadLiveData
+    private val _markAsReadLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
+    val markAsReadLiveData: LiveData<List<SceytResponse<MessageListMarker>>> = _markAsReadLiveData
 
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
@@ -103,7 +103,7 @@ class MessageListViewModel(
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
     val onOutGoingThreadMessageFlow: Flow<SceytMessage>
-    val onTransferUpdatedFlow: Flow<TransferData>
+    val onTransferUpdatedLiveData: LiveData<TransferData>
 
 
     // Chanel events
@@ -158,7 +158,7 @@ class MessageListViewModel(
         onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }
 
-        onTransferUpdatedFlow = FileTransferHelper.onTransferUpdatedFlow
+        onTransferUpdatedLiveData = FileTransferHelper.onTransferUpdatedLiveData
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {

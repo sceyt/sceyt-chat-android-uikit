@@ -317,11 +317,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.deleteMessage(channelId, message, onlyForMe)
     }
 
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessagesAsRead(channelId, *ids)
     }
 
-    override suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessageAsDelivered(channelId, *ids)
     }
 
