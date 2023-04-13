@@ -217,8 +217,6 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     fun release(withProgress: Float? = null) {
-        updateProgressAnim?.cancel()
-        rotateAnim?.cancel()
         progress = max(withProgress ?: 0f, minProgress)
         angle = calculateAngle(progress)
         transferring = true

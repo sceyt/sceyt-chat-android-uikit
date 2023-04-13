@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -10,9 +12,6 @@ import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import org.koin.core.component.inject
 import java.io.File
 
@@ -20,8 +19,8 @@ object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
     private val messagesLogic by inject<PersistenceAttachmentLogic>()
 
-    private val onTransferUpdatedFlow_ = MutableStateFlow<TransferData?>(null)
-    val onTransferUpdatedFlow: Flow<TransferData> = onTransferUpdatedFlow_.filterNotNull()
+    private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
+    val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
 
     fun createTransferTask(attachment: SceytAttachment, isFromUpload: Boolean): TransferTask {
         return TransferTask(
@@ -115,7 +114,7 @@ object FileTransferHelper : SceytKoinComponent {
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
         runOnMainThread {
-            onTransferUpdatedFlow_.tryEmit(data)
+            onTransferUpdatedLiveData_.value = data
         }
     }
 }

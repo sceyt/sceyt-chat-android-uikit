@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.viewholders
 
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.databinding.SceytMediaItemVideoBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -13,8 +12,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                            private val clickListeners: (MediaItem) -> Unit,
@@ -121,8 +118,6 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     }
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedFlow
-            .onEach(::updateState)
-            .launchIn(context.asComponentActivity().lifecycleScope)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 }
