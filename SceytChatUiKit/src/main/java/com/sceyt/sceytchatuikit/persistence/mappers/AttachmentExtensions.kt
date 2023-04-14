@@ -6,24 +6,15 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.util.Size
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.toBase64
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
-
-fun getMessageTypeFromAttachments(body: String?, vararg attachments: Attachment): String {
-    if (attachments.isNotEmpty() && attachments.size == 1) {
-        return if (attachments[0].type.isEqualsVideoOrImage())
-            MessageTypeEnum.Media.value()
-        else MessageTypeEnum.File.value()
-    }
-    return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
-}
 
 fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?, duration: Long?): String? {
     return try {
