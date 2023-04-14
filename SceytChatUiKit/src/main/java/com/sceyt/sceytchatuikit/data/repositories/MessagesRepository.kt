@@ -15,7 +15,7 @@ interface MessagesRepository {
     suspend fun loadAllMessagesAfter(conversationId: Long, replyInThread: Boolean, messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
     suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
-    suspend fun sendMessage(channelId: Long, message: Message): SceytResponse<SceytMessage>
+    suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: ((Message) -> Unit)? = null): SceytResponse<SceytMessage>
     suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun markAsRead(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker>

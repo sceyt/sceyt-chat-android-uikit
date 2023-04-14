@@ -343,11 +343,8 @@ class MessageListViewModel(
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
-                if (result is SendMessageResult.Response) {
-                    if (result.response is SceytResponse.Error) {
-                        // Implement logic if you want to show failed status
-                        Log.e("sendMessage", "send message error-> ${result.response.message}")
-                    }
+                if (result is SendMessageResult.Error) {
+                    // Implement logic if you want to show failed status
                 }
             }
         }
