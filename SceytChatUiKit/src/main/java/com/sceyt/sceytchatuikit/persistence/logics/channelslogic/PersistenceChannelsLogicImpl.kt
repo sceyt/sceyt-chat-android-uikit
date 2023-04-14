@@ -13,7 +13,20 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Blocked
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Created
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Hidden
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Invited
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Joined
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.MarkedUsUnread
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Muted
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnBlocked
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnHidden
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnMuted
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Updated
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver.awaitToConnectSceyt
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -21,14 +34,24 @@ import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toDraftMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.persistence.dao.*
+import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
+import com.sceyt.sceytchatuikit.persistence.dao.DraftMessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
@@ -37,7 +60,13 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.*
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
+import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
@@ -79,6 +108,7 @@ internal class PersistenceChannelsLogicImpl(
                     }
                 }
             }
+
             ClearedHistory -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateLastMessage(channelId, null, null)
@@ -86,6 +116,7 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.clearedHistory(channelId)
                 }
             }
+
             Updated, UnBlocked -> {
                 data.channel?.let { channel ->
                     val sceytChannel = channel.toSceytUiChannel()
@@ -95,6 +126,7 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.upsertChannel(sceytChannel)
                 }
             }
+
             Muted -> {
                 data.channelId?.let { channelId ->
                     val time = data.channel?.muteExpireDate()?.time ?: 0
@@ -102,12 +134,14 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.updateMuteState(channelId, true, time)
                 }
             }
+
             UnMuted -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateMuteState(channelId, false)
                     channelsCache.updateMuteState(channelId, false)
                 }
             }
+
             MarkedUsUnread -> updateChannelDbAndCache(data.channel?.toSceytUiChannel())
             Blocked -> deleteChannelDb(data.channelId ?: return)
             Hidden -> data.channelId?.let { deleteChannelDb(it) }
@@ -228,9 +262,10 @@ internal class PersistenceChannelsLogicImpl(
             val dbChannels = getChannelsDb(offset, searchQuery)
             var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
 
-            channelsCache.addAll(dbChannels.map { it.clone() }, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
+
+            channelsCache.addAll(dbChannels.map { it.clone() }, false)
 
             awaitToConnectSceyt()
 
@@ -347,11 +382,14 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun addMessagesToChatReactionsCache(channelDb: ChannelDb) {
-        channelDb.usersReactions?.forEach {
-            it.message?.let { messageDb ->
+        val lastReaction = channelDb.usersReactions?.maxByOrNull { it.reaction.id } ?: return
+        val lastMessage = channelDb.lastMessage
+        if (lastReaction.reaction.id > (lastMessage?.messageEntity?.id ?: 0) &&
+                lastMessage?.messageEntity?.deliveryStatus != DeliveryStatus.Pending) {
+            lastReaction.message?.let { messageDb ->
                 ChatReactionMessagesCache.addMessage(messageDb.toSceytMessage())
             } ?: run {
-                ChatReactionMessagesCache.getNeededMessages(mapOf(Pair(channelDb.channelEntity.id, it.reaction.messageId)))
+                ChatReactionMessagesCache.getNeededMessages(mapOf(Pair(channelDb.channelEntity.id, lastReaction.reaction.messageId)))
             }
         }
     }
@@ -592,6 +630,7 @@ internal class PersistenceChannelsLogicImpl(
                 is SceytResponse.Success -> {
                     data.avatarUrl = uploadResult.data
                 }
+
                 is SceytResponse.Error -> return SceytResponse.Error(uploadResult.exception)
             }
         }
