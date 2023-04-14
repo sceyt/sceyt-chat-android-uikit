@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -14,7 +13,6 @@ import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -62,12 +60,10 @@ class IncFileMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
-        viewHolderHelper.bind(fileItem)
         setFileDetails(fileItem.file)
 
         with(binding) {
-            val message = item.message
+            val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
             val body = message.body.trim()
@@ -91,7 +87,7 @@ class IncFileMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initAttachment(false)
+                initAttachment()
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
@@ -111,10 +107,11 @@ class IncFileMsgViewHolder(
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
-
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        super.updateState(data, isOnBind)
         when (data.state) {
+            TransferState.Uploaded, TransferState.Downloaded -> {
+                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+            }
             TransferState.PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
@@ -123,9 +120,6 @@ class IncFileMsgViewHolder(
             }
             TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
-            }
-            TransferState.Uploaded, TransferState.Downloaded -> {
-                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
             }
             TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
@@ -136,9 +130,6 @@ class IncFileMsgViewHolder(
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
-
-    override val layoutDetails: ConstraintLayout
-        get() = binding.layoutDetails
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
         with(context) {

@@ -42,6 +42,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var centerIcon: Drawable? = null
     private var enableTrack = true
     private var rotateAnimEnabled = true
+    private var enableProgressDownAnimation = false
     private var trackThickness = 9f
     private var roundedProgress = true
     private var trackColor = "#1A21CFB9".toColorInt()
@@ -66,6 +67,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_trackThickness, trackThickness.toInt()).toFloat()
             centerIcon = a.getDrawable(R.styleable.SceytCircularProgressView_centerIcon)
             rotateAnimEnabled = a.getBoolean(R.styleable.SceytCircularProgressView_rotateAnimEnabled, rotateAnimEnabled)
+            enableProgressDownAnimation = a.getBoolean(R.styleable.SceytCircularProgressView_enableProgressDownAnimation, enableProgressDownAnimation)
             iconTintColor = a.getColor(R.styleable.SceytCircularProgressView_iconTint, iconTintColor)
             bgColor = a.getColor(R.styleable.SceytCircularProgressView_backgroundColor, 0)
             iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.SceytCircularProgressView_iconSizeInPercent, iconSizeInPercent))
@@ -149,7 +151,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     private fun drawProgress(newAngel: Float) {
-        if (newAngel != angle) {
+        if (newAngel != angle && !checkIdProgressDownAndDraw(newAngel)) {
             animatingToAngle = newAngel
             if ((updateProgressAnim == null || updateProgressAnim?.isRunning != true)) {
                 updateProgressAnim = ValueAnimator.ofFloat(angle, newAngel).apply {
@@ -171,6 +173,16 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             }
         }
         rotate()
+    }
+
+    private fun checkIdProgressDownAndDraw(newAngel: Float): Boolean {
+        if (!enableProgressDownAnimation && newAngel < angle) {
+            updateProgressAnim?.cancel()
+            angle = newAngel
+            invalidate()
+            return true
+        }
+        return false
     }
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {

@@ -38,7 +38,6 @@ fun SceytCircularProgressView.getProgressWithState(state: TransferState, progres
             isVisible = true
         }
         Downloading, Uploading, FilePathChanged -> {
-            setTransferring(true)
             setProgress(progressPercent)
             setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_cancel_transfer))
             isVisible = true

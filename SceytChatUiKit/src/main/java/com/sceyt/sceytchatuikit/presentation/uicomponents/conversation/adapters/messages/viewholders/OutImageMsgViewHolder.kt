@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.util.Size
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -13,7 +12,6 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -59,14 +57,11 @@ class OutImageMsgViewHolder(
         }
     }
 
-
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
-        viewHolderHelper.bind(fileItem)
 
         with(binding) {
-            val message = item.message
+            val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
             val body = message.body.trim()
@@ -87,30 +82,28 @@ class OutImageMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initAttachment(true)
+                initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
-                initWidthsDependReactions(recyclerViewReactions, layoutDetails, message)
+                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
         }
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
-
-        loadingProgressView.getProgressWithState(data.state, data.progressPercent)
+        super.updateState(data, isOnBind)
         when (data.state) {
+            TransferState.Downloaded, TransferState.Uploaded -> {
+                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            }
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
             TransferState.Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
-            }
-            TransferState.Uploaded -> {
-                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
             TransferState.PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
@@ -119,11 +112,6 @@ class OutImageMsgViewHolder(
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-            }
-            TransferState.Downloaded -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
-                else viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
@@ -148,8 +136,6 @@ class OutImageMsgViewHolder(
 
     override val layoutDetails: ConstraintLayout
         get() = binding.layoutDetails
-
-    override fun getThumbSize() = Size(binding.fileImage.width, binding.fileImage.height)
 
     private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
         with(context) {
