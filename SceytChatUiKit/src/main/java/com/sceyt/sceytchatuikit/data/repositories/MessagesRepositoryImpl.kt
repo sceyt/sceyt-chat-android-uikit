@@ -169,26 +169,20 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message) = callbackFlow {
-        var tmpMessage: Message? = null
-        tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
-            override fun onResult(message: Message) {
-                trySend(SendMessageResult.Response(SceytResponse.Success(message.toSceytUiMessage())))
-                channel.close()
-            }
-
-            override fun onError(error: SceytException?) {
-                trySend(SendMessageResult.Response(SceytResponse.Error(error, data = tmpMessage?.toSceytUiMessage())))
-                channel.close()
-                Log.e(TAG, "sendMessageAsFlow error: ${error?.message}")
-            }
+        val response = sendMessage(channelId, message, tmpMessageCb = {
+            trySend(SendMessageResult.TempMessage(it.toSceytUiMessage()))
         })
-        trySend(SendMessageResult.TempMessage(tmpMessage.toSceytUiMessage()))
+        when (response) {
+            is SceytResponse.Success -> trySend(SendMessageResult.Success(response))
+            is SceytResponse.Error -> trySend(SendMessageResult.Error(response))
+        }
+        channel.close()
         awaitClose()
     }
 
-    override suspend fun sendMessage(channelId: Long, message: Message): SceytResponse<SceytMessage> {
+    override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: ((Message) -> Unit)?): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
+            val tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }
@@ -198,6 +192,7 @@ class MessagesRepositoryImpl : MessagesRepository {
                     Log.e(TAG, "sendMessage error: ${error?.message}")
                 }
             })
+            tmpMessageCb?.invoke(tmpMessage)
         }
     }
 

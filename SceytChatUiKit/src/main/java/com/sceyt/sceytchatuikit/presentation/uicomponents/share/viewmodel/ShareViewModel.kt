@@ -64,7 +64,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
 
                 launch(Dispatchers.IO) {
                     messagesMiddleWare.sendMessageAsFlow(channelId, message).collect {
-                        if (it is SendMessageResult.Response || it is SendMessageResult.StartedSendingAttachment) {
+                        if (it.isServerResponse() || it is SendMessageResult.StartedSendingAttachment) {
                             val resultCount = count.addAndGet(1)
 
                             if (resultCount == channelIds.size)

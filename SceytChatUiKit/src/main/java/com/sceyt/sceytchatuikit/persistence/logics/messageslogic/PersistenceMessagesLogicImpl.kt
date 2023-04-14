@@ -227,8 +227,8 @@ internal class PersistenceMessagesLogicImpl(
             messagesRepository.sendMessageAsFlow(channelId, message)
                 .onCompletion { channel.close() }
                 .collect { result ->
-                    if (result is SendMessageResult.Response) {
-                        onMessageSentResponse(channelId, result.response)
+                    if (result.isServerResponse()) {
+                        onMessageSentResponse(channelId, result.response())
                         trySend(result)
                     }
                 }
@@ -307,7 +307,7 @@ internal class PersistenceMessagesLogicImpl(
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
     }
 
-    private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>) {
+    private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?) {
         if (response is SceytResponse.Success) {
             response.data?.let { responseMsg ->
                 messageDao.updateMessageByParams(
