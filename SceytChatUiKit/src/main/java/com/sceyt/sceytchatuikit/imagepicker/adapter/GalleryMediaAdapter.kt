@@ -18,9 +18,9 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : Recyc
     private var currentList = arrayListOf<MediaItem>()
 
     companion object {
-        @BindingAdapter("setMediaCheckedState")
+        @BindingAdapter("setGalleryItemCheckedState")
         @JvmStatic
-        fun setMediaCheckedState(image: ImageView, isChecked: Boolean) {
+        fun setGalleryItemCheckedState(image: ImageView, isChecked: Boolean) {
             if (isChecked) {
                 image.setImageResource(GalleryPickerStyle.checkedStateIcon)
             } else {
