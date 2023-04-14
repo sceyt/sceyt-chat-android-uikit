@@ -10,7 +10,6 @@
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
-        android:layout_alignTop="@+id/layoutDetails"
         android:layout_marginEnd="8dp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
@@ -206,29 +205,23 @@
         tools:text="34 reply"
         tools:visibility="visible" />
 
-    <androidx.legacy.widget.Space
-        android:id="@+id/spase"
-        android:layout_width="wrap_content"
-        android:layout_height="5dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
-        app:layout_constraintStart_toStartOf="@id/layoutDetails" />
-
     <ViewStub
         android:id="@+id/rvReactions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"
+        android:layout_marginTop="-5dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="2dp"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
-        android:orientation="horizontal"
-        android:paddingTop="4dp"
         android:visibility="gone"
         app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="@id/layoutDetails"
-        app:layout_constraintTop_toTopOf="@+id/spase"
+        app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
+        app:layout_constraintVertical_bias="0"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

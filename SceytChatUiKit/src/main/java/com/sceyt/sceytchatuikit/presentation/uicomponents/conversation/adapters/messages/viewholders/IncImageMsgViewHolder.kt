@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.util.Size
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -63,11 +62,9 @@ class IncImageMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
-        viewHolderHelper.bind(fileItem)
 
         with(binding) {
-            val message = item.message
+            val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
             val body = message.body.trim()
@@ -91,13 +88,13 @@ class IncImageMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initAttachment(true)
+                initAttachment()
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
-                initWidthsDependReactions(recyclerViewReactions, layoutDetails, message)
+                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
 
             if (item.message.canShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -111,15 +108,15 @@ class IncImageMsgViewHolder(
 
         loadingProgressView.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
+            TransferState.Uploaded, TransferState.Downloaded -> {
+                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            }
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
             TransferState.Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
-            }
-            TransferState.Uploaded -> {
-                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
             TransferState.PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
@@ -128,11 +125,6 @@ class IncImageMsgViewHolder(
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-            }
-            TransferState.Downloaded -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
-                else viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
@@ -157,8 +149,6 @@ class IncImageMsgViewHolder(
 
     override val layoutDetails: ConstraintLayout
         get() = binding.layoutDetails
-
-    override fun getThumbSize() = Size(binding.fileImage.width, binding.fileImage.height)
 
     private fun SceytItemIncImageMessageBinding.setMessageItemStyle() {
         with(context) {

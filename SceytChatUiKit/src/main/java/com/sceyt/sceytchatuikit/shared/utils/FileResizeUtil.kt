@@ -5,20 +5,17 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
-import android.media.ThumbnailUtils
 import android.net.Uri
 import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.sceytchatuikit.extensions.bitmapToByteArray
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.*
 import java.util.*
 import kotlin.math.roundToInt
 
 object FileResizeUtil {
 
+    @Throws(java.lang.Exception::class)
     fun resizeAndCompressImage(context: Context, filePath: String,
                                reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File {
         val initialSize = getImageSize(Uri.parse(filePath))
@@ -26,16 +23,72 @@ object FileResizeUtil {
             inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
         })
         val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
+        bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
+        val bmpFile = FileOutputStream(dest)
+        bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+        bmpFile.flush()
+        bmpFile.close()
+        return File(dest)
+    }
+
+    fun resizeAndCompressImageAsByteArray(filePath: String,
+                                          reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): ByteArray? {
+        val initialSize = getImageSize(Uri.parse(filePath))
+        var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
+            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+        })
         try {
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
+            val bmpFile = ByteArrayOutputStream()
+            bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            bmpFile.flush()
+            bmpFile.close()
+            return bmpFile.toByteArray()
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    fun resizeAndCompressImageAsByteArray(bitmap: Bitmap,
+                                          reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): Bitmap? {
+        val initialSize = Size(bitmap.width, bitmap.height)
+        val byteArray = bitmap.bitmapToByteArray()
+        val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                ?: return null, BitmapFactory.Options().apply {
+            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+        })
+        try {
+            val bmpFile = ByteArrayOutputStream()
+            bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            bmpFile.flush()
+            bmpFile.close()
+            return bmpPic
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
+                                     reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
+        val initialSize = Size(bitmap.width, bitmap.height)
+        val byteArray = bitmap.bitmapToByteArray()
+        val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                ?: return null, BitmapFactory.Options().apply {
+            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+        })
+        try {
+            val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
             bmpFile.flush()
             bmpFile.close()
+            return File(dest)
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
-        return File(dest)
+        return null
     }
 
     fun getImageSize(image: Uri): Size {
@@ -101,7 +154,7 @@ object FileResizeUtil {
 
     fun getImageThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
         return try {
-            getImageThumb(url, maxImageSize).bitmapToByteArray()
+            resizeAndCompressImageAsByteArray(url, reqSize = maxImageSize.roundToInt())
         } catch (ex: Exception) {
             ex.printStackTrace()
             null
@@ -123,7 +176,7 @@ object FileResizeUtil {
             val bitmap = retriever.apply {
                 setDataSource(url)
             }.getFrameAtTime(1000)
-            createThumbFromBitmap(bitmap ?: return null, maxImageSize)
+            resizeAndCompressImageAsByteArray(bitmap ?: return null, reqSize = maxImageSize.toInt())
         } catch (ex: Exception) {
             ex.printStackTrace()
             null
@@ -132,63 +185,30 @@ object FileResizeUtil {
         }
     }
 
-    fun getImageThumb(url: String, maxImageSize: Float): Bitmap? {
-        return try {
-            val bitmap = BitmapFactory.decodeFile(url)
-            val orientation = getFileOrientation(url)
-            createThumbFromBitmap(bitmap, maxImageSize, orientation)
-        } catch (ex: Exception) {
-            null
-        }
-    }
-
     fun getVideoThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
+        val retriever = MediaMetadataRetriever()
         return try {
-            getVideoThumb(url, maxImageSize)?.let {
-                createFileFromBitmap(context, it)
-            }
+            val bitmap = retriever.apply {
+                setDataSource(url)
+            }.getFrameAtTime(1000)
+            resizeAndCompressImageAsFile(context, bitmap
+                    ?: return null, reqSize = maxImageSize.toInt())
         } catch (ex: Exception) {
             ex.printStackTrace()
             null
+        } finally {
+            retriever.release()
         }
     }
+
 
     fun getImageThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
         return try {
-            getImageThumb(url, maxImageSize)?.let {
-                val bitmap = getOrientationCorrectedBitmap(it, url)
-                createFileFromBitmap(context, bitmap)
-            }
+            resizeAndCompressImage(context, url, reqSize = maxImageSize.toInt())
         } catch (ex: Exception) {
             ex.printStackTrace()
             null
         }
-    }
-
-    fun scaleDownBitmap(realImage: Bitmap, maxImageSize: Float): Bitmap {
-        val ratio = (maxImageSize / realImage.width).coerceAtMost(maxImageSize / realImage.height)
-        val width = (ratio * realImage.width).roundToInt()
-        val height = (ratio * realImage.height).roundToInt()
-        return Bitmap.createScaledBitmap(realImage, width, height, true)
-    }
-
-    fun createThumbFromBitmap(realImage: Bitmap, maxImageSize: Float, orientation: Int? = 0): Bitmap {
-        var bitmap = realImage
-        /* if (orientation != null && orientation != 0) {
-             val matrix = Matrix()
-             matrix.setRotate(orientation.toFloat())
-             bitmap= Bitmap.createBitmap(realImage, 0, 0, realImage.width, realImage.height, matrix, true)
-         }*/
-
-        val ratio = (maxImageSize / bitmap.width).coerceAtMost(maxImageSize / bitmap.height)
-        val width = (ratio * bitmap.width).roundToInt()
-        val height = (ratio * bitmap.height).roundToInt()
-
-
-        if (bitmap.width < width || bitmap.height < height)
-            return bitmap
-
-        return ThumbnailUtils.extractThumbnail(bitmap, width, height)
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {

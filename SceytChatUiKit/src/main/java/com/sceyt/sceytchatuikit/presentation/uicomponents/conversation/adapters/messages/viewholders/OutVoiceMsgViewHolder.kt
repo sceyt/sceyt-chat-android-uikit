@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
@@ -74,12 +73,10 @@ class OutVoiceMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = getFileItem(item as MessageItem) ?: return
-        viewHolderHelper.bind(fileItem)
         lastFilePath = fileItem.file.filePath
 
         with(binding) {
-            val message = item.message
+            val message = (item as MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
             if (diff.edited || diff.statusChanged)
@@ -92,7 +89,7 @@ class OutVoiceMsgViewHolder(
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.filesChanged)
-                initAttachment(false)
+                initAttachment()
 
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, viewReply)
@@ -174,6 +171,10 @@ class OutVoiceMsgViewHolder(
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
+            Uploaded, Downloaded -> {
+                lastFilePath = data.filePath
+                binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
+            }
             PendingUpload, PauseUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
@@ -183,13 +184,6 @@ class OutVoiceMsgViewHolder(
             }
             Downloading, Uploading -> {
                 binding.playPauseButton.setImageResource(0)
-            }
-            Uploaded -> {
-                binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
-            }
-            Downloaded -> {
-                lastFilePath = data.filePath
-                binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
             }
             ErrorUpload, ErrorDownload, PauseDownload -> {
                 binding.playPauseButton.setImageResource(0)
@@ -205,9 +199,6 @@ class OutVoiceMsgViewHolder(
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
-
-    override val layoutDetails: ConstraintLayout
-        get() = binding.layoutDetails
 
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         with(context) {
