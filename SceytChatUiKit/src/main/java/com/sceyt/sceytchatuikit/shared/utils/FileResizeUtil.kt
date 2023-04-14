@@ -17,7 +17,9 @@ object FileResizeUtil {
 
     fun resizeAndCompressImage(context: Context, filePath: String,
                                reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
+        if (filePath.isBlank()) return null
         val initialSize = getImageSize(Uri.parse(filePath))
+        if (initialSize.width == -1 || initialSize.height == -1) return null
         var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
             inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
         })
@@ -38,7 +40,9 @@ object FileResizeUtil {
 
     fun resizeAndCompressImageAsByteArray(filePath: String,
                                           reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): ByteArray? {
+        if (filePath.isBlank()) return null
         val initialSize = getImageSize(Uri.parse(filePath))
+        if (initialSize.width == -1 || initialSize.height == -1) return null
         var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
             inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
         })
