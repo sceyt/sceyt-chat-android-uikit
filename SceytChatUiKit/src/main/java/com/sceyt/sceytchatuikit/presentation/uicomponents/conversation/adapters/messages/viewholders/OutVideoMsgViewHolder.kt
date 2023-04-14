@@ -12,7 +12,6 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -95,9 +94,7 @@ class OutVideoMsgViewHolder(
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
-
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        super.updateState(data, isOnBind)
         val imageView = binding.videoViewController.getImageView()
         when (data.state) {
             TransferState.Downloaded, TransferState.Uploaded -> {

@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
-import android.util.Log
 import android.util.Size
 import android.view.View
 import android.widget.TextView
@@ -16,10 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.setMargins
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
-import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.*
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -40,6 +36,7 @@ abstract class BaseMediaMessageViewHolder(
     protected var resizedImageSize: Size? = null
     private val maxSize by lazy { context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) }
     private val minSize = maxSize / 3
+    protected var isAttachedToWindow = true
 
     @CallSuper
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
@@ -54,8 +51,8 @@ abstract class BaseMediaMessageViewHolder(
     protected fun initAttachment() {
         setListener()
 
-        loadingProgressView.release(fileItem.file.progressPercent)
         viewHolderHelper.transferData?.let {
+            loadingProgressView.release(it.progressPercent)
             updateState(it, true)
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
@@ -114,10 +111,27 @@ abstract class BaseMediaMessageViewHolder(
 
     open val layoutDetails: ConstraintLayout? = null
 
-    abstract fun updateState(data: TransferData, isOnBind: Boolean = false)
+    open fun updateState(data: TransferData, isOnBind: Boolean = false) {
+        val isTransferring = data.isTransferring()
+        if (!isOnBind && !isAttachedToWindow && isTransferring) return
+        loadingProgressView.getProgressWithState(data.state, data.progressPercent)
+    }
+
+    override fun onViewAttachedToWindow() {
+        super.onViewAttachedToWindow()
+        isAttachedToWindow = true
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        isAttachedToWindow = false
+    }
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
+            if (viewHolderHelper.updateTransferData(it, fileItem))
+                updateState(it)
+        }
     }
 
     private fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int): Size {

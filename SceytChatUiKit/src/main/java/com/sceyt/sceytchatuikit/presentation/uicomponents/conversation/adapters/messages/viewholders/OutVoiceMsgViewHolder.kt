@@ -15,7 +15,6 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -167,9 +166,7 @@ class OutVoiceMsgViewHolder(
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
-
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
                 lastFilePath = data.filePath
