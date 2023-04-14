@@ -17,9 +17,6 @@ class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
     private lateinit var fileItem: AttachmentDataItem
     val isFileItemInitialized get() = this::fileItem.isInitialized
-
-    var listenerKey: String = ""
-        private set
     var blurredThumb: Drawable? = null
         private set
     var imageSize: Size? = null
@@ -29,20 +26,17 @@ class AttachmentViewHolderHelper(itemView: View) {
 
 
     fun bind(item: AttachmentDataItem) {
+        if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
+                && fileItem.file.messageTid == item.file.messageTid)
+            item.thumbPath = fileItem.thumbPath
+
         fileItem = item
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         imageSize = item.size
-
-        listenerKey = getKey()
         transferData = item.file.toTransferData()
     }
 
-    protected fun getKey(): String {
-        if (isFileItemInitialized.not()) return ""
-        return fileItem.file.messageTid.toString()
-    }
-
-    fun loadThumb(path: String?, imageView: ImageView) {
+    fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {
         Glide.with(context.applicationContext)
             .load(path)
             .transition(DrawableTransitionOptions.withCrossFade())
@@ -53,8 +47,8 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     fun drawThumbOrRequest(imageView: ImageView, requestThumb: () -> Unit) {
         if (isFileItemInitialized.not()) return
-        if (fileItem.thumbPath != null)
-            loadThumb(fileItem.thumbPath, imageView)
+        if (!fileItem.thumbPath.isNullOrBlank())
+            drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
         else {
             loadBlurThumb(blurredThumb, imageView)
             requestThumb()
@@ -65,12 +59,22 @@ class AttachmentViewHolderHelper(itemView: View) {
         imageView.setImageDrawable(thumb)
     }
 
+    fun drawOriginalFile(imageView: ImageView) {
+        if (isFileItemInitialized.not()) return
+        if (!fileItem.file.filePath.isNullOrBlank())
+            drawImageWithBlurredThumb(fileItem.file.filePath, imageView)
+        else
+            loadBlurThumb(blurredThumb, imageView)
+    }
+
     fun updateTransferData(data: TransferData, item: AttachmentDataItem): Boolean {
         if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
         if (data.state == TransferState.ThumbLoaded) {
-            item.thumbPath = data.filePath
-        } else transferData = data
-
+            fileItem.thumbPath = data.filePath
+        } else {
+            fileItem.file.updateWithTransferData(data)
+            transferData = data
+        }
         return true
     }
 }

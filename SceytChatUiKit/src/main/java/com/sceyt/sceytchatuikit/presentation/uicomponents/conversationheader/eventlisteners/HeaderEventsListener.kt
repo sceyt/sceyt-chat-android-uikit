@@ -10,7 +10,7 @@ sealed interface HeaderEventsListener {
     }
 
     fun interface PresenceUpdateListener : HeaderEventsListener {
-        fun onPresenceUpdateEvent(users: List<User>)
+        fun onPresenceUpdateEvent(user: User)
     }
 
     /** Use this if you want to implement all callbacks */

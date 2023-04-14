@@ -7,7 +7,10 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
-import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ForwardingDetailsDb
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.*
 
@@ -53,24 +56,13 @@ fun SceytMessage.toMessageDb(): MessageDb {
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
-        selfReactions = selfReactions?.map { it.toReactionDb(id) },
+        reactions = selfReactions?.map { it.toReactionDb() },
         reactionsScores = reactionScores?.map { it.toReactionScoreEntity(id) },
         forwardingUser = forwardingDetails?.user?.toUserEntity(),
         mentionedUsers = null
     )
 }
 
-fun SceytMessage.toAttachmentPayLoad(): AttachmentPayLoadEntity? {
-    val tid = getTid(id, tid, incoming)
-    val attachment = attachments?.getOrNull(0) ?: return null
-    return AttachmentPayLoadEntity(
-        messageTid = tid,
-        transferState = attachment.transferState,
-        progressPercent = attachment.progressPercent,
-        url = attachment.url,
-        filePath = attachment.filePath
-    )
-}
 
 fun MessageDb.toSceytMessage(): SceytMessage {
     with(messageEntity) {
@@ -214,7 +206,16 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         state = state,
         from = from,
         attachments = attachments?.map {
-            it.toSceytAttachment(tid, TransferState.PendingDownload, 0f)
+            val transferState: TransferState
+            val progress: Float
+            if (it.filePath.isNullOrBlank()) {
+                transferState = TransferState.PendingDownload
+                progress = 0f
+            } else {
+                transferState = TransferState.Downloaded
+                progress = 100f
+            }
+            it.toSceytAttachment(tid, transferState, progress)
         }?.toTypedArray(),
         selfReactions = selfReactions,
         reactionScores = reactionScores,

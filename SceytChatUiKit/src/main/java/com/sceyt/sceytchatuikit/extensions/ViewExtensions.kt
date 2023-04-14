@@ -9,6 +9,7 @@ import android.os.Looper
 import android.text.*
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.annotation.StringRes
@@ -24,6 +25,17 @@ import kotlin.math.roundToInt
 
 fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
     setPadding(paddingLeft + left, paddingTop + top, paddingRight + right, paddingBottom + bottom)
+}
+
+fun View.setMargins(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
+    (layoutParams as? ViewGroup.MarginLayoutParams)?.let {
+        it.setMargins(left, top, right, bottom)
+        layoutParams = it
+    }
+}
+
+fun View.setMargins(size: Int) {
+    setMargins(size, size, size, size)
 }
 
 fun pxToDp(px: Float): Float {
@@ -81,7 +93,7 @@ fun View.getLifecycleScope() = findViewTreeLifecycleOwner()?.lifecycleScope
 fun EditText.setTextAndMoveSelectionEnd(text: String?) {
     text?.let {
         setText(text)
-        setSelection(selectionEnd)
+        setSelection(text.length)
     }
 }
 

@@ -14,9 +14,9 @@ open class HeaderEventsListenerImpl(view: ConversationHeaderView) : HeaderEvents
         typingListener?.onTypingEvent(data)
     }
 
-    override fun onPresenceUpdateEvent(users: List<User>) {
-        defaultListeners.onPresenceUpdateEvent(users)
-        presenceUpdateListener?.onPresenceUpdateEvent(users)
+    override fun onPresenceUpdateEvent(user: User) {
+        defaultListeners.onPresenceUpdateEvent(user)
+        presenceUpdateListener?.onPresenceUpdateEvent(user)
     }
 
     fun setListener(listener: HeaderEventsListener) {

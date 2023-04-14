@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -35,14 +36,14 @@ open class SceytForwardActivity : SceytShareableActivity() {
     }
 
     private fun getDataFromIntent() {
-        forwardMessages = requireNotNull(intent?.getParcelableArrayListExtra(FORWARD_MESSAGES_KEY))
+        forwardMessages = requireNotNull(intent?.parcelableArrayList(FORWARD_MESSAGES_KEY))
     }
 
     private fun SceytActivityForwardBinding.initViews() {
         determinateBtnState()
 
         toolbar.setNavigationIconClickListener {
-            onBackPressed()
+            finish()
         }
 
         toolbar.setQueryChangeListener(::onSearchQueryChanged)

@@ -24,9 +24,12 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCach
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogicImpl
+import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
+import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogicImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.viewmodels.ReactionsInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
@@ -60,22 +63,27 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { provideDatabase(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().messageDao() }
+    single { get<SceytDatabase>().draftMessageDao() }
     single { get<SceytDatabase>().membersDao() }
     single { get<SceytDatabase>().userDao() }
     single { get<SceytDatabase>().reactionDao() }
+    single { get<SceytDatabase>().channelUsersReactionDao() }
     single { get<SceytDatabase>().pendingMarkersDao() }
     single { get<SceytDatabase>().attachmentsDao() }
 
-    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get()) }
+    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMessagesMiddleWare> { get<PersistenceMiddleWareImpl>() }
+    factory<PersistenceAttachmentsMiddleWare> { get<PersistenceMiddleWareImpl>() }
+    factory<PersistenceReactionsMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceUsersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
-    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get()) }
-    factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get()) }
+    factory<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
 
@@ -87,6 +95,7 @@ internal val repositoryModule = module {
     factory<ProfileRepository> { ProfileRepositoryImpl() }
     factory<MessagesRepository> { MessagesRepositoryImpl() }
     factory<AttachmentsRepository> { AttachmentsRepositoryImpl() }
+    factory<ReactionsRepository> { ReactionsRepositoryImpl() }
     factory<UsersRepository> { UsersRepositoryImpl() }
 }
 
@@ -105,4 +114,5 @@ internal val viewModelModule = module {
     viewModel { CreateChatViewModel() }
     viewModel { ConversationInfoViewModel() }
     viewModel { ChannelsViewModel() }
+    viewModel { ReactionsInfoViewModel() }
 }

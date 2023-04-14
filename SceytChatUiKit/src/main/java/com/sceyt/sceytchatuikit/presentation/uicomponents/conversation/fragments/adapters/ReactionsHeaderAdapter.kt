@@ -7,6 +7,8 @@ import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.message.Reaction
+import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoAllReactionsHeaderBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoReactionHeaderBinding
@@ -15,14 +17,12 @@ import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class ReactionsHeaderAdapter(private val data: List<ReactionItem>,
-                             private val allReactionsCount: Int,
-                             private val clickListener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<ReactionItem>>() {
+class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
+                             private val clickListener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<ReactionHeaderItem>>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ReactionItem> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ReactionHeaderItem> {
         return when (viewType) {
             ViewType.Reaction.ordinal -> {
                 val binding = SceytItemInfoReactionHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -35,7 +35,7 @@ class ReactionsHeaderAdapter(private val data: List<ReactionItem>,
         }
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<ReactionItem>, position: Int) {
+    override fun onBindViewHolder(holder: BaseViewHolder<ReactionHeaderItem>, position: Int) {
         holder.bind(data[position])
     }
 
@@ -43,13 +43,13 @@ class ReactionsHeaderAdapter(private val data: List<ReactionItem>,
         return data.size
     }
 
-    inner class ReactionsHeaderViewHolder(val binding: SceytItemInfoReactionHeaderBinding) : BaseViewHolder<ReactionItem>(binding.root) {
+    inner class ReactionsHeaderViewHolder(val binding: SceytItemInfoReactionHeaderBinding) : BaseViewHolder<ReactionHeaderItem>(binding.root) {
 
-        override fun bind(item: ReactionItem) {
-            val reaction = (item as ReactionItem.Reaction).reaction
+        override fun bind(item: ReactionHeaderItem) {
+            val score = (item as ReactionHeaderItem.Reaction).reactionScore
 
             with(binding.reaction) {
-                setCountAndSmile(reaction.score, reaction.key)
+                setCountAndSmile(score.score, score.key)
 
                 if (item.selected) {
                     setReactionBackgroundColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
@@ -66,12 +66,12 @@ class ReactionsHeaderAdapter(private val data: List<ReactionItem>,
         }
     }
 
-    inner class AllReactionsViewHolder(val binding: SceytItemInfoAllReactionsHeaderBinding) : BaseViewHolder<ReactionItem>(binding.root) {
+    inner class AllReactionsViewHolder(val binding: SceytItemInfoAllReactionsHeaderBinding) : BaseViewHolder<ReactionHeaderItem>(binding.root) {
 
         @SuppressLint("SetTextI18n")
-        override fun bind(item: ReactionItem) {
+        override fun bind(item: ReactionHeaderItem) {
             with(binding.tvAll) {
-                text = "${itemView.getString(R.string.all)} $allReactionsCount"
+                text = "${itemView.getString(R.string.sceyt_all)} ${(item as ReactionHeaderItem.All).count}"
 
                 if (item.selected) {
                     background = GradientDrawable().apply {
@@ -98,12 +98,13 @@ class ReactionsHeaderAdapter(private val data: List<ReactionItem>,
 
     override fun getItemViewType(position: Int): Int {
         return when (data[position]) {
-            is ReactionItem.Reaction -> ViewType.Reaction.ordinal
-            is ReactionItem.Other -> ViewType.All.ordinal
+            is ReactionHeaderItem.Reaction -> ViewType.Reaction.ordinal
+            is ReactionHeaderItem.All -> ViewType.All.ordinal
         }
     }
 
     fun setSelected(position: Int) {
+        if (data.isEmpty() || position !in (0 until data.size)) return
         data.findIndexed { it.selected }?.let {
             it.second.selected = false
             notifyItemChanged(it.first, Any())
@@ -112,12 +113,35 @@ class ReactionsHeaderAdapter(private val data: List<ReactionItem>,
         notifyItemChanged(position, Any())
     }
 
+    fun addOrUpdateItem(reaction: ReactionScore) {
+        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
+            (it.second as ReactionHeaderItem.Reaction).reactionScore = ReactionScore(reaction.key, reaction.score)
+            notifyItemChanged(it.first, Any())
+        } ?: let {
+            data.add(ReactionHeaderItem.Reaction(ReactionScore(reaction.key, reaction.score)))
+            notifyItemInserted(data.lastIndex)
+        }
+    }
+
+    fun removeItem(reaction: Reaction) {
+        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
+            data.removeAt(it.first)
+            notifyItemRemoved(it.first)
+        }
+    }
+
+    fun updateAppItem(sumOf: Long) {
+        if (data.isEmpty()) return
+        data[0] = ReactionHeaderItem.All(sumOf).also { it.selected = data[0].selected }
+        notifyItemChanged(0, Any())
+    }
+
     enum class ViewType {
         Reaction,
         All
     }
 
     fun interface OnItemClickListener {
-        fun onItemClick(item: ReactionItem, position: Int)
+        fun onItemClick(item: ReactionHeaderItem, position: Int)
     }
 }

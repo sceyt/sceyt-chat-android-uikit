@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
     android:background="@color/sceyt_color_black"
-    tools:context=".presentation.uicomponents.mediaview.MediaActivity">
+    tools:context=".presentation.uicomponents.mediaview.SceytMediaActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMedia"
@@ -42,7 +42,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvTitle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="35dp"
             android:layout_marginEnd="10dp"
@@ -51,8 +51,10 @@
             android:singleLine="true"
             android:textColor="@color/sceyt_color_white"
             android:textSize="16sp"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toTopOf="@+id/tvDate"
             app:layout_constraintEnd_toStartOf="@+id/icShare"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@+id/icBack"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
@@ -60,16 +62,19 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvDate"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="35dp"
+            android:layout_marginEnd="10dp"
             android:fontFamily="@font/roboto_regular"
             android:lines="1"
             android:textColor="#757D8B"
             android:textSize="13sp"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/tvTitle"
+            app:layout_constraintEnd_toStartOf="@+id/icShare"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@+id/icBack"
-            app:layout_constraintStart_toStartOf="@+id/tvTitle"
             app:layout_constraintTop_toBottomOf="@+id/tvTitle"
             tools:text="Description" />
 

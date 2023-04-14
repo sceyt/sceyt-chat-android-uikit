@@ -50,14 +50,15 @@ import org.koin.core.component.inject
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     private val preferences: SceytSharedPreference by inject()
-    private var membersAdapter: ChannelMembersAdapter? = null
-    var binding: SceytFragmentChannelMembersBinding? = null
+    protected var membersAdapter: ChannelMembersAdapter? = null
+    protected var binding: SceytFragmentChannelMembersBinding? = null
         private set
-    lateinit var channel: SceytChannel
+    protected lateinit var channel: SceytChannel
         private set
-    lateinit var memberType: MemberTypeEnum
+    protected lateinit var memberType: MemberTypeEnum
         private set
-    private var currentUserRole: Role? = null
+    protected var currentUserRole: Role? = null
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
@@ -81,7 +82,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
         val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
         memberType = MemberTypeEnum.values().getOrNull(type) ?: MemberTypeEnum.Member
         getCurrentUserRole()
@@ -116,7 +117,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             }
 
             toolbar.setNavigationIconClickListener {
-                requireActivity().onBackPressed()
+                requireActivity().finish()
             }
         }
     }

@@ -19,9 +19,11 @@ import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.setPadding
+import androidx.lifecycle.*
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytRecordViewBinding
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.util.*
@@ -74,6 +76,17 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                 stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
             }
         }
+
+        post {
+            context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
+        }
+
+        AudioPlayerHelper.addToggleCallback(TAG) {
+            runOnMainThread {
+                if (isRecording)
+                    forceStopRecording()
+            }
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -106,7 +119,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                         stopRecording(RecordingBehaviour.RELEASED)
                 }
                 ACTION_CANCEL -> {
-                    stopRecording(RecordingBehaviour.CANCELED)
+                    stopRecordAndShowPreviewIfNeeded()
                 }
                 ACTION_MOVE -> {
                     if (stopTrackingAction) {
@@ -203,6 +216,13 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         binding.stopRecording(RecordingBehaviour.CANCELED)
     }
 
+    private fun stopRecordAndShowPreviewIfNeeded() {
+        if (isRecording) {
+            isLocked = false
+            binding.stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
+        }
+    }
+
     fun forceStopRecording() {
         if (isRecording) {
             stopTrackingAction = true
@@ -212,12 +232,9 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         }
     }
 
-    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
-        super.onWindowFocusChanged(hasWindowFocus)
-        if (!hasWindowFocus && isRecording) {
-            isLocked = false
-            binding.stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
-        }
+    private val lifecycleEventObserver = LifecycleEventObserver { _, event ->
+        if (event != Lifecycle.Event.ON_RESUME && !hasWindowFocus())
+            stopRecordAndShowPreviewIfNeeded()
     }
 
     private fun SceytRecordViewBinding.stopRecording(recordingBehaviour: RecordingBehaviour) {
@@ -281,8 +298,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         }
 
         icPoint.clearAnimation()
-        textViewTime.visibility = View.INVISIBLE
-        icPoint.visibility = View.INVISIBLE
+        textViewTime.visibility = View.GONE
+        icPoint.visibility = View.GONE
         lockViewContainer.visibility = View.GONE
         layoutEffect2.visibility = View.GONE
         layoutEffect1.visibility = View.GONE

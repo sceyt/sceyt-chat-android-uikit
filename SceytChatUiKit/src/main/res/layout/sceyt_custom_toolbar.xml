@@ -28,6 +28,7 @@
         android:fontFamily="@font/roboto_medium"
         android:padding="10dp"
         android:singleLine="true"
+        android:textAlignment="viewStart"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/bigTextSize"
         app:layout_constraintBottom_toBottomOf="parent"

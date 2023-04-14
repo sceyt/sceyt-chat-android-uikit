@@ -53,7 +53,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                 .setFileSize(it.fileSize)
                 .setMetadata(it.metadata)
                 .setName(it.name)
-                .setCreatedAt(it.createdAt)
+                .setCreatedAt(System.currentTimeMillis())
                 .setUpload(false)
                 .build()
         } ?: emptyList()

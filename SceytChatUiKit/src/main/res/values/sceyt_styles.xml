@@ -20,11 +20,10 @@
         <item name="android:fontFamily">@font/roboto_regular</item>
     </style>
 
-    <style xmlns:tools="http://schemas.android.com/tools" name="PreviewTheme" parent="SceytAppTheme">
+    <style xmlns:tools="http://schemas.android.com/tools" name="SceytPreviewTheme" parent="SceytAppTheme">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges
-        </item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
@@ -36,19 +35,14 @@
         <item name="android:background">@drawable/sceyt_bg_bottom_sheet_dialog</item>
     </style>
 
-    <style name="SceytShapeAppearanceOverlay.CornerSize18" parent="">
+    <style name="SceytShapeAppearanceOverlay.CornerSize17" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">18dp</item>
+        <item name="cornerSize">17dp</item>
     </style>
 
     <style name="SceytShapeAppearanceOverlay.CornerSize5" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">5dp</item>
-    </style>
-
-    <style name="SceytShapeAppearanceOverlay.CornerSize6" parent="">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">6dp</item>
     </style>
 
     <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">

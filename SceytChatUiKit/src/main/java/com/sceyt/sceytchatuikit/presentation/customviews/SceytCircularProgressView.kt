@@ -217,11 +217,11 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     fun release(withProgress: Float? = null) {
-        this.progress = max(withProgress ?: 0f, minProgress)
-        //startAngle = if (rotateAnimEnabled) 0f else -90f
+        progress = max(withProgress ?: 0f, minProgress)
         angle = calculateAngle(progress)
         transferring = true
         if (rotateAnimEnabled) rotate()
+        invalidate()
     }
 
     fun setProgress(@FloatRange(from = 0.0, to = 100.0) newProgress: Float) {

@@ -11,8 +11,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
@@ -148,8 +147,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
             val current = (messages.getOrNull(position) as? MessageItem)?.message
             if (prev != null && current != null)
-                return prev.incoming != current.incoming || prev.type == MessageTypeEnum.System.value()
-        } catch (_: Exception) {
+                return prev.incoming != current.incoming || current.type == MessageTypeEnum.System.value()
+                        || prev.type == MessageTypeEnum.System.value()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
         }
         return true
     }

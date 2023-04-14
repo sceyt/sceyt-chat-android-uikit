@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -62,6 +63,12 @@ internal class PersistenceAttachmentLogicImpl(
     override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>,
                                             offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
         return loadAttachments(loadType = LoadNear, conversationId, attachmentId, types, loadKeyData, offset, ignoreDb)
+    }
+
+    override suspend fun updateForwardedAttachments(message: SceytMessage) {
+        message.attachments?.forEach { attachment ->
+            attachmentDao.updateAttachmentForwarded(attachment.id, message.id, message.tid, attachment.url)
+        }
     }
 
     override fun updateTransferDataByMsgTid(data: TransferData) {

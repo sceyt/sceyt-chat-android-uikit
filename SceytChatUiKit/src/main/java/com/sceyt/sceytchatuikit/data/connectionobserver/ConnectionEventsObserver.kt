@@ -3,8 +3,6 @@ package com.sceyt.sceytchatuikit.data.connectionobserver
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.Status
-import com.sceyt.chat.models.Types
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.extensions.TAG
@@ -35,10 +33,7 @@ object ConnectionEventsObserver {
 
     init {
         ChatClient.getClient().addClientListener(TAG, object : ClientListener {
-            override fun onConnectionStateChanged(
-                state: ConnectionState?,
-                exception: SceytException?
-            ) {
+            override fun onConnectionStateChanged(state: ConnectionState?, exception: SceytException?) {
                 onChangedConnectStatusFlow_.tryEmit(ConnectionStateData(state, exception))
             }
 

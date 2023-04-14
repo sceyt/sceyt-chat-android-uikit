@@ -1,7 +1,5 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
@@ -11,27 +9,31 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.runOnMainThread
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-object MessageEventsObserver {
+object MessageEventsObserver : MessageEventManger.AllEventManagers {
+    private var eventManager = MessageEventManagerImpl(this)
+
     private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 
+    private val onDirectMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onDirectMessageFlow = onDirectMessageFlow_.asSharedFlow()
 
-    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
+    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<ReactionUpdateEventData> = MutableSharedFlow(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
 
 
-    private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<Message?> = MutableSharedFlow(
+    private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
@@ -49,18 +51,35 @@ object MessageEventsObserver {
     val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
 
-    private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
-    val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
-
-
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
             override fun onMessage(channel: Channel, message: Message) {
-                onMessageFlow_.tryEmit(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage()))
+                eventManager.onMessage(channel.toSceytUiChannel(), message.toSceytUiMessage())
             }
 
-            override fun onDirectMessage(p0: Message?) {
+            override fun onDirectMessage(message: Message) {
+                eventManager.onDirectMessage(message.toSceytUiMessage())
+            }
+
+            override fun onMessageDeleted(message: Message?) {
+                message ?: return
+                eventManager.onMessageDeleted(message.toSceytUiMessage())
+            }
+
+            override fun onMessageEdited(message: Message?) {
+                message ?: return
+                eventManager.onMessageEdited(message.toSceytUiMessage())
+            }
+
+            override fun onReactionAdded(message: Message?, reaction: Reaction?) {
+                if (message == null || reaction == null) return
+                eventManager.onReactionAdded(message.toSceytUiMessage(), reaction)
+            }
+
+            override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
+                if (message == null || reaction == null) return
+                eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction)
             }
 
             override fun onMessageComposing(p0: String?, p1: String?) {
@@ -68,25 +87,38 @@ object MessageEventsObserver {
 
             override fun onMessagePaused(p0: String?, p1: String?) {
             }
-
-            override fun onMessageDeleted(message: Message?) {
-                onMessageEditedOrDeletedFlow_.tryEmit(message)
-            }
-
-            override fun onMessageEdited(message: Message?) {
-                onMessageEditedOrDeletedFlow_.tryEmit(message)
-            }
-
-            override fun onReactionAdded(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedFlow_.tryEmit(message)
-            }
-
-            override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
-                onMessageReactionUpdatedFlow_.tryEmit(message)
-            }
         })
     }
 
+
+    override fun onMessage(channel: SceytChannel, message: SceytMessage) {
+        onMessageFlow_.tryEmit(Pair(channel, message))
+    }
+
+    override fun onDirectMessage(message: SceytMessage) {
+        onDirectMessageFlow_.tryEmit(message)
+    }
+
+    override fun onMessageDeleted(message: SceytMessage) {
+        onMessageEditedOrDeletedFlow_.tryEmit(message)
+    }
+
+    override fun onMessageEdited(message: SceytMessage) {
+        onMessageEditedOrDeletedFlow_.tryEmit(message)
+    }
+
+    override fun onReactionAdded(message: SceytMessage, reaction: Reaction) {
+        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.ADD))
+    }
+
+    override fun onReactionDeleted(message: SceytMessage, reaction: Reaction) {
+        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.REMOVE))
+    }
+
+    fun setCustomListener(listener: MessageEventManagerImpl) {
+        eventManager = listener
+        eventManager.setDefaultListeners(this)
+    }
 
     fun emitOutgoingMessage(sceytMessage: SceytMessage) {
         onOutGoingMessageFlow_.tryEmit(sceytMessage)
@@ -94,11 +126,5 @@ object MessageEventsObserver {
 
     fun emitOutgoingMessageSent(channelId: Long, message: SceytMessage) {
         onOutGoingMessageStatusFlow_.tryEmit(Pair(channelId, message))
-    }
-
-    fun emitAttachmentTransferUpdate(data: TransferData) {
-        runOnMainThread {
-            onTransferUpdatedLiveData_.value = data
-        }
     }
 }

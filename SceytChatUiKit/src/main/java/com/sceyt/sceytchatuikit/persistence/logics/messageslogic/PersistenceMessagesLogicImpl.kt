@@ -4,13 +4,14 @@ import android.app.Application
 import android.util.Log
 import androidx.work.WorkManager
 import androidx.work.await
-import com.sceyt.chat.models.message.*
+import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -37,11 +38,13 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendSharedAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
+import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +69,7 @@ internal class PersistenceMessagesLogicImpl(
 ) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
+    private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -87,41 +91,29 @@ internal class PersistenceMessagesLogicImpl(
             markMessagesAs(data.first.id, Received, message.id)
     }
 
-    override fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>) {
+    override fun onFcmMessage(data: RemoteMessageData) {
         launch {
-            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.first.id)
-            val message = data.second
-            if (channelDb != null && message.createdAt <= channelDb.messagesDeletionDate)
+            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
+                    ?: return@launch)
+            val message = data.message
+            if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesDeletionDate)
                 return@launch
 
-            onMessage(data, false)
-            persistenceChannelsLogic.onFcmMessage(data)
-        }
-    }
-
-    override suspend fun onChannelEvent(data: ChannelEventData) {
-        when (data.eventType) {
-            Deleted, ClearedHistory, Left, Hidden -> {
-                data.channelId?.let { messageDao.deleteAllMessages(it) }
+            val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
+            if (messageDb == null) {
+                onMessage(Pair(data.channel, data.message), false)
+                persistenceChannelsLogic.onFcmMessage(data)
             }
-            else -> return
+
+            data.reactionScore?.toReactionScoreEntity(message.id)?.let {
+                reactionDao.insertReactionScore(it)
+            }
         }
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         val updatedMessages = messageDao.updateMessageStatusWithBefore(data.status, data.messageIds.maxOf { it })
         messagesCache.updateMessagesStatus(data.status, *updatedMessages.map { it.tid }.toLongArray())
-    }
-
-    override suspend fun onMessageReactionUpdated(data: Message) {
-        val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
-        reactionDao.insertReactionsAndScores(
-            messageId = data.id,
-            reactionsDb = selfReactions.map { it.reaction },
-            scoresDb = data.reactionScores.map { it.toReactionScoreEntity(data.id) })
-        val message = messageDao.getMessageById(data.id)?.toSceytMessage()
-                ?: data.toSceytUiMessage()
-        messagesCache.messageUpdated(message)
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
@@ -278,6 +270,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         val response = messagesRepository.sendMessage(channelId, message)
         onMessageSentResponse(channelId, response)
+        response.data?.let { persistenceAttachmentLogic.updateForwardedAttachments(it) }
         return response
     }
 
@@ -399,11 +392,11 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return markMessagesAs(channelId, Received, *ids)
     }
 
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return markMessagesAs(channelId, Displayed, *ids)
     }
 
@@ -419,35 +412,8 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        val response = messagesRepository.addReaction(channelId, messageId, scoreKey)
-        if (response is SceytResponse.Success) {
-            response.data?.let { message ->
-                message.selfReactions?.let {
-                    messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity(messageId) })
-                }
-                message.reactionScores?.let {
-                    messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
-                }
-                messagesCache.messageUpdated(message)
-            }
-        }
-        return response
-    }
-
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        val response = messagesRepository.deleteReaction(channelId, messageId, scoreKey)
-        if (response is SceytResponse.Success) {
-            response.data?.let { message ->
-                message.reactionScores?.let {
-                    val fromId = preference.getUserId()
-                    if (fromId != null)
-                        reactionDao.deleteReactionAndScore(messageId, scoreKey, fromId)
-                }
-                messagesCache.messageUpdated(message)
-            }
-        }
-        return response
+    override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        return messagesRepository.getMessageById(channelId, messageId)
     }
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
@@ -456,13 +422,6 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun getMessageDbByTid(tid: Long): SceytMessage? {
         return messageDao.getMessageByTid(tid)?.toSceytMessage()
-    }
-
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction> {
-        return if (key.isEmpty())
-            reactionDao.getReactionsByMsgId(messageId).map { it.toReaction() }
-        else
-            reactionDao.getReactionsByMsgIdAndKey(messageId, key).map { it.toReaction() }
     }
 
     override suspend fun attachmentSuccessfullySent(message: SceytMessage) {
@@ -535,6 +494,8 @@ internal class PersistenceMessagesLogicImpl(
         var forceHasDiff = false
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
+
+        ConnectionEventsObserver.awaitToConnectSceyt()
 
         when (loadType) {
             LoadPrev -> {
@@ -706,14 +667,20 @@ internal class PersistenceMessagesLogicImpl(
             markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): SceytResponse<MessageListMarker> {
-        addPendingMarkerToDb(channelId, status, *ids)
+    private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+        val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
+        ids.toList().chunked(50).forEach {
+            val typedArray = it.toLongArray()
+            addPendingMarkerToDb(channelId, status, *typedArray)
 
-        val response = if (status == Displayed)
-            messagesRepository.markAsRead(channelId, *ids)
-        else messagesRepository.markAsDelivered(channelId, *ids)
-        onMarkerResponse(channelId, response, status, *ids)
-        return response
+            val response = if (status == Displayed)
+                messagesRepository.markAsRead(channelId, *typedArray)
+            else messagesRepository.markAsDelivered(channelId, *typedArray)
+            onMarkerResponse(channelId, response, status, *typedArray)
+            responseList.add(response)
+        }
+
+        return responseList
     }
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long) {

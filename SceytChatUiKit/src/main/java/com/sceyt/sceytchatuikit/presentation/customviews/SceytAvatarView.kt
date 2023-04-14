@@ -1,9 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -12,12 +10,14 @@ import android.util.AttributeSet
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.toColorInt
+import androidx.emoji2.text.EmojiCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.extensions.getFirstCharIsEmoji
+import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -61,13 +61,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun drawName(canvas: Canvas) {
-        textPaint.textAlign = Paint.Align.CENTER
         textPaint.textSize = if (textSize > 0) textSize.toFloat() else width * 0.38f
         textPaint.color = Color.WHITE
 
-        val xPos = (width / 2).toFloat()
-
         val staticLayout = getStaticLayout(getAvatarText(fullName ?: ""))
+
+        val xPos = (width - staticLayout.width) / 2f
         canvas.save()
         canvas.translate(xPos, (height - staticLayout.height) / 2f)
         staticLayout.draw(canvas)
@@ -85,15 +84,20 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         if (title.isBlank()) return ""
         val strings = title.trim().split(" ").filter { it.isNotBlank() }
         if (strings.isEmpty()) return ""
-        val firstChar = strings[0].run {
-            String(Character.toChars(codePointAt(0)))
-        }
-        return if (strings.size > 1) {
-            val secondChar = strings[1].run {
-                String(Character.toChars(codePointAt(0)))
-            }
+        val data = if (isInEditMode)
+            Pair(strings[0].take(1), true) else strings[0].getFirstCharIsEmoji()
+        val firstChar = data.first
+        val isEmoji = data.second
+        if (isEmoji)
+            return if (isInEditMode)
+                firstChar else EmojiCompat.get().process(firstChar) ?: title.take(1)
+
+        val text = if (strings.size > 1) {
+            val secondChar = strings[1].getFirstCharIsEmoji().first
             "${firstChar}${secondChar}".uppercase()
-        } else firstChar.uppercase()
+        } else firstChar.toString().uppercase()
+
+        return if (isInEditMode) text else EmojiCompat.get().process(text) ?: title.take(1)
     }
 
     private fun getAvatarRandomColor(): Int {
@@ -106,13 +110,13 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     @Suppress("DEPRECATION")
     private fun getStaticLayout(title: CharSequence): StaticLayout {
-        val textWidth = textPaint.measureText(title.toString()).toInt()
+        val width = Layout.getDesiredWidth(title, textPaint).roundUp()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            StaticLayout.Builder.obtain(title, 0, title.length, textPaint, textWidth)
+            StaticLayout.Builder.obtain(title, 0, title.length, textPaint, width)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                 .setLineSpacing(0f, 1f)
                 .setIncludePad(false).build()
-        } else StaticLayout(title, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
+        } else StaticLayout(title, textPaint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
     }
 
     private fun loadAvatarImage(oldImageUrl: String?) {

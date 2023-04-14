@@ -1,8 +1,9 @@
 package com.sceyt.sceytchatuikit
 
 import android.app.Application
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
@@ -95,20 +96,18 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
             when (it.state) {
                 ConnectionState.Connected -> {
                     notifyState(true, null)
-
-                    ProcessLifecycleOwner.get().lifecycleScope.launchWhenResumed {
-                        if (ConnectionEventsObserver.isConnected) {
-                            launch(Dispatchers.IO) {
+                    launch {
+                        ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            if (ConnectionEventsObserver.isConnected)
                                 persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
-                            }
                         }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
                     launch(Dispatchers.IO) {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
+                        sceytSyncManager.startSync()
                     }
-                    sceytSyncManager.startSync()
                 }
                 ConnectionState.Failed -> {
                     notifyState(false, it.exception?.message)

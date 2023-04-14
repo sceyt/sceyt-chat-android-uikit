@@ -19,6 +19,17 @@ fun Double.footToCm(): Number {
     return (this * 30.48).roundToInt()
 }
 
+fun Number.roundUp(): Int {
+    return try {
+        DecimalFormat("#").apply {
+            roundingMode = RoundingMode.UP
+        }.format(this).toInt()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        0
+    }
+}
+
 fun Number.scale(scale: Int): Double {
     return toDouble().toBigDecimal().setScale(scale, RoundingMode.UP).toDouble()
 }
@@ -40,8 +51,8 @@ private fun getPow10(skip: Double): Double {
 }
 
 fun Long.toPrettySize(): String {
-    val sizeInKb = (this / 1024f).toDouble()
-    val sizeInMb = sizeInKb / 1024f
+    val sizeInKb = (this / 1000f).toDouble()
+    val sizeInMb = sizeInKb / 1000f
     val format = DecimalFormat("##.##")
     return when {
         sizeInMb >= 1 -> format.format(sizeInMb) + "MB"
@@ -73,10 +84,10 @@ internal fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
  */
 internal fun displayMetrics(): DisplayMetrics = Resources.getSystem().displayMetrics
 
-private val timeFormatter: SimpleDateFormat = SimpleDateFormat("m:ss", Locale.ENGLISH).apply {
-    timeZone = TimeZone.getTimeZone("UTC")
-}
 
 fun Long.durationToMinSecShort(): String {
+    val timeFormatter = SimpleDateFormat("m:ss", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
     return timeFormatter.format(Date(this))
 }

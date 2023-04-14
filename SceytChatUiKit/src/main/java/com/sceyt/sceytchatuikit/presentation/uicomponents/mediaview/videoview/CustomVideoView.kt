@@ -6,7 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import com.sceyt.sceytchatuikit.databinding.SceytVideoViewBinding
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.VideoControllerView.MediaPlayerControl
 
 
@@ -60,7 +60,7 @@ class CustomVideoView @JvmOverloads constructor(
                 binding.videoView.start()
             binding.videoView.isLooping = isLooping
             post {
-                binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
+                binding.controllerView.setUserVisibleHint((context as SceytMediaActivity).isShowMediaDetail())
             }
         }
     }
@@ -72,7 +72,7 @@ class CustomVideoView @JvmOverloads constructor(
                 binding.videoView.start()
                 binding.videoView.isLooping = isLooping
                 post {
-                    binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
+                    binding.controllerView.setUserVisibleHint((context as SceytMediaActivity).isShowMediaDetail())
                 }
             }
         }
@@ -85,7 +85,7 @@ class CustomVideoView @JvmOverloads constructor(
                 binding.videoView.start()
                 binding.videoView.isLooping = isLooping
                 post {
-                    binding.controllerView.setUserVisibleHint((context as MediaActivity).isShowMediaDetail())
+                    binding.controllerView.setUserVisibleHint((context as SceytMediaActivity).isShowMediaDetail())
                 }
             }
         }

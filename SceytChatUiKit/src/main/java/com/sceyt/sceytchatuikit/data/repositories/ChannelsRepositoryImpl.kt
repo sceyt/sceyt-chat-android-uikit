@@ -6,6 +6,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListFilterQueryType
+import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
@@ -137,6 +138,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     override suspend fun getAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> = callbackFlow {
         val channelListQuery = ChannelListQuery.Builder()
             .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
+            .withQueryParam(ChannelQueryParam(1,10,1,true))
             .order(getOrder())
             .limit(limit)
             .build()
@@ -573,6 +575,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
             .order(getOrder())
             .query(query?.ifBlank { null })
+            .withQueryParam(ChannelQueryParam(1,10,1,true))
             .limit(20)
             .build()
     }

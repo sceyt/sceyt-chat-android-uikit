@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class OutDeletedMsgViewHolder(

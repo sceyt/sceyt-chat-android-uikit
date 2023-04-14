@@ -2,9 +2,13 @@ package com.sceyt.sceytchatuikit
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.emoji2.bundled.BundledEmojiCompatConfig
+import androidx.emoji2.text.EmojiCompat
 import com.sceyt.chat.ChatClient
 import com.sceyt.sceytchatuikit.di.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.vanniktech.emoji.EmojiManager
+import com.vanniktech.emoji.google.GoogleEmojiProvider
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.context.GlobalContext
@@ -19,6 +23,8 @@ class SceytUIKitInitializer(private val application: Application) {
         val chatClient = ChatClient.initialize(application, host, appId, clientId)
         initKoin(enableDatabase)
         initTheme()
+        EmojiCompat.init(BundledEmojiCompatConfig(application))
+        EmojiManager.install(GoogleEmojiProvider())
         return chatClient
     }
 

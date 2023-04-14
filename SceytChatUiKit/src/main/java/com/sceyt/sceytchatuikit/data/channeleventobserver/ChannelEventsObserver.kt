@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.data.channeleventobserver
 
-import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.member.Member
@@ -8,6 +7,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-object ChannelEventsObserver {
+object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
+    private var eventManager = ChannelEventManagerImpl(this)
 
     private val onTotalUnreadChangedFlow_ = MutableSharedFlow<ChannelUnreadCountUpdatedEventData>(
         extraBufferCapacity = 5,
@@ -60,120 +61,152 @@ object ChannelEventsObserver {
 
 
     init {
-        ChatClient.getClient().addChannelListener(TAG,object : ChannelListener {
+        ChatClient.getClient().addChannelListener(TAG, object : ChannelListener {
             override fun onTotalUnreadCountUpdated(channel: Channel?, totalUnreadChannelCount: Long, totalUnreadMessageCount: Long) {
                 val data = ChannelUnreadCountUpdatedEventData(channel, totalUnreadChannelCount, totalUnreadMessageCount)
-                onTotalUnreadChangedFlow_.tryEmit(data)
-                Log.i("totalUnreadCountUpdated", "${channel?.unreadMessageCount}  $totalUnreadChannelCount  $totalUnreadMessageCount  ${channel?.lastReadMessageId}")
+                eventManager.onTotalUnreadChanged(data)
             }
 
             override fun onDeleteAllMessagesForMe(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
             }
 
             override fun onDeleteAllMessagesForEveryone(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.ClearedHistory))
             }
 
             override fun onChannelUpdated(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Updated))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.Updated))
             }
 
             override fun onChannelCreated(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Created))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.Created))
             }
 
             override fun onChannelDeleted(channelId: Long) {
                 val data = ChannelEventData(null, ChannelEventEnum.Deleted, channelId)
-                onChannelEventFlow_.tryEmit(data)
+                eventManager.onChannelEvent(data)
             }
 
             override fun onChannelMuted(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Muted))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.Muted))
             }
 
             override fun onChannelUnMuted(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.UnMuted))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.UnMuted))
             }
 
             override fun onChannelLeft(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Left))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.Left))
             }
 
             override fun onChannelJoined(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Joined))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.Joined))
             }
 
             override fun onChannelHidden(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.Hidden))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.Hidden))
             }
 
             override fun onChannelUnHidden(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.UnHidden))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.UnHidden))
             }
 
             override fun onMarkedUsUnread(channel: Channel?) {
-                onChannelEventFlow_.tryEmit(ChannelEventData(channel, ChannelEventEnum.MarkedUsUnread))
+                eventManager.onChannelEvent(ChannelEventData(channel, ChannelEventEnum.MarkedUsUnread))
             }
 
             override fun onChannelInvited(channelId: Long?) {
                 val data = ChannelEventData(null, ChannelEventEnum.Invited, channelId)
-                onChannelEventFlow_.tryEmit(data)
+                eventManager.onChannelEvent(data)
             }
 
             override fun onChannelBlocked(channelId: Long) {
                 val data = ChannelEventData(null, ChannelEventEnum.Blocked, channelId)
-                onChannelEventFlow_.tryEmit(data)
+                eventManager.onChannelEvent(data)
             }
 
             override fun onChannelUnBlocked(channelId: Long) {
                 val data = ChannelEventData(null, ChannelEventEnum.UnBlocked, channelId)
-                onChannelEventFlow_.tryEmit(data)
+                eventManager.onChannelEvent(data)
             }
 
             override fun onOwnerChanged(channel: Channel, newOwner: Member, oldOwner: Member) {
-                onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(channel, newOwner, oldOwner))
+                eventManager.onOwnerChanged(channel.toSceytUiChannel(), newOwner, oldOwner)
             }
 
             override fun onMemberStartedTyping(channel: Channel, member: Member) {
-                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel.toSceytUiChannel(),
+                eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
                     member.toSceytMember(), true))
             }
 
             override fun onMemberStoppedTyping(channel: Channel, member: Member) {
-                onChannelTypingEventFlow_.tryEmit(ChannelTypingEventData(channel.toSceytUiChannel(),
+                eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
                     member.toSceytMember(), false))
             }
 
             override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {
-                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Role))
+                if (channel == null || members == null) return
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Role))
             }
 
             override fun onMembersKicked(channel: Channel?, members: MutableList<Member>?) {
-                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Kicked))
+                if (channel == null || members == null) return
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Kicked))
             }
 
             override fun onMembersBlocked(channel: Channel?, members: MutableList<Member>?) {
-                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Blocked))
+                if (channel == null || members == null) return
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Blocked))
             }
 
             override fun onMembersUnblocked(channel: Channel?, members: MutableList<Member>?) {
-                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.UnBlocked))
+                if (channel == null || members == null) return
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.UnBlocked))
             }
 
             override fun onMembersAdded(channel: Channel?, members: MutableList<Member>?) {
-                onChannelMembersEventFlow_.tryEmit(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Added))
+                if (channel == null || members == null) return
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Added))
             }
 
-            override fun onDeliveryReceiptReceived(channel: Channel, from: User?, messageIds: MutableList<Long>) {
-                Log.i("messageMarker","onDeliveryEvent from msgs -> $messageIds")
-                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Delivered, messageIds))
+            override fun onDeliveryReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Delivered, messageIds))
             }
 
-            override fun onReadReceiptReceived(channel: Channel, from: User?, messageIds: MutableList<Long>) {
-                Log.i("messageMarker","onReadEvent from msgs -> $messageIds")
-                onMessageStatusFlow_.tryEmit(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Read, messageIds))
+            override fun onReadReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Read, messageIds))
             }
         })
+    }
+
+    override fun onTotalUnreadChanged(data: ChannelUnreadCountUpdatedEventData) {
+        onTotalUnreadChangedFlow_.tryEmit(data)
+    }
+
+    override fun onChannelEvent(data: ChannelEventData) {
+        onChannelEventFlow_.tryEmit(data)
+    }
+
+    override fun onOwnerChanged(channel: SceytChannel, newOwner: Member, oldOwner: Member) {
+        onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(channel, newOwner, oldOwner))
+    }
+
+    override fun onChannelTypingEvent(data: ChannelTypingEventData) {
+        onChannelTypingEventFlow_.tryEmit(data)
+    }
+
+    override fun onChangedMembersEvent(data: ChannelMembersEventData) {
+        onChannelMembersEventFlow_.tryEmit(data)
+    }
+
+    override fun onMessageStatusEvent(data: MessageStatusChangeData) {
+        onMessageStatusFlow_.tryEmit(data)
+    }
+
+
+    fun setCustomListener(listener: ChannelEventManagerImpl) {
+        eventManager = listener
+        eventManager.setDefaultListeners(this)
     }
 }

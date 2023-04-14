@@ -107,12 +107,11 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         if (initialized) return
 
         // Initialise variables
-        setTokenizer(CharacterTokenizer(listOf(',', ';'), ","))
+        setTokenizer(CharacterTokenizer(emptyList(), ""))
 
         // Initialise TextChangedListeners
         addListeners()
         setTextIsSelectable(false)
-        isLongClickable = false
 
         //In theory, get the soft keyboard to not supply suggestions. very unreliable
         inputType = inputType or
@@ -295,6 +294,29 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
             }
             return objects
         }
+
+    val objectsIndexed: List<ObjectDataIndexed<T>>
+        get() {
+            val objects = ArrayList<ObjectDataIndexed<T>>()
+            var text = text
+            if (hiddenContent != null) {
+                text = hiddenContent
+            }
+            for (span in text.getSpans(0, text.length, TokenImageSpan::class.java)) {
+                @Suppress("unchecked_cast")
+                val token = span.token as T
+                val start = text.getSpanStart(span)
+                val end = text.getSpanEnd(span)
+                objects.add(ObjectDataIndexed(start, end, token))
+            }
+            return objects
+        }
+
+    data class ObjectDataIndexed<T>(
+            val start: Int,
+            val end: Int,
+            val token: T
+    )
 
     /**
      * Get the content entered in the text field, including hidden text when ellipsized
@@ -585,12 +607,12 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-         val handled = super.onKeyUp(keyCode, event)
-         if (shouldFocusNext) {
-             shouldFocusNext = false
-             handleDone()
-         }
-         return handled
+        val handled = super.onKeyUp(keyCode, event)
+        if (shouldFocusNext) {
+            shouldFocusNext = false
+            handleDone()
+        }
+        return handled
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -882,21 +904,20 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
     }
 
 
-    protected fun initWithObjects(list: List<T>) {
+    protected fun initWithObjects(list: List<ObjectDataIndexed<T>>) {
         if (list.isEmpty()) return
         for (obj in list) {
-            buildSpanForObject(obj)?.also {
-                val ssb = tokenizer?.wrapTokenValue(tokenToString(it.token)) ?: return
+            buildSpanForObject(obj.token)?.also {
                 val editable = text ?: return
                 internalEditInProgress = true
-                editable.indexOf(ssb.toString(), 0, true).takeIf { index -> index != -1 }?.let { index ->
-                    editable.setSpan(it, index, index + ssb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                val validRange = (0..editable.length)
+                if (obj.start in validRange && obj.end in validRange) {
+                    editable.setSpan(it, obj.start, obj.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    internalEditInProgress = false
                 }
-                internalEditInProgress = false
             }
         }
     }
-
 
     /**
      * Append a token object to the object list. Object will be added on the main thread.
@@ -1166,8 +1187,7 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
         }
     }
 
-    inner class TokenImageSpan(d: View, val token: T) : ViewSpan(d, this@TokenCompleteTextView),
-            NoCopySpan {
+    inner class TokenImageSpan(d: View, val token: T) : ViewSpan(d, this@TokenCompleteTextView) {
         fun onClick() {
             val text = text ?: return
             when (tokenClickStyle) {
@@ -1456,7 +1476,7 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
                 out.writeString(parcelableClassName)
                 out.writeList(baseObjects)
             }
-            out.writeString(tokenizer!!.javaClass.canonicalName)
+            out.writeString(tokenizer?.javaClass?.canonicalName)
             out.writeParcelable(tokenizer, 0)
         }
 

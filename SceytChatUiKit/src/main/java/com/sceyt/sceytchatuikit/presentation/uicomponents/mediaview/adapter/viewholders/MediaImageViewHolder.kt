@@ -1,9 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.viewholders
 
-import android.util.Size
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMediaItemImageBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -26,28 +26,28 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
 
         viewHolderHelper.transferData?.let {
             updateState(it, true)
+            binding.progress.release(it.progressPercent)
+
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
-
-        if (fileItem.thumbPath.isNullOrBlank() && !fileItem.file.filePath.isNullOrBlank())
-            requestThumb()
     }
-
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
+        binding.progress.isVisible = data.state == TransferState.Downloading
+
         when (data.state) {
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
-                viewHolderHelper.drawThumbOrRequest(binding.imageView, ::requestThumb)
+                viewHolderHelper.drawOriginalFile(binding.imageView)
             }
             TransferState.Uploading -> {
                 if (isOnBind)
-                    viewHolderHelper.drawThumbOrRequest(binding.imageView, ::requestThumb)
+                    viewHolderHelper.drawOriginalFile(binding.imageView)
             }
             TransferState.Uploaded -> {
-                viewHolderHelper.drawThumbOrRequest(binding.imageView, ::requestThumb)
+                viewHolderHelper.drawOriginalFile(binding.imageView)
             }
             TransferState.PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
@@ -56,10 +56,11 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
+
+                binding.progress.setProgress(data.progressPercent)
             }
             TransferState.Downloaded -> {
-                viewHolderHelper.drawThumbOrRequest(binding.imageView, ::requestThumb)
-                (fileItem as MediaItem.Image).file.filePath = data.filePath
+                viewHolderHelper.drawOriginalFile(binding.imageView)
             }
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
@@ -68,18 +69,13 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
             }
             TransferState.FilePathChanged -> {
-                requestThumb()
+                viewHolderHelper.drawOriginalFile(binding.imageView)
             }
-            TransferState.ThumbLoaded -> {
-                viewHolderHelper.loadThumb(fileItem.thumbPath, binding.imageView)
-            }
+            TransferState.ThumbLoaded -> Unit
         }
     }
 
-    override fun getThumbSize() = Size(itemView.width, itemView.height)
-
     private fun setListener() {
-        MessageEventsObserver.onTransferUpdatedLiveData
-            .observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 }

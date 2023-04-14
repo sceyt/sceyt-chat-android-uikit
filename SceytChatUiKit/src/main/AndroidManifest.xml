@@ -16,9 +16,9 @@
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustNothing" />
         <activity
-            android:name=".presentation.uicomponents.mediaview.MediaActivity"
+            android:name=".presentation.uicomponents.mediaview.SceytMediaActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/PreviewTheme" />
+            android:theme="@style/SceytPreviewTheme" />
 
         <activity
             android:name=".presentation.uicomponents.forward.SceytForwardActivity"

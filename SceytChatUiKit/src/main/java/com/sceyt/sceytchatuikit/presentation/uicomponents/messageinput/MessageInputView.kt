@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -23,10 +25,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
@@ -41,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.persistence.mappers.getMessageTypeFromAttachments
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
@@ -58,6 +58,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.eventlisteners.InputEventsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getAsObjectDataIndexed
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -65,7 +67,10 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
 
@@ -84,11 +89,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var typingJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
-    private var disabledInput: Boolean = false
-    private var showingJoinButton: Boolean = false
+    private var disabledInputByGesture: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
     private val mentionUserDebounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
+    var isInputHidden = false
+        private set
 
     var messageInputActionCallback: MessageInputActionCallback? = null
     private var editMessage: Message? = null
@@ -98,7 +104,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 with(binding) {
                     messageInput.setText(value.body)
                     messageInput.text?.let { text -> messageInput.setSelection(text.length) }
-                    messageInput.setMentionUsers(value.mentionedUsers.map { MentionUserData(SceytMember(it)) })
+                    if (!value.mentionedUsers.isNullOrEmpty()) {
+                        val data = getAsObjectDataIndexed(value.metadata, value.mentionedUsers)
+                        messageInput.setMentionUsers(data)
+                    }
                     context.showSoftInput(messageInput)
                 }
             }
@@ -128,27 +137,29 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 setRecordingListener()
                 voiceMessageRecorderView = this
-                isVisible = !disabledInput && !showingJoinButton
+                isVisible = canShowRecorderView()
             })
         }
+
+        Handler(Looper.getMainLooper()).postDelayed({ binding.messageInput.requestFocus() }, 500)
     }
 
     private fun init() {
         with(binding) {
             setUpStyle()
-            determineState()
+            determineInputState()
             post { onStateChanged(inputState) }
 
             messageInput.doAfterTextChanged { text ->
-                if (voiceMessageRecorderView?.isRecording == true)
+                if (isRecording())
                     return@doAfterTextChanged
 
-                determineState()
+                determineInputState()
                 checkNeedMentionUsers(text)
-                messageInputActionCallback?.typing(text.isNullOrBlank().not())
                 typingJob?.cancel()
-                typingJob = CoroutineScope(Dispatchers.Main + Job()).launch {
+                typingJob = MainScope().launch {
                     messageInputActionCallback?.typing(text.isNullOrBlank().not())
+                    messageInputActionCallback?.updateDraftMessage(text, binding.messageInput.objectsIndexed)
                     delay(2000)
                     messageInputActionCallback?.typing(false)
                 }
@@ -187,7 +198,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 return@submit
             }
 
-            val lastWord = inputText.split(" ").lastOrNull()
+            val lastWord = inputText.toString().replace("\n", " ").split(" ").lastOrNull()
             if (lastWord?.startsWith("@") == true) {
                 val mentionText = lastWord.removePrefix("@")
                 eventListeners.onMentionUsersListener(mentionText)
@@ -273,14 +284,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun checkAndAddMentionedUsers(builder: Message) {
-        val mentionedUsers = binding.messageInput.objects
-        if (mentionedUsers.isEmpty()) return
+    private fun checkAndAddMentionedUsers(messageBuilder: Message) {
+        val mentionedUsers = binding.messageInput.objectsIndexed
+        if (mentionedUsers.isEmpty()) {
+            messageBuilder.metadata = ""
+            messageBuilder.mentionedUsers = null
+            return
+        }
 
         MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
-            builder.metadata = it
+            messageBuilder.metadata = it
         }
-        builder.mentionedUsers = mentionedUsers.map { it.user }.toTypedArray()
+        messageBuilder.mentionedUsers = mentionedUsers.map { it.token.user }.toTypedArray()
     }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
@@ -293,10 +308,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun finishRecording() {
         binding.layoutInput.isVisible = true
-        voiceMessageRecorderView?.isVisible = true
+        showVoiceRecorder()
         binding.voiceRecordPresenter.isVisible = false
         binding.messageInput.setText("")
+        determineInputState()
+        binding.messageInput.requestFocus()
     }
+
+    private fun canShowRecorderView() = !disabledInputByGesture && !isInputHidden && inputState == Voice
 
     private fun SceytVoiceMessageRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
@@ -395,23 +414,30 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun determineState() {
+    private fun determineInputState() {
+        if (!isEnabledInput())
+            return
+
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
+                && !binding.voiceRecordPresenter.isShowing
         val newState = if (showVoiceIcon) Voice else Text
         if (inputState != newState)
             onStateChanged(newState)
         inputState = newState
 
-        binding.icSendMessage.isVisible = !showVoiceIcon && !disabledInput
-        if (!showVoiceIcon || disabledInput) hideAndStopVoiceRecorder()
-        else showVoiceRecorder()
+        binding.icSendMessage.isVisible = !showVoiceIcon
+        if (showVoiceIcon) {
+            showVoiceRecorder()
+        } else hideAndStopVoiceRecorder()
     }
+
+    private fun isEnabledInput() = !disabledInputByGesture && !isInputHidden
 
     private fun addAttachments(attachments: List<Attachment>) {
         binding.rvAttachments.isVisible = true
         allAttachments.addAll(attachments)
         attachmentsAdapter.addItems(attachments.map { AttachmentItem(it) })
-        determineState()
+        determineInputState()
     }
 
     private fun setupAttachmentsList() {
@@ -425,11 +451,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showHideJoinButton(show: Boolean) {
-        showingJoinButton = show
+        isInputHidden = show
         binding.btnJoin.isVisible = show
-        binding.layoutInput.isVisible = !disabledInput && !show
-        binding.layoutCloseInput.root.isVisible = disabledInput && !show
-        if (!show) determineState()
+        binding.layoutInput.isVisible = !disabledInputByGesture && !show
+        binding.layoutCloseInput.root.isVisible = disabledInputByGesture && !show
+        voiceMessageRecorderView?.isVisible = canShowRecorderView()
     }
 
     private fun checkIsExistAttachment(path: String?): Boolean {
@@ -442,7 +468,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         else {
             ViewUtil.collapseHeight(binding.layoutReplyOrEditMessage.root, to = 1, duration = 200) {
                 binding.layoutReplyOrEditMessage.root.isVisible = false
-                context.asComponentActivity().lifecycleScope.launchWhenResumed { readyCb?.invoke() }
+                context.asComponentActivity().lifecycleScope.launch { readyCb?.invoke() }
             }
         }
     }
@@ -467,34 +493,38 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun hideInputWithMessage(message: String, @DrawableRes startIcon: Int) {
-        binding.layoutCloseInput.apply {
-            tvMessage.text = message
-            icStateIcon.setImageResource(startIcon)
-            root.isVisible = true
+        with(binding) {
+            layoutCloseInput.apply {
+                tvMessage.text = message
+                icStateIcon.setImageResource(startIcon)
+                root.isVisible = true
+            }
+            layoutInput.isInvisible = true
+            messageInput.setText("")
+            btnJoin.isVisible = false
+            rvAttachments.isVisible = false
+            hideAndStopVoiceRecorder()
         }
-        binding.layoutInput.isVisible = false
-        binding.btnJoin.isVisible = false
-        voiceMessageRecorderView?.isVisible = false
     }
 
     private fun showInput() {
-        binding.layoutCloseInput.root.isVisible = false
-        if (voiceMessageRecorderView?.isRecording == true)
+        if (isRecording())
             binding.layoutInput.isInvisible = true
         else
             binding.layoutInput.isVisible = true
-        determineState()
+
+        binding.layoutCloseInput.root.isVisible = false
+        determineInputState()
     }
 
     private fun showVoiceRecorder() {
-        voiceMessageRecorderView?.isVisible = true
+        if (canShowRecorderView())
+            voiceMessageRecorderView?.isVisible = true
     }
 
     private fun hideAndStopVoiceRecorder() {
         voiceMessageRecorderView?.isVisible = false
         voiceMessageRecorderView?.forceStopRecording()
-        if (!disabledInput)
-            binding.messageInput.requestFocus()
     }
 
     private fun initMentionUsersContainer() {
@@ -502,8 +532,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        if (binding.messageInput.objects.find { data -> data.id == it.id } != null)
-                            return@setUserClickListener
                         binding.messageInput.appendObjectSyncAsync(MentionUserData(it))
                     }
                 }
@@ -515,44 +543,62 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun replyMessage(message: Message) {
-        replyMessage = message
-        with(binding.layoutReplyOrEditMessage) {
-            isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
-            val name = userNameBuilder?.invoke(message.from) ?: message.from.getPresentableName()
-            val text = "${getString(R.string.sceyt_reply)} $name".run {
-                setBoldSpan(length - name.length, length)
+        checkIfRecordingAndConfirm {
+            replyMessage = message
+            with(binding.layoutReplyOrEditMessage) {
+                isVisible = true
+                ViewUtil.expandHeight(root, 1, 200)
+                val name = userNameBuilder?.invoke(message.from)
+                        ?: message.from.getPresentableName()
+                val text = "${getString(R.string.sceyt_reply)} $name".run {
+                    setBoldSpan(length - name.length, length)
+                }
+                tvName.text = text
+                icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
+
+                if (message.attachments.isNullOrEmpty().not()) {
+                    binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
+                    loadReplyMessageImage(message.attachments[0])
+                } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
+
+                tvMessageBody.text = if (message.isTextMessage())
+                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                else message.toSceytUiMessage().getShowBody(context)
             }
-            tvName.text = text
-            icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
-
-            if (message.attachments.isNullOrEmpty().not()) {
-                binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
-                loadReplyMessageImage(message.attachments[0])
-            } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
-
-            tvMessageBody.text = if (message.isTextMessage())
-                MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
-            else message.toSceytUiMessage().getShowBody(context)
         }
     }
 
     internal fun editMessage(message: Message) {
-        editMessage = message
-        with(binding.layoutReplyOrEditMessage) {
-            isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
-            icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
-            layoutImage.isVisible = false
-            tvName.text = getString(R.string.sceyt_edit_message)
-            tvMessageBody.text = if (message.isTextMessage())
-                message.body.trim()
-            else message.toSceytUiMessage().getShowBody(context)
+        checkIfRecordingAndConfirm {
+            editMessage = message
+            with(binding.layoutReplyOrEditMessage) {
+                isVisible = true
+                ViewUtil.expandHeight(root, 1, 200)
+                icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
+                layoutImage.isVisible = false
+                tvName.text = getString(R.string.sceyt_edit_message)
+                tvMessageBody.text = if (message.isTextMessage())
+                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                else message.toSceytUiMessage().getShowBody(context)
+            }
         }
     }
 
     internal fun setReplyInThreadMessageId(messageId: Long?) {
         replyThreadMessageId = messageId
+    }
+
+    internal fun setDraftMessage(draftMessage: DraftMessage?) {
+        if (draftMessage == null || draftMessage.message.isNullOrEmpty())
+            return
+        with(binding.messageInput) {
+            setTextAndMoveSelectionEnd(draftMessage.message)
+            if (!draftMessage.mentionUsers.isNullOrEmpty()) {
+                val data = getAsObjectDataIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
+                setMentionUsers(data)
+            }
+        }
+        determineInputState()
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -569,15 +615,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         rvAttachments.isVisible = false
                         layoutReplyOrEditMessage.root.isVisible = false
                     }
-                    if (isBlockedPeer)
+                    isInputHidden = if (isBlockedPeer) {
                         hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
-                    else {
-                        if (disabledInput.not())
+                        true
+                    } else {
+                        if (disabledInputByGesture.not())
                             showInput()
+                        false
                     }
                 }
             }
-            else -> {}
+            else -> return
         }
     }
 
@@ -587,6 +635,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun onChannelLeft() {
         showHideJoinButton(true)
+    }
+
+    fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
+        if (isRecording()) {
+            SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording, R.string.sceyt_stop_recording_desc, R.string.sceyt_discard) {
+                stopRecording()
+                onConfirm()
+            }
+        } else onConfirm()
     }
 
     fun createAttachmentWithPaths(vararg filePath: String, metadata: String = "", attachmentType: String? = null): MutableList<Attachment> {
@@ -627,14 +684,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         replyMessage = null
         allAttachments.clear()
         attachmentsAdapter.clear()
-        determineState()
+        determineInputState()
     }
 
-    fun enableDisableInput(message: String, enable: Boolean, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
-        disabledInput = enable.not()
-        if (!enable)
-            hideInputWithMessage(message, startIcon)
-        else showInput()
+    fun disableInputWithMessage(message: String, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
+        disabledInputByGesture = true
+        hideInputWithMessage(message, startIcon)
+    }
+
+    fun enableInput() {
+        disabledInputByGesture = false
+        if (!isInputHidden)
+            showInput()
     }
 
     fun stopRecording() {
@@ -643,6 +704,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
 
+    fun isRecording() = voiceMessageRecorderView?.isRecording == true
+
     fun getComposedMessage() = binding.messageInput.text
 
     interface MessageInputActionCallback {
@@ -650,6 +713,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
+        fun updateDraftMessage(text: Editable?, mentionUserIds: List<ObjectDataIndexed<MentionUserData>>)
         fun mention(query: String)
         fun join()
     }
@@ -713,7 +777,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
-        determineState()
+        determineInputState()
     }
 
     override fun onJoinClick() {
