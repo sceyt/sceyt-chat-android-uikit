@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.util.Size
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -13,7 +12,6 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -62,13 +60,11 @@ class IncVideoMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
-        viewHolderHelper.bind(fileItem)
-        setVideoDuration(binding.tvDuration)
 
         with(binding) {
-            val message = item.message
+            val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
+            setVideoDuration(tvDuration)
 
             val body = message.body.trim()
             if (body.isNotBlank()) {
@@ -91,13 +87,13 @@ class IncVideoMsgViewHolder(
                 setReplyMessageContainer(message, binding.viewReply)
 
             if (diff.filesChanged)
-                initAttachment(true)
+                initAttachment()
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
-                initWidthsDependReactions(recyclerViewReactions, layoutDetails, message)
+                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
 
             if (item.message.canShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -107,11 +103,14 @@ class IncVideoMsgViewHolder(
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
-
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+        super.updateState(data, isOnBind)
         val imageView = binding.videoViewController.getImageView()
         when (data.state) {
+            TransferState.Downloaded, TransferState.Uploaded -> {
+                binding.videoViewController.showPlayPauseButtons(true)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+            }
+
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
@@ -130,14 +129,6 @@ class IncVideoMsgViewHolder(
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
-            }
-            TransferState.Downloaded -> {
-                binding.videoViewController.showPlayPauseButtons(true)
-                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-            }
-            TransferState.Uploaded -> {
-                binding.videoViewController.showPlayPauseButtons(true)
-                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
             TransferState.PauseDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
@@ -164,8 +155,6 @@ class IncVideoMsgViewHolder(
 
     override val layoutDetails: ConstraintLayout
         get() = binding.layoutDetails
-
-    override fun getThumbSize() = Size(fileContainer.width, fileContainer.height)
 
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
         with(context) {
