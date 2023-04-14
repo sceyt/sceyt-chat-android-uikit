@@ -11,4 +11,6 @@ data class TransferData(
     override fun toString(): String {
         return "messageTid $messageTid, attachmentTid $attachmentTid, progressPercent $progressPercent, state $state, filePath $filePath, url$url"
     }
+
+    fun isTransferring() = state == TransferState.Downloading || state == TransferState.Uploading
 }

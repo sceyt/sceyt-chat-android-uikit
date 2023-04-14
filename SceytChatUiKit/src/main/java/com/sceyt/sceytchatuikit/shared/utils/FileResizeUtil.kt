@@ -15,20 +15,25 @@ import kotlin.math.roundToInt
 
 object FileResizeUtil {
 
-    @Throws(java.lang.Exception::class)
     fun resizeAndCompressImage(context: Context, filePath: String,
-                               reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File {
+                               reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
         val initialSize = getImageSize(Uri.parse(filePath))
         var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
             inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
         })
-        val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
-        bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
-        val bmpFile = FileOutputStream(dest)
-        bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
-        bmpFile.flush()
-        bmpFile.close()
-        return File(dest)
+        return try {
+            val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
+
+            bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
+            val bmpFile = FileOutputStream(dest)
+            bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
+            bmpFile.flush()
+            bmpFile.close()
+            File(dest)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     fun resizeAndCompressImageAsByteArray(filePath: String,
@@ -203,12 +208,7 @@ object FileResizeUtil {
 
 
     fun getImageThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
-        return try {
-            resizeAndCompressImage(context, url, reqSize = maxImageSize.toInt())
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            null
-        }
+        return resizeAndCompressImage(context, url, reqSize = maxImageSize.toInt())
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {

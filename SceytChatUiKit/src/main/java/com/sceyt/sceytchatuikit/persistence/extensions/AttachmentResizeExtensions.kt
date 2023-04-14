@@ -14,7 +14,7 @@ fun Attachment.resizeImage(context: Context): Attachment {
     var resizedAttachment = this
     try {
         val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, url, reqSize = 600)
-        resizedAttachment = Attachment.Builder(resizedImageFile.path, url, type)
+        resizedAttachment = Attachment.Builder(resizedImageFile?.path ?: filePath, url, type)
             .withTid(tid)
             .setName(name)
             .setMetadata(metadata)
@@ -30,7 +30,9 @@ fun resizeImage(context: Context, path: String?, reqSize: Int = 600): Result<Str
     return try {
         path?.let {
             val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, it, reqSize)
-            Result.success(resizedImageFile.path)
+            if (resizedImageFile == null) {
+                Result.failure(Exception("Could not resize image"))
+            } else Result.success(resizedImageFile.path)
         } ?: Result.failure(Exception("Wrong file path"))
     } catch (ex: Exception) {
         Log.e("ImageResize", ex.message.toString())
