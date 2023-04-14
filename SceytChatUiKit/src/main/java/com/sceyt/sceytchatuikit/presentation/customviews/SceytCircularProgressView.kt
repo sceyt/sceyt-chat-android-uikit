@@ -151,7 +151,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     private fun drawProgress(newAngel: Float) {
-        if (newAngel != angle || !checkIdProgressDownAndDraw(newAngel)) {
+        if (newAngel != angle && !checkIdProgressDownAndDraw(newAngel)) {
             animatingToAngle = newAngel
             if ((updateProgressAnim == null || updateProgressAnim?.isRunning != true)) {
                 updateProgressAnim = ValueAnimator.ofFloat(angle, newAngel).apply {
