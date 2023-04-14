@@ -99,6 +99,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 })
             })
             with((binding ?: return).rvFiles) {
+                setHasFixedSize(true)
                 adapter = mediaAdapter
                 layoutManager = GridLayoutManager(requireContext(), 3).also {
                     it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {

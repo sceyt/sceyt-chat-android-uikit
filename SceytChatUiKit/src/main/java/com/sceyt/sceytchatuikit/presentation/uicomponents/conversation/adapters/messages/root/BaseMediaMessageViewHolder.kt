@@ -1,8 +1,10 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
+import android.util.Log
 import android.util.Size
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
@@ -21,6 +23,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -32,13 +35,23 @@ abstract class BaseMediaMessageViewHolder(
         senderNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseMsgViewHolder(view, messageListeners, displayedListener, senderNameBuilder) {
-
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
+    protected var resizedImageSize: Size? = null
     private val maxSize by lazy { context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) }
     private val minSize = maxSize / 3
 
-    protected fun initAttachment(isImageOrVideo: Boolean) {
+    @CallSuper
+    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+        super.bind(item, diff)
+        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
+        fileContainer?.let {
+            setImageSize(it)
+        }
+        viewHolderHelper.bind(fileItem, resizedImageSize)
+    }
+
+    protected fun initAttachment() {
         setListener()
 
         loadingProgressView.release(fileItem.file.progressPercent)
@@ -47,29 +60,25 @@ abstract class BaseMediaMessageViewHolder(
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
-
-        if (isImageOrVideo)
-            setImageSize()
     }
 
-    private fun setImageSize() {
-        val container = fileContainer ?: return
-        calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
+    protected fun setImageSize(fileImage: View) {
+        val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
                 ?: maxSize,
-            imageHeight = fileItem.size?.height ?: maxSize) { width, height ->
-            val constraintSet = ConstraintSet()
-            constraintSet.clone(layoutDetails)
-            constraintSet.constrainMinHeight(container.id, height)
-            constraintSet.constrainMinWidth(container.id, width)
-            constraintSet.applyTo(layoutDetails)
+            imageHeight = fileItem.size?.height ?: maxSize)
+        resizedImageSize = size
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(layoutDetails)
+        constraintSet.constrainMinHeight(fileImage.id, size.height)
+        constraintSet.constrainMinWidth(fileImage.id, size.width)
+        constraintSet.applyTo(layoutDetails)
 
-            val message = fileItem.sceytMessage
-            with(container) {
-                val defaultMargin = marginLeft
-                if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank()) {
-                    setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
-                } else setMargins(defaultMargin)
-            }
+        val message = fileItem.sceytMessage
+        with(fileImage) {
+            val defaultMargin = marginLeft
+            if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank()) {
+                setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
+            } else setMargins(defaultMargin)
         }
     }
 
@@ -93,13 +102,17 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    open fun getThumbSize() = Size(itemView.width, itemView.height)
+    open fun getThumbSize(): Size {
+        val with = resizedImageSize?.width ?: fileContainer?.width ?: itemView.width
+        val height = resizedImageSize?.height ?: fileContainer?.height ?: itemView.height
+        return Size(with, height)
+    }
 
     open val fileContainer: View? = null
 
     abstract val loadingProgressView: SceytCircularProgressView
 
-    abstract val layoutDetails: ConstraintLayout
+    open val layoutDetails: ConstraintLayout? = null
 
     abstract fun updateState(data: TransferData, isOnBind: Boolean = false)
 
@@ -107,14 +120,13 @@ abstract class BaseMediaMessageViewHolder(
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
-    private fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int, result: (scaleWidth: Int, scaleHeight: Int) -> Unit) {
+    private fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int): Size {
         val coefficient = imageWidth.toDouble() / imageHeight.toDouble()
         var scaleWidth = defaultSize
         var scaleHeight = defaultSize
 
         if (coefficient.isNaN()) {
-            result.invoke(scaleWidth, scaleHeight)
-            return
+            return Size(scaleWidth, scaleHeight)
         } else {
             if (coefficient != 1.0) {
                 if (imageWidth > imageHeight) {
@@ -129,7 +141,7 @@ abstract class BaseMediaMessageViewHolder(
                     else minSize
                 }
             }
-            result.invoke(scaleWidth, scaleHeight)
+            return Size(scaleWidth, scaleHeight)
         }
     }
 }

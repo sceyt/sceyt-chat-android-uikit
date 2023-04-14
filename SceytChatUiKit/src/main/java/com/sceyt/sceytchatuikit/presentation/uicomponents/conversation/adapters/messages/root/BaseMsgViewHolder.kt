@@ -10,7 +10,6 @@ import android.graphics.Typeface
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
 import android.view.ViewStub
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -227,18 +226,16 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     /** @param layoutDetails when not null, that mean layout details will resize with reactions. */
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
-                                       viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null): RecyclerView? {
+                                       viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
 
         if (reactions.isNullOrEmpty()) {
             reactionsAdapter = null
             rvReactionsViewStub.isVisible = false
             layoutDetails?.layoutParams?.width = ViewGroup.LayoutParams.WRAP_CONTENT
-            return null
+            return
         }
 
-
-        //if (reactionsAdapter == null) {
         reactionsAdapter = ReactionsAdapter(
             ReactionViewHolderFactory(itemView.context, messageListeners)).also {
             it.submitList(reactions)
@@ -249,15 +246,13 @@ abstract class BaseMsgViewHolder(private val view: View,
                 recyclerViewReactions = it as RecyclerView
             }
 
-        with(recyclerViewReactions ?: return null) {
+        with(recyclerViewReactions ?: return) {
             setRecycledViewPool(viewPool)
             itemAnimator = DefaultItemAnimator().also {
                 it.moveDuration = 0
                 it.removeDuration = 0
                 it.addDuration = 200
             }
-            /* if (itemDecorationCount == 0)
-                 addItemDecoration(RecyclerItemOffsetDecoration(0, 4, 8, 4))*/
 
             layoutManager = FlexboxLayoutManager(context).apply {
                 flexDirection = FlexDirection.ROW
@@ -265,23 +260,13 @@ abstract class BaseMsgViewHolder(private val view: View,
                 alignItems = AlignItems.FLEX_START
                 justifyContent = JustifyContent.FLEX_START
             }
-
             adapter = reactionsAdapter
-
         }
-        /*  } else {
-              (recyclerViewReactions?.layoutManager as? FlexboxLayoutManager)?.justifyContentForReactions(
-                  item.message.incoming, reactions.size.plus(1)
-              )
-              reactionsAdapter?.submitList(reactions)
-          }*/
         recyclerViewReactions?.isVisible = true
-        initWidthsDependReactions(recyclerViewReactions, layoutDetails, item.message)
-
-        return recyclerViewReactions
+        initWidthsDependReactions(recyclerViewReactions, layoutDetails)
     }
 
-    protected fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?, message: SceytMessage) {
+    protected fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?) {
         if (layoutDetails == null || rvReactions == null) return
 
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
@@ -290,14 +275,13 @@ abstract class BaseMsgViewHolder(private val view: View,
         when {
             rvReactions.measuredWidth > layoutDetails.measuredWidth -> {
                 val margin = dpToPx(8f)
-                layoutDetails.layoutParams.width = min((rvReactions.measuredWidth + margin), bodyMaxWidth)
-                if (message.incoming.not()) {
-                    (rvReactions.layoutParams as MarginLayoutParams).marginEnd = margin
-                }
+                val newWidth = min((rvReactions.measuredWidth + margin), bodyMaxWidth)
+                layoutDetails.layoutParams.width = newWidth
+                rvReactions.layoutParams.width = newWidth - margin
             }
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {
+                rvReactions.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
                 layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                (rvReactions.layoutParams as MarginLayoutParams).marginEnd = 0
             }
         }
     }
