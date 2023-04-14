@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.entity.messages
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 
 data class MessageDb(
@@ -18,7 +19,7 @@ data class MessageDb(
         val attachments: List<AttachmentDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId", entity = ReactionEntity::class)
-        val selfReactions: List<ReactionDb>?,
+        val reactions: List<ReactionDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
         val reactionsScores: List<ReactionScoreEntity>?,
@@ -28,4 +29,6 @@ data class MessageDb(
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
         val mentionedUsers: List<MentionUserDb>?
-)
+) {
+    val selfReactions get() = reactions?.filter { it.from?.id == SceytKitClient.myId }
+}

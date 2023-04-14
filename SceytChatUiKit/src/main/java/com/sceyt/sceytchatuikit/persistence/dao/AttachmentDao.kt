@@ -34,4 +34,7 @@ abstract class AttachmentDao {
         val hasNext = newest.size > SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2
         return LoadNearData((newMessages + oldest).sortedBy { it.attachmentEntity.createdAt }, hasNext = hasNext, hasPrev)
     }
+
+    @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
+    abstract suspend fun updateAttachmentForwarded(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
 }

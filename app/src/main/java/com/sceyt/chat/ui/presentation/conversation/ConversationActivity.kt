@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.filetransfer.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
@@ -142,9 +143,9 @@ open class ConversationActivity : AppCompatActivity() {
     }
 
     private fun getDataFromIntent() {
-        channel = requireNotNull(intent.getParcelableExtra(CHANNEL))
+        channel = requireNotNull(intent.parcelable(CHANNEL))
         isReplyInThread = intent.getBooleanExtra(REPLY_IN_THREAD, false)
-        replyMessage = intent.getParcelableExtra(REPLY_IN_THREAD_MESSAGE)
+        replyMessage = intent.parcelable(REPLY_IN_THREAD_MESSAGE)
     }
 
     companion object {
@@ -169,15 +170,14 @@ open class ConversationActivity : AppCompatActivity() {
         }
     }
 
-
-    override fun onBackPressed() {
-        super.onBackPressed()
+    override fun finish() {
+        super.finish()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            val channel: SceytChannel = requireNotNull(intent.getParcelableExtra(CHANNEL))
+            val channel: SceytChannel = requireNotNull(intent.parcelable(CHANNEL))
             val conversationId = if (isReplyInThread) replyMessage?.id ?: 0 else channel.id
 
             @Suppress("UNCHECKED_CAST")

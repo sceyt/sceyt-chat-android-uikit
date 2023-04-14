@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -23,6 +22,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -35,9 +36,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.BaseMsgViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.MessageViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.DeleteMessageDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -48,8 +49,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.Po
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactions
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -65,6 +68,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
+    private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
 
     var enabledClickActions = true
         private set
@@ -180,7 +184,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
-        return PopupReactions(context).showPopup(view, message, object : PopupReactionsAdapter.OnItemClickListener {
+        val reactions = message.selfReactions?.map { it.key }?.toArrayList() ?: arrayListOf()
+        if (reactions.size < MAX_SELF_REACTIONS_SIZE)
+            reactions.addAll(SceytKitConfig.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
+
+        return PopupReactions(context).showPopup(view, message, reactions, object : PopupReactionsAdapter.OnItemClickListener {
             override fun onReactionClick(reaction: ReactionItem.Reaction) {
                 this@MessagesListView.onAddOrRemoveReaction(reaction)
             }
@@ -252,9 +260,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
-            BottomSheetEmojisFragment(emojiListener = { emoji ->
-                onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji), message))
-            }).show(it, null)
+            BottomSheetEmojisFragment().also { fragment ->
+                fragment.setEmojiListener { emoji ->
+                    val containsSelf = message.selfReactions?.find { reaction -> reaction.key == emoji } != null
+                    onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message))
+                }
+            }.show(it, null)
         }
     }
 
@@ -374,8 +385,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData) {
-        Log.i(TAG, data.toString())
-        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+        messagesRV.getData()?.find { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 TransferState.Uploading, TransferState.PendingUpload, TransferState.PauseUpload, TransferState.Uploaded -> { attachment ->
                     attachment.messageTid == data.messageTid
@@ -384,28 +394,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     attachment.url == data.url
                 }
             }
+            val foundAttachmentFile = (it as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
 
             if (data.state == TransferState.ThumbLoaded) {
-                updateThumb(data, predicate)
+                foundAttachmentFile?.let { listItem ->
+                    listItem.thumbPath = data.filePath
+                }
                 return
             }
 
-            val foundAttachment = (it.second as MessageItem).message.attachments?.find(predicate)
-            val foundAttachmentFiles = (it.second as MessageItem).message.files?.map { item -> item.file }?.find(predicate)
+            val foundAttachment = it.message.attachments?.find(predicate)
 
             foundAttachment?.let { attachment ->
                 attachment.updateWithTransferData(data)
-                foundAttachmentFiles?.updateWithTransferData(data)
-            }
-        }
-    }
-
-    private fun updateThumb(data: TransferData, predicate: (SceytAttachment) -> Boolean) {
-        Log.i(TAG, data.toString())
-        messagesRV.getData()?.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
-            val foundAttachmentFiles = (it.second as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
-            foundAttachmentFiles?.let { listItem ->
-                listItem.thumbPath = data.filePath
+                foundAttachmentFile?.file?.updateWithTransferData(data)
             }
         }
     }
@@ -476,6 +478,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setUnreadCount(unreadCount: Int) {
         scrollDownIcon.setUnreadCount(unreadCount)
+    }
+
+    internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {
+        onWindowFocusChangeListener = listener
     }
 
     fun hideLoadingPrev() {
@@ -583,6 +589,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             enabledClickActions = enabled
     }
 
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        onWindowFocusChangeListener?.invoke(hasWindowFocus)
+        if (!hasWindowFocus)
+            AudioPlayerHelper.stopAll()
+    }
 
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
@@ -618,7 +630,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        if (item.message.selfReactions.isNullOrEmpty()) return
         context.getFragmentManager()?.let {
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
@@ -637,10 +648,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onAttachmentClick(view: View, item: FileListItem) {
         when (item) {
             is FileListItem.Image -> {
-                MediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
             }
             is FileListItem.Video -> {
-                MediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
             }
             else -> item.file.openFile(context)
         }
@@ -667,7 +678,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Message popup events
     override fun onCopyMessageClick(message: SceytMessage) {
-        context.setClipboard(message.body)
+        context.setClipboard(message.body.trim())
         Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 

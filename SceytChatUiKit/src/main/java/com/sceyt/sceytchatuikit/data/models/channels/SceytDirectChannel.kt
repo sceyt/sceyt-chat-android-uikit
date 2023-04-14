@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
+import com.sceyt.chat.models.message.Reaction
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import kotlinx.parcelize.Parcelize
@@ -22,6 +23,7 @@ class SceytDirectChannel(
         override var channelType: ChannelTypeEnum = ChannelTypeEnum.Direct,
         override var messagesDeletionDate: Long,
         override var lastMessages: List<SceytMessage>?,
+        override var userMessageReactions: List<Reaction>?,
         var peer: SceytMember?,
 ) : SceytChannel(id = id,
     createdAt = createdAt,
@@ -39,7 +41,8 @@ class SceytDirectChannel(
     lastReadMessageId = lastReadMessageId,
     channelType = channelType,
     messagesDeletionDate = messagesDeletionDate,
-    lastMessages = lastMessages) {
+    lastMessages = lastMessages,
+    userMessageReactions = userMessageReactions) {
 
     override val channelSubject: String
         get() = peer?.getPresentableName() ?: ""
@@ -63,11 +66,14 @@ class SceytDirectChannel(
             markedUsUnread = markedUsUnread,
             muted = muted,
             channelType = channelType,
-            peer = peer?.copy(),
+            peer = peer?.clone(),
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
             messagesDeletionDate = messagesDeletionDate,
-            lastMessages = lastMessages)
+            lastMessages = lastMessages,
+            userMessageReactions = userMessageReactions).also {
+            it.draftMessage = draftMessage
+        }
     }
 }
 

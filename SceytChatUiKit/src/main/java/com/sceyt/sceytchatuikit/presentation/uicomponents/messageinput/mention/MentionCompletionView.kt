@@ -14,7 +14,7 @@ class MentionCompletionView : TokenCompleteTextView<MentionUserData> {
     constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
 
     init {
-        setTokenizer(CharacterTokenizer(listOf(), ""))
+        setTokenizer(CharacterTokenizer(emptyList(), ""))
     }
 
     override fun getViewForObject(obj: MentionUserData): View {
@@ -23,7 +23,7 @@ class MentionCompletionView : TokenCompleteTextView<MentionUserData> {
         return token
     }
 
-    fun setMentionUsers(mentionUsers: List<MentionUserData>) {
+    fun setMentionUsers(mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
         initWithObjects(mentionUsers)
     }
 

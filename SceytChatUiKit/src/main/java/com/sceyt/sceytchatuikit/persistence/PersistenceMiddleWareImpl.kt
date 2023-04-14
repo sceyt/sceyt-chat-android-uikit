@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionStateData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -20,14 +21,20 @@ import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,11 +47,14 @@ import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceChannelsLogic,
                                          private val messagesLogic: PersistenceMessagesLogic,
+                                         private val attachmentsLogic: PersistenceAttachmentLogic,
+                                         private val reactionsLogic: PersistenceReactionsLogic,
                                          private val membersLogic: PersistenceMembersLogic,
                                          private val usersLogic: PersistenceUsersLogic,
                                          private val connectionLogic: PersistenceConnectionLogic) :
         CoroutineScope, PersistenceMembersMiddleWare, PersistenceMessagesMiddleWare,
-        PersistenceChanelMiddleWare, PersistenceUsersMiddleWare, SceytKoinComponent {
+        PersistenceChanelMiddleWare, PersistenceUsersMiddleWare, PersistenceAttachmentsMiddleWare,
+        PersistenceReactionsMiddleWare, SceytKoinComponent {
 
 
     override val coroutineContext: CoroutineContext
@@ -68,10 +78,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
 
     private fun onChannelEvent(data: ChannelEventData) {
-        launch {
-            channelLogic.onChannelEvent(data)
-            messagesLogic.onChannelEvent(data)
-        }
+        launch { channelLogic.onChannelEvent(data) }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
@@ -100,15 +107,12 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         }
     }
 
-    private fun onMessageReactionUpdated(data: Message?) {
-        data ?: return
-        launch { messagesLogic.onMessageReactionUpdated(data) }
+    private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
+        launch { reactionsLogic.onMessageReactionUpdated(data) }
     }
 
-    private fun onMessageEditedOrDeleted(data: Message?) {
-        data ?: return
+    private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
         launch {
-            val sceytMessage = data.toSceytUiMessage()
             messagesLogic.onMessageEditedOrDeleted(sceytMessage)
             channelLogic.onMessageEditedOrDeleted(sceytMessage)
         }
@@ -194,6 +198,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.hideChannel(channelId)
+    }
+
+    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
+        channelLogic.updateDraftMessage(channelId, message, mentionUsers)
     }
 
     override fun getTotalUnreadCount(): Flow<Int> {
@@ -309,11 +317,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.deleteMessage(channelId, message, onlyForMe)
     }
 
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessagesAsRead(channelId, *ids)
     }
 
-    override suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessageAsDelivered(channelId, *ids)
     }
 
@@ -321,23 +329,43 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.editMessage(channelId, message)
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return messagesLogic.addReaction(channelId, messageId, scoreKey)
-    }
-
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteReaction(channelId, messageId, scoreKey)
+    override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+        return messagesLogic.getMessageFromServerById(channelId, messageId)
     }
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
         return messagesLogic.getMessageDbById(messageId)
     }
 
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction> {
-        return messagesLogic.getMessageReactionsDbByKey(messageId, key)
+    override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
+
+    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
+        return attachmentsLogic.getAllPayLoadsByMsgTid(tid)
     }
 
-    override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
+    override suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>, offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+        return attachmentsLogic.getPrevAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
+    }
+
+    override suspend fun getNextAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>, offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+        return attachmentsLogic.getNextAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
+    }
+
+    override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>, offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+        return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
+    }
+
+    override fun updateTransferDataByMsgTid(data: TransferData) {
+        attachmentsLogic.updateTransferDataByMsgTid(data)
+    }
+
+    override fun updateAttachmentWithTransferData(data: TransferData) {
+        attachmentsLogic.updateAttachmentWithTransferData(data)
+    }
+
+    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+        attachmentsLogic.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+    }
 
     override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
         return usersLogic.getSceytUsers(ids)
@@ -381,5 +409,21 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun unMuteNotifications(): SceytResponse<Boolean> {
         return usersLogic.unMuteNotifications()
+    }
+
+    override suspend fun loadReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<Reaction>> {
+        return reactionsLogic.loadReactions(messageId, offset, key, loadKey, ignoreDb)
+    }
+
+    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction> {
+        return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
+    }
+
+    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        return reactionsLogic.addReaction(channelId, messageId, scoreKey)
+    }
+
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey)
     }
 }

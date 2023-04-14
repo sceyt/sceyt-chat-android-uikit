@@ -84,8 +84,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    SceytPresenceChecker.onPresenceCheckUsersFlow.onEach {
-        channelsListView.updateUsersPresenceIfNeeded(it.map { presenceUser -> presenceUser.user })
+    ChannelsCache.channelDraftMessageChangesFlow.onEach { sceytChannel ->
+        channelsListView.channelUpdated(sceytChannel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelEventsObserver.onChannelTypingEventFlow

@@ -21,11 +21,9 @@
     <string name="sceyt_clear_history">Clear history</string>
     <string name="sceyt_members">Members</string>
     <string name="sceyt_subscribers">Subscribers</string>
-    <string name="sceyt_remove_member">Kick member</string>
     <string name="sceyt_set_owner">Set Owner</string>
     <string name="sceyt_change_role">Change role</string>
     <string name="sceyt_block_and_kick_member">Block and kick member</string>
-    <string name="sceyt_member_name_you">(You)</string>
     <string name="sceyt_you">You</string>
     <string name="sceyt_take_photo">Take photo</string>
     <string name="sceyt_take_video">Take video</string>
@@ -33,7 +31,6 @@
     <string name="sceyt_file">File</string>
     <string name="sceyt_cancel">Cancel</string>
     <string name="sceyt_edit_message">Edit message</string>
-    <string name="sceyt_something_went_wrong">Something went wrong</string>
     <string name="sceyt_join">Join</string>
     <string name="sceyt_attachment">Attachment</string>
     <string name="sceyt_react">React</string>
@@ -69,20 +66,14 @@
     <string name="sceyt_leave_group_desc">Once you leave this group it will be removed for you along with its entire history.</string>
     <string name="sceyt_leave_channel_title">Leave channel</string>
     <string name="sceyt_leave_channel_desc">Once you leave this channel it will be removed for you along with its entire history.</string>
-    <string name="sceyt_block_and_leave_channel_title">Block and leave channel?</string>
-    <string name="sceyt_block_and_leave_channel_desc">Are you sure you want to block and leave channel?</string>
     <string name="sceyt_block_user_title">Block user</string>
     <string name="sceyt_block_user_desc">Blocking a user will prevent them from sending you messages, calls, adding you to groups and channels.</string>
-    <string name="sceyt_unblock_user_title">Unblock?</string>
-    <string name="sceyt_unblock_user_desc">Are you sure you want to unblock this user?</string>
     <string name="sceyt_delete_p2p_title">Delete chat</string>
     <string name="sceyt_delete_p2p_desc">Once you delete this chat, it will be removed from the chat list with its message history.</string>
     <string name="sceyt_delete_group_title">Delete group</string>
     <string name="sceyt_delete_group_desc">Once you delete this group it will be permanently removed along with its entire history for all the group members.</string>
     <string name="sceyt_delete_channel_title">Delete channel</string>
     <string name="sceyt_delete_channel_desc">Once you delete this channel it will be permanently removed along with its entire history for all the channel subscribers.</string>
-    <string name="sceyt_sign_out_title">Sign out?</string>
-    <string name="sceyt_sign_out_desc">Are you sure you want to sign out?</string>
     <string name="sceyt_leave_channel">Leave channel</string>
     <string name="sceyt_leave">Leave</string>
     <string name="sceyt_leave_small_case">leave</string>
@@ -151,10 +142,16 @@
     <string name="sceyt_shara_max_item_count">You are allowed to send a maximum of 20 files.</string>
     <string name="sceyt_share_max_chats_count">You are allowed to send a message to a maximum of 5 chats.</string>
     <string name="sceyt_photo">Photo</string>
-    <string name="slide_to_cancel">"\u003C Slide to cancel"</string>
+    <string name="sceyt_slide_to_cancel">"\u003C Slide to cancel"</string>
     <string name="sceyt_message_copied">Message copied</string>
     <string name="sceyt_forward_message">Forward message</string>
-    <string name="forwarded_message">Forwarded message</string>
-    <string name="all">All</string>
+    <string name="sceyt_forwarded_message">Forwarded message</string>
+    <string name="sceyt_all">All</string>
+    <string name="sceyt_reacted">Reacted</string>
+    <string name="sceyt_to">to</string>
+    <string name="sceyt_draft">Draft</string>
+    <string name="sceyt_stop_recording">Discard voice message?</string>
+    <string name="sceyt_stop_recording_desc">Are you sure you want to stop recording and discard your voice message?</string>
+    <string name="sceyt_discard">Discard</string>
 
 </resources>

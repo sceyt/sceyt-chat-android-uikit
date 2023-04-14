@@ -12,7 +12,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
@@ -83,8 +85,10 @@ class ChooseAttachmentHelper {
         with(fragment) {
             scope = fragment.lifecycleScope
 
-            lifecycleScope.launchWhenResumed {
-                this@ChooseAttachmentHelper.context = requireContext()
+            lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    this@ChooseAttachmentHelper.context = requireContext()
+                }
             }
 
             requestCameraPermissionLauncher = initPermissionLauncher {

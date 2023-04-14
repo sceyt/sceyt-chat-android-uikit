@@ -4,5 +4,10 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 
 data class ChannelUpdateData(
         val channel: SceytChannel,
-        val needSorting: Boolean
+        val needSorting: Boolean,
+        val eventType: ChannelUpdatedType = ChannelUpdatedType.Updated
 )
+
+enum class ChannelUpdatedType {
+    Updated, Presence, LastMessage, ClearedHistory, MuteState, Members, UnreadCount
+}

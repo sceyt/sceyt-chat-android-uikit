@@ -4,13 +4,17 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.Presence
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.channels.*
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
@@ -40,6 +44,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             messagesDeletionDate = messagesDeletionDate,
             role = myRole(),
             lastMessages = lastMessages?.map { it.toSceytUiMessage() },
+            userMessageReactions = getUserMessageReactions()?.toList()
         )
     } else {
         this as DirectChannel
@@ -60,7 +65,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
             lastReadMessageId = lastReadMessageId,
             channelType = getChannelType(this),
             messagesDeletionDate = messagesDeletionDate,
-            lastMessages = lastMessages?.map { it.toSceytUiMessage() }
+            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
+            userMessageReactions = getUserMessageReactions()?.toList()
         )
     }
 }
@@ -73,14 +79,16 @@ fun SceytChannel.toGroupChannel(): GroupChannel {
                 id, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null, lastMessages?.map { it.toMessage() }?.toTypedArray())
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
+                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
         }
         ChannelTypeEnum.Public -> {
             this as SceytGroupChannel
             PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
                 label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
                 lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null, lastMessages?.map { it.toMessage() }?.toTypedArray())
+                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
+                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
         }
         else -> throw RuntimeException("Channel is direct channel")
     }
@@ -124,13 +132,13 @@ fun SceytAttachment.toAttachment(): Attachment = Attachment(
     messageId,
     name,
     type,
-    metadata,
+    metadata ?: "",
     fileSize,
-    url,
+    url ?: "",
     createdAt,
     userId,
     tid,
-    filePath,
+    filePath ?: "",
     false,
 )
 
@@ -146,3 +154,27 @@ fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
 fun Presence.hasDiff(other: Presence): Boolean {
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }
+
+fun DraftMessageDb.toDraftMessage() = DraftMessage(
+    chatId = draftMessageEntity.chatId,
+    message = draftMessageEntity.message,
+    createdAt = draftMessageEntity.createdAt,
+    metadata = draftMessageEntity.metadata,
+    mentionUsers = users?.map { it.toUser() }
+)
+
+fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?) = DraftMessage(
+    chatId = chatId,
+    message = message,
+    createdAt = createdAt,
+    metadata = metadata,
+    mentionUsers = mentionUsers
+)
+
+fun User.copy() = User(
+    id, firstName, lastName, avatarURL, metadata, presence.copy(), activityState, blocked
+)
+
+fun Presence.copy() = Presence(
+    state, status, lastActiveAt
+)

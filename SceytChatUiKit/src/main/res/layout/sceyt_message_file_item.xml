@@ -32,7 +32,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
         android:ellipsize="middle"
@@ -40,7 +40,9 @@
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold"
+        app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/icFile"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Montagabold.pdf" />

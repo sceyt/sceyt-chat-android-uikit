@@ -8,6 +8,8 @@ import android.text.style.StyleSpan
 import android.util.Base64
 import android.util.Patterns
 import androidx.core.text.isDigitsOnly
+import androidx.emoji2.text.EmojiCompat
+import androidx.emoji2.text.EmojiSpan
 import java.lang.Character.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -99,4 +101,19 @@ fun String?.isRtl(): Boolean {
         }
     }
     return false
+}
+
+fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
+    if (isNullOrBlank()) return Pair("", false)
+    val processed = EmojiCompat.get().process(this, 0, length - 1, 1, EmojiCompat.REPLACE_STRATEGY_ALL)
+    return if (processed is Spannable) {
+        val emojiSpans = processed.getSpans(0, processed.length - 1, EmojiSpan::class.java)
+        val emojiSpan = emojiSpans.getOrNull(0) ?: Pair(take(1), false)
+        val spanStart = processed.getSpanStart(emojiSpan)
+        if (spanStart > 0)
+            return Pair(take(1), false)
+
+        val spanEnd = processed.getSpanEnd(emojiSpan)
+        return Pair(processed.subSequence(spanStart, spanEnd), true)
+    } else Pair(take(1), false)
 }

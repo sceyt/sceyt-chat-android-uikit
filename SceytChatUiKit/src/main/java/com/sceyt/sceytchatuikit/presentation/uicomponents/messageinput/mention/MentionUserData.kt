@@ -14,5 +14,5 @@ data class MentionUserData(val member: SceytMember) {
         return "@${SceytKitConfig.userNameBuilder?.invoke(member.user) ?: member.getPresentableName()}"
     }
 
-    override fun toString() = getMentionedName()
+    override fun toString() = getMentionedName().replace(" ","_")
 }

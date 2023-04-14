@@ -64,8 +64,9 @@
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
             android:id="@+id/lastMessage"
             themedSpannableTextColor="@{true}"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="10dp"
             android:ellipsize="end"
@@ -74,8 +75,9 @@
             android:maxLines="2"
             android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/smallTextSize"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toStartOf="@+id/icMention"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/channelTitle"
             app:layout_constraintTop_toBottomOf="@+id/channelTitle"
             tools:text="Description" />
@@ -100,6 +102,7 @@
             app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
             app:sceytDateStatusViewDateTextSize="13sp"
             app:sceytDateStatusViewFirstStatus="true"
+            app:sceytDateStatusViewIgnoreRtl="true"
             app:sceytDateStatusViewStatusIconMargin="4dp"
             app:sceytDateStatusViewStatusIconSize="16dp"
             tools:sceytDateStatusViewDateText="12:28"
@@ -110,14 +113,14 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginTop="5dp"
-            android:padding="2dp"
             android:layout_marginEnd="8dp"
-            app:srcCompat="@drawable/sceyt_ic_mention"
             android:background="@drawable/sceyt_bg_circle"
             android:gravity="center"
+            android:padding="2dp"
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
             app:layout_constraintTop_toBottomOf="@+id/dateStatus"
+            app:srcCompat="@drawable/sceyt_ic_mention"
             tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView

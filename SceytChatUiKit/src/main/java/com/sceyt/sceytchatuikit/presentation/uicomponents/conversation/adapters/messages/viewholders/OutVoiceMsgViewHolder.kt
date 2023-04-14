@@ -1,15 +1,15 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -17,24 +17,24 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
-import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
-import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class OutVoiceMsgViewHolder(
-        private val binding: SceytItemOutVoiceBinding,
+        private val binding: SceytItemOutVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners,
         senderNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, messageListeners = messageListeners, senderNameBuilder = senderNameBuilder) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder, needMediaDataCallback = needMediaDataCallback) {
     private var lastFilePath: String? = ""
 
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
@@ -55,59 +55,60 @@ class OutVoiceMsgViewHolder(
                 messageListeners.onMessageLongClick(it, messageListItem as MessageItem)
                 return@setOnLongClickListener true
             }
+
+            playBackSpeed.setOnClickListener {
+                val nextPlaybackSpeed = currentPlaybackSpeed.next()
+                currentPlaybackSpeed = nextPlaybackSpeed
+                AudioPlayerHelper.setPlaybackSpeed(lastFilePath, nextPlaybackSpeed.value)
+            }
+
+            loadProgress.setOnClickListener {
+                messageListeners.onAttachmentLoaderClick(it, FileListItem.File(fileItem.file, (messageListItem as MessageItem).message))
+            }
+
+            playPauseButton.setOnClickListener {
+                onPlayPauseClick(fileItem.file)
+            }
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        if (item is MessageItem) {
-            with(binding) {
-                val message = item.message
-                tvForwarded.isVisible = message.isForwarded
+        fileItem = getFileItem(item as MessageItem) ?: return
+        viewHolderHelper.bind(fileItem)
+        lastFilePath = fileItem.file.filePath
 
-                if (diff.edited || diff.statusChanged)
-                    setMessageStatusAndDateText(message, binding.messageDate)
+        with(binding) {
+            val message = item.message
+            tvForwarded.isVisible = message.isForwarded
 
-                if (diff.replyCountChanged)
-                    setReplyCount(binding.tvReplyCount, toReplyLine, item)
+            if (diff.edited || diff.statusChanged)
+                setMessageStatusAndDateText(message, binding.messageDate)
 
-                if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
+            if (diff.replyCountChanged)
+                setReplyCount(binding.tvReplyCount, toReplyLine, item)
 
-                if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, viewReply)
+            if (diff.reactionsChanged)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-                initVoiceMessage(item)
-            }
+            if (diff.filesChanged)
+                initAttachment(false)
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, viewReply)
+
+            initVoiceMessage()
         }
     }
 
-    private fun SceytItemOutVoiceBinding.initVoiceMessage(item: MessageItem) {
-        val attachment: SceytAttachment = item.message.attachments?.firstOrNull() ?: return
-
-        lastFilePath = attachment.filePath
-        binding.loadProgress.release(attachment.progressPercent)
-        attachment.toTransferData()?.let {
-            updateState(it)
-        }
-        setListener()
-
-        if (attachment.filePath.isNullOrBlank() && attachment.url != null)
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(attachment))
-
-        val audioMetadata: AudioMetadata = attachment.getMetadataFromAttachment()
-        val metaDuration: Long = audioMetadata.dur.times(1000L)//convert to milliseconds
-        audioMetadata.tmb?.let { binding.seekBar.setSampleFrom(it) }
+    private fun SceytItemOutVoiceMessageBinding.initVoiceMessage() {
+        val metaDuration: Long = fileItem.duration?.times(1000L) //convert to milliseconds
+                ?: 0
+        fileItem.audioMetadata?.tmb?.let { binding.seekBar.setSampleFrom(it) }
 
         with(playBackSpeed) {
             text = currentPlaybackSpeed.displayValue
             isEnabled = false
-
-            setOnClickListener {
-                val nextPlaybackSpeed = currentPlaybackSpeed.next()
-                currentPlaybackSpeed = nextPlaybackSpeed
-                AudioPlayerHelper.setPlaybackSpeed(lastFilePath, nextPlaybackSpeed.value)
-            }
         }
 
         seekBar.onProgressChanged = object : SeekBarOnProgressChanged {
@@ -121,17 +122,9 @@ class OutVoiceMsgViewHolder(
 
         voiceDuration.text = metaDuration.durationToMinSecShort()
         seekBar.isEnabled = false
-
-        loadProgress.setOnClickListener {
-            messageListeners.onAttachmentLoaderClick(it, FileListItem.File(attachment, item.message))
-        }
-
-        playPauseButton.setOnClickListener {
-            onPlayPauseClick(attachment, audioMetadata)
-        }
     }
 
-    private fun onPlayPauseClick(attachment: SceytAttachment, audioMetadata: AudioMetadata) {
+    private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
 
@@ -154,9 +147,6 @@ class OutVoiceMsgViewHolder(
                 }
             }
 
-            override fun onSeek(position: Long) {
-            }
-
             override fun onToggle(playing: Boolean) {
                 runOnMainThread { setPlayButtonIcon(playing, binding.playPauseButton) }
             }
@@ -165,8 +155,7 @@ class OutVoiceMsgViewHolder(
                 runOnMainThread {
                     setPlayButtonIcon(false, binding.playPauseButton)
                     binding.seekBar.progress = 0f
-                    currentPlaybackSpeed = PlaybackSpeed.X1
-                    binding.voiceDuration.text = audioMetadata.dur.times(1000L).durationToMinSecShort()
+                    binding.voiceDuration.text = fileItem.duration?.durationToMinSecShort()
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
                 }
@@ -177,17 +166,11 @@ class OutVoiceMsgViewHolder(
                     currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
                 }
             }
-
-            override fun onError() {
-            }
         })
-
     }
 
-    private fun updateState(data: TransferData) {
-        if (isMessageListItemInitialized.not()) return
-        val message = (messageListItem as? MessageItem)?.message ?: return
-        if ((data.messageTid != message.tid)) return
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
@@ -195,8 +178,8 @@ class OutVoiceMsgViewHolder(
                 binding.playPauseButton.setImageResource(0)
             }
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(
-                    (message.attachments ?: return)[0]))
+                binding.playPauseButton.setImageResource(0)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
             Downloading, Uploading -> {
                 binding.playPauseButton.setImageResource(0)
@@ -220,13 +203,13 @@ class OutVoiceMsgViewHolder(
         AudioPlayerHelper.stop(lastFilePath)
     }
 
+    override val loadingProgressView: SceytCircularProgressView
+        get() = binding.loadProgress
 
-    private fun setListener() {
-        MessageEventsObserver.onTransferUpdatedLiveData
-            .observe(context.asComponentActivity(), ::updateState)
-    }
+    override val layoutDetails: ConstraintLayout
+        get() = binding.layoutDetails
 
-    private fun SceytItemOutVoiceBinding.setMessageItemStyle() {
+    private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
             playPauseButton.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))

@@ -1,15 +1,19 @@
 package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
 import android.util.Log
+import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
@@ -19,32 +23,57 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
+import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
-import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
-import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
+import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
+        private val messageDao: MessageDao,
         private val membersDao: MembersDao,
         private val usersDao: UserDao,
-        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
+        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent, CoroutineScope {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
+
+    init {
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
+            launch(Dispatchers.IO) {
+                it.forEach { presenceUser ->
+                    channelsCache.getData().forEach { channel ->
+                        val user = presenceUser.user
+                        if (channel is SceytDirectChannel && channel.peer?.id == user.id) {
+                            val oldUser = channel.peer?.user
+                            if (oldUser?.presence?.hasDiff(user.presence) == true) {
+                                channel.peer?.user = user
+                                channelsCache.updateChannelPeer(channel.id, user)
+                            }
+                        }
+                    }
+                }
+            }
+        }.launchIn(this)
+    }
+
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        if (data.channel == null || data.members == null) return
         val chatId = data.channel.id
         when (data.eventType) {
             ChannelMembersEventEnum.Role, ChannelMembersEventEnum.Added -> {
@@ -52,21 +81,36 @@ internal class PersistenceMembersLogicImpl(
                 channelDao.insertUserChatLinks(data.members.map {
                     UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
+
+                if (data.eventType == ChannelMembersEventEnum.Added)
+                    channelDao.updateMemberCount(chatId, (data.channel as GroupChannel).memberCount.toInt())
+
                 channelDao.getChannelById(chatId)?.let {
                     channelsCache.upsertChannel(it.toChannel())
                 } ?: run {
                     channelDao.insertChannel(data.channel.toChannelEntity())
+                    data.channel.lastMessage?.toSceytUiMessage()?.toMessageDb()?.let {
+                        messageDao.insertMessage(it)
+                    }
                     channelsCache.add(data.channel.toSceytUiChannel())
                 }
             }
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
-                channelDao.deleteChannel(chatId)
-                channelsCache.deleteChannel(chatId)
+                if (data.members.any { it.id == SceytKitClient.myId }) {
+                    deleteChannelDb(chatId)
+                } else {
+                    channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
+                    channelDao.updateMemberCount(chatId, (data.channel as GroupChannel).memberCount.toInt())
+                    channelDao.getChannelById(chatId)?.let {
+                        channelsCache.upsertChannel(it.toChannel())
+                    }
+                }
             }
             ChannelMembersEventEnum.UnBlocked -> {
                 channelDao.updateChannel(data.channel.toChannelEntity())
-                channelsCache.upsertChannel(data.channel.toSceytUiChannel())
+                channelDao.getChannelById(chatId)?.let {
+                    channelsCache.upsertChannel(it.toChannel())
+                }
             }
         }
     }
@@ -148,13 +192,21 @@ internal class PersistenceMembersLogicImpl(
         return removedItems
     }
 
+    private suspend fun deleteChannelDb(channelId: Long) {
+        channelDao.deleteChannelAndLinks(channelId)
+        messageDao.deleteAllMessages(channelId)
+        channelsCache.deleteChannel(channelId)
+    }
+
     override suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.changeChannelOwner(channelId, newOwnerId)
 
         if (response is SceytResponse.Success) {
             (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
                 membersDao.updateOwner(channelId = channelId, newOwnerId = member.id)
-                channelsCache.upsertChannel(response.data)
+                channelDao.getChannelById(channelId)?.let {
+                    channelsCache.upsertChannel(it.toChannel())
+                }
             }
         }
         return response

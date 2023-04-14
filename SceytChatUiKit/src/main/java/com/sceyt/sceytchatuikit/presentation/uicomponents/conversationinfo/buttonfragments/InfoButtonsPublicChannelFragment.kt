@@ -36,7 +36,7 @@ class InfoButtonsPublicChannelFragment : Fragment() {
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(ChannelLinksFragment.CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
     }
 
     private fun SceytInfoPageLayoutButtonsPublicChannelBinding.setOnClickListeners() {

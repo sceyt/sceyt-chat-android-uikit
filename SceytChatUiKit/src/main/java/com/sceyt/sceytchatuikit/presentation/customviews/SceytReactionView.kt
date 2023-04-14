@@ -2,11 +2,16 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.graphics.*
+import android.os.Build
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.Size
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
+import androidx.emoji2.text.EmojiCompat
 import com.sceyt.sceytchatuikit.R
 import kotlin.math.abs
 import kotlin.math.max
@@ -15,10 +20,9 @@ import kotlin.math.min
 
 class SceytReactionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
-    private lateinit var smileTextBoundsRect: Rect
     private lateinit var countTextBoundsRect: Rect
-    private lateinit var smileTextPaint: Paint
-    private lateinit var countTextPaint: Paint
+    private lateinit var smileTextPaint: TextPaint
+    private lateinit var countTextPaint: TextPaint
     private lateinit var strokePaint: Paint
     private var countMargin = 0
     private var innerPadding = 0
@@ -30,12 +34,18 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private var cornerRadius = 30
     private var smileTextSize = 40
     private var countTextSize = 30
-    private var smileTitle = ""
     private var countTitle = ""
     private var mCountMargin = 0
     private var reactionBackgroundColor: Int = 0
     private var counterTextMinWidth = 0
     private var enableStroke: Boolean = false
+    private lateinit var smileStaticLayout: StaticLayout
+    private var smileTitle: CharSequence = ""
+        set(value) {
+            field = if (isInEditMode)
+                value
+            else EmojiCompat.get().process(value) ?: value
+        }
 
     init {
         attrs?.let {
@@ -66,13 +76,11 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun init() {
-        smileTextBoundsRect = Rect()
-        countTextBoundsRect = Rect()
-        smileTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        smileTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = smileTextSize.toFloat()
         }
 
-        countTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        countTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = countTextSize.toFloat()
             color = countTetColor
         }
@@ -83,7 +91,8 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
             color = strokeColor
         }
 
-        smileTextPaint.getTextBounds(smileTitle, 0, smileTitle.length, smileTextBoundsRect)
+        smileStaticLayout = getStaticLayout(smileTitle)
+        countTextBoundsRect = Rect()
         countTextPaint.getTextBounds(countTitle, 0, countTitle.length, countTextBoundsRect)
 
         mCountMargin = if (countTitle.isBlank()) {
@@ -118,10 +127,11 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         }
 
         if (smileTitle.isNotBlank()) {
-            canvas.drawText(smileTitle,
-                -smileTextBoundsRect.left.toFloat() + strikeWidth + getInnerPaddingHorizontal() + toCenterX,
-                abs(smileTextBoundsRect.top) + getTopFormSmileText() + strikeWidth + getInnerPaddingVertical() + toCenterY,
-                smileTextPaint)
+            canvas.save()
+            canvas.translate((strikeWidth + getInnerPaddingHorizontal() + toCenterX).toFloat(),
+                (height - smileStaticLayout.height) / 2f)
+            smileStaticLayout.draw(canvas)
+            canvas.restore()
         }
 
         if (countTitle.isNotBlank()) {
@@ -130,7 +140,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
                 diff / 2
             } else 0
             canvas.drawText(countTitle,
-                (countDiffX - countTextBoundsRect.left + smileTextBoundsRect.right + mCountMargin + getInnerPaddingHorizontal()).toFloat() + toCenterX,
+                (countDiffX - countTextBoundsRect.left + smileStaticLayout.width + mCountMargin + getInnerPaddingHorizontal()).toFloat() + toCenterX,
                 abs(countTextBoundsRect.top) + getTopFormCountText() + getInnerPaddingVertical() + strikeWidth + toCenterY,
                 countTextPaint)
         }
@@ -150,14 +160,14 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     private fun getTopFormCountText(): Float {
-        return if (countTextBoundsRect.height() < smileTextBoundsRect.height()) {
-            (smileTextBoundsRect.height() - countTextBoundsRect.height()) / 2f
+        return if (countTextBoundsRect.height() < smileStaticLayout.height) {
+            (smileStaticLayout.height - countTextBoundsRect.height()) / 2f
         } else 0f
     }
 
     private fun getTopFormSmileText(): Float {
-        return if (countTextBoundsRect.height() > smileTextBoundsRect.height()) {
-            (countTextBoundsRect.height() - smileTextBoundsRect.height()) / 2f
+        return if (countTextBoundsRect.height() > smileStaticLayout.height) {
+            (countTextBoundsRect.height() - smileStaticLayout.height) / 2f
         } else 0f
     }
 
@@ -213,9 +223,21 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
 
     private fun getSize(): Size {
         val countTextWidth = if (countTitle.isBlank()) 0 else max(countTextBoundsRect.width(), counterTextMinWidth)
-        val width = 2 * getInnerPaddingHorizontal() + smileTextBoundsRect.width() + countTextWidth + mCountMargin + 2 * strikeWidth
-        val height = 2 * getInnerPaddingVertical() + smileTextBoundsRect.height().coerceAtLeast(countTextBoundsRect.height()) + 2 * strikeWidth
+        val width = 2 * getInnerPaddingHorizontal() + smileStaticLayout.width + countTextWidth + mCountMargin + 2 * strikeWidth
+        val height = 2 * getInnerPaddingVertical() + (smileStaticLayout.height).coerceAtLeast(countTextBoundsRect.height()) + 2 * strikeWidth
         return Size(width, height)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getStaticLayout(title: CharSequence): StaticLayout {
+        val width = Layout.getDesiredWidth(title, smileTextPaint).toInt()
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            StaticLayout.Builder.obtain(title, 0, title.length, smileTextPaint, width)
+                .setAlignment(Layout.Alignment.ALIGN_CENTER)
+                .setLineSpacing(0f, 1f)
+                .setIncludePad(false).build()
+        } else StaticLayout(title, smileTextPaint, width, Layout.Alignment.ALIGN_CENTER, 1f, 0f, false)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

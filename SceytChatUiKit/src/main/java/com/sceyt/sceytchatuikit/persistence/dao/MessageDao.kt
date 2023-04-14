@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -24,9 +25,9 @@ abstract class MessageDao {
         //Delete attachments before insert
         deleteAttachmentsChunked(listOf(messageDb.messageEntity.tid))
 
-        //Delete reactions before insert
+        //Delete reactions scores before insert
         messageDb.messageEntity.id?.let {
-            deleteMessageReactionsAndScoresChunked(listOf(it))
+            deleteMessageReactionScoresChunked(listOf(it))
         }
 
         //Insert attachments
@@ -38,7 +39,7 @@ abstract class MessageDao {
         }
 
         //Insert reactions
-        messageDb.selfReactions?.let {
+        messageDb.reactions?.let {
             insertReactions(it.map { reactionDb -> reactionDb.reaction })
         }
 
@@ -58,8 +59,8 @@ abstract class MessageDao {
         //Delete attachments before insert
         deleteAttachmentsChunked(messagesDb.map { it.messageEntity.tid })
 
-        //Delete reactions before insert
-        deleteMessageReactionsAndScoresChunked(messagesDb.mapNotNull { it.messageEntity.id })
+        //Delete reactions scores before insert
+        deleteMessageReactionScoresChunked(messagesDb.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
         val attachmentPairs = messagesDb.map { Pair(it.attachments ?: arrayListOf(), it) }
@@ -71,7 +72,7 @@ abstract class MessageDao {
         }
 
         //Insert reactions
-        val reactions = messagesDb.flatMap { it.selfReactions ?: arrayListOf() }
+        val reactions = messagesDb.flatMap { it.reactions ?: arrayListOf() }
         if (reactions.isNotEmpty())
             insertReactions(reactions.map { it.reaction })
 
@@ -198,6 +199,9 @@ abstract class MessageDao {
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
     abstract suspend fun getLastMessage(channelId: Long): MessageDb?
 
+    @Query("select exists(select * from messages where message_id =:messageId)")
+    abstract suspend fun existsMessageById(messageId: Long): Boolean
+
     @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
     abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
 
@@ -268,15 +272,17 @@ abstract class MessageDao {
         updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
     }
 
-    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid")
-    abstract fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?)
+    @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid and type !=:ignoreType")
+    abstract fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
 
     @Query("update AttachmentPayLoad set filePath =:filePath, url =:url," +
             "progressPercent= :progress, transferState =:state  where messageTid =:tid")
     abstract fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
 
-    @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata where messageTid =:msgTid")
-    abstract fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long, metadata: String?)
+    @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata " +
+            "where messageTid =:msgTid and type !=:ignoreType")
+    abstract fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long,
+                                                  metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
 
     @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
     abstract fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
@@ -304,7 +310,7 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun deleteMessageReactionsAndScoresChunked(messageIdes: List<Long>) {
+    open suspend fun deleteMessageReactionScoresChunked(messageIdes: List<Long>) {
         messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
     }
 
@@ -317,7 +323,6 @@ abstract class MessageDao {
     @Transaction
     open fun deleteAllReactionsAndScores(messageIds: List<Long>) {
         deleteAllReactionScoresByMessageId(messageIds)
-        deleteAllReactionsByMessageId(messageIds)
     }
 
     @Query("delete from ReactionScoreEntity where messageId in (:messageId)")

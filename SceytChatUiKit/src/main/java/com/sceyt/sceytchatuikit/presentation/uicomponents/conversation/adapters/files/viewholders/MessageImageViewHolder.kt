@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import android.util.Size
-import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
@@ -47,9 +47,6 @@ class MessageImageViewHolder(
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
-
-        if (fileItem.thumbPath.isNullOrBlank())
-            requestThumb()
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
@@ -78,7 +75,7 @@ class MessageImageViewHolder(
             Downloaded -> {
                 if (fileItem.thumbPath.isNullOrBlank())
                     viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
-                else viewHolderHelper.loadThumb(fileItem.thumbPath, binding.fileImage)
+                else viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
             PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
@@ -90,7 +87,7 @@ class MessageImageViewHolder(
                 requestThumb()
             }
             ThumbLoaded -> {
-                viewHolderHelper.loadThumb(data.filePath, binding.fileImage)
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
         }
     }
@@ -98,8 +95,7 @@ class MessageImageViewHolder(
     override fun getThumbSize() = Size(1080, 1080)
 
     private fun setListener() {
-        MessageEventsObserver.onTransferUpdatedLiveData
-            .observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytMessageImageItemBinding.setupStyle() {

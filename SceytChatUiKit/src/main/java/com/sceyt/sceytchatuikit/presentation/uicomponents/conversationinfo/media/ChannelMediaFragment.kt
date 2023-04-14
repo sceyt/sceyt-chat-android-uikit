@@ -27,17 +27,17 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.MediaActivity
+import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
-    private lateinit var channel: SceytChannel
-    private var binding: SceytFragmentChannelMediaBinding? = null
-    private var mediaAdapter: ChannelMediaAdapter? = null
-    private val mediaType = listOf("image", "video")
-    private var pageStateView: PageStateView? = null
-    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var channel: SceytChannel
+    protected var binding: SceytFragmentChannelMediaBinding? = null
+    protected var mediaAdapter: ChannelMediaAdapter? = null
+    protected val mediaType = listOf("image", "video")
+    protected var pageStateView: PageStateView? = null
+    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
@@ -95,9 +95,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 }
 
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    item.getData()?.let { data ->
-                        MediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id,true)
-                    }
+                    onMediaClick(item)
                 })
             })
             with((binding ?: return).rvFiles) {
@@ -123,6 +121,12 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 })
             }
         } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
+    }
+
+    open fun onMediaClick(item: ChannelFileItem) {
+        item.getData()?.let { data ->
+            SceytMediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id, true)
+        }
     }
 
     open fun onMoreMediaList(list: List<ChannelFileItem>) {

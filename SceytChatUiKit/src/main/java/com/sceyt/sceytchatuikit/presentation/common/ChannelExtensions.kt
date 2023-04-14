@@ -13,13 +13,18 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 
 fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
+            || lastMessage?.state != other.lastMessage?.state
+    val userReactionsChanged = userMessageReactions?.maxOfOrNull { it.id } != other.userMessageReactions?.maxOfOrNull { it.id }
+    val lastDraftMessageChanged = draftMessage != other.draftMessage
+    val membersCountChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount
+
     val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
             && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
     return ChannelItemPayloadDiff(
         subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
         avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
-        lastMessageChanged = lastMessageChanged,
-        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus || lastMessageChanged,
+        lastMessageChanged = lastMessageChanged || userReactionsChanged || lastDraftMessageChanged,
+        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
         muteStateChanged = muted != other.muted,
         onlineStateChanged = channelType == ChannelTypeEnum.Direct
@@ -28,7 +33,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
         peerBlockedChanged = peerBlockedChanged,
         typingStateChanged = typingData != other.typingData,
-        membersChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount,
+        membersChanged = membersCountChanged || (this as? SceytGroupChannel)?.members != (other as? SceytGroupChannel)?.members,
         metadataUpdated = metadata != other.metadata)
 }
 
@@ -49,5 +54,5 @@ fun SceytChannel.isPeerDeleted(): Boolean {
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {
-    return (this is SceytDirectChannel) && peer?.user?.blocked==true
+    return (this is SceytDirectChannel) && peer?.user?.blocked == true
 }

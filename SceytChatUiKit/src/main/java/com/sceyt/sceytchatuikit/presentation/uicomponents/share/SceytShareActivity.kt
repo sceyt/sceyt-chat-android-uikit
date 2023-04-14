@@ -10,15 +10,13 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel.State.Finish
 import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel.State.Loading
+import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -45,8 +43,8 @@ open class SceytShareActivity : SceytShareableActivity() {
     private fun getDataFromIntent() {
         when {
             Intent.ACTION_SEND == intent.action -> {
-                if (intent.getParcelableExtra<Parcelable?>(Intent.EXTRA_STREAM) != null) {
-                    val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                if (intent.parcelable<Parcelable>(Intent.EXTRA_STREAM) != null) {
+                    val uri = intent.parcelable<Uri>(Intent.EXTRA_STREAM)
                     uri?.let {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         sharedUris.add(uri)
@@ -57,7 +55,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                 } else finishSharingAction()
             }
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
-                val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                val uris = intent.parcelableArrayList<Uri>(Intent.EXTRA_STREAM)
                 if (uris != null && uris.isNotEmpty()) {
                     if (uris.size > 20)
                         customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
@@ -75,7 +73,7 @@ open class SceytShareActivity : SceytShareableActivity() {
         determinateShareBtnState()
 
         toolbar.setNavigationIconClickListener {
-            onBackPressed()
+            finish()
         }
 
         toolbar.setQueryChangeListener(::onSearchQueryChanged)

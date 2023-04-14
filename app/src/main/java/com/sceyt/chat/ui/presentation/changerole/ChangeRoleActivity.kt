@@ -13,6 +13,7 @@ import com.sceyt.chat.ui.presentation.changerole.viewmodel.RoleViewModel
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -38,7 +39,7 @@ class ChangeRoleActivity : AppCompatActivity() {
     }
 
     private fun getBundleArguments() {
-        member = requireNotNull(intent?.getParcelableExtra(MEMBER))
+        member = requireNotNull(intent?.parcelable(MEMBER))
     }
 
     private fun initViewModel() {
@@ -55,7 +56,7 @@ class ChangeRoleActivity : AppCompatActivity() {
 
     private fun initViews() {
         binding.icBack.setOnClickListener {
-            onBackPressed()
+           finish()
         }
     }
 
@@ -82,14 +83,14 @@ class ChangeRoleActivity : AppCompatActivity() {
         updateOldRole()
         val result = Intent()
         result.putExtra(CHOSEN_ROLE, roleItem.role.name)
-        result.putExtra(MEMBER, intent.getParcelableExtra<SceytMember>(MEMBER))
+        result.putExtra(MEMBER, intent.parcelable<SceytMember>(MEMBER))
         setResult(Activity.RESULT_OK, result)
         finish()
         overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
+    override fun finish() {
+        super.finish()
         overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
     }
 

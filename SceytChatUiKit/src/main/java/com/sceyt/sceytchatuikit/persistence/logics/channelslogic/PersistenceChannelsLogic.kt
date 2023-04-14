@@ -11,6 +11,9 @@ import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
+import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import kotlinx.coroutines.flow.Flow
 
 internal interface PersistenceChannelsLogic {
@@ -18,7 +21,7 @@ internal interface PersistenceChannelsLogic {
     suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
-    suspend fun onFcmMessage(data: Pair<SceytChannel, SceytMessage>)
+    suspend fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadChannels(offset: Int, searchQuery: String,
                              loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
@@ -46,5 +49,6 @@ internal interface PersistenceChannelsLogic {
     suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
+    suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>)
     fun getTotalUnreadCount(): Flow<Int>
 }

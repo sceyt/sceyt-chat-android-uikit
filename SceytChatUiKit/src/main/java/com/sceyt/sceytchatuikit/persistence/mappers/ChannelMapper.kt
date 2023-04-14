@@ -6,6 +6,7 @@ import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.data.getChannelUrl
 import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.toDraftMessage
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import java.util.*
@@ -57,7 +58,7 @@ fun Channel.toChannelEntity(): ChannelEntity {
     var subject = ""
     val avatarUrl: String
     var channelUrl: String? = null
-    val myRole: String?//Todo need refactor
+    val myRole: String?
 
     if (this is GroupChannel) {
         memberCount = this.memberCount
@@ -124,7 +125,8 @@ fun ChannelDb.toChannel(): SceytChannel {
                     lastReadMessageId = lastReadMessageId,
                     messagesDeletionDate = messagesDeletionDate,
                     lastMessages = emptyList(),
-                    role = role?.let { Role(it) }
+                    role = role?.let { Role(it) },
+                    userMessageReactions = usersReactions?.map { it.toReaction() },
                 )
             ChannelTypeEnum.Direct -> SceytDirectChannel(
                 id = id,
@@ -142,8 +144,11 @@ fun ChannelDb.toChannel(): SceytChannel {
                 lastDeliveredMessageId = lastDeliveredMessageId,
                 lastReadMessageId = lastReadMessageId,
                 messagesDeletionDate = messagesDeletionDate,
-                lastMessages = emptyList()
+                lastMessages = emptyList(),
+                userMessageReactions = usersReactions?.map { it.toReaction() },
             )
+        }.apply {
+            draftMessage = this@toChannel.draftMessage?.toDraftMessage()
         }
     }
 }

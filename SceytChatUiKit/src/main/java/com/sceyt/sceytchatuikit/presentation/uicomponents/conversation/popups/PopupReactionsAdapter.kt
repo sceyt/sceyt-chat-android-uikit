@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -66,7 +65,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
         }
 
         private fun SceytItemPopupAddReactionBinding.setupStyle() {
-            addEmoji.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            addEmoji.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         }
     }
 

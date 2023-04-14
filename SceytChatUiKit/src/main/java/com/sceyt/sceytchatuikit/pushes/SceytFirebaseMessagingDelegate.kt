@@ -7,10 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.user.User
+import com.sceyt.chat.models.message.ReactionScore
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_FCM_TOKEN
@@ -70,42 +67,45 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         })
     }
 
-    @Throws(IllegalStateException::class)
     @JvmStatic
     fun handleRemoteMessage(remoteMessage: RemoteMessage): Boolean {
         if (!remoteMessage.isValid()) {
             return false
         }
 
-        val triple = getDataFromJson(remoteMessage)
-        val channel = triple.second
-        val message = triple.third
+        val data = getDataFromRemoteMessage(remoteMessage)
+        val channel = data.channel
+        val message = data.message
 
         if (channel != null && message != null)
-            messagesLogic.onFcmMessage(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage(channel is GroupChannel)))
+            messagesLogic.onFcmMessage(data)
         return true
     }
 
-    @Throws(IllegalStateException::class)
     @JvmStatic
-    fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?>? {
+    fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): RemoteMessageData? {
         if (!remoteMessage.isValid()) {
             return null
         }
 
-        val triple = getDataFromJson(remoteMessage)
-        val channel = triple.second
-        val message = triple.third
+        val data = getDataFromRemoteMessage(remoteMessage)
+        val channel = data.channel
+        val message = data.message
         if (channel != null && message != null)
-            messagesLogic.onFcmMessage(Pair(channel.toSceytUiChannel(), message.toSceytUiMessage(channel is GroupChannel)))
-        return triple
+            messagesLogic.onFcmMessage(data)
+        return data
     }
 
-    private fun getDataFromJson(remoteMessage: RemoteMessage): Triple<User?, Channel?, Message?> {
-        val u = getUserFromPushJson(remoteMessage.data["user"])
-        val c = getChannelFromPushJson(remoteMessage.data["channel"])
-        val m = getMessageBodyFromPushJson(remoteMessage.data["message"], c?.id, u)
-        return Triple(u, c, m)
+    fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): RemoteMessageData {
+        val user = getUserFromPushJson(remoteMessage.data["user"])
+        val channel = getChannelFromPushJson(remoteMessage.data["channel"], user)?.toSceytUiChannel()
+        val message = getMessageBodyFromPushJson(remoteMessage.data["message"], channel?.id, user)?.toSceytUiMessage()
+        val reactionScore = getReactionScoreFromRemoteMessage(remoteMessage)
+        return RemoteMessageData(channel, message, user, reactionScore)
+    }
+
+    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionScore? {
+        return getReactionScoreFromPushJson(remoteMessage.data["reaction"])
     }
 
     @Throws(IllegalStateException::class)

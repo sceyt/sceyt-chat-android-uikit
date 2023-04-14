@@ -26,6 +26,7 @@
         <attr name="sceytDateStatusViewDateText" format="string" />
         <attr name="sceytDateStatusViewFirstStatus" format="boolean" />
         <attr name="sceytDateStatusViewHighlighted" format="boolean" />
+        <attr name="sceytDateStatusViewIgnoreRtl" format="boolean" />
         <attr name="android:paddingStart" format="dimension" />
         <attr name="android:paddingEnd" format="dimension" />
         <attr name="android:paddingBottom" format="dimension" />
@@ -58,6 +59,9 @@
         <attr name="sceytVideoControllerPlayPauseSize" format="integer|dimension" />
         <attr name="sceytVideoControllerPlayIcon" format="reference" />
         <attr name="sceytVideoControllerPauseIcon" format="reference" />
+        <attr name="sceytVideoControllerImage" format="reference" />
+        <attr name="sceytVideoControllerCornerSize" format="dimension" />
+        <attr name="sceytVideoControllerEnablePlayPauseClick" format="boolean" />
 
     </declare-styleable>
 

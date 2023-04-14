@@ -9,6 +9,5 @@
     <dimen name="extraLargeTextSize">22sp</dimen>
     <dimen name="superLargeTextSize">24sp</dimen>
     <dimen name="bodyMaxWidth">270dp</dimen>
-    <dimen name="replayContainerMaxWidth">135dp</dimen>
     <dimen name="messageProgressSize">50dp</dimen>
 </resources>

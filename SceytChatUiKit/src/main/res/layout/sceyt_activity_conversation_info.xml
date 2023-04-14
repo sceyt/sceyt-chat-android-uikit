@@ -22,7 +22,6 @@
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
-                android:id="@+id/colla"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:contentScrim="@color/sceyt_color_bg"
@@ -48,13 +47,14 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <TextView
+                    <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/subject"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:ellipsize="end"
                         android:fontFamily="@font/roboto_medium"
+                        android:gravity="center"
                         android:maxLines="2"
                         android:textColor="@color/sceyt_color_text_themed"
                         android:textSize="20sp"
@@ -63,7 +63,7 @@
                         app:layout_constraintTop_toBottomOf="@+id/avatar"
                         tools:text="@string/sceyt_hint_channel_subject" />
 
-                    <TextView
+                    <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/tvPresenceOrMembers"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -107,13 +107,15 @@
 
                     <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/tvDescription"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="16dp"
                         android:layout_marginTop="4dp"
                         android:textColor="@color/sceyt_color_text_themed"
                         android:textSize="16sp"
+                        app:layout_constrainedWidth="true"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/tvTitle"
                         tools:text="Channel for planning annual meetings" />
@@ -280,16 +282,18 @@
 
                             <androidx.appcompat.widget.AppCompatTextView
                                 android:id="@+id/titleToolbar"
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginHorizontal="12dp"
                                 android:fontFamily="@font/roboto_medium"
+                                android:gravity="start"
                                 android:singleLine="true"
                                 android:textColor="@color/sceyt_color_text_themed"
                                 android:textSize="16sp"
+                                app:layout_constrainedWidth="true"
                                 app:layout_constraintBottom_toTopOf="@+id/subTitleToolbar"
                                 app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintHorizontal_bias="0.5"
+                                app:layout_constraintHorizontal_bias="0"
                                 app:layout_constraintStart_toEndOf="@+id/toolbarAvatar"
                                 app:layout_constraintTop_toTopOf="parent"
                                 app:layout_constraintVertical_chainStyle="packed"
@@ -297,18 +301,21 @@
 
                             <androidx.appcompat.widget.AppCompatTextView
                                 android:id="@+id/subTitleToolbar"
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="12dp"
                                 android:ellipsize="marquee"
                                 android:freezesText="true"
+                                android:gravity="start"
                                 android:marqueeRepeatLimit="marquee_forever"
                                 android:singleLine="true"
                                 android:textColor="@color/sceyt_color_gray_400"
                                 android:textSize="13sp"
+                                app:layout_constrainedWidth="true"
                                 app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="@+id/titleToolbar"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintHorizontal_bias="0"
                                 app:layout_constraintStart_toEndOf="@+id/toolbarAvatar"
-                                app:layout_constraintStart_toStartOf="@+id/titleToolbar"
                                 app:layout_constraintTop_toBottomOf="@+id/titleToolbar"
                                 tools:text="78 subscribers" />
 
@@ -368,6 +375,7 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:overScrollMode="never"
+            android:saveEnabled="false"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutDetails" />

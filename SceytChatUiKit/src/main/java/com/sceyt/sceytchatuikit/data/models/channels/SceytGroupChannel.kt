@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
+import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import kotlinx.parcelize.Parcelize
@@ -24,6 +25,7 @@ class SceytGroupChannel(
         override var channelType: ChannelTypeEnum,
         override var messagesDeletionDate: Long,
         override var lastMessages: List<SceytMessage>?,
+        override var userMessageReactions: List<Reaction>?,
         var role: Role?,
         var subject: String?,
         var avatarUrl: String?,
@@ -46,7 +48,8 @@ class SceytGroupChannel(
     lastReadMessageId = lastReadMessageId,
     channelType = channelType,
     messagesDeletionDate = messagesDeletionDate,
-    lastMessages = lastMessages) {
+    lastMessages = lastMessages,
+    userMessageReactions = userMessageReactions) {
 
     override val channelSubject: String
         get() = subject ?: ""
@@ -74,13 +77,16 @@ class SceytGroupChannel(
             subject = subject,
             avatarUrl = avatarUrl,
             channelUrl = channelUrl,
-            members = members.map { it.copy() },
+            members = members.map { it.clone() },
             memberCount = memberCount,
             lastDeliveredMessageId = lastDeliveredMessageId,
             lastReadMessageId = lastReadMessageId,
             messagesDeletionDate = messagesDeletionDate,
             lastMessages = lastMessages,
-            role = role)
+            role = role,
+            userMessageReactions = userMessageReactions).also {
+            it.draftMessage = draftMessage
+        }
     }
 }
 

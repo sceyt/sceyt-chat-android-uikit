@@ -29,9 +29,13 @@ fun SceytMember.getPresentableName(): String {
 }
 
 fun SceytMember.getPresentableNameWithYou(context: Context): String {
+    return user.getPresentableNameWithYou(context)
+}
+
+fun User.getPresentableNameWithYou(context: Context): String {
     if (SceytKitClient.myId == id)
         return context.getString(R.string.sceyt_you)
-    return getPresentableName()
+    return getPresentableNameCheckDeleted(context)
 }
 
 fun SceytMember.getPresentableFirstName(): String {
@@ -40,6 +44,12 @@ fun SceytMember.getPresentableFirstName(): String {
 
 fun User.getPresentableNameCheckDeleted(context: Context): String {
     return if (activityState == UserActivityStatus.Deleted)
+        context.getString(R.string.sceyt_deleted_user)
+    else getPresentableName()
+}
+
+fun SceytMember.getPresentableNameCheckDeleted(context: Context): String {
+    return if (user.activityState == UserActivityStatus.Deleted)
         context.getString(R.string.sceyt_deleted_user)
     else getPresentableName()
 }

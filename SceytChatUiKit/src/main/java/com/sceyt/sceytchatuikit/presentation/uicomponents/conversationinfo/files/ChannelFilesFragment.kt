@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelFilesBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -32,12 +33,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
-    private lateinit var channel: SceytChannel
-    private var binding: SceytFragmentChannelFilesBinding? = null
-    private var mediaAdapter: ChannelMediaAdapter? = null
-    private var pageStateView: PageStateView? = null
-    private val mediaType = listOf(AttachmentTypeEnum.File.value())
-    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var channel: SceytChannel
+    protected var binding: SceytFragmentChannelFilesBinding? = null
+    protected var mediaAdapter: ChannelMediaAdapter? = null
+    protected var pageStateView: PageStateView? = null
+    protected val mediaType = listOf(AttachmentTypeEnum.File.value())
+    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelFilesBinding.inflate(inflater, container, false).also {
@@ -55,7 +56,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
     }
 
     private fun initViewModel() {
