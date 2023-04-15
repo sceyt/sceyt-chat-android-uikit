@@ -240,7 +240,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     messageInputActionCallback?.sendMessages(messages)
                 } else {
                     val attachment = if (link != null) arrayOf(link) else arrayOf()
-                    messageInputActionCallback?.sendMessage(buildMessage(messageBody, attachment, false))
+                    messageInputActionCallback?.sendMessage(buildMessage(messageBody, attachment, true))
                 }
                 reset()
             }
