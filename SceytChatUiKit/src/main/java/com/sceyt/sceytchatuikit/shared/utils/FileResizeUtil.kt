@@ -113,7 +113,7 @@ object FileResizeUtil {
     }
 
     fun getImageSizeOriented(uri: Uri): Size {
-        var size: Size
+        var size = Size(0, 0)
         try {
             size = getImageSize(uri)
             val exif = ExifInterface(uri.path ?: return size)
@@ -124,7 +124,7 @@ object FileResizeUtil {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return Size(0, 0)
+        return size
     }
 
     fun getVideoSize(path: String): Size {
