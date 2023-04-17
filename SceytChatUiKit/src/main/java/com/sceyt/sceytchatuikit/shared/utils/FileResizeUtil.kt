@@ -18,12 +18,13 @@ object FileResizeUtil {
     fun resizeAndCompressImage(context: Context, filePath: String,
                                reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
         if (filePath.isBlank()) return null
-        val initialSize = getImageSize(Uri.parse(filePath))
-        if (initialSize.width == -1 || initialSize.height == -1) return null
-        var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
-            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-        })
         return try {
+            val initialSize = getImageSize(Uri.parse(filePath))
+            if (initialSize.width == -1 || initialSize.height == -1) return null
+            var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+            })
+
             val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
 
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
@@ -41,63 +42,66 @@ object FileResizeUtil {
     fun resizeAndCompressImageAsByteArray(filePath: String,
                                           reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): ByteArray? {
         if (filePath.isBlank()) return null
-        val initialSize = getImageSize(Uri.parse(filePath))
-        if (initialSize.width == -1 || initialSize.height == -1) return null
-        var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
-            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-        })
-        try {
+        return try {
+            val initialSize = getImageSize(Uri.parse(filePath))
+            if (initialSize.width == -1 || initialSize.height == -1) return null
+            var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+            })
+
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
             val bmpFile = ByteArrayOutputStream()
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
             bmpFile.flush()
             bmpFile.close()
-            return bmpFile.toByteArray()
+            bmpFile.toByteArray()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+            null
         }
-        return null
     }
 
     fun resizeAndCompressImageAsByteArray(bitmap: Bitmap,
                                           reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): Bitmap? {
-        val initialSize = Size(bitmap.width, bitmap.height)
-        val byteArray = bitmap.bitmapToByteArray()
-        val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
-                ?: return null, BitmapFactory.Options().apply {
-            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-        })
-        try {
+        return try {
+            val initialSize = Size(bitmap.width, bitmap.height)
+            val byteArray = bitmap.bitmapToByteArray()
+            val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                    ?: return null, BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+            })
+
             val bmpFile = ByteArrayOutputStream()
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
             bmpFile.flush()
             bmpFile.close()
-            return bmpPic
+            bmpPic
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+            null
         }
-        return null
     }
 
     fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
                                      reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
-        val initialSize = Size(bitmap.width, bitmap.height)
-        val byteArray = bitmap.bitmapToByteArray()
-        val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
-                ?: return null, BitmapFactory.Options().apply {
-            inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-        })
-        try {
+        return try {
+            val initialSize = Size(bitmap.width, bitmap.height)
+            val byteArray = bitmap.bitmapToByteArray()
+            val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                    ?: return null, BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+            })
+
             val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 100, bmpFile)
             bmpFile.flush()
             bmpFile.close()
-            return File(dest)
+            File(dest)
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+            null
         }
-        return null
     }
 
     fun getImageSize(image: Uri): Size {
@@ -109,8 +113,9 @@ object FileResizeUtil {
     }
 
     fun getImageSizeOriented(uri: Uri): Size {
-        var size = getImageSize(uri)
+        var size: Size
         try {
+            size = getImageSize(uri)
             val exif = ExifInterface(uri.path ?: return size)
             when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
                 ExifInterface.ORIENTATION_ROTATE_270, ExifInterface.ORIENTATION_ROTATE_90 ->
@@ -119,7 +124,7 @@ object FileResizeUtil {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return size
+        return Size(0, 0)
     }
 
     fun getVideoSize(path: String): Size {
@@ -212,7 +217,12 @@ object FileResizeUtil {
 
 
     fun getImageThumbAsFile(context: Context, url: String, maxImageSize: Float): File? {
-        return resizeAndCompressImage(context, url, reqSize = maxImageSize.toInt())
+        return try {
+            resizeAndCompressImage(context, url, reqSize = maxImageSize.toInt())
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {

@@ -271,10 +271,10 @@ abstract class BaseMsgViewHolder(private val view: View,
 
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
         layoutDetails.measure(View.MeasureSpec.UNSPECIFIED, 0)
+        val margin = dpToPx(8f)
 
         when {
-            rvReactions.measuredWidth > layoutDetails.measuredWidth -> {
-                val margin = dpToPx(8f)
+            rvReactions.measuredWidth + margin > layoutDetails.measuredWidth -> {
                 val newWidth = min((rvReactions.measuredWidth + margin), bodyMaxWidth)
                 layoutDetails.layoutParams.width = newWidth
                 rvReactions.layoutParams.width = newWidth - margin
