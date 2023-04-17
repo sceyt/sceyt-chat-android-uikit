@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.pushes
 
+import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.DirectChannel
@@ -21,8 +22,9 @@ import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
-fun getMessageBodyFromPushJson(messageJson: String?, channelId: Long?, from: User?): Message? {
+fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, from: User?): Message? {
     return try {
+        val messageJson = remoteMessage.data["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
         val messageId = messageJsonObject.getLong("id")
         val bodyString = messageJsonObject.getString("body")
@@ -53,8 +55,8 @@ fun getMessageBodyFromPushJson(messageJson: String?, channelId: Long?, from: Use
     }
 }
 
-fun getUserFromPushJson(userJson: String?): User? {
-    userJson ?: return null
+fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
+    val userJson = remoteMessage.data["user"] ?: return null
     return try {
         val userJsonObject = JSONObject(userJson)
         val id = userJsonObject.getString("id")
@@ -70,8 +72,8 @@ fun getUserFromPushJson(userJson: String?): User? {
     }
 }
 
-fun getChannelFromPushJson(channelJson: String?, peer: User?): Channel? {
-    channelJson ?: return null
+fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? {
+    val channelJson = remoteMessage.data["channel"] ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
         val id = channelJsonObject.getString("id")

@@ -180,6 +180,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.getChannelFromDb(channelId)
     }
 
+    override suspend fun getDirectChannelFromDb(peerId: String): SceytChannel? {
+        return channelLogic.getDirectChannelFromDb(peerId)
+    }
+
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.getChannelFromServer(channelId)
     }
