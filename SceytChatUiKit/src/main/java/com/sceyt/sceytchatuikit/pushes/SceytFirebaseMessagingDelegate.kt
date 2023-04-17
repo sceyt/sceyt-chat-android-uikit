@@ -97,9 +97,9 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): RemoteMessageData {
-        val user = getUserFromPushJson(remoteMessage.data["user"])
-        val channel = getChannelFromPushJson(remoteMessage.data["channel"], user)?.toSceytUiChannel()
-        val message = getMessageBodyFromPushJson(remoteMessage.data["message"], channel?.id, user)?.toSceytUiMessage()
+        val user = getUserFromPushJson(remoteMessage)
+        val channel = getChannelFromPushJson(remoteMessage, user)?.toSceytUiChannel()
+        val message = getMessageBodyFromPushJson(remoteMessage, channel?.id, user)?.toSceytUiMessage()
         val reactionScore = getReactionScoreFromRemoteMessage(remoteMessage)
         return RemoteMessageData(channel, message, user, reactionScore)
     }

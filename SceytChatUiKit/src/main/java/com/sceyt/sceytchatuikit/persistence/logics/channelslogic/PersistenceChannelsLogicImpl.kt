@@ -559,6 +559,10 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getChannelById(channelId)?.toChannel()
     }
 
+    override suspend fun getDirectChannelFromDb(peerId: String): SceytChannel? {
+        return channelDao.getDirectChannel(peerId)?.toChannel()
+    }
+
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.getChannel(channelId)
 

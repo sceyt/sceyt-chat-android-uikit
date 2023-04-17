@@ -301,18 +301,4 @@ object FileResizeUtil {
         }
         return rotate
     }
-
-    fun checkIfImagePathIsLocale(path: String?): Boolean {
-        if (path != null) {
-            val file = File(path)
-            return file.exists()
-        }
-        return false
-    }
-
-    fun getFileSizeMb(context: Context, uri: Uri): Double {
-        return ImageUriPathUtil.getPath(context, uri)?.let {
-            File(it).length() / 1024.0 / 1024.0
-        } ?: 0.0
-    }
 }
