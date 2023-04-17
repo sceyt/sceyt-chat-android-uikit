@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 enum class LoadKeyType(val longValue: Long) {
     ScrollToUnreadMessage(1),
