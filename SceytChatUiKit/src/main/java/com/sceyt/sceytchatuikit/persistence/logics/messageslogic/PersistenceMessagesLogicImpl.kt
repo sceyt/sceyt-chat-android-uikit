@@ -43,7 +43,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChan
 import com.sceyt.sceytchatuikit.persistence.mappers.*
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendSharedAttachmentWorkManager
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.LoadKeyType
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
