@@ -120,6 +120,7 @@ fun getReactionScoreFromPushJson(json: String?): ReactionScore? {
         val jsonObject = JSONObject(json ?: return null)
         val key = jsonObject.getString("key")
         val score = jsonObject.getLong("score")
+        if (key.isEmpty() || score == 0L) return null
         ReactionScore(key, score)
     } catch (e: Exception) {
         e.printStackTrace()
