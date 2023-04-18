@@ -1206,9 +1206,11 @@ abstract class TokenCompleteTextView<T : Any> : AppCompatAutoCompleteTextView, O
                 TokenClickStyle.Delete -> if (isTokenRemovable(token)) {
                     removeSpan(text, this)
                 }
-                TokenClickStyle.None -> if (selectionStart != text.getSpanEnd(this)) {
-                    //Make sure the selection is not in the middle of the span
-                    setSelection(text.getSpanEnd(this))
+                TokenClickStyle.None -> {
+                    /*if (selectionStart != text.getSpanEnd(this)) {
+                        //Make sure the selection is not in the middle of the span
+                        setSelection(text.getSpanEnd(this))
+                    }*/
                 }
                 else -> {}
             }
