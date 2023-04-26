@@ -14,23 +14,21 @@ import androidx.annotation.ColorRes
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 
 object MentionUserHelper {
     private var userNameBuilder = SceytKitConfig.userNameBuilder
 
-    fun initMentionMetaData(body: String, mentionUsers: List<ObjectDataIndexed<MentionUserData>>): String {
+    fun initMentionMetaData(body: String, mentionUsers: List<Mention>): String {
         if (body.isEmpty() || mentionUsers.isEmpty()) return ""
         val items = mutableListOf<MentionUserMetaDataPayLoad>()
         mentionUsers.forEach {
-            val user = it.token
-            items.add(MentionUserMetaDataPayLoad(user.id, it.start, it.end - it.start))
+            val userId = it.recipientId
+            items.add(MentionUserMetaDataPayLoad(userId, it.start, it.length))
         }
         return Gson().toJson(items)
     }
@@ -90,14 +88,14 @@ object MentionUserHelper {
         }
     }
 
-    fun getAsObjectDataIndexed(metaData: String?, mentionUsers: Array<User>?): List<ObjectDataIndexed<MentionUserData>> {
-        val list = arrayListOf<ObjectDataIndexed<MentionUserData>>()
+    fun getMentionsIndexed(metaData: String?, mentionUsers: Array<User>?): List<Mention> {
+        val list = arrayListOf<Mention>()
         val data = getMentionData(metaData) ?: return list
 
         data.forEach { entry ->
             val user = mentionUsers?.find { it.id == entry.id } ?: User(entry.id)
-            val name = "@${userNameBuilder?.invoke(user) ?: user.getPresentableName()}"
-            list.add(ObjectDataIndexed(entry.loc, entry.loc + name.length, MentionUserData(SceytMember(user))))
+            val name = userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            list.add(Mention(entry.id, name, entry.loc, name.length))
         }
         return list
     }

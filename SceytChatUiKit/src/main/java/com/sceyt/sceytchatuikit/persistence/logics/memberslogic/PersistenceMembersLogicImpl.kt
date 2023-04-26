@@ -161,6 +161,10 @@ internal class PersistenceMembersLogicImpl(
         return membersDao.getChannelMembersByDisplayName(channelId, name).map { it.toSceytMember() }
     }
 
+    override suspend fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String> {
+        return membersDao.filterOnlyMembersByIds(channelId, ids)
+    }
+
     override suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember> {
         return membersDao.getChannelMembersByIds(channelId, *ids).map { it.toSceytMember() }
     }
