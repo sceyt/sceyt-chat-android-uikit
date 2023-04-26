@@ -53,7 +53,7 @@
         android:paddingVertical="12dp"
         app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage">
 
-        <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionCompletionView
+        <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionSupportEditText
             android:id="@+id/messageInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

@@ -52,4 +52,7 @@ interface MembersDao {
         }
         updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
     }
+
+    @Query("select user_id from UserChatLink where user_id in (:ids) and chat_id =:channelId")
+    fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String>
 }

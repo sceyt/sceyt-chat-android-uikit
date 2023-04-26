@@ -7,6 +7,7 @@ import androidx.databinding.Bindable
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.BR
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.repositories.MessageTransformer
 
 object SceytKitConfig {
     val SceytUITheme = ThemeConfig()
@@ -34,6 +35,7 @@ object SceytKitConfig {
 
     var avatarColors = arrayOf("#FF3E74", "#4F6AFF", "#FBB019", "#00CC99", "#9F35E7", "#63AFFF")
 
+    var messageTransformer: MessageTransformer? = null
 
     class ThemeConfig : BaseObservable() {
         @Bindable
