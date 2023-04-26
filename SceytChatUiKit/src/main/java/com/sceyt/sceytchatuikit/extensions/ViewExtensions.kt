@@ -90,7 +90,7 @@ fun View.invokeSuspendInLifecycle(
 
 fun View.getLifecycleScope() = findViewTreeLifecycleOwner()?.lifecycleScope
 
-fun EditText.setTextAndMoveSelectionEnd(text: String?) {
+fun EditText.setTextAndMoveSelectionEnd(text: CharSequence?) {
     text?.let {
         setText(text)
         setSelection(text.length)

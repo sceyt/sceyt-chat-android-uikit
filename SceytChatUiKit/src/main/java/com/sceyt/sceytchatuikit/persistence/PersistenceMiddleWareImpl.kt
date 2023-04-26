@@ -33,8 +33,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembe
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -204,7 +203,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.hideChannel(channelId)
     }
 
-    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
+    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>) {
         channelLogic.updateDraftMessage(channelId, message, mentionUsers)
     }
 
@@ -222,6 +221,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember> {
         return membersLogic.loadChannelMembersByDisplayName(channelId, name)
+    }
+
+    override suspend fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String> {
+        return membersLogic.filterOnlyMembersByIds(channelId, ids)
     }
 
     override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {

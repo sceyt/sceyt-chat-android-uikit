@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
+import android.text.Annotation
 import android.text.Editable
 import androidx.lifecycle.*
 import com.sceyt.chat.models.ConnectionState
@@ -21,6 +22,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
@@ -38,14 +40,16 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesL
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 
@@ -126,9 +130,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             LoadKeyType.ScrollToUnreadMessage.longValue -> {
                 messagesListView.scrollToUnReadMessage()
             }
+
             LoadKeyType.ScrollToLastMessage.longValue -> {
                 messagesListView.scrollToLastMessage()
             }
+
             LoadKeyType.ScrollToMessageById.longValue -> {
                 messagesListView.scrollToMessage(loadKey.value, true)
             }
@@ -146,10 +152,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
                         hasNext = response.hasNext, hasPrev = response.hasPrev))
                 }
+
                 LoadNext -> {
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
                         hasNext = response.hasNext, hasPrev = response.hasPrev, compareMessage))
                 }
+
                 LoadNear, LoadNewest -> {
                     messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
                         hasPrev = response.hasPrev), true)
@@ -172,6 +180,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                 checkToScrollAfterResponse(response)
             }
+
             is SceytResponse.Error -> checkToHildeLoadingMoreItemByLoadType(response.loadType)
         }
     }
@@ -395,6 +404,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
                     messagesListView.context.asActivity().finish()
             }
+
             Deleted -> messagesListView.context.asActivity().finish()
             else -> return@onEach
         }
@@ -456,8 +466,26 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                               replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
 
+    var loadedMembers = listOf<SceytMember>()
+
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
+
+    messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
+        override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
+            return runBlocking {
+                val ids = mentionAnnotations?.map { it.value } ?: return@runBlocking null
+
+                val existUsersIds = if (loadedMembers.isEmpty())
+                    persistenceMembersMiddleWare.filterOnlyMembersByIds(channel.id, ids)
+                else loadedMembers.map { it.id }
+
+                return@runBlocking mentionAnnotations.filter { annotation ->
+                    existUsersIds.none { it == annotation.value }
+                }
+            }
+        }
+    })
 
     viewModelScope.launch(Dispatchers.IO) {
         getChannelsMiddleWare().getChannelFromDb(channel.id)?.let {
@@ -490,6 +518,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                 messageInputView.joinSuccess()
                 (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
             }
+
             is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
         }
     }
@@ -515,6 +544,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                         messageInputView.onChannelLeft()
                 }
             }
+
             Joined -> {
                 if (channel.channelType == ChannelTypeEnum.Public) {
                     val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
@@ -522,9 +552,12 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                         messageInputView.joinSuccess()
                 }
             }
+
             else -> return@onEach
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
+
+    var mentionJog: Job? = null
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
@@ -543,16 +576,17 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<ObjectDataIndexed<MentionUserData>>) {
+        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>) {
             this@bind.updateDraftMessage(text, mentionUserIds)
         }
 
         override fun mention(query: String) {
-            if (channel.channelType == ChannelTypeEnum.Direct)
-                return
-
-            viewModelScope.launch(Dispatchers.IO) {
+            mentionJog?.cancel()
+            mentionJog = viewModelScope.launch(Dispatchers.IO) {
                 val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
+                if (query.isEmpty())
+                    loadedMembers = result
+
                 withContext(Dispatchers.Main) {
                     messageInputView.setMentionList(result.filter { it.id != myId })
                 }

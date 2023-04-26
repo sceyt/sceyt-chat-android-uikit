@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -182,9 +183,13 @@ class MessagesRepositoryImpl : MessagesRepository {
 
     override suspend fun sendMessage(channelId: Long, message: Message, tmpMessageCb: ((Message) -> Unit)?): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            val tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
-                override fun onResult(message: Message?) {
-                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
+            val transformMessage = SceytKitConfig.messageTransformer?.transformToSend(message)
+                    ?: message
+            val tmpMessage = ChannelOperator.build(channelId).sendMessage(transformMessage, object : MessageCallback {
+                override fun onResult(message: Message) {
+                    val resultTransformed = SceytKitConfig.messageTransformer?.transformToGet(message)
+                            ?: message
+                    continuation.safeResume(SceytResponse.Success(resultTransformed.toSceytUiMessage()))
                 }
 
                 override fun onError(error: SceytException?) {
