@@ -49,12 +49,12 @@ open class SceytForwardActivity : SceytShareableActivity() {
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
         btnForward.setOnClickListener {
-            onForwardClick()
+            onForwardClick(true)
         }
     }
 
-    protected fun sendForwardMessage() {
-        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), forwardMessages)
+    protected fun sendForwardMessage(marOwnMessageAsForwarded: Boolean) {
+        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), marOwnMessageAsForwarded, forwardMessages)
             .onEach {
                 when (it) {
                     ForwardViewModel.State.Loading -> SceytLoader.showLoading(this@SceytForwardActivity)
@@ -86,8 +86,9 @@ open class SceytForwardActivity : SceytShareableActivity() {
         }
     }
 
-    protected open fun onForwardClick() {
-        sendForwardMessage()
+    @Suppress("SameParameterValue")
+    protected open fun onForwardClick(markOwnMessageAsForwarded: Boolean) {
+        sendForwardMessage(markOwnMessageAsForwarded)
     }
 
     override fun finishSharingAction() {
