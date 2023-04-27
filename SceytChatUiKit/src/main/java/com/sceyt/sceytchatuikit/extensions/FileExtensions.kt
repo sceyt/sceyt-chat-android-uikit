@@ -44,6 +44,17 @@ fun getFileSize(fileUri: String): Long {
     }
 }
 
+fun getFileSizeMb(filePath: String): Double {
+    return try {
+        var sizeInBytes: Long = 0
+        val file = File(filePath)
+        if (file.isFile) sizeInBytes = file.length()
+        sizeInBytes / 1000.0 / 1000.0
+    } catch (e: Exception) {
+        0.0
+    }
+}
+
 fun File.convertImageFileToBase64(): String {
     return ByteArrayOutputStream().use { outputStream ->
         Base64OutputStream(outputStream, Base64.NO_WRAP).use { base64FilterStream ->
