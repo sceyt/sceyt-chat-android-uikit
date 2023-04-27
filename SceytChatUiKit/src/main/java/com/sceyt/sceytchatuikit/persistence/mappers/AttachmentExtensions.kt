@@ -89,7 +89,7 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
 fun getDimensions(type: String, path: String): Size? {
     return when (type) {
         AttachmentTypeEnum.Image.value() -> {
-            FileResizeUtil.getImageSize(Uri.parse(path))
+            FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
         }
         AttachmentTypeEnum.Video.value() -> {
             FileResizeUtil.getVideoSize(path)
