@@ -100,14 +100,18 @@ internal class PersistenceMessagesLogicImpl(
                 return@launch
 
             val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
-            if (messageDb == null) {
+
+            val isReaction = data.reactionScore != null
+
+            if (messageDb == null && !isReaction) {
                 onMessage(Pair(data.channel, data.message), false)
                 persistenceChannelsLogic.onFcmMessage(data)
             }
 
-            data.reactionScore?.toReactionScoreEntity(message.id)?.let {
-                reactionDao.insertReactionScore(it)
-            }
+            if (messageDb != null)
+                data.reactionScore?.toReactionScoreEntity(message.id)?.let {
+                    reactionDao.insertReactionScore(it)
+                }
         }
     }
 
@@ -461,16 +465,19 @@ internal class PersistenceMessagesLogicImpl(
                 messages = getPrevMessagesDb(channelId, lastMessageId, offset)
                 hasPrev = messages.size == MESSAGES_LOAD_SIZE
             }
+
             LoadNext -> {
                 messages = getNextMessagesDb(channelId, lastMessageId, offset)
                 hasNext = messages.size == MESSAGES_LOAD_SIZE
             }
+
             LoadNear -> {
                 val data = getNearMessagesDb(channelId, lastMessageId, offset)
                 messages = data.data.map { it.toSceytMessage() }
                 hasPrev = data.hasPrev
                 hasNext = data.hasNext
             }
+
             LoadNewest -> {
                 messages = getPrevMessagesDb(channelId, Long.MAX_VALUE, offset)
                 hasPrev = messages.size == MESSAGES_LOAD_SIZE
@@ -511,6 +518,7 @@ internal class PersistenceMessagesLogicImpl(
                     }
                 }
             }
+
             LoadNext -> {
                 response = messagesRepository.getNextMessages(channelId, lastMessageId, replyInThread)
                 if (response is SceytResponse.Success) {
@@ -518,6 +526,7 @@ internal class PersistenceMessagesLogicImpl(
                     hasNext = response.data?.size == MESSAGES_LOAD_SIZE
                 }
             }
+
             LoadNear -> {
                 response = messagesRepository.getNearMessages(channelId, lastMessageId, replyInThread)
                 if (response is SceytResponse.Success) {
@@ -531,6 +540,7 @@ internal class PersistenceMessagesLogicImpl(
                     hasPrev = (oldest?.size ?: 0) >= MESSAGES_LOAD_SIZE / 2
                 }
             }
+
             LoadNewest -> {
                 response = messagesRepository.getPrevMessages(channelId, Long.MAX_VALUE, replyInThread)
                 if (response is SceytResponse.Success) {
