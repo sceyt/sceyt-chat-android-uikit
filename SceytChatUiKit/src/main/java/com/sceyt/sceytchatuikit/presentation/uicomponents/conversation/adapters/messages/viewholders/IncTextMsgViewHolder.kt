@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -51,7 +52,7 @@ class IncTextMsgViewHolder(
 
                 if (diff.edited || diff.bodyChanged) {
                     setMessageBody(messageBody, message)
-                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
@@ -81,4 +82,7 @@ class IncTextMsgViewHolder(
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }
+
+    override val layoutDetails: ConstraintLayout
+        get() = binding.layoutDetails
 }

@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -53,7 +54,7 @@ class OutLinkMsgViewHolder(
 
                 if (diff.edited || diff.bodyChanged) {
                     setMessageBody(messageBody, message)
-                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.replyCountChanged)
@@ -69,6 +70,9 @@ class OutLinkMsgViewHolder(
             }
         }
     }
+
+    override val layoutDetails: ConstraintLayout
+        get() = binding.layoutDetails
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         with(context) {

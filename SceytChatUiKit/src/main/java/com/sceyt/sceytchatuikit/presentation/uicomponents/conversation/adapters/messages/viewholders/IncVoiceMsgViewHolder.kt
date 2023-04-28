@@ -210,6 +210,10 @@ class IncVoiceMsgViewHolder(
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+    }
+
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))

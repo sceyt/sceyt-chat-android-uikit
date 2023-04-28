@@ -87,6 +87,6 @@
         app:layout_constraintStart_toEndOf="@+id/icMsgBodyStartIcon"
         app:layout_constraintTop_toBottomOf="@+id/tvName"
         app:layout_goneMarginStart="8dp"
-        tools:text="WaitiforWaitiforWaitif d orWaitiforWaitiforWaitiforWaitiforWaitifor." />
+        tools:text="Waitifor." />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

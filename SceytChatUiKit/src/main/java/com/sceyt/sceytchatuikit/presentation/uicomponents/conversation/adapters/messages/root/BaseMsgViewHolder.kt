@@ -21,6 +21,8 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -68,7 +70,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected val context: Context by lazy { view.context }
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     protected var recyclerViewReactions: RecyclerView? = null
-    protected var bodyMaxWidth = context.resources.getDimensionPixelSize(com.sceyt.sceytchatuikit.R.dimen.bodyMaxWidth)
+    protected var bubbleMaxWidth = getBubbleMaxWidth(context)
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
@@ -76,8 +78,15 @@ abstract class BaseMsgViewHolder(private val view: View,
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
+        setMaxWidth()
         if (messageListItem.highlighted)
             highlight()
+    }
+
+    open val layoutDetails: ConstraintLayout? = null
+
+    protected open fun setMaxWidth() {
+        (layoutDetails?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
     fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
@@ -177,6 +186,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                             .into(imageAttachment)
                         true
                     }
+
                     attachment?.type == AttachmentTypeEnum.Voice.value() -> {
                         icMsgBodyStartIcon.setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_voice)?.apply {
                             if (message.incoming)
@@ -185,6 +195,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                         })
                         false
                     }
+
                     attachment?.type == AttachmentTypeEnum.Link.value() -> false
                     else -> {
                         imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
@@ -275,10 +286,11 @@ abstract class BaseMsgViewHolder(private val view: View,
 
         when {
             rvReactions.measuredWidth + margin > layoutDetails.measuredWidth -> {
-                val newWidth = min((rvReactions.measuredWidth + margin), bodyMaxWidth)
+                val newWidth = min((rvReactions.measuredWidth + margin), bubbleMaxWidth)
                 layoutDetails.layoutParams.width = newWidth
                 rvReactions.layoutParams.width = newWidth - margin
             }
+
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {
                 rvReactions.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
                 layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
@@ -324,7 +336,8 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected fun setBodyTextPosition(currentView: TextView, nextView: View, parentLayout: ConstraintLayout, maxWidth: Int) {
+    protected fun setBodyTextPosition(currentView: TextView, nextView: View, parentLayout: ConstraintLayout) {
+        val maxWidth = getBodyMaxAcceptableWidth(currentView)
         currentView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         val currentViewWidth = currentView.measuredWidth
         nextView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -359,6 +372,10 @@ abstract class BaseMsgViewHolder(private val view: View,
         constraintSet.applyTo(constraintLayout)
     }
 
+    private fun getBodyMaxAcceptableWidth(textView: TextView): Int {
+        return bubbleMaxWidth - (textView.marginStart + textView.marginEnd)
+    }
+
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
         if (incoming) return 5
         return min(5, reactionsSize)
@@ -388,5 +405,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
         highlightAnim?.doOnEnd { messageListItem.highlighted = false }
+    }
+
+    companion object {
+        fun getBubbleMaxWidth(context: Context): Int {
+            return (context.screenWidthPx() * 0.77f).toInt()
+        }
     }
 }

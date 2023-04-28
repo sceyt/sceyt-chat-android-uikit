@@ -112,6 +112,10 @@ class IncAttachmentsMsgViewHolder(
         filedAdapter?.onItemDetached()
     }
 
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+    }
+
     private fun SceytItemIncAttachmentsMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))

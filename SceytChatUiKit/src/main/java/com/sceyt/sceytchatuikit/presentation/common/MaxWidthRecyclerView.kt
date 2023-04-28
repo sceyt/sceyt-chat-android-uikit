@@ -3,16 +3,18 @@ package com.sceyt.sceytchatuikit.presentation.common
 import android.content.Context
 import android.util.AttributeSet
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import kotlin.math.min
 
 class MaxWidthRecyclerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : RecyclerView(context, attrs, defStyleAttr) {
-    private var bodyMaxWidth = context.resources.getDimensionPixelSize(com.sceyt.sceytchatuikit.R.dimen.bodyMaxWidth)
+    private var bubbleMaxWidth = BaseMsgViewHolder.getBubbleMaxWidth(context)
 
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
         super.onMeasure(widthSpec, heightSpec)
         var width = MeasureSpec.getSize(widthSpec)
-        if (width > bodyMaxWidth) {
-            width = bodyMaxWidth
+        val acceptableW = bubbleMaxWidth
+        if (width > acceptableW) {
+            width = acceptableW
             setMeasuredDimension(min(measuredWidth, width), measuredHeight)
         }
     }

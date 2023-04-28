@@ -41,4 +41,6 @@ class IncDeletedMsgViewHolder(
             tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
         }
     }
+
+    override val layoutDetails get() = binding.layoutDetails
 }
