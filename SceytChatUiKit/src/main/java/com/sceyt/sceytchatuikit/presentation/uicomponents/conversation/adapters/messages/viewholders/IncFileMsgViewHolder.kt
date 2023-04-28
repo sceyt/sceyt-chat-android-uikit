@@ -112,24 +112,33 @@ class IncFileMsgViewHolder(
             TransferState.Uploaded, TransferState.Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
             }
+
             TransferState.PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             TransferState.PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
             }
+
             TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
         }
     }
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
+
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+    }
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
         with(context) {

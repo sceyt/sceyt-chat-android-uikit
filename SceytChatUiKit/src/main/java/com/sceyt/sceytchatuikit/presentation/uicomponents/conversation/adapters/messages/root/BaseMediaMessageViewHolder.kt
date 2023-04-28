@@ -4,12 +4,10 @@ import android.util.Size
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.dpToPx
@@ -39,7 +37,7 @@ abstract class BaseMediaMessageViewHolder(
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null
     private val maxSize by lazy {
-        context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) - dpToPx(4f) //4f is margins
+        bubbleMaxWidth - dpToPx(4f) //4f is margins
     }
     private val minSize = maxSize / 3
     protected var isAttachedToWindow = true
@@ -114,8 +112,6 @@ abstract class BaseMediaMessageViewHolder(
     open val fileContainer: View? = null
 
     abstract val loadingProgressView: SceytCircularProgressView
-
-    open val layoutDetails: ConstraintLayout? = null
 
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
         val isTransferring = data.isTransferring()

@@ -21,10 +21,13 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutDetails"
-        android:layout_width="@dimen/bodyMaxWidth"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/sceyt_bg_out_message"
+        app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatTextView
