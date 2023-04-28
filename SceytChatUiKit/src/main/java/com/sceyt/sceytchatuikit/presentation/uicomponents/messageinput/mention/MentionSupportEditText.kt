@@ -199,9 +199,17 @@ class MentionSupportEditText : AppCompatEditText {
         while (delimiterSearchIndex >= 0 && text[delimiterSearchIndex] != starter && !Character.isWhitespace(text[delimiterSearchIndex])) {
             delimiterSearchIndex--
         }
-        return if (delimiterSearchIndex >= 0 && text[delimiterSearchIndex] == starter) {
+        val index = if (delimiterSearchIndex >= 0 && text[delimiterSearchIndex] == starter) {
             delimiterSearchIndex + 1
         } else -1
+
+        if (index == -1 || index == 1) return index
+
+        val previousChar = text[index - 2]
+        if (previousChar == ' ' || previousChar == '\n')
+            return index
+
+        return -1
     }
 
     private class QueryStart(var index: Int, var isMentionQuery: Boolean)
