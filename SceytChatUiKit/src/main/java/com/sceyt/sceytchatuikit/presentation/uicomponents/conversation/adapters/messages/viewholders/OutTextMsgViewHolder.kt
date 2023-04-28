@@ -45,6 +45,7 @@ class OutTextMsgViewHolder(
             with(binding) {
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
+                layoutDetails.minimumHeight
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
