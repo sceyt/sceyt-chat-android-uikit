@@ -26,8 +26,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toStartOf="@+id/messageDate"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"

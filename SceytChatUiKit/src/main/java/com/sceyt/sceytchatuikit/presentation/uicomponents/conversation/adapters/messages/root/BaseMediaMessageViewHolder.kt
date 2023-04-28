@@ -15,7 +15,11 @@ import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.setMargins
-import com.sceyt.sceytchatuikit.persistence.filetransfer.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
+import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -34,7 +38,9 @@ abstract class BaseMediaMessageViewHolder(
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null
-    private val maxSize by lazy { context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) }
+    private val maxSize by lazy {
+        context.resources.getDimensionPixelSize(R.dimen.bodyMaxWidth) - dpToPx(4f) //4f is margins
+    }
     private val minSize = maxSize / 3
     protected var isAttachedToWindow = true
 

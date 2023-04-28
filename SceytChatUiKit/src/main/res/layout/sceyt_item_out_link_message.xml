@@ -26,7 +26,8 @@
         android:background="@drawable/sceyt_bg_out_message"
         android:paddingTop="2dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="@dimen/bodyMaxWidth">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvForwarded"
@@ -43,18 +44,17 @@
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:visibility="visible" />
 
         <ViewStub
             android:id="@+id/viewReply"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="5dp"
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
@@ -62,7 +62,6 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -76,18 +75,18 @@
             android:autoLink="phone|web|email"
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Lore ipsum  is the correct text which" />
 
         <include
             android:id="@+id/layoutLinkPreview"
             layout="@layout/sceyt_message_link_preview_container"
-            android:layout_width="@dimen/bodyMaxWidth"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginBottom="4dp"
@@ -95,7 +94,8 @@
             app:layout_constraintBottom_toTopOf="@+id/messageDate"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/messageBody" />
+            app:layout_constraintTop_toBottomOf="@+id/messageBody"
+            tools:visibility="visible" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"

@@ -24,7 +24,8 @@
         android:layout_marginStart="8dp"
         android:background="@drawable/sceyt_bg_inc_message"
         app:layout_constraintStart_toEndOf="@+id/avatar"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="@dimen/bodyMaxWidth">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
@@ -37,11 +38,11 @@
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Henry Willian"
             tools:visibility="visible" />
 
@@ -57,11 +58,11 @@
             android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/mediumTextSize"
             android:textStyle="italic"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toStartOf="@+id/messageDate"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-            app:layout_constraintTop_toBottomOf="@+id/tvUserName"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
+            app:layout_constraintTop_toBottomOf="@+id/tvUserName" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
