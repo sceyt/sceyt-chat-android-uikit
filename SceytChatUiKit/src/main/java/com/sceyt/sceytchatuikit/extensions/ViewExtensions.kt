@@ -48,6 +48,11 @@ fun dpToPx(dp: Float): Int {
     return (dp * density).roundToInt()
 }
 
+fun dpToPxAsFloat(dp: Float): Float {
+    val density = Resources.getSystem().displayMetrics.density
+    return dp * density
+}
+
 fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 
 fun View.screenHeightPx() = resources.displayMetrics.heightPixels

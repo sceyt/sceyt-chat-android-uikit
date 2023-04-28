@@ -6,6 +6,7 @@ import android.animation.ObjectAnimator
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import android.view.animation.AnimationSet
 import android.view.animation.ScaleAnimation
 import androidx.core.view.isVisible
 import androidx.transition.Transition
@@ -106,6 +107,23 @@ fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 
     anim.duration = duration
     anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
     startAnimation(anim)
+}
+
+fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 200, finishedListener: ((Animation?) -> Unit) = { }) {
+    val startAlpha = if (endScale < 1) 1.0f else 0f
+    val endAlpha = if (endScale < 1) 0f else 1f
+
+    val animationSet = AnimationSet(true)
+    val scaleAnimation = ScaleAnimation(startScale, endScale, startScale, endScale,
+        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+    scaleAnimation.duration = duration
+    animationSet.addAnimation(scaleAnimation)
+
+    val alphaAnimation = AlphaAnimation(startAlpha, endAlpha)
+    alphaAnimation.duration = (duration / 1.5).toLong()
+    animationSet.addAnimation(alphaAnimation)
+    animationSet.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
+    startAnimation(animationSet)
 }
 
 fun View.visibleGoneWithScaleAnim(visible: Boolean) {
