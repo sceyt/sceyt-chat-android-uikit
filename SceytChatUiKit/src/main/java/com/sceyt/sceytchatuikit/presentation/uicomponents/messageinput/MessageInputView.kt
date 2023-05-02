@@ -399,6 +399,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 AttachmentChooseType.Camera -> {
                     //TODO custom camera impl
                 }
+
                 AttachmentChooseType.Image -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 AttachmentChooseType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
                 AttachmentChooseType.File -> selectFileTypePopupClickListeners.onFileClick()
@@ -551,9 +552,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun initInputWithEditMessage(message: Message) {
         with(binding) {
-            val body = SpannableString(message.body)
+            var body = SpannableString(message.body)
             if (!message.mentionedUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(message.metadata, message.mentionedUsers)
+                val updatedBody = MentionUserHelper.updateBodyWithUsers(message.body, message.metadata, message.mentionedUsers)
+                body = SpannableString(updatedBody)
                 MentionAnnotation.setMentionAnnotations(body, data)
             }
             messageInput.setText(body)
@@ -612,10 +615,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun setDraftMessage(draftMessage: DraftMessage?) {
         if (draftMessage == null || draftMessage.message.isNullOrEmpty())
             return
-        val body = SpannableString(draftMessage.message)
+        var body = SpannableString(draftMessage.message)
         with(binding.messageInput) {
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
+                val updatedBody = MentionUserHelper.updateBodyWithUsers(draftMessage.message,
+                    draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
+                body = SpannableString(updatedBody)
                 MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)
