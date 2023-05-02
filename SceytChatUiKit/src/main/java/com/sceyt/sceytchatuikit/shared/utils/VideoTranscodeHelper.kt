@@ -15,46 +15,6 @@ import kotlin.coroutines.resume
 
 object VideoTranscodeHelper {
 
-    fun transcode(application: Application, destination: File, uri: String) = callbackFlow {
-        try {
-            VideoCompressor.start(
-                context = application,
-                srcUri = Uri.parse(uri),
-                destPath = destination.absolutePath,
-                configureWith = Configuration(
-                    quality = VideoQuality.MEDIUM,
-                    isMinBitrateCheckEnabled = true,
-                    disableAudio = false,
-                ),
-                listener = object : CompressionListener {
-                    override fun onCancelled() {
-                        trySend(VideoTranscodeData(TranscodeResultEnum.Cancelled))
-                    }
-
-                    override fun onFailure(failureMessage: String) {
-                        Log.i("transcodeVideoFailure", failureMessage)
-                        trySend(VideoTranscodeData(TranscodeResultEnum.Failure, failureMessage))
-                    }
-
-                    override fun onProgress(percent: Float) {
-                        trySend(VideoTranscodeData(TranscodeResultEnum.Progress, progressPercent = percent))
-                    }
-
-                    override fun onStart() {
-                        trySend(VideoTranscodeData(TranscodeResultEnum.Start))
-                    }
-
-                    override fun onSuccess() {
-                        trySend(VideoTranscodeData(TranscodeResultEnum.Success))
-                    }
-                },
-            )
-        } catch (ex: Exception) {
-            Log.i("transcodeVideoFailure", ex.message.toString())
-            trySend(VideoTranscodeData(TranscodeResultEnum.Failure, ex.message.toString()))
-        }
-    }
-
     suspend fun transcodeAsResult(context: Context, destination: File, uri: String): VideoTranscodeData {
         return suspendCancellableCoroutine {
             try {
