@@ -76,6 +76,17 @@ object MentionUserHelper {
         return SpannableString.valueOf(newBody)
     }
 
+    fun updateBodyWithUsers(body: String, metaData: String?, mentionUsers: Array<User>?): String {
+        if (metaData.isNullOrBlank()) return body
+
+        val data = getMentionData(metaData) ?: return body
+        val newBody = SpannableStringBuilder(body)
+        data.sortedByDescending { it.loc }.forEach {
+            setNewBodyWithName(mentionUsers, newBody, it)
+        }
+        return newBody.toString()
+    }
+
     fun containsMentionsUsers(message: SceytMessage): Boolean {
         if (message.mentionedUsers?.isNotEmpty() == true) return true
         if (message.metadata.isNullOrBlank()) return false

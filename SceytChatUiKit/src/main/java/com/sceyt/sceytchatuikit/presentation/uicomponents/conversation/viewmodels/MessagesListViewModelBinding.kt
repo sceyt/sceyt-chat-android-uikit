@@ -582,6 +582,10 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
         override fun mention(query: String) {
             mentionJog?.cancel()
+            if (messageInputView.getComposedMessage().isNullOrBlank()) {
+                messageInputView.setMentionList(emptyList())
+                return
+            }
             mentionJog = viewModelScope.launch(Dispatchers.IO) {
                 val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
                 if (query.isEmpty())
