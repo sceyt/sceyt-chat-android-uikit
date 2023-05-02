@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.shared.utils
 
-import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -8,14 +7,13 @@ import com.abedelazizshe.lightcompressorlibrary.CompressionListener
 import com.abedelazizshe.lightcompressorlibrary.VideoCompressor
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 import com.abedelazizshe.lightcompressorlibrary.config.Configuration
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import kotlin.coroutines.resume
 
 object VideoTranscodeHelper {
 
-    suspend fun transcodeAsResult(context: Context, destination: File, uri: String): VideoTranscodeData {
+    suspend fun transcodeAsResult(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.MEDIUM): VideoTranscodeData {
         return suspendCancellableCoroutine {
             try {
                 VideoCompressor.start(
@@ -23,8 +21,8 @@ object VideoTranscodeHelper {
                     srcUri = Uri.parse(uri),
                     destPath = destination.absolutePath,
                     configureWith = Configuration(
-                        quality = VideoQuality.MEDIUM,
-                        isMinBitrateCheckEnabled = true,
+                        quality = quality,
+                        isMinBitrateCheckEnabled = false,
                         disableAudio = false,
                     ),
                     listener = object : CompressionListener {
@@ -55,14 +53,14 @@ object VideoTranscodeHelper {
         }
     }
 
-    fun transcodeAsResultWithCallback(context: Context, destination: File, uri: String, callback: (VideoTranscodeData) -> Unit) {
+    fun transcodeAsResultWithCallback(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.MEDIUM, callback: (VideoTranscodeData) -> Unit) {
         try {
             VideoCompressor.start(
                 context = context,
                 srcUri = Uri.parse(uri),
                 destPath = destination.absolutePath,
                 configureWith = Configuration(
-                    quality = VideoQuality.MEDIUM,
+                    quality = quality,
                     isMinBitrateCheckEnabled = false,
                     disableAudio = false,
                 ),
