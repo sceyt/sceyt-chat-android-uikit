@@ -24,7 +24,9 @@ import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.koin.core.component.inject
 import java.io.File
 import java.io.FileNotFoundException
-import java.util.*
+import java.util.Collections
+import java.util.LinkedList
+import java.util.Queue
 import kotlin.math.max
 
 internal class FileTransferLogicImpl(private val application: Application) : FileTransferLogic, SceytKoinComponent {
@@ -36,7 +38,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     private var currentUploadingAttachment: SceytAttachment? = null
     private var pausedTasksMap = hashMapOf<String, String>()
 
-    private var sharedFilesPath = Collections.synchronizedSet<String>(mutableSetOf())
+    private var sharingFilesPath = Collections.synchronizedSet<ShareFilesData>(mutableSetOf())
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
         checkAndUpload(attachment, task)
@@ -44,10 +46,20 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
 
     override fun uploadSharedFile(attachment: SceytAttachment, task: TransferTask) {
         fileTransferService.getTasks()[task.messageTid.toString()] = task
-        if (!sharedFilesPath.contains(attachment.filePath)) {
-            sharedFilesPath.add(attachment.filePath.toString())
-            uploadSharedAttachment(attachment, task)
+        val data = ShareFilesData(attachment.filePath.toString(), attachment.filePath.toString(), attachment.messageTid)
+        if (sharingFilesPath.none { it.originalPath == attachment.filePath }) {
+            checkAndResizeMessageAttachments(application, attachment) {
+                if (it.isSuccess) {
+                    it.getOrNull()?.let { path ->
+                        task.updateFileLocationCallback.onUpdateFileLocation(path)
+                        data.resizedPath = path
+                    }
+                } else Log.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
+
+                uploadSharedAttachment(attachment, task)
+            }
         }
+        sharingFilesPath.add(data)
     }
 
     override fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
@@ -97,9 +109,11 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
                 uploadNext()
 
             }
+
             TransferState.PendingDownload, TransferState.Downloading -> {
                 //todo
             }
+
             else -> {}
         }
     }
@@ -113,6 +127,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
                     downloadFile(attachment, it)
                 }
             }
+
             TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     it.state = TransferState.Uploading
@@ -120,6 +135,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
                     //Todo need implement resume sharing files
                 }
             }
+
             else -> return
         }
     }
@@ -201,6 +217,15 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     }
 
     private fun uploadSharedAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
+        fun removeFromSharingPath() {
+            val current = sharingFilesPath.firstOrNull { it.resizedPath == attachment.filePath }
+                    ?: return
+            sharingFilesPath.removeAll {
+                it.originalPath == current.originalPath
+            }
+            sharingFilesPath.remove(current)
+        }
+
         ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
             override fun onResult(progress: Float) {
                 if (progress == 1f || pausedTasksMap[attachment.messageTid.toString()] != null) return
@@ -215,29 +240,38 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Error(exception))
                 }
-                sharedFilesPath.remove(attachment.filePath)
+                removeFromSharingPath()
             }
         }, object : UrlCallback {
             override fun onResult(p0: String?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Success(p0))
                 }
-                sharedFilesPath.remove(attachment.filePath)
+                removeFromSharingPath()
             }
 
             override fun onError(exception: SceytException?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Error(exception))
                 }
-                sharedFilesPath.remove(attachment.filePath)
+                removeFromSharingPath()
             }
         })
     }
 
     @Synchronized
     private fun getAppropriateTasks(transferTask: TransferTask): List<TransferTask> {
+        //Get current task original path with resized path
+        val currentTaskOriginalPath = sharingFilesPath.firstOrNull {
+            it.resizedPath == transferTask.attachment.filePath
+        }?.originalPath
+
+        //Find all tasks with the same original file path, to update transfer state
+        val tasks = sharingFilesPath.filter {
+            it.originalPath == currentTaskOriginalPath
+        }
         return fileTransferService.getTasks().values.filter {
-            it.attachment.filePath == transferTask.attachment.filePath
+            tasks.any { data -> data.messageTid == it.attachment.messageTid }
                     && it.state != TransferState.PauseUpload
         }
     }
@@ -248,9 +282,11 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
                 val result = resizeImage(context, attachment.filePath, 1080)
                 callback(result)
             }
+
             AttachmentTypeEnum.Video.value() -> {
                 transcodeVideo(context, attachment.filePath, callback)
             }
+
             else -> callback.invoke(Result.success(null))
         }
     }
@@ -263,9 +299,11 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
             AttachmentTypeEnum.Image.value() -> {
                 FileResizeUtil.getImageThumbAsFile(context, path, reqSize)?.path
             }
+
             AttachmentTypeEnum.Video.value() -> {
                 FileResizeUtil.getVideoThumbAsFile(context, path, reqSize)?.path
             }
+
             else -> null
         }
         return Result.success(resizePath)
@@ -274,11 +312,17 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     fun clear() {
         pausedTasksMap.clear()
         downloadingUrlMap.clear()
-        sharedFilesPath.clear()
+        sharingFilesPath.clear()
         preparingThumbsMap.clear()
     }
 
     data class ThumbPathsData(val messageTid: Long,
                               val path: String,
                               val size: Size)
+
+    data class ShareFilesData(
+            val originalPath: String,
+            var resizedPath: String,
+            val messageTid: Long
+    )
 }
