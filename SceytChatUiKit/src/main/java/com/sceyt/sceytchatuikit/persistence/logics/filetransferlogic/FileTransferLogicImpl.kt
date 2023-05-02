@@ -284,7 +284,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
             }
 
             AttachmentTypeEnum.Video.value() -> {
-                transcodeVideo(context, attachment.filePath, callback)
+                transcodeVideo(context, attachment.filePath, callback = callback)
             }
 
             else -> callback.invoke(Result.success(null))
