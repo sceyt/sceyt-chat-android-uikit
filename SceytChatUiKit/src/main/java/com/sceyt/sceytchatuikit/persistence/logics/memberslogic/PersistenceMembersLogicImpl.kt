@@ -89,8 +89,8 @@ internal class PersistenceMembersLogicImpl(
                     channelsCache.upsertChannel(it.toChannel())
                 } ?: run {
                     channelDao.insertChannel(data.channel.toChannelEntity())
-                    data.channel.lastMessage?.toSceytUiMessage()?.toMessageDb()?.let {
-                        messageDao.insertMessage(it)
+                    data.channel.lastMessage?.toSceytUiMessage()?.toMessageDb(false)?.let {
+                        messageDao.upsertMessage(it)
                     }
                     channelsCache.add(data.channel.toSceytUiChannel())
                 }

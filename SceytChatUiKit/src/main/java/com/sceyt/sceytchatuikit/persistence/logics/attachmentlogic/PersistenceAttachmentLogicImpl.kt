@@ -281,7 +281,7 @@ internal class PersistenceAttachmentLogicImpl(
             when (val messagesResponse = messagesLogic.loadMessagesById(conversationId, messageIds)) {
                 is SceytResponse.Success -> {
                     messagesResponse.data?.let { data ->
-                        messageDao.insertMessages(data.map { it.toMessageDb() })
+                        messageDao.upsertMessages(data.map { it.toMessageDb(false) })
                         data.forEach {
                             attachments.find { attachment -> attachment.messageId == it.id }?.let { attachment ->
                                 sceytAttachments.add(attachment.toSceytAttachment(

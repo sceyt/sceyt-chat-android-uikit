@@ -37,7 +37,7 @@ internal class PersistenceReactionsLogicImpl(
         reactionDao.deleteAllReactionScoresByMessageId(messageId)
         val existMessage = messageDao.existsMessageById(messageId)
         if (!existMessage)
-            messageDao.insertMessage(data.message.toMessageDb())
+            messageDao.upsertMessage(data.message.toMessageDb(false))
 
         when (data.eventType) {
             ADD -> reactionDao.insertReaction(data.reaction.toReactionEntity())

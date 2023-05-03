@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.*
 
-fun SceytMessage.toMessageEntity() = MessageEntity(
+fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
     id = id,
     channelId = channelId,
@@ -39,7 +39,8 @@ fun SceytMessage.toMessageEntity() = MessageEntity(
     replyInThread = replyInThread,
     replyCount = replyCount,
     displayCount = displayCount,
-    forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb()
+    forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
+    isParentMessage = isParentMessage
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -49,10 +50,10 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
 }
 
 
-fun SceytMessage.toMessageDb(): MessageDb {
+fun SceytMessage.toMessageDb(isParentMessage: Boolean): MessageDb {
     val tid = getTid(id, tid, incoming)
     return MessageDb(
-        messageEntity = toMessageEntity(),
+        messageEntity = toMessageEntity(isParentMessage),
         from = from?.toUserEntity(),
         parent = parent?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
@@ -112,7 +113,7 @@ fun ParentMessageDb.toSceytMessage(): SceytMessage {
 }
 
 fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
-    return ParentMessageDb(toMessageEntity(), from?.toUserEntity(), attachments?.map {
+    return ParentMessageDb(toMessageEntity(true), from?.toUserEntity(), attachments?.map {
         it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
     }, null)
 }
