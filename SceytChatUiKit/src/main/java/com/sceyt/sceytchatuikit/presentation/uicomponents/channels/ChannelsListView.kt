@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
@@ -110,6 +111,18 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val oldChannel = channelItem.channel.clone()
             channelItem.channel = channel
             val diff = oldChannel.diff(channel)
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+            return diff
+        }
+        return null
+    }
+
+    internal fun channelDraftMessageUpdated(channelId: Long, draftMessage: DraftMessage?): ChannelItemPayloadDiff? {
+        channelsRV.getChannelIndexed(channelId)?.let { pair ->
+            val channelItem = pair.second
+            val oldChannel = channelItem.channel.clone()
+            channelItem.channel.draftMessage = draftMessage
+            val diff = oldChannel.diff(channelItem.channel)
             channelsRV.adapter?.notifyItemChanged(pair.first, diff)
             return diff
         }

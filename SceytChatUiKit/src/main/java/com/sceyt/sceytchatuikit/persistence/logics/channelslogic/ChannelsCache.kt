@@ -1,9 +1,15 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
+import androidx.lifecycle.MutableLiveData
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.hasDiff
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -11,7 +17,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import java.util.*
+import java.util.Date
 
 class ChannelsCache {
     private var cachedData = hashMapOf<Long, SceytChannel>()
@@ -23,6 +29,9 @@ class ChannelsCache {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<ChannelUpdateData> = channelUpdatedFlow_
+
+        private val channelUpdatedLiveData_ = MutableLiveData<ChannelUpdateData>()
+        val channelUpdatedLiveData = channelUpdatedLiveData_.asLiveData()
 
         private val channelDeletedFlow_ = MutableSharedFlow<Long>(
             extraBufferCapacity = 5,
@@ -36,11 +45,8 @@ class ChannelsCache {
         )
         val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
 
-        private val channelDraftMessageChangesFlow_ = MutableSharedFlow<SceytChannel>(
-            extraBufferCapacity = 5,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST
-        )
-        val channelDraftMessageChangesFlow: SharedFlow<SceytChannel> = channelDraftMessageChangesFlow_
+        private val channelDraftMessageChangesLiveData_ = MutableLiveData<Pair<Long, DraftMessage?>>()
+        val channelDraftMessageChangesLiveData = channelDraftMessageChangesLiveData_.asLiveData()
 
         var currentChannelId: Long? = null
     }
@@ -184,6 +190,7 @@ class ChannelsCache {
 
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
+        channelUpdatedLiveData_.postValue(ChannelUpdateData(channel.clone(), needSort, type))
     }
 
     private fun channelAdded(channel: SceytChannel) {
@@ -200,7 +207,7 @@ class ChannelsCache {
     fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
         cachedData[channelId]?.let {
             it.draftMessage = draftMessage
-            channelDraftMessageChangesFlow_.tryEmit(it.clone())
+            channelDraftMessageChangesLiveData_.postValue(Pair(channelId, draftMessage))
         }
     }
 
