@@ -123,7 +123,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
         data.selfReactions = selfReactions.map { it.toReaction() }.toTypedArray()
-        messageDao.updateMessage(data.toMessageEntity())
+        messageDao.updateMessage(data.toMessageEntity(false))
         messagesCache.messageUpdated(data)
         if (data.state == MessageState.Deleted)
             deletedPayloads(data.id, data.tid)
@@ -302,12 +302,12 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
-        val tmpMessageDb = message.toMessageDb().also {
+        val tmpMessageDb = message.toMessageDb(false).also {
             it.messageEntity.id = null
             if (message.replyInThread)
                 it.messageEntity.channelId = message.parent?.id ?: 0
         }
-        messageDao.insertMessage(tmpMessageDb)
+        messageDao.upsertMessage(tmpMessageDb)
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
     }
 
@@ -408,7 +408,7 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.editMessage(id, message)
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
-                messageDao.updateMessage(updatedMsg.toMessageEntity())
+                messageDao.updateMessage(updatedMsg.toMessageEntity(false))
                 messagesCache.messageUpdated(updatedMsg)
                 persistenceChannelsLogic.onMessageEditedOrDeleted(updatedMsg)
             }
@@ -429,7 +429,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun attachmentSuccessfullySent(message: SceytMessage) {
-        messageDao.insertMessage(message.toMessageDb())
+        messageDao.upsertMessage(message.toMessageDb(false))
         messagesCache.upsertNotifyUpdateAnyway(message)
     }
 
@@ -633,17 +633,19 @@ internal class PersistenceMessagesLogicImpl(
         val usersDb = arrayListOf<UserEntity>()
 
         val messagesDb = arrayListOf<MessageDb>()
+        val parentMessagesDb = arrayListOf<MessageDb>()
         for (message in list) {
-            messagesDb.add(message.toMessageDb())
+            messagesDb.add(message.toMessageDb(false))
             message.parent?.let { parent ->
                 if (parent.id != 0L) {
-                    messagesDb.add(parent.toMessageDb())
+                    parentMessagesDb.add(parent.toMessageDb(true))
                     if (parent.incoming)
                         parent.from?.let { user -> usersDb.add(user.toUserEntity()) }
                 }
             }
         }
-        messageDao.insertMessages(messagesDb)
+        messageDao.upsertMessages(messagesDb)
+        messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
         list.filter { it.incoming && it.from != null }.map { it.from!! }.toSet().let { users ->

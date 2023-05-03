@@ -35,5 +35,6 @@ data class MessageEntity(
         var replyCount: Long,
         val displayCount: Short,
         @Embedded
-        val forwardingDetailsDb: ForwardingDetailsDb?
+        val forwardingDetailsDb: ForwardingDetailsDb?,
+        var isParentMessage: Boolean
 )

@@ -19,51 +19,42 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 abstract class MessageDao {
 
     @Transaction
-    open suspend fun insertMessage(messageDb: MessageDb) {
+    open suspend fun upsertMessage(messageDb: MessageDb) {
         upsertMessageEntity(messageDb.messageEntity)
-
-        //Delete attachments before insert
-        deleteAttachmentsChunked(listOf(messageDb.messageEntity.tid))
-
-        //Delete reactions scores before insert
-        messageDb.messageEntity.id?.let {
-            deleteMessageReactionScoresChunked(listOf(it))
-        }
-
-        //Insert attachments
-        messageDb.attachments?.let { entities ->
-            insertAttachments(entities.map { it.attachmentEntity })
-            insertAttachmentPayLoads(entities.map {
-                it.toAttachmentPayLoad(messageDb.messageEntity)
-            })
-        }
-
-        //Insert reactions
-        messageDb.reactions?.let {
-            insertReactions(it.map { reactionDb -> reactionDb.reaction })
-        }
-
-        //Insert reaction scores
-        messageDb.reactionsScores?.let {
-            insertReactionScores(it)
-        }
-
-        //Inset mentioned users links
-        insertMentionedUsersMessageLinks(messageDb.messageEntity)
+        insertMessagesPayloads(listOf(messageDb))
     }
 
     @Transaction
-    open suspend fun insertMessages(messagesDb: List<MessageDb>) {
+    open suspend fun upsertMessages(messagesDb: List<MessageDb>) {
         if (messagesDb.isEmpty()) return
         upsertMessageEntities(messagesDb.map { it.messageEntity })
+        insertMessagesPayloads(messagesDb)
+    }
+
+    @Transaction
+    open suspend fun insertMessagesIgnored(messagesDb: List<MessageDb>) {
+        if (messagesDb.isEmpty()) return
+
+        val entities = messagesDb.map { it.messageEntity }
+        val rowIds = insertMany(entities)
+        val insertedMessages = rowIds.mapIndexedNotNull { index, rowId ->
+            if (rowId != -1L) messagesDb.firstOrNull { it.messageEntity.tid == entities[index].tid } else null
+        }
+
+        insertMessagesPayloads(insertedMessages)
+    }
+
+    private suspend fun insertMessagesPayloads(messages: List<MessageDb>) {
+        if (messages.isEmpty()) return
+
         //Delete attachments before insert
-        deleteAttachmentsChunked(messagesDb.map { it.messageEntity.tid })
+        deleteAttachmentsChunked(messages.map { it.messageEntity.tid })
 
         //Delete reactions scores before insert
-        deleteMessageReactionScoresChunked(messagesDb.mapNotNull { it.messageEntity.id })
+        deleteMessageReactionScoresChunked(messages.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
-        val attachmentPairs = messagesDb.map { Pair(it.attachments ?: arrayListOf(), it) }
+        val attachmentPairs = messages.map { Pair(it.attachments ?: arrayListOf(), it) }
         if (attachmentPairs.isNotEmpty()) {
             insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
             insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
@@ -72,17 +63,17 @@ abstract class MessageDao {
         }
 
         //Insert reactions
-        val reactions = messagesDb.flatMap { it.reactions ?: arrayListOf() }
+        val reactions = messages.flatMap { it.reactions ?: arrayListOf() }
         if (reactions.isNotEmpty())
             insertReactions(reactions.map { it.reaction })
 
         //Insert reaction scores
-        val reactionScores = messagesDb.flatMap { it.reactionsScores ?: arrayListOf() }
+        val reactionScores = messages.flatMap { it.reactionsScores ?: arrayListOf() }
         if (reactionScores.isNotEmpty())
             insertReactionScores(reactionScores)
 
         //Inset mentioned users links
-        insertMentionedUsersMessageLinks(*messagesDb.map { it.messageEntity }.toTypedArray())
+        insertMentionedUsersMessageLinks(*messages.map { it.messageEntity }.toTypedArray())
     }
 
     @Transaction
@@ -139,16 +130,16 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
-            "order by createdAt desc limit :limit")
+            "and not isParentMessage order by createdAt desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and message_id >:messageId " +
+    @Query("select * from messages where channelId =:channelId and message_id >:messageId and not isParentMessage " +
             "order by createdAt limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and message_id >=:messageId " +
+    @Query("select * from messages where channelId =:channelId and message_id >=:messageId and not isParentMessage " +
             "order by createdAt limit :limit")
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 

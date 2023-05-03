@@ -39,41 +39,50 @@ object MentionUserHelper {
         val data = getMentionData(metaData) ?: return SpannableString(body)
         val newBody = SpannableStringBuilder(body)
 
-        data.sortedByDescending { it.loc }.forEach {
-            val name = setNewBodyWithName(mentionUsers, newBody, it)
-            newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
-                it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return try {
+            data.sortedByDescending { it.loc }.forEach {
+                val name = setNewBodyWithName(mentionUsers, newBody, it)
+                newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
+                    it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-            if (enableClick) {
-                val clickableSpan = object : ClickableSpan() {
-                    override fun onClick(textView: View) {
-                        //todo: implement click action
-                    }
+                if (enableClick) {
+                    val clickableSpan = object : ClickableSpan() {
+                        override fun onClick(textView: View) {
+                            //todo: implement click action
+                        }
 
-                    override fun updateDrawState(ds: TextPaint) {
-                        super.updateDrawState(ds)
-                        ds.isUnderlineText = false
+                        override fun updateDrawState(ds: TextPaint) {
+                            super.updateDrawState(ds)
+                            ds.isUnderlineText = false
+                        }
                     }
+                    newBody.setSpan(clickableSpan, it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
-                newBody.setSpan(clickableSpan, it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
+            SpannableString.valueOf(newBody)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            SpannableString.valueOf(body)
         }
-
-        return SpannableString.valueOf(newBody)
     }
 
     fun buildOnlyNamesWithMentionedUsers(body: String, metaData: String?,
                                          mentionUsers: Array<User>?): SpannableString {
         if (metaData.isNullOrBlank()) return SpannableString(body)
 
-        val data = getMentionData(metaData) ?: return SpannableString(body)
-        val newBody = SpannableStringBuilder(body)
-        data.sortedByDescending { it.loc }.forEach {
-            val name = setNewBodyWithName(mentionUsers, newBody, it)
-            newBody.setSpan(StyleSpan(Typeface.BOLD),
-                it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return try {
+            val data = getMentionData(metaData) ?: return SpannableString(body)
+            val newBody = SpannableStringBuilder(body)
+            data.sortedByDescending { it.loc }.forEach {
+                val name = setNewBodyWithName(mentionUsers, newBody, it)
+                newBody.setSpan(StyleSpan(Typeface.BOLD),
+                    it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            SpannableString.valueOf(newBody)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            SpannableString.valueOf(body)
         }
-        return SpannableString.valueOf(newBody)
     }
 
     fun updateBodyWithUsers(body: String, metaData: String?, mentionUsers: Array<User>?): String {
