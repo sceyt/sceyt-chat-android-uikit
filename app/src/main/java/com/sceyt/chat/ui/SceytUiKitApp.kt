@@ -29,7 +29,7 @@ import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import java.util.*
+import java.util.UUID
 
 class SceytUiKitApp : Application() {
     private val preference by inject<AppSharedPreference>()
@@ -52,9 +52,11 @@ class SceytUiKitApp : Application() {
                     if (!ConnectionEventsObserver.isConnected)
                         connect()
                 }
+
                 Lifecycle.Event.ON_DESTROY, Lifecycle.Event.ON_PAUSE -> {
                     SceytKitClient.disconnect()
                 }
+
                 else -> {}
             }
         })

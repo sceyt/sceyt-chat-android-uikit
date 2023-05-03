@@ -15,6 +15,8 @@ import android.widget.Toast
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import com.sceyt.sceytchatuikit.R
 import java.io.File
@@ -53,6 +55,10 @@ fun Application.isAppOnForeground(): Boolean {
         }
     }
     return false
+}
+
+fun isAppOnForeground(): Boolean {
+    return ProcessLifecycleOwner.get().lifecycle.currentState == Lifecycle.State.RESUMED
 }
 
 fun Context.getOrientation(): Int {

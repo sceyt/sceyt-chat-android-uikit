@@ -4,13 +4,20 @@ import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.isAppOnForeground
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
-import java.util.*
+import java.util.Collections
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.coroutines.CoroutineContext
 
 object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
@@ -44,7 +51,7 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
     }
 
     private fun getUsers() {
-        if (presenceCheckUsers.keys.isEmpty()) return
+        if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground()) return
         workJob = launch {
             val result = persistenceUsersMiddleWare.getUsersByIds(presenceCheckUsers.keys.toList())
             if (result is SceytResponse.Success) {
