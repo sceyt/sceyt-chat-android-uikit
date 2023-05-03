@@ -45,6 +45,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                     if (!hasNextDb) channelsListView.hideLoadingMore()
                 }
             }
+
             is SceytResponse.Error -> if (!hasNextDb) channelsListView.hideLoadingMore()
         }
     }
@@ -65,28 +66,28 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         channelsListView.deleteChannel(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelUpdatedFlow.onEach { data ->
+    ChannelsCache.channelUpdatedLiveData.observe(lifecycleOwner) { data ->
         viewModelScope.launch {
             val isCanceled = channelsListView.cancelLastSort()
             val diff = channelsListView.channelUpdated(data.channel)
-            Log.i("diffChannel", data.channel.lastMessage?.body.toString() + "  " + data.channel.unreadMessageCount)
+            Log.i("diffChannel", data.channel.lastMessage?.body.toString() + "  " + data.channel.draftMessage?.message + " " + diff)
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
                     channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
             } else
                 getChannels(0, query = searchQuery)
         }
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    }
 
     ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
-        Log.i("diffChannel", "add " + sceytChannel.lastMessage?.body.toString() + "  " + sceytChannel.unreadMessageCount)
+        Log.i("diffChannel", "add " + sceytChannel.lastMessage?.body.toString() + "  " + sceytChannel.draftMessage?.message)
         channelsListView.cancelLastSort()
         channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelDraftMessageChangesFlow.onEach { sceytChannel ->
-        channelsListView.channelUpdated(sceytChannel)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    ChannelsCache.channelDraftMessageChangesLiveData.observe(lifecycleOwner) { (channelId, draftMessage) ->
+        channelsListView.channelDraftMessageUpdated(channelId, draftMessage)
+    }
 
     ChannelEventsObserver.onChannelTypingEventFlow
         .filter { it.member.id != SceytKitClient.myId }
@@ -102,6 +103,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             is SceytResponse.Success -> {
                 channelsListView.userBlocked(it.data)
             }
+
             is SceytResponse.Error -> customToastSnackBar(channelsListView, it.message ?: "")
         }
     }
