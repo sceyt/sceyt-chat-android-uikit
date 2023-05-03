@@ -8,10 +8,15 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
@@ -21,7 +26,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
     private var syncResultData: SyncResultData = SyncResultData()
     @Volatile
     private var syncIsInProcess: Boolean = false
-    private val syncResultCallbacks = SyncArrayList<(SyncResultData) -> Unit>()
+    private val syncResultCallbacks = ConcurrentHashSet<(SyncResultData) -> Unit>()
 
     companion object {
         private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
