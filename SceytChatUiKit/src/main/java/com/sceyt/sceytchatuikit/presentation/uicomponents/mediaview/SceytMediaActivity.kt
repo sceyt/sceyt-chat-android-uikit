@@ -120,8 +120,8 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initPageWithData() {
-        val attachment = intent?.extras?.getParcelable<SceytAttachment>(KEY_ATTACHMENT)
-        val user = intent?.extras?.getSerializable(KEY_USER) as User?
+        val attachment = intent?.extras?.parcelable<SceytAttachment>(KEY_ATTACHMENT)
+        val user = intent?.extras?.serializable(KEY_USER) as? User
 
         if (attachment == null) {
             viewModel.loadPrevAttachments(channelId, 0, false, mediaTypes, 0)

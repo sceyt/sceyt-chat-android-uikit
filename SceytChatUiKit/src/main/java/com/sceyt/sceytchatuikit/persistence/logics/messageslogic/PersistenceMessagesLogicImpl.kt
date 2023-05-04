@@ -37,6 +37,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEnt
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
@@ -263,6 +264,10 @@ internal class PersistenceMessagesLogicImpl(
             }
             MessageEventsObserver.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
+            it.attachments?.forEach { attachment ->
+                persistenceAttachmentLogic.updateAttachmentWithTransferData(
+                    TransferData(tmpMessage.tid, attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, attachment.url))
+            }
             messagesCache.add(tmpMessage)
             val response = sendMessageWithUploadedAttachments(channelId, it)
             if (response is SceytResponse.Error)
@@ -274,7 +279,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
         val response = messagesRepository.sendMessage(channelId, message)
         onMessageSentResponse(channelId, response)
-        response.data?.let { persistenceAttachmentLogic.updateForwardedAttachments(it) }
+        response.data?.let { persistenceAttachmentLogic.updateAttachmentIdAndMessageId(it) }
         return response
     }
 
