@@ -65,9 +65,9 @@ internal class PersistenceAttachmentLogicImpl(
         return loadAttachments(loadType = LoadNear, conversationId, attachmentId, types, loadKeyData, offset, ignoreDb)
     }
 
-    override suspend fun updateForwardedAttachments(message: SceytMessage) {
+    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) {
         message.attachments?.forEach { attachment ->
-            attachmentDao.updateAttachmentForwarded(attachment.id, message.id, message.tid, attachment.url)
+            attachmentDao.updateAttachmentIdAndMessageId(attachment.id, message.id, message.tid, attachment.url)
         }
     }
 

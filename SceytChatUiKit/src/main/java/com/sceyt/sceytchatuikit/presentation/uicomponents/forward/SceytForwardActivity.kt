@@ -53,8 +53,8 @@ open class SceytForwardActivity : SceytShareableActivity() {
         }
     }
 
-    protected fun sendForwardMessage(marOwnMessageAsForwarded: Boolean) {
-        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), marOwnMessageAsForwarded, forwardMessages)
+    protected fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {
+        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), markOwnMessageAsForwarded, forwardMessages)
             .onEach {
                 when (it) {
                     ForwardViewModel.State.Loading -> SceytLoader.showLoading(this@SceytForwardActivity)

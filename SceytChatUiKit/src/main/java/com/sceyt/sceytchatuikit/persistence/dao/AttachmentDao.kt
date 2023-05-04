@@ -36,5 +36,5 @@ abstract class AttachmentDao {
     }
 
     @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
-    abstract suspend fun updateAttachmentForwarded(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
+    abstract suspend fun updateAttachmentIdAndMessageId(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
 }

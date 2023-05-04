@@ -20,6 +20,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import com.sceyt.sceytchatuikit.R
 import java.io.File
+import java.io.Serializable
 
 fun Any?.isNull() = this == null
 
@@ -33,6 +34,11 @@ inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
 inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
     SDK_INT >= 33 -> getParcelable(key, T::class.java)
     else -> @Suppress("DEPRECATION") getParcelable(key) as? T
+}
+
+inline fun <reified T : Serializable> Bundle.serializable(key: String): T? = when {
+    SDK_INT >= 33 -> getSerializable(key, T::class.java)
+    else -> @Suppress("DEPRECATION") getSerializable(key) as? T
 }
 
 inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? = when {
