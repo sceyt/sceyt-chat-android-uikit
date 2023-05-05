@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import android.util.Log
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -98,32 +99,41 @@ class OutImageMsgViewHolder(
             TransferState.Downloaded, TransferState.Uploaded -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
+
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
+
             TransferState.Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
+
             TransferState.PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
+
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
+
             TransferState.ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
+
             TransferState.FilePathChanged -> {
                 requestThumb()
             }
+
             TransferState.ThumbLoaded -> {
-                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
         }
     }

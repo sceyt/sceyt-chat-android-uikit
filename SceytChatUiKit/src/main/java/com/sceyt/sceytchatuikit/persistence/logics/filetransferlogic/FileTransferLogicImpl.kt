@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
@@ -140,13 +141,14 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
         }
     }
 
-    override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
+    override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
+        val size = thumbData.size
         val thumbKey = getPreparingThumbKey(messageTid, size)
         if (preparingThumbsMap[thumbKey] != null) return
         val task = fileTransferService.findOrCreateTransferTask(attachment)
         val readyThumb = thumbPaths[thumbKey]
         if (readyThumb != null) {
-            task.thumbCallback.onThumb(readyThumb.path)
+            task.thumbCallback.onThumb(readyThumb.path, thumbData)
             return
         } else {
             preparingThumbsMap[thumbKey] = messageTid
@@ -154,7 +156,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
             if (result.isSuccess)
                 result.getOrNull()?.let { path ->
                     thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
-                    task.thumbCallback.onThumb(path)
+                    task.thumbCallback.onThumb(path, thumbData)
                 }
         }
         preparingThumbsMap.remove(thumbKey)

@@ -115,34 +115,42 @@ class IncVideoMsgViewHolder(
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
+
             TransferState.PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
                 binding.videoViewController.showPlayPauseButtons(false)
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             TransferState.Downloading -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             TransferState.Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
+
             TransferState.PauseDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             TransferState.ErrorDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             TransferState.FilePathChanged -> {
                 requestThumb()
             }
+
             TransferState.ThumbLoaded -> {
-                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
             }
         }
     }

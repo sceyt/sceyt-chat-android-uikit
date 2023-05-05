@@ -5,6 +5,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
@@ -41,40 +42,52 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             TransferState.Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             TransferState.Uploaded -> {
                 viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             TransferState.PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
+
             TransferState.Downloaded -> {
                 viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
+
             TransferState.ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
+
             TransferState.FilePathChanged -> {
                 requestThumb()
             }
+
             TransferState.ThumbLoaded -> {
+
                 viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
         }
     }
 
     override fun getThumbSize() = Size(itemView.width, itemView.height)
+
+    override fun needThumbFor() = ThumbFor.ConversationInfo
 
     private fun setListener() {
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)

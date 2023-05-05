@@ -11,17 +11,17 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 abstract class AttachmentDao {
     @Transaction
     @Query("select * from AttachmentEntity where channelId =:channelId and id != 0 and id <:attachmentId and type in (:types)" +
-            "order by createdAt desc limit :limit")
+            "order by createdAt desc, id desc limit :limit")
     abstract suspend fun getOldestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
     @Query("select * from AttachmentEntity where channelId =:channelId and id != 0 and id >:attachmentId and type in (:types)" +
-            "order by createdAt limit :limit")
+            "order by createdAt, id limit :limit")
     abstract suspend fun getNewestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
     @Query("select * from AttachmentEntity where channelId =:channelId and id >=:attachmentId and type in (:types)" +
-            "order by createdAt limit :limit")
+            "order by createdAt, id limit :limit")
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
@@ -29,10 +29,10 @@ abstract class AttachmentDao {
         val newest = getNewestThenMessageInclude(channelId, attachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2 + 1, types)
         val newMessages = newest.take(SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 1)
 
-        val oldest = getOldestThenAttachment(channelId, attachmentId, limit - newMessages.size, types)
+        val oldest = getOldestThenAttachment(channelId, attachmentId, limit - newMessages.size, types).reversed()
         val hasPrev = oldest.size == limit - newMessages.size
         val hasNext = newest.size > SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2
-        return LoadNearData((newMessages + oldest).sortedBy { it.attachmentEntity.createdAt }, hasNext = hasNext, hasPrev)
+        return LoadNearData(oldest + newMessages, hasNext = hasNext, hasPrev)
     }
 
     @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")

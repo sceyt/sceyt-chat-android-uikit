@@ -6,8 +6,20 @@ import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -57,35 +69,44 @@ class MessageImageViewHolder(
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             Uploaded -> {
                 viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
             }
+
             PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
+
             Downloaded -> {
                 if (fileItem.thumbPath.isNullOrBlank())
                     viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
                 else viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
+
             PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
+
             ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
             }
+
             FilePathChanged -> {
                 requestThumb()
             }
+
             ThumbLoaded -> {
                 viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
@@ -93,6 +114,8 @@ class MessageImageViewHolder(
     }
 
     override fun getThumbSize() = Size(1080, 1080)
+
+    override fun needThumbFor() = ThumbFor.ConversationInfo
 
     private fun setListener() {
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
