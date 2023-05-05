@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
-import android.util.Size
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 
 
@@ -28,11 +27,11 @@ sealed interface FileTransferListeners {
     }
 
     fun interface ThumbListener : FileTransferListeners {
-        fun getThumb(messageTid: Long, attachment: SceytAttachment, size: Size)
+        fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData)
     }
 
 
     /** Use this if you want to implement all callbacks */
-    interface Listeners : UploadListener,UploadSharedListener, DownloadListener, PauseListener,
+    interface Listeners : UploadListener, UploadSharedListener, DownloadListener, PauseListener,
             ResumeListener, ThumbListener
 }

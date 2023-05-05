@@ -21,10 +21,19 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
+import com.sceyt.sceytchatuikit.extensions.awaitToScrollFinish
+import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getFragmentManager
+import com.sceyt.sceytchatuikit.extensions.isLastCompletelyItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
+import com.sceyt.sceytchatuikit.extensions.openLink
+import com.sceyt.sceytchatuikit.extensions.setClipboard
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
@@ -44,7 +53,12 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.dialogs.D
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.BottomSheetReactionsInfoFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageActionsViewClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageActionsViewClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.ReactionPopupClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.ReactionPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactions
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
@@ -390,6 +404,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 TransferState.Uploading, TransferState.PendingUpload, TransferState.PauseUpload, TransferState.Uploaded -> { attachment ->
                     attachment.messageTid == data.messageTid
                 }
+
                 else -> { attachment ->
                     attachment.url == data.url
                 }
@@ -397,9 +412,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             val foundAttachmentFile = (it as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
 
             if (data.state == TransferState.ThumbLoaded) {
-                foundAttachmentFile?.let { listItem ->
-                    listItem.thumbPath = data.filePath
-                }
+                if (data.thumbData?.key == ThumbFor.MessagesLisView.value)
+                    foundAttachmentFile?.let { listItem ->
+                        listItem.thumbPath = data.filePath
+                    }
                 return
             }
 
@@ -650,9 +666,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             is FileListItem.Image -> {
                 SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
             }
+
             is FileListItem.Video -> {
                 SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
             }
+
             else -> item.file.openFile(context)
         }
     }

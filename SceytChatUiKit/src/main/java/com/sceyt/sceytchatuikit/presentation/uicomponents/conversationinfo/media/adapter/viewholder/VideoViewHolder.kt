@@ -44,32 +44,41 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
             TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
             }
+
             TransferState.PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
                 viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
+
             TransferState.Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
+
             TransferState.Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
             }
+
             TransferState.Downloaded, TransferState.Uploaded -> {
                 viewHolderHelper.drawThumbOrRequest(binding.image, ::requestThumb)
             }
+
             TransferState.PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
+
             TransferState.ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
+
             TransferState.FilePathChanged -> {
                 requestThumb()
             }
+
             TransferState.ThumbLoaded -> {
-                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.image)
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.image)
             }
         }
     }

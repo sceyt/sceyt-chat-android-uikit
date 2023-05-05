@@ -130,17 +130,17 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
-            "and not isParentMessage order by createdAt desc limit :limit")
+            "and not isParentMessage order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id >:messageId and not isParentMessage " +
-            "order by createdAt limit :limit")
+            "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id >=:messageId and not isParentMessage " +
-            "order by createdAt limit :limit")
+            "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction

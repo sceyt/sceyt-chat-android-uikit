@@ -585,7 +585,7 @@ class MessageListViewModel(
 
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.getThumb(attachment.messageTid, attachment, data.size)
+                    fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
         }

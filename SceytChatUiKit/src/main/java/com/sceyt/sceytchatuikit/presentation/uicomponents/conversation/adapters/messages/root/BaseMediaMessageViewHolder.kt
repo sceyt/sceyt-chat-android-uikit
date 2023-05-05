@@ -15,6 +15,8 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.setMargins
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
@@ -86,7 +88,8 @@ abstract class BaseMediaMessageViewHolder(
     protected fun requestThumb() {
         itemView.post {
             if (fileItem.file.filePath.isNullOrBlank()) return@post
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, getThumbSize()))
+            val thumbData = ThumbData(ThumbFor.MessagesLisView.value, getThumbSize())
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, thumbData))
         }
     }
 
@@ -101,6 +104,10 @@ abstract class BaseMediaMessageViewHolder(
                 isVisible = true
             } ?: run { isVisible = false }
         }
+    }
+
+    protected fun isValidThumb(thumbData: ThumbData?): Boolean {
+        return thumbData?.size == getThumbSize() && thumbData.key == ThumbFor.MessagesLisView.value
     }
 
     open fun getThumbSize(): Size {

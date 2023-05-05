@@ -6,10 +6,11 @@ data class TransferData(
         val progressPercent: Float,
         var state: TransferState,
         var filePath: String?,
-        val url: String?
+        val url: String?,
+        val thumbData: ThumbData? = null,
 ) {
     override fun toString(): String {
-        return "messageTid $messageTid, attachmentTid $attachmentTid, progressPercent $progressPercent, state $state, filePath $filePath, url$url"
+        return "messageTid $messageTid, attachmentTid $attachmentTid, progressPercent $progressPercent, state $state, filePath $filePath, url$url thumbData $thumbData"
     }
 
     fun isTransferring() = state == TransferState.Downloading || state == TransferState.Uploading

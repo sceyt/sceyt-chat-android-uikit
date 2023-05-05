@@ -3,6 +3,8 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.util.Size
 import android.view.View
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
@@ -18,11 +20,19 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(itemView: View,
     }
 
     protected fun requestThumb() {
+        val thumbFromEnum = needThumbFor() ?: return
         itemView.post {
             if (fileItem.file.filePath.isNullOrBlank()) return@post
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, getThumbSize()))
+            val thumbData = ThumbData(thumbFromEnum.value, getThumbSize())
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, thumbData))
         }
     }
+
+    protected fun isValidThumb(data: ThumbData?): Boolean {
+        return getThumbSize() == data?.size && needThumbFor()?.value == data.key
+    }
+
+    open fun needThumbFor(): ThumbFor? = null
 
     open fun getThumbSize() = Size(itemView.width, itemView.height)
 }

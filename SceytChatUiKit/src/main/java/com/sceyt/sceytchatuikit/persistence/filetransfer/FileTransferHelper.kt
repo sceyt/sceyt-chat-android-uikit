@@ -50,6 +50,7 @@ object FileTransferHelper : SceytKoinComponent {
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
             }
+
             is SceytResponse.Error -> {
                 val transferData = TransferData(
                     attachment.messageTid, attachment.tid, attachment.progressPercent ?: 0f,
@@ -72,6 +73,7 @@ object FileTransferHelper : SceytKoinComponent {
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
             }
+
             is SceytResponse.Error -> {
                 val transferData = TransferData(attachment.messageTid,
                     attachment.tid, attachment.progressPercent
@@ -103,10 +105,10 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
-    fun getThumbCallback(attachment: SceytAttachment) = ThumbCallback { newPath ->
+    fun getThumbCallback(attachment: SceytAttachment) = ThumbCallback { newPath, thumbData ->
         val transferData = TransferData(attachment.messageTid,
             attachment.tid, attachment.progressPercent
-                    ?: 0f, TransferState.ThumbLoaded, newPath, attachment.url)
+                    ?: 0f, TransferState.ThumbLoaded, newPath, attachment.url, thumbData)
 
         emitAttachmentTransferUpdate(transferData)
     }

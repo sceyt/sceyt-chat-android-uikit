@@ -76,8 +76,10 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
                     initPaginationDbResponse(response)
                 }
             }
+
             is PaginationResponse.ServerResponse ->
                 initPaginationServerResponse(response)
+
             else -> return
         }
         pagingResponseReceived(response)
@@ -117,9 +119,10 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
                     fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
                 }
             }
+
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.getThumb(attachment.messageTid, attachment, data.size)
+                    fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
         }
