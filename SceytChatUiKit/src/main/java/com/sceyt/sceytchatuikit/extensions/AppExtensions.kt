@@ -101,7 +101,7 @@ fun customToastSnackBar(view: View?, message: String) {
             Snackbar.make(it, message, Snackbar.LENGTH_LONG).show()
         }
     } catch (ex: Exception) {
-        Toast.makeText(view?.context, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(view?.context ?: return, message, Toast.LENGTH_SHORT).show()
     }
 }
 

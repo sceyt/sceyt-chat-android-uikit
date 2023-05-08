@@ -16,7 +16,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
+import com.sceyt.sceytchatuikit.extensions.checkDeniedOneOfPermissions
+import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
+import com.sceyt.sceytchatuikit.extensions.initAttachmentLauncher
+import com.sceyt.sceytchatuikit.extensions.initCameraLauncher
+import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
+import com.sceyt.sceytchatuikit.extensions.initVideoCameraLauncher
+import com.sceyt.sceytchatuikit.extensions.shortToast
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
@@ -27,7 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
-import java.util.*
+import java.util.UUID
 
 class ChooseAttachmentHelper {
     private lateinit var context: Context
@@ -185,7 +193,9 @@ class ChooseAttachmentHelper {
                         withContext(Dispatchers.Main) {
                             chooseFilesCb?.invoke(paths)
                         }
-                    } else Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
+                    } else withContext(Dispatchers.Main) {
+                        Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
+                    }
                 }
             } else {
                 scope.launch(Dispatchers.IO) {
@@ -194,7 +204,9 @@ class ChooseAttachmentHelper {
                         withContext(Dispatchers.Main) {
                             chooseFilesCb?.invoke(paths)
                         }
-                    } else Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
+                    } else withContext(Dispatchers.Main) {
+                        Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
