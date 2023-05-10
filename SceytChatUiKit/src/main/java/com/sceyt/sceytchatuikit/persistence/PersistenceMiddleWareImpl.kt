@@ -4,10 +4,14 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.Reaction
-import com.sceyt.chat.models.settings.Settings
+import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.channeleventobserver.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionStateData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
@@ -410,7 +414,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.updateStatus(status)
     }
 
-    override suspend fun getSettings(): SceytResponse<Settings> {
+    override suspend fun getSettings(): SceytResponse<UserSettings> {
         return usersLogic.getSettings()
     }
 

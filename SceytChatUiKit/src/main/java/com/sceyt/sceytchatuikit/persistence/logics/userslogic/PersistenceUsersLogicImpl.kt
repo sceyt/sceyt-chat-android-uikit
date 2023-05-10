@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.userslogic
 
-import com.sceyt.chat.models.settings.Settings
+import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
@@ -14,7 +14,10 @@ import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class PersistenceUsersLogicImpl(
@@ -106,7 +109,7 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun getSettings(): SceytResponse<Settings> {
+    override suspend fun getSettings(): SceytResponse<UserSettings> {
         return profileRepo.getSettings()
     }
 
