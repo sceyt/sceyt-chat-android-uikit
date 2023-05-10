@@ -265,8 +265,10 @@ internal class PersistenceMessagesLogicImpl(
             MessageEventsObserver.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
-                persistenceAttachmentLogic.updateAttachmentWithTransferData(
-                    TransferData(tmpMessage.tid, attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, attachment.url))
+                if (attachment.type != AttachmentTypeEnum.Link.value())
+                    persistenceAttachmentLogic.updateAttachmentWithTransferData(
+                        TransferData(tmpMessage.tid, attachment.tid, 100f,
+                            TransferState.Uploaded, attachment.filePath, attachment.url))
             }
             messagesCache.add(tmpMessage)
             val response = sendMessageWithUploadedAttachments(channelId, it)
