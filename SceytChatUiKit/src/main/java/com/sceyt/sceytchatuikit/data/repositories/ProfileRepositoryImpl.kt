@@ -3,10 +3,11 @@ package com.sceyt.sceytchatuikit.data.repositories
 import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.settings.Settings
+import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
+import com.sceyt.chat.sceyt_callbacks.SettingsCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chat.sceyt_callbacks.UserCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -67,13 +68,17 @@ internal class ProfileRepositoryImpl : ProfileRepository {
         }
     }
 
-    override suspend fun getSettings(): SceytResponse<Settings> {
+    override suspend fun getSettings(): SceytResponse<UserSettings> {
         return suspendCancellableCoroutine { continuation ->
-            ChatClient.getClient().getSettings {
-                if (it != null)
-                    continuation.safeResume(SceytResponse.Success(it))
-                else continuation.safeResume(SceytResponse.Error())
-            }
+            ChatClient.getClient().getSettings(object : SettingsCallback {
+                override fun onResult(settings: UserSettings) {
+                    continuation.safeResume(SceytResponse.Success(settings))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error())
+                }
+            })
         }
     }
 
