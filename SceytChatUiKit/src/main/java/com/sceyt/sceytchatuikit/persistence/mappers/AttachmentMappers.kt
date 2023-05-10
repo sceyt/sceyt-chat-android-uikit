@@ -59,7 +59,7 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
 }
 
 
-fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
+fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
     with(attachmentEntity) {
         return Attachment.Builder(filePath ?: "", url ?: "", type)
             .setMetadata(metadata ?: "")
@@ -117,6 +117,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
             AttachmentTypeEnum.File.value(), AttachmentTypeEnum.Link.value() -> {
                 return AttachmentDataFromJson()
             }
+
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
                 blurredThumbBitmap = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()?.decodeByteArrayToBitmap()
 
@@ -125,6 +126,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
                 if (width != null && height != null)
                     size = Size(width, height)
             }
+
             AttachmentTypeEnum.Voice.value() -> audioMetadata = getMetadataFromAttachment()
         }
 

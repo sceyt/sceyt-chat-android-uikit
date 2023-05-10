@@ -170,7 +170,7 @@ fun MessageDb.toMessage(): Message {
             deliveryStatus,
             state,
             from?.toUser(),
-            attachments?.map { it.toSdkAttachment() }?.toTypedArray(),
+            attachments?.map { it.toSdkAttachment(false) }?.toTypedArray(),
             selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
             markerCount?.toTypedArray(),
@@ -180,7 +180,7 @@ fun MessageDb.toMessage(): Message {
             replyInThread,
             replyCount,
             messageEntity.displayCount,
-            ForwardingDetails(id ?: 0, channelId, from?.toUser(), 0)
+            messageEntity.forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
         )
     }
 }

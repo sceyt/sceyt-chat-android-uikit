@@ -387,6 +387,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 .withTid(ClientWrapper.generateTid())
                 .setName("")
                 .setMetadata("")
+                .setCreatedAt(System.currentTimeMillis())
+                .setUpload(false)
                 .build()
         }
         return null
