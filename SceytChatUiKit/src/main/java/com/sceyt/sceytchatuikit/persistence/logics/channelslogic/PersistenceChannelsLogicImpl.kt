@@ -703,6 +703,10 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }
 
+    override suspend fun getChannelsCountFromDb(): Int {
+        return channelDao.getAllChannelsCount()
+    }
+
     override fun getTotalUnreadCount(): Flow<Int> {
         return channelDao.getTotalUnreadCountAsFlow().filterNotNull()
     }

@@ -22,6 +22,7 @@ import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -576,7 +577,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .order(getOrder())
             .query(query?.ifBlank { null })
             .withQueryParam(ChannelQueryParam(1,10,1,true))
-            .limit(20)
+            .limit(CHANNELS_LOAD_SIZE)
             .build()
     }
 }

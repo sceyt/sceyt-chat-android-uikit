@@ -191,6 +191,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.getChannelFromServerByUrl(uri)
     }
 
+    override suspend fun getChannelsCountFromDb(): Int {
+        return channelLogic.getChannelsCountFromDb()
+    }
+
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
         return channelLogic.editChannel(channelId, data)
     }
