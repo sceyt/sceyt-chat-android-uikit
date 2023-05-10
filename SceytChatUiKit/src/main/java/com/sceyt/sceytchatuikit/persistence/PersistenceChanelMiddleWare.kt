@@ -32,6 +32,7 @@ interface PersistenceChanelMiddleWare {
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromServerByUrl(uri: String): SceytResponse<List<SceytChannel>>
+    suspend fun getChannelsCountFromDb(): Int
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>

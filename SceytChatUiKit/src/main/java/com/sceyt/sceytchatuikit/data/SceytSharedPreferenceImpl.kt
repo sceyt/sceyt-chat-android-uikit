@@ -3,7 +3,7 @@ package com.sceyt.sceytchatuikit.data
 import android.app.Application
 import android.content.Context
 
-class SceytSharedPreferenceImpl(application: Application) : SceytSharedPreference {
+internal class SceytSharedPreferenceImpl(application: Application) : SceytSharedPreference {
     private val editor by lazy { pref.edit() }
 
     companion object {

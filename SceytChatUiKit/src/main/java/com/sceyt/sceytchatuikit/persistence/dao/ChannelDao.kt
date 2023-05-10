@@ -76,6 +76,9 @@ interface ChannelDao {
     @Query("select sum(unreadMessageCount) from channels")
     fun getTotalUnreadCountAsFlow(): Flow<Int?>
 
+    @Query("select count(chat_id) from channels")
+    suspend fun getAllChannelsCount(): Int
+
     @Update
     suspend fun updateChannel(channelEntity: ChannelEntity)
 
