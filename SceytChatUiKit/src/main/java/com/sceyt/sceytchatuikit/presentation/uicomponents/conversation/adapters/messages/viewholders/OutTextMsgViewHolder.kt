@@ -46,7 +46,6 @@ class OutTextMsgViewHolder(
             with(binding) {
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
-                (layoutDetails.layoutParams as ConstraintLayout.LayoutParams).matchConstraintMaxWidth = bubbleMaxWidth
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
