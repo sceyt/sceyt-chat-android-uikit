@@ -4,6 +4,7 @@ import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isAppOnForeground
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
 import kotlinx.coroutines.CoroutineScope
@@ -105,6 +106,8 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
         override fun equals(other: Any?): Boolean {
             return other is PresenceUser && other.user.id == user.id
                     && arePresencesEquals(other.user.presence, user.presence)
+                    && other.user.getPresentableName() == user.getPresentableName()
+                    && other.user.avatarURL == user.avatarURL
         }
 
         override fun hashCode(): Int {
