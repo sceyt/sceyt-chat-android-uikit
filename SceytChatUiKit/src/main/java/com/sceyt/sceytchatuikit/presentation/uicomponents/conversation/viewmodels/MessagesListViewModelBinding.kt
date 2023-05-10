@@ -45,6 +45,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -614,8 +615,15 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     else
         headerView.setChannel(channel)
 
-    if (channel is SceytDirectChannel)
+    if (channel is SceytDirectChannel) {
         SceytPresenceChecker.addNewUserToPresenceCheck((channel as SceytDirectChannel).peer?.id)
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
+            .onEach {
+                it.find { user -> user.user.id == (channel as? SceytDirectChannel)?.peer?.id }?.let { presenceUser ->
+                    headerView.onPresenceUpdate(presenceUser.user)
+                }
+            }.launchIn(lifecycleOwner.lifecycleScope)
+    }
 
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
