@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
 
-import android.app.Application
+import android.content.Context
 import android.text.Editable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -93,7 +93,7 @@ class MessageListViewModel(
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
     internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
     protected val messagesRepository: MessagesRepository by inject()
-    private val application: Application by inject()
+    private val context: Context by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
     internal var pinnedLastReadMessageId: Long = 0
@@ -305,7 +305,7 @@ class MessageListViewModel(
             PendingUpload, ErrorUpload, FilePathChanged -> {
                 transferData.state = Uploading
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-                SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
+                SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id)
             }
 
             PendingDownload, ErrorDownload -> {
@@ -330,7 +330,7 @@ class MessageListViewModel(
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
-                else SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
+                else SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id)
             }
 
             Uploading -> {

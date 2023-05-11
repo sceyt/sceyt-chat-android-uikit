@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.pushes
 
-import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import org.koin.core.component.inject
 
 object SceytFirebaseMessagingDelegate : SceytKoinComponent {
-    private val application: Application by inject()
+    private val context: Context by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val preferences: SceytSharedPreference by inject()
     private val firebaseMessaging: FirebaseMessaging by lazy { FirebaseMessaging.getInstance() }
@@ -42,7 +42,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     private fun asyncGetDeviceToken(onToken: (token: String?) -> Unit) {
-        if (FirebaseApp.getApps(application).size > 0) {
+        if (FirebaseApp.getApps(context).size > 0) {
             firebaseMessaging.token.addOnCompleteListener {
                 if (it.isSuccessful) {
                     onToken(it.result)

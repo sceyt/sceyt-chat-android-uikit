@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic
 
-import android.app.Application
 import android.content.Context
 import android.util.Log
 import android.util.Size
@@ -30,7 +29,7 @@ import java.util.LinkedList
 import java.util.Queue
 import kotlin.math.max
 
-internal class FileTransferLogicImpl(private val application: Application) : FileTransferLogic, SceytKoinComponent {
+internal class FileTransferLogicImpl(private val context: Context) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private var downloadingUrlMap = hashMapOf<String, String>()
     private var thumbPaths = hashMapOf<String, ThumbPathsData>()
@@ -49,7 +48,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
         fileTransferService.getTasks()[task.messageTid.toString()] = task
         val data = ShareFilesData(attachment.filePath.toString(), attachment.filePath.toString(), attachment.messageTid)
         if (sharingFilesPath.none { it.originalPath == attachment.filePath }) {
-            checkAndResizeMessageAttachments(application, attachment) {
+            checkAndResizeMessageAttachments(context, attachment) {
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback.onUpdateFileLocation(path)
@@ -64,7 +63,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
     }
 
     override fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
-        val loadedFile = File(application.filesDir, attachment.messageTid.toString())
+        val loadedFile = File(context.filesDir, attachment.messageTid.toString())
         val file = attachment.checkLoadedFileIsCorrect(loadedFile)
 
         if (file != null) {
@@ -77,7 +76,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
                 task.messageTid, attachment.tid, 0f, TransferState.Downloading, null, attachment.url))
             attachment.url?.let { url ->
                 downloadingUrlMap[url] = url
-                Ion.with(application)
+                Ion.with(context)
                     .load(attachment.url)
                     .progress { downloaded, total ->
                         if (pausedTasksMap[attachment.url.toString()] == null) {
@@ -152,7 +151,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
             return
         } else {
             preparingThumbsMap[thumbKey] = messageTid
-            val result = getAttachmentThumbPath(application, attachment, size)
+            val result = getAttachmentThumbPath(context, attachment, size)
             if (result.isSuccess)
                 result.getOrNull()?.let { path ->
                     thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
@@ -187,7 +186,7 @@ internal class FileTransferLogicImpl(private val application: Application) : Fil
 
     private fun uploadAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
         currentUploadingAttachment = attachment
-        checkAndResizeMessageAttachments(application, attachment) {
+        checkAndResizeMessageAttachments(context, attachment) {
             if (it.isSuccess) {
                 it.getOrNull()?.let { path ->
                     transferTask.updateFileLocationCallback.onUpdateFileLocation(path)

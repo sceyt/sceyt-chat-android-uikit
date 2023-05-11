@@ -3,7 +3,7 @@ package com.sceyt.chat.ui.data
 import android.app.Application
 import android.content.Context
 
-class AppSharedPreferenceImpl (application: Application) : AppSharedPreference {
+class AppSharedPreferenceImpl(application: Application) : AppSharedPreference {
     private companion object {
         private const val PREF_NAME = "simple_preferences"
         const val PREF_USER_NAME = "username"

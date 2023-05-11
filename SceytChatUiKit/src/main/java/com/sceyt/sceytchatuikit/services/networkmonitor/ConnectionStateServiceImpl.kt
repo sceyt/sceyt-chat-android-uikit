@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.services.networkmonitor
 
-import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -11,7 +10,7 @@ import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.extensions.checkActiveInternetConnection
 
 
-class ConnectionStateServiceImpl(private val application: Application) : ConnectionStateService {
+class ConnectionStateServiceImpl(private val context: Context) : ConnectionStateService {
     private val mOnAvailableLiveData by lazy { LiveEvent<Network>() }
     private val mOnUnavailableLiveData by lazy { LiveEvent<Boolean>() }
     private val mOnLostLiveData by lazy { LiveEvent<Network>() }
@@ -22,7 +21,7 @@ class ConnectionStateServiceImpl(private val application: Application) : Connect
         .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
         .build()
 
-    private val mConnectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val mConnectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private lateinit var mNetworkCallback: ConnectivityManager.NetworkCallback
 
     init {
@@ -43,7 +42,7 @@ class ConnectionStateServiceImpl(private val application: Application) : Connect
 
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                if (application.checkActiveInternetConnection(5000)) {
+                if (context.checkActiveInternetConnection(5000)) {
                     mOnAvailableLiveData.postValue(network)
                     mAvailableCallbackList.values.forEach {
                         it.invoke(true)

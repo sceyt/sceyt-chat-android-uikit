@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
-import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.work.WorkManager
 import androidx.work.await
@@ -15,9 +15,16 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
-import com.sceyt.sceytchatuikit.data.models.*
+import com.sceyt.sceytchatuikit.data.models.LoadKeyData
+import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -41,7 +48,16 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.*
+import com.sceyt.sceytchatuikit.persistence.mappers.addAttachmentMetadata
+import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendSharedAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
@@ -52,13 +68,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
-        private val application: Application,
+        private val context: Context,
         private val messageDao: MessageDao,
         private val pendingMarkersDao: PendingMarkersDao,
         private val reactionDao: ReactionDao,
@@ -204,7 +224,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.add(tmpMessage)
 
         if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(application, tmpMessage.tid, channelId).await()
+            SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId).await()
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
             onMessageSentResponse(channelId, response)
@@ -226,7 +246,7 @@ internal class PersistenceMessagesLogicImpl(
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
 
         if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(application, tmpMessage.tid, channelId).await()
+            SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId).await()
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
             messagesRepository.sendMessageAsFlow(channelId, message)
@@ -248,7 +268,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.add(tmpMessage)
 
         if (checkHasFileAttachments(message)) {
-            SendSharedAttachmentWorkManager.schedule(application, tmpMessage.tid)
+            SendSharedAttachmentWorkManager.schedule(context, tmpMessage.tid)
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
             onMessageSentResponse(channelId, response)
@@ -294,7 +314,7 @@ internal class PersistenceMessagesLogicImpl(
                 it.transferState = TransferState.Uploading
                 it.progressPercent = 0f
                 if (!it.existThumb())
-                    it.addAttachmentMetadata(application)
+                    it.addAttachmentMetadata(context)
             }
         }
         return tmpMessage
@@ -336,7 +356,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.deleteMessage(message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
-            WorkManager.getInstance(application).cancelAllWorkByTag(message.tid.toString())
+            WorkManager.getInstance(context).cancelAllWorkByTag(message.tid.toString())
             message.attachments?.firstOrNull()?.let {
                 fileTransferService.pause(it.messageTid, it, it.transferState
                         ?: TransferState.Uploading)
@@ -359,7 +379,7 @@ internal class PersistenceMessagesLogicImpl(
             pendingMessages.forEach {
                 val message = it.toMessage()
                 if (checkHasFileAttachments(message)) {
-                    SendAttachmentWorkManager.schedule(application, message.tid, channelId)
+                    SendAttachmentWorkManager.schedule(context, message.tid, channelId)
                 } else {
                     val response = messagesRepository.sendMessage(channelId, message)
                     onMessageSentResponse(channelId, response)
@@ -374,7 +394,7 @@ internal class PersistenceMessagesLogicImpl(
             pendingMessages.forEach {
                 val message = it.toMessage()
                 if (checkHasFileAttachments(message)) {
-                    SendAttachmentWorkManager.schedule(application, message.tid, message.channelId).await()
+                    SendAttachmentWorkManager.schedule(context, message.tid, message.channelId).await()
                 } else {
                     val response = messagesRepository.sendMessage(it.messageEntity.channelId, message)
                     if (response is SceytResponse.Success) {

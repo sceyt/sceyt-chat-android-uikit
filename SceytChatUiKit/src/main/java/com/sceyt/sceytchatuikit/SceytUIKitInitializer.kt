@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit
 
-import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.provider.FontRequest
@@ -9,7 +9,12 @@ import androidx.emoji2.text.FontRequestEmojiCompatConfig
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
-import com.sceyt.sceytchatuikit.di.*
+import com.sceyt.sceytchatuikit.di.SceytKoinApp
+import com.sceyt.sceytchatuikit.di.appModules
+import com.sceyt.sceytchatuikit.di.cacheModule
+import com.sceyt.sceytchatuikit.di.databaseModule
+import com.sceyt.sceytchatuikit.di.repositoryModule
+import com.sceyt.sceytchatuikit.di.viewModelModule
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.vanniktech.emoji.EmojiManager
@@ -22,12 +27,12 @@ import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.koinApplication
 
-class SceytUIKitInitializer(private val application: Application) {
+class SceytUIKitInitializer(private val context: Context) {
 
     fun initialize(clientId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
         //Set static flags before calling setup
         ChatClient.setEnableNetworkAwarenessReconnection(true)
-        val chatClient = ChatClient.initialize(application, host, appId, clientId)
+        val chatClient = ChatClient.initialize(context, host, appId, clientId)
         initKoin(enableDatabase)
         initTheme()
         initEmojiSupport()
@@ -43,11 +48,11 @@ class SceytUIKitInitializer(private val application: Application) {
     private fun initKoin(enableDatabase: Boolean) {
         val koin = GlobalContext.getOrNull()
         if (koin == null) {
-            MyKoinContext.koinApp = startKoin {
+            SceytKoinApp.koinApp = startKoin {
                 init(enableDatabase)
             }
         } else {
-            MyKoinContext.koinApp = koinApplication {
+            SceytKoinApp.koinApp = koinApplication {
                 // declare used modules
                 init(enableDatabase)
             }
@@ -61,7 +66,7 @@ class SceytUIKitInitializer(private val application: Application) {
                 "com.google.android.gms",
                 "Noto Color Emoji Compat",
                 R.array.com_google_android_gms_fonts_certs)
-            val config = FontRequestEmojiCompatConfig(application, fontRequest)
+            val config = FontRequestEmojiCompatConfig(context, fontRequest)
                 .setReplaceAll(true)
                 .registerInitCallback(object : EmojiCompat.InitCallback() {
                     override fun onInitialized() {
@@ -79,7 +84,7 @@ class SceytUIKitInitializer(private val application: Application) {
     }
 
     private fun KoinApplication.init(enableDatabase: Boolean) {
-        androidContext(application)
+        androidContext(context)
         modules(arrayListOf(
             appModules,
             databaseModule(enableDatabase),
