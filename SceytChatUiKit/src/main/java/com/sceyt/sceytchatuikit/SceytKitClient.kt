@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit
 
-import android.app.Application
+import android.content.Context
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -15,7 +15,11 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
@@ -35,7 +39,7 @@ import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
 object SceytKitClient : SceytKoinComponent, CoroutineScope {
-    private val application: Application by inject()
+    private val context: Context by inject()
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
     private val database: SceytDatabase by inject()
@@ -62,7 +66,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
 
     init {
-        FirebaseApp.initializeApp(application)
+        FirebaseApp.initializeApp(context)
         setListener()
     }
 
@@ -109,14 +113,17 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                         sceytSyncManager.startSync()
                     }
                 }
+
                 ConnectionState.Failed -> {
                     notifyState(false, it.exception?.message)
                 }
+
                 ConnectionState.Disconnected -> {
                     if (it.exception?.code == 40102)
                         onTokenExpired_.tryEmit(Unit)
                     else notifyState(false, it.exception?.message)
                 }
+
                 else -> {}
             }
         }.launchIn(this)
@@ -166,7 +173,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
         clearData()
-        WorkManager.getInstance(application).cancelAllWork()
+        WorkManager.getInstance(context).cancelAllWork()
         ClientWrapper.currentUser = null
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
             override fun onSuccess() {

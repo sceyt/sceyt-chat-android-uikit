@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
-import android.app.Application
+import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.work.WorkManager
 import com.sceyt.chat.models.channel.Channel
@@ -68,8 +68,8 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
@@ -86,7 +86,7 @@ internal class PersistenceChannelsLogicImpl(
         private val messageDao: MessageDao,
         private val draftMessageDao: DraftMessageDao,
         private val chatUsersReactionDao: ChatUsersReactionDao,
-        private val application: Application,
+        private val context: Context,
         private val channelsCache: ChannelsCache) : PersistenceChannelsLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -520,7 +520,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
+            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
             channelsCache.clearedHistory(channelId)
@@ -533,7 +533,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.blockChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
+            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
             deleteChannelDb(channelId)
         }
 
@@ -544,7 +544,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.leaveChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
+            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
             deleteChannelDb(channelId)
         }
 
@@ -555,7 +555,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.deleteChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(application).cancelAllWorkByTag(channelId.toString())
+            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
             deleteChannelDb(channelId)
         }
 

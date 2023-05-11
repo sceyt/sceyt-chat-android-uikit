@@ -1,9 +1,8 @@
 package com.sceyt.sceytchatuikit.data
 
-import android.app.Application
 import android.content.Context
 
-internal class SceytSharedPreferenceImpl(application: Application) : SceytSharedPreference {
+internal class SceytSharedPreferenceImpl(context: Context) : SceytSharedPreference {
     private val editor by lazy { pref.edit() }
 
     companion object {
@@ -13,7 +12,7 @@ internal class SceytSharedPreferenceImpl(application: Application) : SceytShared
         const val KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION = "key_subscribed_for_push"
     }
 
-    private val pref = application.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    private val pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     override fun setUserId(id: String?) {
         editor.putString(PREF_USER_ID, id)

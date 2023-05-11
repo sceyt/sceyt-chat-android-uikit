@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
-import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
@@ -50,8 +49,8 @@ fun SceytAttachment.upsertSizeMetadata(size: Size?) {
     }
 }
 
-fun SceytAttachment.addAttachmentMetadata(application: Application) {
-    getBlurredBytesAndSizeToAsString(application, filePath, type)?.let {
+fun SceytAttachment.addAttachmentMetadata(context: Context) {
+    getBlurredBytesAndSizeToAsString(context, filePath, type)?.let {
         metadata = it
     } ?: run { metadata = "" }
 }
@@ -69,6 +68,7 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
                         base64String = bytes.toBase64()
                     }
                 }
+
                 AttachmentTypeEnum.Video.value() -> {
                     size = FileResizeUtil.getVideoSizeOriented(path)
                     durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
@@ -76,6 +76,7 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
                         base64String = bytes.toBase64()
                     }
                 }
+
                 else -> return null
             }
             createMetadata(null, base64String, size, durationMilliSec)
@@ -91,9 +92,11 @@ fun getDimensions(type: String, path: String): Size? {
         AttachmentTypeEnum.Image.value() -> {
             FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
         }
+
         AttachmentTypeEnum.Video.value() -> {
             FileResizeUtil.getVideoSize(path)
         }
+
         else -> return null
     }
 }
