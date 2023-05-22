@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
 import com.sceyt.sceytchatuikit.shared.utils.ViewEnabledUtils
 import kotlinx.coroutines.*
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
@@ -60,6 +61,8 @@ fun View.screenHeightPx() = resources.displayMetrics.heightPixels
 fun Context.screenWidthPx() = resources.displayMetrics.widthPixels
 
 fun Context.screenHeightPx() = resources.displayMetrics.heightPixels
+
+fun Context.screenPortraitWidthPx() = min(screenWidthPx(), screenHeightPx())
 
 fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
 

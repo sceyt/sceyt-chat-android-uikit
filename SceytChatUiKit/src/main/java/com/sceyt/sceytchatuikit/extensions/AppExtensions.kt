@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.*
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.M
@@ -158,6 +159,10 @@ fun Activity.recreateWithoutAnim() {
 }
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+
+fun Context.isLandscape(): Boolean {
+    return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+}
 
 fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
     window.statusBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
