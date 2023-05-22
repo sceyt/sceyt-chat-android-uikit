@@ -68,9 +68,9 @@ abstract class BaseMsgViewHolder(private val view: View,
     : RecyclerView.ViewHolder(view) {
 
     protected val context: Context by lazy { view.context }
+    protected val bubbleMaxWidth by lazy { getBubbleMaxWidth(context) }
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     protected var recyclerViewReactions: RecyclerView? = null
-    protected var bubbleMaxWidth = getBubbleMaxWidth(context)
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
@@ -390,6 +390,10 @@ abstract class BaseMsgViewHolder(private val view: View,
         return user?.activityState == UserActivityStatus.Deleted
     }
 
+    private fun getBubbleMaxWidth(context: Context): Int {
+        return (context.screenPortraitWidthPx() * 0.77f).toInt()
+    }
+
     fun getMessageItem(): MessageListItem? {
         return if (::messageListItem.isInitialized) messageListItem else null
     }
@@ -405,11 +409,5 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
         highlightAnim?.doOnEnd { messageListItem.highlighted = false }
-    }
-
-    companion object {
-        fun getBubbleMaxWidth(context: Context): Int {
-            return (context.screenWidthPx() * 0.77f).toInt()
-        }
     }
 }
