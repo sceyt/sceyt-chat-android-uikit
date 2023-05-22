@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter
 
-import android.media.MediaPlayer
 import android.view.ViewGroup
+import androidx.media3.common.Player
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
@@ -12,7 +12,8 @@ class MediaAdapter(
         private var attachments: ArrayList<MediaItem>,
         private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
 ) : RecyclerView.Adapter<BaseFileViewHolder<MediaItem>>() {
-    private var mediaPlayers = mutableListOf<MediaPlayer>()
+    private var mediaPlayers = mutableListOf<Player>()
+    var shouldPlayVideoPath: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
@@ -77,7 +78,11 @@ class MediaAdapter(
         mediaPlayers.forEach { it.pause() }
     }
 
-    fun addMediaPlayer(mediaPlayer: MediaPlayer) {
-        mediaPlayers.add(mediaPlayer)
+    fun releaseAllPlayers() {
+        mediaPlayers.forEach { it.release() }
+    }
+
+    fun addMediaPlayer(mediaPlayer: Player?) {
+        mediaPlayer?.let { mediaPlayers.add(it) }
     }
 }

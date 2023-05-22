@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
@@ -94,6 +95,8 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
 
 
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
+
+    override fun needThumbFor() = ThumbFor.ConversationInfo
 
     private fun setListener() {
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
