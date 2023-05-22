@@ -36,17 +36,14 @@ class ExoPlayerHelper(private val context: Context,
 
     fun pausePlayer() {
         exoPlayer.playWhenReady = false
-        exoPlayer.playbackState
     }
 
     fun resumePlayer() {
         exoPlayer.playWhenReady = true
-        exoPlayer.playbackState
     }
 
     fun retryPlayer() {
         exoPlayer.prepare()
-        exoPlayer.playbackState
     }
 
     fun releasePlayer() {

@@ -13,6 +13,7 @@ class MediaAdapter(
         private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
 ) : RecyclerView.Adapter<BaseFileViewHolder<MediaItem>>() {
     private var mediaPlayers = mutableListOf<Player>()
+    var shouldPlayVideoPath: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)

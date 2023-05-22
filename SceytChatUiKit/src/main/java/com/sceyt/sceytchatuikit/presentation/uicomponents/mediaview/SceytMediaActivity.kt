@@ -61,6 +61,7 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     private val mediaTypes = listOf(AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value())
     private var mediaAdapter: MediaAdapter? = null
     private var currentItem: MediaItem? = null
+    private var openedWithAttachment: SceytAttachment? = null
     private var reversed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -142,7 +143,9 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initPageWithData() {
-        val attachment = intent?.extras?.parcelable<SceytAttachment>(KEY_ATTACHMENT)
+        val attachment = intent?.extras?.parcelable<SceytAttachment>(KEY_ATTACHMENT).also {
+            openedWithAttachment = it
+        }
         val user = intent?.extras?.serializable(KEY_USER) as? User
 
         if (attachment == null) {
@@ -190,18 +193,12 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun toggleFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
-            WindowInsetsControllerCompat(
-                window,
-                binding.root,
-            ).apply {
+            WindowInsetsControllerCompat(window, binding.root).apply {
                 hide(WindowInsetsCompat.Type.systemBars())
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
-            WindowInsetsControllerCompat(
-                window,
-                binding.root,
-            ).apply {
+            WindowInsetsControllerCompat(window, binding.root).apply {
                 show(WindowInsetsCompat.Type.systemBars())
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
@@ -218,6 +215,8 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
                 it.setClickListener { onMediaClick() }
             })
+            if (openedWithAttachment?.type == AttachmentTypeEnum.Video.value())
+                mediaAdapter?.shouldPlayVideoPath = openedWithAttachment?.filePath
 
             binding.rvMedia.apply {
                 adapter = mediaAdapter
@@ -239,6 +238,7 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
                             mediaAdapter?.getData()?.getOrNull(position)?.let {
                                 loadMediaDetail(it)
                             }
+                            mediaAdapter?.shouldPlayVideoPath = null
                         }
                     }
                 })
