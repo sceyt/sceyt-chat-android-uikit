@@ -31,6 +31,7 @@ fun View.applySystemWindowInsetsMargin(
         applyTop: Boolean = false,
         applyRight: Boolean = false,
         applyBottom: Boolean = false,
+        userDefaultMargins: Boolean = true
 ) {
     doOnApplyWindowInsets { view, insets, _, margin ->
         val left = if (applyLeft) insets.getInsets(WindowInsetsCompat.Type.systemBars()).left else 0
@@ -39,10 +40,10 @@ fun View.applySystemWindowInsetsMargin(
         val bottom = if (applyBottom) insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom else 0
 
         view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            leftMargin = margin.left + left
-            topMargin = margin.top + top
-            rightMargin = margin.right + right
-            bottomMargin = margin.bottom + bottom
+            leftMargin = if (userDefaultMargins) margin.left else 0 + left
+            topMargin = if (userDefaultMargins) margin.top else 0 + top
+            rightMargin = if (userDefaultMargins) margin.right else 0 + right
+            bottomMargin = if (userDefaultMargins) margin.bottom else 0 + bottom
         }
     }
 }

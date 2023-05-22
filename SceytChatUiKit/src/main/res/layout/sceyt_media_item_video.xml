@@ -4,10 +4,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.CustomVideoView
+    <androidx.media3.ui.PlayerView
         android:id="@+id/videoView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:auto_show="true"
+        app:controller_layout_id="@layout/sceyt_player_control_view"
+        app:layout_constraintBottom_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:resize_mode="fixed_width"
+        app:repeat_toggle_modes="none"
+        app:surface_type="texture_view"
+        app:show_timeout="0"
+        app:use_controller="true" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icThumb"
