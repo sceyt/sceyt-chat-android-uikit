@@ -172,7 +172,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 }
             }
         }
-        supportFragmentManager.commit {
+        supportFragmentManager.commit(allowStateLoss = true) {
             replace(R.id.layout_buttons, fragment)
         }
     }
