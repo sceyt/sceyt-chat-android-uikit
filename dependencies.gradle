@@ -22,7 +22,7 @@ ext {
 
     datastore_version = '1.0.0'
 
-    exo_player_media_version = '1.0.1'
+    exo_player_media_version = '1.1.0-alpha01'
     emoji_bundled_version = '1.4.0-beta02'
 
     jsoup_version = '1.16.1'

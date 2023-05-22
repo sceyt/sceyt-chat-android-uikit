@@ -65,7 +65,7 @@ class SceytUiKitApp : Application() {
     private fun initSceyt() {
         chatClient = SceytUIKitInitializer(this).initialize(
             clientId = UUID.randomUUID().toString(),
-            appId = "lzkxqzdgrl",
+            appId = "yzr58x11rm",
             host = "https://uk-london-south-api-2-staging.waafi.com",
             enableDatabase = true)
 
