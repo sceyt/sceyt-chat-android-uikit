@@ -30,9 +30,6 @@ class ChannelsCache {
         )
         val channelUpdatedFlow: SharedFlow<ChannelUpdateData> = channelUpdatedFlow_
 
-        private val channelUpdatedLiveData_ = MutableLiveData<ChannelUpdateData>()
-        val channelUpdatedLiveData = channelUpdatedLiveData_.asLiveData()
-
         private val channelDeletedFlow_ = MutableSharedFlow<Long>(
             extraBufferCapacity = 5,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -190,7 +187,6 @@ class ChannelsCache {
 
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
-        channelUpdatedLiveData_.postValue(ChannelUpdateData(channel.clone(), needSort, type))
     }
 
     private fun channelAdded(channel: SceytChannel) {
