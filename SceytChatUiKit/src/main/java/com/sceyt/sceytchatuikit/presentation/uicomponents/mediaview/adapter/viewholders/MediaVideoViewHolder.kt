@@ -27,7 +27,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                            private val clickListeners: (MediaItem) -> Unit,
                            private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
     : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
-    private val playerHelper by lazy { initPlayer() }
+    private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
 
     init {
@@ -39,8 +39,8 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     override fun bind(item: MediaItem) {
         super.bind(item)
 
-        setListener()
         initVideoController()
+        setListener()
 
         viewHolderHelper.transferData?.let {
             updateState(it, true)
@@ -50,7 +50,6 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
-        binding.icThumb.isVisible = true
         (bindingAdapter as? MediaAdapter)?.addMediaPlayer(binding.videoView.player)
 
         binding.videoView.setOnClickListener {
@@ -63,16 +62,18 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     private fun initVideoController() {
         @UnstableApi
         binding.videoView.controllerHideOnTouch = false
-        var isPlayingBeforePause = playerHelper.isPlaying()
+        playerHelper = initPlayer()
+        var isPlayingBeforePause = false
         with(binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)) {
             applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
             findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        isPlayingBeforePause = playerHelper.isPlaying()
-                        playerHelper.pausePlayer()
+                        isPlayingBeforePause = playerHelper?.isPlaying() ?: false
+                        playerHelper?.pausePlayer()
                     }
-                    MotionEvent.ACTION_UP -> if (isPlayingBeforePause) playerHelper.resumePlayer()
+
+                    MotionEvent.ACTION_UP -> if (isPlayingBeforePause) playerHelper?.resumePlayer()
                 }
                 false
             }
@@ -82,8 +83,8 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     }
 
     private fun setPlayingState(isVisibleToUser: Boolean) {
-        if (!isVisibleToUser && playerHelper.isPlaying())
-            playerHelper.pausePlayer()
+        if (!isVisibleToUser && playerHelper?.isPlaying() == true)
+            playerHelper?.pausePlayer()
 
         if (isVisibleToUser)
             videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
@@ -92,13 +93,14 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     }
 
     private fun initPlayer(): ExoPlayerHelper {
+        binding.icThumb.isVisible = true
         return ExoPlayerHelper(context, binding.videoView, errorListener = {
             Toast.makeText(context, "Couldn't play video: ${it.message}", Toast.LENGTH_SHORT).show()
         }, listener = {
             if (it == ExoPlayerHelper.State.Ended)
-                playerHelper.seekToStart()
+                playerHelper?.seekToStart()
 
-            if (it.isPlaying())
+            if (it.isReady())
                 binding.icThumb.isVisible = false
         })
     }
@@ -106,6 +108,9 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
         setPlayingState(true)
+        initVideoController()
+        if (!fileItem.file.filePath.isNullOrBlank())
+            playerHelper?.setMediaPath(fileItem.file.filePath, shouldPlayVideo())
     }
 
     override fun onViewDetachedFromWindow() {
@@ -142,7 +147,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
             TransferState.Downloaded, TransferState.Uploaded -> {
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
-                playerHelper.setMediaPath(data.filePath, shouldPlayVideo())
+                playerHelper?.setMediaPath(data.filePath, shouldPlayVideo())
             }
 
             TransferState.PauseDownload -> {
