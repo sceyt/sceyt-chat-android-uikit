@@ -80,19 +80,18 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? 
         val type = channelJsonObject.getString("type")
         val uri = channelJsonObject.getString("uri")
         val subject = channelJsonObject.getString("subject")
-        val label = channelJsonObject.getString("label")
         val meta = channelJsonObject.getString("metadata")
         val membersCount = channelJsonObject.getInt("members_count")
         val channel: Channel = when (stringToEnum(type)) {
-            ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, label, 0, 0,
+            ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, "", 0, 0,
                 Member(Role(RoleTypeEnum.Owner.name), peer), null, 0L, 0, 0, false, 0, false,
                 0L, 0L, 0, null, null, null)
 
-            ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, label, 0,
+            ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, "", 0,
                 0, arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
                 false, 0, 0, 0, null, null, null)
 
-            ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", label, 0, 0,
+            ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", "", 0, 0,
                 arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
                 false, 0, 0, 0, null, null, null)
         }
