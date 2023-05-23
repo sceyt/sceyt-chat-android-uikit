@@ -18,8 +18,15 @@ class ExoPlayerHelper(private val context: Context,
         initializePlayer()
     }
 
+    companion object {
+        var lastPlayer: ExoPlayer? = null
+    }
+
     private fun initializePlayer() {
-        exoPlayer = ExoPlayer.Builder(context).build()
+        lastPlayer?.release()
+        exoPlayer = ExoPlayer.Builder(context).build().also {
+            lastPlayer = it
+        }
         player.repeatMode = Player.REPEAT_MODE_OFF
         playerView.player = exoPlayer
         exoPlayer.addListener(this)
@@ -96,7 +103,7 @@ class ExoPlayerHelper(private val context: Context,
         Ready,
         Unknown;
 
-        fun isPlaying(): Boolean {
+        fun isReady(): Boolean {
             return this == Ready
         }
     }
