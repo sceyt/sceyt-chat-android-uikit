@@ -1,9 +1,11 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
-import android.util.Log
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.withResumed
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
@@ -12,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -21,12 +24,35 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
     val typingCancelHelper by lazy { TypingCancelHelper() }
 
     getChannels(0, query = searchQuery)
+    val needToUpdateChannelsAfterResume = ConcurrentHashMap<Long, ChannelUpdateData>()
+
+    viewModelScope.launch {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            channelsListView.post {
+                if (needToUpdateChannelsAfterResume.isNotEmpty()) {
+                    val isCanceled = channelsListView.cancelLastSort()
+                    var needSort = false
+                    needToUpdateChannelsAfterResume.values.forEach { data ->
+                        val diff = channelsListView.channelUpdated(data.channel)
+                        if (diff != null && !needSort) {
+                            if (diff.lastMessageChanged || data.needSorting || isCanceled)
+                                needSort = true
+                        }
+                    }
+                    needToUpdateChannelsAfterResume.clear()
+                    if (needSort)
+                        channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+                }
+            }
+        }
+    }
 
     suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         if (response.offset == 0) {
@@ -63,30 +89,39 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelDeletedFlow.onEach {
-        channelsListView.deleteChannel(it)
+        viewModelScope.launch {
+            lifecycleOwner.lifecycle.withResumed {
+                channelsListView.deleteChannel(it)
+            }
+        }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelUpdatedLiveData.observe(lifecycleOwner) { data ->
-        viewModelScope.launch {
-            val isCanceled = channelsListView.cancelLastSort()
-            val diff = channelsListView.channelUpdated(data.channel)
-            Log.i("diffChannel", data.channel.lastMessage?.body.toString() + "  " + data.channel.draftMessage?.message + " " + diff)
-            if (diff != null) {
-                if (diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-            } else
-                getChannels(0, query = searchQuery)
-        }
-    }
+    ChannelsCache.channelUpdatedFlow.onEach { data ->
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModelScope.launch {
+                val isCanceled = channelsListView.cancelLastSort()
+                val diff = channelsListView.channelUpdated(data.channel)
+                if (diff != null) {
+                    if (diff.lastMessageChanged || data.needSorting || isCanceled)
+                        channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+                } else
+                    getChannels(0, query = searchQuery)
+            }
+        } else needToUpdateChannelsAfterResume[data.channel.id] = data
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
-        Log.i("diffChannel", "add " + sceytChannel.lastMessage?.body.toString() + "  " + sceytChannel.draftMessage?.message)
-        channelsListView.cancelLastSort()
-        channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
+        viewModelScope.launch {
+            lifecycleOwner.lifecycle.withResumed {
+                channelsListView.cancelLastSort()
+                channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
+            }
+        }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelDraftMessageChangesLiveData.observe(lifecycleOwner) { (channelId, draftMessage) ->
         channelsListView.channelDraftMessageUpdated(channelId, draftMessage)
+        needToUpdateChannelsAfterResume[channelId]?.channel?.draftMessage = draftMessage
     }
 
     ChannelEventsObserver.onChannelTypingEventFlow
@@ -94,8 +129,10 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         .onEach {
             typingCancelHelper.await(it) { data ->
                 channelsListView.onTyping(data)
+                needToUpdateChannelsAfterResume[it.channel.id]?.channel?.typingData = data
             }
             channelsListView.onTyping(it)
+            needToUpdateChannelsAfterResume[it.channel.id]?.channel?.typingData = it
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     blockUserLiveData.observe(lifecycleOwner) {
