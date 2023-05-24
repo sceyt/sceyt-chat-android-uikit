@@ -1,7 +1,9 @@
 package com.sceyt.sceytchatuikit.di
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
+import com.sceyt.sceytchatuikit.BuildConfig
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl
@@ -55,8 +57,17 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewm
 import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateChatViewModel
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateServiceImpl
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 
 internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
@@ -134,3 +145,36 @@ internal val viewModelModule = module {
     viewModel { ChannelsViewModel() }
     viewModel { ReactionsInfoViewModel() }
 }
+
+
+@OptIn(DelicateCoroutinesApi::class)
+internal val coroutineModule = module {
+    single {
+        CoroutineExceptionHandler { _, throwable ->
+            if (BuildConfig.DEBUG)
+                Log.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
+        }
+    }
+    single<CoroutineScope> { GlobalScope }
+    single(qualifier = named(CoroutineContextType.Ui)) { providesUiContext(get()) }
+    single(qualifier = named(CoroutineContextType.Disk)) { providesDiskContext(get()) }
+    single(qualifier = named(CoroutineContextType.Network)) { providesNetworkContext(get()) }
+    single(qualifier = named(CoroutineContextType.Computation)) { providesComputationContext(get()) }
+    single(qualifier = named(CoroutineContextType.Database)) { providesDatabaseContext(get()) }
+}
+
+private fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
+        Dispatchers.Main + exceptionHandler
+
+private fun providesDiskContext(exceptionHandler: CoroutineExceptionHandler) =
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
+
+fun providesNetworkContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+        Dispatchers.IO + exceptionHandler
+
+fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+        Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
+
+fun providesDatabaseContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
+

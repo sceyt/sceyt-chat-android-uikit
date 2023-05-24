@@ -39,6 +39,13 @@ fun Fragment.hasPermissions(vararg permission: String): Boolean {
 }
 
 @TargetApi(Build.VERSION_CODES.M)
+fun Context.permissionIgnored(permission: String): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+    if (hasPermissions(permission)) return false
+    return !asActivity().shouldShowRequestPermissionRationale(permission)
+}
+
+@TargetApi(Build.VERSION_CODES.M)
 fun Context.hasOneOfPermissions(vararg permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
     for (per in permission) {

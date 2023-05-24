@@ -10,7 +10,7 @@ sealed interface MessageInputClickListeners {
     }
 
     fun interface SendAttachmentClickListener : MessageInputClickListeners {
-        fun onSendAttachmentClick(view: View)
+        fun onAddAttachmentClick(view: View)
     }
 
     fun interface VoiceClickListener : MessageInputClickListeners {
