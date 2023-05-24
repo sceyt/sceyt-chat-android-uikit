@@ -99,6 +99,7 @@ class MessageListViewModel(
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
+    internal val placeToSavePathsList = mutableSetOf<String>()
 
     private val isGroup = channel.channelType != ChannelTypeEnum.Direct
 
