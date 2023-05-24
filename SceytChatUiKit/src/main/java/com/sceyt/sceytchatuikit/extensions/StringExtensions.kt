@@ -10,7 +10,14 @@ import android.util.Patterns
 import androidx.core.text.isDigitsOnly
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
-import java.lang.Character.*
+import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT
+import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
+import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE
+import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT
+import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
+import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
+import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE
+import java.lang.Character.getDirectionality
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -77,7 +84,7 @@ fun String?.toByteArraySafety(): ByteArray? {
 }
 
 fun String?.extractLinks(): Array<String> {
-    this ?: return emptyArray()
+    if (this.isNullOrBlank() || isValidEmail()) return emptyArray()
     val links = ArrayList<String>()
     val m = Patterns.WEB_URL.matcher(this)
     while (m.find()) {
@@ -85,6 +92,12 @@ fun String?.extractLinks(): Array<String> {
         links.add(url)
     }
     return links.toTypedArray()
+}
+
+fun String?.isValidEmail(): Boolean {
+    this ?: return false
+    val emailRegex = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
+    return emailRegex.matches(this)
 }
 
 fun String?.isRtl(): Boolean {
@@ -95,6 +108,7 @@ fun String?.isRtl(): Boolean {
             DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC,
             DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING,
             DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE -> return true
+
             DIRECTIONALITY_LEFT_TO_RIGHT,
             DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING,
             DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE -> return false

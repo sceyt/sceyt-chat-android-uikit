@@ -41,6 +41,10 @@ class OutVideoMsgViewHolder(
                 return@setOnLongClickListener true
             }
 
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+            }
+
             videoViewController.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem)
             }

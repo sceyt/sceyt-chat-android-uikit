@@ -43,6 +43,10 @@ class OutFileMsgViewHolder(
                 return@setOnLongClickListener true
             }
 
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+            }
+
             viewHandleClick.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem)
             }
