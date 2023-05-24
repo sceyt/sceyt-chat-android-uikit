@@ -12,6 +12,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.sceytchatuikit.di.SceytKoinApp
 import com.sceyt.sceytchatuikit.di.appModules
 import com.sceyt.sceytchatuikit.di.cacheModule
+import com.sceyt.sceytchatuikit.di.coroutineModule
 import com.sceyt.sceytchatuikit.di.databaseModule
 import com.sceyt.sceytchatuikit.di.repositoryModule
 import com.sceyt.sceytchatuikit.di.viewModelModule
@@ -90,7 +91,8 @@ class SceytUIKitInitializer(private val context: Context) {
             databaseModule(enableDatabase),
             repositoryModule,
             cacheModule,
-            viewModelModule))
+            viewModelModule,
+            coroutineModule))
     }
 }
 
