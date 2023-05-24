@@ -120,8 +120,10 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
         val job = viewModelScope.launch {
             lifecycleOwner.lifecycle.withResumed {
+                val updatedChannel = needToUpdateChannelsAfterResume[sceytChannel.id]?.channel
+                        ?: sceytChannel
                 channelsListView.cancelLastSort()
-                channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
+                channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(updatedChannel))
                 newAddedChannelJobs.remove(sceytChannel.id)
             }
         }
