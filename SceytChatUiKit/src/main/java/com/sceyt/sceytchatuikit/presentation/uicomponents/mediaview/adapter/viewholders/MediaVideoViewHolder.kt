@@ -2,9 +2,11 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.vie
 
 import android.annotation.SuppressLint
 import android.view.MotionEvent
+import android.view.View
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.sceytchatuikit.R
@@ -29,6 +31,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
+    private var isAttachedToWindow = false
 
     init {
         binding.root.setOnClickListener {
@@ -62,7 +65,6 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     private fun initVideoController() {
         @UnstableApi
         binding.videoView.controllerHideOnTouch = false
-        playerHelper = initPlayer()
         var isPlayingBeforePause = false
         with(binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)) {
             applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
@@ -80,16 +82,20 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail() ?: true)
             videoController = this
         }
+
+        videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE)
+                playVideo(true)
+
+            return@setOnTouchListener false
+        }
     }
 
-    private fun setPlayingState(isVisibleToUser: Boolean) {
-        if (!isVisibleToUser && playerHelper?.isPlaying() == true)
-            playerHelper?.pausePlayer()
-
-        if (isVisibleToUser)
-            videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
-
-        videoController?.isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail() ?: true)
+    private fun setPlayingState() {
+        videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
+        videoController?.isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail()
+                ?: true)
+        playVideo()
     }
 
     private fun initPlayer(): ExoPlayerHelper {
@@ -107,15 +113,13 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
-        setPlayingState(true)
-        initVideoController()
-        if (!fileItem.file.filePath.isNullOrBlank())
-            playerHelper?.setMediaPath(fileItem.file.filePath, shouldPlayVideo())
+        isAttachedToWindow = true
+        setPlayingState()
     }
 
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
-        setPlayingState(false)
+        isAttachedToWindow = false
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
@@ -147,7 +151,8 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
             TransferState.Downloaded, TransferState.Uploaded -> {
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
-                playerHelper?.setMediaPath(data.filePath, shouldPlayVideo())
+                if (isAttachedToWindow)
+                    playVideo()
             }
 
             TransferState.PauseDownload -> {
@@ -163,6 +168,13 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             }
 
             TransferState.ThumbLoaded -> Unit
+        }
+    }
+
+    private fun playVideo(playVideo: Boolean = shouldPlayVideo()) {
+        if (!fileItem.file.filePath.isNullOrBlank()) {
+            playerHelper = initPlayer()
+            playerHelper?.setMediaPath(fileItem.file.filePath, playVideo)
         }
     }
 
