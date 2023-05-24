@@ -187,6 +187,12 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun uploadAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
         currentUploadingAttachment = attachment
         checkAndResizeMessageAttachments(context, attachment) {
+            // Check if task was paused
+            if (pausedTasksMap[attachment.messageTid.toString()] != null) {
+                uploadNext()
+                return@checkAndResizeMessageAttachments
+            }
+
             if (it.isSuccess) {
                 it.getOrNull()?.let { path ->
                     transferTask.updateFileLocationCallback.onUpdateFileLocation(path)
