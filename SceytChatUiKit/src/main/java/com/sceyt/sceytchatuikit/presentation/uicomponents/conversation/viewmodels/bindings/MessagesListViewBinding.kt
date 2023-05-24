@@ -1,15 +1,10 @@
-package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels
+package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindings
 
-import android.text.Annotation
-import android.text.Editable
 import androidx.lifecycle.*
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.SceytKitClient.getChannelsMiddleWare
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -21,38 +16,26 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdatedType
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
-import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
@@ -461,202 +444,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.setMessageDisplayedListener {
         checkStateAndMarkAsRead(it)
     }
-}
-
-fun MessageListViewModel.bind(messageInputView: MessageInputView,
-                              replyInThreadMessage: SceytMessage?,
-                              lifecycleOwner: LifecycleOwner) {
-
-    var loadedMembers = listOf<SceytMember>()
-
-    messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
-    messageInputView.checkIsParticipant(channel)
-
-    messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
-        override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
-            return runBlocking {
-                val ids = mentionAnnotations?.map { it.value } ?: return@runBlocking null
-
-                val existUsersIds = if (loadedMembers.isEmpty())
-                    persistenceMembersMiddleWare.filterOnlyMembersByIds(channel.id, ids)
-                else loadedMembers.map { it.id }
-
-                return@runBlocking mentionAnnotations.filter { annotation ->
-                    existUsersIds.none { it == annotation.value }
-                }
-            }
-        }
-    })
-
-    viewModelScope.launch(Dispatchers.IO) {
-        getChannelsMiddleWare().getChannelFromDb(channel.id)?.let {
-            withContext(Dispatchers.Main) { messageInputView.setDraftMessage(it.draftMessage) }
-        }
-    }
-
-    getChannel(channel.id)
-    loadChannelMembersIfNeeded()
-
-    onChannelUpdatedEventFlow.onEach {
-        messageInputView.checkIsParticipant(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
-    pageStateLiveData.observe(lifecycleOwner) {
-        if (it is PageState.StateError && it.showMessage)
-            customToastSnackBar(messageInputView, it.errorMessage.toString())
-    }
-
-    channelLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            channel = it.data ?: return@observe
-            messageInputView.checkIsParticipant(channel)
-        }
-    }
-
-    joinLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> {
-                messageInputView.joinSuccess()
-                (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
-            }
-
-            is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
-        }
-    }
-
-    onEditMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.editMessage(it.toMessage())
-    }
-
-    onReplyMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.replyMessage(it.toMessage())
-    }
-
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messageInputView.checkIsParticipant(channel)
-    }
-
-    onChannelEventFlow.onEach {
-        when (it.eventType) {
-            Left -> {
-                if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
-                    if (leftUser == myId)
-                        messageInputView.onChannelLeft()
-                }
-            }
-
-            Joined -> {
-                if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
-                    if (leftUser == myId)
-                        messageInputView.joinSuccess()
-                }
-            }
-
-            else -> return@onEach
-        }
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
-    var mentionJog: Job? = null
-
-    messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
-        override fun sendMessage(message: Message) {
-            this@bind.sendMessage(message)
-        }
-
-        override fun sendMessages(message: List<Message>) {
-            this@bind.sendMessages(message)
-        }
-
-        override fun sendEditMessage(message: SceytMessage) {
-            this@bind.editMessage(message)
-        }
-
-        override fun typing(typing: Boolean) {
-            sendTypingEvent(typing)
-        }
-
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>) {
-            this@bind.updateDraftMessage(text, mentionUserIds)
-        }
-
-        override fun mention(query: String) {
-            mentionJog?.cancel()
-            if (messageInputView.getComposedMessage().isNullOrBlank()) {
-                messageInputView.setMentionList(emptyList())
-                return
-            }
-            mentionJog = viewModelScope.launch(Dispatchers.IO) {
-                val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
-                if (query.isEmpty())
-                    loadedMembers = result
-
-                withContext(Dispatchers.Main) {
-                    messageInputView.setMentionList(result.filter { it.id != myId })
-                }
-            }
-        }
-
-        override fun join() {
-            this@bind.join()
-        }
-    }
-}
-
-fun MessageListViewModel.bind(headerView: ConversationHeaderView,
-                              replyInThreadMessage: SceytMessage?,
-                              lifecycleOwner: LifecycleOwner) {
-
-    messageActionBridge.setHeaderView(headerView)
-
-    if (replyInThread)
-        headerView.setReplyMessage(channel, replyInThreadMessage)
-    else
-        headerView.setChannel(channel)
-
-    if (channel is SceytDirectChannel) {
-        SceytPresenceChecker.addNewUserToPresenceCheck((channel as SceytDirectChannel).peer?.id)
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
-            .onEach {
-                it.find { user -> user.user.id == (channel as? SceytDirectChannel)?.peer?.id }?.let { presenceUser ->
-                    headerView.onPresenceUpdate(presenceUser.user)
-                }
-            }.launchIn(lifecycleOwner.lifecycleScope)
-    }
-
-    ChannelsCache.channelUpdatedFlow
-        .filter { it.channel.id == channel.id }
-        .onEach {
-            if (it.eventType == ChannelUpdatedType.Presence) {
-                (it.channel as? SceytDirectChannel)?.peer?.user?.let { user ->
-                    headerView.onPresenceUpdate(user)
-                } ?: headerView.setChannel(it.channel)
-            } else headerView.setChannel(it.channel)
-        }
-        .launchIn(lifecycleOwner.lifecycleScope)
-
-    onChannelTypingEventFlow.onEach {
-        headerView.onTyping(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        if (!replyInThread)
-            headerView.setChannel(channel)
-    }
-
-    joinLiveData.observe(lifecycleOwner) {
-        if (!replyInThread)
-            getChannel(channel.id)
-    }
-
-    channelLiveData.observe(lifecycleOwner, Observer {
-        if (it is SceytResponse.Success) {
-            channel = it.data ?: return@Observer
-            if (!replyInThread)
-                headerView.setChannel(it.data)
-        }
-    })
 }
 
 @Suppress("unused")

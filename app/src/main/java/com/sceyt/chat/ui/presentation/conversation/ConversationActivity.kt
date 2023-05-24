@@ -26,7 +26,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bind
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindings.bind
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl

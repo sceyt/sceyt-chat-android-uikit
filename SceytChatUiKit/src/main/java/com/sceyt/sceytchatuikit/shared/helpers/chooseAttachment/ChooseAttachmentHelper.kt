@@ -49,13 +49,12 @@ class ChooseAttachmentHelper {
     private var allowMultiple: Boolean = true
     private var onlyImages: Boolean = true
 
-    private var takePhotoPath: String? = null
-    private var takeVideoPath: String? = null
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
     private var takePictureCb: ((String) -> Unit)? = null
     private var takeVideoCb: ((String) -> Unit)? = null
     private lateinit var scope: CoroutineScope
     private val debounceHelper by lazy { DebounceHelper(300L, scope) }
+    private var placeToSavePathsList: MutableSet<String> = mutableSetOf()
 
     constructor(activity: ComponentActivity) {
         with(activity) {
@@ -163,17 +162,17 @@ class ChooseAttachmentHelper {
 
     private fun onTakePhotoResult(success: Boolean) {
         if (success) {
-            takePhotoPath?.let { path ->
+            placeToSavePathsList.lastOrNull()?.let { path ->
                 takePictureCb?.invoke(path)
-            }.also { takePhotoPath = null }
+            }
         }
     }
 
     private fun onTakeVideoResult(success: Boolean) {
         if (success) {
-            takeVideoPath?.let { path ->
+            placeToSavePathsList.lastOrNull()?.let { path ->
                 takeVideoCb?.invoke(path)
-            }.also { takeVideoPath = null }
+            }
         }
     }
 
@@ -191,6 +190,7 @@ class ChooseAttachmentHelper {
                     val paths = getPathFromFile(*uris.toTypedArray())
                     if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
+                            placeToSavePathsList.addAll(paths)
                             chooseFilesCb?.invoke(paths)
                         }
                     } else withContext(Dispatchers.Main) {
@@ -202,6 +202,7 @@ class ChooseAttachmentHelper {
                     val paths = getPathFromFile(data?.data)
                     if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
+                            placeToSavePathsList.addAll(paths)
                             chooseFilesCb?.invoke(paths)
                         }
                     } else withContext(Dispatchers.Main) {
@@ -306,17 +307,21 @@ class ChooseAttachmentHelper {
         addAttachmentLauncher.launch(intent)
     }
 
+    fun setSaveUrlsPlace(list: MutableSet<String>) {
+        placeToSavePathsList = list
+    }
+
     private fun getPhotoFileUri(): Uri {
         val directory = File(context.filesDir, "Photos")
         if (!directory.exists()) directory.mkdir()
         val file = File.createTempFile("Photo_${UUID.randomUUID()}", ".jpg", directory)
-        return context.getFileUriWithProvider(file).also { takePhotoPath = file.path }
+        return context.getFileUriWithProvider(file).also { placeToSavePathsList.add(file.path) }
     }
 
     private fun getVideoFileUri(): Uri {
         val directory = File(context.filesDir, "Videos")
         if (!directory.exists()) directory.mkdir()
         val file = File.createTempFile("Video_${UUID.randomUUID()}", ".mp4", directory)
-        return context.getFileUriWithProvider(file).also { takeVideoPath = file.path }
+        return context.getFileUriWithProvider(file).also { placeToSavePathsList.add(file.path) }
     }
 }
