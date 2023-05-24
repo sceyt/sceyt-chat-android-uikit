@@ -73,7 +73,7 @@
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="8dp"
-            android:autoLink="phone|web|email"
+            android:autoLink="phone|email"
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             app:layout_constrainedWidth="true"

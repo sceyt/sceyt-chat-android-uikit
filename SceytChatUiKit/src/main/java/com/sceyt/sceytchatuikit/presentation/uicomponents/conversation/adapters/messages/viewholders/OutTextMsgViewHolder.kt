@@ -34,6 +34,10 @@ class OutTextMsgViewHolder(
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
             }
+
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+            }
         }
     }
 

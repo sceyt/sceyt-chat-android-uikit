@@ -43,6 +43,10 @@ class IncImageMsgViewHolder(
                 return@setOnLongClickListener true
             }
 
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+            }
+
             fileImage.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem)
             }
