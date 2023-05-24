@@ -22,6 +22,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Typ
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
@@ -29,9 +30,10 @@ import java.util.concurrent.ConcurrentHashMap
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
 
     val typingCancelHelper by lazy { TypingCancelHelper() }
+    val needToUpdateChannelsAfterResume = ConcurrentHashMap<Long, ChannelUpdateData>()
+    val newAddedChannelJobs = ConcurrentHashMap<Long, Job>()
 
     getChannels(0, query = searchQuery)
-    val needToUpdateChannelsAfterResume = ConcurrentHashMap<Long, ChannelUpdateData>()
 
     viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -88,10 +90,15 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelDeletedFlow.onEach {
+    ChannelsCache.channelDeletedFlow.onEach { channelId ->
         viewModelScope.launch {
+            newAddedChannelJobs[channelId]?.apply {
+                cancel()
+                newAddedChannelJobs.remove(channelId)
+            }
+            needToUpdateChannelsAfterResume.remove(channelId)
             lifecycleOwner.lifecycle.withResumed {
-                channelsListView.deleteChannel(it)
+                channelsListView.deleteChannel(channelId)
             }
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
@@ -111,12 +118,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
-        viewModelScope.launch {
+        val job = viewModelScope.launch {
             lifecycleOwner.lifecycle.withResumed {
                 channelsListView.cancelLastSort()
                 channelsListView.addNewChannelAndSort(ChannelListItem.ChannelItem(sceytChannel))
+                newAddedChannelJobs.remove(sceytChannel.id)
             }
         }
+        newAddedChannelJobs[sceytChannel.id] = job
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelDraftMessageChangesLiveData.observe(lifecycleOwner) { (channelId, draftMessage) ->
