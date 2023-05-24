@@ -5,8 +5,11 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.Uri
+import android.provider.Settings
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -24,6 +27,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytRecordViewBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.util.*
@@ -54,6 +58,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
+    private var dialog: SceytDialog? = null
 
     init {
         init()
@@ -92,6 +97,11 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     @SuppressLint("ClickableViewAccessibility")
     private fun SceytRecordViewBinding.setupRecorder() {
         imageViewAudio.setOnTouchListener(OnTouchListener { view, motionEvent ->
+            if (context.permissionIgnored(Manifest.permission.RECORD_AUDIO)) {
+                showPermissionSettingsDialog()
+                return@OnTouchListener false
+            }
+
             if (!context.hasPermissions(Manifest.permission.RECORD_AUDIO)) {
                 context.asActivity().requestPermissionsSafety(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
                 return@OnTouchListener false
@@ -114,13 +124,16 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                         startRecord()
                     }
                 }
+
                 ACTION_UP -> {
                     if (isRecording)
                         stopRecording(RecordingBehaviour.RELEASED)
                 }
+
                 ACTION_CANCEL -> {
                     stopRecordAndShowPreviewIfNeeded()
                 }
+
                 ACTION_MOVE -> {
                     if (stopTrackingAction) {
                         return@OnTouchListener true
@@ -267,11 +280,13 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                 showRecordingLockedButton()
                 recordingListener?.onRecordingLocked()
             }
+
             RecordingBehaviour.CANCELED -> {
                 isRecording = false
                 moveToInitialState()
                 recordingListener?.onRecordingCanceled()
             }
+
             RecordingBehaviour.RELEASED, RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW, RecordingBehaviour.LOCK_DONE_SEND_IMMEDIATELY -> {
                 isRecording = false
                 moveToInitialState()
@@ -419,6 +434,20 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun SceytRecordViewBinding.setupStyle() {
         imageViewLockArrow.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         lockViewStopButton.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+    }
+
+    private fun showPermissionSettingsDialog() {
+        if (dialog != null) return
+        dialog = SceytDialog.showSceytDialog(context,
+            titleId = R.string.sceyt_voice_permission_disabled_title,
+            descId = R.string.sceyt_voice_permission_disabled_desc,
+            positiveBtnTitleId = R.string.sceyt_settings,
+            positiveCb = {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            }).also { it.setOnDismissListener { dialog = null } }
     }
 
     fun setListener(listener: RecordingListener) {
