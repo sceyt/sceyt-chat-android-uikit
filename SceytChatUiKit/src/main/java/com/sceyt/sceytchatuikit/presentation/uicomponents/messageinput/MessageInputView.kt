@@ -193,7 +193,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         icAddAttachments.setOnClickListener {
-            clickListeners.onSendAttachmentClick(it)
+            clickListeners.onAddAttachmentClick(it)
         }
 
         layoutReplyOrEditMessage.icCancelReply.setOnClickListener {
@@ -782,6 +782,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         selectFileTypePopupClickListeners = listener
     }
 
+    fun setSaveUrlsPlace(savePaths: MutableSet<String>) {
+        chooseAttachmentHelper?.setSaveUrlsPlace(savePaths)
+    }
+
     fun setMentionList(data: List<SceytMember>) {
         if (data.isEmpty() && mentionUserContainer == null) return
         initMentionUsersContainer()
@@ -797,7 +801,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         sendMessage()
     }
 
-    override fun onSendAttachmentClick(view: View) {
+    override fun onAddAttachmentClick(view: View) {
         handleAttachmentClick()
     }
 

@@ -153,5 +153,9 @@
     <string name="sceyt_stop_recording">Discard voice message?</string>
     <string name="sceyt_stop_recording_desc">Are you sure you want to stop recording and discard your voice message?</string>
     <string name="sceyt_discard">Discard</string>
+    <string name="sceyt_voice_permission_disabled_title">Audio Recording</string>
+    <string name="sceyt_voice_permission_disabled_desc">To record a voice message, allow access to your device\'s microphone
+        to record audio. Tap on Settings, go to Permissions, turn Microphone on.</string>
+    <string name="sceyt_settings">Settings</string>
 
 </resources>

@@ -13,6 +13,7 @@ class ExoPlayerHelper(private val context: Context,
                       private val listener: PlayerStateChangeCallback? = null) : Player.Listener {
 
     private lateinit var exoPlayer: ExoPlayer
+    private var isSetMediaPath = false
 
     init {
         initializePlayer()
@@ -23,6 +24,7 @@ class ExoPlayerHelper(private val context: Context,
     }
 
     private fun initializePlayer() {
+        lastPlayer?.stop()
         lastPlayer?.release()
         exoPlayer = ExoPlayer.Builder(context).build().also {
             lastPlayer = it
@@ -34,10 +36,12 @@ class ExoPlayerHelper(private val context: Context,
 
 
     fun setMediaPath(url: String?, playVideo: Boolean) {
+        if (isSetMediaPath) return
         url?.let {
-            exoPlayer.addMediaItem(MediaItem.fromUri(it))
+            exoPlayer.setMediaItem(MediaItem.fromUri(it))
             exoPlayer.prepare()
             exoPlayer.playWhenReady = playVideo
+            isSetMediaPath = true
         }
     }
 

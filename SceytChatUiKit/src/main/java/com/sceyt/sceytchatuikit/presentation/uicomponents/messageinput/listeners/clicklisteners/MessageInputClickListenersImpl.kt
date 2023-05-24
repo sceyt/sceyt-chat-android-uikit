@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListeners {
     private var defaultListeners: ClickListeners = view
     private var sendMsgClickListener: SendMsgClickListener? = null
-    private var sendAttachmentClickListener: SendAttachmentClickListener? = null
+    private var addAttachmentClickListener: SendAttachmentClickListener? = null
     private var voiceClickListener: VoiceClickListener? = null
     private var voiceLongClickListener: VoiceLongClickListener? = null
     private var closeReplyMessageViewClickListener: CloseReplyMessageViewClickListener? = null
@@ -27,9 +27,9 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
         sendMsgClickListener?.onSendMsgClick(view)
     }
 
-    override fun onSendAttachmentClick(view: View) {
-        defaultListeners.onSendAttachmentClick(view)
-        sendAttachmentClickListener?.onSendAttachmentClick(view)
+    override fun onAddAttachmentClick(view: View) {
+        defaultListeners.onAddAttachmentClick(view)
+        addAttachmentClickListener?.onAddAttachmentClick(view)
     }
 
     override fun onVoiceClick(view: View) {
@@ -61,7 +61,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
         when (listener) {
             is ClickListeners -> {
                 sendMsgClickListener = listener
-                sendAttachmentClickListener = listener
+                addAttachmentClickListener = listener
                 voiceClickListener = listener
                 voiceLongClickListener = listener
                 closeReplyMessageViewClickListener = listener
@@ -72,7 +72,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
                 sendMsgClickListener = listener
             }
             is SendAttachmentClickListener -> {
-                sendAttachmentClickListener = listener
+                addAttachmentClickListener = listener
             }
             is VoiceClickListener -> {
                 voiceClickListener = listener
