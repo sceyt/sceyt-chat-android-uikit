@@ -18,9 +18,12 @@ import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
@@ -92,19 +95,23 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                     notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
                 }
             }
+
             is PaginationResponse.ServerResponse -> {
                 _loadChannelsFlow.value = response
                 notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
             }
+
             else -> return
         }
         pagingResponseReceived(response)
     }
 
-    internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean): List<ChannelListItem> {
+    internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
+                                          includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
         return suspendCancellableCoroutine {
 
-            val filteredChannels = data?.filter { channel -> !channel.isPeerDeleted() }
+            val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
+            else data?.filter { channel -> !channel.isPeerDeleted() }
                     ?: emptyList()
 
             if (filteredChannels.isEmpty())
@@ -199,6 +206,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                 if (event.channel.channelType == ChannelTypeEnum.Direct)
                     blockUser(((event.channel as SceytDirectChannel).peer ?: return).id)
             }
+
             is ChannelEvent.UnBlockUser -> {
                 if (event.channel.channelType == ChannelTypeEnum.Direct)
                     unBlockUser(((event.channel as SceytDirectChannel).peer ?: return).id)

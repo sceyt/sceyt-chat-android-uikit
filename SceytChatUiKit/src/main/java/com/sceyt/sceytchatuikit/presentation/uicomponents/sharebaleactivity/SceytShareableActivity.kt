@@ -53,7 +53,9 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         val filteredData = filterOnlyAppropriateChannels(response.data)
-        val data = channelsViewModel.mapToChannelItem(data = filteredData, hasNext = response.hasNext)
+        val data = channelsViewModel.mapToChannelItem(data = filteredData,
+            hasNext = response.hasNext,
+            includeDirectChannelsWithDeletedPeers = false)
         if (response.offset == 0) {
             setChannelsList(data)
         } else addNewChannels(data)

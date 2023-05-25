@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic
 import android.content.Context
 import android.util.Log
 import android.util.Size
+import com.abedelazizshe.lightcompressorlibrary.VideoCompressor
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -42,12 +43,12 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private var sharingFilesPath = Collections.synchronizedSet<ShareFilesData>(mutableSetOf())
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
-       /*
-       // Uncomment this logic after implementing play/pause logic
-       if (attachment.transferState == TransferState.PauseUpload) {
-            pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
-            return
-        }*/
+        /*
+        // Uncomment this logic after implementing play/pause logic
+        if (attachment.transferState == TransferState.PauseUpload) {
+             pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
+             return
+         }*/
         checkAndUpload(attachment, task)
     }
 
@@ -108,6 +109,8 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     override fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
         pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
+        if (attachment.type == AttachmentTypeEnum.Video.value())
+            VideoCompressor.cancel()
 
         when (state) {
             TransferState.PendingUpload, TransferState.Uploading -> {
