@@ -251,6 +251,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun buildMessage(body: String, attachments: Array<Attachment>, withMentionedUsers: Boolean): Message {
         val message = Message.MessageBuilder()
+            .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
             .setType("text")
             .setBody(body)

@@ -37,10 +37,17 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private var pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
     private var currentUploadingAttachment: SceytAttachment? = null
     private var pausedTasksMap = hashMapOf<String, String>()
+    private var resizingAttachmentsMap = hashMapOf<String, String>()
 
     private var sharingFilesPath = Collections.synchronizedSet<ShareFilesData>(mutableSetOf())
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
+       /*
+       // Uncomment this logic after implementing play/pause logic
+       if (attachment.transferState == TransferState.PauseUpload) {
+            pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
+            return
+        }*/
         checkAndUpload(attachment, task)
     }
 
@@ -286,12 +293,18 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String?>) -> Unit) {
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
+                resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
                 val result = resizeImage(context, attachment.filePath, 1080)
                 callback(result)
+                resizingAttachmentsMap.remove(attachment.messageTid.toString())
             }
 
             AttachmentTypeEnum.Video.value() -> {
-                transcodeVideo(context, attachment.filePath, callback = callback)
+                resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
+                transcodeVideo(context, attachment.filePath) {
+                    callback(it)
+                    resizingAttachmentsMap.remove(attachment.messageTid.toString())
+                }
             }
 
             else -> callback.invoke(Result.success(null))
