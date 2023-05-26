@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
 import android.content.Context
 import android.graphics.Typeface
+import android.text.Annotation
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -115,7 +116,7 @@ object MentionUserHelper {
         data.forEach { entry ->
             val user = mentionUsers?.find { it.id == entry.id } ?: User(entry.id)
             val name = userNameBuilder?.invoke(user) ?: user.getPresentableName()
-            list.add(Mention(entry.id, name, entry.loc, name.length))
+            list.add(Mention(entry.id, name, entry.loc, entry.len))
         }
         return list
     }
@@ -151,5 +152,14 @@ object MentionUserHelper {
 
     fun setCustomUserNameBuilder(userNameBuilder: (User) -> String) {
         this.userNameBuilder = userNameBuilder
+    }
+
+    fun Annotation.getValueData(): MentionAnnotationValue? {
+        return try {
+            Gson().fromJson(value, MentionAnnotationValue::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

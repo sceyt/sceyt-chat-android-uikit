@@ -34,6 +34,10 @@ class MentionValidatorWatcher : TextWatcher {
                 editable.removeSpan(it)
             }
             editable.removeSpan(annotation)
+            (spanStart until spanEnd).forEach {
+                if (editable[it] == '-')
+                    editable.replace(it, it + 1, " ")
+            }
         }
     }
 
