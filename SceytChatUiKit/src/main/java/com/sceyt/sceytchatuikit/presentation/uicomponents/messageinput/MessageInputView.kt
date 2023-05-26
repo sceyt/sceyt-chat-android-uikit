@@ -559,8 +559,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (!message.mentionedUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(message.metadata, message.mentionedUsers)
                 val updatedBody = MentionUserHelper.updateBodyWithUsers(message.body, message.metadata, message.mentionedUsers)
-                body = SpannableString(updatedBody)
-                MentionAnnotation.setMentionAnnotations(body, data)
+                body = MentionAnnotation.setMentionAnnotations(SpannableString(updatedBody), data)
             }
             messageInput.setText(body)
             messageInput.text?.let { text -> messageInput.setSelection(text.length) }
@@ -624,8 +623,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val data = MentionUserHelper.getMentionsIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
                 val updatedBody = MentionUserHelper.updateBodyWithUsers(draftMessage.message,
                     draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
-                body = SpannableString(updatedBody)
-                MentionAnnotation.setMentionAnnotations(body, data)
+                body = MentionAnnotation.setMentionAnnotations(SpannableString(updatedBody), data)
             }
             setTextAndMoveSelectionEnd(body)
         }

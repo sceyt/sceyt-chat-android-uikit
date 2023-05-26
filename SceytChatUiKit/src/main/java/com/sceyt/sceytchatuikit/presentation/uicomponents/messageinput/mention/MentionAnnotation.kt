@@ -1,10 +1,16 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
+import android.graphics.Color
 import android.text.Annotation
 import android.text.Spannable
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.util.Log
+import com.google.gson.Gson
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 
 /**
  * This wraps an Android standard [Annotation] so it can leverage the built in
@@ -17,26 +23,29 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 object MentionAnnotation {
     private const val MENTION_ANNOTATION = "mention"
 
-    fun mentionAnnotationForRecipientId(id: String): Annotation {
-        return Annotation(MENTION_ANNOTATION, idToMentionAnnotationValue(id))
+    fun mentionAnnotationForRecipientId(id: String, name: String): Annotation {
+        return Annotation(MENTION_ANNOTATION, createAnnotationValue(id, name))
     }
 
-    fun idToMentionAnnotationValue(id: String): String {
-        return id
+    fun createAnnotationValue(id: String, name: String): String {
+        return Gson().toJson(MentionAnnotationValue(name, id))
     }
 
     fun isMentionAnnotation(annotation: Annotation): Boolean {
         return MENTION_ANNOTATION == annotation.key
     }
 
-    fun setMentionAnnotations(body: Spannable, mentions: List<Mention>) {
-        for ((recipientId, _, start, length) in mentions) {
+    fun setMentionAnnotations(body: Spannable, mentions: List<Mention>): SpannableString {
+        val newBody = SpannableStringBuilder(body)
+        for ((recipientId, name, start, length) in mentions.reversed()) {
             try {
-                body.setSpan(mentionAnnotationForRecipientId(recipientId), start, start + length + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + length + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                replaceSpacesWithTransparentLines(newBody, start, start + length)
             } catch (e: Exception) {
                 Log.e(TAG, "Couldn't set mention annotation for recipient id: $recipientId")
             }
         }
+        return SpannableString(newBody)
     }
 
     fun getMentionsFromAnnotations(text: CharSequence?): List<Mention> {
@@ -44,7 +53,8 @@ object MentionAnnotation {
             return getMentionAnnotations(text).map { annotation ->
                 val spanStart = text.getSpanStart(annotation)
                 val spanLength = text.getSpanEnd(annotation) - spanStart
-                Mention(annotation.value, text.substring(spanStart + 1, spanStart + spanLength), spanStart, spanLength)
+                val valueData = annotation.getValueData() ?: return emptyList()
+                Mention(valueData.userId, valueData.userName, spanStart, spanLength)
             }
         }
         return emptyList()
@@ -58,5 +68,14 @@ object MentionAnnotation {
     fun getMentionAnnotations(spanned: Spanned, start: Int, end: Int): List<Annotation> {
         return spanned.getSpans(start, end, Annotation::class.java)
             .filter(MentionAnnotation::isMentionAnnotation)
+    }
+
+    fun replaceSpacesWithTransparentLines(text: SpannableStringBuilder, start: Int, end: Int) {
+        (start..end).forEach {
+            if (it != text.length - 1 && it in text.indices && text[it] == ' ') {
+                text.replace(it, it + 1, "-")
+                text.setSpan(ForegroundColorSpan(Color.GREEN), it, it + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
     }
 }

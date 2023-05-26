@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
-import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -118,7 +117,6 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (!MentionUserHelper.containsMentionsUsers(message))
             messageBody.text = message.body.trim()
         else {
-            messageBody.movementMethod = LinkMovementMethod.getInstance()
             messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, message.body.trim(),
                 message.metadata, message.mentionedUsers, enableClick = true)
         }
