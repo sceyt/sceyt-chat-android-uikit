@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,14 +46,14 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
         override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
             return runBlocking {
-                val ids = mentionAnnotations?.map { it.value } ?: return@runBlocking null
+                val ids = mentionAnnotations?.mapNotNull { it.getValueData()?.userId } ?: return@runBlocking null
 
                 val existUsersIds = if (loadedMembers.isEmpty())
                     persistenceMembersMiddleWare.filterOnlyMembersByIds(channel.id, ids)
                 else loadedMembers.map { it.id }
 
                 return@runBlocking mentionAnnotations.filter { annotation ->
-                    existUsersIds.none { it == annotation.value }
+                    existUsersIds.none { it == annotation.getValueData()?.userId }
                 }
             }
         }

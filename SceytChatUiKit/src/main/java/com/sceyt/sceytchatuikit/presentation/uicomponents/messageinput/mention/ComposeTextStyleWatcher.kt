@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
 import android.content.Context
+import android.graphics.Color
 import android.text.Annotation
 import android.text.Editable
 import android.text.Spanned
@@ -22,9 +23,22 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
     }
 
     override fun afterTextChanged(s: Editable) {
-        s.getSpans<Annotation>(0, s.length).forEach {
+        val annotation = s.getSpans<Annotation>(0, s.length)
+        if (annotation.isEmpty()) return
+
+        val existingSpans = s.getSpans<ForegroundColorSpan>(0, s.length).filter { it.foregroundColor == Color.TRANSPARENT }
+
+        annotation.forEach {
             if (it.key == "mention")
                 s.setSpan(ForegroundColorSpan(context.getCompatColor(SceytKitConfig.sceytColorAccent)), s.getSpanStart(it), s.getSpanEnd(it), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        for (span in existingSpans) {
+            val spanStart: Int = s.getSpanStart(span)
+            val spanEnd: Int = s.getSpanEnd(span)
+            val spanFlags: Int = s.getSpanFlags(span)
+            s.removeSpan(span)
+            s.setSpan(span, spanStart, spanEnd, spanFlags)
         }
     }
 }
