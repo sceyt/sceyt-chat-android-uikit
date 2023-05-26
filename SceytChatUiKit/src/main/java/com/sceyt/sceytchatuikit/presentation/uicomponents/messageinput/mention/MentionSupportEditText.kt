@@ -168,7 +168,8 @@ class MentionSupportEditText : AppCompatEditText {
         } else
             builder.append(text).append(" ")
 
-        builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        MentionAnnotation.replaceSpacesWithTransparentLines(builder, 0, builder.length - 1)
         return builder
     }
 
