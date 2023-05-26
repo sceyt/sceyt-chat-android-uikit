@@ -37,10 +37,11 @@ object MentionAnnotation {
 
     fun setMentionAnnotations(body: Spannable, mentions: List<Mention>): SpannableString {
         val newBody = SpannableStringBuilder(body)
-        for ((recipientId, name, start, length) in mentions.reversed()) {
+        for ((recipientId, name, start, length) in mentions.sortedByDescending { it.start }) {
             try {
-                newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + length + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                replaceSpacesWithTransparentLines(newBody, start, start + length)
+                newBody.replace(start, start + length, "@$name")
+                newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + name.length + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                replaceSpacesWithTransparentLines(newBody, start, start + name.length)
             } catch (e: Exception) {
                 Log.e(TAG, "Couldn't set mention annotation for recipient id: $recipientId")
             }
@@ -74,7 +75,7 @@ object MentionAnnotation {
         (start..end).forEach {
             if (it != text.length - 1 && it in text.indices && text[it] == ' ') {
                 text.replace(it, it + 1, "-")
-                text.setSpan(ForegroundColorSpan(Color.GREEN), it, it + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                text.setSpan(ForegroundColorSpan(Color.TRANSPARENT), it, it + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
     }

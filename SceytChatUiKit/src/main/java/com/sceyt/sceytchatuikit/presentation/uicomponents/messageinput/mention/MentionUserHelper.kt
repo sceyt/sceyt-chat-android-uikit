@@ -116,7 +116,7 @@ object MentionUserHelper {
         data.forEach { entry ->
             val user = mentionUsers?.find { it.id == entry.id } ?: User(entry.id)
             val name = userNameBuilder?.invoke(user) ?: user.getPresentableName()
-            list.add(Mention(entry.id, name, entry.loc, name.length))
+            list.add(Mention(entry.id, name, entry.loc, entry.len))
         }
         return list
     }

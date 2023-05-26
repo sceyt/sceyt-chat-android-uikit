@@ -46,7 +46,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
         override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
             return runBlocking {
-                val ids = mentionAnnotations?.map { it.value } ?: return@runBlocking null
+                val ids = mentionAnnotations?.mapNotNull { it.getValueData()?.userId } ?: return@runBlocking null
 
                 val existUsersIds = if (loadedMembers.isEmpty())
                     persistenceMembersMiddleWare.filterOnlyMembersByIds(channel.id, ids)
