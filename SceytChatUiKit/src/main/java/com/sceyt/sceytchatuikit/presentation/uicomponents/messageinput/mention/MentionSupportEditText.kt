@@ -155,7 +155,7 @@ class MentionSupportEditText : AppCompatEditText {
             text = editable
             setSelection(start + replacement.length)
         } catch (_: Exception) {
-            Log.i("ComposeText", "Failed to replace text with mention.")
+            Log.e("ComposeText", "Failed to replace text with mention.")
         }
     }
 

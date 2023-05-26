@@ -26,7 +26,7 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
         val annotation = s.getSpans<Annotation>(0, s.length)
         if (annotation.isEmpty()) return
 
-        val existingSpans = s.getSpans<ForegroundColorSpan>(0, s.length).filter { it.foregroundColor == Color.GREEN }
+        val existingSpans = s.getSpans<ForegroundColorSpan>(0, s.length).filter { it.foregroundColor == Color.TRANSPARENT }
 
         annotation.forEach {
             if (it.key == "mention")
