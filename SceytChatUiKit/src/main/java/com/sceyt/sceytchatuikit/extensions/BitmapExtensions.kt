@@ -100,7 +100,7 @@ fun ByteArray.decodeByteArrayToBitmap(): Bitmap? {
 }
 
 fun Bitmap.toFile(context: Context): File {
-    val dest = File(context.filesDir.toString() + UUID.randomUUID() + ".JPEG")
+    val dest = File(context.cacheDir.toString() + UUID.randomUUID() + ".JPEG")
     compress(Bitmap.CompressFormat.JPEG, 100, dest.outputStream())
     return dest
 }

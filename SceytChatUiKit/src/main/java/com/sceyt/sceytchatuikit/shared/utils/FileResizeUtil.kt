@@ -34,7 +34,7 @@ object FileResizeUtil {
             var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
                 inSampleSize = inSimpleSize
             })
-            val dest = "${context.filesDir}/" + UUID.randomUUID() + ".JPEG"
+            val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
 
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
             val bmpFile = FileOutputStream(dest)
@@ -96,8 +96,8 @@ object FileResizeUtil {
         }
     }
 
-    fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
-                                     reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
+    private fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
+                                             reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
         return try {
             val initialSize = Size(bitmap.width, bitmap.height)
             val byteArray = bitmap.bitmapToByteArray()
@@ -106,7 +106,7 @@ object FileResizeUtil {
                 inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
             })
 
-            val dest = "${context.filesDir}/" + UUID.randomUUID() + ".JPEG"
+            val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
@@ -258,7 +258,7 @@ object FileResizeUtil {
 
     fun createFileFromBitmap(context: Context, bitmap: Bitmap): File? {
         return try {
-            val fileDest = "${context.filesDir}/" + UUID.randomUUID() + ".JPEG"
+            val fileDest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(fileDest)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
             bmpFile.flush()
