@@ -203,7 +203,7 @@ object ImageUriPathUtil {
     fun copyFile(context: Context, uri: String, name: String): File {
         val file = File(uri)
         if (file.exists()) return file
-        return File(context.cacheDir, name)
+        return File(context.filesDir, name)
             .apply {
                 if (!exists()) {
                     outputStream().use { cache ->

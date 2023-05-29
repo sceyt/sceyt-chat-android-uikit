@@ -21,15 +21,10 @@ fun SceytAttachment.getFileFromMetadata(): File? {
 
 fun SceytAttachment.openFile(context: Context) {
     try {
-        val fileName = name
         var uri: Uri? = null
-        val loadedFile = File(context.filesDir, fileName)
+        val loadedFile = File(filePath ?: "")
         if (loadedFile.exists()) {
             uri = context.getFileUriWithProvider(loadedFile)
-        } else {
-            getFileFromMetadata()?.let {
-                uri = context.getFileUriWithProvider(it)
-            }
         }
 
         if (uri != null) {
