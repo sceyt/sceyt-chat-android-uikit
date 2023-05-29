@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.persistence.mappers.isDeleted
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
@@ -46,7 +47,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
         override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
             return runBlocking {
-                val ids = mentionAnnotations?.mapNotNull { it.getValueData()?.userId } ?: return@runBlocking null
+                val ids = mentionAnnotations?.mapNotNull { it.getValueData()?.userId }
+                        ?: return@runBlocking null
 
                 val existUsersIds = if (loadedMembers.isEmpty())
                     persistenceMembersMiddleWare.filterOnlyMembersByIds(channel.id, ids)
@@ -165,7 +167,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                     loadedMembers = result
 
                 withContext(Dispatchers.Main) {
-                    messageInputView.setMentionList(result.filter { it.id != SceytKitClient.myId })
+                    messageInputView.setMentionList(result.filter { it.id != SceytKitClient.myId && !it.user.isDeleted() })
                 }
             }
         }
