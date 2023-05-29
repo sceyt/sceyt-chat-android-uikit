@@ -96,11 +96,11 @@ fun convertString64ToImage(base64String: String): ByteArray? {
 
 fun ByteArray.decodeByteArrayToBitmap(): Bitmap? {
     val bitmap = BitmapFactory.decodeByteArray(this, 0, this.size)
-    return FileResizeUtil.getOrientationCorrectedBitmap(bitmap?: return null, this)
+    return FileResizeUtil.getOrientationCorrectedBitmap(bitmap ?: return null, this)
 }
 
 fun Bitmap.toFile(context: Context): File {
-    val dest = File(context.cacheDir.toString() + UUID.randomUUID())
+    val dest = File(context.filesDir.toString() + UUID.randomUUID() + ".JPEG")
     compress(Bitmap.CompressFormat.JPEG, 100, dest.outputStream())
     return dest
 }
