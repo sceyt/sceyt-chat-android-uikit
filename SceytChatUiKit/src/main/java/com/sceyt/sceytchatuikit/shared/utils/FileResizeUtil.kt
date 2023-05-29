@@ -96,8 +96,8 @@ object FileResizeUtil {
         }
     }
 
-    fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
-                                     reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
+    private fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
+                                             reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
         return try {
             val initialSize = Size(bitmap.width, bitmap.height)
             val byteArray = bitmap.bitmapToByteArray()

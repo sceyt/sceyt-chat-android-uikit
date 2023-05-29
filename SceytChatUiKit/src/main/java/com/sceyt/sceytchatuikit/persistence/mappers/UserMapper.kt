@@ -48,7 +48,9 @@ fun Member.MemberType.toRoleType(): RoleTypeEnum {
     }
 }
 
+fun User.isDeleted() = activityState == UserActivityStatus.Deleted
+
 fun createEmptyUser(id: String, displayName: String): User {
     return User(id, displayName, "", "", "",
-        Presence(PresenceState.Offline,"",0), UserActivityStatus.Active, false)
+        Presence(PresenceState.Offline, "", 0), UserActivityStatus.Active, false)
 }

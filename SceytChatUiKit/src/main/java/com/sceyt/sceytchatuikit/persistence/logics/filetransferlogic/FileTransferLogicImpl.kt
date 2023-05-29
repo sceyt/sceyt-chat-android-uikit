@@ -71,7 +71,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     }
 
     override fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
-        val loadedFile = File(context.filesDir, attachment.messageTid.toString())
+        val loadedFile = File(getSaveFileLocation(attachment), "${attachment.messageTid}_${attachment.name}")
         val file = attachment.checkLoadedFileIsCorrect(loadedFile)
 
         if (file != null) {
@@ -330,6 +330,16 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             else -> null
         }
         return Result.success(resizePath)
+    }
+
+    private fun getSaveFileLocation(attachment: SceytAttachment): File {
+        return when (attachment.type) {
+            AttachmentTypeEnum.Image.value() -> File(context.filesDir, "Sceyt Images")
+            AttachmentTypeEnum.Video.value() -> File(context.filesDir, "Sceyt Videos")
+            else -> File(context.filesDir, "Sceyt Files")
+        }.apply {
+            if (!exists()) mkdirs()
+        }
     }
 
     fun clear() {

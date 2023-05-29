@@ -59,7 +59,7 @@ suspend fun Attachment.transcodeVideo(context: Context, quality: VideoQuality): 
 
 fun transcodeVideo(context: Context, path: String?, quality: VideoQuality = VideoQuality.MEDIUM, callback: (Result<String>) -> Unit) {
     path?.let {
-        val dest = File("${context.cacheDir}/" + UUID.randomUUID() + getMimeTypeTakeExtension(path))
+        val dest = File("${context.filesDir}/" + UUID.randomUUID() + getMimeTypeTakeExtension(path))
         VideoTranscodeHelper.transcodeAsResultWithCallback(context, destination = dest, uri = it, quality) { data ->
             when (data.resultType) {
                 Cancelled -> callback(Result.failure(Exception("Canceled")))
