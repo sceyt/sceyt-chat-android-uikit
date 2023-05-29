@@ -71,7 +71,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     }
 
     override fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
-        val loadedFile = File(getSaveFileLocation(attachment), attachment.messageTid.toString() + attachment.name)
+        val loadedFile = File(getSaveFileLocation(attachment), "${attachment.messageTid}_${attachment.name}")
         val file = attachment.checkLoadedFileIsCorrect(loadedFile)
 
         if (file != null) {
