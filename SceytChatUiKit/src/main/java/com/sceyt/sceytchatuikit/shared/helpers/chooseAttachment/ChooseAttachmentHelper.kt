@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -17,14 +18,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.asFragmentActivity
 import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
-import com.sceyt.sceytchatuikit.extensions.checkDeniedOneOfPermissions
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import com.sceyt.sceytchatuikit.extensions.initAttachmentLauncher
 import com.sceyt.sceytchatuikit.extensions.initCameraLauncher
 import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.initVideoCameraLauncher
-import com.sceyt.sceytchatuikit.extensions.shortToast
+import com.sceyt.sceytchatuikit.extensions.permissionIgnored
+import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
@@ -42,6 +45,7 @@ class ChooseAttachmentHelper {
     private var requestCameraPermissionLauncher: ActivityResultLauncher<String>
     private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>
     private var requestGalleryPermissionLauncher: ActivityResultLauncher<String>
+    private var requestSceytGalleryPermissionLauncher: ActivityResultLauncher<String>
     private var requestFilesPermissionLauncher: ActivityResultLauncher<String>
     private var takePhotoLauncher: ActivityResultLauncher<Uri>
     private var takeVideoLauncher: ActivityResultLauncher<Uri>
@@ -55,6 +59,7 @@ class ChooseAttachmentHelper {
     private lateinit var scope: CoroutineScope
     private val debounceHelper by lazy { DebounceHelper(300L, scope) }
     private var placeToSavePathsList: MutableSet<String> = mutableSetOf()
+    private var dialog: SceytDialog? = null
 
     constructor(activity: ComponentActivity) {
         with(activity) {
@@ -70,6 +75,11 @@ class ChooseAttachmentHelper {
             requestGalleryPermissionLauncher = initPermissionLauncher {
                 onGalleryPermissionResult(it)
             }
+
+            requestSceytGalleryPermissionLauncher = initPermissionLauncher {
+                onSceytGalleryPermissionResult(it)
+            }
+
             requestFilesPermissionLauncher = initPermissionLauncher {
                 onFilesPermissionResult(it)
             }
@@ -101,12 +111,19 @@ class ChooseAttachmentHelper {
             requestCameraPermissionLauncher = initPermissionLauncher {
                 onCameraPermissionResult(it)
             }
+
             requestVideoCameraPermissionLauncher = initPermissionLauncher {
                 onVideoCameraPermissionResult(it)
             }
+
             requestGalleryPermissionLauncher = initPermissionLauncher {
                 onGalleryPermissionResult(it)
             }
+
+            requestSceytGalleryPermissionLauncher = initPermissionLauncher {
+                onSceytGalleryPermissionResult(it)
+            }
+
             requestFilesPermissionLauncher = initPermissionLauncher {
                 onFilesPermissionResult(it)
             }
@@ -157,6 +174,13 @@ class ChooseAttachmentHelper {
         if (context.checkAndAskPermissions(requestFilesPermissionLauncher,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
             pickFile()
+        }
+    }
+
+    fun openSceytGallery(pickerListener: GalleryMediaPicker.PickerListener, vararg selections: String) {
+        if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            openSceytGalleryPicker(pickerListener, *selections)
         }
     }
 
@@ -255,29 +279,36 @@ class ChooseAttachmentHelper {
     private fun onCameraPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             takePhotoLauncher.launch(getPhotoFileUri())
-        } else if (context.checkDeniedOneOfPermissions(android.Manifest.permission.CAMERA))
-            context.shortToast("Please enable camera permission in settings")
+        } else if (context.permissionIgnored(android.Manifest.permission.CAMERA))
+            showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title, R.string.sceyt_camera_permission_disabled_desc)
     }
 
     private fun onVideoCameraPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             takeVideoLauncher.launch(getVideoFileUri())
-        } else if (context.checkDeniedOneOfPermissions(android.Manifest.permission.CAMERA))
-            context.shortToast("Please enable camera permission in settings")
+        } else if (context.permissionIgnored(android.Manifest.permission.CAMERA))
+            showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title, R.string.sceyt_camera_permission_disabled_desc)
     }
 
     private fun onGalleryPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             openGallery()
-        } else if (context.checkDeniedOneOfPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE))
-            context.shortToast("Please enable storage permission in settings")
+        } else if (context.permissionIgnored(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+            showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
+    }
+
+    private fun onSceytGalleryPermissionResult(isGranted: Boolean) {
+        if (isGranted) {
+            openSceytGalleryPicker()
+        } else if (context.permissionIgnored(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+            showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
     }
 
     private fun onFilesPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             pickFile()
-        } else if (context.checkDeniedOneOfPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE))
-            context.shortToast("Please enable storage permission in settings")
+        } else if (context.permissionIgnored(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+            showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
     }
 
     private fun openGallery() {
@@ -286,6 +317,13 @@ class ChooseAttachmentHelper {
         if (onlyImages)
             intent.type = "image/*"
         addAttachmentLauncher.launch(intent)
+    }
+
+    private fun openSceytGalleryPicker(pickerListener: GalleryMediaPicker.PickerListener? = GalleryMediaPicker.pickerListener,
+                                       vararg selections: String) {
+        GalleryMediaPicker.instance(selections = selections).apply {
+            GalleryMediaPicker.pickerListener = pickerListener
+        }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
     }
 
     private fun pickFile() {
@@ -309,6 +347,20 @@ class ChooseAttachmentHelper {
 
     fun setSaveUrlsPlace(list: MutableSet<String>) {
         placeToSavePathsList = list
+    }
+
+    private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
+        if (dialog != null) return
+        dialog = SceytDialog.showSceytDialog(context,
+            titleId = titleId,
+            descId = descId,
+            positiveBtnTitleId = R.string.sceyt_settings,
+            positiveCb = {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            }).also { it.setOnDismissListener { dialog = null } }
     }
 
     private fun getPhotoFileUri(): Uri {

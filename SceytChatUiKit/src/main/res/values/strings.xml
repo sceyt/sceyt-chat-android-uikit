@@ -154,8 +154,11 @@
     <string name="sceyt_stop_recording_desc">Are you sure you want to stop recording and discard your voice message?</string>
     <string name="sceyt_discard">Discard</string>
     <string name="sceyt_voice_permission_disabled_title">Audio Recording</string>
-    <string name="sceyt_voice_permission_disabled_desc">To record a voice message, allow access to your device\'s microphone
-        to record audio. Tap on Settings, go to Permissions, turn Microphone on.</string>
+    <string name="sceyt_voice_permission_disabled_desc">To record a voice message, allow access to your device\'s microphone to record audio. Tap on Settings, go to Permissions, and turn “Microphone” on.</string>
+    <string name="sceyt_camera_permission_disabled_title">Capturing photos and videos</string>
+    <string name="sceyt_camera_permission_disabled_desc">To capture photos and videos, allow access to your device’s camera. Tap on Settings, go to Permissions, and turn “Camera”, “Photos and videos” and “Music and audio” on.</string>
+    <string name="sceyt_media_permission_disabled_title">Sending Media</string>
+    <string name="sceyt_media_permission_disabled_desc">To send media, allow access to your device’s photos, media, and files. Tap on Settings, go to Permissions, and turn “Photos and videos” and “Music and audio” on.</string>
     <string name="sceyt_settings">Settings</string>
 
 </resources>
