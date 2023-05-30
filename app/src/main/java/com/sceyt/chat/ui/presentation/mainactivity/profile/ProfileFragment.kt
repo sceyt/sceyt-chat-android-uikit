@@ -1,5 +1,6 @@
 package com.sceyt.chat.ui.presentation.mainactivity.profile
 
+import com.sceyt.sceytchatuikit.R as SceytKitR
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,7 +16,13 @@ import com.sceyt.chat.ui.R
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.databinding.FragmentProfileBinding
 import com.sceyt.chat.ui.presentation.login.LoginActivity
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.hideKeyboard
+import com.sceyt.sceytchatuikit.extensions.isNightTheme
+import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
+import com.sceyt.sceytchatuikit.extensions.showSoftInput
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
@@ -25,7 +32,6 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
-import com.sceyt.sceytchatuikit.R as SceytKitR
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -75,7 +81,7 @@ class ProfileFragment : Fragment() {
             binding.setEditMode(false)
             binding.isSaveLoading = false
             isSaveLoading = false
-            customToastSnackBar(requireView(), it.toString())
+            customToastSnackBar(it.toString())
         }
 
         viewModel.settingsLiveData.observe(viewLifecycleOwner) {
@@ -96,7 +102,7 @@ class ProfileFragment : Fragment() {
         }
 
         viewModel.logOutErrorLiveData.observe(viewLifecycleOwner) {
-            customToastSnackBar(requireView(), it.toString())
+            customToastSnackBar(it.toString())
         }
     }
 
@@ -150,11 +156,13 @@ class ProfileFragment : Fragment() {
                                 setProfileImage(uris[0])
                         }
                     }
+
                     EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
                         chooseAttachmentHelper.takePicture { uri ->
                             setProfileImage(uri)
                         }
                     }
+
                     EditAvatarTypeDialog.EditAvatarType.Delete -> {
                         setProfileImage(null)
                     }

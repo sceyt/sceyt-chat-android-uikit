@@ -71,11 +71,6 @@ fun EditText.setMultiLineCapSentencesAndSendAction() {
     setRawInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
 }
 
-fun EditText.removeFucus() {
-    imeOptions = EditorInfo.IME_ACTION_SEND
-    setRawInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-}
-
 fun View.delayOnLifecycle(
         delayMillis: Long,
         dispatcher: CoroutineDispatcher = Dispatchers.Main,
