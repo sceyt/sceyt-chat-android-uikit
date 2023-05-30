@@ -180,13 +180,13 @@ fun Context.isLandscape(): Boolean {
 fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
     window.statusBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
 
-    if (Build.VERSION.SDK_INT >= M) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    if (SDK_INT >= M) {
+        if (SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.setSystemBarsAppearance(
                 if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             )
-        } else if (Build.VERSION.SDK_INT >= M) {
+        } else if (SDK_INT >= M) {
             val wic = WindowInsetsControllerCompat(window, window.decorView)
             wic.isAppearanceLightStatusBars = !isDark
         }
@@ -200,6 +200,16 @@ fun Activity.statusBarBackgroundColor(color: Int) {
 inline fun <reified T> Any.castSafety(): T? {
     return if (this is T)
         this else null
+}
+
+@Suppress("DEPRECATION")
+fun Context.keepScreenOn(): PowerManager.WakeLock {
+    return (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+        newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "myApp:proximity_wakelock").apply {
+            acquire(10 * 60 * 1000L /*10 minutes*/)
+        }
+    }
 }
 
 inline fun activityLifecycleCallbacks(
