@@ -44,7 +44,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
         /*
-        // Uncomment this logic after implementing play/pause logic
+        //todo Uncomment this logic after implementing play/pause logic
         if (attachment.transferState == TransferState.PauseUpload) {
              pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
              return
