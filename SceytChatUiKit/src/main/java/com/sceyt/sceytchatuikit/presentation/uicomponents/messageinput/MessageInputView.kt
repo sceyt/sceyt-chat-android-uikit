@@ -1,8 +1,11 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.text.Editable
 import android.text.SpannableString
 import android.util.AttributeSet
@@ -36,9 +39,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.extensions.asFragmentActivity
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -336,6 +337,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val directoryToSaveRecording = context.filesDir.path + "/Audio"
                 AudioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
+                voiceMessageRecorderView?.keepScreenOn = true
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
@@ -352,12 +354,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                             tryToSendRecording(file, amplitudes.toIntArray(), duration)
                         }
                     }
+                    voiceMessageRecorderView?.keepScreenOn = false
                 }
             }
 
             override fun onRecordingCanceled() {
                 AudioRecorderHelper.cancelRecording {}
                 finishRecording()
+                voiceMessageRecorderView?.keepScreenOn = false
             }
         })
     }
@@ -839,9 +843,21 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Choose file type popup listeners
     override fun onGalleryClick() {
-        GalleryMediaPicker.instance(selections = allAttachments.map { it.url }.toTypedArray()).apply {
-            GalleryMediaPicker.pickerListener = getPickerListener()
-        }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
+        binding.messageInput.clearFocus()
+        chooseAttachmentHelper?.openSceytGallery(getPickerListener(), *allAttachments.map { it.url }.toTypedArray())
+    }
+
+    private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
+        SceytDialog.showSceytDialog(context,
+            titleId = titleId,
+            descId = descId,
+            positiveBtnTitleId = R.string.sceyt_settings,
+            positiveCb = {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            })
     }
 
     override fun onTakePhotoClick() {
