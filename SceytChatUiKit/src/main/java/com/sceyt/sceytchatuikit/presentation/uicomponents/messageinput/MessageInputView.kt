@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.os.PowerManager
 import android.provider.Settings
 import android.text.Editable
 import android.text.SpannableString
@@ -49,7 +48,6 @@ import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
-import com.sceyt.sceytchatuikit.extensions.keepScreenOn
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
@@ -334,13 +332,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun canShowRecorderView() = !disabledInputByGesture && !isInputHidden && inputState == Voice
 
     private fun SceytVoiceMessageRecorderView.setRecordingListener() {
-        var wakeLock: PowerManager.WakeLock? = null
         setListener(object : RecordingListener {
             override fun onRecordingStarted() {
                 val directoryToSaveRecording = context.filesDir.path + "/Audio"
                 AudioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
-                wakeLock = context.keepScreenOn()
+                voiceMessageRecorderView?.keepScreenOn = true
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
@@ -357,14 +354,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                             tryToSendRecording(file, amplitudes.toIntArray(), duration)
                         }
                     }
-                    wakeLock?.release()
+                    voiceMessageRecorderView?.keepScreenOn = false
                 }
             }
 
             override fun onRecordingCanceled() {
                 AudioRecorderHelper.cancelRecording {}
                 finishRecording()
-                wakeLock?.release()
+                voiceMessageRecorderView?.keepScreenOn = false
             }
         })
     }
