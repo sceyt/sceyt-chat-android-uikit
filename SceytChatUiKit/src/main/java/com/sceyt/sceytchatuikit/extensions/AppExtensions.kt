@@ -96,25 +96,38 @@ fun Activity.isKeyboardOpen(): Boolean {
     return (heightDiff3 > dpToPx(200f))
 }
 
-fun customToastSnackBar(view: View?, message: String) {
+fun customToastSnackBar(view: View?, message: String?, maxLines: Int = 5) {
     try {
-        view?.let {
-            Snackbar.make(it, message, Snackbar.LENGTH_LONG).show()
-        }
+        if (view != null && !message.isNullOrBlank())
+            Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setTextMaxLines(maxLines)
+                .show()
     } catch (ex: Exception) {
-        Toast.makeText(view?.context ?: return, message, Toast.LENGTH_SHORT).show()
+        view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
     }
 }
 
 fun Activity.customToastSnackBar(message: String?) {
     try {
         findViewById<View>(android.R.id.content)?.let {
-            message?.let { it1 -> Snackbar.make(it, it1, Snackbar.LENGTH_LONG).show() }
+            customToastSnackBar(it, message)
         }
     } catch (ex: Exception) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        if (!isFinishing)
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
+
+fun Fragment.customToastSnackBar(message: String?) {
+    try {
+        if (isAdded)
+            customToastSnackBar(view, message)
+        else Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    } catch (ex: Exception) {
+        view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
+    }
+}
+
 
 fun Fragment.setBundleArguments(init: Bundle.() -> Unit = {}): Fragment {
     arguments = Bundle().apply { init() }

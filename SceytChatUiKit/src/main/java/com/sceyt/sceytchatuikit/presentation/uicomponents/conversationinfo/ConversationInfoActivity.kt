@@ -699,7 +699,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         if (pageState is PageState.StateError) {
             setChannelDetails(channel)
             if (pageState.showMessage)
-                customToastSnackBar(binding?.root, pageState.errorMessage.toString())
+                customToastSnackBar(pageState.errorMessage.toString())
         }
     }
 

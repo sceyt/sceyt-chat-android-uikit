@@ -68,7 +68,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
             if (it is PageState.StateError) {
-                customToastSnackBar(requireView(), it.errorMessage.toString())
+                customToastSnackBar(it.errorMessage.toString())
                 SceytLoader.hideLoading()
             }
         }
@@ -110,7 +110,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun onAvatarImageSelected(filePath: String?) {
         if (filePath != null) {
             setProfileImage(filePath)
-        } else customToastSnackBar(binding?.root, "Wrong image")
+        } else customToastSnackBar("Wrong image")
     }
 
     open fun setProfileImage(filePath: String?) {
@@ -128,11 +128,13 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                             onAvatarImageSelected(uris[0])
                     }
                 }
+
                 EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
                     chooseAttachmentHelper.takePicture { uri ->
                         onAvatarImageSelected(uri)
                     }
                 }
+
                 EditAvatarTypeDialog.EditAvatarType.Delete -> {
                     setProfileImage(null)
                 }

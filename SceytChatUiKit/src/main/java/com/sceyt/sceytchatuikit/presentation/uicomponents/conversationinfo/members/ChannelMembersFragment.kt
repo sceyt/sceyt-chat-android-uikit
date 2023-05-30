@@ -129,10 +129,12 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     toolbar.setTitle(getString(R.string.sceyt_members))
                     addMembers.text = getString(R.string.sceyt_add_members)
                 }
+
                 MemberTypeEnum.Subscriber -> {
                     toolbar.setTitle(getString(R.string.sceyt_subscribers))
                     addMembers.text = getString(R.string.sceyt_add_subscribers)
                 }
+
                 MemberTypeEnum.Admin -> {
                     toolbar.setTitle(getString(R.string.sceyt_admins))
                     addMembers.text = getString(R.string.sceyt_add_admins)
@@ -302,10 +304,12 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                 titleId = R.string.sceyt_remove_member_title
                 descId = R.string.sceyt_remove_member_desc
             }
+
             Public -> {
                 titleId = R.string.sceyt_remove_subscriber_title
                 descId = R.string.sceyt_remove_subscriber_desc
             }
+
             Direct -> return
         }
         SceytDialog.showSceytDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove) {
@@ -332,12 +336,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     membersAdapter?.addNewItems(data.data)
                 }
             }
+
             is PaginationResponse.ServerResponse -> {
                 if (data.data is SceytResponse.Success) {
                     Log.i(TAG, "server " + data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
                     updateMembersWithServerResponse(data, data.hasNext)
                 }
             }
+
             else -> return
         }
     }
@@ -362,6 +368,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     removeMember(it.id)
                 }
             }
+
             Joined, Invited -> addMembers(groupChannel.lastActiveMembers)
             else -> return
         }
@@ -370,7 +377,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected open fun onChannelMembersEvent(eventData: ChannelMembersEventData) {
         when (eventData.eventType) {
             ChannelMembersEventEnum.Role -> {
-                eventData.members?.forEach { member ->
+                eventData.members.forEach { member ->
                     if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.toString()) {
                         removeMember(member.id)
                     } else
@@ -381,14 +388,17 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                         } ?: addMembers(arrayListOf(member))
                 }
             }
+
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                eventData.members?.forEach { member ->
+                eventData.members.forEach { member ->
                     removeMember(member.id)
                 }
             }
+
             ChannelMembersEventEnum.Added -> {
                 addMembers(eventData.members)
             }
+
             else -> return
         }
     }
@@ -399,7 +409,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     protected open fun onPageStateChange(pageState: PageState) {
         if (pageState is PageState.StateError)
-            customToastSnackBar(requireView(), pageState.errorMessage.toString())
+            customToastSnackBar(pageState.errorMessage.toString())
     }
 
     fun updateChannel(channel: SceytChannel) {

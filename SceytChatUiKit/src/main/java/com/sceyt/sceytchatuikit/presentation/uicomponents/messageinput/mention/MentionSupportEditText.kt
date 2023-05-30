@@ -1,20 +1,27 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
 import android.content.Context
+import android.os.Build
 import android.text.Annotation
 import android.text.Editable
+import android.text.InputFilter
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.TextUtils
+import android.text.style.ClickableSpan
+import android.text.style.SuggestionRangeSpan
 import android.util.AttributeSet
 import android.util.Log
+import android.view.View
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher.MentionValidator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryReplacement
+
 
 class MentionSupportEditText : AppCompatEditText {
 
@@ -39,6 +46,86 @@ class MentionSupportEditText : AppCompatEditText {
         addTextChangedListener(MentionDeleter())
         addTextChangedListener(ComposeTextStyleWatcher(context))
 
+        /*  filters = arrayOf<InputFilter>(object : InputFilter {
+              override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence? {
+                  if (source is Spanned) {
+                      val spans = source.getSpans(0, source.length, Any::class.java)
+                      for (span in spans) {
+                          val spanStart = source.getSpanStart(span)
+                          val spanEnd = source.getSpanEnd(span)
+                          if (dstart in spanStart..spanEnd || dend in spanStart..spanEnd) {
+                              // Spannable text is being modified, prevent autocorrection
+                              return text
+                          }
+                      }
+                  }
+                  return null
+              }
+          })*/
+        /* filters = arrayOf<InputFilter>(object : InputFilter {
+             override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence? {
+                 Log.i("sdfsfsdf", "filter: source: $source start: $start end: $end dest: $dest dstart: $dstart dend:$dend")
+                 // Check if automatic autocorrection is triggered
+               *//*  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1 &&
+                        isInputMethodTarget &&
+                        isFocused &&
+                        selectionStart ==selectionEnd
+                ) {
+                    // Ignore autocorrection
+                    Log.i("sdfsfsdf", "filter: $source")
+                    return ""
+                }*//*
+                if (start==0 && end==0 && source.isEmpty() && dest.getSpans<Annotation>().isNotEmpty()) {
+                    return dest
+                }
+                    return source
+
+            }
+        })*/
+
+        /*    filters = arrayOf<InputFilter>(object : InputFilter {
+                override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence? {
+                    // Check if any span is present in the deleted portion
+                    val deletedSpans = dest.getSpans(dstart, dend, Any::class.java)
+                    if (deletedSpans.isNotEmpty()) {
+                        for (span in deletedSpans) {
+                            val spanStart = dest.getSpanStart(span)
+                            val spanEnd = dest.getSpanEnd(span)
+
+                            // Check if the span starts with "@"
+                            if (spanStart >= dstart && spanStart < dend && dest[spanStart] == '@') {
+                                // Reapply the span to preserve it
+                                val spannable = SpannableString(dest)
+                                return spannable
+                            }
+                        }
+                    }
+                    return null
+                }
+            })*/
+
+        /* filters =arrayOf<InputFilter>(object : InputFilter {
+            override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence? {
+
+               // Log.i("sdfsd111", "$sb")
+                Log.i("sdfsd", "filter: source: $source start: $start end: $end dest: $dest dstart: $dstart dend:$dend")
+                return null
+            }
+        })*/
+        filters = arrayOf<InputFilter>(object : InputFilter {
+            override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence? {
+                if (source is Spanned) {
+                    // Retrieve the spans from the source text
+                    val spans = source.getSpans(start, end, Any::class.java)
+                    if (spans.isNotEmpty()) {
+                        // Preserve the spans by returning the original source text
+                        return source
+                    }
+                }
+                // No spans found, allow the replacement with the suggestion
+                return null
+            }
+        })
         doAfterTextChanged {
             onInputTextChanged(it ?: return@doAfterTextChanged)
         }
@@ -168,10 +255,46 @@ class MentionSupportEditText : AppCompatEditText {
         } else
             builder.append(text).append(" ")
 
+        val clickableSpan = object : ClickableSpan() {
+            override fun onClick(textView: View) {
+                //todo: implement click action
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.isUnderlineText = false
+            }
+        }
+
         builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
         MentionAnnotation.replaceSpacesWithTransparentLines(builder, 0, builder.length - 1)
         return builder
     }
+
+    /*private fun ff(){
+        spannableString.setSpan(
+            SpellCheckSpan(),
+            0,
+            spannableString.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        spannableString.setSpan(
+            SuggestionRangeSpan(),
+            0,
+            spannableString.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        spannableString.setSpan(
+            SuggestionSpan(
+                Locale(""), arrayOf<String>(),
+                SuggestionSpan.FLAG_GRAMMAR_ERROR
+            ),
+            0,
+            spannableString.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }*/
 
     private fun findQueryStart(text: CharSequence, inputCursorPosition: Int, keywordEmojiSearch: Boolean): QueryStart? {
         if (keywordEmojiSearch) {
