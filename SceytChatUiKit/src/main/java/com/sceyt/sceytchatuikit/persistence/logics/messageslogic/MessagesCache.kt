@@ -219,4 +219,13 @@ class MessagesCache {
             }
         }
     }
+
+    //TODO: above methods will be removed soon
+    fun updateAttachmentFilePath(messageTid: Long, path: String?) {
+        cachedMessages[messageTid]?.let {
+            it.attachments?.forEach { attachment ->
+                attachment.filePath = path
+            }
+        }
+    }
 }
