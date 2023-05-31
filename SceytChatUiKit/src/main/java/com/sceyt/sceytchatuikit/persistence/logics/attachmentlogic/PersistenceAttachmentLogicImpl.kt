@@ -6,7 +6,10 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
@@ -72,18 +75,25 @@ internal class PersistenceAttachmentLogicImpl(
     }
 
     override fun updateTransferDataByMsgTid(data: TransferData) {
-        messageDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
+        attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
         messagesCache.updateAttachmentTransferData(data)
     }
 
     override fun updateAttachmentWithTransferData(data: TransferData) {
-        messageDao.updateAttachmentAndPayLoad(data)
+        attachmentDao.updateAttachmentAndPayLoad(data)
         messagesCache.updateAttachmentTransferData(data)
     }
 
     override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
-        messageDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+        attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
+    }
+
+    //TODO: above methods will be removed soon
+    override suspend fun markAllFilesWithoutExtensionAsPendingDownload() {
+        attachmentDao.markNotDownloadedAllFileAttachments().forEach {
+            messagesCache.updateAttachmentFilePath(it, "")
+        }
     }
 
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
@@ -116,16 +126,19 @@ internal class PersistenceAttachmentLogicImpl(
                 attachments = getPrevAttachmentsDb(conversationId, attachmentId, types)
                 hasPrev = attachments.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
             }
+
             LoadNext -> {
                 attachments = getNextAttachmentsDb(conversationId, attachmentId, types)
                 hasNext = attachments.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
             }
+
             LoadNear -> {
                 val data = getNearAttachmentsDb(conversationId, attachmentId, types)
                 attachments = data.data.map { it.toAttachment() }
                 hasPrev = data.hasPrev
                 hasNext = data.hasNext
             }
+
             LoadNewest -> {
                 attachments = getPrevAttachmentsDb(conversationId, Long.MAX_VALUE, types)
                 hasPrev = attachments.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
@@ -173,11 +186,13 @@ internal class PersistenceAttachmentLogicImpl(
                 if (response is SceytResponse.Success)
                     hasPrev = response.data?.first?.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
             }
+
             LoadNext -> {
                 response = attachmentsRepository.getNextAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success)
                     hasPrev = response.data?.first?.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
             }
+
             LoadNear -> {
                 response = attachmentsRepository.getNearAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success) {
@@ -191,6 +206,7 @@ internal class PersistenceAttachmentLogicImpl(
                     }
                 }
             }
+
             LoadNewest -> {
                 response = attachmentsRepository.getPrevAttachments(conversationId, Long.MAX_VALUE, types)
                 if (response is SceytResponse.Success)
@@ -237,6 +253,7 @@ internal class PersistenceAttachmentLogicImpl(
                 val finalData = sceytAttachments.map { AttachmentWithUserData(it, usersMap[it.userId]) }
                 return SceytResponse.Success(finalData)
             }
+
             is SceytResponse.Error -> return SceytResponse.Error(response.exception)
         }
     }
@@ -292,6 +309,7 @@ internal class PersistenceAttachmentLogicImpl(
                     }
                     SceytResponse.Success(sceytAttachments)
                 }
+
                 is SceytResponse.Error -> SceytResponse.Error(messagesResponse.exception)
             }
         } else SceytResponse.Success(emptyList())

@@ -114,9 +114,10 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun onFcmMessage(data: RemoteMessageData) {
         launch {
+            val message = data.message
+            if (message?.id == 0L) return@launch
             val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
                     ?: return@launch)
-            val message = data.message
             if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesDeletionDate)
                 return@launch
 

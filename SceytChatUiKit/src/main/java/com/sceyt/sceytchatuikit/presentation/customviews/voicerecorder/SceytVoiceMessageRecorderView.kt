@@ -58,7 +58,6 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
-    private var dialog: SceytDialog? = null
 
     init {
         init()
@@ -437,17 +436,17 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
     private fun showPermissionSettingsDialog() {
-        if (dialog != null) return
-        dialog = SceytDialog.showSceytDialog(context,
+        SceytDialog.showSceytDialog(context,
             titleId = R.string.sceyt_voice_permission_disabled_title,
             descId = R.string.sceyt_voice_permission_disabled_desc,
             positiveBtnTitleId = R.string.sceyt_settings,
+            replaceLastDialog = false,
             positiveCb = {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 val uri = Uri.fromParts("package", context.packageName, null)
                 intent.data = uri
                 context.startActivity(intent)
-            }).also { it.setOnDismissListener { dialog = null } }
+            })
     }
 
     fun setListener(listener: RecordingListener) {

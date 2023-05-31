@@ -171,12 +171,13 @@ class ProfileFragment : Fragment() {
         }
 
         signOut.setOnClickListener {
-            SceytDialog(requireContext(), positiveClickListener = {
-                viewModel.logout()
-            }).setTitle(getString(R.string.sign_out_title))
+            SceytDialog(requireContext()).setTitle(getString(R.string.sign_out_title))
                 .setDescription(getString(R.string.sign_out_desc))
                 .setPositiveButtonTitle(getString(R.string.sign_out))
                 .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_red))
+                .setPositiveButtonClickListener {
+                    viewModel.logout()
+                }
                 .show()
         }
 
