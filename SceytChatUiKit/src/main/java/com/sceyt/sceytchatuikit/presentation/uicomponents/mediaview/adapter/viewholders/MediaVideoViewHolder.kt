@@ -53,8 +53,6 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
-        (bindingAdapter as? MediaAdapter)?.addMediaPlayer(binding.videoView.player)
-
         binding.videoView.setOnClickListener {
             videoController?.isVisible = !(videoController?.isVisible ?: false)
             (context as? OnMediaClickCallback)?.onMediaClick()
@@ -108,7 +106,9 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
             if (it.isReady())
                 binding.icThumb.isVisible = false
-        })
+        }).also {
+            (bindingAdapter as? MediaAdapter)?.addMediaPlayer(it.player)
+        }
     }
 
     override fun onViewAttachedToWindow() {

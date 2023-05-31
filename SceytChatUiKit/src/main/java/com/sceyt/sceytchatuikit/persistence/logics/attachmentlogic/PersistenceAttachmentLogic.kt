@@ -23,4 +23,7 @@ interface PersistenceAttachmentLogic {
     fun updateTransferDataByMsgTid(data: TransferData)
     fun updateAttachmentWithTransferData(data: TransferData)
     fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?)
+
+    //TODO: above methods will be removed soon
+    suspend fun markAllFilesWithoutExtensionAsPendingDownload()
 }
