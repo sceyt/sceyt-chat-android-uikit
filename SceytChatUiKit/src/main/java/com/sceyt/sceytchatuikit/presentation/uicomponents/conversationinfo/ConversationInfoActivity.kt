@@ -409,9 +409,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             Private -> R.string.sceyt_clear_private_chat_history_desc
             Public -> R.string.sceyt_clear_public_chat_history_desc
         }
-        showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear) {
+        showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
             clearHistory(channel.channelType == Public)
-        }
+        })
     }
 
     open fun onLeaveChatClick(channel: SceytChannel) {
@@ -430,17 +430,18 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
             else -> return
         }
-        showSceytDialog(this, titleId, descId, R.string.sceyt_leave) {
+        showSceytDialog(this, titleId, descId, R.string.sceyt_leave, positiveCb = {
             leaveChannel()
-        }
+        })
     }
 
     open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
         val peer = (channel as? SceytDirectChannel)?.peer ?: return
         if (block) {
-            showSceytDialog(this, R.string.sceyt_block_user_title, R.string.sceyt_block_user_desc, R.string.sceyt_block) {
-                blockUser(peer.id)
-            }
+            showSceytDialog(this, R.string.sceyt_block_user_title,
+                R.string.sceyt_block_user_desc, R.string.sceyt_block, positiveCb = {
+                    blockUser(peer.id)
+                })
         } else unblockUser(peer.id)
     }
 
@@ -463,9 +464,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 descId = R.string.sceyt_delete_p2p_desc
             }
         }
-        showSceytDialog(this, titleId, descId, R.string.sceyt_delete) {
+        showSceytDialog(this, titleId, descId, R.string.sceyt_delete, positiveCb = {
             deleteChannel()
-        }
+        })
     }
 
     open fun onVideoCallClick(channel: SceytChannel) {
