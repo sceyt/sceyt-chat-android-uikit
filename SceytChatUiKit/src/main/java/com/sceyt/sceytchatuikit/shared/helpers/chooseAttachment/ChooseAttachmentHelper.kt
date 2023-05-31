@@ -59,7 +59,6 @@ class ChooseAttachmentHelper {
     private lateinit var scope: CoroutineScope
     private val debounceHelper by lazy { DebounceHelper(300L, scope) }
     private var placeToSavePathsList: MutableSet<String> = mutableSetOf()
-    private var dialog: SceytDialog? = null
 
     constructor(activity: ComponentActivity) {
         with(activity) {
@@ -350,17 +349,17 @@ class ChooseAttachmentHelper {
     }
 
     private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
-        if (dialog != null) return
-        dialog = SceytDialog.showSceytDialog(context,
+        SceytDialog.showSceytDialog(context,
             titleId = titleId,
             descId = descId,
             positiveBtnTitleId = R.string.sceyt_settings,
+            replaceLastDialog = false,
             positiveCb = {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 val uri = Uri.fromParts("package", context.packageName, null)
                 intent.data = uri
                 context.startActivity(intent)
-            }).also { it.setOnDismissListener { dialog = null } }
+            })
     }
 
     private fun getPhotoFileUri(): Uri {
