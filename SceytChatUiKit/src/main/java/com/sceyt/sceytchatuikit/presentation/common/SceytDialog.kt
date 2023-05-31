@@ -75,12 +75,16 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
     }
 
     companion object {
+        private var lastDialog: SceytDialog? = null
+
         fun showSceytDialog(context: Context, title: String, description: String,
                             positiveBtnTitle: String,
                             negativeBtnTitle: String = context.getString(R.string.sceyt_cancel),
+                            replaceLastDialog: Boolean = true,
                             negativeCb: (() -> Unit)? = null,
                             positiveCb: (() -> Unit)? = null): SceytDialog {
-            return showDialog(context, title, description, negativeBtnTitle, positiveBtnTitle, negativeCb, positiveCb)
+            return showDialog(context, title, description, positiveBtnTitle, negativeBtnTitle,
+                replaceLastDialog, negativeCb, positiveCb)
         }
 
         fun showSceytDialog(context: Context,
@@ -88,21 +92,32 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
                             @StringRes descId: Int = R.string.sceyt_empty_string,
                             @StringRes positiveBtnTitleId: Int,
                             @StringRes negativeBtnTitleId: Int = R.string.sceyt_cancel,
+                            replaceLastDialog: Boolean = true,
                             negativeCb: (() -> Unit)? = null,
                             positiveCb: (() -> Unit)? = null
         ): SceytDialog {
-
             return showDialog(context, context.getString(titleId), context.getString(descId),
-                context.getString(positiveBtnTitleId), context.getString(negativeBtnTitleId), negativeCb, positiveCb)
+                context.getString(positiveBtnTitleId), context.getString(negativeBtnTitleId),
+                replaceLastDialog, negativeCb, positiveCb)
         }
 
         private fun showDialog(
                 context: Context, title: String, description: String,
                 positiveBtnTitle: String,
                 negativeBtnTitle: String,
+                replaceLastDialog: Boolean,
                 negativeCb: (() -> Unit)? = null,
                 positiveCb: (() -> Unit)? = null,
         ): SceytDialog {
+
+            if (replaceLastDialog)
+                lastDialog?.dismiss()
+            else lastDialog?.let {
+                if (it.isShowing)
+                    return it
+                else lastDialog = null
+            }
+
             return SceytDialog(context).apply {
                 setTitle(title)
                 setDescription(description)
@@ -113,6 +128,8 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
                 setPositiveButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
                 setNegativeButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
                 show()
+                setOnDismissListener { lastDialog = null }
+                lastDialog = this
             }
         }
     }
