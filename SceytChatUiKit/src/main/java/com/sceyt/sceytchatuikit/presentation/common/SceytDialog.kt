@@ -76,26 +76,33 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
 
     companion object {
         fun showSceytDialog(context: Context, title: String, description: String,
-                            positiveBtnTitle: String, positiveCb: (() -> Unit)? = null,
+                            positiveBtnTitle: String,
                             negativeBtnTitle: String = context.getString(R.string.sceyt_cancel),
-                            negativeCb: (() -> Unit)? = null): SceytDialog {
-            return showDialog(context, title, description, positiveBtnTitle, positiveCb, negativeBtnTitle, negativeCb)
+                            negativeCb: (() -> Unit)? = null,
+                            positiveCb: (() -> Unit)? = null): SceytDialog {
+            return showDialog(context, title, description, negativeBtnTitle, positiveBtnTitle, negativeCb, positiveCb)
         }
 
         fun showSceytDialog(context: Context,
                             @StringRes titleId: Int = R.string.sceyt_empty_string,
                             @StringRes descId: Int = R.string.sceyt_empty_string,
-                            @StringRes positiveBtnTitleId: Int, positiveCb: (() -> Unit)? = null,
+                            @StringRes positiveBtnTitleId: Int,
                             @StringRes negativeBtnTitleId: Int = R.string.sceyt_cancel,
-                            negativeCb: (() -> Unit)? = null): SceytDialog {
+                            negativeCb: (() -> Unit)? = null,
+                            positiveCb: (() -> Unit)? = null
+        ): SceytDialog {
 
             return showDialog(context, context.getString(titleId), context.getString(descId),
-                context.getString(positiveBtnTitleId), positiveCb, context.getString(negativeBtnTitleId), negativeCb)
+                context.getString(positiveBtnTitleId), context.getString(negativeBtnTitleId), negativeCb, positiveCb)
         }
 
-        private fun showDialog(context: Context, title: String, description: String,
-                               positiveBtnTitle: String, positiveCb: (() -> Unit)? = null,
-                               negativeBtnTitle: String, negativeCb: (() -> Unit)? = null): SceytDialog {
+        private fun showDialog(
+                context: Context, title: String, description: String,
+                positiveBtnTitle: String,
+                negativeBtnTitle: String,
+                negativeCb: (() -> Unit)? = null,
+                positiveCb: (() -> Unit)? = null,
+        ): SceytDialog {
             return SceytDialog(context).apply {
                 setTitle(title)
                 setDescription(description)

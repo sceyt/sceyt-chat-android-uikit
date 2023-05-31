@@ -671,10 +671,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
         if (isRecording()) {
-            SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording, R.string.sceyt_stop_recording_desc, R.string.sceyt_discard) {
-                stopRecording()
-                onConfirm()
-            }
+            SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording,
+                R.string.sceyt_stop_recording_desc, R.string.sceyt_discard, positiveCb = {
+                    stopRecording()
+                    onConfirm()
+                })
         } else onConfirm()
     }
 
