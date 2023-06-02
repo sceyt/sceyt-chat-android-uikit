@@ -41,6 +41,7 @@ interface ChannelDao {
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
 
+    @Transaction
     @RawQuery
     suspend fun searchChannelsRaw(query: SimpleSQLiteQuery): List<ChannelDb>
 
@@ -76,6 +77,7 @@ interface ChannelDao {
     @Query("select sum(unreadMessageCount) from channels")
     fun getTotalUnreadCountAsFlow(): Flow<Int?>
 
+    @Transaction
     @Query("select count(chat_id) from channels")
     suspend fun getAllChannelsCount(): Int
 
