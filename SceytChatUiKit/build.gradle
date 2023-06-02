@@ -127,4 +127,5 @@ dependencies {
     api supportDependencies.photoView
     api supportDependencies.emojiBundled
     api supportDependencies.vanniktechGoogleEmoji
+    api supportDependencies.googleCodeLibPhone
 }

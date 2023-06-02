@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -28,6 +29,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
+import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
@@ -114,11 +116,29 @@ abstract class BaseMsgViewHolder(private val view: View,
     private var reactionsAdapter: ReactionsAdapter? = null
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
-        if (!MentionUserHelper.containsMentionsUsers(message))
-            messageBody.text = message.body.trim()
-        else {
-            messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, message.body.trim(),
+        val bodyText = message.body.trim()
+        messageBody.autoLinkMask = 0
+        if (!MentionUserHelper.containsMentionsUsers(message)) {
+            setTextAutoLinkMasks(messageBody, bodyText)
+            messageBody.text = bodyText
+        } else {
+            messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, bodyText,
                 message.metadata, message.mentionedUsers, enableClick = true)
+        }
+    }
+
+    private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String) {
+        try {
+            if (bodyText.isValidEmail()) {
+                messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
+                return
+            }
+            val phone = PhoneNumberUtil.getInstance().parse(bodyText, "")
+            val isValid = PhoneNumberUtil.getInstance().isValidNumber(phone)
+            if (isValid) {
+                messageBody.autoLinkMask = Linkify.PHONE_NUMBERS
+            }
+        } catch (_: Exception) {
         }
     }
 
