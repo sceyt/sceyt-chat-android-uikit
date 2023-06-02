@@ -7,6 +7,7 @@ import androidx.room.Transaction
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.getMimeType
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -89,7 +90,7 @@ abstract class AttachmentDao {
     open fun markNotDownloadedAllFileAttachments(): List<Long> {
         val attachments = getAllFileAttachments()
         Log.i("getAllFileAttachments", "result: ${attachments.map { it.url }}")
-        val tIds = attachments/*.filter { getMimeType(it.filePath).isNullOrBlank() }*/.map { it.messageTid }
+        val tIds = attachments.filter { getMimeType(it.filePath).isNullOrBlank() }.map { it.messageTid }
         markNotDownloadedFileAttachments(tIds)
         markNorDownloadedFileAttachmentsPayLoad(tIds)
         return tIds
