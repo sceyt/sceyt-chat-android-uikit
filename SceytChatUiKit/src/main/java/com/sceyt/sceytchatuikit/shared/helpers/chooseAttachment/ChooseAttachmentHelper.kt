@@ -180,7 +180,7 @@ class ChooseAttachmentHelper {
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
             openSceytGalleryPicker(pickerListener, *selections)
-        }
+        } else GalleryMediaPicker.pickerListener = pickerListener
     }
 
     private fun onTakePhotoResult(success: Boolean) {
