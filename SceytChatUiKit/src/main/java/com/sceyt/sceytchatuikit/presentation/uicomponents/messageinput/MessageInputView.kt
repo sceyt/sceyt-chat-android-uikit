@@ -40,6 +40,7 @@ import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -53,7 +54,7 @@ import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
-import com.sceyt.sceytchatuikit.extensions.toNotAutoCorrect
+import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
@@ -224,7 +225,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun sendMessage() {
         val messageBody = binding.messageInput.text.toString().trim()
-        if (messageBody.isEmpty() && allAttachments.isEmpty()) return
+        if (messageBody.isEmpty() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
+            if (isEditingMessage())
+                customToastSnackBar(this, context.getString(R.string.empty_message_body_message))
+            return
+        }
 
         if (!checkIsEditingMessage(messageBody)) {
             cancelReply {
@@ -299,6 +304,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
         return false
     }
+
+    private fun isEditingMessage() = editMessage != null
 
     private fun checkAndAddMentionedUsers(message: Message) {
         val mentionedUsers = binding.messageInput.mentions
@@ -432,13 +439,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             return
 
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
-                && !binding.voiceRecordPresenter.isShowing
+                && !binding.voiceRecordPresenter.isShowing && !isEditingMessage()
         val newState = if (showVoiceIcon) Voice else Text
         if (inputState != newState)
             onStateChanged(newState)
         inputState = newState
 
         binding.icSendMessage.isVisible = !showVoiceIcon
+        binding.icAddAttachments.isVisible = !isEditingMessage()
         if (showVoiceIcon) {
             showVoiceRecorder()
         } else hideAndStopVoiceRecorder()
@@ -548,7 +556,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
                         val name = (SceytKitConfig.userNameBuilder?.invoke(it.user)
-                                ?: it.getPresentableName()).toNotAutoCorrect()
+                                ?: it.getPresentableName()).notAutoCorrectable()
                         binding.messageInput.replaceTextWithMention(name, it.id)
                     }
                 }
@@ -575,6 +583,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun editMessage(message: Message) {
         checkIfRecordingAndConfirm {
             editMessage = message
+            determineInputState()
             initInputWithEditMessage(message)
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true

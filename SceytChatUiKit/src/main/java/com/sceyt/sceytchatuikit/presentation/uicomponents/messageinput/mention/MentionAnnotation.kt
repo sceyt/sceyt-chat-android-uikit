@@ -8,7 +8,7 @@ import android.text.Spanned
 import android.util.Log
 import com.google.gson.Gson
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.toNotAutoCorrect
+import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 
 /**
@@ -38,7 +38,7 @@ object MentionAnnotation {
         val newBody = SpannableStringBuilder(body)
         for ((recipientId, name, start, length) in mentions.sortedByDescending { it.start }) {
             try {
-                val newName = "@$name".toNotAutoCorrect()
+                val newName = "@$name".notAutoCorrectable()
                 newBody.replace(start, start + length, newName)
                 newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + newName.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             } catch (e: Exception) {
