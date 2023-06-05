@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.i
 
 
 class MentionSupportEditText : AppCompatEditText {
+    val watcher by lazy { WatcherNew(this) }
 
     constructor(context: Context) : super(context) {
         initialize()
@@ -42,6 +43,7 @@ class MentionSupportEditText : AppCompatEditText {
         addTextChangedListener(mentionValidatorWatcher)
         addTextChangedListener(MentionDeleter())
         addTextChangedListener(ComposeTextStyleWatcher(context))
+        addTextChangedListener(watcher)
 
         doAfterTextChanged {
             onInputTextChanged(it ?: return@doAfterTextChanged)
@@ -50,13 +52,17 @@ class MentionSupportEditText : AppCompatEditText {
 
     override fun onSelectionChanged(selectionStart: Int, selectionEnd: Int) {
         super.onSelectionChanged(selectionStart, selectionEnd)
-        text?.let {
-            val selectionChanged = changeSelectionForPartialMentions(it, selectionStart, selectionEnd)
+        text?.let { inputText ->
+            val selectionChanged = changeSelectionForPartialMentions(inputText, selectionStart, selectionEnd)
             if (selectionChanged)
                 return
 
             if (selectionStart != selectionEnd)
                 clearInlineQuery()
+
+            post {
+                watcher.cursorChanged()
+            }
         }
 
         cursorPositionChangedListener?.onCursorPositionChanged(selectionStart, selectionEnd)
