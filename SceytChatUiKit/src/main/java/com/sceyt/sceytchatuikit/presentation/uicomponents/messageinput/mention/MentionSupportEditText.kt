@@ -50,8 +50,8 @@ class MentionSupportEditText : AppCompatEditText {
 
     override fun onSelectionChanged(selectionStart: Int, selectionEnd: Int) {
         super.onSelectionChanged(selectionStart, selectionEnd)
-        text?.let {
-            val selectionChanged = changeSelectionForPartialMentions(it, selectionStart, selectionEnd)
+        text?.let { inputText ->
+            val selectionChanged = changeSelectionForPartialMentions(inputText, selectionStart, selectionEnd)
             if (selectionChanged)
                 return
 
@@ -184,7 +184,6 @@ class MentionSupportEditText : AppCompatEditText {
         }
 
         builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        MentionAnnotation.replaceSpacesWithTransparentLines(builder, 0, builder.length - 1)
         return builder
     }
 

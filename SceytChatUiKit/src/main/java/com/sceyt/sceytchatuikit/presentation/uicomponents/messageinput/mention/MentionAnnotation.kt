@@ -1,15 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
-import android.graphics.Color
 import android.text.Annotation
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
-import android.text.style.ForegroundColorSpan
 import android.util.Log
 import com.google.gson.Gson
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.toNotAutoCorrect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 
 /**
@@ -39,9 +38,9 @@ object MentionAnnotation {
         val newBody = SpannableStringBuilder(body)
         for ((recipientId, name, start, length) in mentions.sortedByDescending { it.start }) {
             try {
-                newBody.replace(start, start + length, "@$name")
-                newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + name.length + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                replaceSpacesWithTransparentLines(newBody, start, start + name.length)
+                val newName = "@$name".toNotAutoCorrect()
+                newBody.replace(start, start + length, newName)
+                newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + newName.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             } catch (e: Exception) {
                 Log.e(TAG, "Couldn't set mention annotation for recipient id: $recipientId")
             }
@@ -69,14 +68,5 @@ object MentionAnnotation {
     fun getMentionAnnotations(spanned: Spanned, start: Int, end: Int): List<Annotation> {
         return spanned.getSpans(start, end, Annotation::class.java)
             .filter(MentionAnnotation::isMentionAnnotation)
-    }
-
-    fun replaceSpacesWithTransparentLines(text: SpannableStringBuilder, start: Int, end: Int) {
-        (start..end).forEach {
-            if (it != text.length - 1 && it in text.indices && text[it] == ' ') {
-                text.replace(it, it + 1, "-")
-                text.setSpan(ForegroundColorSpan(Color.TRANSPARENT), it, it + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-        }
     }
 }
