@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.util.Log
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible

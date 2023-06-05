@@ -18,6 +18,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.extensions.toNotAutoCorrect
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 
@@ -127,7 +128,7 @@ object MentionUserHelper {
         var name = mentionUser?.let { user ->
             userNameBuilder?.invoke(user) ?: user.getPresentableName()
         } ?: item.id
-        name = "@$name"
+        name = "@$name".toNotAutoCorrect()
 
         val end = item.loc + item.len
         if (end > newBody.length)

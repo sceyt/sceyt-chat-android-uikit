@@ -53,6 +53,7 @@ import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
+import com.sceyt.sceytchatuikit.extensions.toNotAutoCorrect
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
@@ -546,8 +547,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        binding.messageInput.replaceTextWithMention(SceytKitConfig.userNameBuilder?.invoke(it.user)
-                                ?: it.getPresentableName(), it.id)
+                        val name = (SceytKitConfig.userNameBuilder?.invoke(it.user)
+                                ?: it.getPresentableName()).toNotAutoCorrect()
+                        binding.messageInput.replaceTextWithMention(name, it.id)
                     }
                 }
             })

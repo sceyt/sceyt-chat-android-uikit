@@ -11,8 +11,8 @@ import android.util.Size
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
-import androidx.emoji2.text.EmojiCompat
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.extensions.getSafetyEmojiCompat
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -44,7 +44,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         set(value) {
             field = if (isInEditMode)
                 value
-            else EmojiCompat.get().process(value) ?: value
+            else getSafetyEmojiCompat()?.process(value) ?: value
         }
 
     init {
@@ -165,6 +165,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         } else 0f
     }
 
+    @Suppress("UNUSED")
     private fun getTopFormSmileText(): Float {
         return if (countTextBoundsRect.height() > smileStaticLayout.height) {
             (countTextBoundsRect.height() - smileStaticLayout.height) / 2f
@@ -176,12 +177,14 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         invalidate()
     }
 
+    @Suppress("UNUSED")
     fun setReactionStrokeColor(@ColorInt color: Int) {
         strokeColor = color
         strokePaint.color = color
         invalidate()
     }
 
+    @Suppress("UNUSED")
     fun setReactionBgAndStrokeColor(@ColorInt bgColor: Int, @ColorInt colorStroke: Int) {
         reactionBackgroundColor = bgColor
         strokeColor = colorStroke
@@ -195,6 +198,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         invalidate()
     }
 
+    @Suppress("UNUSED")
     fun setCount(count: Number) {
         countTitle = count.toString()
         init()
