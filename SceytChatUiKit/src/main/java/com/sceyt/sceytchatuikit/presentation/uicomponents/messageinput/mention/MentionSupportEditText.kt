@@ -21,7 +21,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.i
 
 
 class MentionSupportEditText : AppCompatEditText {
-    val watcher by lazy { WatcherNew(this) }
 
     constructor(context: Context) : super(context) {
         initialize()
@@ -43,7 +42,6 @@ class MentionSupportEditText : AppCompatEditText {
         addTextChangedListener(mentionValidatorWatcher)
         addTextChangedListener(MentionDeleter())
         addTextChangedListener(ComposeTextStyleWatcher(context))
-        addTextChangedListener(watcher)
 
         doAfterTextChanged {
             onInputTextChanged(it ?: return@doAfterTextChanged)
@@ -59,10 +57,6 @@ class MentionSupportEditText : AppCompatEditText {
 
             if (selectionStart != selectionEnd)
                 clearInlineQuery()
-
-            post {
-                watcher.cursorChanged()
-            }
         }
 
         cursorPositionChangedListener?.onCursorPositionChanged(selectionStart, selectionEnd)
@@ -190,7 +184,6 @@ class MentionSupportEditText : AppCompatEditText {
         }
 
         builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        MentionAnnotation.replaceSpacesWithTransparentLines(builder, 0, builder.length - 1)
         return builder
     }
 

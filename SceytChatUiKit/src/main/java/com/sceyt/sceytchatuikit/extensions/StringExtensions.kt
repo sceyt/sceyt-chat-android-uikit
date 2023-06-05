@@ -131,3 +131,11 @@ fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
         return Pair(processed.subSequence(spanStart, spanEnd), true)
     } else Pair(take(1), false)
 }
+
+fun String.toNotAutoCorrect(): String {
+    return "\u2068${remAutoCorrect()}\u2068"
+}
+
+fun CharSequence.remAutoCorrect(): CharSequence {
+    return replace("\u2068".toRegex(), "")
+}
