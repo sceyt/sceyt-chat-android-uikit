@@ -203,7 +203,7 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
             urlConnection.connectTimeout = timeout
             urlConnection.connect()
             return urlConnection.responseCode == 200
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             Log.e("internetConnection", e.message.toString())
         }
     }
