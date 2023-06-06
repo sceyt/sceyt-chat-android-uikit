@@ -172,7 +172,7 @@ fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?) = DraftMessage(
 )
 
 fun User.copy() = User(
-    id, firstName, lastName, avatarURL, metadata, presence.copy(), activityState, blocked
+    id, firstName, lastName, avatarURL, metadata, presence?.copy(), activityState, blocked
 )
 
 fun Presence.copy() = Presence(

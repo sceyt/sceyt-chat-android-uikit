@@ -13,7 +13,9 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMediaBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.isLandscape
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -55,7 +57,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
     }
 
     private fun initViewModel() {
@@ -101,7 +103,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             with((binding ?: return).rvFiles) {
                 setHasFixedSize(true)
                 adapter = mediaAdapter
-                layoutManager = GridLayoutManager(requireContext(), 3).also {
+                layoutManager = GridLayoutManager(requireContext(), getSpanCount()).also {
                     it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                         override fun getSpanSize(position: Int): Int {
                             return when (mediaAdapter?.getItemViewType(position)) {
@@ -122,6 +124,12 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 })
             }
         } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
+    }
+
+    open fun getSpanCount(): Int {
+        return if (requireContext().isLandscape()) {
+            6
+        } else 3
     }
 
     open fun onMediaClick(item: ChannelFileItem) {
