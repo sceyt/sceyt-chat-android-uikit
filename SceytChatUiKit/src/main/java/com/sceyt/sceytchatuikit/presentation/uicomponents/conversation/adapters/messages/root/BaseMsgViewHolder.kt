@@ -115,11 +115,11 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private var reactionsAdapter: ReactionsAdapter? = null
 
-    protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
+    protected fun setMessageBody(messageBody: TextView, message: SceytMessage, isLink: Boolean = false) {
         val bodyText = message.body.trim()
         messageBody.autoLinkMask = 0
         if (!MentionUserHelper.containsMentionsUsers(message)) {
-            setTextAutoLinkMasks(messageBody, bodyText)
+            setTextAutoLinkMasks(messageBody, bodyText, isLink)
             messageBody.text = bodyText
         } else {
             messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, bodyText,
@@ -127,7 +127,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String) {
+    private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, isLink: Boolean) {
+        if (isLink) {
+            messageBody.autoLinkMask = Linkify.WEB_URLS
+            return
+        }
         try {
             if (bodyText.isValidEmail()) {
                 messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
