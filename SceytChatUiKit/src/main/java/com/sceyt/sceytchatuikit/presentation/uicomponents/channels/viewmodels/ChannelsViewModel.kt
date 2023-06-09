@@ -6,15 +6,16 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
@@ -200,16 +201,16 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
             is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
             is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
-            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id, event.channel.channelType == ChannelTypeEnum.Public)
+            is ChannelEvent.ClearHistory -> clearHistory(event.channel.id, event.channel.isPublic())
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
             is ChannelEvent.BlockUser -> {
-                if (event.channel.channelType == ChannelTypeEnum.Direct)
-                    blockUser(((event.channel as SceytDirectChannel).peer ?: return).id)
+                if (event.channel.isDirect())
+                    blockUser((event.channel.getFirstMember() ?: return).id)
             }
 
             is ChannelEvent.UnBlockUser -> {
-                if (event.channel.channelType == ChannelTypeEnum.Direct)
-                    unBlockUser(((event.channel as SceytDirectChannel).peer ?: return).id)
+                if (event.channel.isDirect())
+                    unBlockUser((event.channel.getFirstMember() ?: return).id)
             }
         }
     }

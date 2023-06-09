@@ -3,14 +3,16 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.memb
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.sceytchatuikit.data.channeleventobserver.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -84,6 +86,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                     }
                 }
             }
+
             is PaginationResponse.ServerResponse -> {
                 if (it.data is SceytResponse.Success) {
                     withContext(Dispatchers.Main) {
@@ -95,6 +98,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                 }
                 notifyPageStateWithResponse(it.data, it.offset > 0)
             }
+
             is PaginationResponse.Nothing -> return
         }
         pagingResponseReceived(it)
@@ -112,8 +116,8 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersMiddleWare.changeChannelOwner(channelId, id)
             if (response is SceytResponse.Success) {
-                val groupChannel = (response.data ?: return@launch).toGroupChannel()
-                _changeOwnerLiveData.postValue((groupChannel.lastActiveMembers.find { it.role.name == "owner" }
+                val groupChannel = (response.data ?: return@launch)
+                _changeOwnerLiveData.postValue((groupChannel.members?.find { it.role.name == "owner" }
                         ?: return@launch).id)
             }
             notifyPageStateWithResponse(response)
@@ -126,14 +130,15 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
             else membersMiddleWare.deleteMember(channelId, memberId)
 
             if (response is SceytResponse.Success) {
-                val groupChannel = (response.data ?: return@launch).toGroupChannel()
+                val channel = response.data ?: return@launch
+                val members = channel.members ?: return@launch
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = groupChannel,
-                    members = groupChannel.lastActiveMembers,
+                    channel = channel,
+                    members = members,
                     eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
                 ))
 
-                _channelRemoveMemberLiveData.postValue(groupChannel.lastActiveMembers.map { it.toSceytMember() })
+                _channelRemoveMemberLiveData.postValue(members)
             }
 
             notifyPageStateWithResponse(response)
@@ -144,10 +149,11 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersMiddleWare.changeChannelMemberRole(channelId, *member)
             if (response is SceytResponse.Success) {
-                val groupChannel = (response.data ?: return@launch).toGroupChannel()
+                val channel = response.data ?: return@launch
+                val members = channel.members ?: return@launch
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = groupChannel,
-                    members = groupChannel.lastActiveMembers,
+                    channel = channel,
+                    members = members,
                     eventType = ChannelMembersEventEnum.Role
                 ))
             }
@@ -158,18 +164,18 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
 
     fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
-            val members = users.map { it.toMember() }
-            val response = membersMiddleWare.addMembersToChannel(channelId, members)
+            val membersToAdd = users.map { it.toMember() }
+            val response = membersMiddleWare.addMembersToChannel(channelId, membersToAdd)
             if (response is SceytResponse.Success) {
-                val groupChannel = (response.data ?: return@launch).toGroupChannel()
-                if (groupChannel.lastActiveMembers.isNullOrEmpty()) return@launch
+                val channel = response.data ?: return@launch
+                val members = channel.members ?: return@launch
 
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = groupChannel,
-                    members = groupChannel.lastActiveMembers,
+                    channel = channel,
+                    members = members,
                     eventType = ChannelMembersEventEnum.Added
                 ))
-                _channelAddMemberLiveData.postValue(groupChannel.lastActiveMembers.map { it.toSceytMember() })
+                _channelAddMemberLiveData.postValue(members)
             }
 
             notifyPageStateWithResponse(response)

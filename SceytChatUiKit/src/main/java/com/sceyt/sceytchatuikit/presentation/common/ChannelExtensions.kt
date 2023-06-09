@@ -5,54 +5,70 @@ import com.sceyt.chat.models.user.UserActivityStatus
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
-import com.sceyt.sceytchatuikit.data.toGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 
 fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
+    val firstMember = getFirstMember()
+    val otherFirstMember = other.getFirstMember()
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state
-    val userReactionsChanged = userMessageReactions?.maxOfOrNull { it.id } != other.userMessageReactions?.maxOfOrNull { it.id }
+    val userReactionsChanged = newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
-    val membersCountChanged = (this as? SceytGroupChannel)?.memberCount != (other as? SceytGroupChannel)?.memberCount
+    val membersCountChanged = memberCount != other.memberCount
+    val peerBlockedChanged = isDirect() && firstMember?.user?.blocked != otherFirstMember?.user?.blocked
 
-    val peerBlockedChanged = channelType == ChannelTypeEnum.Direct
-            && (this as? SceytDirectChannel)?.peer?.user?.blocked != (other as? SceytDirectChannel)?.peer?.user?.blocked
     return ChannelItemPayloadDiff(
         subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
         avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
         lastMessageChanged = lastMessageChanged || userReactionsChanged || lastDraftMessageChanged,
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
-        unreadCountChanged = unreadMessageCount != other.unreadMessageCount,
+        unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
-        onlineStateChanged = channelType == ChannelTypeEnum.Direct
-                && (this as? SceytDirectChannel)?.peer?.user?.presence?.state != (other as? SceytDirectChannel)?.peer?.user?.presence?.state,
-        markedUsUnreadChanged = markedUsUnread != other.markedUsUnread,
-        lastReadMsdChanged = lastReadMessageId != other.lastReadMessageId,
+        onlineStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
+        markedUsUnreadChanged = unread != other.unread,
+        lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
         typingStateChanged = typingData != other.typingData,
-        membersChanged = membersCountChanged || (this as? SceytGroupChannel)?.members != (other as? SceytGroupChannel)?.members,
+        membersChanged = membersCountChanged || members != other.members,
         metadataUpdated = metadata != other.metadata)
 }
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
-        toGroupChannel().lastActiveMembers.find { it.id == myId } != null
+        members?.find { it.id == myId } != null
     } else true
 }
 
 fun SceytChannel.getMyRole(): Role? {
     return if (isGroup) {
-        toGroupChannel().lastActiveMembers.find { it.id == myId }?.role
+        members?.find { it.id == myId }?.role
     } else null
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
-    return (this is SceytDirectChannel) && peer?.user?.activityState == UserActivityStatus.Deleted
+    return isDirect() && getFirstMember()?.user?.activityState == UserActivityStatus.Deleted
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {
-    return (this is SceytDirectChannel) && peer?.user?.blocked == true
+    return isDirect() && getFirstMember()?.user?.blocked == true
 }
+
+fun SceytChannel.getChannelType(): ChannelTypeEnum {
+    return stringToEnum(type)
+}
+
+fun SceytChannel.getFirstMember(): SceytMember? {
+    return members?.firstOrNull { it.id != myId }
+}
+
+fun ChannelTypeEnum?.isGroup() = this == ChannelTypeEnum.Private || this == ChannelTypeEnum.Public
+
+fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
+
+fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString()
+
+fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString()
+

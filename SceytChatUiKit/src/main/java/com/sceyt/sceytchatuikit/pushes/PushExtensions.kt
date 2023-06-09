@@ -3,22 +3,14 @@ package com.sceyt.sceytchatuikit.pushes
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.DirectChannel
-import com.sceyt.chat.models.channel.PrivateChannel
-import com.sceyt.chat.models.channel.PublicChannel
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionScore
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
@@ -81,20 +73,11 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? 
         val uri = channelJsonObject.getString("uri")
         val subject = channelJsonObject.getString("subject")
         val meta = channelJsonObject.getString("metadata")
-        val membersCount = channelJsonObject.getInt("members_count")
-        val channel: Channel = when (stringToEnum(type)) {
-            ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, "", 0, 0,
-                Member(Role(RoleTypeEnum.Owner.name), peer), null, 0L, 0, 0, false, 0, false,
-                0L, 0L, 0, null, null, null)
-
-            ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, "", 0,
-                0, arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
-                false, 0, 0, 0, null, null, null)
-
-            ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", "", 0, 0,
-                arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
-                false, 0, 0, 0, null, null, null)
-        }
+        val membersCount = channelJsonObject.getLong("members_count")
+        val channel = Channel(id.toLong(), 0, uri, subject, meta, null, meta, 0,
+            0, 0, membersCount, null, "", false, 0, 0,
+            0, false, false, false, 0, 0, 0,
+            0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
         channel
     } catch (e: Exception) {
         e.printStackTrace()

@@ -24,16 +24,13 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
@@ -101,7 +98,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
 
-    private val isGroup = channel.channelType != ChannelTypeEnum.Direct
+    private val isGroup = channel.isGroup
 
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
@@ -446,11 +443,9 @@ class MessageListViewModel(
 
     fun loadChannelMembersIfNeeded() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (channel is SceytGroupChannel) {
-                val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
-                if ((channel as SceytGroupChannel).memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
-                    persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
-            }
+            val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+            if (channel.memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+                persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
         }
     }
 
@@ -597,13 +592,13 @@ class MessageListViewModel(
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
-        val sceytMembers = eventData.members.map { member -> member.toSceytMember() }
-        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
+        val sceytMembers = eventData.members
+        val channelMembers = channel.members?.toMutableList() ?: arrayListOf()
 
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers)
-                (channel as SceytGroupChannel).apply {
+                channel.apply {
                     members = channelMembers
                     memberCount += sceytMembers.size
                 }
@@ -612,7 +607,7 @@ class MessageListViewModel(
 
             ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers)
-                (channel as SceytGroupChannel).apply {
+                channel.apply {
                     members = channelMembers
                     memberCount -= sceytMembers.size
                 }

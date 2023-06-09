@@ -5,8 +5,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
@@ -17,7 +15,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import java.util.Date
 
 class ChannelsCache {
     private var cachedData = hashMapOf<Long, SceytChannel>()
@@ -123,7 +120,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 channel.lastMessage = message
-                channel.lastReadMessageId = message.id
+                channel.lastDisplayedMessageId = message.id
                 channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
@@ -133,10 +130,10 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 channel.lastMessage = null
-                channel.unreadMessageCount = 0
-                channel.unreadMentionCount = 0
-                channel.unreadReactionCount = 0
-                channel.userMessageReactions = null
+                channel.newMessageCount = 0
+                channel.newMentionCount = 0
+                channel.newReactionCount = 0
+                channel.newReactions = null
                 channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
             }
         }
@@ -147,7 +144,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 if (muted) {
                     channel.muted = true
-                    channel.muteExpireDate = Date(muteUntil)
+                    channel.mutedUntil = muteUntil
                 } else channel.muted = false
 
                 channelUpdated(channel, false, ChannelUpdatedType.MuteState)
@@ -158,12 +155,10 @@ class ChannelsCache {
     fun addedMembers(channelId: Long, sceytMember: SceytMember) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                (channel as? SceytGroupChannel)?.let {
-                    it.members = it.members.toArrayList().apply {
-                        add(sceytMember)
-                    }
-                    channelUpdated(channel, false, ChannelUpdatedType.Members)
+                channel.members = channel.members?.toArrayList()?.apply {
+                    add(sceytMember)
                 }
+                channelUpdated(channel, false, ChannelUpdatedType.Members)
             }
         }
     }
@@ -171,8 +166,8 @@ class ChannelsCache {
     fun updateUnreadCount(channelId: Long, count: Int) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channel.unreadMessageCount = count.toLong()
-                channel.markedUsUnread = false
+                channel.newMessageCount = count.toLong()
+                channel.unread = false
                 channelUpdated(channel, false, ChannelUpdatedType.UnreadCount)
             }
         }
@@ -193,9 +188,9 @@ class ChannelsCache {
         channelAddedFlow_.tryEmit(channel.clone())
     }
 
-    fun updateMembersCount(channel: SceytGroupChannel) {
+    fun updateMembersCount(channel: SceytChannel) {
         cachedData[channel.id]?.let {
-            (it as? SceytGroupChannel)?.memberCount = channel.memberCount
+            it.memberCount = channel.memberCount
             channelUpdated(it, false, ChannelUpdatedType.Members)
         } ?: upsertChannel(channel)
     }
@@ -209,11 +204,11 @@ class ChannelsCache {
 
     fun updateChannelPeer(id: Long, user: User) {
         synchronized(lock) {
-            cachedData[id]?.let {
-                (it as? SceytDirectChannel)?.let { channel ->
-                    val oldUser = channel.peer?.user
-                    if (oldUser?.presence?.hasDiff(user.presence) == true) {
-                        channel.peer?.user = user
+            cachedData[id]?.let { channel ->
+                channel.members?.find { member -> member.user.id == user.id }?.let {
+                    val oldUser = it.user
+                    if (oldUser.presence?.hasDiff(user.presence) == true) {
+                        it.user = user
                         channelUpdated(channel.clone(), false, ChannelUpdatedType.Presence)
                     }
                 }

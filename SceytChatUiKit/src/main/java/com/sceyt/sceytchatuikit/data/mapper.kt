@@ -18,82 +18,6 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
-fun Channel.toSceytUiChannel(): SceytChannel {
-    if (this is GroupChannel) {
-        return SceytGroupChannel(
-            id = id,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            unreadMessageCount = unreadMessageCount,
-            unreadMentionCount = unreadMentionCount,
-            unreadReactionCount = unreadReactionCount,
-            lastMessage = lastMessage?.toSceytUiMessage(true),
-            label = label,
-            metadata = metadata,
-            muted = muted(),
-            muteExpireDate = muteExpireDate(),
-            markedUsUnread = markedAsUnread(),
-            channelType = getChannelType(this),
-            subject = subject,
-            avatarUrl = avatarUrl,
-            channelUrl = getChannelUrl(),
-            members = lastActiveMembers.map { it.toSceytMember() },
-            memberCount = memberCount,
-            lastDeliveredMessageId = lastDeliveredMessageId,
-            lastReadMessageId = lastReadMessageId,
-            messagesDeletionDate = messagesDeletionDate,
-            role = myRole(),
-            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
-            userMessageReactions = getUserMessageReactions()?.toList()
-        )
-    } else {
-        this as DirectChannel
-        return SceytDirectChannel(
-            id = id,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            unreadMessageCount = unreadMessageCount,
-            unreadMentionCount = unreadMentionCount,
-            unreadReactionCount = unreadReactionCount,
-            lastMessage = lastMessage?.toSceytUiMessage(false),
-            label = label,
-            metadata = metadata,
-            muted = muted(),
-            markedUsUnread = markedAsUnread(),
-            peer = peer?.toSceytMember(),
-            lastDeliveredMessageId = lastDeliveredMessageId,
-            lastReadMessageId = lastReadMessageId,
-            channelType = getChannelType(this),
-            messagesDeletionDate = messagesDeletionDate,
-            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
-            userMessageReactions = getUserMessageReactions()?.toList()
-        )
-    }
-}
-
-fun SceytChannel.toGroupChannel(): GroupChannel {
-    return when (channelType) {
-        ChannelTypeEnum.Private -> {
-            this as SceytGroupChannel
-            PrivateChannel(
-                id, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
-                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
-        }
-        ChannelTypeEnum.Public -> {
-            this as SceytGroupChannel
-            PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
-                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
-        }
-        else -> throw RuntimeException("Channel is direct channel")
-    }
-}
-
 fun Member.toSceytMember() = SceytMember(
     role = role,
     user = this
@@ -101,12 +25,6 @@ fun Member.toSceytMember() = SceytMember(
 
 fun SceytMember.toMember(): Member {
     return Member(role, user)
-}
-
-fun GroupChannel.getChannelUrl(): String {
-    return if (this is PublicChannel)
-        uri
-    else ""
 }
 
 fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float = 0f) = SceytAttachment(

@@ -5,13 +5,14 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.chat.models.message.MessageState
 
-@Entity(tableName = "messages", indices = [Index(value = ["message_id"], unique = true)])
+@Entity(tableName = "messages", indices = [Index(value = ["message_id"], unique = true),
+    Index(value = ["channelId"]), Index(value = ["createdAt"]),
+    Index(value = ["deliveryStatus"]), Index(value = ["state"])])
 data class MessageEntity(
         @PrimaryKey
         var tid: Long,
         @ColumnInfo(name = "message_id")
         var id: Long?,
-        @ColumnInfo(index = true)
         var channelId: Long,
         var to: String?,
         var body: String,
@@ -36,5 +37,6 @@ data class MessageEntity(
         val displayCount: Short,
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
+        @ColumnInfo(index = true)
         var isParentMessage: Boolean
 )

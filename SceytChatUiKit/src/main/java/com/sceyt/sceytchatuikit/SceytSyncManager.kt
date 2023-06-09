@@ -82,9 +82,9 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
 
     private suspend fun syncChannelsMessages(list: List<SceytChannel>) {
         list.forEach {
-            if (it.unreadMessageCount > 0) {
+            if (it.newMessageCount > 0) {
                 syncResultData.apply {
-                    unreadMessagesCount += it.unreadMessageCount.toInt()
+                    unreadMessagesCount += it.newMessageCount.toInt()
                     unreadChannelsCount++
                 }
             }
@@ -94,10 +94,10 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
     }
 
     private suspend fun loadMessages(channel: SceytChannel) {
-        if (channel.lastReadMessageId == channel.lastMessage?.id)
+        if (channel.lastDisplayedMessageId == channel.lastMessage?.id)
             return
 
-        syncMessagesAfter(channel, channel.lastReadMessageId, false)
+        syncMessagesAfter(channel, channel.lastDisplayedMessageId, false)
     }
 
     private suspend fun syncMessagesAfter(channel: SceytChannel, fromMessageId: Long, syncConversation: Boolean) {

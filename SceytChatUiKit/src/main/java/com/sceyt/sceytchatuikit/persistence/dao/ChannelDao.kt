@@ -74,7 +74,7 @@ interface ChannelDao {
     suspend fun getAllChannelsIds(): List<Long>
 
     @Transaction
-    @Query("select sum(unreadMessageCount) from channels")
+    @Query("select sum(newMessageCount) from channels")
     fun getTotalUnreadCountAsFlow(): Flow<Int?>
 
     @Query("select count(chat_id) from channels")
@@ -90,16 +90,16 @@ interface ChannelDao {
     suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
 
     @Query("update channels set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
-            "lastReadMessageId =:lastMessageId where chat_id= :channelId")
+            "lastDisplayedMessageId =:lastMessageId where chat_id= :channelId")
     suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
 
-    @Query("update channels set unreadMessageCount =:count, markedUsUnread = 0 where chat_id= :channelId")
+    @Query("update channels set newMessageCount =:count, unread = 0 where chat_id= :channelId")
     suspend fun updateUnreadCount(channelId: Long, count: Int)
 
     @Query("update channels set memberCount =:count where chat_id= :channelId")
     suspend fun updateMemberCount(channelId: Long, count: Int)
 
-    @Query("update channels set muted =:muted, muteExpireDate =:muteUntil where chat_id =:channelId")
+    @Query("update channels set muted =:muted, mutedUntil =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
     @Query("delete from channels where chat_id =:channelId")

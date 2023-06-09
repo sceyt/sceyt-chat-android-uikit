@@ -8,16 +8,17 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogDirectChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
-    private lateinit var channel: SceytDirectChannel
+    private lateinit var channel: SceytChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +37,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         }
     }
 
-    private fun setChannel(channel: SceytDirectChannel) {
+    private fun setChannel(channel: SceytChannel) {
         this.channel = channel
     }
 
@@ -45,7 +46,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.initView() {
-        channel.peer?.let {
+        channel.getFirstMember()?.let {
             blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
             unBlockUser.isVisible = it.user.blocked
         }
@@ -80,7 +81,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     companion object {
-        fun newInstance(context: Context, channel: SceytDirectChannel): DirectChatActionsDialog {
+        fun newInstance(context: Context, channel: SceytChannel): DirectChatActionsDialog {
             val dialog = DirectChatActionsDialog(context)
             dialog.setChannel(channel)
             return dialog

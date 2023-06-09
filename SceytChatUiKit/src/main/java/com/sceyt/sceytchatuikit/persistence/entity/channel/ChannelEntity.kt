@@ -3,32 +3,45 @@ package com.sceyt.sceytchatuikit.persistence.entity.channel
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 
 @Entity(tableName = "channels")
 data class ChannelEntity(
         @PrimaryKey
         @ColumnInfo(name = "chat_id")
         var id: Long,
-        var type: ChannelTypeEnum,
+        @ColumnInfo(index = true)
+        val parentId: Long?,
+        var uri: String?,
+        @ColumnInfo(index = true)
+        var type: String,
+        @ColumnInfo(index = true)
+        var subject: String?,
+        var avatarUrl: String?,
+        var metadata: String?,
+        @ColumnInfo(index = true)
         var createdAt: Long,
         var updatedAt: Long,
-        var unreadMessageCount: Long,
-        var unreadMentionCount: Long,
-        var unreadReactionCount: Long,
-        var lastMessageTid: Long?,
-        var lastMessageAt: Long?,
-        var label: String?,
-        var metadata: String?,
-        var muted: Boolean,
-        var muteExpireDate: Long?,
-        var markedUsUnread: Boolean,
-        var subject: String?,
-        var channelUrl: String?,
-        var avatarUrl: String?,
+        var messagesClearedAt: Long,
         var memberCount: Long,
-        var lastDeliveredMessageId: Long,
-        var lastReadMessageId: Long,
-        var messagesDeletionDate: Long,
-        var role: String?
+        @ColumnInfo(index = true)
+        var createdById: String?,
+        @ColumnInfo(index = true)
+        var role: String?,
+        var unread: Boolean,
+        var newMessageCount: Long,
+        var newMentionCount: Long,
+        var newReactionCount: Long,
+        @ColumnInfo(index = true)
+        var hidden:Boolean,
+        @ColumnInfo(index = true)
+        var archived: Boolean,
+        var muted: Boolean,
+        var mutedUntil: Long?,
+        var pinnedAt: Long?,
+        var lastReceivedMessageId: Long,
+        var lastDisplayedMessageId: Long,
+        var messageRetentionPeriod: Long,
+        var lastMessageTid: Long?,
+        @ColumnInfo(index = true)
+        var lastMessageAt: Long?
 )

@@ -7,10 +7,10 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.ui.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
 import com.sceyt.sceytchatuikit.R.anim
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toMember
@@ -87,14 +87,13 @@ class CreateGroupActivity : AppCompatActivity() {
         }
 
         switchChannelMode.setOnCheckedChangeListener { _, isChecked ->
-            createChannelData.channelType = if (isChecked) Channel.Type.Private else Channel.Type.Public
+            createChannelData.channelType = if (isChecked) ChannelTypeEnum.Private else ChannelTypeEnum.Public
             binding.groupURI.isVisible = !isChecked
         }
 
         icSave.setOnClickListener {
             with(createChannelData) {
                 uri = uriInput.text.toString().trim()
-                label = labelInput.text.toString().trim()
                 metadata = metaDataInput.text.toString().trim()
                 subject = subjectInput.text.toString().trim()
                 members = intent.parcelableArrayList<SceytMember>(MEMBERS)?.map {

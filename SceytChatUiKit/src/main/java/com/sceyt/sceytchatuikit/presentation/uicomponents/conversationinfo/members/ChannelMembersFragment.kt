@@ -9,8 +9,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.channel.GroupChannel
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
@@ -28,9 +26,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
@@ -43,6 +39,7 @@ import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
@@ -156,7 +153,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getCurrentUserRole() {
-        (channel as? SceytGroupChannel)?.members?.find { it.id == preferences.getUserId() }?.let {
+        channel.members?.find { it.id == preferences.getUserId() }?.let {
             currentUserRole = it.role
         }
     }
@@ -197,10 +194,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun addMembers(members: List<Member>?) {
+    private fun addMembers(members: List<SceytMember>?) {
         if (members.isNullOrEmpty()) return
         membersAdapter?.addNewItemsToStart(members.map {
-            MemberItem.Member(it.toSceytMember())
+            MemberItem.Member(it)
         })
         binding?.rvMembers?.scrollToPosition(0)
     }
@@ -237,7 +234,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
-            val currentUser = (channel as SceytGroupChannel).members.find {
+            val currentUser = channel.members?.find {
                 it.id == preferences.getUserId()
             }
             currentUserRole = currentUser?.role
@@ -311,7 +308,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected open fun onKickMemberClick(member: SceytMember) {
         val titleId: Int
         val descId: Int
-        when (channel.channelType) {
+        when (channel.getChannelType()) {
             Private -> {
                 titleId = R.string.sceyt_remove_member_title
                 descId = R.string.sceyt_remove_member_desc
@@ -373,15 +370,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onChannelEvent(eventData: ChannelEventData) {
-        val groupChannel = (eventData.channel as? GroupChannel) ?: return
         when (eventData.eventType) {
             Left -> {
-                groupChannel.lastActiveMembers?.forEach {
+                channel.members?.forEach {
                     removeMember(it.id)
                 }
             }
 
-            Joined, Invited -> addMembers(groupChannel.lastActiveMembers)
+            Joined, Invited -> addMembers(channel.members)
             else -> return
         }
     }
@@ -395,7 +391,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     } else
                         membersAdapter?.getMemberItemById(member.id)?.let {
                             val memberItem = it.second as MemberItem.Member
-                            memberItem.member = member.toSceytMember()
+                            memberItem.member = member
                             membersAdapter?.notifyItemChanged(it.first, MemberItemPayloadDiff.DEFAULT)
                         } ?: addMembers(arrayListOf(member))
                 }
