@@ -5,18 +5,16 @@ import android.text.Editable
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.mappers.isDeleted
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
@@ -90,7 +88,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         when (it) {
             is SceytResponse.Success -> {
                 messageInputView.joinSuccess()
-                (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
+                channel.members = it.data?.members
             }
 
             is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
@@ -112,16 +110,16 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     onChannelEventFlow.onEach {
         when (it.eventType) {
             ChannelEventEnum.Left -> {
-                if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                if (channel.isPublic()) {
+                    val leftUser = channel.members?.getOrNull(0)?.id
                     if (leftUser == SceytKitClient.myId)
                         messageInputView.onChannelLeft()
                 }
             }
 
             ChannelEventEnum.Joined -> {
-                if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                if (channel.isPublic()) {
+                    val leftUser = channel.members?.getOrNull(0)?.id
                     if (leftUser == SceytKitClient.myId)
                         messageInputView.joinSuccess()
                 }

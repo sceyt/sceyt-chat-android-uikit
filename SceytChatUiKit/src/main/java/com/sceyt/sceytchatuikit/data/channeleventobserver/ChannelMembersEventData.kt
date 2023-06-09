@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.data.channeleventobserver
 
-import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.member.Member
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 
 data class ChannelMembersEventData(
-        val channel: Channel,
-        val members: List<Member>,
+        val channel: SceytChannel,
+        val members: List<SceytMember>,
         val eventType: ChannelMembersEventEnum
 )

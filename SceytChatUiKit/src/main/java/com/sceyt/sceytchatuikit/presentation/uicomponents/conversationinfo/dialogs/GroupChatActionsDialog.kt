@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogGroupChannelActionsBinding
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -41,7 +42,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     }
 
     private fun SceytDialogGroupChannelActionsBinding.initView() {
-        when (channel.channelType) {
+        when (channel.getChannelType()) {
             ChannelTypeEnum.Private -> {
                 binding.leaveChat.text = context.getString(R.string.sceyt_leave_group)
                 binding.delete.text = context.getString(R.string.sceyt_delete_group)

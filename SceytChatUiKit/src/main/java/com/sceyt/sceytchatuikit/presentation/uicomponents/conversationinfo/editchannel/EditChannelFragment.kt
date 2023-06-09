@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.databinding.FragmentEditChannelBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
@@ -19,6 +18,7 @@ import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
@@ -92,11 +92,12 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun setDetails() {
-        avatarUrl = channel.getChannelAvatarUrl()
+        avatarUrl = channel.avatarUrl
         with(binding ?: return) {
             avatar.setImageUrl(avatarUrl)
             tvSubject.setText(channel.channelSubject.trim())
-            tvDescription.setText(channel.label?.trim())
+            //todo need to set channel description
+            //tvDescription.setText(channel.label?.trim())
         }
     }
 
@@ -145,16 +146,15 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun onSaveClick() {
         val newSubject = binding?.tvSubject?.text?.trim().toString()
         val newDescription = binding?.tvDescription?.text?.trim().toString()
-        val isEditedAvatar = avatarUrl != channel.getChannelAvatarUrl()
-        val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() || newDescription != channel.label?.trim()
+        val isEditedAvatar = avatarUrl != channel.avatarUrl
+        val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() /*|| newDescription != channel.label?.trim()*/
         if (isEditedAvatar || isEditedSubjectOrDesc) {
             showLoading(requireContext())
             val data = EditChannelData(newSubject = newSubject,
                 metadata = channel.metadata,
-                label = newDescription,
                 avatarUrl = avatarUrl,
-                channelUrl = (channel as? SceytGroupChannel)?.channelUrl,
-                channelType = channel.channelType,
+                channelUri = channel.uri,
+                channelType = channel.getChannelType(),
                 avatarEdited = isEditedAvatar)
             viewModel.saveChanges(channel.id, data)
         } else requireActivity().finish()

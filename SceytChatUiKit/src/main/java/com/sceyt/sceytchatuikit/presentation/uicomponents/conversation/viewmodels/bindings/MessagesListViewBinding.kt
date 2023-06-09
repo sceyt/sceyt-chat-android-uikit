@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 
 import androidx.lifecycle.*
 import com.sceyt.chat.models.ConnectionState
-import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
@@ -13,9 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
@@ -24,7 +21,9 @@ import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
@@ -63,18 +62,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         else ChannelsCache.currentChannelId = null
     }
 
-    if (channel.markedUsUnread)
+    if (channel.unread)
         markChannelAsRead(channel.id)
 
-    if (channel.lastReadMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
-            || channel.lastReadMessageId == channel.lastMessage?.id)
+    if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
+            || channel.lastDisplayedMessageId == channel.lastMessage?.id)
         loadPrevMessages(0, 0)
     else {
-        pinnedLastReadMessageId = channel.lastReadMessageId
+        pinnedLastReadMessageId = channel.lastDisplayedMessageId
         loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue))
     }
 
-    messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
+    messagesListView.setUnreadCount(channel.newMessageCount.toInt())
 
     messagesListView.setNeedDownloadListener {
         needMediaInfo(it)
@@ -83,7 +82,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.enableDisableClickActions(
             enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
-                    && (channel.isGroup || (channel as? SceytDirectChannel)?.peer?.user?.blocked != true), false)
+                    && (channel.isGroup || channel.getFirstMember()?.user?.blocked != true), false)
     }
 
     checkEnableDisableActions(channel)
@@ -187,8 +186,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (it.first.id == channel.id) {
             channel = it.first
 
-            if (pinnedLastReadMessageId == 0L && channel.lastReadMessageId != 0L && channel.lastReadMessageId != channel.lastMessage?.id)
-                pinnedLastReadMessageId = channel.lastReadMessageId
+            if (pinnedLastReadMessageId == 0L && channel.lastDisplayedMessageId != 0L && channel.lastDisplayedMessageId != channel.lastMessage?.id)
+                pinnedLastReadMessageId = channel.lastDisplayedMessageId
 
             lifecycleOwner.lifecycleScope.launch {
                 val currentMessages = messagesListView.getData()?.filterIsInstance<MessageListItem.MessageItem>()?.map { item -> item.message }
@@ -250,7 +249,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onChannelUpdatedEventFlow.onEach {
         channel = it
-        messagesListView.setUnreadCount(it.unreadMessageCount.toInt())
+        messagesListView.setUnreadCount(it.newMessageCount.toInt())
         checkEnableDisableActions(channel)
         if (channel.lastMessage == null)
             messagesListView.clearData()
@@ -384,8 +383,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (it.eventType) {
             ClearedHistory -> messagesListView.clearData()
             Left -> {
-                val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
-                if (leftUser == myId && (channel.channelType == ChannelTypeEnum.Direct || channel.channelType == ChannelTypeEnum.Private))
+                val leftUser = channel.members?.getOrNull(0)?.id
+                if (leftUser == myId && !channel.isPublic())
                     messagesListView.context.asActivity().finish()
             }
 
@@ -410,7 +409,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
                 checkEnableDisableActions(channel)
-                messagesListView.setUnreadCount(channel.unreadMessageCount.toInt())
+                messagesListView.setUnreadCount(channel.newMessageCount.toInt())
             }
         }
     }

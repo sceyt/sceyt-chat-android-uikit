@@ -14,17 +14,30 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.*
+import androidx.core.view.isVisible
+import androidx.core.view.marginBottom
+import androidx.core.view.marginLeft
+import androidx.core.view.marginRight
+import androidx.core.view.marginTop
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
+import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
@@ -40,8 +53,12 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.Date
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
@@ -127,7 +144,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
         } else
             titleTextView.text = if (isGroup) channel.channelSubject else {
-                val member = (channel as? SceytDirectChannel)?.peer ?: return
+                val member = channel.members?.getOrNull(0) ?: return
                 userNameBuilder?.invoke(member.user)
                         ?: member.user.getPresentableNameCheckDeleted(context)
             }
@@ -140,9 +157,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
         post {
             if (!replyInThread) {
-                val title = when (channel.channelType) {
+                val title = when (channel.getChannelType()) {
                     ChannelTypeEnum.Direct -> {
-                        val member = (channel as? SceytDirectChannel)?.peer ?: return@post
+                        val member = channel.getFirstMember() ?: return@post
                         if (member.user.presence?.state == PresenceState.Online) {
                             getString(R.string.sceyt_online)
                         } else {
@@ -155,14 +172,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                             }
                         }
                     }
+
                     ChannelTypeEnum.Private -> {
-                        val memberCount = (channel as SceytGroupChannel).memberCount
+                        val memberCount = channel.memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_members_count, memberCount)
                         else getString(R.string.sceyt_member_count, memberCount)
                     }
+
                     ChannelTypeEnum.Public -> {
-                        val memberCount = (channel as SceytGroupChannel).memberCount
+                        val memberCount = channel.memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_subscribers_count, memberCount)
                         else getString(R.string.sceyt_subscriber_count, memberCount)
@@ -221,10 +240,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             typingUsers.isEmpty() -> {
                 updateTypingJob?.cancel()
             }
+
             typingUsers.size == 1 -> {
                 binding.tvTyping.text = initTypingTitle(typingUsers.last())
                 updateTypingJob?.cancel()
             }
+
             else -> {
                 if (updateTypingJob == null || updateTypingJob!!.isActive.not())
                     updateTypingTitleEveryTwoSecond()
@@ -286,10 +307,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun setPresenceUpdated(user: User) {
         if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
-        (channel as? SceytDirectChannel)?.let { directChannel ->
-            val peer = directChannel.peer
-            if (user.id == peer?.user?.id) {
-                directChannel.peer?.user = user
+        channel.getFirstMember()?.let { member ->
+            if (member.user.id == user.id) {
+                member.user = user
                 if (!isTyping)
                     uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }

@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.work.WorkManager
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.DirectChannel
-import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.Reaction
@@ -38,14 +36,11 @@ import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toDraftMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
@@ -66,8 +61,10 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
@@ -97,7 +94,7 @@ internal class PersistenceChannelsLogicImpl(
             Joined -> onChanelJoined(data.channel)
             Deleted -> data.channelId?.let { channelId -> deleteChannelDb(channelId) }
             Left -> {
-                val leftUser = (data.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                val leftUser = data.channel?.members?.getOrNull(0)?.id
                         ?: return
                 data.channelId?.let { channelId ->
                     if (leftUser == myId) {
@@ -129,7 +126,7 @@ internal class PersistenceChannelsLogicImpl(
 
             Muted -> {
                 data.channelId?.let { channelId ->
-                    val time = data.channel?.muteExpireDate()?.time ?: 0
+                    val time = data.channel?.muteUntil ?: 0
                     channelDao.updateMuteState(channelId, true, time)
                     channelsCache.updateMuteState(channelId, true, time)
                 }
@@ -151,8 +148,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun onChanelJoined(channel: Channel?) {
-        if (channel !is GroupChannel) return
-        val joinedMember = channel.lastActiveMembers?.getOrNull(0)?.id ?: return
+        val joinedMember = channel?.members?.getOrNull(0)?.id ?: return
         if (joinedMember == myId) {
             onChanelAdded(channel)
         } else updateMembersCount(channel.id, channel.memberCount.toInt())
@@ -169,8 +165,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun onChanelAdded(channel: Channel?) {
         channel?.let {
-            val members = if (it is GroupChannel) it.lastActiveMembers
-                    ?: return else arrayListOf((it as? DirectChannel)?.peer ?: return)
+            val members = it.members ?: return
             val sceytChannel = channel.toSceytUiChannel()
             insertChannel(sceytChannel, *members.map { member -> member.toSceytMember() }.toTypedArray())
             channelsCache.add(sceytChannel)
@@ -281,7 +276,7 @@ internal class PersistenceChannelsLogicImpl(
 
                 val map = mutableMapOf<Long, Long>()
                 response.data?.forEach { channel ->
-                    channel.userMessageReactions?.forEach {
+                    channel.newReactions?.forEach {
                         map[channel.id] = it.messageId
                     }
                 }
@@ -382,7 +377,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun addMessagesToChatReactionsCache(channelDb: ChannelDb) {
-        val lastReaction = channelDb.usersReactions?.maxByOrNull { it.reaction.id } ?: return
+        val lastReaction = channelDb.newReactions?.maxByOrNull { it.reaction.id } ?: return
         val lastMessage = channelDb.lastMessage
         if (lastReaction.reaction.id > (lastMessage?.messageEntity?.id ?: 0) &&
                 lastMessage?.messageEntity?.deliveryStatus != DeliveryStatus.Pending) {
@@ -404,8 +399,8 @@ internal class PersistenceChannelsLogicImpl(
         val parentMessages = arrayListOf<MessageDb>()
         val userReactions = arrayListOf<ChatUserReactionEntity>()
 
-        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>, lastMessage: SceytMessage?, userMessageReactions: List<Reaction>?) {
-            members.forEach { member ->
+        fun addEntitiesToLists(channelId: Long, members: List<SceytMember>?, lastMessage: SceytMessage?, userMessageReactions: List<Reaction>?) {
+            members?.forEach { member ->
                 links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
                 users.add(member.toUserEntity())
             }
@@ -434,15 +429,15 @@ internal class PersistenceChannelsLogicImpl(
 
         list.forEach { channel ->
             if (channel.isGroup) {
-                addEntitiesToLists(channel.id, (channel as SceytGroupChannel).members, channel.lastMessage, channel.userMessageReactions)
+                addEntitiesToLists(channel.id, channel.members, channel.lastMessage, channel.newReactions)
             } else {
                 val members = arrayListOf<SceytMember>()
-                (channel as SceytDirectChannel).peer?.let {
+                channel.getFirstMember()?.let {
                     if (it.user.activityState == UserActivityStatus.Deleted)
                         directChatsWithDeletedPeers.add(channel.id)
                     members.add(it)
                 }
-                addEntitiesToLists(channel.id, members, channel.lastMessage, channel.userMessageReactions)
+                addEntitiesToLists(channel.id, members, channel.lastMessage, channel.newReactions)
             }
 
             fillChannelsNeededInfo(channel)
@@ -484,7 +479,9 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let { channel ->
-                insertChannel(channel, *(channel as SceytGroupChannel).members.toTypedArray())
+                channel.members?.toTypedArray()?.let {
+                    insertChannel(channel, *it)
+                }
                 channelsCache.add(channel)
             }
         }
@@ -653,7 +650,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success)
             response.data?.let {
-                (it as SceytGroupChannel).members.getOrNull(0)?.let { sceytMember ->
+                it.members?.getOrNull(0)?.let { sceytMember ->
                     channelDao.insertUserChatLink(UserChatLink(
                         userId = sceytMember.id,
                         chatId = it.id,
@@ -749,7 +746,7 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun fillChannelsNeededInfo(vararg channel: SceytChannel) {
         channel.forEach {
             val reactions = chatUsersReactionDao.getChannelUserReactions(it.id)
-            it.userMessageReactions = reactions.map { reactionDb -> reactionDb.toReaction() }
+            it.newReactions = reactions.map { reactionDb -> reactionDb.toReaction() }
             draftMessageDao.getDraftByChannelId(it.id)?.let { draftMessage ->
                 it.draftMessage = draftMessage.toDraftMessage()
             }

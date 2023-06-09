@@ -9,9 +9,15 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
+import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
+import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.extensions.isFirstItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsItemComparatorBy
@@ -114,8 +120,8 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
     fun getDirectChannelByUserIdIndexed(userId: String): Pair<Int, ChannelListItem.ChannelItem>? {
         return if (::mAdapter.isInitialized)
             mAdapter.getData().findIndexed {
-                it is ChannelListItem.ChannelItem && !it.channel.isGroup
-                        && (it.channel as? SceytDirectChannel)?.peer?.id == userId
+                it is ChannelListItem.ChannelItem && it.channel.isDirect()
+                        && it.channel.getFirstMember()?.id == userId
             }?.let {
                 return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
             }

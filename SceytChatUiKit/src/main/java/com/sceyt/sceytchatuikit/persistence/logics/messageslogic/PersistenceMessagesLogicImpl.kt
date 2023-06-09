@@ -118,7 +118,7 @@ internal class PersistenceMessagesLogicImpl(
             if (message?.id == 0L) return@launch
             val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
                     ?: return@launch)
-            if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesDeletionDate)
+            if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
                 return@launch
 
             val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
@@ -198,9 +198,9 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onSyncedChannels(channels: List<SceytChannel>) {
         channels.forEach {
-            if (it.messagesDeletionDate > 0) {
-                messageDao.deleteAllMessagesLowerThenDateIgnorePending(it.id, it.messagesDeletionDate)
-                messagesCache.deleteAllMessagesLowerThenDate(it.id, it.messagesDeletionDate)
+            if (it.messagesClearedAt > 0) {
+                messageDao.deleteAllMessagesLowerThenDateIgnorePending(it.id, it.messagesClearedAt)
+                messagesCache.deleteAllMessagesLowerThenDate(it.id, it.messagesClearedAt)
             }
         }
     }
