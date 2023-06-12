@@ -8,6 +8,7 @@ import android.os.Parcelable
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -122,7 +123,11 @@ open class SceytShareActivity : SceytShareableActivity() {
         }
     }
 
-    override fun getRV() = binding.rvChannels
+    override fun getRV(): RecyclerView? {
+        return if (::binding.isInitialized)
+            binding.rvChannels
+        else null
+    }
 
     override fun onChannelClick(channelItem: ChannelListItem.ChannelItem): Boolean {
         return super.onChannelClick(channelItem).also {

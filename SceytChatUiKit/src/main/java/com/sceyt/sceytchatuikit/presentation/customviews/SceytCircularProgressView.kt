@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.Animation
+import android.view.animation.AnimationSet
 import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.animation.doOnEnd
@@ -57,6 +58,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var transferring: Boolean = true
     private var animatingToAngle = angle
     private var drawingProgressAnimEndCb: ((Boolean) -> Unit)? = null
+    private var visibleAnim: AnimationSet? = null
+    private var goneAnim: AnimationSet? = null
 
     init {
         attrs?.let {
@@ -299,28 +302,32 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun getProgressAnim() = updateProgressAnim
 
-    private fun setVisibilityWithAnim(visible: Boolean) {
-        if (isAttachedToWindow) {
-            if (animation == null || !animation.hasStarted() || animation.hasEnded()) {
-                if (visible) {
-                    if (!isVisible) {
-                        super.setVisibility(VISIBLE)
-                        scaleAndAlphaAnim(0.5f, 1f, duration = 100)
-                    }
-                } else {
-                    if (isVisible) {
-                        scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
-                            super.setVisibility(GONE)
-                        }
-                    }
+    private fun setVisibleWithAnim() {
+        goneAnim?.cancel()
+        if (visibleAnim == null || visibleAnim?.hasStarted() != true || visibleAnim?.hasEnded() == true) {
+            if (!isVisible) {
+                super.setVisibility(VISIBLE)
+                visibleAnim = scaleAndAlphaAnim(0.5f, 1f, duration = 100)
+            }
+        }
+    }
+
+    private fun setGoneWithAnim() {
+        visibleAnim?.cancel()
+        if (goneAnim == null || goneAnim?.hasStarted() != true || goneAnim?.hasEnded() == true) {
+            if (isVisible) {
+                goneAnim = scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
+                    super.setVisibility(GONE)
                 }
             }
-        } else isVisible = visible
+        }
     }
 
     override fun setVisibility(visibility: Int) {
         if (isAttachedToWindow) {
-            setVisibilityWithAnim(visibility == VISIBLE)
+            if (visibility == VISIBLE)
+                setVisibleWithAnim()
+            else setGoneWithAnim()
         } else {
             super.setVisibility(visibility)
             drawingProgressAnimEndCb = null
