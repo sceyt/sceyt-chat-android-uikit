@@ -6,10 +6,10 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.AnimationSet
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.extensions.scaleViewOut
-import com.sceyt.sceytchatuikit.extensions.scaleViewWithAnim
+import com.sceyt.sceytchatuikit.extensions.scaleAndAlphaAnim
 
 class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
@@ -19,6 +19,8 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var indicatorColor = Color.GREEN
     private var changeVisibilityWithAnim = true
     private var strokeWidth = 0
+    private var visibleAnim: AnimationSet? = null
+    private var goneAnim: AnimationSet? = null
 
     init {
         attrs?.let {
@@ -56,30 +58,34 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
         canvas.drawCircle(width / 2f, height / 2f, width / 2f - strokeWidth - smallDiff, indicatorPaint)
     }
 
-    private fun setVisibilityWithAnim(visible: Boolean) {
-        if (isAttachedToWindow) {
-            if (animation == null || !animation.hasStarted() || animation.hasEnded()) {
-                if (visible) {
-                    if (!isVisible) {
-                        super.setVisibility(VISIBLE)
-                        scaleViewOut(0f, 1f)
-                    }
-                } else {
-                    if (isVisible) {
-                        scaleViewWithAnim(1f, 0f) {
-                            super.setVisibility(GONE)
-                        }
-                    }
-                }
-            }
-        } else isVisible = visible
-    }
-
     override fun setVisibility(visibility: Int) {
         if (changeVisibilityWithAnim && isAttachedToWindow) {
-            setVisibilityWithAnim(visibility == VISIBLE)
+            if (visibility == VISIBLE)
+                setVisibleWithAnim()
+            else setGoneWithAnim()
         } else
             super.setVisibility(visibility)
+    }
+
+    private fun setVisibleWithAnim() {
+        goneAnim?.cancel()
+        if (visibleAnim == null || visibleAnim?.hasStarted() != true || visibleAnim?.hasEnded() == true) {
+            if (!isVisible) {
+                super.setVisibility(VISIBLE)
+                visibleAnim = scaleAndAlphaAnim(0.5f, 1f, duration = 100)
+            }
+        }
+    }
+
+    private fun setGoneWithAnim() {
+        visibleAnim?.cancel()
+        if (goneAnim == null || goneAnim?.hasStarted() != true || goneAnim?.hasEnded() == true) {
+            if (isVisible) {
+                goneAnim = scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
+                    super.setVisibility(GONE)
+                }
+            }
+        }
     }
 
     fun setStrokeColor(color: Int) {

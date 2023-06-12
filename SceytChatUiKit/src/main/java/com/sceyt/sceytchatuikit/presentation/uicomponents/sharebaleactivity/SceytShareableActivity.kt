@@ -5,6 +5,7 @@ import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.withResumed
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
@@ -62,27 +63,31 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun setChannelsList(data: List<ChannelListItem>) {
-        val rv = getRV() ?: return
-        setSelectedItems(data)
-        if (channelsAdapter == null || rv.adapter !is ShareableChannelsAdapter) {
-            channelsAdapter = ShareableChannelsAdapter(data.toMutableList(), viewHolderFactory.also {
-                it.setChannelClickListener(::onChannelClick)
-            }).also { channelsAdapter = it }
-            with(rv) {
-                adapter = channelsAdapter
-                layoutManager = LinearLayoutManager(this@SceytShareableActivity)
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && channelsViewModel.canLoadNext())
-                            channelsViewModel.getChannels(channelsAdapter?.getSkip()
-                                    ?: 0, channelsViewModel.searchQuery,
-                                LoadKeyData(value = channelsAdapter?.getChannels()?.lastOrNull()?.channel?.id
-                                        ?: 0))
+        lifecycleScope.launch {
+            lifecycle.withResumed {
+                val rv = getRV() ?: return@withResumed
+                setSelectedItems(data)
+                if (channelsAdapter == null || rv.adapter !is ShareableChannelsAdapter) {
+                    channelsAdapter = ShareableChannelsAdapter(data.toMutableList(), viewHolderFactory.also {
+                        it.setChannelClickListener(::onChannelClick)
+                    }).also { channelsAdapter = it }
+                    with(rv) {
+                        adapter = channelsAdapter
+                        layoutManager = LinearLayoutManager(this@SceytShareableActivity)
+                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                                super.onScrolled(recyclerView, dx, dy)
+                                if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && channelsViewModel.canLoadNext())
+                                    channelsViewModel.getChannels(channelsAdapter?.getSkip()
+                                            ?: 0, channelsViewModel.searchQuery,
+                                        LoadKeyData(value = channelsAdapter?.getChannels()?.lastOrNull()?.channel?.id
+                                                ?: 0))
+                            }
+                        })
                     }
-                })
+                } else channelsAdapter?.notifyUpdate(data, rv)
             }
-        } else channelsAdapter?.notifyUpdate(data, rv)
+        }
     }
 
     protected open fun addNewChannels(data: List<ChannelListItem>) {

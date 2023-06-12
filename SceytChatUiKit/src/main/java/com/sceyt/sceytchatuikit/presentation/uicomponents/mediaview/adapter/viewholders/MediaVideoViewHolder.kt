@@ -120,6 +120,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
         isAttachedToWindow = false
+        playerHelper?.pausePlayer()
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
