@@ -10,16 +10,6 @@ import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import com.sceyt.sceytchatuikit.extensions.getMimeType
 import java.io.File
 
-
-fun SceytAttachment.getFileFromMetadata(): File? {
-    val path = filePath ?: return null
-    try {
-        return File(path)
-    } catch (_: Exception) {
-    }
-    return null
-}
-
 fun SceytAttachment.openFile(context: Context) {
     try {
         var uri: Uri? = null
