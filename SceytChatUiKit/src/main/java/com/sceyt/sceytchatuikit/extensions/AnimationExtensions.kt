@@ -109,7 +109,7 @@ fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 
     startAnimation(anim)
 }
 
-fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 200, finishedListener: ((Animation?) -> Unit) = { }) {
+fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 200, finishedListener: ((Animation?) -> Unit) = { }): AnimationSet {
     val startAlpha = if (endScale < 1) 1.0f else 0f
     val endAlpha = if (endScale < 1) 0f else 1f
 
@@ -124,6 +124,7 @@ fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 
     animationSet.addAnimation(alphaAnimation)
     animationSet.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
     startAnimation(animationSet)
+    return animationSet
 }
 
 fun View.visibleGoneWithScaleAnim(visible: Boolean) {
