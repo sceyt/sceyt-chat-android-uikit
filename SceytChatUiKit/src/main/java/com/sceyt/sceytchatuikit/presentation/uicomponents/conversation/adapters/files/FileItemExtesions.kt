@@ -7,6 +7,7 @@ import android.widget.Toast
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
+import com.sceyt.sceytchatuikit.extensions.getMimeType
 import java.io.File
 
 
@@ -29,7 +30,7 @@ fun SceytAttachment.openFile(context: Context) {
 
         if (uri != null) {
             val intent = Intent(Intent.ACTION_VIEW)
-                .setData(uri)
+                .setDataAndType(uri, getMimeType(filePath) ?: "*/*")
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             context.startActivity(intent)
 
