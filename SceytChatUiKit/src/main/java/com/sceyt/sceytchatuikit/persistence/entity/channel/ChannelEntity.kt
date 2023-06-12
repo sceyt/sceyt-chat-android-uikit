@@ -9,7 +9,6 @@ data class ChannelEntity(
         @PrimaryKey
         @ColumnInfo(name = "chat_id")
         var id: Long,
-        @ColumnInfo(index = true)
         val parentId: Long?,
         var uri: String?,
         @ColumnInfo(index = true)
@@ -23,7 +22,6 @@ data class ChannelEntity(
         var updatedAt: Long,
         var messagesClearedAt: Long,
         var memberCount: Long,
-        @ColumnInfo(index = true)
         var createdById: String?,
         @ColumnInfo(index = true)
         var role: String?,
@@ -31,9 +29,7 @@ data class ChannelEntity(
         var newMessageCount: Long,
         var newMentionCount: Long,
         var newReactionCount: Long,
-        @ColumnInfo(index = true)
-        var hidden:Boolean,
-        @ColumnInfo(index = true)
+        var hidden: Boolean,
         var archived: Boolean,
         var muted: Boolean,
         var mutedUntil: Long?,
