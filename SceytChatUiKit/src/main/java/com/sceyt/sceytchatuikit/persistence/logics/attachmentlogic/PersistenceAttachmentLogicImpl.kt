@@ -89,13 +89,6 @@ internal class PersistenceAttachmentLogicImpl(
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
     }
 
-    //TODO: above methods will be removed soon
-    override suspend fun markAllFilesWithoutExtensionAsPendingDownload() {
-        attachmentDao.markNotDownloadedAllFileAttachments().forEach {
-            messagesCache.updateAttachmentFilePath(it, "")
-        }
-    }
-
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
                                 types: List<String>, loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
                                 offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<AttachmentWithUserData>> {

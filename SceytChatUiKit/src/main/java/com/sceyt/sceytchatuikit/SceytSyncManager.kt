@@ -2,6 +2,8 @@ package com.sceyt.sceytchatuikit
 
 import androidx.lifecycle.LiveData
 import com.hadilq.liveevent.LiveEvent
+import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -21,9 +23,11 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
 class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWare,
-                       private val messagesMiddleWare: PersistenceMessagesMiddleWare) : SceytKoinComponent, CoroutineScope {
+                       private val messagesMiddleWare: PersistenceMessagesMiddleWare,
+                       private val preference: SceytSharedPreference) : SceytKoinComponent, CoroutineScope {
 
     private var syncResultData: SyncResultData = SyncResultData()
+
     @Volatile
     private var syncIsInProcess: Boolean = false
     private val syncResultCallbacks = ConcurrentHashSet<(SyncResultData) -> Unit>()
@@ -41,14 +45,22 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             return
 
         launch {
-            syncIsInProcess = true
-            syncResultData = SyncResultData()
-            val result = getChannels()
-            syncResultCallbacks.forEach {
-                it(result)
+            val haveLoadedChannelsToSync = preference.getBoolean(KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE)
+            if (haveLoadedChannelsToSync) {
+                syncIsInProcess = true
+                syncResultData = SyncResultData()
+                val result = getChannels()
+                syncResultCallbacks.forEach {
+                    it(result)
+                }
+                syncResultCallbacks.clear()
+                syncIsInProcess = false
+            } else {
+                syncResultCallbacks.forEach {
+                    it(syncResultData)
+                }
+                syncResultCallbacks.clear()
             }
-            syncResultCallbacks.clear()
-            syncIsInProcess = false
         }
     }
 
