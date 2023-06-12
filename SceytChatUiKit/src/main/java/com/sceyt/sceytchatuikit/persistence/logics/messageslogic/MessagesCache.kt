@@ -6,7 +6,18 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.removeAllIf
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
@@ -201,10 +212,12 @@ class MessagesCache {
                         if (attachment.messageTid == updateDate.messageTid)
                             update(attachment)
                     }
+
                     Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
                         if (attachment.url == updateDate.url)
                             update(attachment)
                     }
+
                     FilePathChanged, ThumbLoaded -> return
                 }
             }
@@ -216,15 +229,6 @@ class MessagesCache {
             it.attachments?.forEach { attachment ->
                 attachment.filePath = path
                 attachment.metadata = metadata
-            }
-        }
-    }
-
-    //TODO: above methods will be removed soon
-    fun updateAttachmentFilePath(messageTid: Long, path: String?) {
-        cachedMessages[messageTid]?.let {
-            it.attachments?.forEach { attachment ->
-                attachment.filePath = path
             }
         }
     }

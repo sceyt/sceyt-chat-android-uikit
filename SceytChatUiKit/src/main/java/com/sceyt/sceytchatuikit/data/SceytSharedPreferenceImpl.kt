@@ -10,6 +10,7 @@ internal class SceytSharedPreferenceImpl(context: Context) : SceytSharedPreferen
         private const val PREF_USER_ID = "user_id"
         const val KEY_FCM_TOKEN = "key_fcm_token"
         const val KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION = "key_subscribed_for_push"
+        const val KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE = "key_have_success_loaded_channels_response"
     }
 
     private val pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
