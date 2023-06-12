@@ -7,7 +7,6 @@ import androidx.room.Transaction
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.extensions.getMimeType
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -83,18 +82,6 @@ abstract class AttachmentDao {
 
     @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
     abstract fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
-
-
-    //TODO: above methods will be removed soon
-    @Transaction
-    open fun markNotDownloadedAllFileAttachments(): List<Long> {
-        val attachments = getAllFileAttachments()
-        Log.i("getAllFileAttachments", "result: ${attachments.map { it.url }}")
-        val tIds = attachments.filter { getMimeType(it.filePath).isNullOrBlank() }.map { it.messageTid }
-        markNotDownloadedFileAttachments(tIds)
-        markNorDownloadedFileAttachmentsPayLoad(tIds)
-        return tIds
-    }
 
     @Query("select * from AttachmentEntity  where type =:type and url <> ''")
     abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
