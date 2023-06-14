@@ -8,21 +8,23 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 interface PersistenceMessagesMiddleWare {
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                 replyInThread: Boolean, offset: Int, loadKey: LoadKeyData,
-                                 ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
-
-    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                 offset: Int, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
-
-    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
+                                 replyInThread: Boolean, offset: Int, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
                                  loadKey: LoadKeyData, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean,
+    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
+                                 offset: Int, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
+                                 ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+
+    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
+                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+
+    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
                                    loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>

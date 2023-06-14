@@ -8,9 +8,9 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
 interface MessagesRepository {
-    suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>>
-    suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>>
-    suspend fun getNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>>
+    suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, limit: Int): SceytResponse<List<SceytMessage>>
+    suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, limit: Int): SceytResponse<List<SceytMessage>>
+    suspend fun getNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean, limit: Int): SceytResponse<List<SceytMessage>>
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
     suspend fun loadAllMessagesAfter(conversationId: Long, replyInThread: Boolean, messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
     suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>

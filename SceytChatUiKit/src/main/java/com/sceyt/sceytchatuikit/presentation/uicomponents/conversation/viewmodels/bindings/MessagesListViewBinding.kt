@@ -279,11 +279,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         it.second.highlighted = true
                         messagesListView.scrollToPositionAndHighlight(it.first, true)
                     }
-                } /*?: run {
+                } ?: run {
                     loadNearMessages(parentId, LoadKeyData(
                         key = LoadKeyType.ScrollToMessageById.longValue,
                         value = parentId))
-                }*/
+                }
             }
         }
     }
