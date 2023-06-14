@@ -19,15 +19,17 @@ internal interface PersistenceMessagesLogic {
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                 loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
+                                 limit: Int,
                                  ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                 loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
+    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
+                                   loadKey: LoadKeyData,
                                    ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
