@@ -96,6 +96,8 @@ class OutFileMsgViewHolder(
         }
     }
 
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
+
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {
             tvFileName.text = file.name

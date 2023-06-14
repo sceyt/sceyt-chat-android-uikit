@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -68,6 +69,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -80,11 +82,12 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import kotlin.math.min
 
 class MessageListViewModel(
-        private val conversationId: Long,
-        internal val replyInThread: Boolean = false,
-        internal var channel: SceytChannel,
+        val conversationId: Long,
+        val replyInThread: Boolean = false,
+        var channel: SceytChannel,
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
@@ -92,7 +95,7 @@ class MessageListViewModel(
     private val persistenceAttachmentsMiddleWare: PersistenceAttachmentsMiddleWare by inject()
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
     internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
-    protected val messagesRepository: MessagesRepository by inject()
+    private val messagesRepository: MessagesRepository by inject()
     private val context: Context by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
@@ -194,7 +197,7 @@ class MessageListViewModel(
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey = loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -218,10 +221,12 @@ class MessageListViewModel(
     }
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData) {
-        setPagingLoadingStarted(LoadNear, true)
+        setPagingLoadingStarted(LoadNear)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread, loadKey).collect { response ->
+            val limit = min(50, MESSAGES_LOAD_SIZE * 2)
+            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread,
+                limit, loadKey).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
@@ -230,10 +235,11 @@ class MessageListViewModel(
     }
 
     fun loadNewestMessages(loadKey: LoadKeyData) {
-        setPagingLoadingStarted(LoadNear, true)
+        setPagingLoadingStarted(LoadNewest)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread, loadKey, true).collect { response ->
+            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread,
+                loadKey = loadKey, ignoreDb = false).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }

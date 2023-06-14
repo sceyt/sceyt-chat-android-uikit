@@ -4,6 +4,7 @@ import android.util.Size
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
@@ -70,11 +71,12 @@ abstract class BaseMediaMessageViewHolder(
                 ?: maxSize,
             imageHeight = fileItem.size?.height ?: maxSize)
         resizedImageSize = size
+        val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val constraintSet = ConstraintSet()
-        constraintSet.clone(layoutDetails)
+        constraintSet.clone(layoutBubble)
         constraintSet.constrainMinHeight(fileImage.id, size.height)
         constraintSet.constrainMinWidth(fileImage.id, size.width)
-        constraintSet.applyTo(layoutDetails)
+        constraintSet.applyTo(layoutBubble)
 
         val message = fileItem.sceytMessage
         with(fileImage) {
