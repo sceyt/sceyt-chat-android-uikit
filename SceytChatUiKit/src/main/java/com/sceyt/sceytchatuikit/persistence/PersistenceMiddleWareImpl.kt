@@ -264,23 +264,23 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                          loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey, ignoreDb)
+                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, limit, loadKey, ignoreDb)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                          offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replyInThread, offset, ignoreDb)
+                                          offset: Int, limit: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNextMessages(conversationId, lastMessageId, replyInThread, offset, limit, ignoreDb)
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, loadKey, ignoreDb)
+                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, limit, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, loadKey: LoadKeyData,
-                                            ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNewestMessages(conversationId, replyInThread, loadKey, ignoreDb)
+    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
+                                            loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNewestMessages(conversationId, replyInThread, limit, loadKey, ignoreDb)
     }
 
     override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {

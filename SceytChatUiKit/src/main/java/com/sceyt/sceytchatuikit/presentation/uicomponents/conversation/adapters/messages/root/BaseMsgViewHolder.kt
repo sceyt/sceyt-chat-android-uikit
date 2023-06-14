@@ -84,10 +84,14 @@ abstract class BaseMsgViewHolder(private val view: View,
             highlight()
     }
 
-    open val layoutDetails: ConstraintLayout? = null
+    /** The Pair's param ViewGroup is layout bubble, the param Boolean when true, that mean the
+     *  layout bubble with will resize depend reactions. */
+    open val layoutBubbleConfig: Pair<ViewGroup, Boolean>? = null
+
+    protected val layoutBubble get() = layoutBubbleConfig?.first
 
     protected open fun setMaxWidth() {
-        (layoutDetails?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
+        (layoutBubble?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
     fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
@@ -230,6 +234,14 @@ abstract class BaseMsgViewHolder(private val view: View,
             root.setOnClickListener {
                 (messageListItem as? MessageListItem.MessageItem)?.let { item ->
                     messageListeners?.onReplyMessageContainerClick(it, item)
+                }
+            }
+
+            root.post {
+                val bubbleWidth = layoutBubble?.width ?: return@post
+                if (root.width < bubbleWidth) {
+                    root.layoutParams.width = bubbleWidth
+                    root.requestLayout()
                 }
             }
         }

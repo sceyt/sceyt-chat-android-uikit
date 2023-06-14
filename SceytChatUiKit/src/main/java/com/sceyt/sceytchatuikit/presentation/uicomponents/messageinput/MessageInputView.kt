@@ -49,12 +49,12 @@ import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
-import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
