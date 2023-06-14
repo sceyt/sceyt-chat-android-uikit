@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -75,8 +74,7 @@ class OutLinkMsgViewHolder(
         }
     }
 
-    override val layoutDetails: ConstraintLayout
-        get() = binding.layoutDetails
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         with(context) {

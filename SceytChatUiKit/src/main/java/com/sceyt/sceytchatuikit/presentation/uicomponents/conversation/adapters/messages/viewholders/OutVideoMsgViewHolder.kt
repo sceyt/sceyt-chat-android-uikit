@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.content.res.ColorStateList
 import android.view.View
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -156,8 +155,7 @@ class OutVideoMsgViewHolder(
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    override val layoutDetails: ConstraintLayout
-        get() = binding.layoutDetails
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
         with(context) {

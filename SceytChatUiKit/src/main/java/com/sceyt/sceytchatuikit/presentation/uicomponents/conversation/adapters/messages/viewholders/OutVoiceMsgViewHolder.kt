@@ -97,6 +97,8 @@ class OutVoiceMsgViewHolder(
         }
     }
 
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
+
     private fun SceytItemOutVoiceMessageBinding.initVoiceMessage() {
         val metaDuration: Long = fileItem.duration?.times(1000L) //convert to milliseconds
                 ?: 0
