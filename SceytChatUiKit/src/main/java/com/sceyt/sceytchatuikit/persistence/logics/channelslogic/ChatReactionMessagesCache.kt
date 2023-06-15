@@ -19,7 +19,7 @@ object ChatReactionMessagesCache : SceytKoinComponent {
     }
 
     private suspend fun getMessage(channelId: Long, messageId: Long) {
-        messageCash.get(messageId)?.let {
+        messageCash.get(channelId, messageId)?.let {
             list[it.id] = it
         } ?: run {
             SceytKitClient.getMessagesMiddleWare().getMessageDbById(messageId)?.let {
