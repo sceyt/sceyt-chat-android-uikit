@@ -29,11 +29,11 @@ class MessagesCache {
     private val lock = Any()
 
     companion object {
-        private val messageUpdatedFlow_ = MutableSharedFlow<List<SceytMessage>>(
+        private val messageUpdatedFlow_ = MutableSharedFlow<Pair<Long, List<SceytMessage>>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messageUpdatedFlow: SharedFlow<List<SceytMessage>> = messageUpdatedFlow_
+        val messageUpdatedFlow: SharedFlow<Pair<Long, List<SceytMessage>>> = messageUpdatedFlow_
 
         private val messagesClearedFlow_ = MutableSharedFlow<Pair<Long, Long>>(
             extraBufferCapacity = 30,
@@ -99,7 +99,7 @@ class MessagesCache {
             //cachedMessages[message.tid] = message
             put(channelId, message)
             if (exist)
-                emitMessageUpdated(payLoad?.toList(), message)
+                emitMessageUpdated(channelId, payLoad?.toList(), message)
         }
     }
 
@@ -139,7 +139,7 @@ class MessagesCache {
             message.forEach {
                 update(channelId, it)
             }
-            emitMessageUpdated(payLoad, *message)
+            emitMessageUpdated(channelId, payLoad, *message)
         }
     }
 
@@ -153,7 +153,7 @@ class MessagesCache {
                 }
             }
             val payLoad = getPayLoads(channelId, *updatesMessages.toTypedArray())
-            emitMessageUpdated(payLoad, *updatesMessages.toTypedArray())
+            emitMessageUpdated(channelId, payLoad, *updatesMessages.toTypedArray())
         }
     }
 
@@ -176,7 +176,7 @@ class MessagesCache {
             message.forEach {
                 val payLoad = getPayLoads(channelId, it)
                 if (putAndCheckHasDiff(channelId, false, it))
-                    emitMessageUpdated(payLoad, it)
+                    emitMessageUpdated(channelId, payLoad, it)
             }
         }
     }
@@ -186,14 +186,14 @@ class MessagesCache {
             message.forEach {
                 val payLoad = getPayLoads(channelId, it)
                 update(channelId, it)
-                emitMessageUpdated(payLoad, it)
+                emitMessageUpdated(channelId, payLoad, it)
             }
         }
     }
 
-    private fun emitMessageUpdated(payLoads: List<AttachmentPayLoadEntity>?, vararg message: SceytMessage) {
+    private fun emitMessageUpdated(channelId: Long, payLoads: List<AttachmentPayLoadEntity>?, vararg message: SceytMessage) {
         setPayloads(payLoads, message.toList())
-        messageUpdatedFlow_.tryEmit(message.map { it.clone() })
+        messageUpdatedFlow_.tryEmit(Pair(channelId, message.map { it.clone() }))
     }
 
     private fun setPayloads(payloads: List<AttachmentPayLoadEntity>?, messages: List<SceytMessage>) {
