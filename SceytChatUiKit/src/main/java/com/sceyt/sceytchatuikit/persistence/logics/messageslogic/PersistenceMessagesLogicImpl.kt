@@ -59,7 +59,6 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
-import com.sceyt.sceytchatuikit.persistence.workers.SendSharedAttachmentWorkManager
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
@@ -269,7 +268,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.add(tmpMessage)
 
         if (checkHasFileAttachments(message)) {
-            SendSharedAttachmentWorkManager.schedule(context, tmpMessage.tid)
+            SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId, true).await()
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
             onMessageSentResponse(channelId, response)

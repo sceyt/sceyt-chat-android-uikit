@@ -1,12 +1,10 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
-import android.util.Log
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -49,17 +47,9 @@ abstract class AttachmentDao {
 
     @Transaction
     open fun updateAttachmentAndPayLoad(transferData: TransferData) {
-        try {
-            updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
-        } catch (e: Exception) {
-            Log.e(TAG, "Couldn't updateAttachmentByMsgTid: ${e.message}")
-        }
-        try {
-            updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
-                transferData.progressPercent, transferData.state)
-        } catch (e: Exception) {
-            Log.e(TAG, "Couldn't updateAttachmentPayLoadByMsgTid: ${e.message}")
-        }
+        updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
+        updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
+            transferData.progressPercent, transferData.state)
     }
 
     @Transaction
