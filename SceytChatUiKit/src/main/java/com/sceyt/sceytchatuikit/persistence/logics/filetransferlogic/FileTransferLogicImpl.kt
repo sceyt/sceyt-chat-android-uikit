@@ -178,10 +178,13 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun getPreparingThumbKey(messageTid: Long, size: Size) = "$messageTid$size"
 
     private fun checkAndUpload(attachment: SceytAttachment, task: TransferTask) {
-        if (currentUploadingAttachment == null)
+        if (currentUploadingAttachment == null) {
             uploadAttachment(attachment, task)
-        else {
-            if (currentUploadingAttachment?.filePath != attachment.filePath)
+        } else {
+            val alreadyExist = currentUploadingAttachment?.messageTid == attachment.messageTid ||
+                    pendingUploadQueue.any { it.first.messageTid == attachment.messageTid }
+
+            if (!alreadyExist)
                 pendingUploadQueue.add(Pair(attachment, task))
         }
     }
