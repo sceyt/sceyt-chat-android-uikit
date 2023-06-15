@@ -1,11 +1,21 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.CoroutineWorker
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.Operation
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -18,17 +28,21 @@ import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAt
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
+import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHARING
+import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
 object SendAttachmentWorkManager : SceytKoinComponent {
 
-    const val MESSAGE_TID = "MESSAGE_TID"
+    internal const val MESSAGE_TID = "MESSAGE_TID"
+    internal const val IS_SHARING = "IS_SHARING"
 
-    fun schedule(context: Context, messageTid: Long, channelId: Long?): Operation {
+    fun schedule(context: Context, messageTid: Long, channelId: Long?, isSharing: Boolean = false): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
-
+        dataBuilder.putBoolean(IS_SHARING, isSharing)
 
         val networkConstraint = Constraints.Builder().apply {
             setRequiredNetworkType(NetworkType.CONNECTED)
@@ -51,47 +65,70 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val messageLogic: PersistenceMessagesLogic by inject()
 
-    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage): Pair<Boolean, String?> {
+    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage, isSharing: Boolean): Pair<Boolean, String?> {
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
 
         return suspendCancellableCoroutine { continuation ->
             tmpMessage.attachments?.let { attachments ->
+                var foundAttachmentToUpload = false
                 for (attachment in attachments) {
                     if (attachment.type == AttachmentTypeEnum.Link.value())
                         continue
 
                     val payload = payloads.find { it.messageTid == attachment.messageTid }
+
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
                         val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
                         continuation.safeResume(Pair(true, payload.url))
                     } else {
+                        foundAttachmentToUpload = true
                         val transferData = TransferData(tmpMessage.tid, attachment.tid, 0f,
                             TransferState.Uploading, attachment.filePath, attachment.url)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
 
-                        fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
-                            task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
-                                continuation.safeResume(Pair(success, url))
-                            })
-                        })
+                        uploadFile(attachment, continuation, isSharing)
                     }
                 }
+                if (!foundAttachmentToUpload)
+                    continuation.safeResume(Pair(false, "Not found Attachment To Upload"))
+
             } ?: kotlin.run {
-                continuation.safeResume(Pair(false, null))
+                continuation.safeResume(Pair(false, "Attachments are empty"))
             }
+        }
+    }
+
+    private fun uploadFile(attachment: SceytAttachment, continuation: CancellableContinuation<Pair<Boolean, String?>>, isSharing: Boolean) {
+        if (isSharing) {
+            fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
+                task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
+                    continuation.safeResume(Pair(success, url))
+                })
+            })
+        } else {
+            fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
+                task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
+                    continuation.safeResume(Pair(success, url))
+                })
+            })
         }
     }
 
     override suspend fun doWork(): Result {
         val data = inputData
-        val messageTid = data.getLong(SendAttachmentWorkManager.MESSAGE_TID, 0)
+        val messageTid = data.getLong(MESSAGE_TID, 0)
+        val isSharing = data.getBoolean(IS_SHARING, false)
 
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
-        val result = checkToUploadAttachmentsBeforeSend(tmpMessage)
-        return if (result.first && result.second.isNotNullOrBlank()) {
+        if (tmpMessage.deliveryStatus != DeliveryStatus.Pending && tmpMessage.deliveryStatus != DeliveryStatus.Failed)
+            return Result.success()
+
+
+        val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
+        return if (result.first && result.second.isNotNullOrBlank() && !isStopped) {
             tmpMessage.attachments?.getOrNull(0)?.url = result.second
 
             ConnectionEventsObserver.awaitToConnectSceyt()
@@ -102,7 +139,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 }
                 Result.success()
             } else Result.retry()
-        } else
-            Result.failure()
+
+        } else Result.failure()
     }
 }

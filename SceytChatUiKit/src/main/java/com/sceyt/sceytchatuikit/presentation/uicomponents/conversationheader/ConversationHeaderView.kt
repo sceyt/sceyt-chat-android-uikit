@@ -14,17 +14,30 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.*
+import androidx.core.view.isVisible
+import androidx.core.view.marginBottom
+import androidx.core.view.marginLeft
+import androidx.core.view.marginRight
+import androidx.core.view.marginTop
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
+import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
@@ -40,8 +53,12 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.Date
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
@@ -155,12 +172,14 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                             }
                         }
                     }
+
                     ChannelTypeEnum.Private -> {
                         val memberCount = (channel as SceytGroupChannel).memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_members_count, memberCount)
                         else getString(R.string.sceyt_member_count, memberCount)
                     }
+
                     ChannelTypeEnum.Public -> {
                         val memberCount = (channel as SceytGroupChannel).memberCount
                         if (memberCount > 1)
@@ -168,16 +187,19 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                         else getString(R.string.sceyt_subscriber_count, memberCount)
                     }
                 }
-
-                subjectTextView.text = title
-                subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping
+                setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !isTyping)
             } else {
                 val fullName = replyMessage?.from?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                subjectTextView.text = subTitleText
-                subjectTextView.isVisible = !fullName.isNullOrBlank() && !isTyping
+                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
             }
         }
+    }
+
+    private fun setSubTitleText(textView: TextView, title: String?, visible: Boolean) {
+        if (textView.text.equals(title) && textView.isVisible == visible) return
+        textView.text = title
+        textView.isVisible = visible
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -221,10 +243,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             typingUsers.isEmpty() -> {
                 updateTypingJob?.cancel()
             }
+
             typingUsers.size == 1 -> {
                 binding.tvTyping.text = initTypingTitle(typingUsers.last())
                 updateTypingJob?.cancel()
             }
+
             else -> {
                 if (updateTypingJob == null || updateTypingJob!!.isActive.not())
                     updateTypingTitleEveryTwoSecond()
