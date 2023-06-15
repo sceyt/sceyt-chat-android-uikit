@@ -225,9 +225,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messageUpdatedFlow.onEach { messages ->
+    MessagesCache.messageUpdatedFlow.filter { it.first == channel.id }.onEach { data ->
         viewModelScope.launch(Dispatchers.Default) {
-            messages.forEach {
+            data.second.forEach {
                 val message = initMessageInfoData(it)
                 withContext(Dispatchers.Main) {
                     if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
