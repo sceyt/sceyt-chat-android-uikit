@@ -44,22 +44,21 @@ object MentionUserHelper {
         return try {
             data.sortedByDescending { it.loc }.forEach {
                 val name = setNewBodyWithName(mentionUsers, newBody, it)
-                newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
-                    it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (enableClick) {
                     val clickableSpan = object : ClickableSpan() {
                         override fun onClick(textView: View) {
-                            //todo: implement click action
                         }
 
                         override fun updateDrawState(ds: TextPaint) {
-                            super.updateDrawState(ds)
+                            ds.color = context.getCompatColor(colorId)
                             ds.isUnderlineText = false
                         }
                     }
                     newBody.setSpan(clickableSpan, it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
+                } else
+                    newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
+                        it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             SpannableString.valueOf(newBody)
         } catch (e: Exception) {
