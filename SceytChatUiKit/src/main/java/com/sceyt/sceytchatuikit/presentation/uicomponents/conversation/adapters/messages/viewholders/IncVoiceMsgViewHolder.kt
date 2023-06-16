@@ -90,7 +90,7 @@ class IncVoiceMsgViewHolder(
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, viewReply)
+                setReplyMessageContainer(message, viewReply, false)
 
             if (diff.filesChanged)
                 initAttachment()
@@ -187,19 +187,24 @@ class IncVoiceMsgViewHolder(
                 lastFilePath = data.filePath
                 binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
             }
+
             PendingUpload, PauseUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             PendingDownload -> {
                 binding.playPauseButton.setImageResource(0)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             Downloading, Uploading -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             ErrorUpload, ErrorDownload, PauseDownload -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             FilePathChanged, ThumbLoaded -> return
         }
     }

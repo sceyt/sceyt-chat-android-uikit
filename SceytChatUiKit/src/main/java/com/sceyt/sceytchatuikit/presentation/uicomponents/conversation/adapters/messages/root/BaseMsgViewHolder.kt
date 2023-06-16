@@ -172,7 +172,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         message.setConversationMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
-    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub) {
+    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
         if (!message.isReplied) {
             viewStub.isVisible = false
             return
@@ -231,13 +231,14 @@ abstract class BaseMsgViewHolder(private val view: View,
                 }
             }
             with(root) {
-                layoutParams.width = LayoutParams.WRAP_CONTENT
-                measure(View.MeasureSpec.UNSPECIFIED, 0)
-                layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
-                val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
-                if (measuredWidth < bubbleMeasuredWidth)
-                    layoutParams.width = bubbleMeasuredWidth
-
+                if (calculateWith) {
+                    layoutParams.width = LayoutParams.WRAP_CONTENT
+                    measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
+                    if (measuredWidth < bubbleMeasuredWidth)
+                        layoutParams.width = bubbleMeasuredWidth
+                }
                 isVisible = true
 
                 setOnClickListener {

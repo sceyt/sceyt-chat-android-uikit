@@ -78,7 +78,7 @@ class OutAttachmentsMsgViewHolder(
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply)
+                    setReplyMessageContainer(message, binding.viewReply, false)
             }
         }
     }
