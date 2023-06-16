@@ -42,41 +42,6 @@ class MessagesCache {
         val messagesClearedFlow: SharedFlow<Pair<Long, Long>> = messagesClearedFlow_
     }
 
-    private fun getMessages(channelId: Long): HashMap<Long, SceytMessage>? {
-        return cachedMessages[channelId]
-    }
-
-    private fun putAll(channelId: Long, list: List<SceytMessage>) {
-        cachedMessages[channelId]?.let {
-            it.putAll(list.associateBy { message -> message.tid })
-        } ?: run {
-            cachedMessages[channelId] = HashMap(list.associateBy { message -> message.tid })
-        }
-    }
-
-    private fun put(channelId: Long, message: SceytMessage) {
-        cachedMessages[channelId]?.let {
-            it[message.tid] = message
-        } ?: run {
-            cachedMessages[channelId] = hashMapOf(message.tid to message)
-        }
-    }
-
-    private fun update(channelId: Long, message: SceytMessage) {
-        cachedMessages[channelId]?.let {
-            it[message.tid] = message
-        }
-    }
-
-    private fun delete(channelId: Long, tid: Long) {
-        cachedMessages[channelId]?.remove(tid)
-    }
-
-    private fun getFrom(channelId: Long, tId: Long): SceytMessage? {
-        return cachedMessages[channelId]?.let {
-            it[tId]
-        }
-    }
 
     /** Added messages like upsert, and check is differences between messages*/
     fun addAll(channelId: Long, list: List<SceytMessage>, checkDifference: Boolean): Boolean {
@@ -85,7 +50,7 @@ class MessagesCache {
                 putAndCheckHasDiff(channelId, true, *list.toTypedArray())
             else {
                 // cachedMessages.putAll(list.associateBy { it.tid })
-                putAll(channelId, list)
+                putAllMessages(channelId, list)
                 false
             }
         }
@@ -93,11 +58,11 @@ class MessagesCache {
 
     fun add(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
-            val exist = getFrom(channelId, message.id) != null
+            val exist = getMessageByTid(channelId, message.id) != null
             val payLoad = if (exist)
                 getPayLoads(channelId, message) else null
             //cachedMessages[message.tid] = message
-            put(channelId, message)
+            putMessage(channelId, message)
             if (exist)
                 emitMessageUpdated(channelId, payLoad?.toList(), message)
         }
@@ -105,7 +70,7 @@ class MessagesCache {
 
     fun get(channelId: Long, tid: Long): SceytMessage? {
         synchronized(lock) {
-            return getFrom(channelId, tid)
+            return getMessageByTid(channelId, tid)
         }
     }
 
@@ -117,18 +82,18 @@ class MessagesCache {
 
     fun clearAllExceptPending(channelId: Long) {
         synchronized(lock) {
-            getMessages(channelId)?.values
+            getMessagesMap(channelId)?.values
                 ?.filter { it.deliveryStatus != DeliveryStatus.Pending }
                 ?.map { it.tid }?.forEach {
                     cachedMessages.remove(it)
-                    delete(channelId, it)
+                    deleteMessage(channelId, it)
                 }
         }
     }
 
     fun getSorted(channelId: Long): List<SceytMessage> {
         synchronized(lock) {
-            return getMessages(channelId)?.values?.sortedWith(MessageComparator())?.map { it.clone() }
+            return getMessagesMap(channelId)?.values?.sortedWith(MessageComparator())?.map { it.clone() }
                     ?: emptyList()
         }
     }
@@ -137,7 +102,7 @@ class MessagesCache {
         synchronized(lock) {
             val payLoad = getPayLoads(channelId, *message)
             message.forEach {
-                update(channelId, it)
+                updateMessage(channelId, it)
             }
             emitMessageUpdated(channelId, payLoad, *message)
         }
@@ -147,7 +112,7 @@ class MessagesCache {
         synchronized(lock) {
             val updatesMessages = mutableListOf<SceytMessage>()
             tIds.forEach {
-                getFrom(channelId, it)?.let { message ->
+                getMessageByTid(channelId, it)?.let { message ->
                     message.deliveryStatus = status
                     updatesMessages.add(message)
                 }
@@ -165,7 +130,7 @@ class MessagesCache {
 
     fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) {
         synchronized(lock) {
-            if (getMessages(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
+            if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
                 messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
             }
         }
@@ -185,7 +150,7 @@ class MessagesCache {
         synchronized(lock) {
             message.forEach {
                 val payLoad = getPayLoads(channelId, it)
-                update(channelId, it)
+                updateMessage(channelId, it)
                 emitMessageUpdated(channelId, payLoad, it)
             }
         }
@@ -194,6 +159,38 @@ class MessagesCache {
     private fun emitMessageUpdated(channelId: Long, payLoads: List<AttachmentPayLoadEntity>?, vararg message: SceytMessage) {
         setPayloads(payLoads, message.toList())
         messageUpdatedFlow_.tryEmit(Pair(channelId, message.map { it.clone() }))
+    }
+
+    private fun getMessagesMap(channelId: Long): HashMap<Long, SceytMessage>? {
+        return cachedMessages[channelId]
+    }
+
+    private fun putAllMessages(channelId: Long, list: List<SceytMessage>) {
+        cachedMessages[channelId]?.let {
+            it.putAll(list.associateBy { message -> message.tid })
+        } ?: run {
+            cachedMessages[channelId] = HashMap(list.associateBy { message -> message.tid })
+        }
+    }
+
+    private fun putMessage(channelId: Long, message: SceytMessage) {
+        cachedMessages[channelId]?.let {
+            it[message.tid] = message
+        } ?: run {
+            cachedMessages[channelId] = hashMapOf(message.tid to message)
+        }
+    }
+
+    private fun updateMessage(channelId: Long, message: SceytMessage) {
+        cachedMessages[channelId]?.let {
+            it[message.tid] = message
+        }
+    }
+
+    private fun getMessageByTid(channelId: Long, tid: Long): SceytMessage? {
+        return cachedMessages[channelId]?.let {
+            it[tid]
+        }
     }
 
     private fun setPayloads(payloads: List<AttachmentPayLoadEntity>?, messages: List<SceytMessage>) {
@@ -213,7 +210,7 @@ class MessagesCache {
     private fun getPayLoads(channelId: Long, vararg messages: SceytMessage): List<AttachmentPayLoadEntity>? {
         var payloads: List<AttachmentPayLoadEntity>? = null
         messages.forEach {
-            payloads = getFrom(channelId, it.tid)?.attachments?.map { attachment ->
+            payloads = getMessageByTid(channelId, it.tid)?.attachments?.map { attachment ->
                 AttachmentPayLoadEntity(
                     messageTid = it.tid,
                     transferState = attachment.transferState,
@@ -230,10 +227,10 @@ class MessagesCache {
         var detectedDiff = false
         messages.forEach {
             if (!detectedDiff) {
-                val old = getFrom(channelId, it.tid)
+                val old = getMessageByTid(channelId, it.tid)
                 detectedDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
             }
-            update(channelId, it)
+            updateMessage(channelId, it)
         }
         return detectedDiff
     }
@@ -246,8 +243,8 @@ class MessagesCache {
             attachment.url = updateDate.url
         }
 
-        cachedMessages.values.forEach {
-            it[updateDate.messageTid]?.let { message ->
+        cachedMessages.values.forEach { messageHashMap ->
+            messageHashMap[updateDate.messageTid]?.let { message ->
                 message.attachments?.forEach { attachment ->
                     when (updateDate.state) {
                         PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
@@ -268,8 +265,8 @@ class MessagesCache {
     }
 
     fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) {
-        cachedMessages.values.forEach {
-            it[messageTid]?.let { message ->
+        cachedMessages.values.forEach { messageHashMap ->
+            messageHashMap[messageTid]?.let { message ->
                 message.attachments?.forEach { attachment ->
                     attachment.filePath = path
                     attachment.metadata = metadata
