@@ -31,8 +31,7 @@ import org.koin.dsl.koinApplication
 class SceytUIKitInitializer(private val context: Context) {
 
     fun initialize(clientId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
-        //Set static flags before calling setup
-        ChatClient.setEnableNetworkAwarenessReconnection(true)
+        //Set static flags before calling initialize
         val chatClient = ChatClient.initialize(context, host, appId, clientId)
         initKoin(enableDatabase)
         initTheme()
