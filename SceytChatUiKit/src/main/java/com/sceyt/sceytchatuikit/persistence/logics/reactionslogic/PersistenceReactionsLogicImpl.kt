@@ -12,11 +12,22 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepository
-import com.sceyt.sceytchatuikit.persistence.dao.*
+import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
+import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
+import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
-import com.sceyt.sceytchatuikit.persistence.mappers.*
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
+import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -48,7 +59,7 @@ internal class PersistenceReactionsLogicImpl(
         }
 
         val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
-        messagesCache.messageUpdated(message)
+        messagesCache.messageUpdated(data.message.channelId, message)
         handleChannelReaction(data, message)
     }
 
@@ -60,6 +71,7 @@ internal class PersistenceReactionsLogicImpl(
                 channelReactionsDao.insertChannelUserReaction(data.reaction.toUserReactionsEntity(message.channelId))
                 ChatReactionMessagesCache.addMessage(message)
             }
+
             REMOVE -> channelReactionsDao.deleteChannelUserReaction(message.channelId, message.id,
                 data.reaction.key, data.reaction.user.id)
         }
@@ -129,7 +141,7 @@ internal class PersistenceReactionsLogicImpl(
                 val message = messageDao.getMessageById(messageId)?.toSceytMessage()
                         ?: resultMessage
 
-                messagesCache.messageUpdated(message)
+                messagesCache.messageUpdated(channelId, message)
 
                 if (!message.incoming) {
                     val reaction = message.selfReactions?.maxBy { it.id }
@@ -152,7 +164,7 @@ internal class PersistenceReactionsLogicImpl(
                 val message = messageDao.getMessageById(messageId)?.toSceytMessage()
                         ?: resultMessage
 
-                messagesCache.messageUpdated(message)
+                messagesCache.messageUpdated(channelId, message)
 
                 if (!message.incoming) {
                     val reaction = Reaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser)

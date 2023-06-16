@@ -792,7 +792,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private fun concatWithSeparator(items: List<String>, dbKey: String, dbFunction: String, dbPatternPrefix: String, dbPatternSuffix: String, dbSeparator: String): String {
         return items.asSequence().map {
-            "$dbKey $dbFunction '${dbPatternPrefix}${it}${dbPatternSuffix}'"
+            "$dbKey $dbFunction '${dbPatternPrefix}${dbPatternSuffix}${it}${dbPatternSuffix}'"
         }.joinToString(" $dbSeparator ")
     }
 

@@ -137,14 +137,14 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         val updatedMessages = messageDao.updateMessageStatusWithBefore(data.status, data.messageIds.maxOf { it })
-        messagesCache.updateMessagesStatus(data.status, *updatedMessages.map { it.tid }.toLongArray())
+        messagesCache.updateMessagesStatus(data.channel.id, data.status, *updatedMessages.map { it.tid }.toLongArray())
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
         data.selfReactions = selfReactions.map { it.toReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
-        messagesCache.messageUpdated(data)
+        messagesCache.messageUpdated(data.channelId, data)
         if (data.state == MessageState.Deleted)
             deletedPayloads(data.id, data.tid)
     }
@@ -186,7 +186,7 @@ internal class PersistenceMessagesLogicImpl(
                 if (it is SceytResponse.Success) {
                     it.data?.let { messages ->
                         saveMessagesToDb(messages)
-                        messagesCache.upsertMessages(*messages.toTypedArray())
+                        messagesCache.upsertMessages(conversationId, *messages.toTypedArray())
                         markChannelMessagesAsDelivered(conversationId, messages)
                     }
                 }
@@ -221,7 +221,7 @@ internal class PersistenceMessagesLogicImpl(
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
         insertTmpMessageToDb(tmpMessage)
-        messagesCache.add(tmpMessage)
+        messagesCache.add(channelId, tmpMessage)
 
         if (checkHasFileAttachments(message)) {
             SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId).await()
@@ -241,7 +241,7 @@ internal class PersistenceMessagesLogicImpl(
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         trySend(SendMessageResult.TempMessage(tmpMessage))
         insertTmpMessageToDb(tmpMessage)
-        messagesCache.add(tmpMessage)
+        messagesCache.add(channelId, tmpMessage)
 
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
 
@@ -265,7 +265,7 @@ internal class PersistenceMessagesLogicImpl(
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
         insertTmpMessageToDb(tmpMessage)
-        messagesCache.add(tmpMessage)
+        messagesCache.add(channelId, tmpMessage)
 
         if (checkHasFileAttachments(message)) {
             SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId, true).await()
@@ -290,7 +290,7 @@ internal class PersistenceMessagesLogicImpl(
                         TransferData(tmpMessage.tid, attachment.tid, 100f,
                             TransferState.Uploaded, attachment.filePath, attachment.url))
             }
-            messagesCache.add(tmpMessage)
+            messagesCache.add(channelId, tmpMessage)
             val response = sendMessageWithUploadedAttachments(channelId, it)
             if (response is SceytResponse.Error)
                 areSentAllWithSuccessResult = false
@@ -345,7 +345,7 @@ internal class PersistenceMessagesLogicImpl(
                     tid = responseMsg.tid, serverId = responseMsg.id,
                     date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
-                messagesCache.messageUpdated(responseMsg)
+                messagesCache.messageUpdated(channelId, responseMsg)
                 persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
             }
         }
@@ -354,7 +354,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             messageDao.deleteMessageByTid(message.tid)
-            messagesCache.deleteMessage(message.tid)
+            messagesCache.deleteMessage(channelId, message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
             WorkManager.getInstance(context).cancelAllWorkByTag(message.tid.toString())
             message.attachments?.firstOrNull()?.let {
@@ -403,7 +403,7 @@ internal class PersistenceMessagesLogicImpl(
                                 tid = responseMsg.tid, serverId = responseMsg.id,
                                 date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
-                            messagesCache.messageUpdated(responseMsg)
+                            messagesCache.messageUpdated(it.messageEntity.channelId, responseMsg)
                         }
                     } else Log.e("sendMessage", "send pending message error-> ${response.message}")
                 }
@@ -431,12 +431,12 @@ internal class PersistenceMessagesLogicImpl(
         return markMessagesAs(channelId, Displayed, *ids)
     }
 
-    override suspend fun editMessage(id: Long, message: SceytMessage): SceytResponse<SceytMessage> {
-        val response = messagesRepository.editMessage(id, message)
+    override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
+        val response = messagesRepository.editMessage(channelId, message)
         if (response is SceytResponse.Success) {
             response.data?.let { updatedMsg ->
                 messageDao.updateMessage(updatedMsg.toMessageEntity(false))
-                messagesCache.messageUpdated(updatedMsg)
+                messagesCache.messageUpdated(channelId, updatedMsg)
                 persistenceChannelsLogic.onMessageEditedOrDeleted(updatedMsg)
             }
         }
@@ -457,7 +457,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun attachmentSuccessfullySent(message: SceytMessage) {
         messageDao.upsertMessage(message.toMessageDb(false))
-        messagesCache.upsertNotifyUpdateAnyway(message)
+        messagesCache.upsertNotifyUpdateAnyway(message.channelId, message)
     }
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
@@ -512,7 +512,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messagesCache.addAll(messages, false)
+        messagesCache.addAll(channelId, messages, false)
 
         // Mark messages as received
         markChannelMessagesAsDelivered(channelId, messages)
@@ -542,7 +542,7 @@ internal class PersistenceMessagesLogicImpl(
                     // Check maybe messages was cleared
                     if (offset == 0 && messages.isEmpty()) {
                         messageDao.deleteAllMessagesExceptPending(channelId)
-                        messagesCache.clearAllExceptPending()
+                        messagesCache.clearAllExceptPending(channelId)
                         forceHasDiff = true
                     }
                 }
@@ -588,7 +588,7 @@ internal class PersistenceMessagesLogicImpl(
             it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
         }
 
-        hasDiff = messagesCache.addAll(messages, true)
+        hasDiff = messagesCache.addAll(channelId, messages, true)
 
         if (forceHasDiff) hasDiff = true
 
@@ -596,7 +596,7 @@ internal class PersistenceMessagesLogicImpl(
         markChannelMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.ServerResponse(
-            data = response, cacheData = messagesCache.getSorted(),
+            data = response, cacheData = messagesCache.getSorted(channelId),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }
@@ -736,7 +736,7 @@ internal class PersistenceMessagesLogicImpl(
                 val deliveryStatus = status.toDeliveryStatus()
                 messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, deliveryStatus)
                 val tIds = messageDao.getMessageTIdsByIds(*ids)
-                messagesCache.updateMessagesStatus(deliveryStatus, *tIds.toLongArray())
+                messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
                 pendingMarkersDao.deleteMessagesMarkersByStatus(response.data.messageIds, status)
                 ids.forEach {
