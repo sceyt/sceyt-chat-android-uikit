@@ -10,6 +10,7 @@ import android.graphics.Typeface
 import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -229,19 +230,20 @@ abstract class BaseMsgViewHolder(private val view: View,
                     }
                 }
             }
-            root.isVisible = true
+            with(root) {
+                layoutParams.width = LayoutParams.WRAP_CONTENT
+                measure(View.MeasureSpec.UNSPECIFIED, 0)
+                layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
+                val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
+                if (measuredWidth < bubbleMeasuredWidth)
+                    layoutParams.width = bubbleMeasuredWidth
 
-            root.setOnClickListener {
-                (messageListItem as? MessageListItem.MessageItem)?.let { item ->
-                    messageListeners?.onReplyMessageContainerClick(it, item)
-                }
-            }
+                isVisible = true
 
-            root.post {
-                val bubbleWidth = layoutBubble?.width ?: return@post
-                if (root.width < bubbleWidth) {
-                    root.layoutParams.width = bubbleWidth
-                    root.requestLayout()
+                setOnClickListener {
+                    (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                        messageListeners?.onReplyMessageContainerClick(it, item)
+                    }
                 }
             }
         }
