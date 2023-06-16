@@ -11,6 +11,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.appcompat.widget.AppCompatTextView
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 
 class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatTextView(context, attrs, defStyleAttr) {
@@ -23,6 +25,9 @@ class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: 
         doOnLongClick?.invoke(this)
     }
 
+    init {
+        setLinkTextColor(context.getCompatColor(MessagesStyle.autoLinkTextColor))
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {

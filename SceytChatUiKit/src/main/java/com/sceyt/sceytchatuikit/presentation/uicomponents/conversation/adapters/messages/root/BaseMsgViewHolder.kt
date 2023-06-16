@@ -30,7 +30,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
-import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
@@ -122,14 +121,13 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage, isLink: Boolean = false) {
         val bodyText = message.body.trim()
-        messageBody.autoLinkMask = 0
-        if (!MentionUserHelper.containsMentionsUsers(message)) {
-            setTextAutoLinkMasks(messageBody, bodyText, isLink)
-            messageBody.text = bodyText
-        } else {
-            messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, bodyText,
-                message.metadata, message.mentionedUsers, enableClick = true)
-        }
+        val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
+            bodyText
+        } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
+            message.metadata, message.mentionedUsers, enableClick = false)
+
+        setTextAutoLinkMasks(messageBody, text.toString(), isLink)
+        messageBody.setText(text, TextView.BufferType.SPANNABLE)
     }
 
     private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, isLink: Boolean) {
@@ -137,18 +135,11 @@ abstract class BaseMsgViewHolder(private val view: View,
             messageBody.autoLinkMask = Linkify.WEB_URLS
             return
         }
-        try {
-            if (bodyText.isValidEmail()) {
-                messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
-                return
-            }
-            val phone = PhoneNumberUtil.getInstance().parse(bodyText, "")
-            val isValid = PhoneNumberUtil.getInstance().isValidNumber(phone)
-            if (isValid) {
-                messageBody.autoLinkMask = Linkify.PHONE_NUMBERS
-            }
-        } catch (_: Exception) {
+        if (bodyText.isValidEmail()) {
+            messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
+            return
         }
+        messageBody.autoLinkMask = 0
     }
 
     @SuppressLint("SetTextI18n")
