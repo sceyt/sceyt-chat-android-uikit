@@ -83,7 +83,7 @@ class IncAttachmentsMsgViewHolder(
                     setFilesAdapter(message)
 
                 if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply)
+                    setReplyMessageContainer(message, binding.viewReply, false)
 
                 if (item.message.canShowAvatarAndName)
                     avatar.setOnClickListener {

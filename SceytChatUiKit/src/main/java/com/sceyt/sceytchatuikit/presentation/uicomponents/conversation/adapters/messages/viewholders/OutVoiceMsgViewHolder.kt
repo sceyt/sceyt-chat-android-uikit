@@ -9,12 +9,30 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceMessageBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
+import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
+import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -91,7 +109,7 @@ class OutVoiceMsgViewHolder(
                 initAttachment()
 
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, viewReply)
+                setReplyMessageContainer(message, viewReply, false)
 
             initVoiceMessage()
         }
@@ -174,19 +192,24 @@ class OutVoiceMsgViewHolder(
                 lastFilePath = data.filePath
                 binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
             }
+
             PendingUpload, PauseUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             PendingDownload -> {
                 binding.playPauseButton.setImageResource(0)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             Downloading, Uploading -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             ErrorUpload, ErrorDownload, PauseDownload -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             FilePathChanged, ThumbLoaded -> return
         }
     }
