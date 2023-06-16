@@ -225,7 +225,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messageUpdatedFlow.filter { it.first == channel.id }.onEach { data ->
+    MessagesCache.messageUpdatedFlow.onEach { data ->
         viewModelScope.launch(Dispatchers.Default) {
             data.second.forEach {
                 val message = initMessageInfoData(it)
