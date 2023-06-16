@@ -37,6 +37,7 @@
     <color name="sceyt_color_admin_role">#7A6EF6</color>
     <color name="sceyt_color_disabled">#BFBFC2</color>
     <color name="sceyt_self_reaction_color">#4BBEFD</color>
+    <color name="sceyt_auto_link_color">#438CED</color>
     <color name="sceyt_media_primary_color">#CC000000</color>
 
 </resources>
