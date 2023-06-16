@@ -49,7 +49,6 @@ class MessagesCache {
             return if (checkDifference)
                 putAndCheckHasDiff(channelId, true, *list.toTypedArray())
             else {
-                // cachedMessages.putAll(list.associateBy { it.tid })
                 putAllMessages(channelId, list)
                 false
             }
@@ -61,7 +60,6 @@ class MessagesCache {
             val exist = getMessageByTid(channelId, message.id) != null
             val payLoad = if (exist)
                 getPayLoads(channelId, message) else null
-            //cachedMessages[message.tid] = message
             putMessage(channelId, message)
             if (exist)
                 emitMessageUpdated(channelId, payLoad?.toList(), message)
