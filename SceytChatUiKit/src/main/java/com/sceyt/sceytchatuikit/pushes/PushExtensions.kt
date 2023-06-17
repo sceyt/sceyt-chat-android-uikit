@@ -26,7 +26,10 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
     return try {
         val messageJson = remoteMessage.data["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
-        val messageId = messageJsonObject.getLong("id")
+
+        // Do not getLong from json when its a string
+        // double.parse corrupts the value
+        val messageIdString = messageJsonObject.getString("id")
         val bodyString = messageJsonObject.getString("body")
         val messageType = messageJsonObject.getString("type")
         val meta = messageJsonObject.getString("metadata")
@@ -43,6 +46,8 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
                 }
             }
         }
+
+        val messageId = messageIdString.toLong()
 
         Message(messageId, messageId, channelId
                 ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
