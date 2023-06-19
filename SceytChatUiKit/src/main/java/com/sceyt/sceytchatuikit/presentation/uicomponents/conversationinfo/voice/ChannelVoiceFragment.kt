@@ -131,11 +131,6 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         })
     }
 
-    override fun onPause() {
-        super.onPause()
-        AudioPlayerHelper.stopAll()
-    }
-
     companion object {
         const val CHANNEL = "CHANNEL"
 
