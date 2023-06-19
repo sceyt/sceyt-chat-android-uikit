@@ -9,6 +9,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceMessageBinding
+import com.sceyt.sceytchatuikit.extensions.TAG_REF
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -17,6 +18,7 @@ import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -138,15 +140,31 @@ class OutVoiceMsgViewHolder(
 
         voiceDuration.text = metaDuration.durationToMinSecShort()
         seekBar.isEnabled = false
+
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: ""))
+            initAudioPlayer()
     }
 
     private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: "")) {
+            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(playerListener, TAG_REF)
+            AudioPlayerHelper.toggle(lastFilePath)
+        } else
+            initAudioPlayer()
+    }
 
-        AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
-            override fun onInitialized() {
-                AudioPlayerHelper.toggle(lastFilePath)
+    private fun initAudioPlayer() {
+        AudioPlayerHelper.init(lastFilePath, playerListener, TAG_REF)
+    }
+
+    private val playerListener: OnAudioPlayer by lazy {
+        object : OnAudioPlayer {
+            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer) {
+                if (!alreadyInitialized)
+                    player.togglePlayPause()
+
                 runOnMainThread {
                     binding.seekBar.isEnabled = true
                     binding.playBackSpeed.isEnabled = true
@@ -182,7 +200,7 @@ class OutVoiceMsgViewHolder(
                     currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
                 }
             }
-        })
+        }
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
@@ -190,7 +208,7 @@ class OutVoiceMsgViewHolder(
         when (data.state) {
             Uploaded, Downloaded -> {
                 lastFilePath = data.filePath
-                binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
+                binding.playPauseButton.setImageResource(getPlayPauseItemResId())
             }
 
             PendingUpload, PauseUpload -> {
@@ -214,9 +232,9 @@ class OutVoiceMsgViewHolder(
         }
     }
 
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        AudioPlayerHelper.stop(lastFilePath)
+    private fun getPlayPauseItemResId(): Int {
+        val isPlaying = AudioPlayerHelper.isPlaying(fileItem.file.filePath ?: "")
+        return if (isPlaying) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
     }
 
     override val loadingProgressView: SceytCircularProgressView
