@@ -18,7 +18,10 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
     return try {
         val messageJson = remoteMessage.data["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
-        val messageId = messageJsonObject.getLong("id")
+
+        // Do not getLong from json when its a string
+        // double.parse corrupts the value
+        val messageIdString = messageJsonObject.getString("id")
         val bodyString = messageJsonObject.getString("body")
         val messageType = messageJsonObject.getString("type")
         val meta = messageJsonObject.getString("metadata")
@@ -35,6 +38,8 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
                 }
             }
         }
+
+        val messageId = messageIdString.toLong()
 
         Message(messageId, messageId, channelId
                 ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
@@ -68,13 +73,13 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? 
     val channelJson = remoteMessage.data["channel"] ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
-        val id = channelJsonObject.getString("id")
+        val id = channelJsonObject.getString("id").toLong()
         val type = channelJsonObject.getString("type")
         val uri = channelJsonObject.getString("uri")
         val subject = channelJsonObject.getString("subject")
         val meta = channelJsonObject.getString("metadata")
         val membersCount = channelJsonObject.getLong("members_count")
-        val channel = Channel(id.toLong(), 0, uri, subject, meta, null, meta, 0,
+        val channel = Channel(id, 0, uri, subject, meta, null, meta, 0,
             0, 0, membersCount, null, "", false, 0, 0,
             0, false, false, false, 0, 0, 0,
             0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
@@ -91,7 +96,7 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
         val data = attachment.getString("data")
         val name = attachment.getString("name")
         val type = attachment.getString("type")
-        val size = attachment.getLong("size")
+        val size = attachment.getString("size").toLong()
         Attachment.Builder("", data, type).setFileSize(size).setName(name).build()
     } catch (e: Exception) {
         e.printStackTrace()
@@ -103,7 +108,7 @@ fun getReactionScoreFromPushJson(json: String?): ReactionScore? {
     return try {
         val jsonObject = JSONObject(json ?: return null)
         val key = jsonObject.getString("key")
-        val score = jsonObject.getLong("score")
+        val score = jsonObject.getString("score").toLong()
         if (key.isEmpty() || score == 0L) return null
         ReactionScore(key, score)
     } catch (e: Exception) {

@@ -5,8 +5,10 @@ import android.media.MediaPlayer;
 import android.os.Build;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AudioPlayerImpl implements AudioPlayer {
 
@@ -15,13 +17,13 @@ public class AudioPlayerImpl implements AudioPlayer {
     private final String filePath;
     private long startTime;
     private Timer timer;
-    private final AudioPlayerHelper.OnAudioPlayer events;
+    private final ConcurrentHashMap<String, AudioPlayerHelper.OnAudioPlayer> events = new ConcurrentHashMap<>();
     private boolean stopped;
 
-    public AudioPlayerImpl(String audioFilePath, AudioPlayerHelper.OnAudioPlayer events) {
+    public AudioPlayerImpl(String audioFilePath, AudioPlayerHelper.OnAudioPlayer events, String tag) {
         this.filePath = audioFilePath;
         this.player = new MediaPlayer();
-        this.events = events;
+        this.events.put(tag, events);
 
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
@@ -31,8 +33,8 @@ public class AudioPlayerImpl implements AudioPlayer {
         this.player.setAudioAttributes(audioAttributes);
     }
 
-    public AudioPlayerHelper.OnAudioPlayer getEvents() {
-        return events;
+    public Collection<AudioPlayerHelper.OnAudioPlayer> getEvents() {
+        return events.values();
     }
 
     @Override
@@ -41,19 +43,20 @@ public class AudioPlayerImpl implements AudioPlayer {
             this.player.setDataSource(filePath);
 
             this.player.setOnPreparedListener(mp -> {
-                this.events.onProgress(player.getCurrentPosition(), player.getDuration());
+                for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+                    event.onProgress(player.getCurrentPosition(), player.getDuration());
             });
 
             this.player.setOnSeekCompleteListener(mp -> {
-                if (events != null)
-                    events.onSeek(player.getCurrentPosition());
+                for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+                    event.onSeek(player.getCurrentPosition());
             });
 
             this.player.setOnCompletionListener(mp -> {
                 stopTimer();
                 this.stopped = true;
-                if (events != null)
-                    events.onStop();
+                for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+                    event.onStop();
             });
 
             this.player.prepare();
@@ -70,9 +73,8 @@ public class AudioPlayerImpl implements AudioPlayer {
         this.startTime = System.currentTimeMillis();
         this.player.start();
         startTimer();
-        if (events != null) {
-            events.onToggle(this.player.isPlaying());
-        }
+        for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+            event.onToggle(this.player.isPlaying());
     }
 
     @Override
@@ -85,8 +87,8 @@ public class AudioPlayerImpl implements AudioPlayer {
         stopTimer();
         this.player.stop();
         this.stopped = true;
-        if (events != null)
-            events.onStop();
+        for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+            event.onStop();
     }
 
     @Override
@@ -121,16 +123,15 @@ public class AudioPlayerImpl implements AudioPlayer {
 
     @Override
     public void togglePlayPause() {
-        if (this.player.isPlaying())
-            this.player.pause();
+        if (player.isPlaying())
+            player.pause();
         else if (startTime > 0 && !stopped)
-            this.player.start();
+            player.start();
         else
-            this.play();
+            play();
 
-        if (events != null) {
-            events.onToggle(this.player.isPlaying());
-        }
+        for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+            event.onToggle(player.isPlaying());
     }
 
     @Override
@@ -145,8 +146,8 @@ public class AudioPlayerImpl implements AudioPlayer {
                 if (!isPlaying)
                     this.player.pause();
 
-                if (events != null)
-                    events.onSpeedChanged(speed);
+                for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+                    event.onSpeedChanged(speed);
             }
 
         }
@@ -155,6 +156,16 @@ public class AudioPlayerImpl implements AudioPlayer {
     @Override
     public String getFilePath() {
         return this.filePath;
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return player != null && player.isPlaying();
+    }
+
+    @Override
+    public void addEventListener(AudioPlayerHelper.OnAudioPlayer event, String tag) {
+        this.events.put(tag, event);
     }
 
     private void startTimer() {
@@ -169,11 +180,9 @@ public class AudioPlayerImpl implements AudioPlayer {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-
-                if (AudioPlayerImpl.this.events != null) {
-                    events.onProgress(AudioPlayerImpl.this.player.getCurrentPosition(),
+                for (AudioPlayerHelper.OnAudioPlayer event : events.values())
+                    event.onProgress(AudioPlayerImpl.this.player.getCurrentPosition(),
                             AudioPlayerImpl.this.player.getDuration());
-                }
             }
         }, TIMER_PERIOD, TIMER_PERIOD);
     }

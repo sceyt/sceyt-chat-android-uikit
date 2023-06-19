@@ -78,10 +78,12 @@ class OutAttachmentsMsgViewHolder(
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply)
+                    setReplyMessageContainer(message, binding.viewReply, false)
             }
         }
     }
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)

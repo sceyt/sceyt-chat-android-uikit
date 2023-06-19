@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.awaitToScrollFinish
 import com.sceyt.sceytchatuikit.extensions.findIndexed
@@ -608,7 +609,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
         super.onWindowFocusChanged(hasWindowFocus)
         onWindowFocusChangeListener?.invoke(hasWindowFocus)
-        if (!hasWindowFocus)
+        if (!hasWindowFocus && context.asActivity().isFinishing)
             AudioPlayerHelper.stopAll()
     }
 

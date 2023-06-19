@@ -224,9 +224,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messageUpdatedFlow.onEach { messages ->
+    MessagesCache.messageUpdatedFlow.onEach { data ->
         viewModelScope.launch(Dispatchers.Default) {
-            messages.forEach {
+            data.second.forEach {
                 val message = initMessageInfoData(it)
                 withContext(Dispatchers.Main) {
                     if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
@@ -278,11 +278,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         it.second.highlighted = true
                         messagesListView.scrollToPositionAndHighlight(it.first, true)
                     }
-                } /*?: run {
+                } ?: run {
                     loadNearMessages(parentId, LoadKeyData(
                         key = LoadKeyType.ScrollToMessageById.longValue,
                         value = parentId))
-                }*/
+                }
             }
         }
     }

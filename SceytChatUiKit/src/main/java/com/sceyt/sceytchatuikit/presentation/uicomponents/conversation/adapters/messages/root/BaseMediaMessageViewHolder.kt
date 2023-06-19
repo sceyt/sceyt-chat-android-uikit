@@ -4,6 +4,7 @@ import android.util.Size
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
@@ -70,11 +71,12 @@ abstract class BaseMediaMessageViewHolder(
                 ?: maxSize,
             imageHeight = fileItem.size?.height ?: maxSize)
         resizedImageSize = size
+        val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val constraintSet = ConstraintSet()
-        constraintSet.clone(layoutDetails)
+        constraintSet.clone(layoutBubble)
         constraintSet.constrainMinHeight(fileImage.id, size.height)
         constraintSet.constrainMinWidth(fileImage.id, size.width)
-        constraintSet.applyTo(layoutDetails)
+        constraintSet.applyTo(layoutBubble)
 
         val message = fileItem.sceytMessage
         with(fileImage) {
@@ -158,10 +160,21 @@ abstract class BaseMediaMessageViewHolder(
                         h
                     else minSize
                 } else {
-                    val w = (defaultSize * coefficient).toInt()
+                    val futureW = (defaultSize * coefficient).toInt()
+                    val coefficientWidth = futureW.toDouble() / defaultSize.toDouble()
+                    var newDefaultSize = defaultSize
+
+                    // If the width of the image is less than 80% of the default size, then we can increase the default size by 20%
+                    if (coefficientWidth <= 0.8 )
+                        newDefaultSize = (defaultSize * 1.2).toInt()
+
+                    val w = (newDefaultSize * coefficient).toInt()
+
                     scaleWidth = if (w >= minSize)
                         w
                     else minSize
+
+                    scaleHeight = newDefaultSize
                 }
             }
             return Size(scaleWidth, scaleHeight)

@@ -156,7 +156,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
         } else if (force)
-            mAdapter.notifyDataSetChanged()
+            mAdapter.forceUpdate(messages)
         else
             mAdapter.notifyUpdate(messages, this)
     }

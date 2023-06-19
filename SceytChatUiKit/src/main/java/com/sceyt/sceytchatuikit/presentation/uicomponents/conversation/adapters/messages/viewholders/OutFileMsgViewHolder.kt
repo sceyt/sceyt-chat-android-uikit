@@ -86,7 +86,7 @@ class OutFileMsgViewHolder(
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
+                setReplyMessageContainer(message, binding.viewReply, false)
 
             if (diff.filesChanged)
                 initAttachment()
@@ -95,6 +95,8 @@ class OutFileMsgViewHolder(
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
         }
     }
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {
@@ -109,18 +111,23 @@ class OutFileMsgViewHolder(
             TransferState.Uploaded, TransferState.Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
             }
+
             TransferState.PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             TransferState.PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
             }
+
             TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
         }
     }

@@ -8,10 +8,12 @@ import android.widget.FrameLayout
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.sceytchatuikit.databinding.SceytRecordedVoicePresenterBinding
+import com.sceyt.sceytchatuikit.extensions.TAG_REF
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
 import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
@@ -39,6 +41,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                         isShowing = false
                         listener?.onDeleteVoiceRecord()
                     }
+
                     playVoiceRecord.id -> {
                         listener?.onPlayVoiceRecord()
 
@@ -52,8 +55,9 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                         }
 
                         AudioPlayerHelper.init(file.path, object : OnAudioPlayer {
-                            override fun onInitialized() {
-                                AudioPlayerHelper.toggle(file.path)
+                            override fun onInitialized(alreadyInitialized: Boolean, currentPlayer: AudioPlayer) {
+                                if (!alreadyInitialized)
+                                    AudioPlayerHelper.toggle(file.path)
                             }
 
                             override fun onProgress(position: Long, duration: Long) {
@@ -83,7 +87,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
 
                             override fun onError() {
                             }
-                        })
+                        }, TAG_REF)
                     }
                     icSendMessage.id -> {
                         AudioPlayerHelper.stop(file.path)

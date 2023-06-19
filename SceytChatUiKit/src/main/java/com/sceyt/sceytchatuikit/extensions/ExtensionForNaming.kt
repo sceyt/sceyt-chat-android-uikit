@@ -61,3 +61,6 @@ private fun isDeletedUser(status: UserActivityStatus): Boolean {
 
 val Any.TAG: String
     get() = javaClass.simpleName
+
+val Any.TAG_REF: String
+    get() = this.toString()

@@ -10,6 +10,7 @@ import android.graphics.Typeface
 import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -29,7 +30,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
-import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
@@ -84,10 +84,14 @@ abstract class BaseMsgViewHolder(private val view: View,
             highlight()
     }
 
-    open val layoutDetails: ConstraintLayout? = null
+    /** The Pair's param ViewGroup is layout bubble, the param Boolean when true, that mean the
+     *  layout bubble with will resize depend reactions. */
+    open val layoutBubbleConfig: Pair<ViewGroup, Boolean>? = null
+
+    protected val layoutBubble get() = layoutBubbleConfig?.first
 
     protected open fun setMaxWidth() {
-        (layoutDetails?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
+        (layoutBubble?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
     fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
@@ -117,14 +121,13 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage, isLink: Boolean = false) {
         val bodyText = message.body.trim()
-        messageBody.autoLinkMask = 0
-        if (!MentionUserHelper.containsMentionsUsers(message)) {
-            setTextAutoLinkMasks(messageBody, bodyText, isLink)
-            messageBody.text = bodyText
-        } else {
-            messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, bodyText,
-                message.metadata, message.mentionedUsers, enableClick = true)
-        }
+        val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
+            bodyText
+        } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
+            message.metadata, message.mentionedUsers, enableClick = false)
+
+        setTextAutoLinkMasks(messageBody, text.toString(), isLink)
+        messageBody.setText(text, TextView.BufferType.SPANNABLE)
     }
 
     private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, isLink: Boolean) {
@@ -132,18 +135,11 @@ abstract class BaseMsgViewHolder(private val view: View,
             messageBody.autoLinkMask = Linkify.WEB_URLS
             return
         }
-        try {
-            if (bodyText.isValidEmail()) {
-                messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
-                return
-            }
-            val phone = PhoneNumberUtil.getInstance().parse(bodyText, "")
-            val isValid = PhoneNumberUtil.getInstance().isValidNumber(phone)
-            if (isValid) {
-                messageBody.autoLinkMask = Linkify.PHONE_NUMBERS
-            }
-        } catch (_: Exception) {
+        if (bodyText.isValidEmail()) {
+            messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
+            return
         }
+        messageBody.autoLinkMask = 0
     }
 
     @SuppressLint("SetTextI18n")
@@ -167,7 +163,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         message.setConversationMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
-    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub) {
+    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
         if (!message.isReplied) {
             viewStub.isVisible = false
             return
@@ -225,11 +221,21 @@ abstract class BaseMsgViewHolder(private val view: View,
                     }
                 }
             }
-            root.isVisible = true
+            with(root) {
+                if (calculateWith) {
+                    layoutParams.width = LayoutParams.WRAP_CONTENT
+                    measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
+                    if (measuredWidth < bubbleMeasuredWidth)
+                        layoutParams.width = bubbleMeasuredWidth
+                }
+                isVisible = true
 
-            root.setOnClickListener {
-                (messageListItem as? MessageListItem.MessageItem)?.let { item ->
-                    messageListeners?.onReplyMessageContainerClick(it, item)
+                setOnClickListener {
+                    (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                        messageListeners?.onReplyMessageContainerClick(it, item)
+                    }
                 }
             }
         }

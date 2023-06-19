@@ -187,16 +187,19 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                         else getString(R.string.sceyt_subscriber_count, memberCount)
                     }
                 }
-
-                subjectTextView.text = title
-                subjectTextView.isVisible = !title.isNullOrBlank() && !isTyping
+                setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !isTyping)
             } else {
                 val fullName = replyMessage?.from?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                subjectTextView.text = subTitleText
-                subjectTextView.isVisible = !fullName.isNullOrBlank() && !isTyping
+                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
             }
         }
+    }
+
+    private fun setSubTitleText(textView: TextView, title: String?, visible: Boolean) {
+        if (textView.text.equals(title) && textView.isVisible == visible) return
+        textView.text = title
+        textView.isVisible = visible
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
