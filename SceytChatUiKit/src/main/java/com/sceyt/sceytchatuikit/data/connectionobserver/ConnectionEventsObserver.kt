@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object ConnectionEventsObserver {
-    val connectionState get() = ClientWrapper.connectionState ?: ConnectionState.Disconnected
+    val connectionState get() = ClientWrapper.getConnectionState() ?: ConnectionState.Disconnected
     val isConnected get() = connectionState == ConnectionState.Connected
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
