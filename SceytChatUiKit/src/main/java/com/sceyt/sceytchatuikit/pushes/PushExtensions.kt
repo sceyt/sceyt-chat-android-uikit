@@ -81,22 +81,22 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? 
     val channelJson = remoteMessage.data["channel"] ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
-        val id = channelJsonObject.getString("id")
+        val id = channelJsonObject.getString("id").toLong()
         val type = channelJsonObject.getString("type")
         val uri = channelJsonObject.getString("uri")
         val subject = channelJsonObject.getString("subject")
         val meta = channelJsonObject.getString("metadata")
         val membersCount = channelJsonObject.getInt("members_count")
         val channel: Channel = when (stringToEnum(type)) {
-            ChannelTypeEnum.Direct -> DirectChannel(id.toLong(), meta, "", 0, 0,
+            ChannelTypeEnum.Direct -> DirectChannel(id, meta, "", 0, 0,
                 Member(Role(RoleTypeEnum.Owner.name), peer), null, 0L, 0, 0, false, 0, false,
                 0L, 0L, 0, null, null, null)
 
-            ChannelTypeEnum.Public -> PublicChannel(id.toLong(), uri, subject, meta, null, "", 0,
+            ChannelTypeEnum.Public -> PublicChannel(id, uri, subject, meta, null, "", 0,
                 0, arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
                 false, 0, 0, 0, null, null, null)
 
-            ChannelTypeEnum.Private -> PrivateChannel(id.toLong(), subject, meta, "", "", 0, 0,
+            ChannelTypeEnum.Private -> PrivateChannel(id, subject, meta, "", "", 0, 0,
                 arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
                 false, 0, 0, 0, null, null, null)
         }
@@ -113,7 +113,7 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
         val data = attachment.getString("data")
         val name = attachment.getString("name")
         val type = attachment.getString("type")
-        val size = attachment.getLong("size")
+        val size = attachment.getString("size").toLong()
         Attachment.Builder("", data, type).setFileSize(size).setName(name).build()
     } catch (e: Exception) {
         e.printStackTrace()
@@ -125,7 +125,7 @@ fun getReactionScoreFromPushJson(json: String?): ReactionScore? {
     return try {
         val jsonObject = JSONObject(json ?: return null)
         val key = jsonObject.getString("key")
-        val score = jsonObject.getLong("score")
+        val score = jsonObject.getString("score").toLong()
         if (key.isEmpty() || score == 0L) return null
         ReactionScore(key, score)
     } catch (e: Exception) {
