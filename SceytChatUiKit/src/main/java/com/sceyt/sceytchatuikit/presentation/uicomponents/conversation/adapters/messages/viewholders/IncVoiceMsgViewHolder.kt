@@ -9,12 +9,32 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncVoiceMessageBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG_REF
+import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
+import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
+import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -90,7 +110,7 @@ class IncVoiceMsgViewHolder(
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, viewReply)
+                setReplyMessageContainer(message, viewReply, false)
 
             if (diff.filesChanged)
                 initAttachment()
@@ -103,6 +123,8 @@ class IncVoiceMsgViewHolder(
             initVoiceMessage()
         }
     }
+
+    override val layoutBubbleConfig get() = Pair(binding.root, false)
 
     private fun SceytItemIncVoiceMessageBinding.initVoiceMessage() {
         val metaDuration: Long = fileItem.duration?.times(1000L) //convert to milliseconds
@@ -131,15 +153,31 @@ class IncVoiceMsgViewHolder(
 
         voiceDuration.text = metaDuration.durationToMinSecShort()
         seekBar.isEnabled = false
+
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: ""))
+            initAudioPlayer()
     }
 
     private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: "")) {
+            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(playerListener, TAG_REF)
+            AudioPlayerHelper.toggle(lastFilePath)
+        } else
+            initAudioPlayer()
+    }
 
-        AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
-            override fun onInitialized() {
-                AudioPlayerHelper.toggle(lastFilePath)
+    private fun initAudioPlayer() {
+        AudioPlayerHelper.init(lastFilePath, playerListener, TAG_REF)
+    }
+
+    private val playerListener: OnAudioPlayer by lazy {
+        object : OnAudioPlayer {
+            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer) {
+                if (!alreadyInitialized)
+                    player.togglePlayPause()
+
                 runOnMainThread {
                     binding.seekBar.isEnabled = true
                     binding.playBackSpeed.isEnabled = true
@@ -175,7 +213,7 @@ class IncVoiceMsgViewHolder(
                     currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
                 }
             }
-        })
+        }
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
@@ -183,28 +221,33 @@ class IncVoiceMsgViewHolder(
         when (data.state) {
             Uploaded, Downloaded -> {
                 lastFilePath = data.filePath
-                binding.playPauseButton.setImageResource(R.drawable.sceyt_ic_play)
+                binding.playPauseButton.setImageResource(getPlayPauseItemResId())
             }
+
             PendingUpload, PauseUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             PendingDownload -> {
                 binding.playPauseButton.setImageResource(0)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             Downloading, Uploading -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             ErrorUpload, ErrorDownload, PauseDownload -> {
                 binding.playPauseButton.setImageResource(0)
             }
+
             FilePathChanged, ThumbLoaded -> return
         }
     }
 
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        AudioPlayerHelper.stop(lastFilePath)
+    private fun getPlayPauseItemResId(): Int {
+        val isPlaying = AudioPlayerHelper.isPlaying(fileItem.file.filePath ?: "")
+        return if (isPlaying) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
     }
 
     override val loadingProgressView: SceytCircularProgressView

@@ -5,10 +5,11 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
 import com.sceyt.chat.models.message.MarkerCount
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import kotlin.math.max
 
 @Dao
 abstract class MessageDao {
@@ -129,27 +130,33 @@ abstract class MessageDao {
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
+    @Query("select * from messages where channelId =:channelId and message_id <=:lastMessageId " +
+            "and not isParentMessage order by createdAt desc, tid desc limit :limit")
+    abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
     @Query("select * from messages where channelId =:channelId and message_id >:messageId and not isParentMessage " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and message_id >=:messageId and not isParentMessage " +
-            "order by createdAt, tid limit :limit")
-    abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
-
-    @Transaction
     open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
-        val newest = getNewestThenMessageInclude(channelId, messageId, SceytKitConfig.MESSAGES_LOAD_SIZE / 2 + 1)
+        val newest = getNewestThenMessage(channelId, messageId, limit)
+
         if (newest.isEmpty() || (newest.size == 1 && newest[0].messageEntity.id == messageId))
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
 
-        val newMessages = newest.take(SceytKitConfig.MESSAGES_LOAD_SIZE / 1)
+        val oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
 
-        val oldest = getOldestThenMessages(channelId, messageId, limit - newMessages.size)
-        val hasPrev = oldest.size == limit - newMessages.size
-        val hasNext = newest.size > SceytKitConfig.MESSAGES_LOAD_SIZE / 2
-        return LoadNearData((newMessages + oldest).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
+        val newestDiff = max(limit / 2 - newest.size, 0)
+        val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
+
+        val newMessages = newest.take(limit / 2 + oldestDiff)
+        val oldMessages = oldest.takeLast(limit / 2 + 1 + newestDiff)
+
+        val hasPrev = oldest.size > limit / 2
+        val hasNext = newest.size > limit / 2
+        return LoadNearData((oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
     }
 
     @Transaction

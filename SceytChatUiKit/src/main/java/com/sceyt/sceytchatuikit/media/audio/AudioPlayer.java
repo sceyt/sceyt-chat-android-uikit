@@ -22,4 +22,8 @@ public interface AudioPlayer {
     void setPlaybackSpeed(float speed);
 
     String getFilePath();
+
+    boolean isPlaying();
+
+    void addEventListener(AudioPlayerHelper.OnAudioPlayer event, String tag);
 }

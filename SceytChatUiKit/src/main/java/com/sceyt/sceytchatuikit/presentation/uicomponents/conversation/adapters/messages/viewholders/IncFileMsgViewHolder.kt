@@ -88,7 +88,7 @@ class IncFileMsgViewHolder(
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
+                setReplyMessageContainer(message, binding.viewReply, false)
 
             if (diff.filesChanged)
                 initAttachment()
@@ -102,6 +102,8 @@ class IncFileMsgViewHolder(
                 }
         }
     }
+
+    override val layoutBubbleConfig get() = Pair(binding.root, false)
 
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {

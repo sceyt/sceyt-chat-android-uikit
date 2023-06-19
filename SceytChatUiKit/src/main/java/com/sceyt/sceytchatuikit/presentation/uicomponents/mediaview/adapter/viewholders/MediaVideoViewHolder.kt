@@ -32,6 +32,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
     private var isAttachedToWindow = false
+    private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
 
     init {
         binding.root.setOnClickListener {
@@ -73,7 +74,10 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                         playerHelper?.pausePlayer()
                     }
 
-                    MotionEvent.ACTION_UP -> if (isPlayingBeforePause) playerHelper?.resumePlayer()
+                    MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
+                        playerHelper?.resumePlayer()
+                        initWakeLock()
+                    }
                 }
                 false
             }
@@ -83,7 +87,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
         videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE)
-                playVideo(true)
+                initPlayerHelper(true)
 
             return@setOnTouchListener false
         }
@@ -93,7 +97,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
         videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
         videoController?.isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail()
                 ?: true)
-        playVideo()
+        initPlayerHelper()
     }
 
     private fun initPlayer(): ExoPlayerHelper {
@@ -106,9 +110,19 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
             if (it.isReady())
                 binding.icThumb.isVisible = false
-        }).also {
-            (bindingAdapter as? MediaAdapter)?.addMediaPlayer(it.player)
-        }
+        }, playingListener = { playing ->
+            if (playing) {
+                initWakeLock()
+            } else releaseWakeLock()
+        }).also { mediaAdapter?.addMediaPlayer(it.player) }
+    }
+
+    private fun initWakeLock() {
+        mediaAdapter?.initWakeLock(context)
+    }
+
+    private fun releaseWakeLock() {
+        mediaAdapter?.releaseWakeLock()
     }
 
     override fun onViewAttachedToWindow() {
@@ -153,7 +167,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             TransferState.Downloaded, TransferState.Uploaded -> {
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
                 if (isAttachedToWindow)
-                    playVideo()
+                    initPlayerHelper()
             }
 
             TransferState.PauseDownload -> {
@@ -172,15 +186,16 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
         }
     }
 
-    private fun playVideo(playVideo: Boolean = shouldPlayVideo()) {
+    private fun initPlayerHelper(playVideo: Boolean = shouldPlayVideo()) {
         if (!fileItem.file.filePath.isNullOrBlank()) {
             playerHelper = initPlayer()
             playerHelper?.setMediaPath(fileItem.file.filePath, playVideo)
+            if (playVideo) initWakeLock()
         }
     }
 
     private fun shouldPlayVideo(): Boolean {
-        return (bindingAdapter as MediaAdapter).shouldPlayVideoPath == fileItem.file.filePath
+        return mediaAdapter?.shouldPlayVideoPath == fileItem.file.filePath
     }
 
     private fun setListener() {

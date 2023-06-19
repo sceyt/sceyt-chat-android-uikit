@@ -10,7 +10,8 @@ import androidx.media3.ui.PlayerView
 class ExoPlayerHelper(private val context: Context,
                       private val playerView: PlayerView,
                       private val errorListener: ((PlaybackException) -> Unit)? = null,
-                      private val listener: PlayerStateChangeCallback? = null) : Player.Listener {
+                      private val listener: PlayerStateChangeCallback? = null,
+                      private val playingListener: ((Boolean) -> Unit)? = null) : Player.Listener {
 
     private lateinit var exoPlayer: ExoPlayer
     private var isSetMediaPath = false
@@ -78,6 +79,11 @@ class ExoPlayerHelper(private val context: Context,
             Player.STATE_READY -> listener?.updateState(State.Ready)
             else -> listener?.updateState(State.Unknown)
         }
+    }
+
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        super.onIsPlayingChanged(isPlaying)
+        playingListener?.invoke(isPlaying)
     }
 
     override fun onPlayerError(error: PlaybackException) {

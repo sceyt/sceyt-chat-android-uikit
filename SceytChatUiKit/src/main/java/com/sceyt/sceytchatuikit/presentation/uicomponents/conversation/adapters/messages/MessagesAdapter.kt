@@ -140,6 +140,13 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun forceUpdate(data: List<MessageListItem>) {
+        updateJob?.cancel()
+        messages = SyncArrayList(data)
+        notifyDataSetChanged()
+    }
+
     fun getData() = messages
 
     fun needTopOffset(position: Int): Boolean {

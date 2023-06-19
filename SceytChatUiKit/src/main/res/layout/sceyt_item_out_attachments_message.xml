@@ -50,7 +50,7 @@
 
         <ViewStub
             android:id="@+id/viewReply"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout="@layout/sceyt_recycler_reply_container"
