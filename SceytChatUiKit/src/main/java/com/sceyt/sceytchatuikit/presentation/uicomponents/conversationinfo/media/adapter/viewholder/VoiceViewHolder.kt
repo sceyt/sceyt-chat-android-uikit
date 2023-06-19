@@ -5,7 +5,13 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG_REF
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
@@ -48,6 +54,9 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
 
         lastFilePath = attachment.filePath
 
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: ""))
+            initAudioPlayer()
+
         with(binding) {
             val user = (item as ChannelFileItem.Voice).data.user
             tvFileName.text = user?.let {
@@ -56,40 +65,51 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
             tvDate.text = DateTimeUtil.getDateTimeString(attachment.createdAt, "dd.MM.yy • HH:mm")
 
             setVoiceDuration()
+            setPlayingState(AudioPlayerHelper.isPlaying(lastFilePath ?: ""))
 
             icFile.setOnClickListener {
-                AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
-                    override fun onInitialized() {
-                        AudioPlayerHelper.toggle(lastFilePath)
-                    }
-
-                    override fun onProgress(position: Long, duration: Long) {
-                        runOnMainThread {
-                            binding.tvDuration.text = position.durationToMinSecShort()
-                        }
-                    }
-
-                    override fun onSeek(position: Long) {
-                    }
-
-                    override fun onToggle(playing: Boolean) {
-                        binding.root.post { setPlayingState(playing) }
-                    }
-
-                    override fun onStop() {
-                        binding.root.post {
-                            setPlayingState(false)
-                        }
-                    }
-
-                    override fun onSpeedChanged(speed: Float) {
-                    }
-
-                    override fun onError() {
-                    }
-                })
+                if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: "")) {
+                    AudioPlayerHelper.toggle(lastFilePath)
+                } else initAudioPlayer()
             }
         }
+    }
+
+    private fun initAudioPlayer() {
+        AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
+            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer) {
+                if (!alreadyInitialized)
+                    AudioPlayerHelper.toggle(lastFilePath)
+            }
+
+            override fun onProgress(position: Long, duration: Long) {
+                runOnMainThread {
+                    binding.tvDuration.text = position.durationToMinSecShort()
+                }
+            }
+
+            override fun onSeek(position: Long) {
+            }
+
+            override fun onToggle(playing: Boolean) {
+                binding.root.post { setPlayingState(playing) }
+            }
+
+            override fun onStop() {
+                binding.root.post {
+                    setPlayingState(false)
+                }
+            }
+
+            override fun onSpeedChanged(speed: Float) {
+            }
+
+            override fun onError() {
+                binding.root.post {
+                    setPlayingState(false)
+                }
+            }
+        }, TAG_REF)
     }
 
     private fun updateState(data: TransferData) {
@@ -100,14 +120,9 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
             TransferState.Downloaded -> {
                 lastFilePath = data.filePath
             }
+
             else -> return
         }
-    }
-
-
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        AudioPlayerHelper.stop(lastFilePath ?: "")
     }
 
     private fun SceytItemChannelVoiceBinding.setupStyle() {
