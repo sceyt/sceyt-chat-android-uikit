@@ -382,6 +382,14 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         attachmentsLogic.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
     }
 
+    override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
+        return usersLogic.loadUsers(query)
+    }
+
+    override suspend fun loadMoreUsers(): SceytResponse<List<User>> {
+        return usersLogic.loadMoreUsers()
+    }
+
     override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
         return usersLogic.getSceytUsers(ids)
     }
