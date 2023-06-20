@@ -119,7 +119,7 @@ fun String?.isRtl(): Boolean {
 
 fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
     if (isNullOrBlank()) return Pair("", false)
-    val processed = getSafetyEmojiCompat()?.process(this, 0, length - 1, 1, EmojiCompat.REPLACE_STRATEGY_ALL)
+    val processed = processEmojiCompat(0, length - 1, 1, EmojiCompat.REPLACE_STRATEGY_ALL)
     return if (processed is Spannable) {
         val emojiSpans = processed.getSpans(0, processed.length - 1, EmojiSpan::class.java)
         val emojiSpan = emojiSpans.getOrNull(0) ?: Pair(take(1), false)
@@ -130,6 +130,24 @@ fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
         val spanEnd = processed.getSpanEnd(emojiSpan)
         return Pair(processed.subSequence(spanStart, spanEnd), true)
     } else Pair(take(1), false)
+}
+
+fun CharSequence?.processEmojiCompat(): CharSequence? {
+    return try {
+        EmojiCompat.get().process(this)
+    } catch (e: Exception) {
+        println("EmojiCompat.process: not initialized yet")
+        this
+    }
+}
+
+fun CharSequence?.processEmojiCompat(start: Int, end: Int, maxCount: Int, @EmojiCompat.ReplaceStrategy strategy: Int): CharSequence? {
+    return try {
+        EmojiCompat.get().process(this, start, end, maxCount, strategy)
+    } catch (e: Exception) {
+        println("EmojiCompat.process: not initialized yet")
+        this
+    }
 }
 
 fun String.notAutoCorrectable(): String {
