@@ -14,7 +14,6 @@ import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.emoji2.text.EmojiCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -196,15 +195,6 @@ fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
 
 fun Activity.statusBarBackgroundColor(color: Int) {
     window.statusBarColor = color
-}
-
-fun getSafetyEmojiCompat(): EmojiCompat? {
-    return try {
-        EmojiCompat.get()
-    } catch (e: Exception) {
-        println("EmojiCompat.getSafetyInstance: not initialized yet")
-        null
-    }
 }
 
 inline fun <reified T> Any.castSafety(): T? {

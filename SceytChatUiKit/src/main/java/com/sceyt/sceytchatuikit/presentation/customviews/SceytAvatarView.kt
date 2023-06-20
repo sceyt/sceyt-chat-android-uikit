@@ -15,7 +15,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getFirstCharIsEmoji
-import com.sceyt.sceytchatuikit.extensions.getSafetyEmojiCompat
+import com.sceyt.sceytchatuikit.extensions.processEmojiCompat
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.math.BigInteger
@@ -90,14 +90,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         val isEmoji = data.second
         if (isEmoji)
             return if (isInEditMode)
-                firstChar else getSafetyEmojiCompat()?.process(firstChar) ?: title.take(1)
+                firstChar else firstChar.processEmojiCompat() ?: title.take(1)
 
         val text = if (strings.size > 1) {
             val secondChar = strings[1].getFirstCharIsEmoji().first
             "${firstChar}${secondChar}".uppercase()
         } else firstChar.toString().uppercase()
 
-        return if (isInEditMode) text else getSafetyEmojiCompat()?.process(text) ?: title.take(1)
+        return if (isInEditMode) text else text.processEmojiCompat() ?: title.take(1)
     }
 
     private fun getAvatarRandomColor(): Int {

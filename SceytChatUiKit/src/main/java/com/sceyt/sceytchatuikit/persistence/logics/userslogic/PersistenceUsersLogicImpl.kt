@@ -27,6 +27,30 @@ internal class PersistenceUsersLogicImpl(
         private val preference: SceytSharedPreference
 ) : PersistenceUsersLogic, SceytKoinComponent {
 
+    override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
+        val response = userRepository.loadUsers(query)
+
+        if (response is SceytResponse.Success) {
+            response.data?.let { users ->
+                userDao.updateUsers(users.map { it.toUserEntity() })
+            }
+        }
+
+        return response
+    }
+
+    override suspend fun loadMoreUsers(): SceytResponse<List<User>> {
+        val response = userRepository.loadMoreUsers()
+
+        if (response is SceytResponse.Success) {
+            response.data?.let { users ->
+                userDao.updateUsers(users.map { it.toUserEntity() })
+            }
+        }
+
+        return response
+    }
+
     override suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<User>> {
         val response = userRepository.getSceytUsersByIds(ids)
 

@@ -8,17 +8,12 @@ import com.sceyt.chat.ui.presentation.addmembers.adapters.UserItem
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
-import com.sceyt.sceytchatuikit.data.repositories.UsersRepositoryImpl
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class UsersViewModel : BaseViewModel() {
-    //Todo
-    private val usersRepository: UsersRepository = UsersRepositoryImpl()
-
     private val _usersLiveData = MutableLiveData<List<UserItem>>()
     val usersLiveData: LiveData<List<UserItem>> = _usersLiveData
 
@@ -32,8 +27,8 @@ class UsersViewModel : BaseViewModel() {
         loadingNextItems.set(true)
         viewModelScope.launch(Dispatchers.IO) {
             val response = if (isLoadMore)
-                usersRepository.loadMoreUsers()
-            else usersRepository.loadUsers(query)
+                SceytKitClient.getUserMiddleWare().loadMoreUsers()
+            else SceytKitClient.getUserMiddleWare().loadUsers(query)
 
             var empty = false
             if (response is SceytResponse.Success) {

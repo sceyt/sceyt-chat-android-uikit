@@ -12,7 +12,7 @@ import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.extensions.getSafetyEmojiCompat
+import com.sceyt.sceytchatuikit.extensions.processEmojiCompat
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -44,7 +44,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
         set(value) {
             field = if (isInEditMode)
                 value
-            else getSafetyEmojiCompat()?.process(value) ?: value
+            else value.processEmojiCompat() ?: value
         }
 
     init {
