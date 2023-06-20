@@ -7,6 +7,8 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceUsersLogic {
+    suspend fun loadUsers(query: String): SceytResponse<List<User>>
+    suspend fun loadMoreUsers(): SceytResponse<List<User>>
     suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<User>>
     suspend fun getUserDbById(id: String): User?
     suspend fun getCurrentUser(): User?
