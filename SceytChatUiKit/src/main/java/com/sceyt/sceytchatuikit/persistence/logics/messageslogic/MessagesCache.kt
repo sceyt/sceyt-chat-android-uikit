@@ -57,12 +57,11 @@ class MessagesCache {
 
     fun add(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
-            val exist = getMessageByTid(channelId, message.id) != null
-            val payLoad = if (exist)
-                getPayLoads(channelId, message) else null
-            putMessage(channelId, message)
-            if (exist)
+            val hasDiff = putAndCheckHasDiff(channelId, false, message)
+            if (hasDiff) {
+                val payLoad = getPayLoads(channelId, message)
                 emitMessageUpdated(channelId, payLoad?.toList(), message)
+            }
         }
     }
 
