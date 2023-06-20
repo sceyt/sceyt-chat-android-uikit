@@ -104,6 +104,7 @@ internal class PersistenceMessagesLogicImpl(
             saveMessagesToDb(arrayListOf(message, parent))
         } ?: run { saveMessagesToDb(arrayListOf(message)) }
 
+        messagesCache.add(data.first.id, message)
         onMessageFlow.tryEmit(data)
 
         if (message.incoming && sendDeliveryMarker)
