@@ -18,6 +18,9 @@ import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE
 import java.lang.Character.getDirectionality
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -156,4 +159,12 @@ fun String.notAutoCorrectable(): String {
 
 fun String.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
+}
+
+fun String.toSha256(): Long {
+    val bytes = toByteArray(StandardCharsets.UTF_8)
+    val md = MessageDigest.getInstance("SHA-256")
+    val digest = md.digest(bytes)
+    val bigInt = BigInteger(1, digest)
+    return bigInt.toLong()
 }

@@ -32,12 +32,12 @@ interface ChannelDao {
     suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where role !=:ignoreRole " +
+    @Query("select * from channels where role !=:ignoreRole and (not pending or lastMessageTid != 0) " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
 
     @Transaction
-    @Query("select * from channels where subject LIKE '%' || :query || '%' " +
+    @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0)" +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
 
@@ -65,9 +65,9 @@ interface ChannelDao {
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:channelTypeEnum")
-    suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
+    suspend fun getDirectChannel(peerId: String, channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
 
-    @Query("select chat_id from channels where chat_id not in (:ids)")
+    @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
 
     @Query("select chat_id from channels")

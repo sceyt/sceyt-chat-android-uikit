@@ -3,12 +3,15 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.work.WorkManager
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.Reaction
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE
@@ -34,6 +37,7 @@ import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
@@ -42,8 +46,10 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toDraftMessage
+import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.toSha256
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.DraftMessageDao
@@ -64,6 +70,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
+import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -466,16 +473,49 @@ internal class PersistenceChannelsLogicImpl(
         if (channelDb != null)
             return SceytResponse.Success(channelDb.toChannel())
 
-        val response = channelsRepository.createDirectChannel(user)
+        val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel"))
+        val createdBy = ClientWrapper.currentUser ?: usersDao.getUserById(myId
+                ?: return fail)?.toUser() ?: User(myId ?: return fail)
 
-        if (response is SceytResponse.Success) {
-            response.data?.let { channel ->
-                insertChannel(channel, SceytMember(user))
-                channelsCache.add(channel)
-            }
-        }
+        val role = Role(RoleTypeEnum.Owner.toString())
+        val members = listOf(SceytMember(role, user), SceytMember(role, createdBy))
+        val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
+        val channel = SceytChannel(
+            id = channelId,
+            parentId = null,
+            uri = null,
+            type = ChannelTypeEnum.Direct.getString(),
+            subject = null,
+            avatarUrl = null,
+            metadata = "",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = 0,
+            messagesClearedAt = 0,
+            memberCount = 2,
+            createdBy = createdBy,
+            role = role.name,
+            unread = false,
+            newMessageCount = 0,
+            newMentionCount = 0,
+            newReactionCount = 0,
+            hidden = false,
+            archived = false,
+            muted = false,
+            mutedUntil = 0,
+            pinnedAt = null,
+            lastReceivedMessageId = 0,
+            lastDisplayedMessageId = 0,
+            messageRetentionPeriod = 0,
+            lastMessage = null,
+            messages = null,
+            members = members,
+            newReactions = null,
+            pending = true
+        )
 
-        return response
+        insertChannel(channel, *members.toTypedArray())
+        channelsCache.addPendingChannel(channel)
+        return SceytResponse.Success(channel)
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
@@ -489,7 +529,28 @@ internal class PersistenceChannelsLogicImpl(
                 channelsCache.add(channel)
             }
         }
+        return response
+    }
 
+    override suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
+        val pendingChannelId = channel.id
+        val response = channelsRepository.createChannel(CreateChannelData(ChannelTypeEnum.Direct,
+            members = channel.members?.map { it.toMember() } ?: arrayListOf()))
+        if (response is SceytResponse.Success) {
+            val newChannel = response.data
+                    ?: return SceytResponse.Error(SceytException(0, "create channel response is success, but channel is null"))
+
+            val newChannelId = newChannel.id
+            // Set new channel last message to pending channel last message with new channel id
+            newChannel.lastMessage = channel.lastMessage?.apply { channelId = newChannelId }
+
+            channelDao.deleteChannelAndLinks(pendingChannelId)
+            channelDao.insertChannel(newChannel.toChannelEntity())
+            messageDao.updateMessagesChannelId(pendingChannelId, newChannelId)
+
+            channelsCache.pendingChannelCreated(pendingChannelId, newChannel)
+            SceytResponse.Success(newChannel)
+        }
         return response
     }
 
@@ -518,6 +579,11 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
+        if (channelsCache.get(channelId)?.pending == true) {
+            deleteChannelDb(channelId)
+            return SceytResponse.Success(channelId)
+        }
+
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
@@ -553,6 +619,11 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun deleteChannel(channelId: Long): SceytResponse<Long> {
+        if (channelsCache.get(channelId)?.pending == true) {
+            deleteChannelDb(channelId)
+            return SceytResponse.Success(channelId)
+        }
+
         val response = channelsRepository.deleteChannel(channelId)
 
         if (response is SceytResponse.Success) {
@@ -613,6 +684,8 @@ internal class PersistenceChannelsLogicImpl(
                 channel.toChannelEntity().let {
                     channelDao.insertChannel(it)
                     fillChannelsNeededInfo(channel)
+                    //Todo need remove this line
+                    channel.members = channelsCache.get(channelId)?.members ?: arrayListOf()
                     channelsCache.upsertChannel(channel)
                     messageLogic.onSyncedChannels(arrayListOf(channel))
                 }

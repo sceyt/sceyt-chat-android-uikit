@@ -39,5 +39,7 @@ data class ChannelEntity(
         var messageRetentionPeriod: Long,
         var lastMessageTid: Long?,
         @ColumnInfo(index = true)
-        var lastMessageAt: Long?
+        var lastMessageAt: Long?,
+        @ColumnInfo(index = true)
+        var pending: Boolean
 )

@@ -241,6 +241,9 @@ abstract class MessageDao {
         }
     }
 
+    @Query("update messages set channelId =:newChannelId where channelId =:oldChannelId")
+    abstract suspend fun updateMessagesChannelId(oldChannelId: Long, newChannelId: Long): Int
+
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
 

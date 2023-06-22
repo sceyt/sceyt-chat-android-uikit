@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -114,6 +115,13 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             return diff
         }
         return null
+    }
+
+    fun replaceChannel(first: Long, second: SceytChannel) {
+        channelsRV.getChannelIndexed(first)?.let { pair ->
+            val channelItem = pair.second
+            channelItem.channel = second.clone()
+        }
     }
 
     internal fun channelDraftMessageUpdated(channelId: Long, draftMessage: DraftMessage?): ChannelItemPayloadDiff? {

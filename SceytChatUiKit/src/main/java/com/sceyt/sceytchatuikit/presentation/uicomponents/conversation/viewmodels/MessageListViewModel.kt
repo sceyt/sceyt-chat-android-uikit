@@ -74,15 +74,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import kotlin.math.min
 
 class MessageListViewModel(
-        val conversationId: Long,
+        var conversationId: Long,
         val replyInThread: Boolean = false,
         var channel: SceytChannel,
 ) : BaseViewModel(), SceytKoinComponent {
@@ -170,11 +172,19 @@ class MessageListViewModel(
             .filter { it.channel.id == channel.id }
             .map { it.channel }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             ChannelEventsObserver.onChannelMembersEventFlow
                 .filter { it.channel.id == channel.id }
                 .collect(::onChannelMemberEvent)
         }
+
+        ChannelsCache.pendingChannelCreatedFlow
+            .filter { it.first == channel.id }
+            .onEach { data ->
+                val newChannelId = data.second.id
+                channel.id = newChannelId
+                conversationId = newChannelId
+            }.launchIn(viewModelScope)
 
         onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
 

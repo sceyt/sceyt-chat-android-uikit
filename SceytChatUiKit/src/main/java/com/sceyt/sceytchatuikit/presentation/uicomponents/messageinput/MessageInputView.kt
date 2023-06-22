@@ -259,6 +259,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             .setAttachments(attachments)
             .setType("text")
             .setBody(body)
+            .setCreatedAt(System.currentTimeMillis())
             .initRelyMessage()
             .build()
 

@@ -182,6 +182,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
 
+    ChannelsCache.pendingChannelCreatedFlow
+        .filter { it.first == channel.id }
+        .onEach {
+            loadPrevMessages(0, 0)
+        }.launchIn(lifecycleOwner.lifecycleScope)
+
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner) {
         if (it.first.id == channel.id) {
             channel = it.first
@@ -415,7 +421,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
-        messagesListView.updateViewState(it, false)
+        if (it is PageState.StateError && it.code == 40401 && messagesListView.getData().isNullOrEmpty())
+            messagesListView.updateViewState(PageState.StateEmpty())
+        else
+            messagesListView.updateViewState(it, false)
     }
 
     messagesListView.setMessageCommandEventListener {
