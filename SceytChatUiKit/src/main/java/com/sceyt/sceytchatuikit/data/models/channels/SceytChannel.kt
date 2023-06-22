@@ -6,6 +6,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isGroup
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -45,11 +46,11 @@ data class SceytChannel(
 
     val channelSubject: String
         get() = (if (isGroup) subject
-        else members?.getOrNull(0)?.getPresentableName()) ?: ""
+        else getFirstMember()?.getPresentableName()) ?: ""
 
     val iconUrl: String?
         get() = if (isGroup) avatarUrl
-        else members?.getOrNull(0)?.avatarUrl
+        else getFirstMember()?.avatarUrl
 
     val isGroup get() = stringToEnum(type).isGroup()
 

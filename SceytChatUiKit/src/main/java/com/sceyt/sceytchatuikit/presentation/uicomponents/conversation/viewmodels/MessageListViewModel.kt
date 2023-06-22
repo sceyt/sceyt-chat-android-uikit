@@ -184,6 +184,7 @@ class MessageListViewModel(
                 val newChannelId = data.second.id
                 channel.id = newChannelId
                 conversationId = newChannelId
+                channel.pending = false
             }.launchIn(viewModelScope)
 
         onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow

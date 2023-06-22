@@ -163,8 +163,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.leaveChannel(channelId)
     }
 
-    override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
-        return channelLogic.createDirectChannel(user)
+    override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
+        return channelLogic.findOrCreateDirectChannel(user)
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
