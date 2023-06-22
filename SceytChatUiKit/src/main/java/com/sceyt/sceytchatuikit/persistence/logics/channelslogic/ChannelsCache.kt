@@ -18,6 +18,11 @@ import kotlinx.coroutines.flow.SharedFlow
 
 class ChannelsCache {
     private var cachedData = hashMapOf<Long, SceytChannel>()
+    private var pendingChannelsData = hashMapOf<Long, SceytChannel>()
+
+    /** fromPendingToRealChannelsData is used to store created pending channel ids and their real channel ids,
+     * to escape creating channel every time when sending message*/
+    private var fromPendingToRealChannelsData = hashMapOf<Long, Long>()
     private val lock = Any()
 
     companion object {
@@ -38,6 +43,12 @@ class ChannelsCache {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
+
+        private val pendingChannelCreatedFlow_ = MutableSharedFlow<Pair<Long, SceytChannel>>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val pendingChannelCreatedFlow: SharedFlow<Pair<Long, SceytChannel>> = pendingChannelCreatedFlow_
 
         private val channelDraftMessageChangesLiveData_ = MutableLiveData<Pair<Long, DraftMessage?>>()
         val channelDraftMessageChangesLiveData = channelDraftMessageChangesLiveData_.asLiveData()
@@ -64,6 +75,14 @@ class ChannelsCache {
         }
     }
 
+    fun addPendingChannel(channel: SceytChannel) {
+        synchronized(lock) {
+            pendingChannelsData[channel.id] = channel
+            if (channel.lastMessage != null)
+                channelAdded(channel)
+        }
+    }
+
     fun clear() {
         synchronized(lock) {
             cachedData.clear()
@@ -84,7 +103,13 @@ class ChannelsCache {
 
     fun get(channelId: Long): SceytChannel? {
         synchronized(lock) {
-            return cachedData[channelId]?.clone()
+            return cachedData[channelId]?.clone() ?: pendingChannelsData[channelId]?.clone()
+        }
+    }
+
+    fun getRealChannelIdWithPendingChannelId(pendingChannelId: Long): Long? {
+        synchronized(lock) {
+            return fromPendingToRealChannelsData[pendingChannelId]
         }
     }
 
@@ -180,6 +205,25 @@ class ChannelsCache {
         }
     }
 
+    fun removeFromPendingToRealChannelsData(pendingChannelId: Long) {
+        synchronized(lock) {
+            fromPendingToRealChannelsData.remove(pendingChannelId)
+        }
+    }
+
+    fun pendingChannelCreated(pendingChannelId: Long, newChannel: SceytChannel) {
+        synchronized(lock) {
+            // Removing pending channel
+            pendingChannelsData.remove(pendingChannelId)
+            // Adding already created channel to cache
+            cachedData[newChannel.id] = newChannel.clone()
+            // Adding pending channel id with real channel id for future getting real channel id by pending channel id
+            fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
+            // Emitting to flow
+            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+        }
+    }
+
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
     }
@@ -196,7 +240,7 @@ class ChannelsCache {
     }
 
     fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
-        cachedData[channelId]?.let {
+        get(channelId)?.let {
             it.draftMessage = draftMessage
             channelDraftMessageChangesLiveData_.postValue(Pair(channelId, draftMessage))
         }

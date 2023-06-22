@@ -34,7 +34,8 @@ fun SceytChannel.toChannelEntity() = ChannelEntity(
     lastDisplayedMessageId = lastDisplayedMessageId,
     messageRetentionPeriod = messageRetentionPeriod,
     lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
-    lastMessageAt = lastMessage?.createdAt
+    lastMessageAt = lastMessage?.createdAt,
+    pending = pending
 )
 
 private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {
@@ -70,7 +71,8 @@ fun Channel.toChannelEntity() = ChannelEntity(
     lastDisplayedMessageId = lastDisplayedMessageId,
     messageRetentionPeriod = messageRetentionPeriod,
     lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
-    lastMessageAt = lastMessage?.createdAt?.time
+    lastMessageAt = lastMessage?.createdAt?.time,
+    pending = false
 )
 
 fun ChannelDb.toChannel(): SceytChannel {
@@ -104,7 +106,8 @@ fun ChannelDb.toChannel(): SceytChannel {
             lastMessage = lastMessage?.toSceytMessage(),
             messages = emptyList(),
             members = members?.map { it.toSceytMember() },
-            newReactions = newReactions?.map { it.toReaction() }
+            newReactions = newReactions?.map { it.toReaction() },
+            pending = pending
         ).apply {
             draftMessage = this@toChannel.draftMessage?.toDraftMessage()
         }
@@ -141,6 +144,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         lastMessage = lastMessage?.toSceytUiMessage(),
         messages = messages?.map { it.toSceytUiMessage() },
         members = members?.map { it.toSceytMember() },
-        newReactions = newReactions
+        newReactions = newReactions,
+        pending = false
     )
 }

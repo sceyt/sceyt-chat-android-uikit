@@ -9,7 +9,7 @@ import org.koin.core.component.inject
 
 object ChatReactionMessagesCache : SceytKoinComponent {
 
-    private val messageCash: MessagesCache by inject()
+    private val messageCache: MessagesCache by inject()
     private val list = mutableMapOf<Long, SceytMessage>()
 
     suspend fun getNeededMessages(ids: Map<Long, Long>) {
@@ -19,7 +19,7 @@ object ChatReactionMessagesCache : SceytKoinComponent {
     }
 
     private suspend fun getMessage(channelId: Long, messageId: Long) {
-        messageCash.get(channelId, messageId)?.let {
+        messageCache.get(channelId, messageId)?.let {
             list[it.id] = it
         } ?: run {
             SceytKitClient.getMessagesMiddleWare().getMessageDbById(messageId)?.let {

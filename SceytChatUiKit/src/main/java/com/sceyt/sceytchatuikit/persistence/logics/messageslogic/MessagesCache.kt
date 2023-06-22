@@ -271,4 +271,11 @@ class MessagesCache {
             }
         }
     }
+
+    fun moveMessagesToNewChannel(pendingChannelId: Long, newChannelId: Long) {
+        synchronized(lock) {
+            cachedMessages[newChannelId] = cachedMessages[pendingChannelId] ?: return
+            cachedMessages.remove(pendingChannelId)
+        }
+    }
 }

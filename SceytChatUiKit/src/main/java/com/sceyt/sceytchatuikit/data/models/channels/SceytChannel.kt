@@ -12,7 +12,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytChannel(
-        val id: Long,
+        var id: Long,
         val parentId: Long?,
         var uri: String?,
         val type: String,
@@ -40,7 +40,8 @@ data class SceytChannel(
         var lastMessage: SceytMessage?,
         var messages: List<SceytMessage>?,
         var members: List<SceytMember>?,
-        var newReactions: List<Reaction>?) : Parcelable, Cloneable {
+        var newReactions: List<Reaction>?,
+        var pending: Boolean) : Parcelable, Cloneable {
 
     val channelSubject: String
         get() = (if (isGroup) subject
@@ -101,7 +102,8 @@ data class SceytChannel(
             lastMessage = lastMessage?.clone(),
             messages = messages?.map { it.clone() },
             members = members?.map { it.clone() },
-            newReactions = newReactions
+            newReactions = newReactions,
+            pending = pending
         ).also {
             it.draftMessage = draftMessage
         }
