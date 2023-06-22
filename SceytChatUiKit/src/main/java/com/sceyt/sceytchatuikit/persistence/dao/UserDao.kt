@@ -23,6 +23,10 @@ interface UserDao {
     @Query("select * from users where user_id in (:id)")
     suspend fun getUsersById(id: List<String>): List<UserEntity>
 
+    @Query("select user_id from users where firstName like '%' || :searchQuery || '%' " +
+            "or lastName like  '%' || :searchQuery || '%' or (firstName || ' ' || lastName) like :searchQuery || '%'")
+    suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateUser(user: UserEntity)
 
