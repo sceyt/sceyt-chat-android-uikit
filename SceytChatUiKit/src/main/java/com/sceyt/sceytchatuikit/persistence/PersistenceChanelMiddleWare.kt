@@ -24,7 +24,7 @@ interface PersistenceChanelMiddleWare {
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
-    suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
+    suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>

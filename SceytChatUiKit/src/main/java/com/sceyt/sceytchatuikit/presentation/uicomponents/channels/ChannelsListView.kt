@@ -157,7 +157,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             channelsRV.getChannels()?.find {
                 it.channel.isDirect() && it.channel.getFirstMember()?.id == user.id
             }?.let {
-                it.channel.members?.getOrNull(0)?.user = user
+                it.channel.getFirstMember()?.user = user
             }
         }
     }

@@ -64,6 +64,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
+import com.sceyt.sceytchatuikit.persistence.mappers.createPendingDirectChannelData
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
@@ -468,7 +469,7 @@ internal class PersistenceChannelsLogicImpl(
         return list
     }
 
-    override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
+    override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
         val channelDb = channelDao.getDirectChannel(user.id)
         if (channelDb != null)
             return SceytResponse.Success(channelDb.toChannel())
@@ -480,38 +481,7 @@ internal class PersistenceChannelsLogicImpl(
         val role = Role(RoleTypeEnum.Owner.toString())
         val members = listOf(SceytMember(role, user), SceytMember(role, createdBy))
         val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
-        val channel = SceytChannel(
-            id = channelId,
-            parentId = null,
-            uri = null,
-            type = ChannelTypeEnum.Direct.getString(),
-            subject = null,
-            avatarUrl = null,
-            metadata = "",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = 0,
-            messagesClearedAt = 0,
-            memberCount = 2,
-            createdBy = createdBy,
-            role = role.name,
-            unread = false,
-            newMessageCount = 0,
-            newMentionCount = 0,
-            newReactionCount = 0,
-            hidden = false,
-            archived = false,
-            muted = false,
-            mutedUntil = 0,
-            pinnedAt = null,
-            lastReceivedMessageId = 0,
-            lastDisplayedMessageId = 0,
-            messageRetentionPeriod = 0,
-            lastMessage = null,
-            messages = null,
-            members = members,
-            newReactions = null,
-            pending = true
-        )
+        val channel = createPendingDirectChannelData(channelId, createdBy, members, role.name)
 
         insertChannel(channel, *members.toTypedArray())
         channelsCache.addPendingChannel(channel)

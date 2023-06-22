@@ -29,7 +29,7 @@ internal interface PersistenceChannelsLogic {
                                onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
-    suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
+    suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>

@@ -144,7 +144,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
         } else
             titleTextView.text = if (isGroup) channel.channelSubject else {
-                val member = channel.members?.getOrNull(0) ?: return
+                val member = channel.getFirstMember() ?: return
                 userNameBuilder?.invoke(member.user)
                         ?: member.user.getPresentableNameCheckDeleted(context)
             }
