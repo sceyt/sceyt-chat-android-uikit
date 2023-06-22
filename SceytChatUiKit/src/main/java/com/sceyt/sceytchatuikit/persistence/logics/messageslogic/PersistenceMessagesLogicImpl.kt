@@ -254,10 +254,10 @@ internal class PersistenceMessagesLogicImpl(
         createChannelAndSendMessageMutex.withLock {
             val channelId = channel.id
             channel.lastMessage = message.toSceytUiMessage()
-            Log.i("experementCHannel", "channelId $channelId")
+            Log.i("experimentChannel", "channelId $channelId")
             channelCache.getRealChannelIdWithPendingChannelId(channelId)?.let {
                 message.channelId = it
-                Log.i("experementCHannel", "found in cash $it")
+                Log.i("experimentChannel", "found in cash $it")
                 return sendMessageImpl(it, message, false, isPendingMessage, isUploadedAttachments)
             }
 
@@ -265,13 +265,13 @@ internal class PersistenceMessagesLogicImpl(
                 is SceytResponse.Success -> {
                     val newChannelId = response.data?.id ?: 0L
                     message.channelId = newChannelId
-                    Log.i("experementCHannel", "send new message: ${message.channelId}")
+                    Log.i("experimentChannel", "send new message: ${message.channelId}")
                     return sendMessageImpl(newChannelId, message, false, isPendingMessage, isUploadedAttachments)
                 }
 
                 is SceytResponse.Error -> {
                     channelCache.addPendingChannel(channel)
-                    Log.i("experementCHannel", "created new channel failed ${response.message}")
+                    Log.e("experimentChannel", "created new channel failed ${response.exception?.message}")
 
                     return callbackFlow {
                         if (!isPendingMessage && !isUploadedAttachments)
@@ -353,7 +353,7 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success)
             response.data?.let { persistenceAttachmentLogic.updateAttachmentIdAndMessageId(it) }
 
-        return response ?: SceytResponse.Error(SceytException(0, "response is null"))
+        return response ?: SceytResponse.Error(SceytException(0, "sendMessageWithUploadedAttachments: response is null"))
     }
 
 
@@ -456,7 +456,6 @@ internal class PersistenceMessagesLogicImpl(
             if (channel?.pending == true) {
                 pendingMessages.forEach {
                     createChannelAndSendMessageWithLock(channel, it.toMessage(), isPendingMessage = true, isUploadedAttachments = false).collect()
-                    Log.i("fdsdfsdfsd", "end awaiting1")
                 }
                 if (!createChannelAndSendMessageMutex.isLocked)
                     channelCache.removeFromPendingToRealChannelsData(channelId)
@@ -464,7 +463,6 @@ internal class PersistenceMessagesLogicImpl(
                 pendingMessages.forEach {
                     val message = it.toMessage()
                     sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = true, isUploadedAttachments = false).collect()
-                    Log.i("fdsdfsdfsd", "end awaiting2")
                 }
             }
         }
