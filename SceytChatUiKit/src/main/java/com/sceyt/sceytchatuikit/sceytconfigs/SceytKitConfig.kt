@@ -12,12 +12,24 @@ import com.sceyt.sceytchatuikit.data.repositories.MessageTransformer
 object SceytKitConfig {
     val SceytUITheme = ThemeConfig()
 
+    @IntRange(1, 50)
     var CHANNELS_LOAD_SIZE = 20
+
+    @IntRange(1, 50)
     var CHANNELS_MEMBERS_LOAD_SIZE = 30
+
+    @IntRange(1, 50)
     var USERS_LOAD_SIZE = 30
+
+    @IntRange(1, 50)
     var MESSAGES_LOAD_SIZE = 30
+
+    @IntRange(1, 50)
     var ATTACHMENTS_LOAD_SIZE = 20
+
+    @IntRange(1, 50)
     var REACTIONS_LOAD_SIZE = 30
+
     @IntRange(from = 1, to = 6)
     var MAX_SELF_REACTIONS_SIZE = 6
 
