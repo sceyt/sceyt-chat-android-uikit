@@ -303,7 +303,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 else lastMessageCreatedAt
             }
 
-            else -> channel.createdAt / 1000
+            else -> channel.createdAt
         }
         return Pair(DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt), shouldShowStatus)
     }
