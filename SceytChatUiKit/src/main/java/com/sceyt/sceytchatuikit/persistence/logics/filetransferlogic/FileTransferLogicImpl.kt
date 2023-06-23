@@ -81,7 +81,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
             task.progressCallback.onProgress(TransferData(
-                task.messageTid, attachment.tid, 0f, TransferState.Downloading, null, attachment.url))
+                task.messageTid, 0f, TransferState.Downloading, null, attachment.url))
             attachment.url?.let { url ->
                 downloadingUrlMap[url] = url
                 Ion.with(context)
@@ -90,7 +90,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                         if (pausedTasksMap[attachment.url.toString()] == null) {
                             val progress = ((downloaded / total.toFloat())) * 100
                             task.progressCallback.onProgress(TransferData(
-                                task.messageTid, attachment.tid, progress, TransferState.Downloading, null, attachment.url))
+                                task.messageTid, progress, TransferState.Downloading, null, attachment.url))
                         }
                     }
                     .write(loadedFile)
@@ -215,7 +215,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
                 override fun onResult(progress: Float) {
                     if (progress == 1f) return
-                    transferTask.progressCallback.onProgress(TransferData(transferTask.messageTid, attachment.tid,
+                    transferTask.progressCallback.onProgress(TransferData(transferTask.messageTid,
                         progress * 100, TransferState.Uploading, attachment.filePath, null))
                 }
 
@@ -251,7 +251,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 if (progress == 1f || pausedTasksMap[attachment.messageTid.toString()] != null) return
                 getAppropriateTasks(transferTask).forEach { task ->
                     fileTransferService.getTasks()[task.messageTid.toString()]?.state = TransferState.Uploading
-                    task.progressCallback.onProgress(TransferData(task.messageTid, task.attachment.tid,
+                    task.progressCallback.onProgress(TransferData(task.messageTid,
                         progress * 100, TransferState.Uploading, task.attachment.filePath, null))
                 }
             }
