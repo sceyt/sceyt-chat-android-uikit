@@ -430,7 +430,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.cancel()
         val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         view.setBackgroundColor(colorFrom)
-        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.7 * 255).toInt())
+        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.3 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT
         highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFro, colorTo)
         highlightAnim?.duration = 2000
