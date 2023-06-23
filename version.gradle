@@ -1,0 +1,7 @@
+ext {
+    // MavenCentral
+    maven_central_publish_group = "com.sceyt"
+    maven_central_atifact_id = "sceyt-chat-android-uikit"
+    maven_central_version = "1.1.38-SNAPSHOT"
+//    maven_central_version = "1.1.0"
+}
