@@ -656,8 +656,6 @@ internal class PersistenceChannelsLogicImpl(
                 channel.toChannelEntity().let {
                     channelDao.insertChannel(it)
                     fillChannelsNeededInfo(channel)
-                    //Todo need remove this line
-                    channel.members = channelsCache.get(channelId)?.members ?: arrayListOf()
                     channelsCache.upsertChannel(channel)
                     messageLogic.onSyncedChannels(arrayListOf(channel))
                 }
