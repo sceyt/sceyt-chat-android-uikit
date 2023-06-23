@@ -148,7 +148,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                         ?: member.user.getPresentableNameCheckDeleted(context)
             }
             if (titleTextView.text.equals(title)) return
-            titleTextView.text
+            titleTextView.text = title
         }
     }
 
