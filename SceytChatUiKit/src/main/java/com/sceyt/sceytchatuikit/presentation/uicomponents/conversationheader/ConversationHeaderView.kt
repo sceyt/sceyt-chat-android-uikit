@@ -141,12 +141,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 text = getString(R.string.sceyt_thread_reply)
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
-        } else
-            titleTextView.text = if (isGroup) channel.channelSubject else {
+        } else {
+            val title = if (isGroup) channel.channelSubject else {
                 val member = (channel as? SceytDirectChannel)?.peer ?: return
                 userNameBuilder?.invoke(member.user)
                         ?: member.user.getPresentableNameCheckDeleted(context)
             }
+            if (titleTextView.text.equals(title)) return
+            titleTextView.text = title
+        }
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
