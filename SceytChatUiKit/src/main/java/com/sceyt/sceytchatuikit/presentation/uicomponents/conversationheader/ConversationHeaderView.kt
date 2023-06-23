@@ -54,7 +54,6 @@ import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -197,9 +196,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun setSubTitleText(textView: TextView, title: String?, visible: Boolean) {
-        if (textView.text.equals(title) && textView.isVisible == visible) return
+        if (!visible) {
+            textView.isVisible = false
+            return
+        }
+        if (textView.text.equals(title))
+            return
+
         textView.text = title
-        textView.isVisible = visible
+        textView.isVisible = true
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -250,7 +255,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
 
             else -> {
-                if (updateTypingJob == null || updateTypingJob!!.isActive.not())
+                if (updateTypingJob == null || updateTypingJob?.isActive?.not() == true)
                     updateTypingTitleEveryTwoSecond()
             }
         }
@@ -258,7 +263,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun updateTypingTitleEveryTwoSecond() {
         updateTypingJob?.cancel()
-        updateTypingJob = MainScope().launch {
+        updateTypingJob = context.asComponentActivity().lifecycleScope.launch {
             while (true) {
                 typingUsers.toList().forEach {
                     binding.tvTyping.text = initTypingTitle(it)
