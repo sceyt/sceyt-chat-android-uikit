@@ -1,19 +1,17 @@
 package com.sceyt.sceytchatuikit.data
 
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
@@ -29,7 +27,6 @@ fun SceytMember.toMember(): Member {
 
 fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float = 0f) = SceytAttachment(
     id = id,
-    tid = tid,
     messageTid = messageTid,
     messageId = messageId,
     userId = userId,
@@ -55,7 +52,7 @@ fun SceytAttachment.toAttachment(): Attachment = Attachment(
     url ?: "",
     createdAt,
     userId,
-    tid,
+    0,
     filePath ?: "",
     false,
 )

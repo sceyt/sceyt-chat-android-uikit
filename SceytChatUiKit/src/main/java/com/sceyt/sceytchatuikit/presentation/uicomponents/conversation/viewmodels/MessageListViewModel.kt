@@ -313,7 +313,7 @@ class MessageListViewModel(
                 && !item.sceytMessage.isForwarded)
             PendingUpload else PendingDownload
         val transferData = TransferData(
-            item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
+            item.sceytMessage.tid, item.file.progressPercent ?: 0f,
             item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
 
         when (val state = item.file.transferState ?: return) {

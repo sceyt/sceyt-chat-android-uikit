@@ -317,7 +317,7 @@ internal class PersistenceMessagesLogicImpl(
             it.attachments?.forEach { attachment ->
                 if (attachment.type != AttachmentTypeEnum.Link.value())
                     persistenceAttachmentLogic.updateAttachmentWithTransferData(
-                        TransferData(tmpMessage.tid, attachment.tid, 100f,
+                        TransferData(tmpMessage.tid, 100f,
                             TransferState.Uploaded, attachment.filePath, attachment.url))
             }
             messagesCache.add(channelId, tmpMessage)
@@ -353,7 +353,8 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success)
             response.data?.let { persistenceAttachmentLogic.updateAttachmentIdAndMessageId(it) }
 
-        return response ?: SceytResponse.Error(SceytException(0, "sendMessageWithUploadedAttachments: response is null"))
+        return response
+                ?: SceytResponse.Error(SceytException(0, "sendMessageWithUploadedAttachments: response is null"))
     }
 
 

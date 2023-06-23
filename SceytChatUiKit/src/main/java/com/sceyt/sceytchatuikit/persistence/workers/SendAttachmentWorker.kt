@@ -78,12 +78,12 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     val payload = payloads.find { it.messageTid == attachment.messageTid }
 
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
-                        val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
+                        val transferData = payload.toTransferData(TransferState.Uploaded)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
                         continuation.safeResume(Pair(true, payload.url))
                     } else {
                         foundAttachmentToUpload = true
-                        val transferData = TransferData(tmpMessage.tid, attachment.tid, 0f,
+                        val transferData = TransferData(tmpMessage.tid, 0f,
                             TransferState.Uploading, attachment.filePath, attachment.url)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
 
