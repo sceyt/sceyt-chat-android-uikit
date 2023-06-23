@@ -130,9 +130,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
     }
 
-    override suspend fun searchChannels(offset: Int, limit: Int, searchItems: List<String>,
-                                        loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannels(offset, limit, searchItems, loadKey, onlyMine, ignoreDb)
+    override suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
+                                                   loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, loadKey, onlyMine, ignoreDb)
     }
 
     override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
