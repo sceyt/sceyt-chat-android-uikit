@@ -279,11 +279,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         it.second.highlighted = true
                         messagesListView.scrollToPositionAndHighlight(it.first, true)
                     }
-                } ?: run {
+                } /*?: run {
+                    // todo when uncomment this logic, please make sure that should save loaded messages in db
                     loadNearMessages(parentId, LoadKeyData(
                         key = LoadKeyType.ScrollToMessageById.longValue,
                         value = parentId))
-                }
+                }*/
             }
         }
     }
