@@ -1,12 +1,12 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.Reaction
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 
 fun Reaction.toReactionEntity() = ReactionEntity(
     id = id,
@@ -23,9 +23,10 @@ fun Reaction.toReactionDb() = ReactionDb(
     from = user.toUserEntity()
 )
 
-fun ReactionScore.toReactionScoreEntity(messageId: Long) = ReactionScoreEntity(
+fun ReactionTotal.toReactionTotalEntity(messageId: Long) = ReactionTotalEntity(
     messageId = messageId,
     key = key,
+    count = count,
     score = score.toInt()
 )
 
@@ -53,4 +54,4 @@ fun Reaction.toUserReactionsEntity(channelId: Long) = ChatUserReactionEntity(
     fromId = user.id
 )
 
-fun ReactionScoreEntity.toReactionScore(): ReactionScore = ReactionScore(key, score.toLong())
+fun ReactionTotalEntity.toReactionScore(): ReactionTotal = ReactionTotal(key, count, score.toLong())

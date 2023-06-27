@@ -36,7 +36,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
             return@setOnMenuItemClickListener true
         }
 
-        val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending || message.deliveryStatus == DeliveryStatus.Failed
+        val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending
 
         menu.findItem(R.id.sceyt_reply).isVisible = !statusPendingOrFailed
         menu.findItem(R.id.sceyt_forward).isVisible = !statusPendingOrFailed

@@ -3,12 +3,12 @@ package com.sceyt.sceytchatuikit.data.repositories
 import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListFilterQueryType
 import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chat.models.channel.CreateChannelRequest
-import com.sceyt.chat.models.channel.CreateChannelRequestBuilder
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
 import com.sceyt.chat.models.role.Role
@@ -180,7 +180,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            CreateChannelRequestBuilder(ChannelTypeEnum.Direct.getString())
+            Builder(ChannelTypeEnum.Direct.getString())
                 .withMembers(arrayListOf(Member(Role("Admin"), user)))
                 .execute(object : ChannelCallback {
                     override fun onResult(channel: Channel) {
@@ -229,7 +229,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
-        return CreateChannelRequestBuilder(channelData.channelType.getString())
+        return Builder(channelData.channelType.getString())
             .withMembers(channelData.members)
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)

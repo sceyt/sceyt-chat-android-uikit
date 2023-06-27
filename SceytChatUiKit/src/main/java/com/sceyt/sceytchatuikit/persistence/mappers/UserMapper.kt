@@ -5,11 +5,11 @@ import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
+import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
 
 fun ChanelMemberDb.toSceytMember() = SceytMember(
     role = Role(link.role),
@@ -48,9 +48,9 @@ fun Member.MemberType.toRoleType(): RoleTypeEnum {
     }
 }
 
-fun User.isDeleted() = activityState == UserActivityStatus.Deleted
+fun User.isDeleted() = activityState == UserActivityState.Deleted
 
 fun createEmptyUser(id: String, displayName: String): User {
     return User(id, displayName, "", "", "",
-        Presence(PresenceState.Offline, "", 0), UserActivityStatus.Active, false)
+        Presence(PresenceState.Offline, "", 0), UserActivityState.Active, false)
 }

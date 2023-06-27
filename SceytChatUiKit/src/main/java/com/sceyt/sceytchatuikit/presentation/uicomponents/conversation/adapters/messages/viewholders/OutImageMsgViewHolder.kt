@@ -42,7 +42,11 @@ class OutImageMsgViewHolder(
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
 
             fileImage.setOnClickListener {

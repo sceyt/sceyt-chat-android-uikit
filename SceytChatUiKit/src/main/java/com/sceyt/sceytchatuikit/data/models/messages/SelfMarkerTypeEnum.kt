@@ -15,8 +15,8 @@ enum class SelfMarkerTypeEnum {
 
     fun toDeliveryStatus(): DeliveryStatus {
         return when (this) {
-            Displayed -> DeliveryStatus.Read
-            Received -> DeliveryStatus.Delivered
+            Displayed -> DeliveryStatus.Displayed
+            Received -> DeliveryStatus.Received
         }
     }
 }

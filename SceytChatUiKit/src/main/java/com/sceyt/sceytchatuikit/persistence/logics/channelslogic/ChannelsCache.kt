@@ -157,7 +157,7 @@ class ChannelsCache {
                 channel.lastMessage = null
                 channel.newMessageCount = 0
                 channel.newMentionCount = 0
-                channel.newReactionCount = 0
+                channel.newReactedMessageCount = 0
                 channel.newReactions = null
                 channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
             }
@@ -169,7 +169,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 if (muted) {
                     channel.muted = true
-                    channel.mutedUntil = muteUntil
+                    channel.mutedTill = muteUntil
                 } else channel.muted = false
 
                 channelUpdated(channel, false, ChannelUpdatedType.MuteState)

@@ -123,7 +123,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
-        if (tmpMessage.deliveryStatus != DeliveryStatus.Pending && tmpMessage.deliveryStatus != DeliveryStatus.Failed)
+        if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
             return Result.success()
 
 

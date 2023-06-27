@@ -176,11 +176,11 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
             }
 
             override fun onDeliveryReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Delivered, messageIds))
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Received, messageIds))
             }
 
             override fun onReadReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Read, messageIds))
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Displayed, messageIds))
             }
         })
     }

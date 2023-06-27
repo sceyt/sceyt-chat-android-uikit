@@ -24,7 +24,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
     DraftMessageUserLink::class,
     AttachmentEntity::class,
     ReactionEntity::class,
-    ReactionScoreEntity::class,
+    ReactionTotalEntity::class,
     ChatUserReactionEntity::class,
     PendingMarkersEntity::class,
     AttachmentPayLoadEntity::class

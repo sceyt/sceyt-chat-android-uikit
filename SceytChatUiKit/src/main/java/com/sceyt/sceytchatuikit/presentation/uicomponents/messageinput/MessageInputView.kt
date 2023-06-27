@@ -273,10 +273,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         replyMessage?.let {
             setParentMessageId(it.id)
             setParentMessage(it)
-            setReplyInThread(replyThreadMessageId != null)
+           // setReplyInThread(replyThreadMessageId != null)
         } ?: replyThreadMessageId?.let {
             setParentMessageId(it)
-            setReplyInThread(true)
+            //setReplyInThread(true)
         }
         return this
     }
@@ -602,8 +602,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
                 ViewUtil.expandHeight(root, 1, 200)
-                val name = userNameBuilder?.invoke(message.from)
-                        ?: message.from.getPresentableName()
+                val name = userNameBuilder?.invoke(message.user)
+                        ?: message.user.getPresentableName()
                 val text = "${getString(R.string.sceyt_reply)} $name".run {
                     setBoldSpan(length - name.length, length)
                 }
@@ -643,7 +643,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun checkIsParticipant(channel: SceytChannel) {
         when (channel.getChannelType()) {
             ChannelTypeEnum.Public -> {
-                if (channel.role.isNullOrBlank()) {
+                if (channel.userRole.isNullOrBlank()) {
                     showHideJoinButton(true)
                 } else showHideJoinButton(false)
             }

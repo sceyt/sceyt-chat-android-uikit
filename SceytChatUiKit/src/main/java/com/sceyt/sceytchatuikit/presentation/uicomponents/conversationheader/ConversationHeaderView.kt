@@ -191,7 +191,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 }
                 setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !isTyping)
             } else {
-                val fullName = replyMessage?.from?.fullName
+                val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
                 setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
             }

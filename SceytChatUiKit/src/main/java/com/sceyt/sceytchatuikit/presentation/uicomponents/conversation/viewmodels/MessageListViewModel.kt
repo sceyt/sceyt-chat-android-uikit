@@ -127,10 +127,10 @@ class MessageListViewModel(
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
-    val onNewThreadMessageFlow: Flow<SceytMessage>
+    //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
-    val onOutGoingThreadMessageFlow: Flow<SceytMessage>
+   // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onTransferUpdatedLiveData: LiveData<TransferData>
 
 
@@ -152,12 +152,14 @@ class MessageListViewModel(
 
     init {
         onNewMessageFlow = persistenceMessageMiddleWare.getOnMessageFlow()
-            .filter { it.first.id == channel.id && it.second.replyInThread == replyInThread }
+            .filter { it.first.id == channel.id /*&& it.second.replyInThread == replyInThread*/ }
             .mapNotNull { initMessageInfoData(it.second) }
 
-        onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
+      /*
+     // todo reply in thread
+      onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
             .filter { it.first.id == channel.id && it.second.replyInThread }
-            .mapNotNull { initMessageInfoData(it.second) }
+            .mapNotNull { initMessageInfoData(it.second) }*/
 
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
             .filter { it.channel.id == channel.id }
@@ -190,10 +192,10 @@ class MessageListViewModel(
         onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
 
         onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
-            .filter { it.channelId == channel.id && !it.replyInThread }
+            .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }
 
-        onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
-            .filter { it.channelId == channel.id && it.replyInThread }
+        /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
+            .filter { it.channelId == channel.id && it.replyInThread }*/
 
         onTransferUpdatedLiveData = FileTransferHelper.onTransferUpdatedLiveData
     }
@@ -518,9 +520,9 @@ class MessageListViewModel(
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
-        return message.reactionScores?.map {
+        return message.reactionTotals?.map {
             ReactionItem.Reaction(ReactionData(it.key, it.score,
-                message.selfReactions?.find { reaction ->
+                message.userReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user.id == SceytKitClient.myId
                 } != null), message)
         }?.sortedBy { it.reaction.key }
@@ -537,7 +539,7 @@ class MessageListViewModel(
         return if (prevMessage == null)
             isGroup
         else {
-            val sameSender = prevMessage.from?.id == sceytMessage.from?.id
+            val sameSender = prevMessage.user?.id == sceytMessage.user?.id
             isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
                     || prevMessage.type == MessageTypeEnum.System.value())
         }
