@@ -61,10 +61,10 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
 
     private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>, clickListener: PopupReactionsAdapter.OnItemClickListener) {
         val reactionsItems = reactions.map {
-            val containsSelf = message.selfReactions?.map { reaction -> reaction.key }?.contains(it) == true
+            val containsSelf = message.userReactions?.map { reaction -> reaction.key }?.contains(it) == true
             ReactionItem.Reaction(ReactionData(it, containsSelf = containsSelf), message)
         }.run {
-            if ((message.selfReactions?.size ?: 0) < MAX_SELF_REACTIONS_SIZE)
+            if ((message.userReactions?.size ?: 0) < MAX_SELF_REACTIONS_SIZE)
                 plus(ReactionItem.Other(message))
             else this
         }

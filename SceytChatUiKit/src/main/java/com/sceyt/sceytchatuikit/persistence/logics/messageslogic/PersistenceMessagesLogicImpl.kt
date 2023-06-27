@@ -56,7 +56,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
-import com.sceyt.sceytchatuikit.persistence.mappers.toReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -109,7 +109,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean) {
         val message = data.second
 
-        message.parent?.let { parent ->
+        message.parentMessage?.let { parent ->
             saveMessagesToDb(arrayListOf(message, parent))
         } ?: run { saveMessagesToDb(arrayListOf(message)) }
 
@@ -139,7 +139,7 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             if (messageDb != null)
-                data.reactionScore?.toReactionScoreEntity(message.id)?.let {
+                data.reactionScore?.toReactionTotalEntity(message.id)?.let {
                     reactionDao.insertReactionScore(it)
                 }
         }
@@ -152,7 +152,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
-        data.selfReactions = selfReactions.map { it.toReaction() }.toTypedArray()
+        data.userReactions = selfReactions.map { it.toReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
         messagesCache.messageUpdated(data.channelId, data)
         if (data.state == MessageState.Deleted)
@@ -221,7 +221,7 @@ internal class PersistenceMessagesLogicImpl(
             val payloads = messageDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
             response.data?.forEach {
                 findAndUpdateAttachmentPayLoads(it, payloads)
-                it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
+                it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
             }
         }
         return response
@@ -310,7 +310,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesToSend.forEach {
             val tmpMessage = it.toSceytUiMessage().apply {
                 createdAt = System.currentTimeMillis()
-                from = ClientWrapper.currentUser ?: User(preference.getUserId())
+                user = ClientWrapper.currentUser ?: User(preference.getUserId())
             }
             MessageEventsObserver.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
@@ -383,7 +383,7 @@ internal class PersistenceMessagesLogicImpl(
     private fun tmpMessageToSceytMessage(channelId: Long, message: Message): SceytMessage {
         val tmpMessage = message.toSceytUiMessage().apply {
             createdAt = System.currentTimeMillis()
-            from = ClientWrapper.currentUser ?: User(preference.getUserId())
+            user = ClientWrapper.currentUser ?: User(preference.getUserId())
             this.channelId = channelId
             attachments?.map {
                 it.transferState = TransferState.Uploading
@@ -406,8 +406,10 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
         val tmpMessageDb = message.toMessageDb(false).also {
             it.messageEntity.id = null
-            if (message.replyInThread)
-                it.messageEntity.channelId = message.parent?.id ?: 0
+           /*
+           // todo reply in thread
+           if (message.replyInThread)
+                it.messageEntity.channelId = message.parentMessage?.id ?: 0*/
         }
         messageDao.upsertMessage(tmpMessageDb)
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
@@ -653,7 +655,7 @@ internal class PersistenceMessagesLogicImpl(
 
         messages.forEach {
             findAndUpdateAttachmentPayLoads(it, payloads)
-            it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
+            it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
         }
 
         hasDiff = messagesCache.addAll(channelId, messages, true)
@@ -730,11 +732,11 @@ internal class PersistenceMessagesLogicImpl(
         val parentMessagesDb = arrayListOf<MessageDb>()
         for (message in list) {
             messagesDb.add(message.toMessageDb(false))
-            message.parent?.let { parent ->
+            message.parentMessage?.let { parent ->
                 if (parent.id != 0L) {
                     parentMessagesDb.add(parent.toMessageDb(true))
                     if (parent.incoming)
-                        parent.from?.let { user -> usersDb.add(user.toUserEntity()) }
+                        parent.user?.let { user -> usersDb.add(user.toUserEntity()) }
                 }
             }
         }
@@ -742,7 +744,7 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
-        list.filter { it.incoming && it.from != null }.map { it.from!! }.toSet().let { users ->
+        list.filter { it.incoming && it.user != null }.map { it.user!! }.toSet().let { users ->
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
@@ -760,14 +762,14 @@ internal class PersistenceMessagesLogicImpl(
         val tIds = mutableListOf<Long>()
         messages?.forEach {
             tIds.add(it.tid)
-            it.parent?.let { parent -> tIds.add(parent.tid) }
+            it.parentMessage?.let { parent -> tIds.add(parent.tid) }
         }
         return tIds
     }
 
     private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         val notDisplayedMessages = messages.filter {
-            it.incoming && it.selfMarkers?.contains(Received.value()) != true
+            it.incoming && it.userMarkers?.contains(Received.value()) != true
         }
         if (notDisplayedMessages.isNotEmpty())
             markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
@@ -780,8 +782,8 @@ internal class PersistenceMessagesLogicImpl(
             addPendingMarkerToDb(channelId, status, *typedArray)
 
             val response = if (status == Displayed)
-                messagesRepository.markAsRead(channelId, *typedArray)
-            else messagesRepository.markAsDelivered(channelId, *typedArray)
+                messagesRepository.markAsDisplayed(channelId, *typedArray)
+            else messagesRepository.markAsReceived(channelId, *typedArray)
             onMarkerResponse(channelId, response, status, *typedArray)
             responseList.add(response)
         }

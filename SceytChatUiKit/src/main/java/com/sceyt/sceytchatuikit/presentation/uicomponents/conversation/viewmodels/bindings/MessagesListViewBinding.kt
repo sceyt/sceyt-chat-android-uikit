@@ -215,14 +215,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
         if (stateData.state == ConnectionState.Connected) {
             val message = messagesListView.getLastMessageBy {
-                // First tying to get last read message
-                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
+                // First tying to get last displayed message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Displayed
             } ?: messagesListView.getFirstMessageBy {
                 // Next tying to get fist sent message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
             } ?: messagesListView.getFirstMessageBy {
-                // Next tying to get fist delivered message
-                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
+                // Next tying to get fist received message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Received
             }
             (message as? MessageListItem.MessageItem)?.let {
                 syncConversationMessagesAfter(it.message.id)
@@ -277,7 +277,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
-        it.parent?.id?.let { parentId ->
+        it.parentMessage?.id?.let { parentId ->
             viewModelScope.launch(Dispatchers.Default) {
                 messagesListView.getMessageIndexedById(parentId)?.let {
                     withContext(Dispatchers.Main) {
@@ -302,7 +302,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     messagesListView.getData()?.forEach { listItem ->
                         (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
-                                message.selfMarkers = message.selfMarkers?.toMutableSet()?.apply {
+                                message.userMarkers = message.userMarkers?.toMutableSet()?.apply {
                                     add(SelfMarkerTypeEnum.Displayed.value())
                                 }?.toTypedArray()
                             }
@@ -315,8 +315,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messageEditedDeletedLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
-            if (it.data?.deliveryStatus == DeliveryStatus.Pending ||
-                    it.data?.deliveryStatus == DeliveryStatus.Failed) {
+            if (it.data?.deliveryStatus == DeliveryStatus.Pending) {
                 messagesListView.messageEditedOrDeleted(it.data)
             }
         } else
@@ -343,7 +342,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
         (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
-            if (!message.incoming || message.selfMarkers?.contains(SelfMarkerTypeEnum.Displayed.value()) == true)
+            if (!message.incoming || message.userMarkers?.contains(SelfMarkerTypeEnum.Displayed.value()) == true)
                 return
 
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
@@ -368,14 +367,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateViewState(PageState.Nothing)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onNewThreadMessageFlow.onEach {
+    // todo reply in thread
+  /*  onNewThreadMessageFlow.onEach {
         messagesListView.updateReplyCount(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onOutGoingThreadMessageFlow.onEach {
-        messagesListView.newReplyMessage(it.parent?.id)
+        messagesListView.newReplyMessage(it.parentMessage?.id)
     }.launchIn(lifecycleOwner.lifecycleScope)
-
+*/
     onMessageStatusFlow.onEach {
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)

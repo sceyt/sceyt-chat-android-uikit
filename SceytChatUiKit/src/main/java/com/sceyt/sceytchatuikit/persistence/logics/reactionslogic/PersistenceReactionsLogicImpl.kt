@@ -24,7 +24,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
@@ -54,7 +54,7 @@ internal class PersistenceReactionsLogicImpl(
             ADD -> reactionDao.insertReaction(data.reaction.toReactionEntity())
             REMOVE -> reactionDao.deleteReaction(messageId, data.reaction.key, data.reaction.user.id)
         }
-        data.message.reactionScores?.map { it.toReactionScoreEntity(messageId) }?.let {
+        data.message.reactionTotals?.map { it.toReactionTotalEntity(messageId) }?.let {
             reactionDao.insertReactionScores(it)
         }
 
@@ -131,11 +131,11 @@ internal class PersistenceReactionsLogicImpl(
         val response = reactionsRepository.addReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
-                resultMessage.selfReactions?.let {
+                resultMessage.userReactions?.let {
                     messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
                 }
-                resultMessage.reactionScores?.let {
-                    messageDao.insertReactionScores(it.map { score -> score.toReactionScoreEntity(messageId) })
+                resultMessage.reactionTotals?.let {
+                    messageDao.insertReactionScores(it.map { score -> score.toReactionTotalEntity(messageId) })
                 }
 
                 val message = messageDao.getMessageById(messageId)?.toSceytMessage()
@@ -144,7 +144,7 @@ internal class PersistenceReactionsLogicImpl(
                 messagesCache.messageUpdated(channelId, message)
 
                 if (!message.incoming) {
-                    val reaction = message.selfReactions?.maxBy { it.id }
+                    val reaction = message.userReactions?.maxBy { it.id }
                     if (reaction != null)
                         handleChannelReaction(ReactionUpdateEventData(message, reaction, ADD), message)
                 }

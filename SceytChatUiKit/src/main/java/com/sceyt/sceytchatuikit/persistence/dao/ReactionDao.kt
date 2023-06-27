@@ -3,13 +3,13 @@ package com.sceyt.sceytchatuikit.persistence.dao
 import androidx.room.*
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 
 @Dao
 abstract class ReactionDao {
 
     @Transaction
-    open suspend fun insertReactionsAndScores(messageId: Long, reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionScoreEntity>) {
+    open suspend fun insertReactionsAndScores(messageId: Long, reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionTotalEntity>) {
         deleteAllReactionScoresByMessageId(messageId)
         insertReactions(reactionsDb)
         insertReactionScores(scoresDb)
@@ -22,13 +22,13 @@ abstract class ReactionDao {
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
+    abstract suspend fun insertReactionScores(reactionScores: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScore(reactionScores:ReactionScoreEntity)
+    abstract suspend fun insertReactionScore(reactionScores:ReactionTotalEntity)
 
-    @Query("select * from ReactionScoreEntity where messageId =:messageId and reaction_key =:key")
-    abstract suspend fun getReactionScore(messageId: Long, key: String): ReactionScoreEntity?
+    @Query("select * from ReactionTotalEntity where messageId =:messageId and reaction_key =:key")
+    abstract suspend fun getReactionScore(messageId: Long, key: String): ReactionTotalEntity?
 
     @Transaction
     @Query("select * from ReactionEntity where messageId =:messageId")
@@ -52,12 +52,12 @@ abstract class ReactionDao {
     abstract suspend fun getSelfReactionsByMessageId(messageId: Long, myId: String): List<ReactionDb>
 
     @Update
-    abstract suspend fun updateReactionScore(reactionScore: ReactionScoreEntity)
+    abstract suspend fun updateReactionScore(reactionScore: ReactionTotalEntity)
 
-    @Query("delete from ReactionScoreEntity where id =:id")
+    @Query("delete from ReactionTotalEntity where id =:id")
     abstract suspend fun deleteReactionScoreByScoreId(id: Int)
 
-    @Query("delete from ReactionScoreEntity where messageId =:messageId")
+    @Query("delete from ReactionTotalEntity where messageId =:messageId")
     abstract suspend fun deleteAllReactionScoresByMessageId(messageId: Long)
 
     @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")

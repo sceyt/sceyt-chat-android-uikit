@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -49,7 +49,7 @@ fun SceytChannel.getMyRole(): Role? {
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
-    return isDirect() && getFirstMember()?.user?.activityState == UserActivityStatus.Deleted
+    return isDirect() && getFirstMember()?.user?.activityState == UserActivityState.Deleted
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {

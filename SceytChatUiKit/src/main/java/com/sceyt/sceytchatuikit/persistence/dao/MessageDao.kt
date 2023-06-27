@@ -3,7 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.dao
 import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
-import com.sceyt.chat.models.message.MarkerCount
+import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
@@ -108,7 +108,7 @@ abstract class MessageDao {
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
+    abstract suspend fun insertReactionScores(reactionScores: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
@@ -207,7 +207,7 @@ abstract class MessageDao {
     @Transaction
     open suspend fun updateMessageStatusWithBefore(status: DeliveryStatus, id: Long): List<MessageIdAndTid> {
         val ids = when (status) {
-            Read -> getMessagesTidAndIdLoverThanByStatus(id, Sent, Delivered)
+            Displayed -> getMessagesTidAndIdLoverThanByStatus(id, Sent, Received)
             else -> getMessagesTidAndIdLoverThanByStatus(id, Sent)
         }.filter { it.id != 0L }
 
@@ -221,21 +221,21 @@ abstract class MessageDao {
     }
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId")
-    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = Read)
+    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = Displayed)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
-    @Query("update messages set selfMarkers =:markers where channelId =:channelId and message_id =:messageId")
+    @Query("update messages set userMarkers =:markers where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, markers: List<String>?)
 
     @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
-    abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerCount>?)
+    abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerTotal>?)
 
     @Transaction
     open suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, marker: String) {
         getMessageById(messageId)?.let { messageDb ->
-            val selfMarkers = messageDb.messageEntity.selfMarkers?.toArrayList()
+            val selfMarkers = messageDb.messageEntity.userMarkers?.toArrayList()
             selfMarkers?.add(marker)
             updateMessageSelfMarkers(channelId, messageId, selfMarkers?.toSet()?.toList())
         }
@@ -282,7 +282,7 @@ abstract class MessageDao {
         deleteAllReactionScoresByMessageId(messageIds)
     }
 
-    @Query("delete from ReactionScoreEntity where messageId in (:messageId)")
+    @Query("delete from ReactionTotalEntity where messageId in (:messageId)")
     abstract fun deleteAllReactionScoresByMessageId(messageId: List<Long>)
 
     @Query("delete from ReactionEntity where messageId in (:messageId)")

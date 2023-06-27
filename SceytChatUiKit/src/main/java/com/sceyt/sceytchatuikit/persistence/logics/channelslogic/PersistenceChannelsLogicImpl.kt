@@ -9,7 +9,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
@@ -136,7 +136,7 @@ internal class PersistenceChannelsLogicImpl(
 
             Muted -> {
                 data.channelId?.let { channelId ->
-                    val time = data.channel?.muteUntil ?: 0
+                    val time = data.channel?.mutedTill ?: 0
                     channelDao.updateMuteState(channelId, true, time)
                     channelsCache.updateMuteState(channelId, true, time)
                 }
@@ -249,7 +249,7 @@ internal class PersistenceChannelsLogicImpl(
         initPendingLastMessageBeforeInsert(channel)
         val users = members.map { it.toUserEntity() }
         channel.lastMessage?.let {
-            it.selfReactions?.map { reaction -> reaction.user }?.let { it1 ->
+            it.userReactions?.map { reaction -> reaction.user }?.let { it1 ->
                 (users as ArrayList).addAll(it1.map { user -> user.toUserEntity() })
             }
         }
@@ -421,14 +421,14 @@ internal class PersistenceChannelsLogicImpl(
 
             lastMessage?.let {
                 lastMessages.add(it.toMessageDb(false))
-                lastMessage.parent?.let { parent ->
+                lastMessage.parentMessage?.let { parent ->
                     parentMessages.add(parent.toMessageDb(true))
                     if (lastMessage.incoming)
-                        parent.from?.let { user -> users.add(user.toUserEntity()) }
+                        parent.user?.let { user -> users.add(user.toUserEntity()) }
                 }
 
                 //Add user from last message
-                it.from?.let { user ->
+                it.user?.let { user ->
                     // Add if not exist
                     users.find { entity -> entity.id == user.id } ?: run {
                         users.add(user.toUserEntity())
@@ -447,7 +447,7 @@ internal class PersistenceChannelsLogicImpl(
             } else {
                 val members = arrayListOf<SceytMember>()
                 channel.getFirstMember()?.let {
-                    if (it.user.activityState == UserActivityStatus.Deleted)
+                    if (it.user.activityState == UserActivityState.Deleted)
                         directChatsWithDeletedPeers.add(channel.id)
                     members.add(it)
                 }

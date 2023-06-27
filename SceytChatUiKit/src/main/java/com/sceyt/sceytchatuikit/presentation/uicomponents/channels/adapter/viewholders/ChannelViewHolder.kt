@@ -141,7 +141,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 context.getString(R.string.sceyt_attachment) else message.body
 
             val fromText = if (message.incoming) {
-                val from = channel.lastMessage?.from
+                val from = channel.lastMessage?.user
                 val userFirstName = from?.let {
                     userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
                 }

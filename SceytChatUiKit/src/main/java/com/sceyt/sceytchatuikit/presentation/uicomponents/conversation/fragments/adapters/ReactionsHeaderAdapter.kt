@@ -8,7 +8,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.Reaction
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoAllReactionsHeaderBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoReactionHeaderBinding
@@ -28,6 +28,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                 val binding = SceytItemInfoReactionHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 ReactionsHeaderViewHolder(binding)
             }
+
             else -> {
                 val binding = SceytItemInfoAllReactionsHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 AllReactionsViewHolder(binding)
@@ -113,12 +114,12 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
         notifyItemChanged(position, Any())
     }
 
-    fun addOrUpdateItem(reaction: ReactionScore) {
+    fun addOrUpdateItem(reaction: ReactionTotal) {
         data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
-            (it.second as ReactionHeaderItem.Reaction).reactionScore = ReactionScore(reaction.key, reaction.score)
+            (it.second as ReactionHeaderItem.Reaction).reactionScore = ReactionTotal(reaction.key, reaction.count, reaction.score)
             notifyItemChanged(it.first, Any())
         } ?: let {
-            data.add(ReactionHeaderItem.Reaction(ReactionScore(reaction.key, reaction.score)))
+            data.add(ReactionHeaderItem.Reaction(ReactionTotal(reaction.key, reaction.count, reaction.score)))
             notifyItemInserted(data.lastIndex)
         }
     }

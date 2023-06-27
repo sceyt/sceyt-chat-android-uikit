@@ -7,7 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_FCM_TOKEN
@@ -104,7 +104,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         return RemoteMessageData(channel, message, user, reactionScore)
     }
 
-    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionScore? {
+    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionTotal? {
         return getReactionScoreFromPushJson(remoteMessage.data["reaction"])
     }
 

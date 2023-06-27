@@ -20,7 +20,7 @@ class ReactionViewHolder(private val binding: SceytItemReactionBinding,
         if (data !is ReactionItem.Reaction) return
         reactionItem = data
         if (shouldShowCount) {
-            val count = data.message.reactionScores?.sumOf { it.score } ?: 0
+            val count = data.message.reactionTotals?.sumOf { it.score } ?: 0
             binding.reactionView.setCountAndSmile(count, data.reaction.key)
         } else
             binding.reactionView.setSmileText(data.reaction.key, true)
