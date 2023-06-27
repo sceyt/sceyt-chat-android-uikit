@@ -45,7 +45,7 @@ internal class PersistenceReactionsLogicImpl(
 
     override suspend fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
         val messageId = data.message.id
-        reactionDao.deleteAllReactionScoresByMessageId(messageId)
+        reactionDao.deleteAllReactionTotalsByMessageId(messageId)
         val existMessage = messageDao.existsMessageById(messageId)
         if (!existMessage)
             messageDao.upsertMessage(data.message.toMessageDb(false))
@@ -55,7 +55,7 @@ internal class PersistenceReactionsLogicImpl(
             REMOVE -> reactionDao.deleteReaction(messageId, data.reaction.key, data.reaction.user.id)
         }
         data.message.reactionTotals?.map { it.toReactionTotalEntity(messageId) }?.let {
-            reactionDao.insertReactionScores(it)
+            reactionDao.insertReactionTotals(it)
         }
 
         val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
@@ -135,7 +135,7 @@ internal class PersistenceReactionsLogicImpl(
                     messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
                 }
                 resultMessage.reactionTotals?.let {
-                    messageDao.insertReactionScores(it.map { score -> score.toReactionTotalEntity(messageId) })
+                    messageDao.insertReactionTotals(it.map { total -> total.toReactionTotalEntity(messageId) })
                 }
 
                 val message = messageDao.getMessageById(messageId)?.toSceytMessage()
@@ -158,7 +158,7 @@ internal class PersistenceReactionsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 SceytKitClient.myId?.let { fromId ->
-                    reactionDao.deleteReactionAndScore(messageId, key, fromId)
+                    reactionDao.deleteReactionAndTotal(messageId, key, fromId)
                 }
 
                 val message = messageDao.getMessageById(messageId)?.toSceytMessage()

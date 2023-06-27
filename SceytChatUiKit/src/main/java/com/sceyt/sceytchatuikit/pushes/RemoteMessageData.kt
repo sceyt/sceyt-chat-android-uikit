@@ -9,5 +9,5 @@ data class RemoteMessageData(
         val channel: SceytChannel?,
         val message: SceytMessage?,
         val user: User?,
-        val reactionScore: ReactionTotal?
+        val reactionTotal: ReactionTotal?
 )

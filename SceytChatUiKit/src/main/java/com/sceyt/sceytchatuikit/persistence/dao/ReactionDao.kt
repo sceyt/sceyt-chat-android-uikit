@@ -9,10 +9,10 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 abstract class ReactionDao {
 
     @Transaction
-    open suspend fun insertReactionsAndScores(messageId: Long, reactionsDb: List<ReactionEntity>, scoresDb: List<ReactionTotalEntity>) {
-        deleteAllReactionScoresByMessageId(messageId)
+    open suspend fun insertReactionsAndTotals(messageId: Long, reactionsDb: List<ReactionEntity>, totalsDb: List<ReactionTotalEntity>) {
+        deleteAllReactionTotalsByMessageId(messageId)
         insertReactions(reactionsDb)
-        insertReactionScores(scoresDb)
+        insertReactionTotals(totalsDb)
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -22,13 +22,13 @@ abstract class ReactionDao {
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScores(reactionScores: List<ReactionTotalEntity>)
+    abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScore(reactionScores:ReactionTotalEntity)
+    abstract suspend fun insertReactionTotal(reactionTotal:ReactionTotalEntity)
 
     @Query("select * from ReactionTotalEntity where messageId =:messageId and reaction_key =:key")
-    abstract suspend fun getReactionScore(messageId: Long, key: String): ReactionTotalEntity?
+    abstract suspend fun getReactionTotal(messageId: Long, key: String): ReactionTotalEntity?
 
     @Transaction
     @Query("select * from ReactionEntity where messageId =:messageId")
@@ -52,13 +52,13 @@ abstract class ReactionDao {
     abstract suspend fun getSelfReactionsByMessageId(messageId: Long, myId: String): List<ReactionDb>
 
     @Update
-    abstract suspend fun updateReactionScore(reactionScore: ReactionTotalEntity)
+    abstract suspend fun updateReactionTotal(reactionTotal: ReactionTotalEntity)
 
     @Query("delete from ReactionTotalEntity where id =:id")
-    abstract suspend fun deleteReactionScoreByScoreId(id: Int)
+    abstract suspend fun deleteReactionTotalByTotalId(id: Int)
 
     @Query("delete from ReactionTotalEntity where messageId =:messageId")
-    abstract suspend fun deleteAllReactionScoresByMessageId(messageId: Long)
+    abstract suspend fun deleteAllReactionTotalsByMessageId(messageId: Long)
 
     @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")
     abstract suspend fun deleteReaction(messageId: Long, key: String, fromId: String)
@@ -70,20 +70,20 @@ abstract class ReactionDao {
     protected abstract suspend fun deleteAllReactionsByMessageId(messageId: Long)
 
     @Transaction
-    open suspend fun deleteReactionAndScore(messageId: Long, key: String, fromId: String) {
+    open suspend fun deleteReactionAndTotal(messageId: Long, key: String, fromId: String) {
         deleteReaction(messageId, key, fromId)
-        getReactionScore(messageId, key)?.let {
+        getReactionTotal(messageId, key)?.let {
             if (it.score > 1) {
                 it.score--
-                updateReactionScore(it)
+                updateReactionTotal(it)
             } else
-                deleteReactionScoreByScoreId(it.id)
+                deleteReactionTotalByTotalId(it.id)
         }
     }
 
     @Transaction
-    open suspend fun deleteAllReactionsAndScores(messageId: Long) {
-        deleteAllReactionScoresByMessageId(messageId)
+    open suspend fun deleteAllReactionsAndTotals(messageId: Long) {
+        deleteAllReactionTotalsByMessageId(messageId)
         deleteAllReactionsByMessageId(messageId)
     }
 }

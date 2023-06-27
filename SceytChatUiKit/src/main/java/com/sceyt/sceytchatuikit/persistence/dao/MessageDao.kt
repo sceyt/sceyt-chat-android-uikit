@@ -47,7 +47,7 @@ abstract class MessageDao {
         deleteAttachmentsChunked(messages.map { it.messageEntity.tid })
 
         //Delete reactions scores before insert
-        deleteMessageReactionScoresChunked(messages.mapNotNull { it.messageEntity.id })
+        deleteMessageReactionTotalsChunked(messages.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
         val attachmentPairs = messages.map { Pair(it.attachments ?: arrayListOf(), it) }
@@ -63,10 +63,10 @@ abstract class MessageDao {
         if (reactions.isNotEmpty())
             insertReactions(reactions.map { it.reaction })
 
-        //Insert reaction scores
-        val reactionScores = messages.flatMap { it.reactionsScores ?: arrayListOf() }
-        if (reactionScores.isNotEmpty())
-            insertReactionScores(reactionScores)
+        //Insert reaction totals
+        val reactionTotals = messages.flatMap { it.reactionsTotals ?: arrayListOf() }
+        if (reactionTotals.isNotEmpty())
+            insertReactionTotals(reactionTotals)
 
         //Inset mentioned users links
         insertMentionedUsersMessageLinks(*messages.map { it.messageEntity }.toTypedArray())
@@ -108,7 +108,7 @@ abstract class MessageDao {
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScores(reactionScores: List<ReactionTotalEntity>)
+    abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
@@ -267,8 +267,8 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun deleteMessageReactionScoresChunked(messageIdes: List<Long>) {
-        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
+    open suspend fun deleteMessageReactionTotalsChunked(messageIdes: List<Long>) {
+        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndTotals)
     }
 
     @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
@@ -278,12 +278,12 @@ abstract class MessageDao {
     abstract fun deleteAttachmentsPayLoad(messageTides: List<Long>)
 
     @Transaction
-    open fun deleteAllReactionsAndScores(messageIds: List<Long>) {
-        deleteAllReactionScoresByMessageId(messageIds)
+    open fun deleteAllReactionsAndTotals(messageIds: List<Long>) {
+        deleteAllReactionTotalsByMessageId(messageIds)
     }
 
     @Query("delete from ReactionTotalEntity where messageId in (:messageId)")
-    abstract fun deleteAllReactionScoresByMessageId(messageId: List<Long>)
+    abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
 
     @Query("delete from ReactionEntity where messageId in (:messageId)")
     protected abstract fun deleteAllReactionsByMessageId(messageId: List<Long>)

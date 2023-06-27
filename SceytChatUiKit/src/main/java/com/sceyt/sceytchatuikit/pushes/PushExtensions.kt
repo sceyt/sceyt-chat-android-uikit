@@ -104,7 +104,7 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
     }
 }
 
-fun getReactionScoreFromPushJson(json: String?): ReactionTotal? {
+fun getReactionTotalFromPushJson(json: String?): ReactionTotal? {
     return try {
         val jsonObject = JSONObject(json ?: return null)
         val key = jsonObject.getString("key")

@@ -47,7 +47,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
     inner class ReactionsHeaderViewHolder(val binding: SceytItemInfoReactionHeaderBinding) : BaseViewHolder<ReactionHeaderItem>(binding.root) {
 
         override fun bind(item: ReactionHeaderItem) {
-            val score = (item as ReactionHeaderItem.Reaction).reactionScore
+            val score = (item as ReactionHeaderItem.Reaction).reactionTotal
 
             with(binding.reaction) {
                 setCountAndSmile(score.score, score.key)
@@ -115,8 +115,8 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
     }
 
     fun addOrUpdateItem(reaction: ReactionTotal) {
-        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
-            (it.second as ReactionHeaderItem.Reaction).reactionScore = ReactionTotal(reaction.key, reaction.count, reaction.score)
+        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
+            (it.second as ReactionHeaderItem.Reaction).reactionTotal = ReactionTotal(reaction.key, reaction.count, reaction.score)
             notifyItemChanged(it.first, Any())
         } ?: let {
             data.add(ReactionHeaderItem.Reaction(ReactionTotal(reaction.key, reaction.count, reaction.score)))
@@ -125,7 +125,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
     }
 
     fun removeItem(reaction: Reaction) {
-        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
+        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
             data.removeAt(it.first)
             notifyItemRemoved(it.first)
         }

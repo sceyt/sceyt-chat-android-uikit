@@ -131,7 +131,7 @@ internal class PersistenceMessagesLogicImpl(
 
             val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
 
-            val isReaction = data.reactionScore != null
+            val isReaction = data.reactionTotal != null
 
             if (messageDb == null && !isReaction) {
                 onMessage(Pair(data.channel, data.message), false)
@@ -139,8 +139,8 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             if (messageDb != null)
-                data.reactionScore?.toReactionTotalEntity(message.id)?.let {
-                    reactionDao.insertReactionScore(it)
+                data.reactionTotal?.toReactionTotalEntity(message.id)?.let {
+                    reactionDao.insertReactionTotal(it)
                 }
         }
     }
@@ -755,7 +755,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun deletedPayloads(id: Long, tid: Long) {
         messageDao.deleteAttachmentsChunked(listOf(tid))
         messageDao.deleteAttachmentsPayloadsChunked(listOf(tid))
-        reactionDao.deleteAllReactionsAndScores(id)
+        reactionDao.deleteAllReactionsAndTotals(id)
     }
 
     private fun getMessagesTid(messages: List<SceytMessage>?): List<Long> {
