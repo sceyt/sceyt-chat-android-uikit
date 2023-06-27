@@ -54,4 +54,4 @@ fun Reaction.toUserReactionsEntity(channelId: Long) = ChatUserReactionEntity(
     fromId = user.id
 )
 
-fun ReactionTotalEntity.toReactionScore(): ReactionTotal = ReactionTotal(key, count, score.toLong())
+fun ReactionTotalEntity.toReactionTotal(): ReactionTotal = ReactionTotal(key, count, score.toLong())

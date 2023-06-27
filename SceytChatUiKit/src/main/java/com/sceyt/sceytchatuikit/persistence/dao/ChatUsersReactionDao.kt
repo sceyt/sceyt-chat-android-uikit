@@ -8,16 +8,16 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntit
 interface ChatUsersReactionDao {
 
     @Transaction
-    suspend fun replaceChannelUserReactions(reactionScores: List<ChatUserReactionEntity>) {
-        deleteChannelsUserReactions(reactionScores.map { it.channelId })
-        insertChannelUserReactions(reactionScores)
+    suspend fun replaceChannelUserReactions(reactionTotals: List<ChatUserReactionEntity>) {
+        deleteChannelsUserReactions(reactionTotals.map { it.channelId })
+        insertChannelUserReactions(reactionTotals)
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChannelUserReactions(reactionScores: List<ChatUserReactionEntity>)
+    suspend fun insertChannelUserReactions(reactionTotals: List<ChatUserReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChannelUserReaction(reactionScores: ChatUserReactionEntity)
+    suspend fun insertChannelUserReaction(reactionTotals: ChatUserReactionEntity)
 
     @Transaction
     @Query("select * from ChatUserReactionEntity where channelId =:channelId")

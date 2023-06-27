@@ -74,20 +74,20 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
                     dismissSafety()
                     return@onEach
                 }
-                val reactionScore = eventData.message.reactionTotals?.find { it.key == eventData.reaction.key }
+                val reactionTotal = eventData.message.reactionTotals?.find { it.key == eventData.reaction.key }
                         ?: ReactionTotal(eventData.reaction.key, 0, eventData.reaction.score.toLong())
                 when (eventData.eventType) {
                     ReactionUpdateEventEnum.ADD -> {
-                        headerAdapter?.addOrUpdateItem(reactionScore)
+                        headerAdapter?.addOrUpdateItem(reactionTotal)
                         pagerAdapter?.addOrUpdateItem(createReactedUsersFragment(eventData.reaction.key, message.id), eventData.reaction)
                     }
 
                     ReactionUpdateEventEnum.REMOVE -> {
-                        if (reactionScore.score == 0L) {
+                        if (reactionTotal.score == 0L) {
                             headerAdapter?.removeItem(eventData.reaction)
                             pagerAdapter?.removeFragment(eventData.reaction.key)
                         } else {
-                            headerAdapter?.addOrUpdateItem(reactionScore)
+                            headerAdapter?.addOrUpdateItem(reactionTotal)
                             pagerAdapter?.addOrUpdateItem(createReactedUsersFragment(eventData.reaction.key, message.id), eventData.reaction)
                         }
                     }

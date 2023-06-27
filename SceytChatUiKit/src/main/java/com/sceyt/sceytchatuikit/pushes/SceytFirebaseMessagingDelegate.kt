@@ -100,12 +100,12 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         val user = getUserFromPushJson(remoteMessage)
         val channel = getChannelFromPushJson(remoteMessage, user)?.toSceytUiChannel()
         val message = getMessageBodyFromPushJson(remoteMessage, channel?.id, user)?.toSceytUiMessage()
-        val reactionScore = getReactionScoreFromRemoteMessage(remoteMessage)
-        return RemoteMessageData(channel, message, user, reactionScore)
+        val reactionTotal = getReactionTotalFromRemoteMessage(remoteMessage)
+        return RemoteMessageData(channel, message, user, reactionTotal)
     }
 
-    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionTotal? {
-        return getReactionScoreFromPushJson(remoteMessage.data["reaction"])
+    fun getReactionTotalFromRemoteMessage(remoteMessage: RemoteMessage): ReactionTotal? {
+        return getReactionTotalFromPushJson(remoteMessage.data["reaction"])
     }
 
     @Throws(IllegalStateException::class)

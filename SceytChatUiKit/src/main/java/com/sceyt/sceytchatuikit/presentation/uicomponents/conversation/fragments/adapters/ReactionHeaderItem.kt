@@ -6,7 +6,7 @@ import com.sceyt.sceytchatuikit.presentation.common.SelectableItem
 sealed class ReactionHeaderItem : SelectableItem() {
 
     data class Reaction(
-            var reactionScore: ReactionTotal
+            var reactionTotal: ReactionTotal
     ) : ReactionHeaderItem()
 
     data class All(

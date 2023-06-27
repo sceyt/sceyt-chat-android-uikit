@@ -55,7 +55,7 @@ fun SceytMessage.toMessageDb(isParentMessage: Boolean): MessageDb {
         parent = parentMessage?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
         reactions = userReactions?.map { it.toReactionDb() },
-        reactionsScores = reactionTotals?.map { it.toReactionTotalEntity(id) },
+        reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) },
         forwardingUser = forwardingDetails?.user?.toUserEntity(),
         mentionedUsers = null
     )
@@ -81,7 +81,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             user = from?.toUser(),
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
             userReactions = selfReactions?.map { it.toReaction() }?.toTypedArray(),
-            reactionTotals = reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
+            reactionTotals = reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerTotals = markerCount?.toTypedArray(),
             userMarkers = userMarkers?.toTypedArray(),
             mentionedUsers = mentionedUsers?.map {
@@ -160,7 +160,7 @@ fun MessageDb.toMessage(): Message {
             from?.toUser(),
             attachments?.map { it.toSdkAttachment(false) }?.toTypedArray(),
             selfReactions?.map { it.toReaction() }?.toTypedArray(),
-            reactionsScores?.map { it.toReactionScore() }?.toTypedArray(),
+            reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerCount?.toTypedArray(),
             emptyArray(),
             emptyArray(),
