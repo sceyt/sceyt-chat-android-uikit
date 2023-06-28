@@ -33,7 +33,6 @@ data class MessageEntity(
         var fromId: String?,
         var markerCount: List<MarkerTotal>?,
         var mentionedUsersIds: List<String>?,
-        var userMarkers: List<String>?,
         var parentId: Long?,
         var replyCount: Long,
         val displayCount: Short,

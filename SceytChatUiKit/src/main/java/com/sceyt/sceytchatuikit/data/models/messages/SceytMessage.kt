@@ -1,13 +1,19 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.chat.models.message.*
+import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.ForwardingDetails
+import com.sceyt.chat.models.message.Marker
+import com.sceyt.chat.models.message.MarkerTotal
+import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.message.Reaction
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import java.util.*
+import java.util.Date
 
 @Parcelize
 open class SceytMessage(var id: Long,
@@ -28,7 +34,7 @@ open class SceytMessage(var id: Long,
                         var userReactions: Array<Reaction>?,
                         var reactionTotals: Array<ReactionTotal>?,
                         var markerTotals: Array<MarkerTotal>?,
-                        var userMarkers: Array<String>?,
+                        var userMarkers: Array<Marker>?,
                         var mentionedUsers: Array<User>?,
                         var parentMessage: SceytMessage?,
                         var replyCount: Long,

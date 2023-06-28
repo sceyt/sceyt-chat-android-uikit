@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 
@@ -22,12 +21,6 @@ class MessageConverter {
 
     @TypeConverter
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
-
-    @TypeConverter
-    fun selfMarkerTypeEnumToTnt(value: SelfMarkerTypeEnum) = value.ordinal
-
-    @TypeConverter
-    fun intToSelfMarkerTypeEnum(value: Int) = value.toEnum<SelfMarkerTypeEnum>()
 
     @TypeConverter
     fun transferStateEnumToTnt(value: TransferState?) = value?.ordinal

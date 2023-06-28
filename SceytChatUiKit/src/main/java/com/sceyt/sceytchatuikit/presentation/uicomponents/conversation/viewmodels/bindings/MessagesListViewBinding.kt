@@ -3,7 +3,10 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 import androidx.lifecycle.*
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -14,8 +17,8 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
@@ -299,11 +302,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@Observer
                 viewModelScope.launch(Dispatchers.Default) {
+                    val user = ClientWrapper.currentUser ?: User(myId ?: return@launch)
                     messagesListView.getData()?.forEach { listItem ->
                         (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
                                 message.userMarkers = message.userMarkers?.toMutableSet()?.apply {
-                                    add(SelfMarkerTypeEnum.Displayed.value())
+                                    add(Marker(message.id, user, data.name, data.createdAt))
                                 }?.toTypedArray()
                             }
                         }
@@ -342,7 +346,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
         (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
-            if (!message.incoming || message.userMarkers?.contains(SelfMarkerTypeEnum.Displayed.value()) == true)
+            if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
                 return
 
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
@@ -368,14 +372,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     // todo reply in thread
-  /*  onNewThreadMessageFlow.onEach {
-        messagesListView.updateReplyCount(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    /*  onNewThreadMessageFlow.onEach {
+          messagesListView.updateReplyCount(it)
+      }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onOutGoingThreadMessageFlow.onEach {
-        messagesListView.newReplyMessage(it.parentMessage?.id)
-    }.launchIn(lifecycleOwner.lifecycleScope)
-*/
+      onOutGoingThreadMessageFlow.onEach {
+          messagesListView.newReplyMessage(it.parentMessage?.id)
+      }.launchIn(lifecycleOwner.lifecycleScope)
+  */
     onMessageStatusFlow.onEach {
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)

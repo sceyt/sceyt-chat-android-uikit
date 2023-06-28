@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 
 @Entity(tableName = "PendingMarkers",
@@ -16,12 +16,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("messageId", "status", unique = true)]
+    indices = [Index("messageId", "name", unique = true)]
 )
 data class PendingMarkersEntity(
         @PrimaryKey(autoGenerate = true)
         val primaryKey: Int = 0,
         val channelId: Long,
         val messageId: Long,
-        val status: SelfMarkerTypeEnum
+        val name: MarkerTypeEnum
 )

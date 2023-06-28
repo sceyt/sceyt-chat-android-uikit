@@ -38,7 +38,6 @@ object FileTransferHelper : SceytKoinComponent {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
         emitAttachmentTransferUpdate(it)
-        messagesLogic.updateTransferDataByMsgTid(it)
     }
 
     fun getDownloadResultCallback(attachment: SceytAttachment) = TransferResultCallback {

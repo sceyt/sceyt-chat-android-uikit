@@ -29,12 +29,13 @@ import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Displayed
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Received
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Displayed
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
@@ -42,6 +43,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
@@ -85,6 +87,7 @@ import kotlin.coroutines.CoroutineContext
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
         private val messageDao: MessageDao,
+        private val attachmentDao: AttachmentDao,
         private val pendingMarkersDao: PendingMarkersDao,
         private val reactionDao: ReactionDao,
         private val userDao: UserDao,
@@ -218,7 +221,7 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
         if (response is SceytResponse.Success) {
             val tIds = getMessagesTid(response.data)
-            val payloads = messageDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
+            val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
             response.data?.forEach {
                 findAndUpdateAttachmentPayLoads(it, payloads)
                 it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
@@ -406,10 +409,10 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
         val tmpMessageDb = message.toMessageDb(false).also {
             it.messageEntity.id = null
-           /*
-           // todo reply in thread
-           if (message.replyInThread)
-                it.messageEntity.channelId = message.parentMessage?.id ?: 0*/
+            /*
+            // todo reply in thread
+            if (message.replyInThread)
+                 it.messageEntity.channelId = message.parentMessage?.id ?: 0*/
         }
         messageDao.upsertMessage(tmpMessageDb)
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
@@ -486,7 +489,7 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMarkers.isNotEmpty()) {
             val groupByChannel = pendingMarkers.groupBy { it.channelId }
             for ((channelId, messages) in groupByChannel) {
-                val messagesByStatus = messages.groupBy { it.status }
+                val messagesByStatus = messages.groupBy { it.name }
                 for ((status, msg) in messagesByStatus)
                     markMessagesAs(channelId, status, *msg.map { it.messageId }.toLongArray())
             }
@@ -651,7 +654,7 @@ internal class PersistenceMessagesLogicImpl(
 
         saveMessagesToDb(messages)
         val tIds = getMessagesTid(messages)
-        val payloads = messageDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
+        val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
 
         messages.forEach {
             findAndUpdateAttachmentPayLoads(it, payloads)
@@ -769,13 +772,13 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         val notDisplayedMessages = messages.filter {
-            it.incoming && it.userMarkers?.contains(Received.value()) != true
+            it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value() } != true
         }
         if (notDisplayedMessages.isNotEmpty())
             markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+    private suspend fun markMessagesAs(channelId: Long, status: MarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
@@ -791,26 +794,29 @@ internal class PersistenceMessagesLogicImpl(
         return responseList
     }
 
-    private suspend fun addPendingMarkerToDb(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long) {
+    private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
         try {
-            val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, status = status) }
+            val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, name = status) }
             pendingMarkersDao.insertMany(list)
         } catch (e: Exception) {
             Log.e(TAG, "Couldn't insert pending markers.")
         }
     }
 
-    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: SelfMarkerTypeEnum, vararg ids: Long) {
+    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: MarkerTypeEnum, vararg ids: Long) {
         if (response is SceytResponse.Success) {
-            response.data?.let { messageListMarker ->
+            response.data?.let { data ->
                 val deliveryStatus = status.toDeliveryStatus()
-                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, deliveryStatus)
+                messageDao.updateMessagesStatus(channelId, data.messageIds, deliveryStatus)
                 val tIds = messageDao.getMessageTIdsByIds(*ids)
                 messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
                 pendingMarkersDao.deleteMessagesMarkersByStatus(response.data.messageIds, status)
                 ids.forEach {
-                    messageDao.updateMessageSelfMarkers(channelId, it, status.value())
+                    SceytKitClient.myId?.let { userId ->
+                        val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
+                        messageDao.insertUserMarker(markerEntity)
+                    }
                 }
             }
         }
