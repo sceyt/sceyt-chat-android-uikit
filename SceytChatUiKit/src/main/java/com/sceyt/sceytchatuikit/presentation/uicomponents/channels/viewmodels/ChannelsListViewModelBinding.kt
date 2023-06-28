@@ -97,7 +97,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 newAddedChannelJobs.remove(channelId)
             }
             needToUpdateChannelsAfterResume.remove(channelId)
-            lifecycleOwner.lifecycle.withResumed {
+            lifecycleOwner.withResumed {
                 channelsListView.deleteChannel(channelId)
             }
         }
@@ -119,7 +119,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     fun createJobToAddNewChannelWithOnResumed(sceytChannel: SceytChannel) {
         val job = viewModelScope.launch {
-            lifecycleOwner.lifecycle.withResumed {
+            lifecycleOwner.withResumed {
                 val updatedChannel = needToUpdateChannelsAfterResume[sceytChannel.id]?.channel
                         ?: sceytChannel
                 channelsListView.cancelLastSort()

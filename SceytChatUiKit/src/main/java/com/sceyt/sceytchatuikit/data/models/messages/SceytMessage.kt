@@ -39,7 +39,7 @@ open class SceytMessage(var id: Long,
                         var parentMessage: SceytMessage?,
                         var replyCount: Long,
                         val displayCount: Short,
-                        var autoDeleteDate: Long?,
+                        var autoDeleteAt: Long?,
                         var forwardingDetails: ForwardingDetails?) : Parcelable, Cloneable {
 
 
@@ -83,7 +83,7 @@ open class SceytMessage(var id: Long,
         mentionedUsers = message.mentionedUsers
         parentMessage = message.parentMessage
         replyCount = message.replyCount
-        autoDeleteDate = message.autoDeleteDate
+        autoDeleteAt = message.autoDeleteAt
         reactionTotals?.toMutableSet()?.retainAll {
             it.key == ""
         }
@@ -117,7 +117,7 @@ open class SceytMessage(var id: Long,
             parentMessage = parentMessage,
             replyCount = replyCount,
             displayCount = displayCount,
-            autoDeleteDate = autoDeleteDate,
+            autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetails).also {
             it.messageReactions = messageReactions
             it.files = files
