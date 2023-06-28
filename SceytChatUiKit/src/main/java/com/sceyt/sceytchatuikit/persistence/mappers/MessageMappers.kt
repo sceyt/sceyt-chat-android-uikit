@@ -1,18 +1,21 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.ForwardingDetails
+import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toAttachment
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ForwardingDetailsDb
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import java.util.*
+import java.util.Date
 
 fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
@@ -31,7 +34,6 @@ fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
     fromId = user?.id,
     markerCount = markerTotals?.toList(),
     mentionedUsersIds = mentionedUsers?.map { it.id },
-    userMarkers = userMarkers?.toList(),
     parentId = if (parentMessage?.id == 0L) null else parentMessage?.id,
     replyCount = replyCount,
     displayCount = displayCount,
@@ -54,6 +56,7 @@ fun SceytMessage.toMessageDb(isParentMessage: Boolean): MessageDb {
         from = user?.toUserEntity(),
         parent = parentMessage?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
+        userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) },
         forwardingUser = forwardingDetails?.user?.toUserEntity(),
@@ -83,7 +86,9 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             userReactions = selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionTotals = reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerTotals = markerCount?.toTypedArray(),
-            userMarkers = userMarkers?.toTypedArray(),
+            userMarkers = userMarkers?.map {
+                it.toMarker(ClientWrapper.currentUser ?: User(it.userId))
+            }?.toTypedArray(),
             mentionedUsers = mentionedUsers?.map {
                 it.user?.toUser() ?: User(it.link.userId)
             }?.toTypedArray(),
@@ -112,6 +117,10 @@ fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     }, null)
 }
 
+fun Marker.toMarkerEntity( ): MarkerEntity {
+    return MarkerEntity(messageId, user.id, name, createdAt)
+}
+
 private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAttachment>?,
                                                       from: User?, mentionedUsers: Array<User>?) = SceytMessage(
     id = id ?: 0,
@@ -132,7 +141,7 @@ private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAt
     userReactions = emptyArray(),
     reactionTotals = emptyArray(),
     markerTotals = markerCount?.toTypedArray(),
-    userMarkers = userMarkers?.toTypedArray(),
+    userMarkers = emptyArray(),
     mentionedUsers = mentionedUsers,
     parentMessage = null,
     replyCount = replyCount,
@@ -206,7 +215,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         userReactions = userReactions,
         reactionTotals = reactionTotals,
         markerTotals = markerTotals,
-        userMarkers = userMarkers,
+        userMarkers = emptyArray(),
         mentionedUsers = mentionedUsers,
         parentMessage = parentMessage?.toSceytUiMessage(),
         replyCount = replyCount,

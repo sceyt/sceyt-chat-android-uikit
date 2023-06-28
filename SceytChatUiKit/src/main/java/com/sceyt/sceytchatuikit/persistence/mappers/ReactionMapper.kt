@@ -1,9 +1,12 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
+import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
@@ -36,6 +39,7 @@ fun ReactionDb.toReaction(): Reaction {
     }
 }
 
+fun MarkerEntity.toMarker(user: User) = Marker(messageId, user, name, createdAt)
 
 fun ChatUserReactionDb.toReaction(): Reaction {
     with(reaction) {

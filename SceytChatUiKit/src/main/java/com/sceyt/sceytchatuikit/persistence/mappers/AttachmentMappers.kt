@@ -36,7 +36,6 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         filePath = filePath), null
 )
 
-
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
         return SceytAttachment(
@@ -55,7 +54,6 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             progressPercent = payLoad?.progressPercent)
     }
 }
-
 
 fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
     with(attachmentEntity) {

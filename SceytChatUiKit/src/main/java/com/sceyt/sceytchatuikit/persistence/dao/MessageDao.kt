@@ -7,7 +7,6 @@ import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlin.math.max
 
@@ -58,6 +57,11 @@ abstract class MessageDao {
             })
         }
 
+        //Insert user markers
+        val userMarkers = messages.flatMap { it.userMarkers ?: arrayListOf() }
+        if (userMarkers.isNotEmpty())
+            insertUserMarkers(userMarkers)
+
         //Insert reactions
         val reactions = messages.flatMap { it.reactions ?: arrayListOf() }
         if (reactions.isNotEmpty())
@@ -103,6 +107,12 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertUserMarker(userMarker: MarkerEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
@@ -185,9 +195,6 @@ abstract class MessageDao {
     @Query("select message_id as id, tid from messages where message_id <= :id and deliveryStatus in (:status)")
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
 
-    @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
-    abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
-
     @Transaction
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
     abstract suspend fun getLastMessage(channelId: Long): MessageDb?
@@ -226,20 +233,8 @@ abstract class MessageDao {
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
-    @Query("update messages set userMarkers =:markers where channelId =:channelId and message_id =:messageId")
-    abstract suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, markers: List<String>?)
-
     @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
     abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerTotal>?)
-
-    @Transaction
-    open suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, marker: String) {
-        getMessageById(messageId)?.let { messageDb ->
-            val selfMarkers = messageDb.messageEntity.userMarkers?.toArrayList()
-            selfMarkers?.add(marker)
-            updateMessageSelfMarkers(channelId, messageId, selfMarkers?.toSet()?.toList())
-        }
-    }
 
     @Query("update messages set channelId =:newChannelId where channelId =:oldChannelId")
     abstract suspend fun updateMessagesChannelId(oldChannelId: Long, newChannelId: Long): Int

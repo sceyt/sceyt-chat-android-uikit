@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.data.models.messages
 
 import com.sceyt.chat.models.message.DeliveryStatus
 
-enum class SelfMarkerTypeEnum {
+enum class MarkerTypeEnum {
     Displayed,
     Received;
 

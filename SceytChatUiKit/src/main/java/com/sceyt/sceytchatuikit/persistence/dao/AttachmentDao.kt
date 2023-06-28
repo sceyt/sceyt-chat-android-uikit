@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -38,6 +39,12 @@ abstract class AttachmentDao {
         val hasNext = newest.size > SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2
         return LoadNearData(oldest + newMessages, hasNext = hasNext, hasPrev)
     }
+
+    @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
+    abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
+
+    @Query("select * from AttachmentEntity  where type =:type and url <> ''")
+    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
 
     @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
     abstract suspend fun updateAttachmentIdAndMessageId(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
@@ -72,9 +79,6 @@ abstract class AttachmentDao {
 
     @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
     abstract fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
-
-    @Query("select * from AttachmentEntity  where type =:type and url <> ''")
-    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
 
     @Query("update AttachmentEntity set filePath = '' where messageTid in (:messageTid)")
     abstract fun markNotDownloadedFileAttachments(messageTid: List<Long>)

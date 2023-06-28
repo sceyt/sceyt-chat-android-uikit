@@ -23,6 +23,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
     DraftMessageEntity::class,
     DraftMessageUserLink::class,
     AttachmentEntity::class,
+    MarkerEntity::class,
     ReactionEntity::class,
     ReactionTotalEntity::class,
     ChatUserReactionEntity::class,
