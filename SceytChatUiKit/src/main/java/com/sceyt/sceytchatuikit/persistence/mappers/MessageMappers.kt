@@ -37,7 +37,7 @@ fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
     parentId = if (parentMessage?.id == 0L) null else parentMessage?.id,
     replyCount = replyCount,
     displayCount = displayCount,
-    autoDeleteDate = autoDeleteDate,
+    autoDeleteAt = autoDeleteAt,
     forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
     isParentMessage = isParentMessage
 )
@@ -95,7 +95,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             parentMessage = parent?.toSceytMessage(),
             replyCount = replyCount,
             displayCount = displayCount,
-            autoDeleteDate = autoDeleteDate,
+            autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
         )
     }
@@ -146,7 +146,7 @@ private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAt
     parentMessage = null,
     replyCount = replyCount,
     displayCount = displayCount,
-    autoDeleteDate = autoDeleteDate,
+    autoDeleteAt = autoDeleteAt,
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null)
 )
 
@@ -176,7 +176,7 @@ fun MessageDb.toMessage(): Message {
             parent?.toSceytMessage()?.toMessage(),
             replyCount,
             messageEntity.displayCount,
-            messageEntity.autoDeleteDate ?: 0L,
+            messageEntity.autoDeleteAt ?: 0L,
             messageEntity.forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
         )
     }
@@ -220,7 +220,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         parentMessage = parentMessage?.toSceytUiMessage(),
         replyCount = replyCount,
         displayCount = displayCount.toShort(),
-        autoDeleteDate = autoDeleteDate,
+        autoDeleteAt = autoDeleteDate,
         forwardingDetails = forwardingDetails
     ).apply {
         isGroup?.let {
@@ -254,7 +254,7 @@ fun SceytMessage.toMessage(): Message {
         parentMessage?.toMessage(),
         replyCount,
         displayCount,
-        autoDeleteDate ?: 0L,
+        autoDeleteAt ?: 0L,
         ForwardingDetails(id, channelId, user, 0))
 }
 

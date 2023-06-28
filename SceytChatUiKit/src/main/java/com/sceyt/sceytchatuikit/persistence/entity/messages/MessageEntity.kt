@@ -36,7 +36,7 @@ data class MessageEntity(
         var parentId: Long?,
         var replyCount: Long,
         val displayCount: Short,
-        val autoDeleteDate: Long?,
+        val autoDeleteAt: Long?,
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
         @ColumnInfo(index = true)
