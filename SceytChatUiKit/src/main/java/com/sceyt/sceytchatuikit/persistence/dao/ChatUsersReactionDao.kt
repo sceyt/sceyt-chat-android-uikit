@@ -31,4 +31,10 @@ interface ChatUsersReactionDao {
 
     @Query("delete from ChatUserReactionEntity where messageId =:messageId and channelId =:channelId")
     suspend fun deleteChannelMessageUserReaction(channelId: Long, messageId: Long)
+
+    @Query("delete from ChatUserReactionEntity where messageId =:messageId and channelId =:channelId and reaction_key =:key and fromId =:fromId and pending = 1")
+    suspend fun deleteChannelUserPendingReaction(channelId: Long, messageId: Long, key: String?, fromId: String?)
+
+    @Query("update ChatUserReactionEntity set pending = 0 where messageId =:messageId and channelId =:channelId and reaction_key =:key and fromId =:fromId and pending = 1")
+    suspend fun markChannelPendingReactionAsNotPending(channelId: Long, messageId: Long, key: String?, fromId: String?)
 }

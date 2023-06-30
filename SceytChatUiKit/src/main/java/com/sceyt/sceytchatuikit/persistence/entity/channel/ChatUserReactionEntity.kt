@@ -2,9 +2,10 @@ package com.sceyt.sceytchatuikit.persistence.entity.channel
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(indices = [Index(value = ["messageId", "channelId", "reaction_key","fromId"], unique = true)])
 data class ChatUserReactionEntity(
         @PrimaryKey
         val id: Long,
