@@ -6,8 +6,8 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class ReactionData(
         var key: String,
-        val score: Int = 1,
-        val containsSelf: Boolean = false) : Parcelable {
+        var score: Int = 1,
+        var containsSelf: Boolean = false) : Parcelable {
 
     override fun equals(other: Any?): Boolean {
         return ((other as? ReactionData) ?: return true).run {

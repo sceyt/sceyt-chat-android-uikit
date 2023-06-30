@@ -9,8 +9,8 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntit
 @Dao
 interface PendingReactionDao {
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(entity: PendingReactionEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: PendingReactionEntity): Long
 
     @Query("select * from pendingReaction")
     suspend fun getAllData(): List<PendingReactionEntity>

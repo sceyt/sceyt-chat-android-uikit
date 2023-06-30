@@ -25,7 +25,7 @@ data class MessageDb(
         val reactions: List<ReactionDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
-        var reactionsTotals: List<ReactionTotalEntity>?,
+        var reactionsTotals: MutableList<ReactionTotalEntity>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
         var pendingReactions: List<PendingReactionEntity>?,

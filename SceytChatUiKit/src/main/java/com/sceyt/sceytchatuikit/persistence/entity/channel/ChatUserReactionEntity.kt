@@ -18,5 +18,7 @@ data class ChatUserReactionEntity(
         val reason: String,
         val createdAt: Long,
         @ColumnInfo(index = true)
-        val fromId: String?
+        val fromId: String?,
+        @ColumnInfo(index = true)
+        val pending: Boolean
 )

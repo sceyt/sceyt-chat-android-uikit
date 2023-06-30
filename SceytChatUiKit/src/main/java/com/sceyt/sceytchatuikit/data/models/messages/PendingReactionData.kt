@@ -9,7 +9,8 @@ data class PendingReactionData(
         var key: String,
         var score: Int,
         var count: Long,
-        var createdAt: Long
+        var createdAt: Long,
+        var isAdd: Boolean
 ) : Parcelable {
 
     override fun equals(other: Any?): Boolean {

@@ -25,7 +25,7 @@ abstract class ReactionDao {
     abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionTotal(reactionTotal:ReactionTotalEntity)
+    abstract suspend fun insertReactionTotal(reactionTotal: ReactionTotalEntity)
 
     @Query("select * from ReactionTotalEntity where messageId =:messageId and reaction_key =:key")
     abstract suspend fun getReactionTotal(messageId: Long, key: String): ReactionTotalEntity?
@@ -61,7 +61,7 @@ abstract class ReactionDao {
     abstract suspend fun deleteAllReactionTotalsByMessageId(messageId: Long)
 
     @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")
-    abstract suspend fun deleteReaction(messageId: Long, key: String, fromId: String)
+    abstract suspend fun deleteReaction(messageId: Long, key: String, fromId: String?): Int
 
     @Query("delete from ReactionEntity where id in (:ids)")
     abstract suspend fun deleteReactionByIds(vararg ids: Long)
@@ -70,15 +70,16 @@ abstract class ReactionDao {
     protected abstract suspend fun deleteAllReactionsByMessageId(messageId: Long)
 
     @Transaction
-    open suspend fun deleteReactionAndTotal(messageId: Long, key: String, fromId: String) {
-        deleteReaction(messageId, key, fromId)
-        getReactionTotal(messageId, key)?.let {
-            if (it.score > 1) {
-                it.score--
-                updateReactionTotal(it)
-            } else
-                deleteReactionTotalByTotalId(it.id)
-        }
+    open suspend fun deleteReactionAndTotal(messageId: Long, key: String, fromId: String?) {
+        val row = deleteReaction(messageId, key, fromId)
+        if (row > 0)
+            getReactionTotal(messageId, key)?.let {
+                if (it.score > 1) {
+                    it.score--
+                    updateReactionTotal(it)
+                } else
+                    deleteReactionTotalByTotalId(it.id)
+            }
     }
 
     @Transaction

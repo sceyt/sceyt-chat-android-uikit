@@ -10,8 +10,10 @@ import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.ReactionsCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -19,7 +21,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class ReactionsRepositoryImpl : ReactionsRepository {
     private lateinit var reactionsQuery: ReactionsListQuery
 
-    override suspend fun getReactions(messageId: Long, key: String): SceytResponse<List<Reaction>> {
+    override suspend fun getReactions(messageId: Long, key: String): SceytResponse<List<SceytReaction>> {
         return suspendCancellableCoroutine { continuation ->
             val channelListQuery = createReactionsQuery(messageId, key).also { reactionsQuery = it }
 
@@ -28,7 +30,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
                     if (reactions.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(emptyList()))
                     else {
-                        continuation.safeResume(SceytResponse.Success(reactions))
+                        continuation.safeResume(SceytResponse.Success(reactions.map { it.toSceytReaction() }))
                     }
                 }
 
@@ -40,7 +42,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
         }
     }
 
-    override suspend fun loadMoreReactions(messageId: Long, key: String): SceytResponse<List<Reaction>> {
+    override suspend fun loadMoreReactions(messageId: Long, key: String): SceytResponse<List<SceytReaction>> {
         return suspendCancellableCoroutine { continuation ->
             val query = if (::reactionsQuery.isInitialized)
                 reactionsQuery
@@ -51,7 +53,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
                     if (reactions.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(emptyList()))
                     else {
-                        continuation.safeResume(SceytResponse.Success(reactions))
+                        continuation.safeResume(SceytResponse.Success(reactions.map { it.toSceytReaction() }))
                     }
                 }
 

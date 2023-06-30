@@ -11,12 +11,12 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.databinding.SceytBottomShetReactionsInfoBinding
 import com.sceyt.sceytchatuikit.extensions.dismissSafety
 import com.sceyt.sceytchatuikit.extensions.parcelable
@@ -39,7 +39,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
     private var headerAdapter: ReactionsHeaderAdapter? = null
     private var pagerAdapter: ViewPagerAdapterReactedUsers? = null
     private lateinit var message: SceytMessage
-    private var reactionClick: ((Reaction) -> Unit)? = null
+    private var reactionClick: ((SceytReaction) -> Unit)? = null
     private var pagerCallback: ViewPager2.OnPageChangeCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,12 +77,12 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
                 val reactionTotal = eventData.message.reactionTotals?.find { it.key == eventData.reaction.key }
                         ?: ReactionTotal(eventData.reaction.key, 0, eventData.reaction.score.toLong())
                 when (eventData.eventType) {
-                    ReactionUpdateEventEnum.ADD -> {
+                    ReactionUpdateEventEnum.Add -> {
                         headerAdapter?.addOrUpdateItem(reactionTotal)
                         pagerAdapter?.addOrUpdateItem(createReactedUsersFragment(eventData.reaction.key, message.id), eventData.reaction)
                     }
 
-                    ReactionUpdateEventEnum.REMOVE -> {
+                    ReactionUpdateEventEnum.Remove -> {
                         if (reactionTotal.score == 0L) {
                             headerAdapter?.removeItem(eventData.reaction)
                             pagerAdapter?.removeFragment(eventData.reaction.key)
@@ -175,7 +175,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
         }
     }
 
-    fun setClickListener(listener: (Reaction) -> Unit) {
+    fun setClickListener(listener: (SceytReaction) -> Unit) {
         reactionClick = listener
     }
 

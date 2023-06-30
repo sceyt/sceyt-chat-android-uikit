@@ -4,7 +4,10 @@ import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.messages.PendingReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
@@ -13,19 +16,29 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 
-fun Reaction.toReactionEntity() = ReactionEntity(
+fun SceytReaction.toReactionEntity() = ReactionEntity(
     id = id,
     messageId = messageId,
     key = key,
     score = score,
     reason = reason,
-    updatedAt = createdAt.time,
-    fromId = user.id
+    updatedAt = createdAt,
+    fromId = user?.id
 )
 
-fun Reaction.toReactionDb() = ReactionDb(
+fun SceytReaction.toReaction() = Reaction(
+    id,
+    messageId,
+    key,
+    score,
+    reason,
+    createdAt,
+    user
+)
+
+fun SceytReaction.toReactionDb() = ReactionDb(
     reaction = toReactionEntity(),
-    from = user.toUserEntity()
+    from = user?.toUserEntity()
 )
 
 fun ReactionTotal.toReactionTotalEntity(messageId: Long) = ReactionTotalEntity(
@@ -35,6 +48,12 @@ fun ReactionTotal.toReactionTotalEntity(messageId: Long) = ReactionTotalEntity(
     score = score.toInt()
 )
 
+fun ReactionDb.toSceytReaction(): SceytReaction {
+    with(reaction) {
+        return SceytReaction(id, messageId, key, score, reason, updatedAt, from?.toUser(), pending = false)
+    }
+}
+
 fun ReactionDb.toReaction(): Reaction {
     with(reaction) {
         return Reaction(id, messageId, key, score, reason, updatedAt, from?.toUser())
@@ -43,23 +62,29 @@ fun ReactionDb.toReaction(): Reaction {
 
 fun MarkerEntity.toMarker(user: User) = Marker(messageId, user, name, createdAt)
 
-fun ChatUserReactionDb.toReaction(): Reaction {
+fun ChatUserReactionDb.toSceytReaction(): SceytReaction {
     with(reaction) {
-        return Reaction(id, messageId, key, score, reason, createdAt, from?.toUser())
+        return SceytReaction(id, messageId, key, score, reason, createdAt, from?.toUser(), pending = pending)
     }
 }
 
-fun Reaction.toUserReactionsEntity(channelId: Long) = ChatUserReactionEntity(
+fun SceytReaction.toUserReactionsEntity(channelId: Long) = ChatUserReactionEntity(
     id = id,
     messageId = messageId,
     channelId = channelId,
     key = key,
     score = score,
     reason = reason,
-    createdAt = createdAt.time,
-    fromId = user.id
+    createdAt = createdAt,
+    fromId = user?.id,
+    pending = false
 )
+
+fun Reaction.toSceytReaction() = SceytReaction(id, messageId, key, score, reason, createdAt.time, user, false)
 
 fun ReactionTotalEntity.toReactionTotal(): ReactionTotal = ReactionTotal(key, count, score.toLong())
 
-fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt)
+fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt, isAdd)
+
+fun PendingReactionData.toSceytReaction() = SceytReaction(0, messageId, key, score, "", createdAt, ClientWrapper.currentUser
+        ?: User(SceytKitClient.myId), true)

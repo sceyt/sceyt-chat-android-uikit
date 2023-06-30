@@ -15,7 +15,8 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val otherFirstMember = other.getFirstMember()
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state
-    val userReactionsChanged = newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
+    val pendingReactionChanged = newReactions?.filter { it.pending }?.maxOfOrNull { it.id } != other.newReactions?.filter { it.pending }?.maxOfOrNull { it.id }
+    val userReactionsChanged = pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
     val membersCountChanged = memberCount != other.memberCount
     val peerBlockedChanged = isDirect() && firstMember?.user?.blocked != otherFirstMember?.user?.blocked

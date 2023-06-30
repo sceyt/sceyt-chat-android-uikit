@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isGroup
@@ -41,7 +41,7 @@ data class SceytChannel(
         var lastMessage: SceytMessage?,
         var messages: List<SceytMessage>?,
         var members: List<SceytMember>?,
-        var newReactions: List<Reaction>?,
+        var newReactions: List<SceytReaction>?,
         var pending: Boolean) : Parcelable, Cloneable {
 
     val channelSubject: String

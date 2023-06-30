@@ -109,7 +109,7 @@ fun ChannelDb.toChannel(): SceytChannel {
             lastMessage = lastMessage?.toSceytMessage(),
             messages = emptyList(),
             members = members?.map { it.toSceytMember() },
-            newReactions = newReactions?.map { it.toReaction() },
+            newReactions = newReactions?.map { it.toSceytReaction() },
             pending = pending
         ).apply {
             draftMessage = this@toChannel.draftMessage?.toDraftMessage()
@@ -147,7 +147,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         lastMessage = lastMessage?.toSceytUiMessage(),
         messages = messages?.map { it.toSceytUiMessage() },
         members = members?.map { it.toSceytMember() },
-        newReactions = newReactions,
+        newReactions = newReactions.map { it.toSceytReaction() },
         pending = false
     )
 }
