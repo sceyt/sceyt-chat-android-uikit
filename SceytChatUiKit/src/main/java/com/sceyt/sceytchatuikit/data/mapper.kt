@@ -75,7 +75,7 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     message = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
     metadata = draftMessageEntity.metadata,
-    mentionUsers = users?.map { it.toUser() }
+    mentionUsers = mentionUsers?.map { it.toUser() }
 )
 
 fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?) = DraftMessage(

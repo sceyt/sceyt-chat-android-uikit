@@ -4,9 +4,11 @@ import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.messages.PendingReactionData
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
@@ -59,3 +61,5 @@ fun Reaction.toUserReactionsEntity(channelId: Long) = ChatUserReactionEntity(
 )
 
 fun ReactionTotalEntity.toReactionTotal(): ReactionTotal = ReactionTotal(key, count, score.toLong())
+
+fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt)

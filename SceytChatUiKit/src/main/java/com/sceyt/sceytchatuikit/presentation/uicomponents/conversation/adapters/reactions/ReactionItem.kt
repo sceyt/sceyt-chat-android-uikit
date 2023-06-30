@@ -6,7 +6,8 @@ import com.sceyt.sceytchatuikit.presentation.common.SelectableItem
 
 sealed class ReactionItem : SelectableItem() {
     data class Reaction(val reaction: ReactionData,
-                        val message: SceytMessage) : ReactionItem()
+                        val message: SceytMessage,
+                        val isPending: Boolean) : ReactionItem()
 
     data class Other(val message: SceytMessage) : ReactionItem()
 }
