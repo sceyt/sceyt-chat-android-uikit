@@ -27,5 +27,5 @@ data class PendingReactionEntity(
         var isAdd: Boolean,
         var createdAt: Long,
         @PrimaryKey(autoGenerate = true)
-        val id: Int = 0
+        val id: Long = 0
 )

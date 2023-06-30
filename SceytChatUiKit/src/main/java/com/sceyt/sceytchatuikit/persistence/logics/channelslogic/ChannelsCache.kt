@@ -260,6 +260,18 @@ class ChannelsCache {
         }
     }
 
+    fun removeChannelMessageReactions(channelId: Long, messageId: Long) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                channel.newReactions?.filter { it.messageId == messageId }?.let {
+                    channel.newReactions = channel.newReactions?.toArrayList()?.apply {
+                        removeAll(it.toSet())
+                    }
+                }
+            }
+        }
+    }
+
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {
         var detectedDiff = false
         list.forEach {

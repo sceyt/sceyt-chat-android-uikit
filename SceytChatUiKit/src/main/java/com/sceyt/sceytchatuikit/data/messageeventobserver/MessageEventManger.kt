@@ -1,8 +1,8 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 
 sealed interface MessageEventManger {
 
@@ -23,11 +23,11 @@ sealed interface MessageEventManger {
     }
 
     fun interface OnReactionAdded : MessageEventManger {
-        fun onReactionAdded(message: SceytMessage, reaction: Reaction)
+        fun onReactionAdded(message: SceytMessage, reaction: SceytReaction)
     }
 
     fun interface OnReactionDeleted : MessageEventManger {
-        fun onReactionDeleted(message: SceytMessage, reaction: Reaction)
+        fun onReactionDeleted(message: SceytMessage, reaction: SceytReaction)
     }
 
     interface AllEventManagers : OnMessage, OnDirectMessage, OnMessageDeleted, OnMessageEdited,

@@ -58,7 +58,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -156,7 +156,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
-        data.userReactions = selfReactions.map { it.toReaction() }.toTypedArray()
+        data.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
         messagesCache.messageUpdated(data.channelId, data)
         if (data.state == MessageState.Deleted)

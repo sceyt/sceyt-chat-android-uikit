@@ -6,7 +6,6 @@ import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -31,7 +30,7 @@ open class SceytMessage(var id: Long,
                         var state: MessageState,
                         var user: User?,
                         var attachments: Array<SceytAttachment>?,
-                        var userReactions: Array<Reaction>?,
+                        var userReactions: Array<SceytReaction>?,
                         var reactionTotals: Array<ReactionTotal>?,
                         var markerTotals: Array<MarkerTotal>?,
                         var userMarkers: Array<Marker>?,

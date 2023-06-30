@@ -58,7 +58,7 @@ fun SceytMessage.toMessageDb(isParentMessage: Boolean): MessageDb {
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
         userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
-        reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) },
+        reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
         forwardingUser = forwardingDetails?.user?.toUserEntity(),
         pendingReactions = null,
         mentionedUsers = null
@@ -84,7 +84,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             state = state,
             user = from?.toUser(),
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
-            userReactions = selfReactions?.map { it.toReaction() }?.toTypedArray(),
+            userReactions = selfReactions?.map { it.toSceytReaction() }?.toTypedArray(),
             reactionTotals = reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerTotals = markerCount?.toTypedArray(),
             userMarkers = userMarkers?.map {
@@ -98,7 +98,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser()),
-            pendingReactions = pendingReactions?.filter { it.isAdd }?.map { it.toReactionData() }
+            pendingReactions = pendingReactions?.map { it.toReactionData() }
         )
     }
 }
@@ -215,7 +215,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
             }
             it.toSceytAttachment(tid, transferState, progress)
         }?.toTypedArray(),
-        userReactions = userReactions,
+        userReactions = userReactions?.map { it.toSceytReaction() }?.toTypedArray(),
         reactionTotals = reactionTotals,
         markerTotals = markerTotals,
         userMarkers = emptyArray(),
@@ -250,7 +250,7 @@ fun SceytMessage.toMessage(): Message {
         state,
         user,
         attachments?.map { it.toAttachment() }?.toTypedArray(),
-        userReactions,
+        userReactions?.map { it.toReaction() }?.toTypedArray(),
         reactionTotals,
         markerTotals,
         userMarkers,

@@ -62,7 +62,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>, clickListener: PopupReactionsAdapter.OnItemClickListener) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
-            val containsSelf = reactionItem != null
+            val containsSelf = reactionItem?.reaction?.containsSelf ?: false
             ReactionItem.Reaction(ReactionData(it, containsSelf = containsSelf), message, reactionItem?.isPending
                     ?: false)
         }.run {

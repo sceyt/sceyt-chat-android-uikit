@@ -38,7 +38,6 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceReactionsMiddleWare
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -524,16 +523,33 @@ class MessageListViewModel(
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         val pendingReactions = message.pendingReactions
-        var reactionItems = message.reactionTotals?.map {
+        val reactionItems = message.reactionTotals?.map {
             ReactionItem.Reaction(ReactionData(it.key, it.score.toInt(),
                 message.userReactions?.find { reaction ->
-                    reaction.key == it.key && reaction.user.id == SceytKitClient.myId
+                    reaction.key == it.key && reaction.user?.id == SceytKitClient.myId
                 } != null), message, false)
-        }
+        }?.toMutableList()
 
-        if (!pendingReactions.isNullOrEmpty()) {
-            reactionItems = (reactionItems ?: arrayListOf()).toArrayList().apply {
-                addAll(pendingReactions.map { ReactionItem.Reaction(ReactionData(it.key, it.score, true), message, true) })
+        if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
+            pendingReactions.forEach { pendingReaction ->
+                reactionItems.find { it.reaction.key == pendingReaction.key }?.let { item ->
+                    if (pendingReaction.isAdd) {
+                        item.reaction.score += pendingReaction.score
+                        item.reaction.containsSelf = true
+                        item.isPending = true
+                    } else {
+                        item.reaction.score -= pendingReaction.score
+                        if (item.reaction.score <= 0)
+                            reactionItems.remove(item)
+                        else {
+                            item.reaction.containsSelf = false
+                            item.isPending = false
+                        }
+                    }
+                } ?: run {
+                    if (pendingReaction.isAdd)
+                        reactionItems.add(ReactionItem.Reaction(ReactionData(pendingReaction.key, pendingReaction.score, true), message, true))
+                }
             }
         }
         return reactionItems?.sortedBy { it.reaction.key }
