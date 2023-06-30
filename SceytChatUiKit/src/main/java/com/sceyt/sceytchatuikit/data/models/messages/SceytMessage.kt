@@ -40,7 +40,8 @@ open class SceytMessage(var id: Long,
                         var replyCount: Long,
                         val displayCount: Short,
                         var autoDeleteAt: Long?,
-                        var forwardingDetails: ForwardingDetails?) : Parcelable, Cloneable {
+                        var forwardingDetails: ForwardingDetails?,
+                        var pendingReactions: List<PendingReactionData>?) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -90,6 +91,7 @@ open class SceytMessage(var id: Long,
         // Update inner data
         messageReactions = message.messageReactions
         files = message.files
+        pendingReactions = message.pendingReactions
     }
 
     public override fun clone(): SceytMessage {
@@ -118,7 +120,8 @@ open class SceytMessage(var id: Long,
             replyCount = replyCount,
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
-            forwardingDetails = forwardingDetails).also {
+            forwardingDetails = forwardingDetails,
+            pendingReactions = pendingReactions).also {
             it.messageReactions = messageReactions
             it.files = files
         }

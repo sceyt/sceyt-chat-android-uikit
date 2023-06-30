@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.reactionslogic
 
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
@@ -15,8 +16,11 @@ import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepository
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntity
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
@@ -40,6 +44,7 @@ internal class PersistenceReactionsLogicImpl(
         private var reactionDao: ReactionDao,
         private var channelReactionsDao: ChatUsersReactionDao,
         private var channelDao: ChannelDao,
+        private var pendingReactionDao: PendingReactionDao,
         private var channelsCache: ChannelsCache,
         private var messagesCache: MessagesCache) : PersistenceReactionsLogic {
 
@@ -127,8 +132,42 @@ internal class PersistenceReactionsLogicImpl(
             reactionDao.getReactionsByMsgIdAndKey(messageId, key).map { it.toReaction() }
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
-        val response = reactionsRepository.addReaction(channelId, messageId, key)
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
+        insertPendingReactionToDb(channelId, messageId, key, true)
+        return addReactionImpl(channelId, messageId, key, score, true)
+    }
+
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String, isPending: Boolean): SceytResponse<SceytMessage> {
+        if (isPending)
+            return removePendingReaction(channelId, messageId, key)
+
+        insertPendingReactionToDb(channelId, messageId, key, false)
+        return deleteReactionImpl(channelId, messageId, key, true)
+    }
+
+    override suspend fun sendAllPendingReactions() {
+        val pendingReactions = pendingReactionDao.getAllData()
+        if (pendingReactions.isNotEmpty()) {
+            val groupByChannel = pendingReactions.groupBy { it.channelId }
+            for ((channelId, reactions) in groupByChannel) {
+                sendPendingReactionsSync(channelId, reactions)
+            }
+        }
+    }
+
+    private suspend fun sendPendingReactionsSync(channelId: Long, reactions: List<PendingReactionEntity>) {
+        reactions.groupBy { it.messageId }.forEach { (messageId, reactions) ->
+            reactions.forEachIndexed { index, pendingReactionEntity ->
+                if (pendingReactionEntity.isAdd) {
+                    addReactionImpl(channelId, messageId, pendingReactionEntity.key, pendingReactionEntity.score, index == reactions.lastIndex)
+                } else
+                    deleteReactionImpl(channelId, messageId, pendingReactionEntity.key, index == reactions.lastIndex)
+            }
+        }
+    }
+
+    private suspend fun addReactionImpl(channelId: Long, messageId: Long, key: String, score: Int, emitUpdate: Boolean): SceytResponse<SceytMessage> {
+        val response = reactionsRepository.addReaction(channelId, messageId, key, score)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 resultMessage.userReactions?.let {
@@ -138,41 +177,101 @@ internal class PersistenceReactionsLogicImpl(
                     messageDao.insertReactionTotals(it.map { total -> total.toReactionTotalEntity(messageId) })
                 }
 
-                val message = messageDao.getMessageById(messageId)?.toSceytMessage()
-                        ?: resultMessage
+                messageDao.getMessageTidById(messageId)?.let { tid ->
+                    messagesCache.deletePendingReaction(channelId, tid, key)
+                }
+                pendingReactionDao.deletePendingReaction(messageId, key)
 
-                messagesCache.messageUpdated(channelId, message)
+                if (emitUpdate) {
+                    val message = messageDao.getMessageById(messageId)?.toSceytMessage()
+                            ?: response.data
 
-                if (!message.incoming) {
-                    val reaction = message.userReactions?.maxBy { it.id }
-                    if (reaction != null)
-                        handleChannelReaction(ReactionUpdateEventData(message, reaction, ADD), message)
+                    messagesCache.messageUpdated(channelId, message)
+
+                    if (!message.incoming) {
+                        val reaction = message.userReactions?.maxBy { it.createdAt }
+                        if (reaction != null)
+                            handleChannelReaction(ReactionUpdateEventData(message, reaction, ADD), message)
+                    }
                 }
             }
         }
         return response
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
+    private suspend fun deleteReactionImpl(channelId: Long, messageId: Long, key: String, emitUpdate: Boolean): SceytResponse<SceytMessage> {
         val response = reactionsRepository.deleteReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 SceytKitClient.myId?.let { fromId ->
                     reactionDao.deleteReactionAndTotal(messageId, key, fromId)
                 }
+                pendingReactionDao.deletePendingReaction(messageId, key)
 
-                val message = messageDao.getMessageById(messageId)?.toSceytMessage()
-                        ?: resultMessage
+                if (emitUpdate) {
+                    val message = messageDao.getMessageById(messageId)?.toSceytMessage()
+                            ?: resultMessage
 
-                messagesCache.messageUpdated(channelId, message)
+                    messagesCache.messageUpdated(channelId, message)
 
-                if (!message.incoming) {
-                    val reaction = Reaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser)
-                    handleChannelReaction(ReactionUpdateEventData(message, reaction, REMOVE), message)
+                    if (!message.incoming) {
+                        val reaction = Reaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser)
+                        handleChannelReaction(ReactionUpdateEventData(message, reaction, REMOVE), message)
+                    }
                 }
             }
         }
         return response
+    }
+
+    private suspend fun insertPendingReactionToDb(channelId: Long, messageId: Long, key: String, isAdd: Boolean) {
+        val messageDb = messageDao.getMessageById(messageId) ?: return
+        val pendingReactions = messageDb.pendingReactions?.toArrayList() ?: arrayListOf()
+
+        var pendingReactionEntity = pendingReactions.find { it.key == key }
+        if (pendingReactionEntity != null) {
+            if (pendingReactionEntity.isAdd != isAdd) {
+                pendingReactions.remove(pendingReactionEntity)
+                pendingReactionDao.deletePendingReaction(messageId, key)
+                pendingReactionEntity = null
+            }
+
+        } else {
+            val entity = PendingReactionEntity(messageId = messageId, channelId = channelId, key = key,
+                score = 1, createdAt = System.currentTimeMillis(), isAdd = isAdd, count = 1)
+            pendingReactions.add(entity)
+            pendingReactionEntity = entity
+        }
+
+        val groupReactions = pendingReactions.groupBy { it.isAdd }
+        messageDb.pendingReactions = groupReactions[true]
+
+        val removeReactions = groupReactions[false]
+        if (!removeReactions.isNullOrEmpty()) {
+            val newTotals = messageDb.reactionsTotals?.toArrayList()?.apply {
+                removeAll(filter {
+                    removeReactions.any { removeItem -> removeItem.key == it.key }
+                }.toSet())
+            }
+            messageDb.reactionsTotals = newTotals
+        }
+        val message = messageDb.toSceytMessage()
+
+        messagesCache.messageUpdated(channelId, message)
+
+        pendingReactionEntity?.let { pendingReactionDao.insert(it) }
+    }
+
+    private suspend fun removePendingReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
+        val tid = messageDao.getMessageTidById(messageId)
+                ?: return SceytResponse.Error(SceytException(0, "Message not found"))
+
+        pendingReactionDao.deletePendingReaction(messageId, key)
+        messagesCache.deletePendingReaction(channelId, tid, key)?.let {
+            messagesCache.messageUpdated(channelId, it)
+        }
+
+        return SceytResponse.Success(null)
     }
 
     private suspend fun getReactionsDb(messageId: Long, offset: Int, limit: Int, key: String): List<Reaction> {

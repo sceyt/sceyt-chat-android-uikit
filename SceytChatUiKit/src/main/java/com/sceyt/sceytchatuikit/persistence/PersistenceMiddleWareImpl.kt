@@ -317,15 +317,19 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun sendPendingMessages(channelId: Long) {
-        return messagesLogic.sendPendingMessages(channelId)
+        messagesLogic.sendPendingMessages(channelId)
     }
 
     override suspend fun sendAllPendingMessages() {
-        return messagesLogic.sendAllPendingMessages()
+        messagesLogic.sendAllPendingMessages()
     }
 
     override suspend fun sendAllPendingMarkers() {
-        return messagesLogic.sendAllPendingMarkers()
+        messagesLogic.sendAllPendingMarkers()
+    }
+
+    override suspend fun sendAllPendingReactions() {
+        reactionsLogic.sendAllPendingReactions()
     }
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
@@ -442,11 +446,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return reactionsLogic.addReaction(channelId, messageId, scoreKey)
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
+        return reactionsLogic.addReaction(channelId, messageId, key, score)
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey)
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String, isPending: Boolean): SceytResponse<SceytMessage> {
+        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey, isPending)
     }
 }

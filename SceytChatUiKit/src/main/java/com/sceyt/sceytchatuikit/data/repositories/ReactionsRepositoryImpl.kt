@@ -70,9 +70,9 @@ class ReactionsRepositoryImpl : ReactionsRepository {
             .build()
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).addReactionWithMessageId(messageId, scoreKey, 1, "", false, object : MessageCallback {
+            ChannelOperator.build(channelId).addReactionWithMessageId(messageId, key, score.toShort(), "", false, object : MessageCallback {
                 override fun onResult(message: Message?) {
                     continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
                 }

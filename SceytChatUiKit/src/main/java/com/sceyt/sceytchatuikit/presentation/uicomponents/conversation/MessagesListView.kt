@@ -199,7 +199,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
-        val reactions = message.userReactions?.map { it.key }?.toArrayList() ?: arrayListOf()
+        val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList() ?: arrayListOf()
         if (reactions.size < MAX_SELF_REACTIONS_SIZE)
             reactions.addAll(SceytKitConfig.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
 
@@ -278,7 +278,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetEmojisFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
                     val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
-                    onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message))
+                    onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message, true))
                 }
             }.show(it, null)
         }
@@ -651,7 +651,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
                     if (reaction.user?.id == SceytKitClient.myId)
-                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message))
+                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message, item.isPending))
                 }
             }.show(it, null)
         }
@@ -734,6 +734,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
+        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key, reactionItem.isPending))
     }
 }
