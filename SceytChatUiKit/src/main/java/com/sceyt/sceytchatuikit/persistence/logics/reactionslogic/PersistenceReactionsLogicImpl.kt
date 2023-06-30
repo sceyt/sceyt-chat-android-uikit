@@ -184,7 +184,7 @@ internal class PersistenceReactionsLogicImpl(
                     messagesCache.deletePendingReaction(channelId, tid, key)
                 }
                 pendingReactionDao.deletePendingReaction(messageId, key)
-                channelReactionsDao.markChannelPendingReactionAsNotPending(channelId, messageId, key, SceytKitClient.myId)
+                channelReactionsDao.deleteChannelUserPendingReaction(channelId, messageId, key, SceytKitClient.myId)
 
                 if (emitUpdate) {
                     val message = messageDao.getMessageById(messageId)?.toSceytMessage()
