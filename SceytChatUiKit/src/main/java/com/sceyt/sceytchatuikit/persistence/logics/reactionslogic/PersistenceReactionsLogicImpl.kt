@@ -74,8 +74,10 @@ internal class PersistenceReactionsLogicImpl(
 
         when (data.eventType) {
             Add -> {
-                channelReactionsDao.insertChannelUserReaction(data.reaction.toUserReactionsEntity(message.channelId))
-                ChatReactionMessagesCache.addMessage(message)
+                if (!message.incoming) {
+                    channelReactionsDao.insertChannelUserReaction(data.reaction.toUserReactionsEntity(message.channelId))
+                    ChatReactionMessagesCache.addMessage(message)
+                }
             }
 
             Remove -> channelReactionsDao.deleteChannelUserReaction(message.channelId, message.id,
@@ -182,6 +184,7 @@ internal class PersistenceReactionsLogicImpl(
                     messagesCache.deletePendingReaction(channelId, tid, key)
                 }
                 pendingReactionDao.deletePendingReaction(messageId, key)
+                channelReactionsDao.markChannelPendingReactionAsNotPending(channelId, messageId, key, SceytKitClient.myId)
 
                 if (emitUpdate) {
                     val message = messageDao.getMessageById(messageId)?.toSceytMessage()
@@ -208,6 +211,7 @@ internal class PersistenceReactionsLogicImpl(
                     reactionDao.deleteReactionAndTotal(messageId, key, fromId)
                 }
                 pendingReactionDao.deletePendingReaction(messageId, key)
+                channelReactionsDao.deleteChannelUserPendingReaction(channelId, messageId, key, SceytKitClient.myId)
                 messageDao.getMessageTidById(messageId)?.let { tid ->
                     messagesCache.deletePendingReaction(channelId, tid, key)
                 }
@@ -237,7 +241,7 @@ internal class PersistenceReactionsLogicImpl(
             if (pendingReactionEntity.isAdd != isAdd) {
                 pendingReactions.remove(pendingReactionEntity)
                 pendingReactionDao.deletePendingReaction(messageId, key)
-                channelReactionsDao.deleteChannelUserReaction(channelId, messageId, key, SceytKitClient.myId)
+                channelReactionsDao.deleteChannelUserPendingReaction(channelId, messageId, key, SceytKitClient.myId)
                 notifyChannelReactionUpdated(channelId)
                 pendingReactionEntity = null
             }
@@ -254,12 +258,15 @@ internal class PersistenceReactionsLogicImpl(
 
         messagesCache.messageUpdated(channelId, message)
 
+
         pendingReactionEntity?.let {
             val id = pendingReactionDao.insert(it)
-            if (it.isAdd)
-                channelReactionsDao.insertChannelUserReaction(ChatUserReactionEntity(id, messageId, channelId, key, it.score,
-                    "", it.createdAt, SceytKitClient.myId, true))
-            else channelReactionsDao.deleteChannelUserReaction(channelId, messageId, key, SceytKitClient.myId)
+            if (!messageDb.messageEntity.incoming) {
+                if (it.isAdd)
+                    channelReactionsDao.insertChannelUserReaction(ChatUserReactionEntity(id, messageId, channelId, key, it.score,
+                        "", it.createdAt, SceytKitClient.myId, true))
+                else channelReactionsDao.deleteChannelUserReaction(channelId, messageId, key, SceytKitClient.myId)
+            }
         }
 
         notifyChannelReactionUpdated(channelId)
