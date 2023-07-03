@@ -18,7 +18,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
@@ -278,7 +278,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetEmojisFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
                     val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
-                    onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message, true))
+                    onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji, containsSelf = containsSelf), message, true))
                 }
             }.show(it, null)
         }
@@ -651,7 +651,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
                     if (reaction.user?.id == SceytKitClient.myId)
-                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message, reaction.pending))
+                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), item.message, reaction.pending))
                 }
             }.show(it, null)
         }
