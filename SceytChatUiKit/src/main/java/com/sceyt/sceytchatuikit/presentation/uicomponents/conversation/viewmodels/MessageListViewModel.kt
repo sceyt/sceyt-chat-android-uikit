@@ -28,7 +28,7 @@ import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
@@ -524,7 +524,7 @@ class MessageListViewModel(
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         val pendingReactions = message.pendingReactions
         val reactionItems = message.reactionTotals?.map {
-            ReactionItem.Reaction(ReactionData(it.key, it.score.toInt(),
+            ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
                 message.userReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user?.id == SceytKitClient.myId
                 } != null), message, false)
@@ -548,7 +548,7 @@ class MessageListViewModel(
                     }
                 } ?: run {
                     if (pendingReaction.isAdd)
-                        reactionItems.add(ReactionItem.Reaction(ReactionData(pendingReaction.key, pendingReaction.score, true), message, true))
+                        reactionItems.add(ReactionItem.Reaction(SceytReactionTotal(pendingReaction.key, pendingReaction.score, true), message, true))
                 }
             }
         }
