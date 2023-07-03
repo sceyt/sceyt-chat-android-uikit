@@ -178,7 +178,9 @@ fun Context.isLandscape(): Boolean {
 }
 
 fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
-    window.statusBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
+    val themeColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
+    window.statusBarColor = themeColor
+    window.navigationBarColor = themeColor
 
     if (SDK_INT >= M) {
         if (SDK_INT >= Build.VERSION_CODES.R) {
