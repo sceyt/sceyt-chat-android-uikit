@@ -129,3 +129,4 @@ dependencies {
     api supportDependencies.vanniktechGoogleEmoji
     api supportDependencies.googleCodeLibPhone
 }
+apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"
