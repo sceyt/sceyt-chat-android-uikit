@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoAllReactionsHeaderBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoReactionHeaderBinding
@@ -116,10 +117,10 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
 
     fun addOrUpdateItem(reaction: ReactionTotal) {
         data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
-            (it.second as ReactionHeaderItem.Reaction).reactionTotal = ReactionTotal(reaction.key, reaction.count, reaction.score)
+            (it.second as ReactionHeaderItem.Reaction).reactionTotal = ReactionData(reaction.key, reaction.score.toInt(), false)
             notifyItemChanged(it.first, Any())
         } ?: let {
-            data.add(ReactionHeaderItem.Reaction(ReactionTotal(reaction.key, reaction.count, reaction.score)))
+            data.add(ReactionHeaderItem.Reaction(ReactionData(reaction.key, reaction.score.toInt(), false)))
             notifyItemInserted(data.lastIndex)
         }
     }

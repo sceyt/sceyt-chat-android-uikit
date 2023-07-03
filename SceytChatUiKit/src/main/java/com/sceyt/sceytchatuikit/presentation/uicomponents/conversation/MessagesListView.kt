@@ -651,7 +651,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
                     if (reaction.user?.id == SceytKitClient.myId)
-                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message, item.isPending))
+                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message, reaction.pending))
                 }
             }.show(it, null)
         }

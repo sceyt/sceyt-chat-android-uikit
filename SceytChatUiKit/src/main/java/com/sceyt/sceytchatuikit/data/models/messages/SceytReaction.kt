@@ -9,9 +9,9 @@ data class SceytReaction(
         var id: Long,
         val messageId: Long,
         val key: String,
-        val score: Int,
+        var score: Int,
         val reason: String,
         val createdAt: Long,
-        val user: User?,
-        val pending: Boolean
+        var user: User?,
+        var pending: Boolean
 ) : Parcelable

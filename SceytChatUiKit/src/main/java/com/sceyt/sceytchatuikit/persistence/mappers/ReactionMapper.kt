@@ -22,7 +22,7 @@ fun SceytReaction.toReactionEntity() = ReactionEntity(
     key = key,
     score = score,
     reason = reason,
-    updatedAt = createdAt,
+    createdAt = createdAt,
     fromId = user?.id
 )
 
@@ -50,13 +50,24 @@ fun ReactionTotal.toReactionTotalEntity(messageId: Long) = ReactionTotalEntity(
 
 fun ReactionDb.toSceytReaction(): SceytReaction {
     with(reaction) {
-        return SceytReaction(id, messageId, key, score, reason, updatedAt, from?.toUser(), pending = false)
+        return SceytReaction(id, messageId, key, score, reason, createdAt, from?.toUser(), pending = false)
     }
 }
 
+fun PendingReactionEntity.toSceytReaction() = SceytReaction(
+    id = id,
+    messageId = messageId,
+    key = key,
+    score = score,
+    reason = "",
+    createdAt = createdAt,
+    user = ClientWrapper.currentUser ?: User(SceytKitClient.myId),
+    pending = true
+)
+
 fun ReactionDb.toReaction(): Reaction {
     with(reaction) {
-        return Reaction(id, messageId, key, score, reason, updatedAt, from?.toUser())
+        return Reaction(id, messageId, key, score, reason, createdAt, from?.toUser())
     }
 }
 
