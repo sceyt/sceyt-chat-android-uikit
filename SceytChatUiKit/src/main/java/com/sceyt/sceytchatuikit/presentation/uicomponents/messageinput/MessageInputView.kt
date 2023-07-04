@@ -1,11 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.text.Editable
 import android.text.SpannableString
 import android.util.AttributeSet
@@ -855,19 +852,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
         chooseAttachmentHelper?.openSceytGallery(getPickerListener(), *allAttachments.map { it.url }.toTypedArray())
-    }
-
-    private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
-        SceytDialog.showSceytDialog(context,
-            titleId = titleId,
-            descId = descId,
-            positiveBtnTitleId = R.string.sceyt_settings,
-            positiveCb = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", context.packageName, null)
-                intent.data = uri
-                context.startActivity(intent)
-            })
     }
 
     override fun onTakePhotoClick() {
