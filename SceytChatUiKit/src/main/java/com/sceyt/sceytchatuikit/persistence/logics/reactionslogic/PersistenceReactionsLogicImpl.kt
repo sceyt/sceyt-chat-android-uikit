@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
@@ -27,7 +28,6 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -36,6 +36,8 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -50,24 +52,28 @@ internal class PersistenceReactionsLogicImpl(
         private var channelsCache: ChannelsCache,
         private var messagesCache: MessagesCache) : PersistenceReactionsLogic {
 
+    private val reactionUpdateMutex = Mutex()
+
     override suspend fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
-        val messageId = data.message.id
-        reactionDao.deleteAllReactionTotalsByMessageId(messageId)
-        val existMessage = messageDao.existsMessageById(messageId)
-        if (!existMessage)
-            messageDao.upsertMessage(data.message.toMessageDb(false))
+        reactionUpdateMutex.withLock {
+            val messageId = data.message.id
+            val existMessage = messageDao.existsMessageById(messageId)
+            if (!existMessage)
+                messageDao.upsertMessage(data.message.toMessageDb(false))
 
-        when (data.eventType) {
-            Add -> reactionDao.insertReaction(data.reaction.toReactionEntity())
-            Remove -> reactionDao.deleteReaction(messageId, data.reaction.key, data.reaction.user?.id)
-        }
-        data.message.reactionTotals?.map { it.toReactionTotalEntity(messageId) }?.let {
-            reactionDao.insertReactionTotals(it)
-        }
+            when (data.eventType) {
+                Add -> {
+                    reactionDao.insertReaction(data.reaction.toReactionEntity())
+                    increaseReactionTotal(messageId, data.reaction.key, data.reaction.score)
+                }
 
-        val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
-        messagesCache.messageUpdated(data.message.channelId, message)
-        handleChannelReaction(data, message)
+                Remove -> reactionDao.deleteReactionAndTotal(messageId, data.reaction.key, data.reaction.user?.id)
+            }
+
+            val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
+            messagesCache.messageUpdated(data.message.channelId, message)
+            handleChannelReaction(data, message)
+        }
     }
 
     private suspend fun handleChannelReaction(data: ReactionUpdateEventData, message: SceytMessage) {
@@ -165,19 +171,23 @@ internal class PersistenceReactionsLogicImpl(
     }
 
     override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
-        val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key, true)
-        if (wasPending)
-            return SceytResponse.Success(null)
+        reactionUpdateMutex.withLock {
+            val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key, true)
+            if (wasPending)
+                return SceytResponse.Success(null)
 
-        return addReactionImpl(channelId, messageId, key, score, true)
+            return addReactionImpl(channelId, messageId, key, score, true)
+        }
     }
 
     override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String, isPending: Boolean): SceytResponse<SceytMessage> {
-        val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key, false)
-        if (wasPending)
-            return SceytResponse.Success(null)
+        reactionUpdateMutex.withLock {
+            val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key, false)
+            if (wasPending)
+                return SceytResponse.Success(null)
 
-        return deleteReactionImpl(channelId, messageId, key, true)
+            return deleteReactionImpl(channelId, messageId, key, true)
+        }
     }
 
     override suspend fun sendAllPendingReactions() {
@@ -206,11 +216,9 @@ internal class PersistenceReactionsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 resultMessage.userReactions?.let {
-                    messageDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
+                    reactionDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
                 }
-                resultMessage.reactionTotals?.let {
-                    messageDao.insertReactionTotals(it.map { total -> total.toReactionTotalEntity(messageId) })
-                }
+                increaseReactionTotal(messageId, key, score)
 
                 messageDao.getMessageTidById(messageId)?.let { tid ->
                     messagesCache.deletePendingReaction(channelId, tid, key)
@@ -304,6 +312,16 @@ internal class PersistenceReactionsLogicImpl(
 
         notifyChannelReactionUpdated(channelId)
         return wasPending
+    }
+
+    private suspend fun increaseReactionTotal(messageId: Long, key: String, score: Int) {
+        reactionDao.getReactionTotal(messageId, key)?.let {
+            it.score += score
+            reactionDao.insertReactionTotal(it)
+        } ?: run {
+            reactionDao.insertReactionTotal(ReactionTotalEntity(messageId = messageId,
+                key = key, score = score, count = 1))
+        }
     }
 
     private suspend fun notifyChannelReactionUpdated(channelId: Long) {
