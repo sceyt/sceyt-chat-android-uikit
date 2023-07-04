@@ -59,7 +59,6 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
-    private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
 
     init {
         init()
@@ -67,8 +66,6 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
 
     private fun init() {
         binding = SceytRecordViewBinding.inflate(LayoutInflater.from(context), this, true)
-        if (!isInEditMode)
-            chooseAttachmentHelper = ChooseAttachmentHelper(context.asComponentActivity())
         with(binding) {
             showDefaultRecordButton()
             setupRecorder()
