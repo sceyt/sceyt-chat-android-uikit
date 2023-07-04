@@ -79,8 +79,8 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? 
         val subject = channelJsonObject.getString("subject")
         val meta = channelJsonObject.getString("metadata")
         val membersCount = channelJsonObject.getLong("members_count")
-        val channel = Channel(id, 0, uri, subject, meta, null, meta, 0,
-            0, 0, membersCount, null, "", false, 0, 0,
+        val channel = Channel(id, 0, uri, type, subject, null, meta, 0, 0,
+            0, membersCount, null, "", false, 0, 0,
             0, false, false, false, 0, 0, 0,
             0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
         channel
