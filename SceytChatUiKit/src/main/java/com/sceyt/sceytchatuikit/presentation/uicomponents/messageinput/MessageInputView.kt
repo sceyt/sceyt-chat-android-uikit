@@ -142,9 +142,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         init()
         setupAttachmentsList()
-
+        val voiceRecorderView = SceytVoiceMessageRecorderView(context)
         post {
-            (parent as? ViewGroup)?.addView(SceytVoiceMessageRecorderView(context).apply {
+            (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 setRecordingListener()
                 voiceMessageRecorderView = this
@@ -273,7 +273,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         replyMessage?.let {
             setParentMessageId(it.id)
             setParentMessage(it)
-           // setReplyInThread(replyThreadMessageId != null)
+            // setReplyInThread(replyThreadMessageId != null)
         } ?: replyThreadMessageId?.let {
             setParentMessageId(it)
             //setReplyInThread(true)
