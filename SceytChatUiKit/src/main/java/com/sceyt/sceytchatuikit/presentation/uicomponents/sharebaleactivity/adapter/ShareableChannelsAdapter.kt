@@ -58,8 +58,7 @@ class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem
         val myDiffUtil = ChannelsDiffUtil(this.channels, channels)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
-        this.channels.clear()
-        this.channels.addAll(channels)
+        this.channels = channels.toMutableList()
     }
 
     @SuppressLint("NotifyDataSetChanged")
