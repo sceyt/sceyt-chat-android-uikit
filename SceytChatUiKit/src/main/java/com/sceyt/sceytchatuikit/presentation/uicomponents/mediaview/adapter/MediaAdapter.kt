@@ -55,8 +55,7 @@ class MediaAdapter(
         val myDiffUtil = MediaDiffUtil(attachments, data)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
-        this.attachments.clear()
-        this.attachments.addAll(data)
+        attachments = data.toArrayList()
     }
 
     fun addPrevItems(data: List<MediaItem>) {
