@@ -102,7 +102,7 @@ internal class PersistenceReactionsLogicImpl(
             var dbReactions = getReactionsDb(messageId, offset, SceytKitConfig.REACTIONS_LOAD_SIZE, key)
             var hasNext = dbReactions.size == SceytKitConfig.REACTIONS_LOAD_SIZE
 
-            dbReactions = dbReactions.updateWithPendingReactions(key)
+            dbReactions = dbReactions.updateWithPendingReactions(messageId, key)
 
             trySend(PaginationResponse.DBResponse(data = dbReactions, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
@@ -124,7 +124,7 @@ internal class PersistenceReactionsLogicImpl(
                 saveReactionsToDb(reactions)
 
                 val limit = SceytKitConfig.REACTIONS_LOAD_SIZE + offset
-                val cashData = getReactionsDb(messageId, 0, limit, key).updateWithPendingReactions(key)
+                val cashData = getReactionsDb(messageId, 0, limit, key).updateWithPendingReactions(messageId, key)
 
                 hasNext = response.data?.size == SceytKitConfig.REACTIONS_LOAD_SIZE
 
@@ -138,9 +138,9 @@ internal class PersistenceReactionsLogicImpl(
         }
     }
 
-    private suspend fun List<SceytReaction>.updateWithPendingReactions(key: String): List<SceytReaction> {
-        val pendingData = (if (key.isBlank()) pendingReactionDao.getAll()
-        else pendingReactionDao.getAllByKey(key)).groupBy { it.isAdd }
+    private suspend fun List<SceytReaction>.updateWithPendingReactions(messageId: Long, key: String): List<SceytReaction> {
+        val pendingData = (if (key.isBlank()) pendingReactionDao.getAllByMsgId(messageId)
+        else pendingReactionDao.getAllByMsgIdAndKey(messageId, key)).groupBy { it.isAdd }
 
         var dbReactions = ArrayList(this)
         val pendingAddedR = pendingData[true]
@@ -149,7 +149,7 @@ internal class PersistenceReactionsLogicImpl(
         if (!pendingRemoveItems.isNullOrEmpty()) {
             dbReactions.apply {
                 val needTOBeRemoved = dbReactions.filter { reaction ->
-                    pendingRemoveItems.any { it.key == reaction.key && it.messageId == reaction.messageId && reaction.user?.id == SceytKitClient.myId }
+                    pendingRemoveItems.any { it.key == reaction.key && reaction.user?.id == SceytKitClient.myId }
                 }
                 removeAll(needTOBeRemoved.toSet())
             }
@@ -278,6 +278,7 @@ internal class PersistenceReactionsLogicImpl(
         var wasPending = false
         var pendingReactionEntity = pendingReactions.find { it.key == key }
         if (pendingReactionEntity != null) {
+            // if pending reaction already exists, and isAdd is different, remove it.
             if (pendingReactionEntity.isAdd != isAdd) {
                 pendingReactions.remove(pendingReactionEntity)
                 pendingReactionDao.deletePendingReaction(messageId, key)

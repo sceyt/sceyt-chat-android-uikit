@@ -15,8 +15,11 @@ interface PendingReactionDao {
     @Query("select * from pendingReaction")
     suspend fun getAll(): List<PendingReactionEntity>
 
-    @Query("select * from pendingReaction where reaction_key =:key")
-    suspend fun getAllByKey(key: String): List<PendingReactionEntity>
+    @Query("select * from pendingReaction where messageId =:messageId")
+    suspend fun getAllByMsgId(messageId: Long): List<PendingReactionEntity>
+
+    @Query("select * from pendingReaction where messageId =:messageId and reaction_key =:key")
+    suspend fun getAllByMsgIdAndKey(messageId: Long, key: String): List<PendingReactionEntity>
 
     @Query("delete from pendingReaction where messageId =:messageId and reaction_key =:key")
     suspend fun deletePendingReaction(messageId: Long, key: String)
