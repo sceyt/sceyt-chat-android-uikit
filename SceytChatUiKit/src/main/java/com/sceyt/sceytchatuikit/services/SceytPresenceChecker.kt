@@ -32,6 +32,8 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
 
     private const val presenceCheckCapacity = 12
     private var workJob: Job? = null
+
+    @Volatile
     private var presenceCheckTimer: Timer? = null
     private val presenceCheckUsers = Collections.synchronizedMap(object : LinkedHashMap<String, User>(presenceCheckCapacity) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, User>): Boolean {
