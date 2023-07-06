@@ -98,7 +98,7 @@ class MessagesCache {
     fun messageUpdated(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
-                updateMessage(channelId, it)
+                updateMessage(channelId, it, true)
             }
             emitMessageUpdated(channelId, *message)
         }
@@ -143,7 +143,7 @@ class MessagesCache {
     fun upsertNotifyUpdateAnyway(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
-                updateMessage(channelId, it)
+                updateMessage(channelId, it, true)
                 emitMessageUpdated(channelId, it)
             }
         }
@@ -165,9 +165,10 @@ class MessagesCache {
         }
     }
 
-    private fun updateMessage(channelId: Long, message: SceytMessage) {
+    private fun updateMessage(channelId: Long, message: SceytMessage, initPayloads: Boolean) {
         cachedMessages[channelId]?.let {
-            initMessagePayLoads(channelId, message)
+            if (initPayloads)
+                initMessagePayLoads(channelId, message)
             it[message.tid] = message
         }
     }
@@ -178,6 +179,7 @@ class MessagesCache {
         }
     }
 
+    /** Set message attachments and pending reactions from cash, which saved in local db.*/
     private fun initMessagePayLoads(channelId: Long, messageToUpdate: SceytMessage) {
         setPayloads(channelId, messageToUpdate)
     }
@@ -225,11 +227,12 @@ class MessagesCache {
     private fun putAndCheckHasDiff(channelId: Long, includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
         messages.forEach {
+            initMessagePayLoads(channelId, it)
             if (!detectedDiff) {
                 val old = getMessageByTid(channelId, it.tid)
                 detectedDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
             }
-            updateMessage(channelId, it)
+            updateMessage(channelId, it, false)
         }
         return detectedDiff
     }
