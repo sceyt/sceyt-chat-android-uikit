@@ -28,7 +28,7 @@ internal class PersistenceConnectionLogicImpl(
 
     override suspend fun onChangedConnectStatus(state: ConnectionStateData) {
         if (state.state == ConnectionState.Connected) {
-            preference.setUserId(ClientWrapper.currentUser?.id)
+            ClientWrapper.currentUser?.id?.let { preference.setUserId(it) }
             insertCurrentUser()
             SceytPresenceChecker.startPresenceCheck()
         } else SceytPresenceChecker.stopPresenceCheck()
