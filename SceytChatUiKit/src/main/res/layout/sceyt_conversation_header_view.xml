@@ -7,7 +7,7 @@
     android:background="@color/sceyt_color_bg">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+        android:id="@+id/headerToolbar"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:contentInsetStart="0dp"
