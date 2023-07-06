@@ -15,6 +15,9 @@ interface PendingReactionDao {
     @Query("select * from pendingReaction")
     suspend fun getAll(): List<PendingReactionEntity>
 
+    @Query("select * from pendingReaction where channelId =:channelId")
+    suspend fun getAllByChannelId(channelId: Long): List<PendingReactionEntity>
+
     @Query("select * from pendingReaction where messageId =:messageId")
     suspend fun getAllByMsgId(messageId: Long): List<PendingReactionEntity>
 

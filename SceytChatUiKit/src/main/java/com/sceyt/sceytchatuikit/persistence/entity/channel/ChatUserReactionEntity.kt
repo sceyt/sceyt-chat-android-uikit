@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(indices = [Index(value = ["messageId", "channelId", "reaction_key","fromId"], unique = true)])
+@Entity(indices = [Index(value = ["messageId", "channelId", "reaction_key", "fromId"], unique = true)])
 data class ChatUserReactionEntity(
         @PrimaryKey
         val id: Long,
@@ -19,7 +19,5 @@ data class ChatUserReactionEntity(
         val reason: String,
         val createdAt: Long,
         @ColumnInfo(index = true)
-        val fromId: String?,
-        @ColumnInfo(index = true)
-        val pending: Boolean
+        val fromId: String?
 )

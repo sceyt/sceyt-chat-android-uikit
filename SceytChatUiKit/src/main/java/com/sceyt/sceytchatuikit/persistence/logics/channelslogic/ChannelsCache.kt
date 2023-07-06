@@ -159,6 +159,7 @@ class ChannelsCache {
                 channel.newMentionCount = 0
                 channel.newReactedMessageCount = 0
                 channel.newReactions = null
+                channel.pendingReactions = null
                 channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
             }
         }

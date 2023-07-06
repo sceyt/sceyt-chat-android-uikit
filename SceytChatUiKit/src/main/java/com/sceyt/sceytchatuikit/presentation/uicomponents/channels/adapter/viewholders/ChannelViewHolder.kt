@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
@@ -164,9 +165,14 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
         if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false
-        val pendingReaction = channel.newReactions?.filter { it.pending }?.maxByOrNull { it.createdAt }
-        val lastReaction = pendingReaction ?: channel.newReactions?.maxByOrNull { it.id }
-        ?: return false
+        val pendingAddOrRemoveReaction = channel.pendingReactions?.groupBy { it.isAdd }
+        val addReactions = pendingAddOrRemoveReaction?.get(true)
+        val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
+        val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
+                ?: channel.newReactions?.filter {
+                    removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
+                }?.maxByOrNull { it.id } ?: return false
+
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {

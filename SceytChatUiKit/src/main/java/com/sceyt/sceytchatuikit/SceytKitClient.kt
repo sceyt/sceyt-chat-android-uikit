@@ -52,8 +52,12 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val sceytSyncManager by inject<SceytSyncManager>()
     private val filesTransferService by inject<FileTransferService>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
+    private var clientUserId: String? = null
 
-    val myId get() = preferences.getUserId()
+    val myId
+        get() = clientUserId ?: preferences.getUserId().also {
+            clientUserId = it
+        }
 
     private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
         extraBufferCapacity = 1,
@@ -176,6 +180,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         clearData()
         WorkManager.getInstance(context).cancelAllWork()
         ClientWrapper.currentUser = null
+        clientUserId = null
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
             override fun onSuccess() {
                 ChatClient.getClient().disconnect()
