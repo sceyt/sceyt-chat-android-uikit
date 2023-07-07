@@ -40,10 +40,8 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
 
         menu.findItem(R.id.sceyt_reply).isVisible = !statusPendingOrFailed
         menu.findItem(R.id.sceyt_forward).isVisible = !statusPendingOrFailed
-        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank()
-
-        if (message.incoming)
-            menu.findItem(R.id.sceyt_edit_message)?.isVisible = false
+        menu.findItem(R.id.sceyt_edit_message).isVisible = !message.incoming && message.body.isNotNullOrBlank()
+        menu.findItem(R.id.sceyt_copy_message).isVisible = message.body.isNotNullOrBlank()
     }
 
     fun setupMenuWithMessage(@MenuRes menuRes: Int, message: SceytMessage): Menu? {
