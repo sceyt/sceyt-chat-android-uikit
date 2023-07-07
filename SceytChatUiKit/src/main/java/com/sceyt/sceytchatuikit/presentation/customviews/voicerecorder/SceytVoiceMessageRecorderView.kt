@@ -30,7 +30,6 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import java.util.*
 import kotlin.math.abs
 
@@ -97,8 +96,6 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     @SuppressLint("ClickableViewAccessibility")
     private fun SceytRecordViewBinding.setupRecorder() {
         imageViewAudio.setOnTouchListener(OnTouchListener { view, motionEvent ->
-
-
             when (motionEvent.action) {
                 ACTION_DOWN -> {
                     if (isLocked) {
