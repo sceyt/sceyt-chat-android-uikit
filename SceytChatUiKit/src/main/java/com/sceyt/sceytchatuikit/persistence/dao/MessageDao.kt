@@ -126,17 +126,17 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
-            "and not isParentMessage order by createdAt desc, tid desc limit :limit")
+            "and not isParentMessage and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <=:lastMessageId " +
-            "and not isParentMessage order by createdAt desc, tid desc limit :limit")
+            "and not isParentMessage and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id >:messageId and not isParentMessage " +
-            "order by createdAt, tid limit :limit")
+            "and deliveryStatus != $msgPendingStatus order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
@@ -160,13 +160,13 @@ abstract class MessageDao {
     }
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and deliveryStatus =:status " +
+    @Query("select * from messages where channelId =:channelId and deliveryStatus = $msgPendingStatus " +
             "order by createdAt")
-    abstract suspend fun getPendingMessages(channelId: Long, status: DeliveryStatus = Pending): List<MessageDb>
+    abstract suspend fun getPendingMessages(channelId: Long): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where deliveryStatus =:status order by createdAt")
-    abstract suspend fun getAllPendingMessages(status: DeliveryStatus = Pending): List<MessageDb>
+    @Query("select * from messages where deliveryStatus = $msgPendingStatus order by createdAt")
+    abstract suspend fun getAllPendingMessages(): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where message_id =:id")
@@ -247,11 +247,11 @@ abstract class MessageDao {
     @Query("delete from messages where channelId =:channelId")
     abstract suspend fun deleteAllMessages(channelId: Long)
 
-    @Query("delete from messages where channelId =:channelId and createdAt <=:date and deliveryStatus != :ignoreStatus")
-    abstract suspend fun deleteAllMessagesLowerThenDateIgnorePending(channelId: Long, date: Long, ignoreStatus: DeliveryStatus = Pending)
+    @Query("delete from messages where channelId =:channelId and createdAt <=:date and deliveryStatus != $msgPendingStatus")
+    abstract suspend fun deleteAllMessagesLowerThenDateIgnorePending(channelId: Long, date: Long)
 
-    @Query("delete from messages where channelId =:channelId and deliveryStatus != :deliveryStatus")
-    abstract suspend fun deleteAllMessagesExceptPending(channelId: Long, deliveryStatus: DeliveryStatus = Pending)
+    @Query("delete from messages where channelId =:channelId and deliveryStatus != $msgPendingStatus")
+    abstract suspend fun deleteAllMessagesExceptPending(channelId: Long)
 
     @Transaction
     open suspend fun deleteAttachmentsChunked(messageTides: List<Long>) {
@@ -287,5 +287,6 @@ abstract class MessageDao {
 
     private companion object {
         private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999
+        private const val msgPendingStatus = 0
     }
 }
