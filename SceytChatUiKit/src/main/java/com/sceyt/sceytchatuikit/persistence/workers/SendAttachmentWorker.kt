@@ -1,11 +1,9 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
@@ -44,15 +42,10 @@ object SendAttachmentWorkManager : SceytKoinComponent {
         dataBuilder.putLong(MESSAGE_TID, messageTid)
         dataBuilder.putBoolean(IS_SHARING, isSharing)
 
-        val networkConstraint = Constraints.Builder().apply {
-            setRequiredNetworkType(NetworkType.CONNECTED)
-        }.build()
-
         val myWorkRequest = OneTimeWorkRequest.Builder(SendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
             .apply { channelId?.let { addTag(channelId.toString()) } }
             .setInputData(dataBuilder.build())
-            .setConstraints(networkConstraint)
             .build()
 
         return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
