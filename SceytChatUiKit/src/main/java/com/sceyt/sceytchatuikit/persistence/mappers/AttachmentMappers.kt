@@ -27,7 +27,6 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         messageTid = messageTid,
         channelId = channelId,
         userId = userId,
-        tid = tid,
         name = name,
         type = type,
         createdAt = createdAt,
@@ -37,12 +36,10 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         filePath = filePath), null
 )
 
-
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
         return SceytAttachment(
             id = id,
-            tid = tid,
             messageId = messageId,
             messageTid = messageTid,
             userId = userId,
@@ -58,13 +55,11 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
     }
 }
 
-
 fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
     with(attachmentEntity) {
         return Attachment.Builder(filePath ?: "", url ?: "", type)
             .setMetadata(metadata ?: "")
             .setName(name)
-            .withTid(tid)
             .setUpload(upload)
             .build()
     }
@@ -83,10 +78,9 @@ fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPa
     }
 }
 
-fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: TransferState): TransferData {
+fun AttachmentPayLoadEntity.toTransferData(default: TransferState): TransferData {
     return TransferData(
         messageTid = messageTid,
-        attachmentTid = attachmentTid,
         state = transferState ?: default,
         progressPercent = 0f,
         url = url,
@@ -97,7 +91,6 @@ fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: Transfe
 fun SceytAttachment.toTransferData(): TransferData? {
     return TransferData(
         messageTid = messageTid,
-        attachmentTid = tid,
         progressPercent = (progressPercent ?: 0).toFloat(),
         state = transferState ?: return null,
         filePath = filePath,

@@ -1,11 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.text.Editable
 import android.text.SpannableString
 import android.util.AttributeSet
@@ -142,9 +139,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         init()
         setupAttachmentsList()
-
+        val voiceRecorderView = SceytVoiceMessageRecorderView(context)
         post {
-            (parent as? ViewGroup)?.addView(SceytVoiceMessageRecorderView(context).apply {
+            (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 setRecordingListener()
                 voiceMessageRecorderView = this
@@ -259,6 +256,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             .setAttachments(attachments)
             .setType("text")
             .setBody(body)
+            .setCreatedAt(System.currentTimeMillis())
             .initRelyMessage()
             .build()
 
@@ -272,10 +270,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         replyMessage?.let {
             setParentMessageId(it.id)
             setParentMessage(it)
-            setReplyInThread(replyThreadMessageId != null)
+            // setReplyInThread(replyThreadMessageId != null)
         } ?: replyThreadMessageId?.let {
             setParentMessageId(it)
-            setReplyInThread(true)
+            //setReplyInThread(true)
         }
         return this
     }
@@ -601,8 +599,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
                 ViewUtil.expandHeight(root, 1, 200)
-                val name = userNameBuilder?.invoke(message.from)
-                        ?: message.from.getPresentableName()
+                val name = userNameBuilder?.invoke(message.user)
+                        ?: message.user.getPresentableName()
                 val text = "${getString(R.string.sceyt_reply)} $name".run {
                     setBoldSpan(length - name.length, length)
                 }
@@ -642,7 +640,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun checkIsParticipant(channel: SceytChannel) {
         when (channel.getChannelType()) {
             ChannelTypeEnum.Public -> {
-                if (channel.role.isNullOrBlank()) {
+                if (channel.userRole.isNullOrBlank()) {
                     showHideJoinButton(true)
                 } else showHideJoinButton(false)
             }
@@ -854,19 +852,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
         chooseAttachmentHelper?.openSceytGallery(getPickerListener(), *allAttachments.map { it.url }.toTypedArray())
-    }
-
-    private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
-        SceytDialog.showSceytDialog(context,
-            titleId = titleId,
-            descId = descId,
-            positiveBtnTitleId = R.string.sceyt_settings,
-            positiveCb = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", context.packageName, null)
-                intent.data = uri
-                context.startActivity(intent)
-            })
     }
 
     override fun onTakePhotoClick() {

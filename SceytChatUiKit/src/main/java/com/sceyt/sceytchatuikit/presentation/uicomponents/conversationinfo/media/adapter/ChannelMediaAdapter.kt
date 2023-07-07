@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
@@ -71,7 +72,6 @@ class ChannelMediaAdapter(
         val myDiffUtil = AttachmentsDiffUtil(attachments, data)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
-        this.attachments.clear()
-        this.attachments.addAll(data)
+        attachments = data.toArrayList()
     }
 }

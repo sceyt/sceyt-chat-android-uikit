@@ -7,9 +7,10 @@ import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.Reaction
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoAllReactionsHeaderBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoReactionHeaderBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
@@ -28,6 +29,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                 val binding = SceytItemInfoReactionHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 ReactionsHeaderViewHolder(binding)
             }
+
             else -> {
                 val binding = SceytItemInfoAllReactionsHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 AllReactionsViewHolder(binding)
@@ -46,7 +48,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
     inner class ReactionsHeaderViewHolder(val binding: SceytItemInfoReactionHeaderBinding) : BaseViewHolder<ReactionHeaderItem>(binding.root) {
 
         override fun bind(item: ReactionHeaderItem) {
-            val score = (item as ReactionHeaderItem.Reaction).reactionScore
+            val score = (item as ReactionHeaderItem.Reaction).reactionTotal
 
             with(binding.reaction) {
                 setCountAndSmile(score.score, score.key)
@@ -113,18 +115,18 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
         notifyItemChanged(position, Any())
     }
 
-    fun addOrUpdateItem(reaction: ReactionScore) {
-        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
-            (it.second as ReactionHeaderItem.Reaction).reactionScore = ReactionScore(reaction.key, reaction.score)
+    fun addOrUpdateItem(reaction: ReactionTotal) {
+        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
+            (it.second as ReactionHeaderItem.Reaction).reactionTotal = SceytReactionTotal(reaction.key, reaction.score.toInt(), false)
             notifyItemChanged(it.first, Any())
         } ?: let {
-            data.add(ReactionHeaderItem.Reaction(ReactionScore(reaction.key, reaction.score)))
+            data.add(ReactionHeaderItem.Reaction(SceytReactionTotal(reaction.key, reaction.score.toInt(), false)))
             notifyItemInserted(data.lastIndex)
         }
     }
 
-    fun removeItem(reaction: Reaction) {
-        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionScore.key == reaction.key }?.let {
+    fun removeItem(reaction: SceytReaction) {
+        data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
             data.removeAt(it.first)
             notifyItemRemoved(it.first)
         }

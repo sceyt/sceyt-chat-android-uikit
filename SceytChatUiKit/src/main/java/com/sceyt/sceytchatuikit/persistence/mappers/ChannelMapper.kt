@@ -1,7 +1,10 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toDraftMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
@@ -9,7 +12,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 
 fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,
-    parentId = parentId,
+    parentChannelId = parentChannelId,
     uri = uri,
     type = type,
     subject = subject,
@@ -20,21 +23,22 @@ fun SceytChannel.toChannelEntity() = ChannelEntity(
     messagesClearedAt = messagesClearedAt,
     memberCount = memberCount,
     createdById = createdBy?.id,
-    role = role,
+    userRole = userRole,
     unread = unread,
     newMessageCount = newMessageCount,
     newMentionCount = newMentionCount,
-    newReactionCount = newReactionCount,
+    newReactedMessageCount = newReactedMessageCount,
     hidden = hidden,
     archived = archived,
     muted = muted,
-    mutedUntil = mutedUntil,
+    mutedTill = mutedTill,
     pinnedAt = pinnedAt,
     lastReceivedMessageId = lastReceivedMessageId,
     lastDisplayedMessageId = lastDisplayedMessageId,
     messageRetentionPeriod = messageRetentionPeriod,
     lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
-    lastMessageAt = lastMessage?.createdAt
+    lastMessageAt = lastMessage?.createdAt,
+    pending = pending
 )
 
 private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {
@@ -43,41 +47,11 @@ private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {
     else tid
 }
 
-fun Channel.toChannelEntity() = ChannelEntity(
-    id = id,
-    parentId = parentId,
-    uri = uri,
-    type = type,
-    subject = subject,
-    avatarUrl = avatarUrl,
-    metadata = metadata,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-    messagesClearedAt = messagesClearedAt,
-    memberCount = memberCount,
-    createdById = createdBy?.id,
-    role = role,
-    unread = isUnread,
-    newMessageCount = newMessageCount,
-    newMentionCount = newMentionCount,
-    newReactionCount = newReactionCount,
-    hidden = isHidden,
-    archived = isArchived,
-    muted = isMuted,
-    mutedUntil = muteUntil,
-    pinnedAt = pinnedAt,
-    lastReceivedMessageId = lastReceivedMessageId,
-    lastDisplayedMessageId = lastDisplayedMessageId,
-    messageRetentionPeriod = messageRetentionPeriod,
-    lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
-    lastMessageAt = lastMessage?.createdAt?.time
-)
-
 fun ChannelDb.toChannel(): SceytChannel {
     with(channelEntity) {
         return SceytChannel(
             id = id,
-            parentId = parentId,
+            parentChannelId = parentChannelId,
             uri = uri,
             type = type,
             subject = subject,
@@ -88,15 +62,15 @@ fun ChannelDb.toChannel(): SceytChannel {
             messagesClearedAt = messagesClearedAt,
             memberCount = memberCount,
             createdBy = createdBy?.toUser(),
-            role = role,
+            userRole = userRole,
             unread = unread,
             newMessageCount = newMessageCount,
             newMentionCount = newMentionCount,
-            newReactionCount = newReactionCount,
+            newReactedMessageCount = newReactedMessageCount,
             hidden = hidden,
             archived = archived,
             muted = muted,
-            mutedUntil = mutedUntil,
+            mutedTill = mutedTill,
             pinnedAt = pinnedAt,
             lastReceivedMessageId = lastReceivedMessageId,
             lastDisplayedMessageId = lastDisplayedMessageId,
@@ -104,7 +78,9 @@ fun ChannelDb.toChannel(): SceytChannel {
             lastMessage = lastMessage?.toSceytMessage(),
             messages = emptyList(),
             members = members?.map { it.toSceytMember() },
-            newReactions = newReactions?.map { it.toReaction() }
+            newReactions = newReactions?.map { it.toSceytReaction() },
+            pendingReactions = pendingReactions?.map { it.toReactionData() },
+            pending = pending
         ).apply {
             draftMessage = this@toChannel.draftMessage?.toDraftMessage()
         }
@@ -114,7 +90,7 @@ fun ChannelDb.toChannel(): SceytChannel {
 fun Channel.toSceytUiChannel(): SceytChannel {
     return SceytChannel(
         id = id,
-        parentId = parentId,
+        parentChannelId = parentChannelId,
         uri = uri,
         type = type,
         subject = subject,
@@ -125,15 +101,15 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         messagesClearedAt = messagesClearedAt,
         memberCount = memberCount,
         createdBy = createdBy,
-        role = role,
+        userRole = userRole,
         unread = isUnread,
         newMessageCount = newMessageCount,
         newMentionCount = newMentionCount,
-        newReactionCount = newReactionCount,
+        newReactedMessageCount = newReactedMessageCount,
         hidden = isHidden,
         archived = isArchived,
         muted = isMuted,
-        mutedUntil = muteUntil,
+        mutedTill = mutedTill,
         pinnedAt = pinnedAt,
         lastReceivedMessageId = lastReceivedMessageId,
         lastDisplayedMessageId = lastDisplayedMessageId,
@@ -141,6 +117,44 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         lastMessage = lastMessage?.toSceytUiMessage(),
         messages = messages?.map { it.toSceytUiMessage() },
         members = members?.map { it.toSceytMember() },
-        newReactions = newReactions
+        newReactions = newReactions.map { it.toSceytReaction() },
+        pendingReactions = null,
+        pending = false
+    )
+}
+
+fun createPendingDirectChannelData(channelId: Long, createdBy: User, members: List<SceytMember>, role: String): SceytChannel {
+    return SceytChannel(
+        id = channelId,
+        parentChannelId = null,
+        uri = null,
+        type = ChannelTypeEnum.Direct.getString(),
+        subject = null,
+        avatarUrl = null,
+        metadata = "",
+        createdAt = System.currentTimeMillis(),
+        updatedAt = 0,
+        messagesClearedAt = 0,
+        memberCount = members.size.toLong(),
+        createdBy = createdBy,
+        userRole = role,
+        unread = false,
+        newMessageCount = 0,
+        newMentionCount = 0,
+        newReactedMessageCount = 0,
+        hidden = false,
+        archived = false,
+        muted = false,
+        mutedTill = 0,
+        pinnedAt = null,
+        lastReceivedMessageId = 0,
+        lastDisplayedMessageId = 0,
+        messageRetentionPeriod = 0,
+        lastMessage = null,
+        messages = null,
+        members = members,
+        newReactions = null,
+        pendingReactions = null,
+        pending = true
     )
 }

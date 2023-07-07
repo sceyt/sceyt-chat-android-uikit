@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.persistence.converters.ChannelConverter
 import com.sceyt.sceytchatuikit.persistence.converters.ListStringConverter
 import com.sceyt.sceytchatuikit.persistence.converters.MessageConverter
 import com.sceyt.sceytchatuikit.persistence.dao.*
-import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
+import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
@@ -23,10 +23,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
     DraftMessageEntity::class,
     DraftMessageUserLink::class,
     AttachmentEntity::class,
+    MarkerEntity::class,
     ReactionEntity::class,
-    ReactionScoreEntity::class,
+    ReactionTotalEntity::class,
     ChatUserReactionEntity::class,
-    PendingMarkersEntity::class,
+    PendingMarkerEntity::class,
+    PendingReactionEntity::class,
     AttachmentPayLoadEntity::class
 ], version = 1, exportSchema = false)
 
@@ -34,11 +36,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun messageDao(): MessageDao
+    abstract fun attachmentsDao(): AttachmentDao
     abstract fun draftMessageDao(): DraftMessageDao
     abstract fun membersDao(): MembersDao
     abstract fun userDao(): UserDao
     abstract fun reactionDao(): ReactionDao
     abstract fun channelUsersReactionDao(): ChatUsersReactionDao
     abstract fun pendingMarkersDao(): PendingMarkersDao
-    abstract fun attachmentsDao(): AttachmentDao
+    abstract fun pendingReactionDao(): PendingReactionDao
 }

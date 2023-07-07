@@ -3,7 +3,10 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 import androidx.lifecycle.*
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -14,8 +17,8 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
@@ -182,6 +185,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
 
+    ChannelsCache.pendingChannelCreatedFlow
+        .filter { it.first == channel.id }
+        .onEach {
+            loadPrevMessages(0, 0)
+        }.launchIn(lifecycleOwner.lifecycleScope)
+
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner) {
         if (it.first.id == channel.id) {
             channel = it.first
@@ -209,14 +218,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
         if (stateData.state == ConnectionState.Connected) {
             val message = messagesListView.getLastMessageBy {
-                // First tying to get last read message
-                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
+                // First tying to get last displayed message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Displayed
             } ?: messagesListView.getFirstMessageBy {
                 // Next tying to get fist sent message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
             } ?: messagesListView.getFirstMessageBy {
-                // Next tying to get fist delivered message
-                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
+                // Next tying to get fist received message
+                it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Received
             }
             (message as? MessageListItem.MessageItem)?.let {
                 syncConversationMessagesAfter(it.message.id)
@@ -271,18 +280,19 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
-        it.parent?.id?.let { parentId ->
+        it.parentMessage?.id?.let { parentId ->
             viewModelScope.launch(Dispatchers.Default) {
                 messagesListView.getMessageIndexedById(parentId)?.let {
                     withContext(Dispatchers.Main) {
                         it.second.highlighted = true
                         messagesListView.scrollToPositionAndHighlight(it.first, true)
                     }
-                } ?: run {
+                } /*?: run {
+                    // todo when uncomment this logic, please make sure that should save loaded messages in db
                     loadNearMessages(parentId, LoadKeyData(
                         key = LoadKeyType.ScrollToMessageById.longValue,
                         value = parentId))
-                }
+                }*/
             }
         }
     }
@@ -292,11 +302,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@Observer
                 viewModelScope.launch(Dispatchers.Default) {
+                    val user = ClientWrapper.currentUser ?: User(myId ?: return@launch)
                     messagesListView.getData()?.forEach { listItem ->
                         (listItem as? MessageListItem.MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
-                                message.selfMarkers = message.selfMarkers?.toMutableSet()?.apply {
-                                    add(SelfMarkerTypeEnum.Displayed.value())
+                                message.userMarkers = message.userMarkers?.toMutableSet()?.apply {
+                                    add(Marker(message.id, user, data.name, data.createdAt))
                                 }?.toTypedArray()
                             }
                         }
@@ -308,8 +319,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messageEditedDeletedLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
-            if (it.data?.deliveryStatus == DeliveryStatus.Pending ||
-                    it.data?.deliveryStatus == DeliveryStatus.Failed) {
+            if (it.data?.deliveryStatus == DeliveryStatus.Pending) {
                 messagesListView.messageEditedOrDeleted(it.data)
             }
         } else
@@ -336,7 +346,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
         (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
-            if (!message.incoming || message.selfMarkers?.contains(SelfMarkerTypeEnum.Displayed.value()) == true)
+            if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
                 return
 
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
@@ -361,14 +371,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateViewState(PageState.Nothing)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onNewThreadMessageFlow.onEach {
-        messagesListView.updateReplyCount(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    // todo reply in thread
+    /*  onNewThreadMessageFlow.onEach {
+          messagesListView.updateReplyCount(it)
+      }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onOutGoingThreadMessageFlow.onEach {
-        messagesListView.newReplyMessage(it.parent?.id)
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
+      onOutGoingThreadMessageFlow.onEach {
+          messagesListView.newReplyMessage(it.parentMessage?.id)
+      }.launchIn(lifecycleOwner.lifecycleScope)
+  */
     onMessageStatusFlow.onEach {
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(lifecycleOwner.lifecycleScope)
@@ -415,7 +426,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
-        messagesListView.updateViewState(it, false)
+        if (it is PageState.StateError && it.code == 40401 && messagesListView.getData().isNullOrEmpty())
+            messagesListView.updateViewState(PageState.StateEmpty())
+        else
+            messagesListView.updateViewState(it, false)
     }
 
     messagesListView.setMessageCommandEventListener {

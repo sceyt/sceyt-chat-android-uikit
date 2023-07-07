@@ -85,7 +85,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
-                prevMessage.canShowAvatarAndName = prevMessage.incoming && prevMessage.from?.id != newItem.message.from?.id
+                prevMessage.canShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
                 notifyItemChanged(prevIndex, Unit)
             }
 

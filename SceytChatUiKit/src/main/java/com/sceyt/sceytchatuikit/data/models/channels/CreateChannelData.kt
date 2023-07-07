@@ -4,10 +4,10 @@ import com.sceyt.chat.models.member.Member
 
 data class CreateChannelData(
         var channelType: ChannelTypeEnum = ChannelTypeEnum.Public,
-        var uri: String? = null,
-        var subject: String? = null,
-        var avatarUrl: String? = null,
-        var metadata: String? = null,
+        var uri: String = "",
+        var subject: String = "",
+        var avatarUrl: String = "",
+        var metadata: String = "",
         var members: List<Member> = arrayListOf()
 ) {
     var avatarUploaded: Boolean = false

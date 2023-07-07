@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.chat.ui.presentation.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
+import com.sceyt.chat.ui.presentation.common.BaseViewHolder
 import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.shared.utils.MyDiffUtil
 
 class SelectableUsersAdapter(
@@ -58,7 +59,7 @@ class SelectableUsersAdapter(
         val myDiffUtil = MyDiffUtil(usersList, list)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesTo(this)
-        usersList = list as ArrayList<UserItem>
+        usersList = list.toArrayList()
     }
 
     fun interface ClickListener {

@@ -32,7 +32,7 @@ import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -175,8 +175,8 @@ abstract class BaseMsgViewHolder(private val view: View,
                 it.view.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replyMessageLineColor))
             }
         with(replyMessageContainerBinding ?: return) {
-            val parent = message.parent
-            tvName.text = getSenderName(parent?.from)
+            val parent = message.parentMessage
+            tvName.text = getSenderName(parent?.user)
             if (parent?.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
                 tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_gray_400))
@@ -245,7 +245,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (!message.isGroup) return
 
         if (message.canShowAvatarAndName) {
-            val user = message.from
+            val user = message.user
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
                 avatarView.setImageUrl(null, UserStyle.deletedUserAvatar)
@@ -271,7 +271,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (reactions.isNullOrEmpty()) {
             reactionsAdapter = null
             rvReactionsViewStub.isVisible = false
-            layoutDetails?.layoutParams?.width = ViewGroup.LayoutParams.WRAP_CONTENT
+            layoutDetails?.layoutParams?.width = LayoutParams.WRAP_CONTENT
             return
         }
 
@@ -320,8 +320,8 @@ abstract class BaseMsgViewHolder(private val view: View,
             }
 
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {
-                rvReactions.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                rvReactions.layoutParams.width = LayoutParams.WRAP_CONTENT
+                layoutDetails.layoutParams.width = LayoutParams.WRAP_CONTENT
             }
         }
     }
@@ -366,9 +366,9 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setBodyTextPosition(currentView: TextView, nextView: View, parentLayout: ConstraintLayout) {
         val maxWidth = getBodyMaxAcceptableWidth(currentView)
-        currentView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        currentView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val currentViewWidth = currentView.measuredWidth
-        nextView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        nextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val nextViewWidth = nextView.measuredWidth
 
         val body = currentView.text.toString()
@@ -415,7 +415,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private fun isDeletedUser(user: User?): Boolean {
-        return user?.activityState == UserActivityStatus.Deleted
+        return user?.activityState == UserActivityState.Deleted
     }
 
     private fun getBubbleMaxWidth(context: Context): Int {
@@ -430,7 +430,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.cancel()
         val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         view.setBackgroundColor(colorFrom)
-        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.7 * 255).toInt())
+        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.3 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT
         highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFro, colorTo)
         highlightAnim?.duration = 2000

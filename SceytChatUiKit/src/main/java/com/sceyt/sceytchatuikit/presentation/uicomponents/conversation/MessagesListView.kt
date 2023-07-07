@@ -18,7 +18,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
@@ -199,7 +199,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
-        val reactions = message.selfReactions?.map { it.key }?.toArrayList() ?: arrayListOf()
+        val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList() ?: arrayListOf()
         if (reactions.size < MAX_SELF_REACTIONS_SIZE)
             reactions.addAll(SceytKitConfig.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
 
@@ -277,8 +277,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             BottomSheetEmojisFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
-                    val containsSelf = message.selfReactions?.find { reaction -> reaction.key == emoji } != null
-                    onAddOrRemoveReaction(ReactionItem.Reaction(ReactionData(emoji, containsSelf = containsSelf), message))
+                    val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
+                    onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji, containsSelf = containsSelf), message, true))
                 }
             }.show(it, null)
         }
@@ -356,8 +356,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == data.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
-            message.reactionScores = data.reactionScores
-            message.selfReactions = data.selfReactions
+            message.reactionTotals = data.reactionTotals
+            message.userReactions = data.userReactions
             message.messageReactions = data.messageReactions
             updateItem(it.first, it.second, oldMessage.diff(message))
         }
@@ -433,14 +433,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
-            message.deliveryStatus = DeliveryStatus.Failed
+            message.deliveryStatus = DeliveryStatus.Pending
             updateItem(it.first, it.second, oldMessage.diff(message))
         }
     }
 
     internal fun updateReplyCount(replyMessage: SceytMessage?) {
         messagesRV.getData()?.findIndexed {
-            it is MessageItem && it.message.id == replyMessage?.parent?.id
+            it is MessageItem && it.message.id == replyMessage?.parentMessage?.id
         }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
@@ -651,7 +651,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
                     if (reaction.user?.id == SceytKitClient.myId)
-                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(ReactionData(reaction.key, containsSelf = true), item.message))
+                        reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), item.message, reaction.pending))
                 }
             }.show(it, null)
         }
@@ -665,11 +665,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onAttachmentClick(view: View, item: FileListItem) {
         when (item) {
             is FileListItem.Image -> {
-                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.user, item.message.channelId)
             }
 
             is FileListItem.Video -> {
-                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.from, item.message.channelId)
+                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.user, item.message.channelId)
             }
 
             else -> item.file.openFile(context)
@@ -734,6 +734,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
+        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key, reactionItem.isPending))
     }
 }

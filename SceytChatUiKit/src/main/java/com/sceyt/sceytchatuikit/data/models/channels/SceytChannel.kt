@@ -1,19 +1,21 @@
 package com.sceyt.sceytchatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.sceytchatuikit.data.models.messages.PendingReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isGroup
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytChannel(
-        val id: Long,
-        val parentId: Long?,
+        var id: Long,
+        val parentChannelId: Long?,
         var uri: String?,
         val type: String,
         var subject: String?,
@@ -24,15 +26,15 @@ data class SceytChannel(
         var messagesClearedAt: Long,
         var memberCount: Long,
         val createdBy: User?,
-        var role: String?,
+        var userRole: String?,
         var unread: Boolean,
         var newMessageCount: Long,
         var newMentionCount: Long,
-        var newReactionCount: Long,
+        var newReactedMessageCount: Long,
         var hidden: Boolean,
         var archived: Boolean,
         var muted: Boolean,
-        var mutedUntil: Long?,
+        var mutedTill: Long?,
         var pinnedAt: Long?,
         var lastReceivedMessageId: Long,
         var lastDisplayedMessageId: Long,
@@ -40,15 +42,17 @@ data class SceytChannel(
         var lastMessage: SceytMessage?,
         var messages: List<SceytMessage>?,
         var members: List<SceytMember>?,
-        var newReactions: List<Reaction>?) : Parcelable, Cloneable {
+        var newReactions: List<SceytReaction>?,
+        var pendingReactions: List<PendingReactionData>?,
+        var pending: Boolean) : Parcelable, Cloneable {
 
     val channelSubject: String
         get() = (if (isGroup) subject
-        else members?.getOrNull(0)?.getPresentableName()) ?: ""
+        else getFirstMember()?.getPresentableName()) ?: ""
 
     val iconUrl: String?
         get() = if (isGroup) avatarUrl
-        else members?.getOrNull(0)?.avatarUrl
+        else getFirstMember()?.avatarUrl
 
     val isGroup get() = stringToEnum(type).isGroup()
 
@@ -74,7 +78,7 @@ data class SceytChannel(
     public override fun clone(): SceytChannel {
         return SceytChannel(
             id = id,
-            parentId = parentId,
+            parentChannelId = parentChannelId,
             uri = uri,
             type = type,
             subject = subject,
@@ -85,15 +89,15 @@ data class SceytChannel(
             messagesClearedAt = messagesClearedAt,
             memberCount = memberCount,
             createdBy = createdBy,
-            role = role,
+            userRole = userRole,
             unread = unread,
             newMessageCount = newMessageCount,
             newMentionCount = newMentionCount,
-            newReactionCount = newReactionCount,
+            newReactedMessageCount = newReactedMessageCount,
             hidden = hidden,
             archived = archived,
             muted = muted,
-            mutedUntil = mutedUntil,
+            mutedTill = mutedTill,
             pinnedAt = pinnedAt,
             lastReceivedMessageId = lastReceivedMessageId,
             lastDisplayedMessageId = lastDisplayedMessageId,
@@ -101,7 +105,9 @@ data class SceytChannel(
             lastMessage = lastMessage?.clone(),
             messages = messages?.map { it.clone() },
             members = members?.map { it.clone() },
-            newReactions = newReactions
+            newReactions = newReactions,
+            pendingReactions = pendingReactions,
+            pending = pending
         ).also {
             it.draftMessage = draftMessage
         }

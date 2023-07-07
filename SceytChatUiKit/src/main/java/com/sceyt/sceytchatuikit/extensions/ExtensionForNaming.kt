@@ -3,7 +3,7 @@ package com.sceyt.sceytchatuikit.extensions
 import android.content.Context
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
@@ -43,19 +43,19 @@ fun SceytMember.getPresentableFirstName(): String {
 }
 
 fun User.getPresentableNameCheckDeleted(context: Context): String {
-    return if (activityState == UserActivityStatus.Deleted)
+    return if (activityState == UserActivityState.Deleted)
         context.getString(R.string.sceyt_deleted_user)
     else getPresentableName()
 }
 
 fun SceytMember.getPresentableNameCheckDeleted(context: Context): String {
-    return if (user.activityState == UserActivityStatus.Deleted)
+    return if (user.activityState == UserActivityState.Deleted)
         context.getString(R.string.sceyt_deleted_user)
     else getPresentableName()
 }
 
-private fun isDeletedUser(status: UserActivityStatus): Boolean {
-    return status == UserActivityStatus.Deleted
+private fun isDeletedUser(status: UserActivityState): Boolean {
+    return status == UserActivityState.Deleted
 }
 
 

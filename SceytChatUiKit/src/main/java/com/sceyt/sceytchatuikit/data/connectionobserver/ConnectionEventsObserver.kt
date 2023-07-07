@@ -6,11 +6,10 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.firstOrNull
 
 object ConnectionEventsObserver {
     val connectionState get() = ClientWrapper.getConnectionState() ?: ConnectionState.Disconnected
@@ -51,16 +50,7 @@ object ConnectionEventsObserver {
         if (isConnected)
             return true
 
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        return suspendCancellableCoroutine { continuation ->
-            scope.launch {
-                onChangedConnectStatusFlow.collect {
-                    if (it.state == ConnectionState.Connected) {
-                        continuation.safeResume(true)
-                        scope.cancel()
-                    }
-                }
-            }
-        }
+        onChangedConnectStatusFlow.firstOrNull { it.state == ConnectionState.Connected }
+        return connectionState == ConnectionState.Connected
     }
 }

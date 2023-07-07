@@ -28,7 +28,6 @@ data class AttachmentEntity(
         val messageTid: Long,
         val channelId: Long,
         var userId: String?,
-        val tid: Long,
         val name: String,
         @ColumnInfo(index = true)
         val type: String,

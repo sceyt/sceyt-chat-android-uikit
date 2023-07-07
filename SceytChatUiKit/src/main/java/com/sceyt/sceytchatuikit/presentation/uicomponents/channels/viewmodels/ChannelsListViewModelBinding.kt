@@ -97,7 +97,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 newAddedChannelJobs.remove(channelId)
             }
             needToUpdateChannelsAfterResume.remove(channelId)
-            lifecycleOwner.lifecycle.withResumed {
+            lifecycleOwner.withResumed {
                 channelsListView.deleteChannel(channelId)
             }
         }
@@ -117,9 +117,9 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         } else needToUpdateChannelsAfterResume[data.channel.id] = data
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelAddedFlow.onEach { sceytChannel ->
+    fun createJobToAddNewChannelWithOnResumed(sceytChannel: SceytChannel) {
         val job = viewModelScope.launch {
-            lifecycleOwner.lifecycle.withResumed {
+            lifecycleOwner.withResumed {
                 val updatedChannel = needToUpdateChannelsAfterResume[sceytChannel.id]?.channel
                         ?: sceytChannel
                 channelsListView.cancelLastSort()
@@ -128,6 +128,20 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             }
         }
         newAddedChannelJobs[sceytChannel.id] = job
+    }
+
+    ChannelsCache.channelAddedFlow.onEach(::createJobToAddNewChannelWithOnResumed)
+        .launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelsCache.pendingChannelCreatedFlow.onEach { data ->
+        channelsListView.replaceChannel(data.first, data.second)
+        if (lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED) {
+            newAddedChannelJobs[data.first]?.let {
+                it.cancel()
+                newAddedChannelJobs.remove(data.first)
+            }
+            createJobToAddNewChannelWithOnResumed(data.second)
+        }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelDraftMessageChangesLiveData.observe(lifecycleOwner) { (channelId, draftMessage) ->

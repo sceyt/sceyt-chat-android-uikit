@@ -66,7 +66,7 @@ class CreateGroupActivity : AppCompatActivity() {
         binding.icBack.setOnClickListener { finish() }
 
         icEditPhoto.setOnClickListener {
-            EditAvatarTypeDialog(this@CreateGroupActivity, createChannelData.avatarUrl.isNullOrBlank().not()) {
+            EditAvatarTypeDialog(this@CreateGroupActivity, createChannelData.avatarUrl.isBlank().not()) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
                         chooseAttachmentHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
@@ -74,11 +74,13 @@ class CreateGroupActivity : AppCompatActivity() {
                                 setAvatarImage(uris[0])
                         }
                     }
+
                     EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
                         chooseAttachmentHelper.takePicture { uri ->
                             setAvatarImage(uri)
                         }
                     }
+
                     EditAvatarTypeDialog.EditAvatarType.Delete -> {
                         setAvatarImage(null)
                     }
@@ -107,7 +109,7 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun setAvatarImage(filePath: String?) {
-        createChannelData.avatarUrl = filePath
+        createChannelData.avatarUrl = filePath ?: ""
         binding.avatar.setImageUrl(filePath)
     }
 

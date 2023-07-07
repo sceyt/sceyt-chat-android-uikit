@@ -4,9 +4,8 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.MarkerCount
+import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 
@@ -24,21 +23,15 @@ class MessageConverter {
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
 
     @TypeConverter
-    fun selfMarkerTypeEnumToTnt(value: SelfMarkerTypeEnum) = value.ordinal
-
-    @TypeConverter
-    fun intToSelfMarkerTypeEnum(value: Int) = value.toEnum<SelfMarkerTypeEnum>()
-
-    @TypeConverter
     fun transferStateEnumToTnt(value: TransferState?) = value?.ordinal
 
     @TypeConverter
     fun intToTransferStateTypeEnum(value: Int?) = value?.toEnum<TransferState>()
 
     @TypeConverter
-    fun stringToMarkerCount(json: String?): List<MarkerCount>? {
+    fun stringToMarkerTotal(json: String?): List<MarkerTotal>? {
         json ?: return null
-        val type = object : TypeToken<List<MarkerCount>>() {}.type
+        val type = object : TypeToken<List<MarkerTotal>>() {}.type
         return try {
             Gson().fromJson(json, type)
         } catch (e: Exception) {
@@ -47,12 +40,12 @@ class MessageConverter {
     }
 
     @TypeConverter
-    fun markerCountToString(obj: List<MarkerCount>?): String? {
+    fun markerCountToString(obj: List<MarkerTotal>?): String? {
         if (obj == null)
             return null
 
         val gson = Gson()
-        val type = object : TypeToken<List<MarkerCount>>() {}.type
+        val type = object : TypeToken<List<MarkerTotal>>() {}.type
         return gson.toJson(obj, type)
     }
 }

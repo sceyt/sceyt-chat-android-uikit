@@ -50,7 +50,7 @@ internal class PersistenceAttachmentLogicImpl(
     private val messagesLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
-        return messageDao.getAllAttachmentPayLoadsByMsgTid(tid)
+        return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid)
     }
 
     override suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>,
@@ -256,7 +256,7 @@ internal class PersistenceAttachmentLogicImpl(
             return Pair(emptyList(), emptyList())
 
         val msgIds = attachments.map { it.messageId }
-        val transferData = messageDao.getAllAttachmentPayLoadsByMsgTid(*idsData.map { it.tid }.toLongArray())
+        val transferData = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*idsData.map { it.tid }.toLongArray())
         val missedMsgIds: MutableList<Long> = msgIds.minus(idsData.mapNotNull { it.id }.toSet()).toMutableList()
         val sceytAttachments = arrayListOf<SceytAttachment>()
 

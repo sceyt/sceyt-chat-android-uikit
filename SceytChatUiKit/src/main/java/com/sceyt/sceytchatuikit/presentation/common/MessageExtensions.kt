@@ -29,9 +29,8 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateSt
     val iconResId = when (deliveryStatus) {
         DeliveryStatus.Pending -> ChannelStyle.statusIndicatorPendingIcon
         DeliveryStatus.Sent -> ChannelStyle.statusIndicatorSentIcon
-        DeliveryStatus.Delivered -> ChannelStyle.statusIndicatorDeliveredIcon
-        DeliveryStatus.Read -> ChannelStyle.statusIndicatorReadIcon
-        DeliveryStatus.Failed -> R.drawable.sceyt_ic_status_faild
+        DeliveryStatus.Received -> ChannelStyle.statusIndicatorDeliveredIcon
+        DeliveryStatus.Displayed -> ChannelStyle.statusIndicatorReadIcon
         else -> null
     }
     iconResId?.let {
@@ -50,9 +49,8 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
     val iconResId = when (deliveryStatus) {
         DeliveryStatus.Pending -> MessagesStyle.messageStatusPendingIcon
         DeliveryStatus.Sent -> MessagesStyle.messageStatusSentIcon
-        DeliveryStatus.Delivered -> MessagesStyle.messageStatusDeliveredIcon
-        DeliveryStatus.Read -> MessagesStyle.messageStatusReadIcon
-        DeliveryStatus.Failed -> R.drawable.sceyt_ic_status_faild
+        DeliveryStatus.Received -> MessagesStyle.messageStatusDeliveredIcon
+        DeliveryStatus.Displayed -> MessagesStyle.messageStatusReadIcon
         else -> null
     }
     iconResId?.let {
@@ -62,7 +60,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
 }
 
 private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
-    return deliveryStatus == DeliveryStatus.Read
+    return deliveryStatus == DeliveryStatus.Displayed
 }
 
 fun SceytMessage.getShowBody(context: Context): SpannableString {
@@ -71,6 +69,7 @@ fun SceytMessage.getShowBody(context: Context): SpannableString {
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
             MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, metadata, mentionedUsers)
         }
+
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
         else -> context.getString(R.string.sceyt_file)
     }
@@ -105,12 +104,12 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         edited = state != other.state,
         bodyChanged = body != other.body,
         statusChanged = deliveryStatus != other.deliveryStatus,
-        avatarChanged = from?.avatarURL.equalsIgnoreNull(other.from?.avatarURL).not(),
-        nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
+        avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
+        nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
+        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
-                ?: other.reactionScores.isNullOrEmpty().not(),
+                ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
         filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
     )
@@ -121,12 +120,12 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         edited = state != other.state,
         bodyChanged = body != other.body,
         statusChanged = deliveryStatus != other.deliveryStatus,
-        avatarChanged = from?.avatarURL.equalsIgnoreNull(other.from?.avatarURL).not(),
-        nameChanged = from?.fullName.equalsIgnoreNull(other.from?.fullName).not(),
+        avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
+        nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parent != other.parent || parent?.from != other.parent?.from,
-        reactionsChanged = reactionScores?.equalsIgnoreNull(other.reactionScores)?.not()
-                ?: other.reactionScores.isNullOrEmpty().not(),
+        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user,
+        reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
+                ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
         filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
     )

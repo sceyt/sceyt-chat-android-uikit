@@ -93,6 +93,20 @@ public class AudioPlayerHelper {
         });
     }
 
+    public static void pause(String filePath) {
+        playerExecutor.execute(() -> {
+            if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath))
+                currentPlayer.pause();
+        });
+    }
+
+    public static void pauseAll() {
+        playerExecutor.execute(() -> {
+            if (currentPlayer != null)
+                currentPlayer.pause();
+        });
+    }
+
     public static void toggle(String filePath) {
         playerExecutor.execute(() -> {
             if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath)) {

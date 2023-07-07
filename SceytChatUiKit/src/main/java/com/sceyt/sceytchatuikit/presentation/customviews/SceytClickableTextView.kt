@@ -17,9 +17,9 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatTextView(context, attrs, defStyleAttr) {
     private var doOnLongClick: ((View) -> Unit)? = null
+    private var doOnClickWhenNoLink: ((View) -> Unit)? = null
     private val handler = Handler(Looper.getMainLooper())
     private var isLongClick = false
-
     private val longClickRunnable = Runnable {
         isLongClick = true
         doOnLongClick?.invoke(this)
@@ -52,7 +52,7 @@ class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: 
                         if (link.isNotEmpty()) {
                             link[0].onClick(this)
                             return true
-                        }
+                        } else doOnClickWhenNoLink?.invoke(this)
                     }
                     isLongClick = false
                 }
@@ -68,5 +68,9 @@ class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: 
 
     fun doOnLongClick(onClick: (View) -> Unit) {
         doOnLongClick = onClick
+    }
+
+    fun doOnClickWhenNoLink(onClick: (View) -> Unit) {
+        doOnClickWhenNoLink = onClick
     }
 }
