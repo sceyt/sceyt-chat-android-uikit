@@ -159,6 +159,7 @@ class ChannelsCache {
                 channel.newMentionCount = 0
                 channel.newReactedMessageCount = 0
                 channel.newReactions = null
+                channel.pendingReactions = null
                 channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
             }
         }
@@ -254,6 +255,18 @@ class ChannelsCache {
                     if (oldUser.presence?.hasDiff(user.presence) == true) {
                         it.user = user
                         channelUpdated(channel.clone(), false, ChannelUpdatedType.Presence)
+                    }
+                }
+            }
+        }
+    }
+
+    fun removeChannelMessageReactions(channelId: Long, messageId: Long) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                channel.newReactions?.filter { it.messageId == messageId }?.let {
+                    channel.newReactions = channel.newReactions?.toArrayList()?.apply {
+                        removeAll(it.toSet())
                     }
                 }
             }

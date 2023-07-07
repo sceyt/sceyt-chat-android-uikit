@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
@@ -15,6 +16,16 @@ object ChatReactionMessagesCache : SceytKoinComponent {
     suspend fun getNeededMessages(ids: Map<Long, Long>) {
         ids.forEach {
             getMessage(it.key, it.value)
+        }
+    }
+
+    suspend fun getNeededMessages(channels: List<SceytChannel>) {
+        channels.forEach { channel ->
+            val messageId = channel.pendingReactions?.maxByOrNull { reactionData -> reactionData.createdAt }?.messageId
+                    ?: run { channel.newReactions?.maxByOrNull { reactionData -> reactionData.id } }?.messageId
+
+            if (messageId != null)
+                getMessage(channel.id, messageId)
         }
     }
 

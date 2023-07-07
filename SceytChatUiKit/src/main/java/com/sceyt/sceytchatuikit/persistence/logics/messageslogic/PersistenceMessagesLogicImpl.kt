@@ -28,19 +28,20 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Displayed
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
-import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
+import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
@@ -57,7 +58,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -155,7 +156,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
-        data.userReactions = selfReactions.map { it.toReaction() }.toTypedArray()
+        data.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
         messagesCache.messageUpdated(data.channelId, data)
         if (data.state == MessageState.Deleted)
@@ -653,14 +654,6 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
-        val tIds = getMessagesTid(messages)
-        val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
-
-        messages.forEach {
-            findAndUpdateAttachmentPayLoads(it, payloads)
-            it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
-        }
-
         hasDiff = messagesCache.addAll(channelId, messages, true)
 
         if (forceHasDiff) hasDiff = true
@@ -675,12 +668,20 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadEntity>) {
-        payloads.find { payLoad -> payLoad.messageTid == message.tid }?.let { entity ->
+        payloads.filter { payLoad -> payLoad.messageTid == message.tid }.let { entity ->
             message.attachments?.forEach { attachment ->
-                attachment.transferState = entity.transferState
-                attachment.progressPercent = entity.progressPercent
-                attachment.filePath = entity.filePath
-                attachment.url = entity.url
+                val predicate: (AttachmentPayLoadEntity) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
+                    { entity.any { it.url == attachment.url } }
+                } else {
+                    { entity.any { it.filePath == attachment.filePath } }
+                }
+
+                payloads.find(predicate)?.let {
+                    attachment.transferState = it.transferState
+                    attachment.progressPercent = it.progressPercent
+                    attachment.filePath = it.filePath
+                    attachment.url = it.url
+                }
             }
         }
     }
@@ -796,7 +797,7 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
         try {
-            val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, name = status) }
+            val list = ids.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
             pendingMarkersDao.insertMany(list)
         } catch (e: Exception) {
             Log.e(TAG, "Couldn't insert pending markers.")

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 
-@Entity(tableName = "PendingMarkers",
+@Entity(tableName = "PendingMarker",
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,
@@ -18,7 +18,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
     ],
     indices = [Index("messageId", "name", unique = true)]
 )
-data class PendingMarkersEntity(
+data class PendingMarkerEntity(
         @PrimaryKey(autoGenerate = true)
         val primaryKey: Int = 0,
         val channelId: Long,

@@ -30,6 +30,7 @@ import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import java.util.*
 import kotlin.math.abs
 
@@ -96,15 +97,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     @SuppressLint("ClickableViewAccessibility")
     private fun SceytRecordViewBinding.setupRecorder() {
         imageViewAudio.setOnTouchListener(OnTouchListener { view, motionEvent ->
-            if (context.permissionIgnored(Manifest.permission.RECORD_AUDIO)) {
-                showPermissionSettingsDialog()
-                return@OnTouchListener false
-            }
 
-            if (!context.hasPermissions(Manifest.permission.RECORD_AUDIO)) {
-                context.asActivity().requestPermissionsSafety(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
-                return@OnTouchListener false
-            }
 
             when (motionEvent.action) {
                 ACTION_DOWN -> {
@@ -112,6 +105,9 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                         // If its already locked, unlock and send
                         isLocked = false
                     } else {
+                        if (!context.checkAndAskPermissions(requestVoicePermissionLauncher, Manifest.permission.RECORD_AUDIO))
+                            return@OnTouchListener false
+
                         cancelOffset = screenWidthPx() / 2.8f
                         lockOffset = screenWidthPx() / 2.5f
                         if (firstX == 0f) {
@@ -447,6 +443,15 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                 intent.data = uri
                 context.startActivity(intent)
             })
+    }
+
+    private val requestVoicePermissionLauncher = context.asComponentActivity().initPermissionLauncher {
+        onVoicePermissionResult(it)
+    }
+
+    private fun onVoicePermissionResult(isGranted: Boolean) {
+        if (!isGranted && context.permissionIgnored(Manifest.permission.RECORD_AUDIO))
+            showPermissionSettingsDialog()
     }
 
     fun setListener(listener: RecordingListener) {

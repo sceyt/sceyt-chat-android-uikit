@@ -388,7 +388,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     fun setToolbarMenu(@MenuRes resId: Int, listener: Toolbar.OnMenuItemClickListener) {
-        with(binding.toolbar) {
+        with(binding.headerToolbar) {
             inflateMenu(resId)
             setOnMenuItemClickListener(listener)
         }

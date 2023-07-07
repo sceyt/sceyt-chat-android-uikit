@@ -11,18 +11,19 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.databinding.SceytBottomShetReactionsInfoBinding
 import com.sceyt.sceytchatuikit.extensions.dismissSafety
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters.FragmentReactedUsers
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters.ReactionHeaderItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters.ReactionsHeaderAdapter
@@ -39,7 +40,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
     private var headerAdapter: ReactionsHeaderAdapter? = null
     private var pagerAdapter: ViewPagerAdapterReactedUsers? = null
     private lateinit var message: SceytMessage
-    private var reactionClick: ((Reaction) -> Unit)? = null
+    private var reactionClick: ((SceytReaction) -> Unit)? = null
     private var pagerCallback: ViewPager2.OnPageChangeCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,12 +78,12 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
                 val reactionTotal = eventData.message.reactionTotals?.find { it.key == eventData.reaction.key }
                         ?: ReactionTotal(eventData.reaction.key, 0, eventData.reaction.score.toLong())
                 when (eventData.eventType) {
-                    ReactionUpdateEventEnum.ADD -> {
+                    ReactionUpdateEventEnum.Add -> {
                         headerAdapter?.addOrUpdateItem(reactionTotal)
                         pagerAdapter?.addOrUpdateItem(createReactedUsersFragment(eventData.reaction.key, message.id), eventData.reaction)
                     }
 
-                    ReactionUpdateEventEnum.REMOVE -> {
+                    ReactionUpdateEventEnum.Remove -> {
                         if (reactionTotal.score == 0L) {
                             headerAdapter?.removeItem(eventData.reaction)
                             pagerAdapter?.removeFragment(eventData.reaction.key)
@@ -110,23 +111,23 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
             }
 
     private fun initAdapters() {
-        initHeaderAdapter(message.reactionTotals ?: emptyArray())
-        initPager(message.reactionTotals ?: emptyArray())
+        initHeaderAdapter(message.messageReactions ?: emptyList())
+        initPager(message.messageReactions ?: emptyList())
     }
 
-    private fun initHeaderAdapter(data: Array<ReactionTotal>) {
-        val reactions: ArrayList<ReactionHeaderItem> = data.map { ReactionHeaderItem.Reaction(it) }.toArrayList()
-        reactions.add(0, ReactionHeaderItem.All(message.reactionTotals?.sumOf { it.score } ?: 0))
+    private fun initHeaderAdapter(data: List<ReactionItem.Reaction>) {
+        val reactions: ArrayList<ReactionHeaderItem> = data.map { ReactionHeaderItem.Reaction(it.reaction) }.toArrayList()
+        reactions.add(0, ReactionHeaderItem.All(message.messageReactions?.sumOf { it.reaction.score }?.toLong() ?: 0))
         headerAdapter = ReactionsHeaderAdapter(reactions) { _, position ->
             binding.viewPager.currentItem = position
         }
         binding.rvReactions.adapter = headerAdapter
     }
 
-    private fun initPager(data: Array<ReactionTotal>) {
+    private fun initPager(data: List<ReactionItem.Reaction>) {
         val messageId = message.id
         val fragments: ArrayList<FragmentReactedUsers> = data.map {
-            createReactedUsersFragment(it.key, messageId)
+            createReactedUsersFragment(it.reaction.key, messageId)
         }.toArrayList().apply {
             add(0, createReactedUsersFragment("", messageId))
         }
@@ -175,7 +176,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
         }
     }
 
-    fun setClickListener(listener: (Reaction) -> Unit) {
+    fun setClickListener(listener: (SceytReaction) -> Unit) {
         reactionClick = listener
     }
 

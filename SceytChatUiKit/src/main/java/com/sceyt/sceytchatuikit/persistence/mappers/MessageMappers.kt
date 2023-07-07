@@ -58,8 +58,9 @@ fun SceytMessage.toMessageDb(isParentMessage: Boolean): MessageDb {
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
         userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
-        reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) },
+        reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
         forwardingUser = forwardingDetails?.user?.toUserEntity(),
+        pendingReactions = null,
         mentionedUsers = null
     )
 }
@@ -83,7 +84,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             state = state,
             user = from?.toUser(),
             attachments = attachments?.map { it.toAttachment() }?.toTypedArray(),
-            userReactions = selfReactions?.map { it.toReaction() }?.toTypedArray(),
+            userReactions = selfReactions?.map { it.toSceytReaction() }?.toTypedArray(),
             reactionTotals = reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerTotals = markerCount?.toTypedArray(),
             userMarkers = userMarkers?.map {
@@ -96,7 +97,8 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             replyCount = replyCount,
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
-            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
+            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser()),
+            pendingReactions = pendingReactions?.map { it.toReactionData() }
         )
     }
 }
@@ -117,7 +119,7 @@ fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     }, null)
 }
 
-fun Marker.toMarkerEntity( ): MarkerEntity {
+fun Marker.toMarkerEntity(): MarkerEntity {
     return MarkerEntity(messageId, user.id, name, createdAt)
 }
 
@@ -147,7 +149,8 @@ private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAt
     replyCount = replyCount,
     displayCount = displayCount,
     autoDeleteAt = autoDeleteAt,
-    forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null)
+    forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
+    pendingReactions = null
 )
 
 fun MessageDb.toMessage(): Message {
@@ -212,7 +215,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
             }
             it.toSceytAttachment(tid, transferState, progress)
         }?.toTypedArray(),
-        userReactions = userReactions,
+        userReactions = userReactions?.map { it.toSceytReaction() }?.toTypedArray(),
         reactionTotals = reactionTotals,
         markerTotals = markerTotals,
         userMarkers = emptyArray(),
@@ -221,7 +224,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         replyCount = replyCount,
         displayCount = displayCount.toShort(),
         autoDeleteAt = autoDeleteDate,
-        forwardingDetails = forwardingDetails
+        forwardingDetails = forwardingDetails,
+        pendingReactions = null
     ).apply {
         isGroup?.let {
             this.isGroup = it
@@ -246,7 +250,7 @@ fun SceytMessage.toMessage(): Message {
         state,
         user,
         attachments?.map { it.toAttachment() }?.toTypedArray(),
-        userReactions,
+        userReactions?.map { it.toReaction() }?.toTypedArray(),
         reactionTotals,
         markerTotals,
         userMarkers,

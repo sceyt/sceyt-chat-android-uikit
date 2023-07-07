@@ -47,37 +47,6 @@ private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {
     else tid
 }
 
-fun Channel.toChannelEntity() = ChannelEntity(
-    id = id,
-    parentChannelId = parentChannelId,
-    uri = uri,
-    type = type,
-    subject = subject,
-    avatarUrl = avatarUrl,
-    metadata = metadata,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-    messagesClearedAt = messagesClearedAt,
-    memberCount = memberCount,
-    createdById = createdBy?.id,
-    userRole = userRole,
-    unread = isUnread,
-    newMessageCount = newMessageCount,
-    newMentionCount = newMentionCount,
-    newReactedMessageCount = newReactedMessageCount,
-    hidden = isHidden,
-    archived = isArchived,
-    muted = isMuted,
-    mutedTill = mutedTill,
-    pinnedAt = pinnedAt,
-    lastReceivedMessageId = lastReceivedMessageId,
-    lastDisplayedMessageId = lastDisplayedMessageId,
-    messageRetentionPeriod = messageRetentionPeriod,
-    lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
-    lastMessageAt = lastMessage?.createdAt?.time,
-    pending = false
-)
-
 fun ChannelDb.toChannel(): SceytChannel {
     with(channelEntity) {
         return SceytChannel(
@@ -109,7 +78,8 @@ fun ChannelDb.toChannel(): SceytChannel {
             lastMessage = lastMessage?.toSceytMessage(),
             messages = emptyList(),
             members = members?.map { it.toSceytMember() },
-            newReactions = newReactions?.map { it.toReaction() },
+            newReactions = newReactions?.map { it.toSceytReaction() },
+            pendingReactions = pendingReactions?.map { it.toReactionData() },
             pending = pending
         ).apply {
             draftMessage = this@toChannel.draftMessage?.toDraftMessage()
@@ -147,7 +117,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         lastMessage = lastMessage?.toSceytUiMessage(),
         messages = messages?.map { it.toSceytUiMessage() },
         members = members?.map { it.toSceytMember() },
-        newReactions = newReactions,
+        newReactions = newReactions.map { it.toSceytReaction() },
+        pendingReactions = null,
         pending = false
     )
 }
@@ -183,6 +154,7 @@ fun createPendingDirectChannelData(channelId: Long, createdBy: User, members: Li
         messages = null,
         members = members,
         newReactions = null,
+        pendingReactions = null,
         pending = true
     )
 }
