@@ -58,9 +58,9 @@ import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
@@ -506,13 +506,20 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
+        suspend fun doOnSuccess(message: SceytMessage) {
+            messageDao.updateMessage(message.toMessageEntity(false))
+            messagesCache.messageUpdated(channelId, message)
+            persistenceChannelsLogic.onMessageEditedOrDeleted(message)
+        }
+
+        if (message.deliveryStatus == DeliveryStatus.Pending) {
+            doOnSuccess(message)
+            return SceytResponse.Success(message)
+        }
+
         val response = messagesRepository.editMessage(channelId, message)
         if (response is SceytResponse.Success) {
-            response.data?.let { updatedMsg ->
-                messageDao.updateMessage(updatedMsg.toMessageEntity(false))
-                messagesCache.messageUpdated(channelId, updatedMsg)
-                persistenceChannelsLogic.onMessageEditedOrDeleted(updatedMsg)
-            }
+            response.data?.let { updatedMsg -> doOnSuccess(updatedMsg) }
         }
         return response
     }

@@ -18,9 +18,9 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.awaitToScrollFinish
@@ -198,8 +198,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions {
-        val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList() ?: arrayListOf()
+    private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions? {
+        if (message.deliveryStatus == DeliveryStatus.Pending) return null
+        val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList()
+                ?: arrayListOf()
         if (reactions.size < MAX_SELF_REACTIONS_SIZE)
             reactions.addAll(SceytKitConfig.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
 
@@ -310,8 +312,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage) {
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
-            if (item is MessageItem && ((message.id != 0L && item.message.id == message.id) ||
-                            (item.message.id == 0L && item.message.tid == message.tid))) {
+            if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
                 item.message.updateMessage(message)
                 updateItem(index, item, oldMessage.diff(item.message))
@@ -350,6 +351,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             else
                 updateItem(it.first, it.second, oldMessage.diff(message))
         }
+    }
+
+    internal fun forceDeleteMessageByTid(tid: Long) {
+        messagesRV.deleteMessageByTid(tid)
+        if (messagesRV.isEmpty())
+            pageStateView?.updateState(PageState.StateEmpty())
     }
 
     internal fun updateReaction(data: SceytMessage) {
