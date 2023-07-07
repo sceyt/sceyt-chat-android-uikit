@@ -7,9 +7,10 @@ import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoAllReactionsHeaderBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemInfoReactionHeaderBinding
 import com.sceyt.sceytchatuikit.extensions.dpToPx
@@ -116,15 +117,15 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
 
     fun addOrUpdateItem(reaction: ReactionTotal) {
         data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
-            (it.second as ReactionHeaderItem.Reaction).reactionTotal = ReactionTotal(reaction.key, reaction.count, reaction.score)
+            (it.second as ReactionHeaderItem.Reaction).reactionTotal = SceytReactionTotal(reaction.key, reaction.score.toInt(), false)
             notifyItemChanged(it.first, Any())
         } ?: let {
-            data.add(ReactionHeaderItem.Reaction(ReactionTotal(reaction.key, reaction.count, reaction.score)))
+            data.add(ReactionHeaderItem.Reaction(SceytReactionTotal(reaction.key, reaction.score.toInt(), false)))
             notifyItemInserted(data.lastIndex)
         }
     }
 
-    fun removeItem(reaction: Reaction) {
+    fun removeItem(reaction: SceytReaction) {
         data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
             data.removeAt(it.first)
             notifyItemRemoved(it.first)

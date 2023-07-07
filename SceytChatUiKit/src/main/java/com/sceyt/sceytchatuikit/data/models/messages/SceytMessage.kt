@@ -6,7 +6,6 @@ import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -31,7 +30,7 @@ open class SceytMessage(var id: Long,
                         var state: MessageState,
                         var user: User?,
                         var attachments: Array<SceytAttachment>?,
-                        var userReactions: Array<Reaction>?,
+                        var userReactions: Array<SceytReaction>?,
                         var reactionTotals: Array<ReactionTotal>?,
                         var markerTotals: Array<MarkerTotal>?,
                         var userMarkers: Array<Marker>?,
@@ -40,7 +39,8 @@ open class SceytMessage(var id: Long,
                         var replyCount: Long,
                         val displayCount: Short,
                         var autoDeleteAt: Long?,
-                        var forwardingDetails: ForwardingDetails?) : Parcelable, Cloneable {
+                        var forwardingDetails: ForwardingDetails?,
+                        var pendingReactions: List<PendingReactionData>?) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -90,6 +90,7 @@ open class SceytMessage(var id: Long,
         // Update inner data
         messageReactions = message.messageReactions
         files = message.files
+        pendingReactions = message.pendingReactions
     }
 
     public override fun clone(): SceytMessage {
@@ -118,7 +119,8 @@ open class SceytMessage(var id: Long,
             replyCount = replyCount,
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
-            forwardingDetails = forwardingDetails).also {
+            forwardingDetails = forwardingDetails,
+            pendingReactions = pendingReactions).also {
             it.messageReactions = messageReactions
             it.files = files
         }

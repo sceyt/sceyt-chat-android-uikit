@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
@@ -164,21 +165,28 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
         if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false
-        val lastReaction = channel.newReactions?.maxByOrNull { it.id } ?: return false
+        val pendingAddOrRemoveReaction = channel.pendingReactions?.groupBy { it.isAdd }
+        val addReactions = pendingAddOrRemoveReaction?.get(true)
+        val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
+        val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
+                ?: channel.newReactions?.filter {
+                    removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
+                }?.maxByOrNull { it.id } ?: return false
+
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
 
-        if (lastReaction.id > (channel.lastMessage?.id ?: 0)) {
+        if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
             val toMessage = if (message != null) "\"${message.getShowBody(context)}\"" else itemView.getString(R.string.sceyt_message).lowercase()
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = SceytKitConfig.userNameBuilder?.invoke(lastReaction.user)
+                    val name = lastReaction.user?.let { SceytKitConfig.userNameBuilder?.invoke(it) }
                             ?: lastReaction.user?.getPresentableNameWithYou(context)
                     "$name ${reactedWord.lowercase()}"
                 }
 
-                lastReaction.user.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
+                lastReaction.user?.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
                 else -> reactedWord
             }
 
@@ -296,7 +304,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             channel.lastMessage != null -> {
                 val lastMessageCreatedAt = channel.lastMessage?.createdAt ?: 0L
-                val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt?.time
+                val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt
                         ?: 0
                 if (lastReactionCreatedAt > lastMessageCreatedAt)
                     lastReactionCreatedAt

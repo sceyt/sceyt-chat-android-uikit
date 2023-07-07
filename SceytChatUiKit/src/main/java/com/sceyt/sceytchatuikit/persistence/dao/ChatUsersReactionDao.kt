@@ -23,9 +23,13 @@ interface ChatUsersReactionDao {
     @Query("select * from ChatUserReactionEntity where channelId =:channelId")
     suspend fun getChannelUserReactions(channelId: Long): List<ChatUserReactionDb>
 
-    @Query("delete from ChatUserReactionEntity where channelId in(:channelIds)")
+    @Query("delete from ChatUserReactionEntity where channelId in (:channelIds)")
     suspend fun deleteChannelsUserReactions(channelIds: List<Long>)
 
-    @Query("delete from ChatUserReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId and channelId =:channelId")
+    @Query("delete from ChatUserReactionEntity where messageId =:messageId and reaction_key =:key " +
+            "and fromId =:fromId and channelId =:channelId")
     suspend fun deleteChannelUserReaction(channelId: Long, messageId: Long, key: String?, fromId: String?)
+
+    @Query("delete from ChatUserReactionEntity where messageId =:messageId and channelId =:channelId")
+    suspend fun deleteChannelMessageUserReaction(channelId: Long, messageId: Long)
 }

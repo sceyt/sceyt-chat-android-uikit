@@ -28,7 +28,7 @@ import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
@@ -127,10 +127,12 @@ class MessageListViewModel(
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
+
     //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
-   // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
+
+    // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onTransferUpdatedLiveData: LiveData<TransferData>
 
 
@@ -155,11 +157,11 @@ class MessageListViewModel(
             .filter { it.first.id == channel.id /*&& it.second.replyInThread == replyInThread*/ }
             .mapNotNull { initMessageInfoData(it.second) }
 
-      /*
-     // todo reply in thread
-      onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
-            .filter { it.first.id == channel.id && it.second.replyInThread }
-            .mapNotNull { initMessageInfoData(it.second) }*/
+        /*
+       // todo reply in thread
+        onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
+              .filter { it.first.id == channel.id && it.second.replyInThread }
+              .mapNotNull { initMessageInfoData(it.second) }*/
 
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
             .filter { it.channel.id == channel.id }
@@ -377,15 +379,15 @@ class MessageListViewModel(
 
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey)
-            notifyPageStateWithResponse(response)
+            val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey, 1)
+            notifyPageStateWithResponse(response, showError = false)
         }
     }
 
-    fun deleteReaction(message: SceytMessage, scoreKey: String) {
+    fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
-            notifyPageStateWithResponse(response)
+            val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey, isPending)
+            notifyPageStateWithResponse(response, showError = false)
         }
     }
 
@@ -520,12 +522,37 @@ class MessageListViewModel(
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
-        return message.reactionTotals?.map {
-            ReactionItem.Reaction(ReactionData(it.key, it.score,
+        val pendingReactions = message.pendingReactions
+        val reactionItems = message.reactionTotals?.map {
+            ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
                 message.userReactions?.find { reaction ->
-                    reaction.key == it.key && reaction.user.id == SceytKitClient.myId
-                } != null), message)
-        }?.sortedBy { it.reaction.key }
+                    reaction.key == it.key && reaction.user?.id == SceytKitClient.myId
+                } != null), message, false)
+        }?.toMutableList()
+
+        if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
+            pendingReactions.forEach { pendingReaction ->
+                reactionItems.find { it.reaction.key == pendingReaction.key }?.let { item ->
+                    if (pendingReaction.isAdd) {
+                        item.reaction.score += pendingReaction.score
+                        item.reaction.containsSelf = true
+                        item.isPending = true
+                    } else {
+                        item.reaction.score -= pendingReaction.score
+                        if (item.reaction.score <= 0)
+                            reactionItems.remove(item)
+                        else {
+                            item.reaction.containsSelf = false
+                            item.isPending = false
+                        }
+                    }
+                } ?: run {
+                    if (pendingReaction.isAdd)
+                        reactionItems.add(ReactionItem.Reaction(SceytReactionTotal(pendingReaction.key, pendingReaction.score, true), message, true))
+                }
+            }
+        }
+        return reactionItems?.sortedBy { it.reaction.key }
     }
 
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
@@ -584,7 +611,7 @@ class MessageListViewModel(
             }
 
             is ReactionEvent.RemoveReaction -> {
-                deleteReaction(event.message, event.scoreKey)
+                deleteReaction(event.message, event.scoreKey, event.isPending)
             }
         }
     }
