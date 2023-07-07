@@ -32,14 +32,25 @@ interface ChannelDao {
     suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where role !=:ignoreRole " +
+    @Query("select * from channels where userRole !=:ignoreRole and (not pending or lastMessageTid != 0) " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
 
     @Transaction
-    @Query("select * from channels where subject LIKE '%' || :query || '%' " +
+    @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0)" +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
+    suspend fun getChannelsBySubject(limit: Int, offset: Int, query: String): List<ChannelDb>
+
+    @Transaction
+    @Query("select * from channels " +
+            "join UserChatLink as link on link.chat_id = channels.chat_id " +
+            "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directChannelType " +
+            "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
+            "or (type =:directChannelType and link.user_id in (:userIds))) " +
+            "group by channels.chat_id " +
+            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
+    suspend fun getChannelsByQueryAndUserIds(query: String, userIds: List<String>, limit: Int, offset: Int, onlyMine: Boolean,
+                                             directChannelType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
 
     @Transaction
     @RawQuery
@@ -65,9 +76,9 @@ interface ChannelDao {
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:channelTypeEnum")
-    suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
+    suspend fun getDirectChannel(peerId: String, channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
 
-    @Query("select chat_id from channels where chat_id not in (:ids)")
+    @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
 
     @Query("select chat_id from channels")
@@ -99,7 +110,7 @@ interface ChannelDao {
     @Query("update channels set memberCount =:count where chat_id= :channelId")
     suspend fun updateMemberCount(channelId: Long, count: Int)
 
-    @Query("update channels set muted =:muted, mutedUntil =:muteUntil where chat_id =:channelId")
+    @Query("update channels set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
     @Query("delete from channels where chat_id =:channelId")

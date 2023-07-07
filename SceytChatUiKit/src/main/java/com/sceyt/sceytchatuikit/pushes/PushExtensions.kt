@@ -6,15 +6,16 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import okhttp3.internal.toLongOrDefault
 import org.json.JSONObject
 
-fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, from: User?): Message? {
+fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
     return try {
         val messageJson = remoteMessage.data["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
@@ -40,12 +41,11 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
         }
 
         val messageId = messageIdString.toLong()
-
         Message(messageId, messageId, channelId
-                ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
-            0L, true, true, transient, false, false, DeliveryStatus.Sent, MessageState.None,
-            from, attachmentArray.toTypedArray(), null, null, null, null,
-            null, null, false, 0, 0, null)
+                ?: return null, bodyString, messageType, meta, createdAt?.time ?: 0,
+            0L, true, transient, false, DeliveryStatus.Sent, MessageState.Unmodified,
+            user, attachmentArray.toTypedArray(), null, null, null, null,
+            null, null, 0, 0, 0, null)
     } catch (e: Exception) {
         e.printStackTrace()
         null
@@ -62,7 +62,7 @@ fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
         val meta = userJsonObject.getString("metadata")
         val presence = userJsonObject.getString("presence_status")
         User(id, fName, lName, "", meta, Presence(PresenceState.Online, presence, 0),
-            UserActivityStatus.Active, false)
+            UserActivityState.Active, false)
     } catch (e: Exception) {
         e.printStackTrace()
         null
@@ -79,8 +79,8 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? 
         val subject = channelJsonObject.getString("subject")
         val meta = channelJsonObject.getString("metadata")
         val membersCount = channelJsonObject.getLong("members_count")
-        val channel = Channel(id, 0, uri, subject, meta, null, meta, 0,
-            0, 0, membersCount, null, "", false, 0, 0,
+        val channel = Channel(id, 0, uri, type, subject, null, meta, 0, 0,
+            0, membersCount, null, "", false, 0, 0,
             0, false, false, false, 0, 0, 0,
             0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
         channel
@@ -104,13 +104,14 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
     }
 }
 
-fun getReactionScoreFromPushJson(json: String?): ReactionScore? {
+fun getReactionTotalFromPushJson(json: String?): ReactionTotal? {
     return try {
         val jsonObject = JSONObject(json ?: return null)
         val key = jsonObject.getString("key")
         val score = jsonObject.getString("score").toLong()
+        val count = jsonObject.getString("count").toLongOrDefault(1)
         if (key.isEmpty() || score == 0L) return null
-        ReactionScore(key, score)
+        ReactionTotal(key, count, score)
     } catch (e: Exception) {
         e.printStackTrace()
         null

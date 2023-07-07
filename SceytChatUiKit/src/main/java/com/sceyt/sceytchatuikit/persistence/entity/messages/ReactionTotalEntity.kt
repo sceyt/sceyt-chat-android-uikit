@@ -11,12 +11,13 @@ import androidx.room.*
         deferred = true
     )],
     indices = [Index("messageId", "reaction_key", unique = true)])
-data class ReactionScoreEntity(
+data class ReactionTotalEntity(
         @PrimaryKey(autoGenerate = true)
         val id: Int = 0,
         @ColumnInfo(index = true)
         val messageId: Long,
         @ColumnInfo(name = "reaction_key", index = true)
         var key: String,
-        var score: Int
+        var score: Int,
+        var count: Long
 )

@@ -116,6 +116,13 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return null
     }
 
+    fun replaceChannel(first: Long, second: SceytChannel) {
+        channelsRV.getChannelIndexed(first)?.let { pair ->
+            val channelItem = pair.second
+            channelItem.channel = second.clone()
+        }
+    }
+
     internal fun channelDraftMessageUpdated(channelId: Long, draftMessage: DraftMessage?): ChannelItemPayloadDiff? {
         channelsRV.getChannelIndexed(channelId)?.let { pair ->
             val channelItem = pair.second
@@ -149,7 +156,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             channelsRV.getChannels()?.find {
                 it.channel.isDirect() && it.channel.getFirstMember()?.id == user.id
             }?.let {
-                it.channel.members?.getOrNull(0)?.user = user
+                it.channel.getFirstMember()?.user = user
             }
         }
     }

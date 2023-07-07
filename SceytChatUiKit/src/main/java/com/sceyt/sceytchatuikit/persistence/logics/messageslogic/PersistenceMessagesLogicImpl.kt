@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.WorkManager
 import androidx.work.await
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -27,34 +28,38 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Displayed
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Displayed
-import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
-import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkersEntity
+import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toReaction
-import com.sceyt.sceytchatuikit.persistence.mappers.toReactionScoreEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -65,30 +70,38 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
         private val messageDao: MessageDao,
+        private val attachmentDao: AttachmentDao,
         private val pendingMarkersDao: PendingMarkersDao,
         private val reactionDao: ReactionDao,
         private val userDao: UserDao,
         private val fileTransferService: FileTransferService,
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference,
-        private val messagesCache: MessagesCache
+        private val messagesCache: MessagesCache,
+        private val channelCache: ChannelsCache
 ) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
+    private val createChannelAndSendMessageMutex = Mutex()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -100,7 +113,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean) {
         val message = data.second
 
-        message.parent?.let { parent ->
+        message.parentMessage?.let { parent ->
             saveMessagesToDb(arrayListOf(message, parent))
         } ?: run { saveMessagesToDb(arrayListOf(message)) }
 
@@ -122,7 +135,7 @@ internal class PersistenceMessagesLogicImpl(
 
             val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
 
-            val isReaction = data.reactionScore != null
+            val isReaction = data.reactionTotal != null
 
             if (messageDb == null && !isReaction) {
                 onMessage(Pair(data.channel, data.message), false)
@@ -130,8 +143,8 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             if (messageDb != null)
-                data.reactionScore?.toReactionScoreEntity(message.id)?.let {
-                    reactionDao.insertReactionScore(it)
+                data.reactionTotal?.toReactionTotalEntity(message.id)?.let {
+                    reactionDao.insertReactionTotal(it)
                 }
         }
     }
@@ -143,7 +156,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
-        data.selfReactions = selfReactions.map { it.toReaction() }.toTypedArray()
+        data.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
         messagesCache.messageUpdated(data.channelId, data)
         if (data.state == MessageState.Deleted)
@@ -209,46 +222,155 @@ internal class PersistenceMessagesLogicImpl(
         val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
         if (response is SceytResponse.Success) {
             val tIds = getMessagesTid(response.data)
-            val payloads = messageDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
+            val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
             response.data?.forEach {
                 findAndUpdateAttachmentPayLoads(it, payloads)
-                it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
+                it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
             }
         }
         return response
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message) {
-        val tmpMessage = tmpMessageToSceytMessage(channelId, message)
-        MessageEventsObserver.emitOutgoingMessage(tmpMessage)
-        insertTmpMessageToDb(tmpMessage)
-        messagesCache.add(channelId, tmpMessage)
-
-        if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId).await()
-        } else {
-            val response = messagesRepository.sendMessage(channelId, message)
-            onMessageSentResponse(channelId, response)
-        }
+        sendMessageAsFlow(channelId, message).collect()
     }
 
     override suspend fun sendMessages(channelId: Long, messages: List<Message>) {
         messages.forEach {
-            sendMessage(channelId, it)
+            sendMessageAsFlow(channelId, it).collect()
         }
     }
 
-    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> = callbackFlow {
+    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {
+        val channel = channelCache.get(channelId)
+                ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+        if (channel?.pending == true) {
+            return createChannelAndSendMessageWithLock(channel, message, isPendingMessage = false, isUploadedAttachments = false).also {
+                if (!createChannelAndSendMessageMutex.isLocked)
+                    channelCache.removeFromPendingToRealChannelsData(channelId)
+            }
+        }
+        return sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = false, isUploadedAttachments = false)
+    }
+
+    private suspend fun createChannelAndSendMessageWithLock(channel: SceytChannel, message: Message,
+                                                            isPendingMessage: Boolean, isUploadedAttachments: Boolean): Flow<SendMessageResult> {
+        createChannelAndSendMessageMutex.withLock {
+            val channelId = channel.id
+            channel.lastMessage = message.toSceytUiMessage()
+            Log.i("experimentChannel", "channelId $channelId")
+            channelCache.getRealChannelIdWithPendingChannelId(channelId)?.let {
+                message.channelId = it
+                Log.i("experimentChannel", "found in cash $it")
+                return sendMessageImpl(it, message, false, isPendingMessage, isUploadedAttachments)
+            }
+
+            when (val response = createNewChannelInsteadOfPendingChannel(channel)) {
+                is SceytResponse.Success -> {
+                    val newChannelId = response.data?.id ?: 0L
+                    message.channelId = newChannelId
+                    Log.i("experimentChannel", "send new message: ${message.channelId}")
+                    return sendMessageImpl(newChannelId, message, false, isPendingMessage, isUploadedAttachments)
+                }
+
+                is SceytResponse.Error -> {
+                    channelCache.addPendingChannel(channel)
+                    Log.e("experimentChannel", "created new channel failed ${response.exception?.message}")
+
+                    return callbackFlow {
+                        if (!isPendingMessage && !isUploadedAttachments)
+                            emitTmpMessageAndStore(channelId, message, this.channel)
+
+                        trySend(SendMessageResult.Error(SceytResponse.Error(response.exception)))
+                        this.channel.close()
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun emitTmpMessageAndStore(channelId: Long, message: Message, sendChannel: SendChannel<SendMessageResult>) {
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
-        trySend(SendMessageResult.TempMessage(tmpMessage))
+        sendChannel.trySend(SendMessageResult.TempMessage(tmpMessage))
         insertTmpMessageToDb(tmpMessage)
         messagesCache.add(channelId, tmpMessage)
-
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
+    }
 
-        if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId).await()
+    private suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
+        val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(channel)
+        if (response is SceytResponse.Success) {
+            response.data?.let { messagesCache.moveMessagesToNewChannel(channel.id, it.id) }
+        }
+        return response
+    }
+
+    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) {
+        sendMessageImpl(channelId, message, isSharing = true, isPendingMessage = false, false).collect()
+    }
+
+    override suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean> {
+        var areSentAllWithSuccessResult = true
+        messagesToSend.forEach {
+            val tmpMessage = it.toSceytUiMessage().apply {
+                createdAt = System.currentTimeMillis()
+                user = ClientWrapper.currentUser ?: User(preference.getUserId())
+            }
+            MessageEventsObserver.emitOutgoingMessage(tmpMessage)
+            insertTmpMessageToDb(tmpMessage)
+            it.attachments?.forEach { attachment ->
+                if (attachment.type != AttachmentTypeEnum.Link.value())
+                    persistenceAttachmentLogic.updateAttachmentWithTransferData(
+                        TransferData(tmpMessage.tid, 100f,
+                            TransferState.Uploaded, attachment.filePath, attachment.url))
+            }
+            messagesCache.add(channelId, tmpMessage)
+            val response = sendMessageWithUploadedAttachments(channelId, it)
+            if (response is SceytResponse.Error)
+                areSentAllWithSuccessResult = false
+        }
+        return SceytResponse.Success(areSentAllWithSuccessResult)
+    }
+
+    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
+        val channel = channelCache.get(channelId)
+                ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+        val response = if (channel?.pending == true) {
+            when (val createChannelResponse = createNewChannelInsteadOfPendingChannel(channel)) {
+                is SceytResponse.Success -> {
+                    val newChannelId = createChannelResponse.data?.id ?: 0L
+                    message.channelId = newChannelId
+                    sendMessageImpl(newChannelId, message, isSharing = false,
+                        isPendingMessage = false, isUploadedAttachments = true).first {
+                        it.isServerResponse()
+                    }.response()
+                }
+
+                is SceytResponse.Error -> SceytResponse.Error(createChannelResponse.exception)
+            }
+        } else {
+            sendMessageImpl(channelId, message, isSharing = false,
+                isPendingMessage = false, isUploadedAttachments = true).first {
+                it.isServerResponse()
+            }.response()
+        }
+        if (response is SceytResponse.Success)
+            response.data?.let { persistenceAttachmentLogic.updateAttachmentIdAndMessageId(it) }
+
+        return response
+                ?: SceytResponse.Error(SceytException(0, "sendMessageWithUploadedAttachments: response is null"))
+    }
+
+
+    private fun sendMessageImpl(channelId: Long, message: Message, isSharing: Boolean, isPendingMessage: Boolean, isUploadedAttachments: Boolean) = callbackFlow {
+        // If message is pending, we don't need to insert it to db and emit it to UI as outgoing message
+        if (!isPendingMessage && !isUploadedAttachments)
+            emitTmpMessageAndStore(channelId, message, this.channel)
+
+        if (checkHasFileAttachments(message) && !isUploadedAttachments) {
+            SendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing).await()
             trySend(SendMessageResult.StartedSendingAttachment)
+            channel.close()
         } else {
             messagesRepository.sendMessageAsFlow(channelId, message)
                 .onCompletion { channel.close() }
@@ -262,54 +384,10 @@ internal class PersistenceMessagesLogicImpl(
         awaitClose()
     }
 
-    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) {
-        val tmpMessage = tmpMessageToSceytMessage(channelId, message)
-        MessageEventsObserver.emitOutgoingMessage(tmpMessage)
-        insertTmpMessageToDb(tmpMessage)
-        messagesCache.add(channelId, tmpMessage)
-
-        if (checkHasFileAttachments(message)) {
-            SendAttachmentWorkManager.schedule(context, tmpMessage.tid, channelId, true).await()
-        } else {
-            val response = messagesRepository.sendMessage(channelId, message)
-            onMessageSentResponse(channelId, response)
-        }
-    }
-
-    override suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean> {
-        var areSentAllWithSuccessResult = true
-        messagesToSend.forEach {
-            val tmpMessage = it.toSceytUiMessage().apply {
-                createdAt = System.currentTimeMillis()
-                from = ClientWrapper.currentUser ?: User(preference.getUserId())
-            }
-            MessageEventsObserver.emitOutgoingMessage(tmpMessage)
-            insertTmpMessageToDb(tmpMessage)
-            it.attachments?.forEach { attachment ->
-                if (attachment.type != AttachmentTypeEnum.Link.value())
-                    persistenceAttachmentLogic.updateAttachmentWithTransferData(
-                        TransferData(tmpMessage.tid, attachment.tid, 100f,
-                            TransferState.Uploaded, attachment.filePath, attachment.url))
-            }
-            messagesCache.add(channelId, tmpMessage)
-            val response = sendMessageWithUploadedAttachments(channelId, it)
-            if (response is SceytResponse.Error)
-                areSentAllWithSuccessResult = false
-        }
-        return SceytResponse.Success(areSentAllWithSuccessResult)
-    }
-
-    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
-        val response = messagesRepository.sendMessage(channelId, message)
-        onMessageSentResponse(channelId, response)
-        response.data?.let { persistenceAttachmentLogic.updateAttachmentIdAndMessageId(it) }
-        return response
-    }
-
     private fun tmpMessageToSceytMessage(channelId: Long, message: Message): SceytMessage {
         val tmpMessage = message.toSceytUiMessage().apply {
             createdAt = System.currentTimeMillis()
-            from = ClientWrapper.currentUser ?: User(preference.getUserId())
+            user = ClientWrapper.currentUser ?: User(preference.getUserId())
             this.channelId = channelId
             attachments?.map {
                 it.transferState = TransferState.Uploading
@@ -332,8 +410,10 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
         val tmpMessageDb = message.toMessageDb(false).also {
             it.messageEntity.id = null
+            /*
+            // todo reply in thread
             if (message.replyInThread)
-                it.messageEntity.channelId = message.parent?.id ?: 0
+                 it.messageEntity.channelId = message.parentMessage?.id ?: 0*/
         }
         messageDao.upsertMessage(tmpMessageDb)
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
@@ -376,38 +456,31 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun sendPendingMessages(channelId: Long) {
         val pendingMessages = messageDao.getPendingMessages(channelId)
+        val channel = channelCache.get(channelId)
+                ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+
         if (pendingMessages.isNotEmpty()) {
-            pendingMessages.forEach {
-                val message = it.toMessage()
-                if (checkHasFileAttachments(message)) {
-                    SendAttachmentWorkManager.schedule(context, message.tid, channelId)
-                } else {
-                    val response = messagesRepository.sendMessage(channelId, message)
-                    onMessageSentResponse(channelId, response)
+            if (channel?.pending == true) {
+                pendingMessages.forEach {
+                    createChannelAndSendMessageWithLock(channel, it.toMessage(), isPendingMessage = true, isUploadedAttachments = false).collect()
+                }
+                if (!createChannelAndSendMessageMutex.isLocked)
+                    channelCache.removeFromPendingToRealChannelsData(channelId)
+            } else {
+                pendingMessages.forEach {
+                    val message = it.toMessage()
+                    sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = true, isUploadedAttachments = false).collect()
                 }
             }
         }
     }
 
     override suspend fun sendAllPendingMessages() {
-        val pendingMessages = messageDao.getAllPendingMessages()
-        if (pendingMessages.isNotEmpty()) {
-            pendingMessages.forEach {
-                val message = it.toMessage()
-                if (checkHasFileAttachments(message)) {
-                    SendAttachmentWorkManager.schedule(context, message.tid, message.channelId).await()
-                } else {
-                    val response = messagesRepository.sendMessage(it.messageEntity.channelId, message)
-                    if (response is SceytResponse.Success) {
-                        response.data?.let { responseMsg ->
-                            messageDao.updateMessageByParams(
-                                tid = responseMsg.tid, serverId = responseMsg.id,
-                                date = responseMsg.createdAt, status = DeliveryStatus.Sent)
-
-                            messagesCache.messageUpdated(it.messageEntity.channelId, responseMsg)
-                        }
-                    } else Log.e("sendMessage", "send pending message error-> ${response.message}")
-                }
+        val pendingMessagesGroup = messageDao.getAllPendingMessages().groupBy { it.messageEntity.channelId }
+        if (pendingMessagesGroup.isNotEmpty()) {
+            pendingMessagesGroup.forEach {
+                val channelId = it.key
+                sendPendingMessages(channelId)
             }
         }
     }
@@ -417,7 +490,7 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMarkers.isNotEmpty()) {
             val groupByChannel = pendingMarkers.groupBy { it.channelId }
             for ((channelId, messages) in groupByChannel) {
-                val messagesByStatus = messages.groupBy { it.status }
+                val messagesByStatus = messages.groupBy { it.name }
                 for ((status, msg) in messagesByStatus)
                     markMessagesAs(channelId, status, *msg.map { it.messageId }.toLongArray())
             }
@@ -581,14 +654,6 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         saveMessagesToDb(messages)
-        val tIds = getMessagesTid(messages)
-        val payloads = messageDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
-
-        messages.forEach {
-            findAndUpdateAttachmentPayLoads(it, payloads)
-            it.parent?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
-        }
-
         hasDiff = messagesCache.addAll(channelId, messages, true)
 
         if (forceHasDiff) hasDiff = true
@@ -603,12 +668,20 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadEntity>) {
-        payloads.find { payLoad -> payLoad.messageTid == message.tid }?.let { entity ->
+        payloads.filter { payLoad -> payLoad.messageTid == message.tid }.let { entity ->
             message.attachments?.forEach { attachment ->
-                attachment.transferState = entity.transferState
-                attachment.progressPercent = entity.progressPercent
-                attachment.filePath = entity.filePath
-                attachment.url = entity.url
+                val predicate: (AttachmentPayLoadEntity) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
+                    { entity.any { it.url == attachment.url } }
+                } else {
+                    { entity.any { it.filePath == attachment.filePath } }
+                }
+
+                payloads.find(predicate)?.let {
+                    attachment.transferState = it.transferState
+                    attachment.progressPercent = it.progressPercent
+                    attachment.filePath = it.filePath
+                    attachment.url = it.url
+                }
             }
         }
     }
@@ -663,11 +736,11 @@ internal class PersistenceMessagesLogicImpl(
         val parentMessagesDb = arrayListOf<MessageDb>()
         for (message in list) {
             messagesDb.add(message.toMessageDb(false))
-            message.parent?.let { parent ->
+            message.parentMessage?.let { parent ->
                 if (parent.id != 0L) {
                     parentMessagesDb.add(parent.toMessageDb(true))
                     if (parent.incoming)
-                        parent.from?.let { user -> usersDb.add(user.toUserEntity()) }
+                        parent.user?.let { user -> usersDb.add(user.toUserEntity()) }
                 }
             }
         }
@@ -675,7 +748,7 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
-        list.filter { it.incoming && it.from != null }.map { it.from!! }.toSet().let { users ->
+        list.filter { it.incoming && it.user != null }.map { it.user!! }.toSet().let { users ->
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
@@ -686,35 +759,35 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun deletedPayloads(id: Long, tid: Long) {
         messageDao.deleteAttachmentsChunked(listOf(tid))
         messageDao.deleteAttachmentsPayloadsChunked(listOf(tid))
-        reactionDao.deleteAllReactionsAndScores(id)
+        reactionDao.deleteAllReactionsAndTotals(id)
     }
 
     private fun getMessagesTid(messages: List<SceytMessage>?): List<Long> {
         val tIds = mutableListOf<Long>()
         messages?.forEach {
             tIds.add(it.tid)
-            it.parent?.let { parent -> tIds.add(parent.tid) }
+            it.parentMessage?.let { parent -> tIds.add(parent.tid) }
         }
         return tIds
     }
 
     private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         val notDisplayedMessages = messages.filter {
-            it.incoming && it.selfMarkers?.contains(Received.value()) != true
+            it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value() } != true
         }
         if (notDisplayedMessages.isNotEmpty())
             markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAs(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+    private suspend fun markMessagesAs(channelId: Long, status: MarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
             addPendingMarkerToDb(channelId, status, *typedArray)
 
             val response = if (status == Displayed)
-                messagesRepository.markAsRead(channelId, *typedArray)
-            else messagesRepository.markAsDelivered(channelId, *typedArray)
+                messagesRepository.markAsDisplayed(channelId, *typedArray)
+            else messagesRepository.markAsReceived(channelId, *typedArray)
             onMarkerResponse(channelId, response, status, *typedArray)
             responseList.add(response)
         }
@@ -722,26 +795,29 @@ internal class PersistenceMessagesLogicImpl(
         return responseList
     }
 
-    private suspend fun addPendingMarkerToDb(channelId: Long, status: SelfMarkerTypeEnum, vararg ids: Long) {
+    private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
         try {
-            val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, status = status) }
+            val list = ids.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
             pendingMarkersDao.insertMany(list)
         } catch (e: Exception) {
             Log.e(TAG, "Couldn't insert pending markers.")
         }
     }
 
-    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: SelfMarkerTypeEnum, vararg ids: Long) {
+    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: MarkerTypeEnum, vararg ids: Long) {
         if (response is SceytResponse.Success) {
-            response.data?.let { messageListMarker ->
+            response.data?.let { data ->
                 val deliveryStatus = status.toDeliveryStatus()
-                messageDao.updateMessagesStatus(channelId, messageListMarker.messageIds, deliveryStatus)
+                messageDao.updateMessagesStatus(channelId, data.messageIds, deliveryStatus)
                 val tIds = messageDao.getMessageTIdsByIds(*ids)
                 messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
                 pendingMarkersDao.deleteMessagesMarkersByStatus(response.data.messageIds, status)
                 ids.forEach {
-                    messageDao.updateMessageSelfMarkers(channelId, it, status.value())
+                    SceytKitClient.myId?.let { userId ->
+                        val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
+                        messageDao.insertUserMarker(markerEntity)
+                    }
                 }
             }
         }

@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -15,7 +15,8 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val otherFirstMember = other.getFirstMember()
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state
-    val userReactionsChanged = newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
+    val pendingReactionChanged = pendingReactions != other.pendingReactions
+    val userReactionsChanged = pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
     val membersCountChanged = memberCount != other.memberCount
     val peerBlockedChanged = isDirect() && firstMember?.user?.blocked != otherFirstMember?.user?.blocked
@@ -49,7 +50,7 @@ fun SceytChannel.getMyRole(): Role? {
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
-    return isDirect() && getFirstMember()?.user?.activityState == UserActivityStatus.Deleted
+    return isDirect() && getFirstMember()?.user?.activityState == UserActivityState.Deleted
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {

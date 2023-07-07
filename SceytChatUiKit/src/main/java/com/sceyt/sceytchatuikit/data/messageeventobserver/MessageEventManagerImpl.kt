@@ -1,8 +1,8 @@
 package com.sceyt.sceytchatuikit.data.messageeventobserver
 
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 
 open class MessageEventManagerImpl : MessageEventManger.AllEventManagers {
     private var defaultListeners: MessageEventManger.AllEventManagers? = null
@@ -29,11 +29,11 @@ open class MessageEventManagerImpl : MessageEventManger.AllEventManagers {
         defaultListeners?.onMessageEdited(message)
     }
 
-    override fun onReactionAdded(message: SceytMessage, reaction: Reaction) {
+    override fun onReactionAdded(message: SceytMessage, reaction: SceytReaction) {
         defaultListeners?.onReactionAdded(message, reaction)
     }
 
-    override fun onReactionDeleted(message: SceytMessage, reaction: Reaction) {
+    override fun onReactionDeleted(message: SceytMessage, reaction: SceytReaction) {
         defaultListeners?.onReactionDeleted(message, reaction)
     }
 

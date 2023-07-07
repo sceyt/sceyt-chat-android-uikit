@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.data.models.messages
 
 import com.sceyt.chat.models.message.DeliveryStatus
 
-enum class SelfMarkerTypeEnum {
+enum class MarkerTypeEnum {
     Displayed,
     Received;
 
@@ -15,8 +15,8 @@ enum class SelfMarkerTypeEnum {
 
     fun toDeliveryStatus(): DeliveryStatus {
         return when (this) {
-            Displayed -> DeliveryStatus.Read
-            Received -> DeliveryStatus.Delivered
+            Displayed -> DeliveryStatus.Displayed
+            Received -> DeliveryStatus.Received
         }
     }
 }

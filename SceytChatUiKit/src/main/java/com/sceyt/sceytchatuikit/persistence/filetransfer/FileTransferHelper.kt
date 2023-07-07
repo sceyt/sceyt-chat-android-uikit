@@ -38,13 +38,12 @@ object FileTransferHelper : SceytKoinComponent {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
         emitAttachmentTransferUpdate(it)
-        messagesLogic.updateTransferDataByMsgTid(it)
     }
 
     fun getDownloadResultCallback(attachment: SceytAttachment) = TransferResultCallback {
         when (it) {
             is SceytResponse.Success -> {
-                val transferData = TransferData(attachment.messageTid, attachment.tid,
+                val transferData = TransferData(attachment.messageTid,
                     100f, TransferState.Downloaded, it.data, attachment.url)
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
@@ -53,7 +52,7 @@ object FileTransferHelper : SceytKoinComponent {
 
             is SceytResponse.Error -> {
                 val transferData = TransferData(
-                    attachment.messageTid, attachment.tid, attachment.progressPercent ?: 0f,
+                    attachment.messageTid, attachment.progressPercent ?: 0f,
                     TransferState.ErrorDownload, null, attachment.url)
 
                 attachment.updateWithTransferData(transferData)
@@ -68,7 +67,7 @@ object FileTransferHelper : SceytKoinComponent {
         when (result) {
             is SceytResponse.Success -> {
                 val transferData = TransferData(attachment.messageTid,
-                    attachment.tid, 100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
+                    100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
@@ -76,8 +75,8 @@ object FileTransferHelper : SceytKoinComponent {
 
             is SceytResponse.Error -> {
                 val transferData = TransferData(attachment.messageTid,
-                    attachment.tid, attachment.progressPercent
-                            ?: 0f, TransferState.ErrorUpload, attachment.filePath, null)
+                    attachment.progressPercent ?: 0f,
+                    TransferState.ErrorUpload, attachment.filePath, null)
 
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
@@ -90,8 +89,7 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun getUpdateFileLocationCallback(attachment: SceytAttachment) = UpdateFileLocationCallback { newPath ->
-        val transferData = TransferData(attachment.messageTid,
-            attachment.tid, 0f, TransferState.FilePathChanged, newPath, attachment.url)
+        val transferData = TransferData(attachment.messageTid, 0f, TransferState.FilePathChanged, newPath, attachment.url)
 
         val newFile = File(newPath)
         if (newFile.exists()) {
@@ -106,9 +104,8 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun getThumbCallback(attachment: SceytAttachment) = ThumbCallback { newPath, thumbData ->
-        val transferData = TransferData(attachment.messageTid,
-            attachment.tid, attachment.progressPercent
-                    ?: 0f, TransferState.ThumbLoaded, newPath, attachment.url, thumbData)
+        val transferData = TransferData(attachment.messageTid, attachment.progressPercent ?: 0f,
+            TransferState.ThumbLoaded, newPath, attachment.url, thumbData)
 
         emitAttachmentTransferUpdate(transferData)
     }

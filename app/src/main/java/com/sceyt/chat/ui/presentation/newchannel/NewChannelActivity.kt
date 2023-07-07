@@ -96,7 +96,7 @@ class NewChannelActivity : AppCompatActivity() {
             binding.rvUsers.adapter = UsersAdapter(list as ArrayList, UserViewHolderFactory(this) {
                 if (creatingChannel) return@UserViewHolderFactory
                 creatingChannel = true
-                viewModel.createDirectChannel(it.user)
+                viewModel.findOrCreateDirectChannel(it.user)
             }).also { usersAdapter = it }
 
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {

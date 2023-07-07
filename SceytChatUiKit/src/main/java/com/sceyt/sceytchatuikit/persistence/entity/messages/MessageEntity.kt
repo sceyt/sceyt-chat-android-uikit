@@ -6,7 +6,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.MarkerCount
+import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 
 @Entity(tableName = "messages",
@@ -18,7 +18,6 @@ data class MessageEntity(
         var id: Long?,
         @ColumnInfo(index = true)
         var channelId: Long,
-        var to: String?,
         var body: String,
         var type: String,
         var metadata: String?,
@@ -26,21 +25,18 @@ data class MessageEntity(
         var createdAt: Long,
         var updatedAt: Long,
         var incoming: Boolean,
-        var receipt: Boolean,
         var isTransient: Boolean,
         var silent: Boolean,
-        var direct: Boolean,
         @ColumnInfo(index = true)
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
-        var markerCount: List<MarkerCount>?,
+        var markerCount: List<MarkerTotal>?,
         var mentionedUsersIds: List<String>?,
-        var selfMarkers: List<String>?,
         var parentId: Long?,
-        var replyInThread: Boolean,
         var replyCount: Long,
         val displayCount: Short,
+        val autoDeleteAt: Long?,
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
         @ColumnInfo(index = true)

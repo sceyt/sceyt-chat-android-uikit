@@ -54,7 +54,6 @@ import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -142,12 +141,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 text = getString(R.string.sceyt_thread_reply)
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
-        } else
-            titleTextView.text = if (isGroup) channel.channelSubject else {
-                val member = channel.members?.getOrNull(0) ?: return
+        } else {
+            val title = if (isGroup) channel.channelSubject else {
+                val member = channel.getFirstMember() ?: return
                 userNameBuilder?.invoke(member.user)
                         ?: member.user.getPresentableNameCheckDeleted(context)
             }
+            if (titleTextView.text.equals(title)) return
+            titleTextView.text = title
+        }
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
@@ -189,7 +191,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 }
                 setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !isTyping)
             } else {
-                val fullName = replyMessage?.from?.fullName
+                val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
                 setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
             }
@@ -197,9 +199,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun setSubTitleText(textView: TextView, title: String?, visible: Boolean) {
-        if (textView.text.equals(title) && textView.isVisible == visible) return
+        if (!visible) {
+            textView.isVisible = false
+            return
+        }
+        if (textView.text.equals(title))
+            return
+
         textView.text = title
-        textView.isVisible = visible
+        textView.isVisible = true
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -250,7 +258,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
 
             else -> {
-                if (updateTypingJob == null || updateTypingJob!!.isActive.not())
+                if (updateTypingJob == null || updateTypingJob?.isActive?.not() == true)
                     updateTypingTitleEveryTwoSecond()
             }
         }
@@ -258,7 +266,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun updateTypingTitleEveryTwoSecond() {
         updateTypingJob?.cancel()
-        updateTypingJob = MainScope().launch {
+        updateTypingJob = context.asComponentActivity().lifecycleScope.launch {
             while (true) {
                 typingUsers.toList().forEach {
                     binding.tvTyping.text = initTypingTitle(it)
@@ -380,7 +388,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     fun setToolbarMenu(@MenuRes resId: Int, listener: Toolbar.OnMenuItemClickListener) {
-        with(binding.toolbar) {
+        with(binding.headerToolbar) {
             inflateMenu(resId)
             setOnMenuItemClickListener(listener)
         }

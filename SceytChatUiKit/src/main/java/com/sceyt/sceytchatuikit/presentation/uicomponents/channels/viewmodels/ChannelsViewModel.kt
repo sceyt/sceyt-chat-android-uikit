@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
+import androidx.annotation.IntRange
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
@@ -64,8 +65,9 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun searchChannels(offset: Int, limit: Int, query: List<String>, loadKey: LoadKeyData? = null,
-                       notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false) {
+    fun searchChannelsWithUserIds(offset: Int, @IntRange(0, 50) limit: Int, searchQuery: String, userIds: List<String>,
+                                  notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false,
+                                  loadKey: LoadKeyData? = null) {
         if (notifyFlow == NotifyFlow.LOAD) {
             setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
 
@@ -74,7 +76,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.searchChannels(offset, limit, query, loadKey, onlyMine, ignoreDb).collect {
+            channelMiddleWare.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, loadKey, onlyMine, ignoreDb).collect {
                 when (notifyFlow) {
                     // Notifies chanel list like getChannels
                     NotifyFlow.LOAD -> initPaginationResponse(it)

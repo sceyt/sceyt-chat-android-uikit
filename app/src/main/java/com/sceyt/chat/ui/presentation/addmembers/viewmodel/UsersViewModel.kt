@@ -51,9 +51,9 @@ class UsersViewModel : BaseViewModel() {
         return memberItems
     }
 
-    fun createDirectChannel(user: User) {
+    fun findOrCreateDirectChannel(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = SceytKitClient.getChannelsMiddleWare().createDirectChannel(user)
+            val response = SceytKitClient.getChannelsMiddleWare().findOrCreateDirectChannel(user)
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }

@@ -1,11 +1,9 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
@@ -44,15 +42,10 @@ object SendAttachmentWorkManager : SceytKoinComponent {
         dataBuilder.putLong(MESSAGE_TID, messageTid)
         dataBuilder.putBoolean(IS_SHARING, isSharing)
 
-        val networkConstraint = Constraints.Builder().apply {
-            setRequiredNetworkType(NetworkType.CONNECTED)
-        }.build()
-
         val myWorkRequest = OneTimeWorkRequest.Builder(SendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
             .apply { channelId?.let { addTag(channelId.toString()) } }
             .setInputData(dataBuilder.build())
-            .setConstraints(networkConstraint)
             .build()
 
         return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
@@ -78,12 +71,12 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     val payload = payloads.find { it.messageTid == attachment.messageTid }
 
                     if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
-                        val transferData = payload.toTransferData(attachment.tid, TransferState.Uploaded)
+                        val transferData = payload.toTransferData(TransferState.Uploaded)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
                         continuation.safeResume(Pair(true, payload.url))
                     } else {
                         foundAttachmentToUpload = true
-                        val transferData = TransferData(tmpMessage.tid, attachment.tid, 0f,
+                        val transferData = TransferData(tmpMessage.tid, 0f,
                             TransferState.Uploading, attachment.filePath, attachment.url)
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
 
@@ -123,7 +116,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
-        if (tmpMessage.deliveryStatus != DeliveryStatus.Pending && tmpMessage.deliveryStatus != DeliveryStatus.Failed)
+        if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
             return Result.success()
 
 

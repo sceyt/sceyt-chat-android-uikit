@@ -3,12 +3,12 @@ package com.sceyt.sceytchatuikit.data.repositories
 import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListFilterQueryType
 import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chat.models.channel.CreateChannelRequest
-import com.sceyt.chat.models.channel.CreateChannelRequestBuilder
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
 import com.sceyt.chat.models.role.Role
@@ -65,7 +65,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun getChannel(id: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            ChatClient.getClient().getChannel(id, object : ChannelCallback {
+            ChannelOperator.getChannelRequest(id, channelQueryParam).execute(object : ChannelCallback {
                 override fun onResult(channel: Channel) {
                     continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
@@ -151,7 +151,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     override suspend fun getAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> = callbackFlow {
         val channelListQuery = ChannelListQuery.Builder()
             .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
-            .withQueryParam(ChannelQueryParam(1, 10, 1, true))
+            .withQueryParam(channelQueryParam)
             .order(getOrder())
             .limit(limit)
             .build()
@@ -180,7 +180,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            CreateChannelRequestBuilder(ChannelTypeEnum.Direct.getString())
+            Builder(ChannelTypeEnum.Direct.getString())
                 .withMembers(arrayListOf(Member(Role("Admin"), user)))
                 .execute(object : ChannelCallback {
                     override fun onResult(channel: Channel) {
@@ -195,10 +195,10 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     override suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel> {
-        if (channelData.avatarUrl.isNullOrBlank().not() && channelData.avatarUploaded.not()) {
-            when (val uploadResult = uploadAvatar(channelData.avatarUrl!!)) {
+        if (channelData.avatarUrl.isBlank().not() && channelData.avatarUploaded.not()) {
+            when (val uploadResult = uploadAvatar(channelData.avatarUrl)) {
                 is SceytResponse.Success -> {
-                    channelData.avatarUrl = uploadResult.data
+                    channelData.avatarUrl = uploadResult.data ?: ""
                     channelData.avatarUploaded = true
                 }
 
@@ -229,23 +229,12 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
-        val createChannelRequest: CreateChannelRequest? = when (channelData.channelType) {
-            ChannelTypeEnum.Private -> CreateChannelRequestBuilder(ChannelTypeEnum.Private.getString())
-                .withMembers(channelData.members)
-                .withAvatarUrl(channelData.avatarUrl ?: "")
-                .withSubject(channelData.subject ?: "")
-                .withMetadata(channelData.metadata ?: "")
-
-            ChannelTypeEnum.Public -> CreateChannelRequestBuilder(ChannelTypeEnum.Public.getString())
-                .withMembers(channelData.members)
-                .withUri(channelData.uri ?: "")
-                .withAvatarUrl(channelData.avatarUrl ?: "")
-                .withSubject(channelData.subject ?: "")
-                .withMetadata(channelData.metadata ?: "")
-
-            else -> null
-        }
-        return createChannelRequest
+        return Builder(channelData.channelType.getString())
+            .withMembers(channelData.members)
+            .withUri(channelData.uri)
+            .withAvatarUrl(channelData.avatarUrl)
+            .withSubject(channelData.subject)
+            .withMetadata(channelData.metadata)
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
@@ -334,7 +323,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     continuation.safeResume(SceytResponse.Error(e))
                     Log.e(TAG, "blockUser error: ${e?.message}")
                 }
-
             })
         }
     }
@@ -593,8 +581,10 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
             .order(getOrder())
             .query(query?.ifBlank { null })
-            .withQueryParam(ChannelQueryParam(1, 10, 1, true))
+            .withQueryParam(channelQueryParam)
             .limit(CHANNELS_LOAD_SIZE)
             .build()
     }
+
+    private val channelQueryParam = ChannelQueryParam(1, 10, 1, true)
 }
