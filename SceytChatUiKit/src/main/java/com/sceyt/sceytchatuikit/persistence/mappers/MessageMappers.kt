@@ -19,7 +19,8 @@ import java.util.Date
 
 fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
-    id = id,
+    // Set id null if message is not sent yet, because id id unique in db
+    id = if (id == 0L) null else id,
     channelId = channelId,
     body = body,
     type = type,

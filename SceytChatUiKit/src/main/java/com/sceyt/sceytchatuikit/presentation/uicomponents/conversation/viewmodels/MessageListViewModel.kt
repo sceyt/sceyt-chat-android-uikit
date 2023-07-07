@@ -28,8 +28,8 @@ import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -108,8 +108,8 @@ class MessageListViewModel(
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
 
-    private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
-    val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
+    private val _messageForceDeleteLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
+    val messageForceDeleteLiveData: LiveData<SceytResponse<SceytMessage>> = _messageForceDeleteLiveData
 
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
@@ -410,15 +410,14 @@ class MessageListViewModel(
 
     fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
-            _messageEditedDeletedLiveData.postValue(response)
+            persistenceMessageMiddleWare.editMessage(channel.id, message)
         }
     }
 
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
-            _messageEditedDeletedLiveData.postValue(response)
+            _messageForceDeleteLiveData.postValue(response)
         }
     }
 
