@@ -210,13 +210,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ConnectionEventsObserver.onChangedConnectStatusFlow.onEach { stateData ->
         if (stateData.state == ConnectionState.Connected) {
             val message = messagesListView.getLastMessageBy {
-                // First tying to get last read message
+                // First trying to get last read message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Read
             } ?: messagesListView.getFirstMessageBy {
-                // Next tying to get fist sent message
+                // Next trying to get fist sent message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
             } ?: messagesListView.getFirstMessageBy {
-                // Next tying to get fist delivered message
+                // Next trying to get fist delivered message
                 it is MessageListItem.MessageItem && it.message.deliveryStatus == DeliveryStatus.Delivered
             }
             (message as? MessageListItem.MessageItem)?.let {
