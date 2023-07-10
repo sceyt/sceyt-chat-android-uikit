@@ -51,7 +51,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val persistenceAttachmentsLogic by inject<PersistenceAttachmentLogic>()
     private val sceytSyncManager by inject<SceytSyncManager>()
     private val filesTransferService by inject<FileTransferService>()
-    private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
+    private val connectionStateListenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
 
     val myId get() = preferences.getUserId()
 
@@ -67,7 +67,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     init {
         FirebaseApp.initializeApp(context)
-        setListener()
+        setConnectionStateListener()
     }
 
     fun connect(token: String, userName: String) {
@@ -95,7 +95,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         getChatClient()?.disconnect()
     }
 
-    private fun setListener() {
+    private fun setConnectionStateListener() {
         ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
             when (it.state) {
                 ConnectionState.Connected -> {
@@ -138,7 +138,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     }
 
     private fun notifyState(success: Boolean, errorMessage: String?) {
-        listenersMap.values.forEach { listener ->
+        connectionStateListenersMap.values.forEach { listener ->
             listener.invoke(success, errorMessage)
         }
     }
@@ -161,8 +161,8 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     fun getFileTransferService() = filesTransferService
 
-    fun addListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
-        listenersMap[key] = listener
+    fun addConnectionStateListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
+        connectionStateListenersMap[key] = listener
     }
 
     fun clearData() {

@@ -134,7 +134,7 @@ class SceytUiKitApp : Application() {
 
         getTokenByUserName(userName, {
             (it.get("token") as? String)?.let { token ->
-                SceytKitClient.addListener(TAG) { success, errorMessage ->
+                SceytKitClient.addConnectionStateListener(TAG) { success, errorMessage ->
                     successLiveData.postValue(success)
                     if (!success)
                         Log.e("sceytConnectError", errorMessage.toString())
