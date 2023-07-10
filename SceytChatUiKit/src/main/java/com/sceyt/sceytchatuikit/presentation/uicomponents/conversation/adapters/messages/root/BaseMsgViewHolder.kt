@@ -224,6 +224,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             with(root) {
                 if (calculateWith) {
                     layoutParams.width = LayoutParams.WRAP_CONTENT
+                    maxWidth = bubbleMaxWidth
                     measure(View.MeasureSpec.UNSPECIFIED, 0)
                     layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
                     val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
