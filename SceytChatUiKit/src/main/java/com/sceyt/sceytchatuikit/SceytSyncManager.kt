@@ -96,8 +96,12 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
         list.forEach {
             if (it.newMessageCount > 0) {
                 syncResultData.apply {
-                    unreadMessagesCount += it.newMessageCount.toInt()
-                    unreadChannelsCount++
+                    if (it.muted) {
+                        unreadMessagesImMutedChannelCount += it.newMessageCount.toInt()
+                        unreadMutedChannelsCount++
+                    }
+                    totalUnreadMessagesCount += it.newMessageCount.toInt()
+                    totalUnreadChannelsCount++
                 }
             }
             loadMessages(it)
@@ -128,14 +132,23 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             var withError: Boolean
     )
 
+    /**@param totalUnreadChannelsCount is total unread channels count, include muted channels.
+     * @param totalUnreadMessagesCount is total unread messages count, include messages in muted channels.
+     * @param unreadMutedChannelsCount is total unread muted channels count.
+     * @param unreadMessagesImMutedChannelCount is total unread messages in muted channels count.
+     * @param syncedChannelsCount is total synced channels count, include muted channels.
+     * @param syncedMessagesCount is total synced messages count, include messages in muted channels.*/
     data class SyncResultData(
-            var unreadChannelsCount: Int = 0,
-            var unreadMessagesCount: Int = 0,
+            var totalUnreadChannelsCount: Int = 0,
+            var totalUnreadMessagesCount: Int = 0,
+            var unreadMutedChannelsCount: Int = 0,
+            var unreadMessagesImMutedChannelCount: Int = 0,
             var syncedChannelsCount: Int = 0,
-            var syncedMessagesCount: Int = 0
+            var syncedMessagesCount: Int = 0,
     ) {
         override fun toString(): String {
-            return "unreadChannelsCount-> $unreadChannelsCount, unreadMessagesCount-> $unreadMessagesCount," +
+            return "unreadChannelsCount-> $totalUnreadChannelsCount, unreadMutedChannelsCount-> $unreadMutedChannelsCount " +
+                    "unreadMessagesCount-> $totalUnreadMessagesCount, unreadMessagesImMutedChannelCount $unreadMessagesImMutedChannelCount" +
                     "syncedChannelsCount-> $syncedChannelsCount, syncedMessagesCount-> $syncedMessagesCount"
         }
     }
