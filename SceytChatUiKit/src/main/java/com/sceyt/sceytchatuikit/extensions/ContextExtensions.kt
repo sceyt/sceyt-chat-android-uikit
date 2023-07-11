@@ -1,7 +1,11 @@
 package com.sceyt.sceytchatuikit.extensions
 
 import android.app.Activity
-import android.content.*
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
@@ -26,12 +30,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.*
+import java.util.Locale
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -204,7 +208,7 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
             urlConnection.connect()
             return urlConnection.responseCode == 200
         } catch (e: Exception) {
-            Log.e("internetConnection", e.message.toString())
+            SceytLog.e("internetConnection", e.message.toString())
         }
     }
     return false

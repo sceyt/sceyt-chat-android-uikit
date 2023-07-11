@@ -130,7 +130,6 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         val normalizedOffset = offset / CHANNELS_MEMBERS_LOAD_SIZE * CHANNELS_MEMBERS_LOAD_SIZE
-        Log.i(TAG, "normalizedOffset  old->$offset normalized-> $normalizedOffset")
         return callbackFlow {
             val dbMembers = getMembersDb(channelId, normalizedOffset, role, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
@@ -198,7 +197,6 @@ internal class PersistenceMembersLogicImpl(
         serverResponse ?: return emptyList()
         val removedItems: List<SceytMember> = dbMembers.minus(serverResponse.toSet())
         if (removedItems.isNotEmpty()) {
-            Log.i(TAG, "removed items  ${removedItems.map { it.fullName }}")
             (dbMembers as ArrayList).removeAll(removedItems.toSet())
             channelDao.deleteUserChatLinks(channelId, *removedItems.map { it.user.id }.toTypedArray())
         }

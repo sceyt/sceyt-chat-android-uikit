@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
@@ -27,6 +26,7 @@ import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.sceytchatuikit.extensions.permissionIgnored
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
@@ -253,7 +253,7 @@ class ChooseAttachmentHelper {
                     FileInputStream(File(path))
                     realFile = File(path)
                 } catch (ex: Exception) {
-                    Log.e(TAG, "error to get path with reason ${ex.message}")
+                    SceytLog.e(TAG, "error to get path with reason ${ex.message}")
                 } finally {
                     if (realFile != null && realFile.exists()) {
                         paths.add(realFile.path)
@@ -266,7 +266,7 @@ class ChooseAttachmentHelper {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "error to copy file with reason ${e.message}")
+                SceytLog.e(TAG, "error to copy file with reason ${e.message}")
             }
         }
         debounceHelper.cancelLastDebounce()

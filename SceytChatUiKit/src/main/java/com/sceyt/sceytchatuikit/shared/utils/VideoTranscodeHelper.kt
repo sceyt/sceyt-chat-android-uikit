@@ -2,11 +2,11 @@ package com.sceyt.sceytchatuikit.shared.utils
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
 import com.abedelazizshe.lightcompressorlibrary.VideoCompressor
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 import com.abedelazizshe.lightcompressorlibrary.config.Configuration
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import kotlin.coroutines.resume
@@ -31,7 +31,7 @@ object VideoTranscodeHelper {
                         }
 
                         override fun onFailure(failureMessage: String) {
-                            Log.i("transcodeVideoFailure", failureMessage)
+                            SceytLog.i("transcodeVideoFailure", failureMessage)
                             it.resume(VideoTranscodeData(TranscodeResultEnum.Failure, failureMessage))
                         }
 
@@ -47,7 +47,7 @@ object VideoTranscodeHelper {
                     },
                 )
             } catch (ex: Exception) {
-                Log.i("transcodeVideoFailure", ex.message.toString())
+                SceytLog.e("transcodeVideoException", ex.message.toString())
                 it.resume(VideoTranscodeData(TranscodeResultEnum.Failure, ex.message.toString()))
             }
         }
@@ -87,7 +87,7 @@ object VideoTranscodeHelper {
                 },
             )
         } catch (ex: Exception) {
-            Log.i("transcodeVideoFailure", ex.message.toString())
+            SceytLog.e("transcodeVideoException", ex.message.toString())
             callback(VideoTranscodeData(TranscodeResultEnum.Failure, ex.message.toString()))
         }
     }

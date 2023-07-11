@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -9,6 +8,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
@@ -58,7 +58,7 @@ object FileTransferHelper : SceytKoinComponent {
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
-                Log.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
+                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
             }
         }
     }
@@ -80,7 +80,7 @@ object FileTransferHelper : SceytKoinComponent {
 
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
-                Log.e(this.TAG, "Couldn't upload file " + result.message.toString())
+                SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
             }
         }
         fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {

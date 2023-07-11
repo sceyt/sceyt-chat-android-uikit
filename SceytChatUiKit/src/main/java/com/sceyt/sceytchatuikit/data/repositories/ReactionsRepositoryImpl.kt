@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
-import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
@@ -12,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -36,7 +36,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "getReactions error: ${e?.message}")
+                    SceytLog.e(TAG, "getReactions error: ${e?.message}")
                 }
             })
         }
@@ -59,7 +59,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "loadMoreReactions error: ${e?.message}")
+                    SceytLog.e(TAG, "loadMoreReactions error: ${e?.message}")
                 }
             })
         }
@@ -81,7 +81,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
-                    Log.e(TAG, "addReaction error: ${error?.message}")
+                    SceytLog.e(TAG, "addReaction error: ${error?.message}")
                 }
             })
         }
@@ -96,7 +96,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
-                    Log.e(TAG, "deleteReaction error: ${error?.message}")
+                    SceytLog.e(TAG, "deleteReaction error: ${error?.message}")
                 }
             })
         }

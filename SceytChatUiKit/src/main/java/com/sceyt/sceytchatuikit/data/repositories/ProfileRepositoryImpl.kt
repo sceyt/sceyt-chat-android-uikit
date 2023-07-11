@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
-import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.settings.UserSettings
@@ -12,6 +11,7 @@ import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chat.sceyt_callbacks.UserCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -32,7 +32,7 @@ internal class ProfileRepositoryImpl : ProfileRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "updateProfile error: ${e?.message}")
+                    SceytLog.e(TAG, "updateProfile error: ${e?.message}")
                 }
             })
         }
@@ -47,7 +47,7 @@ internal class ProfileRepositoryImpl : ProfileRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "unMuteNotifications error: ${e?.message}")
+                    SceytLog.e(TAG, "unMuteNotifications error: ${e?.message}")
                 }
             })
         }
@@ -62,7 +62,7 @@ internal class ProfileRepositoryImpl : ProfileRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "muteNotifications error: ${e?.message}")
+                    SceytLog.e(TAG, "muteNotifications error: ${e?.message}")
                 }
             })
         }
@@ -97,7 +97,7 @@ internal class ProfileRepositoryImpl : ProfileRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "uploadAvatar error: ${e?.message}")
+                    SceytLog.e(TAG, "uploadAvatar error: ${e?.message}")
                 }
             })
         }

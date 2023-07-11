@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepository
 import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepositoryImpl
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.data.repositories.UsersRepositoryImpl
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
@@ -153,7 +154,7 @@ internal val coroutineModule = module {
     single {
         CoroutineExceptionHandler { _, throwable ->
             if (BuildConfig.DEBUG)
-                Log.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
+                SceytLog.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
         }
     }
     single<CoroutineScope> { GlobalScope }

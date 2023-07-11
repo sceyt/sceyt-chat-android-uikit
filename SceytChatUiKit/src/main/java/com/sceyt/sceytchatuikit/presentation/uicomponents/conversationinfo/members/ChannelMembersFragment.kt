@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.memb
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,7 +28,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -188,8 +186,6 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
                     if (!itemsDb.contains(MemberItem.LoadingMore))
                         itemsDb.add(MemberItem.LoadingMore)
                 } else itemsDb.remove(MemberItem.LoadingMore)
-
-            Log.i(TAG, "final " + itemsDb.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
             setOrUpdateMembersAdapter(itemsDb)
         }
     }
@@ -338,19 +334,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             is PaginationResponse.DBResponse -> {
                 if (data.offset == 0) {
                     setOrUpdateMembersAdapter(data.data)
-                    Log.i(TAG, "db =0 " + data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
                 } else {
-                    Log.i(TAG, "db >0 " + data.data.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
-
                     membersAdapter?.addNewItems(data.data)
                 }
             }
 
             is PaginationResponse.ServerResponse -> {
-                if (data.data is SceytResponse.Success) {
-                    Log.i(TAG, "server " + data.data.data?.map { (it as? MemberItem.Member)?.member?.fullName }.toString())
+                if (data.data is SceytResponse.Success)
                     updateMembersWithServerResponse(data, data.hasNext)
-                }
             }
 
             else -> return
