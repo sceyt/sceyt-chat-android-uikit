@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
-import android.util.Log
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.attachment.AttachmentListQuery
@@ -8,6 +7,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.AttachmentsCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -30,7 +30,7 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "getPrevAttachments error: ${e?.message}")
+                    SceytLog.e(TAG, "getPrevAttachments error: ${e?.message}")
                 }
             })
         }
@@ -46,7 +46,7 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "getNextAttachments error: ${e?.message}")
+                    SceytLog.e(TAG, "getNextAttachments error: ${e?.message}")
                 }
             })
         }
@@ -62,7 +62,7 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    Log.e(TAG, "getNearAttachments error: ${e?.message}")
+                    SceytLog.e(TAG, "getNearAttachments error: ${e?.message}")
                 }
             })
         }

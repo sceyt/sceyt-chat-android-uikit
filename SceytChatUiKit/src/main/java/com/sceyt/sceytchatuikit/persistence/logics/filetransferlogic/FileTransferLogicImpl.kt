@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic
 
 import android.content.Context
-import android.util.Log
 import android.util.Size
 import com.abedelazizshe.lightcompressorlibrary.VideoCompressor
 import com.koushikdutta.ion.Ion
@@ -13,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
@@ -62,7 +62,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                         task.updateFileLocationCallback.onUpdateFileLocation(path)
                         data.resizedPath = path
                     }
-                } else Log.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
+                } else SceytLog.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
 
                 uploadSharedAttachment(attachment, task)
             }
@@ -210,7 +210,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 it.getOrNull()?.let { path ->
                     transferTask.updateFileLocationCallback.onUpdateFileLocation(path)
                 }
-            } else Log.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
+            } else SceytLog.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
 
             ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
                 override fun onResult(progress: Float) {

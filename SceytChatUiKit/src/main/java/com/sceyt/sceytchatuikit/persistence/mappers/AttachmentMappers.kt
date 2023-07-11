@@ -1,14 +1,17 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import android.graphics.Bitmap
-import android.util.Log
 import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
+import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
+import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
@@ -134,7 +137,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
             duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
 
     } catch (ex: Exception) {
-        Log.i(TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
+        SceytLog.i(TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
     }
 
     return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
@@ -166,7 +169,7 @@ fun String?.getInfoFromMetadataByKey(key: String): String? {
         val jsonObject = JSONObject(this ?: return null)
         return jsonObject.getFromJsonObject(key)
     } catch (ex: Exception) {
-        Log.i(this?.TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
+        SceytLog.i("GetInfoFromMeta", "Couldn't get data from attachment metadata with reason ${ex.message}")
         return null
     }
 }

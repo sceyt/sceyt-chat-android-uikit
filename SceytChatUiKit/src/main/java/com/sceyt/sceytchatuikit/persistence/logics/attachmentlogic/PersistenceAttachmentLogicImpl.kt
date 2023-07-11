@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic
 
-import android.util.Log
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
@@ -18,6 +17,7 @@ import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -263,7 +263,7 @@ internal class PersistenceAttachmentLogicImpl(
         for (attachment in attachments) {
             val messageTid = idsData.find { it.id == attachment.messageId }?.tid
             if (messageTid == null) {
-                Log.e(TAG, "Couldn't find message tid for msgId -> ${attachment.messageId}, added to missed messages list.")
+                SceytLog.e(TAG, "Couldn't find message tid for msgId -> ${attachment.messageId}, added to missed messages list.")
                 missedMsgIds.add(attachment.messageId)
                 continue
             }

@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.di.databaseModule
 import com.sceyt.sceytchatuikit.di.repositoryModule
 import com.sceyt.sceytchatuikit.di.viewModelModule
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
@@ -70,11 +71,11 @@ class SceytUIKitInitializer(private val context: Context) {
                 .setReplaceAll(true)
                 .registerInitCallback(object : EmojiCompat.InitCallback() {
                     override fun onInitialized() {
-                        Log.d(TAG, "EmojiCompat initialized")
+                        SceytLog.d(TAG, "EmojiCompat initialized")
                     }
 
                     override fun onFailed(throwable: Throwable?) {
-                        Log.e(TAG, "EmojiCompat initialization failed", throwable)
+                        SceytLog.e(TAG, "EmojiCompat initialization failed", throwable)
                     }
                 })
 

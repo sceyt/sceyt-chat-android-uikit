@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.pushes
 
 import android.content.Context
-import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
@@ -15,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_SUB
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import org.koin.core.component.inject
@@ -47,7 +47,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
                 if (it.isSuccessful) {
                     onToken(it.result)
                 } else
-                    Log.e(this@SceytFirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
+                    SceytLog.e(this@SceytFirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
             }
         } else onToken(null)
     }
@@ -58,11 +58,11 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
             override fun onSuccess() {
                 preferences.setString(KEY_FCM_TOKEN, fcmToken)
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
-                Log.i(this@SceytFirebaseMessagingDelegate.TAG, "push token successfully registered")
+                SceytLog.i(this@SceytFirebaseMessagingDelegate.TAG, "push token successfully registered")
             }
 
             override fun onError(e: SceytException) {
-                Log.e(this@SceytFirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
+                SceytLog.e(this@SceytFirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
             }
         })
     }

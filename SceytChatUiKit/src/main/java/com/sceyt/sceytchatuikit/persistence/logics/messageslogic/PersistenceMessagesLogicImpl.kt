@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import android.content.Context
-import android.util.Log
 import androidx.work.WorkManager
 import androidx.work.await
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -34,6 +33,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SelfMarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
@@ -406,7 +406,7 @@ internal class PersistenceMessagesLogicImpl(
 
                             messagesCache.messageUpdated(it.messageEntity.channelId, responseMsg)
                         }
-                    } else Log.e("sendMessage", "send pending message error-> ${response.message}")
+                    } else SceytLog.e("sendMessage", "send pending message error-> ${response.message}")
                 }
             }
         }
@@ -727,7 +727,7 @@ internal class PersistenceMessagesLogicImpl(
             val list = ids.map { PendingMarkersEntity(channelId = channelId, messageId = it, status = status) }
             pendingMarkersDao.insertMany(list)
         } catch (e: Exception) {
-            Log.e(TAG, "Couldn't insert pending markers.")
+            SceytLog.e(TAG, "Couldn't insert pending markers.")
         }
     }
 
