@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.channelsFragment -> {
                     binding.viewPager.setCurrentItem(0, false)
                 }
+
                 R.id.profileFragment -> {
                     binding.viewPager.setCurrentItem(1, false)
                 }

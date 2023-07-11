@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
-import android.util.Log
 import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
@@ -20,7 +19,6 @@ import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -29,14 +27,23 @@ import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
-import com.sceyt.sceytchatuikit.persistence.mappers.*
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
+import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext
@@ -121,7 +128,6 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         val normalizedOffset = offset / CHANNELS_MEMBERS_LOAD_SIZE * CHANNELS_MEMBERS_LOAD_SIZE
-        Log.i(TAG, "normalizedOffset  old->$offset normalized-> $normalizedOffset")
         return callbackFlow {
             val dbMembers = getMembersDb(channelId, normalizedOffset, role, CHANNELS_MEMBERS_LOAD_SIZE)
             val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
@@ -189,7 +195,6 @@ internal class PersistenceMembersLogicImpl(
         serverResponse ?: return emptyList()
         val removedItems: List<SceytMember> = dbMembers.minus(serverResponse.toSet())
         if (removedItems.isNotEmpty()) {
-            Log.i(TAG, "removed items  ${removedItems.map { it.fullName }}")
             (dbMembers as ArrayList).removeAll(removedItems.toSet())
             channelDao.deleteUserChatLinks(channelId, *removedItems.map { it.user.id }.toTypedArray())
         }

@@ -14,7 +14,6 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SCTLogLevel
-import com.sceyt.chat.sceyt_listeners.NativeLogger
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.viewModelModules
@@ -30,7 +29,7 @@ import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import java.util.*
+import java.util.UUID
 
 class SceytUiKitApp : Application() {
     private val preference by inject<AppSharedPreference>()
@@ -72,14 +71,13 @@ class SceytUiKitApp : Application() {
             host = "https://uk-london-south-api-2-staging.waafi.com",
             enableDatabase = true)
 
-        ChatClient.setSceytLogLevel(SCTLogLevel.Info,
-            NativeLogger { i: Int, s: String, s1: String ->
-                when (i) {
-                    Log.DEBUG, Log.INFO -> Log.i(TAG, "$s $s1")
-                    Log.WARN -> Log.w(TAG, "$s $s1")
-                    Log.ERROR, Log.ASSERT -> Log.e(TAG, "$s $s1")
-                }
-            })
+        ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
+            when (i) {
+                Log.DEBUG, Log.INFO -> Log.i(TAG, "$s $s1")
+                Log.WARN -> Log.w(TAG, "$s $s1")
+                Log.ERROR, Log.ASSERT -> Log.e(TAG, "$s $s1")
+            }
+        }
     }
 
     private fun setNetworkListeners() {

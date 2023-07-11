@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.toBase64
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.json.JSONObject
@@ -30,7 +31,7 @@ fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?,
         }
         obj.toString()
     } catch (t: Throwable) {
-        Log.e(TAG, "Could not parse malformed JSON: \"" + currentMetadata.toString() + "\"")
+        SceytLog.e(TAG, "Could not parse malformed JSON: \"" + currentMetadata.toString() + "\"")
         null
     }
 }
