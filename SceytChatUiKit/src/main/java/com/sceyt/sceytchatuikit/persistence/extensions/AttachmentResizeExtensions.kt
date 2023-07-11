@@ -5,6 +5,7 @@ import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeExtension
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.*
 import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeHelper
@@ -22,7 +23,7 @@ fun Attachment.resizeImage(context: Context): Attachment {
             .setUpload(true)
             .build()
     } catch (ex: Exception) {
-        Log.e("ImageResize", ex.message.toString())
+        SceytLog.e("ImageResize", ex.message.toString())
     }
     return resizedAttachment
 }

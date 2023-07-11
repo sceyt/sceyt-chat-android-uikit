@@ -10,7 +10,6 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,9 +28,18 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.sceytchatuikit.BR
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytGaleryMediaPickerBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
+import com.sceyt.sceytchatuikit.extensions.dismissSafety
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getOrientation
+import com.sceyt.sceytchatuikit.extensions.hasPermissions
+import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -273,7 +281,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
                 channel.close()
             } catch (ex: Exception) {
-                Log.i(this@GalleryMediaPicker.TAG, ex.message.toString())
+                SceytLog.e(this@GalleryMediaPicker.TAG, ex.message.toString())
                 channel.close()
             }
         }

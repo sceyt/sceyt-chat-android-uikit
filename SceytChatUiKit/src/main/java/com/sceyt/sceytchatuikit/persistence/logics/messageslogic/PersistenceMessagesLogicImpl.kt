@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import android.content.Context
-import android.util.Log
 import androidx.work.WorkManager
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
@@ -37,6 +36,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
@@ -258,10 +258,10 @@ internal class PersistenceMessagesLogicImpl(
         createChannelAndSendMessageMutex.withLock {
             val channelId = channel.id
             channel.lastMessage = message.toSceytUiMessage()
-            Log.i("experimentChannel", "channelId $channelId")
+            SceytLog.i("experimentChannel", "channelId $channelId")
             channelCache.getRealChannelIdWithPendingChannelId(channelId)?.let {
                 message.channelId = it
-                Log.i("experimentChannel", "found in cash $it")
+                SceytLog.i("experimentChannel", "found in cash $it")
                 return sendMessageImpl(it, message, false, isPendingMessage, isUploadedAttachments)
             }
 
@@ -269,13 +269,13 @@ internal class PersistenceMessagesLogicImpl(
                 is SceytResponse.Success -> {
                     val newChannelId = response.data?.id ?: 0L
                     message.channelId = newChannelId
-                    Log.i("experimentChannel", "send new message: ${message.channelId}")
+                    SceytLog.i("experimentChannel", "send new message: ${message.channelId}")
                     return sendMessageImpl(newChannelId, message, false, isPendingMessage, isUploadedAttachments)
                 }
 
                 is SceytResponse.Error -> {
                     channelCache.addPendingChannel(channel)
-                    Log.e("experimentChannel", "created new channel failed ${response.exception?.message}")
+                    SceytLog.e("experimentChannel", "created new channel failed ${response.exception?.message}")
 
                     return callbackFlow {
                         if (!isPendingMessage && !isUploadedAttachments)
@@ -807,7 +807,7 @@ internal class PersistenceMessagesLogicImpl(
             val list = ids.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
             pendingMarkersDao.insertMany(list)
         } catch (e: Exception) {
-            Log.e(TAG, "Couldn't insert pending markers.")
+            SceytLog.e(TAG, "Couldn't insert pending markers.")
         }
     }
 
