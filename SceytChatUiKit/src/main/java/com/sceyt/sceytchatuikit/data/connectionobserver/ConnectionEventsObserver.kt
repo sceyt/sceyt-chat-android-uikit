@@ -65,7 +65,6 @@ object ConnectionEventsObserver {
         return connectionState == ConnectionState.Connected
     }
 
-
     suspend fun awaitToConnectSceytWithTimeout(timeout: Long): Boolean {
         if (isConnected)
             return true
