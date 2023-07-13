@@ -15,7 +15,7 @@ class UsersAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder<SceytMember>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<SceytMember> {
-        return factory.createViewHolder(parent, viewType)
+        return factory.createViewHolder(parent)
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<SceytMember>, position: Int) {

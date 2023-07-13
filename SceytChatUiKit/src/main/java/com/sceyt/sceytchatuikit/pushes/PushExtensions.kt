@@ -28,6 +28,8 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, u
         val meta = messageJsonObject.getString("metadata")
         val createdAtString = messageJsonObject.getString("created_at")
         val transient = messageJsonObject.getBoolean("transient")
+        val deliveryStatus = getDeliveryStatusFromPushJson(messageJsonObject)
+        val state = getStateFromPushJson(messageJsonObject)
         val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
         val attachmentArray = ArrayList<Attachment>()
@@ -43,7 +45,7 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, u
         val messageId = messageIdString.toLong()
         Message(messageId, messageId, channelId
                 ?: return null, bodyString, messageType, meta, createdAt?.time ?: 0,
-            0L, true, transient, false, DeliveryStatus.Sent, MessageState.Unmodified,
+            0L, true, transient, false, deliveryStatus, state,
             user, attachmentArray.toTypedArray(), null, null, null, null,
             null, null, 0, 0, 0, null)
     } catch (e: Exception) {
@@ -69,7 +71,7 @@ fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
     }
 }
 
-fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? {
+fun getChannelFromPushJson(remoteMessage: RemoteMessage): Channel? {
     val channelJson = remoteMessage.data["channel"] ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
@@ -115,5 +117,33 @@ fun getReactionTotalFromPushJson(json: String?): ReactionTotal? {
     } catch (e: Exception) {
         e.printStackTrace()
         null
+    }
+}
+
+private fun getDeliveryStatusFromPushJson(jsonObject: JSONObject): DeliveryStatus {
+    return try {
+        when (jsonObject.getString("delivery_status")) {
+            "sent" -> DeliveryStatus.Sent
+            "delivered" -> DeliveryStatus.Received
+            "read" -> DeliveryStatus.Displayed
+            else -> DeliveryStatus.Sent
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        DeliveryStatus.Sent
+    }
+}
+
+private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
+    return try {
+        when (jsonObject.getString("state")) {
+            "none" -> MessageState.Unmodified
+            "edited" -> MessageState.Edited
+            "deleted" -> MessageState.Deleted
+            else -> MessageState.Unmodified
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        MessageState.Unmodified
     }
 }
