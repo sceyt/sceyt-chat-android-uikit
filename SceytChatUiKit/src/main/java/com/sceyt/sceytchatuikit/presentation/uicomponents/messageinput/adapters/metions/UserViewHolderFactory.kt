@@ -11,7 +11,7 @@ class UserViewHolderFactory(context: Context, private val listeners: UsersAdapte
 
     private val layoutInflater = LayoutInflater.from(context)
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<SceytMember> {
+    fun createViewHolder(parent: ViewGroup): BaseViewHolder<SceytMember> {
         return UserViewHolder(SceytItemMemberBinding.inflate(layoutInflater, parent, false),
             listeners)
     }

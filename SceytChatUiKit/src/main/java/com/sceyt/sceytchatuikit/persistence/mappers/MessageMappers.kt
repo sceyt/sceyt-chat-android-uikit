@@ -224,7 +224,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         parentMessage = parentMessage?.toSceytUiMessage(),
         replyCount = replyCount,
         displayCount = displayCount.toShort(),
-        autoDeleteAt = autoDeleteDate,
+        autoDeleteAt = autoDeleteAt,
         forwardingDetails = forwardingDetails,
         pendingReactions = null
     ).apply {
