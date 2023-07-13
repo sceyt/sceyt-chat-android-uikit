@@ -6,10 +6,21 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 object ConnectionEventsObserver {
     val connectionState get() = ClientWrapper.getConnectionState() ?: ConnectionState.Disconnected
@@ -52,5 +63,29 @@ object ConnectionEventsObserver {
 
         onChangedConnectStatusFlow.firstOrNull { it.state == ConnectionState.Connected }
         return connectionState == ConnectionState.Connected
+    }
+
+
+    suspend fun awaitToConnectSceytWithTimeout(timeout: Long): Boolean {
+        if (isConnected)
+            return true
+
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        return suspendCancellableCoroutine { continuation ->
+            onChangedConnectStatusFlow
+                .onSubscription {
+                    scope.launch {
+                        delay(timeout)
+                        continuation.safeResume(isConnected)
+                        scope.cancel()
+                    }
+                }
+                .onEach {
+                    if (it.state == ConnectionState.Connected) {
+                        continuation.safeResume(true)
+                        scope.cancel()
+                    }
+                }.launchIn(scope)
+        }
     }
 }
