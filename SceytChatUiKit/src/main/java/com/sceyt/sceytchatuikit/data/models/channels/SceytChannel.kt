@@ -63,7 +63,7 @@ data class SceytChannel(
     var draftMessage: DraftMessage? = null
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
-        return Pair(channelSubject, avatarUrl)
+        return Pair(channelSubject, iconUrl)
     }
 
     override fun equals(other: Any?): Boolean {
