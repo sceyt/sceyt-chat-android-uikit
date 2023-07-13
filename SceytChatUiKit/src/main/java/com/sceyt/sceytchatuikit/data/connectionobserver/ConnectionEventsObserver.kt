@@ -83,7 +83,7 @@ object ConnectionEventsObserver {
                 .onSubscription {
                     scope.launch {
                         delay(timeout)
-                        continuation.safeResume(false)
+                        continuation.safeResume(isConnected)
                         scope.cancel()
                     }
                 }
