@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ui.R
+import com.sceyt.chat.ui.connection.SceytConnectionProvider
 import com.sceyt.chat.ui.databinding.ActivityMainBinding
 import com.sceyt.chat.ui.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.ui.presentation.mainactivity.profile.ProfileFragment
@@ -15,10 +16,12 @@ import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.android.ext.android.inject
 
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val connectionProvider by inject<SceytConnectionProvider>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         setPagerAdapter()
         setBottomNavClickListeners()
+        connectionProvider.connectChatClient()
 
         SceytKitClient.getChannelsMiddleWare().getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {

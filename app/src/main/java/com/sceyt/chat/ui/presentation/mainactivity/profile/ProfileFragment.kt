@@ -96,7 +96,7 @@ class ProfileFragment : Fragment() {
 
         viewModel.logOutLiveData.observe(viewLifecycleOwner) {
             preference.setToken(null)
-            preference.setUserName(null)
+            preference.setUserId(null)
             LoginActivity.launch(requireContext())
             requireActivity().finish()
         }

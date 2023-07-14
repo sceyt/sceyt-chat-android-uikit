@@ -57,10 +57,10 @@ dependencies {
     implementation supportDependencies.lifecycleRuntime
     implementation supportDependencies.glide
     implementation supportDependencies.okHttp
-    implementation supportDependencies.voley
     implementation supportDependencies.koinAndroid
     implementation supportDependencies.moshiConverter
     implementation supportDependencies.jsoup
     implementation supportDependencies.sdp
     implementation supportDependencies.ssp
+    implementation supportDependencies.retrofitConverterGason
 }
