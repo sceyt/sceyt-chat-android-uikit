@@ -43,12 +43,6 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private var sharingFilesPath = Collections.synchronizedSet<ShareFilesData>(mutableSetOf())
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
-        /*
-        //todo Uncomment this logic after implementing play/pause logic
-        if (attachment.transferState == TransferState.PauseUpload) {
-             pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
-             return
-         }*/
         checkAndUpload(attachment, task)
     }
 
