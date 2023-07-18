@@ -442,7 +442,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             })
     }
 
-    private val requestVoicePermissionLauncher = context.asComponentActivity().initPermissionLauncher {
+    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.asComponentActivity().initPermissionLauncher {
         onVoicePermissionResult(it)
     }
 
