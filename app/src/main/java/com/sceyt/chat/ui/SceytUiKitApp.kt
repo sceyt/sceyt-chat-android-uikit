@@ -71,9 +71,9 @@ class SceytUiKitApp : Application() {
             host = "https://uk-london-south-api-2-staging.waafi.com",
             enableDatabase = true)
 
-        ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
+        ChatClient.setSceytLogLevel(SCTLogLevel.Verbose) { i: Int, s: String, s1: String ->
             when (i) {
-                Log.DEBUG, Log.INFO -> Log.i(TAG, "$s $s1")
+                Log.DEBUG, Log.INFO, Log.VERBOSE -> Log.i(TAG, "$s $s1")
                 Log.WARN -> Log.w(TAG, "$s $s1")
                 Log.ERROR, Log.ASSERT -> Log.e(TAG, "$s $s1")
             }
