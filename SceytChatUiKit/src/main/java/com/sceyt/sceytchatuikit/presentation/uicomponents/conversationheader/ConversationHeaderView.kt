@@ -116,7 +116,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
         }
 
-        updatePresenceEveryOneMin()
+        if (!isInEditMode)
+            updatePresenceEveryOneMin()
     }
 
     private fun updatePresenceEveryOneMin() {
