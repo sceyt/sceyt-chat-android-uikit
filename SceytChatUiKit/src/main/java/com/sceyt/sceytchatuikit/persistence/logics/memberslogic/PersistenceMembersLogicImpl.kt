@@ -67,13 +67,8 @@ internal class PersistenceMembersLogicImpl(
                 it.forEach { presenceUser ->
                     channelsCache.getData().forEach { channel ->
                         val user = presenceUser.user
-                        if (channel is SceytDirectChannel && channel.peer?.id == user.id) {
-                            val oldUser = channel.peer?.user
-                            if (oldUser?.presence?.hasDiff(user.presence) == true) {
-                                channel.peer?.user = user
-                                channelsCache.updateChannelPeer(channel.id, user)
-                            }
-                        }
+                        if (channel is SceytDirectChannel && channel.peer?.id == user.id)
+                            channelsCache.updateChannelPeer(channel.id, user)
                     }
                 }
             }
@@ -102,6 +97,7 @@ internal class PersistenceMembersLogicImpl(
                     channelsCache.add(data.channel.toSceytUiChannel())
                 }
             }
+
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
                 if (data.members.any { it.id == SceytKitClient.myId }) {
                     deleteChannelDb(chatId)
@@ -113,6 +109,7 @@ internal class PersistenceMembersLogicImpl(
                     }
                 }
             }
+
             ChannelMembersEventEnum.UnBlocked -> {
                 channelDao.updateChannel(data.channel.toChannelEntity())
                 channelDao.getChannelById(chatId)?.let {
