@@ -1,13 +1,11 @@
 package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
-import android.util.Log
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
-import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -16,7 +14,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
@@ -67,13 +64,8 @@ internal class PersistenceMembersLogicImpl(
                     channelsCache.getData().forEach { channel ->
                         val user = presenceUser.user
                         val peer = channel.getFirstMember()
-                        if (channel.isDirect() && peer?.id == user.id) {
-                            val oldUser = peer?.user
-                            if (oldUser?.presence?.hasDiff(user.presence) == true) {
-                                peer.user = user
-                                channelsCache.updateChannelPeer(channel.id, user)
-                            }
-                        }
+                        if (channel.isDirect() && peer?.id == user.id)
+                            channelsCache.updateChannelPeer(channel.id, user)
                     }
                 }
             }

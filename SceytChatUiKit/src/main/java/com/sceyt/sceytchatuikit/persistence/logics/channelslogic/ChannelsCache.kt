@@ -62,7 +62,7 @@ class ChannelsCache {
             return if (checkDifference)
                 putAndCheckHasDiff(list)
             else {
-                cachedData.putAll(list.associateBy { it.id })
+                cachedData.putAll(list.map { it.clone() }.associateBy { it.id })
                 false
             }
         }
@@ -117,7 +117,7 @@ class ChannelsCache {
         synchronized(lock) {
             channels.forEach {
                 if (cachedData[it.id] == null) {
-                    cachedData[it.id] = it
+                    cachedData[it.id] = it.clone()
                     channelAdded(it)
                 } else {
                     val oldMsg = cachedData[it.id]?.lastMessage
@@ -134,7 +134,7 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
-                channel.lastMessage = message
+                channel.lastMessage = message?.clone()
                 channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
@@ -144,7 +144,7 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
-                channel.lastMessage = message
+                channel.lastMessage = message.clone()
                 channel.lastDisplayedMessageId = message.id
                 channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
@@ -182,7 +182,7 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 channel.members = channel.members?.toArrayList()?.apply {
-                    add(sceytMember)
+                    add(sceytMember.copy())
                 }
                 channelUpdated(channel, false, ChannelUpdatedType.Members)
             }
@@ -242,7 +242,7 @@ class ChannelsCache {
 
     fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
         get(channelId)?.let {
-            it.draftMessage = draftMessage
+            it.draftMessage = draftMessage?.copy()
             channelDraftMessageChangesLiveData_.postValue(Pair(channelId, draftMessage))
         }
     }
@@ -254,7 +254,7 @@ class ChannelsCache {
                     val oldUser = it.user
                     if (oldUser.presence?.hasDiff(user.presence) == true) {
                         it.user = user
-                        channelUpdated(channel.clone(), false, ChannelUpdatedType.Presence)
+                        channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }
                 }
             }
@@ -280,14 +280,14 @@ class ChannelsCache {
                 val old = cachedData[it.id]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: true
             }
-            cachedData[it.id] = it
+            cachedData[it.id] = it.clone()
         }
         return detectedDiff
     }
 
     private fun putAndCheckHasDiff(channel: SceytChannel): ChannelItemPayloadDiff {
         val old = cachedData[channel.id]
-        cachedData[channel.id] = channel
+        cachedData[channel.id] = channel.clone()
         return old?.diff(channel) ?: ChannelItemPayloadDiff.DEFAULT
     }
 
