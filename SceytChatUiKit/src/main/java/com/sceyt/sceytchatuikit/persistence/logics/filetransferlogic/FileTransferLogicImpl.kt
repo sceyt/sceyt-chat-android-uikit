@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
+import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.common.checkLoadedFileIsCorrect
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import org.koin.core.component.inject
@@ -108,13 +109,20 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
         when (state) {
             TransferState.PendingUpload, TransferState.Uploading -> {
-                fileTransferService.getTasks()[attachment.messageTid.toString()]?.state = TransferState.PauseUpload
+                fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
+                    it.state = TransferState.PauseUpload
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.PauseUpload))
+                }
                 //todo
                 uploadNext()
 
             }
 
             TransferState.PendingDownload, TransferState.Downloading -> {
+                fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
+                    it.state = TransferState.PauseUpload
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.PauseDownload))
+                }
                 //todo
             }
 
@@ -128,6 +136,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             TransferState.PendingDownload, TransferState.PauseDownload, TransferState.ErrorDownload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     downloadingUrlMap.remove(attachment.messageTid.toString())
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.Downloading))
                     downloadFile(attachment, it)
                 }
             }
@@ -135,6 +144,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     it.state = TransferState.Uploading
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.Uploading))
                     uploadFile(attachment, it)
                     //Todo need implement resume sharing files
                 }

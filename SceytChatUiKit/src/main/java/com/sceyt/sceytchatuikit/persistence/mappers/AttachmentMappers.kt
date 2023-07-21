@@ -108,6 +108,17 @@ fun SceytAttachment.toTransferData(): TransferData? {
     )
 }
 
+fun SceytAttachment.toTransferData(transferState: TransferState): TransferData {
+    return TransferData(
+        messageTid = messageTid,
+        attachmentTid = tid,
+        progressPercent = (progressPercent ?: 0).toFloat(),
+        state = transferState,
+        filePath = filePath,
+        url = url
+    )
+}
+
 fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     var size: Size? = null
     var duration: Long? = null

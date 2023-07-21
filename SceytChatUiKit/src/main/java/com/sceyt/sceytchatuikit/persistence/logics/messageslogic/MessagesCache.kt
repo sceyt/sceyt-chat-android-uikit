@@ -245,7 +245,7 @@ class MessagesCache {
                 message.attachments?.forEach { attachment ->
                     when (updateDate.state) {
                         PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
-                            if (attachment.messageTid == updateDate.messageTid)
+                            if (attachment.filePath == updateDate.filePath)
                                 update(attachment)
                         }
 
