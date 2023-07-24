@@ -425,7 +425,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     pageStateLiveData.observe(lifecycleOwner) {
-        if (it is PageState.StateError && it.code == 40401 && messagesListView.getData().isNullOrEmpty())
+        if (it is PageState.StateError && messagesListView.getData().isNullOrEmpty())
             messagesListView.updateViewState(PageState.StateEmpty())
         else
             messagesListView.updateViewState(it, false)

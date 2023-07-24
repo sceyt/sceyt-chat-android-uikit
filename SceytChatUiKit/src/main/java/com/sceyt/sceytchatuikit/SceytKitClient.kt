@@ -124,9 +124,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                 }
 
                 ConnectionState.Disconnected -> {
-                    if (it.exception?.code == 40102)
-                        onTokenExpired_.tryEmit(Unit)
-                    else notifyState(false, it.exception?.message)
+                    notifyState(false, it.exception?.message)
                 }
 
                 else -> {}
