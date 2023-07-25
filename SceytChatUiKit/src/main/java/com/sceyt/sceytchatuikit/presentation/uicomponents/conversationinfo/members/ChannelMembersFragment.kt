@@ -36,6 +36,7 @@ import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -235,7 +236,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             }
             currentUserRole = currentUser?.role
 
-            membersAdapter = ChannelMembersAdapter(data as ArrayList,
+            membersAdapter = ChannelMembersAdapter(data.toArrayList(),
                 ChannelMembersViewHolderFactory(requireContext()).also {
                     it.setOnClickListener(MemberClickListeners.MemberLongClickListener { _, item ->
                         showMemberLongClick(item)
@@ -279,7 +280,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected fun addMembersToChannel(members: List<SceytMember>) {
-        viewModel.addMembersToChannel(channel.id, members as ArrayList)
+        viewModel.addMembersToChannel(channel.id, members.toArrayList())
     }
 
     protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
