@@ -91,3 +91,7 @@ fun Long.durationToMinSecShort(): String {
     }
     return timeFormatter.format(Date(this))
 }
+
+fun Float.inNotNanOrZero(): Float {
+    return if (isNaN()) 0f else this
+}
