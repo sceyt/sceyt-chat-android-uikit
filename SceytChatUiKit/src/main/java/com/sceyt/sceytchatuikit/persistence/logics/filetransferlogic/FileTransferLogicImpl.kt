@@ -38,7 +38,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private var preparingThumbsMap = hashMapOf<String, Long>()
     private var pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
     private var currentUploadingAttachment: SceytAttachment? = null
-    private var pausedTasksMap = hashMapOf<String, String>()
+    private var pausedTasksMap = hashMapOf<Long, Long>()
     private var resizingAttachmentsMap = hashMapOf<String, String>()
 
     private var sharingFilesPath = Collections.synchronizedSet<ShareFilesData>(mutableSetOf())
@@ -51,7 +51,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         fileTransferService.getTasks()[task.messageTid.toString()] = task
         val data = ShareFilesData(attachment.filePath.toString(), attachment.filePath.toString(), attachment.messageTid)
         if (sharingFilesPath.none { it.originalPath == attachment.filePath }) {
-            checkAndResizeMessageAttachments(context, attachment) {
+            checkAndResizeMessageAttachments(context, attachment, task) {
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback.onUpdateFileLocation(path)
@@ -82,7 +82,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 Ion.with(context)
                     .load(attachment.url)
                     .progress { downloaded, total ->
-                        if (pausedTasksMap[attachment.url.toString()] == null) {
+                        if (pausedTasksMap[attachment.messageTid] == null) {
                             val progress = ((downloaded / total.toFloat())) * 100
                             task.progressCallback.onProgress(TransferData(
                                 task.messageTid, progress, TransferState.Downloading, null, attachment.url))
@@ -103,12 +103,12 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     }
 
     override fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
-        pausedTasksMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
+        pausedTasksMap[attachment.messageTid] = attachment.messageTid
         if (attachment.type == AttachmentTypeEnum.Video.value())
             VideoCompressor.cancel()
 
         when (state) {
-            TransferState.PendingUpload, TransferState.Uploading -> {
+            TransferState.PendingUpload, TransferState.Uploading, TransferState.Preparing -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     it.state = TransferState.PauseUpload
                     it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.PauseUpload))
@@ -131,7 +131,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     }
 
     override fun resumeLoad(attachment: SceytAttachment, state: TransferState) {
-        pausedTasksMap.remove(attachment.messageTid.toString())
+        pausedTasksMap.remove(attachment.messageTid)
         when (state) {
             TransferState.PendingDownload, TransferState.PauseDownload, TransferState.ErrorDownload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
@@ -203,9 +203,9 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     private fun uploadAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
         currentUploadingAttachment = attachment
-        checkAndResizeMessageAttachments(context, attachment) {
+        checkAndResizeMessageAttachments(context, attachment, transferTask) {
             // Check if task was paused
-            if (pausedTasksMap[attachment.messageTid.toString()] != null) {
+            if (pausedTasksMap[attachment.messageTid] != null) {
                 uploadNext()
                 return@checkAndResizeMessageAttachments
             }
@@ -252,7 +252,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
         ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
             override fun onResult(progress: Float) {
-                if (progress == 1f || pausedTasksMap[attachment.messageTid.toString()] != null) return
+                if (progress == 1f || pausedTasksMap[attachment.messageTid] != null) return
                 getAppropriateTasks(transferTask).forEach { task ->
                     fileTransferService.getTasks()[task.messageTid.toString()]?.state = TransferState.Uploading
                     task.progressCallback.onProgress(TransferData(task.messageTid,
@@ -300,7 +300,8 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         }
     }
 
-    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String?>) -> Unit) {
+    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment,
+                                                 task: TransferTask, callback: (Result<String?>) -> Unit) {
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
@@ -311,7 +312,10 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
             AttachmentTypeEnum.Video.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
-                transcodeVideo(context, attachment.filePath) {
+                transcodeVideo(context, attachment.filePath, progressCallback = {
+                    if (pausedTasksMap[attachment.messageTid] == null)
+                        task.preparingCallback.onPreparing(attachment.toTransferData(TransferState.Preparing, it.progressPercent))
+                }) {
                     callback(it)
                     resizingAttachmentsMap.remove(attachment.messageTid.toString())
                 }

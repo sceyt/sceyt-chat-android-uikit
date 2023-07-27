@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -110,6 +111,8 @@ class MessageImageViewHolder(
             ThumbLoaded -> {
                 viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
+
+            TransferState.Preparing -> Unit
         }
     }
 

@@ -182,7 +182,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
 
-            TransferState.ThumbLoaded -> Unit
+            TransferState.ThumbLoaded, TransferState.Preparing -> Unit
         }
     }
 
