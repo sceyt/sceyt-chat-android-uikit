@@ -28,12 +28,12 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     else
         headerView.setChannel(channel)
 
-    val peer = channel.getFirstMember()
+    val peerId = channel.getFirstMember()?.id
     if (channel.isDirect()) {
-        SceytPresenceChecker.addNewUserToPresenceCheck(peer?.id)
+        SceytPresenceChecker.addNewUserToPresenceCheck(peerId)
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
             .onEach {
-                it.find { user -> user.user.id == peer?.id }?.let { presenceUser ->
+                it.find { user -> user.user.id == peerId}?.let { presenceUser ->
                     headerView.onPresenceUpdate(presenceUser.user)
                 }
             }.launchIn(lifecycleOwner.lifecycleScope)
@@ -42,10 +42,8 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
-            if (it.eventType == ChannelUpdatedType.Presence) {
-                peer?.user?.let { user ->
-                    headerView.onPresenceUpdate(user)
-                } ?: headerView.setChannel(it.channel)
+            if (it.eventType != ChannelUpdatedType.Presence) {
+                headerView.setChannel(it.channel)
             } else headerView.setChannel(it.channel)
         }
         .launchIn(lifecycleOwner.lifecycleScope)
