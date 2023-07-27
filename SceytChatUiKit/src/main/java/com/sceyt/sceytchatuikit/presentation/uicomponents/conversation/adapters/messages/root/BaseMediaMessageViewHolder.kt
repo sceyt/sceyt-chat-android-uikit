@@ -165,7 +165,7 @@ abstract class BaseMediaMessageViewHolder(
                     var newDefaultSize = defaultSize
 
                     // If the width of the image is less than 80% of the default size, then we can increase the default size by 20%
-                    if (coefficientWidth <= 0.8 )
+                    if (coefficientWidth <= 0.8)
                         newDefaultSize = (defaultSize * 1.2).toInt()
 
                     val w = (newDefaultSize * coefficient).toInt()

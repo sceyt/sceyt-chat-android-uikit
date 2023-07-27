@@ -50,6 +50,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDown
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
@@ -338,11 +339,7 @@ class MessageListViewModel(
                 else SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id)
             }
 
-            Uploading -> {
-                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
-            }
-
-            Downloading -> {
+            Uploading, Downloading, Preparing -> {
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
             }
 

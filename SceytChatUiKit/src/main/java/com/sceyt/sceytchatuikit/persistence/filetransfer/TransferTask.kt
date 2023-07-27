@@ -7,6 +7,7 @@ data class TransferTask(
         val messageTid: Long,
         var state: TransferState?,
         val progressCallback: ProgressUpdateCallback,
+        val preparingCallback: PreparingCallback,
         val resumePauseCallback: ResumePauseCallback,
         val resultCallback: TransferResultCallback,
         val updateFileLocationCallback: UpdateFileLocationCallback,

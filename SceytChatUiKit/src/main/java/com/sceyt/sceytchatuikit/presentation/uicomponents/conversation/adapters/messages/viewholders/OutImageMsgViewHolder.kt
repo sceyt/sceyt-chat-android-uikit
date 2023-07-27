@@ -141,6 +141,8 @@ class OutImageMsgViewHolder(
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
+
+            TransferState.Preparing -> Unit
         }
     }
 

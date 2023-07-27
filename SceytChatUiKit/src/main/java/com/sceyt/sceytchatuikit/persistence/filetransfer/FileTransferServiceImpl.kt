@@ -113,6 +113,10 @@ fun interface ProgressUpdateCallback {
     fun onProgress(date: TransferData)
 }
 
+fun interface PreparingCallback {
+    fun onPreparing(date: TransferData)
+}
+
 fun interface ResumePauseCallback {
     fun onResumePause(date: TransferData)
 }

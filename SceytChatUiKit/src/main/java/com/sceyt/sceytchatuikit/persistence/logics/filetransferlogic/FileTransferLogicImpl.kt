@@ -51,7 +51,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         fileTransferService.getTasks()[task.messageTid.toString()] = task
         val data = ShareFilesData(attachment.filePath.toString(), attachment.filePath.toString(), attachment.messageTid)
         if (sharingFilesPath.none { it.originalPath == attachment.filePath }) {
-            checkAndResizeMessageAttachments(context, attachment) {
+            checkAndResizeMessageAttachments(context, attachment, task) {
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback.onUpdateFileLocation(path)
@@ -203,7 +203,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     private fun uploadAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
         currentUploadingAttachment = attachment
-        checkAndResizeMessageAttachments(context, attachment) {
+        checkAndResizeMessageAttachments(context, attachment, transferTask) {
             // Check if task was paused
             if (pausedTasksMap[attachment.messageTid.toString()] != null) {
                 uploadNext()
@@ -300,7 +300,8 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         }
     }
 
-    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, callback: (Result<String?>) -> Unit) {
+    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment,
+                                                 task: TransferTask, callback: (Result<String?>) -> Unit) {
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
@@ -311,7 +312,9 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
             AttachmentTypeEnum.Video.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
-                transcodeVideo(context, attachment.filePath) {
+                transcodeVideo(context, attachment.filePath, progressCallback = {
+                    task.preparingCallback.onPreparing(attachment.toTransferData(TransferState.Preparing, it.progressPercent))
+                }) {
                     callback(it)
                     resizingAttachmentsMap.remove(attachment.messageTid.toString())
                 }

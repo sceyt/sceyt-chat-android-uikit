@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDown
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
@@ -260,7 +261,7 @@ class MessagesCache {
                                     update(attachment)
                             }
 
-                            FilePathChanged, ThumbLoaded -> return
+                            FilePathChanged, ThumbLoaded, Preparing -> return
                         }
                     }
                 }

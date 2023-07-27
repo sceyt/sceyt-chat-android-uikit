@@ -120,7 +120,8 @@ class OutFileMsgViewHolder(
         when (data.state) {
             TransferState.Uploaded, TransferState.Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
-                setFileDetails(fileItem.file)
+                binding.tvFileSize.text = data.fileTotalSize
+                        ?: fileItem.file.fileSize.toPrettySize()
             }
 
             TransferState.PendingUpload -> {
@@ -140,7 +141,7 @@ class OutFileMsgViewHolder(
                 binding.icFile.setImageResource(0)
             }
 
-            TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
+            TransferState.FilePathChanged, TransferState.ThumbLoaded, TransferState.Preparing -> return
         }
     }
 
