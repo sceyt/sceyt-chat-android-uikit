@@ -251,7 +251,7 @@ class MessagesCache {
                 messageHashMap[updateDate.messageTid]?.let { message ->
                     message.attachments?.forEach { attachment ->
                         when (updateDate.state) {
-                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
+                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing -> {
                                 if (attachment.filePath == updateDate.filePath)
                                     update(attachment)
                             }
@@ -261,7 +261,7 @@ class MessagesCache {
                                     update(attachment)
                             }
 
-                            FilePathChanged, ThumbLoaded, Preparing -> return
+                            FilePathChanged, ThumbLoaded -> return
                         }
                     }
                 }

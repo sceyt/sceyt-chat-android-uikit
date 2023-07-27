@@ -17,5 +17,5 @@ data class TransferData(
 
     fun isCalculatedLoadedSize() = !fileLoadedSize.isNullOrBlank() && !fileTotalSize.isNullOrBlank()
 
-    fun isTransferring() = state == TransferState.Downloading || state == TransferState.Uploading
+    fun isTransferring() = state == TransferState.Downloading || state == TransferState.Uploading || state == TransferState.Preparing
 }
