@@ -33,7 +33,7 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
         SceytPresenceChecker.addNewUserToPresenceCheck(peerId)
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
             .onEach {
-                it.find { user -> user.user.id == peerId}?.let { presenceUser ->
+                it.find { user -> user.user.id == peerId }?.let { presenceUser ->
                     headerView.onPresenceUpdate(presenceUser.user)
                 }
             }.launchIn(lifecycleOwner.lifecycleScope)
@@ -42,9 +42,8 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
-            if (it.eventType != ChannelUpdatedType.Presence) {
+            if (it.eventType != ChannelUpdatedType.Presence)
                 headerView.setChannel(it.channel)
-            } else headerView.setChannel(it.channel)
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
