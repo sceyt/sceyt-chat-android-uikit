@@ -135,6 +135,23 @@
             app:progressColor="@color/sceyt_color_white"
             app:trackColor="@android:color/transparent" />
 
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvLoadSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/sceyt_bg_corners_20"
+            android:backgroundTint="@color/sceyt_progress_bg_color"
+            android:paddingHorizontal="5dp"
+            android:paddingVertical="1dp"
+            android:textColor="@color/sceyt_color_white"
+            android:textSize="@dimen/extraSmallTextSize"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/loadProgress"
+            tools:text="12KB / 10.7MB" />
+
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"

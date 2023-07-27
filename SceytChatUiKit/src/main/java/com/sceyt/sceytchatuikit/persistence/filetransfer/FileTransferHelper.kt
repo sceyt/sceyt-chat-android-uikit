@@ -29,6 +29,7 @@ object FileTransferHelper : SceytKoinComponent {
             messageTid = attachment.messageTid,
             state = attachment.transferState,
             progressCallback = getProgressUpdateCallback(attachment),
+            preparingCallback = getPreparingCallback(attachment),
             resumePauseCallback = getResumePauseCallback(attachment),
             resultCallback = if (isFromUpload) getUploadResultCallback(attachment)
             else getDownloadResultCallback(attachment),
@@ -39,6 +40,12 @@ object FileTransferHelper : SceytKoinComponent {
     fun getProgressUpdateCallback(attachment: SceytAttachment) = ProgressUpdateCallback {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
+        initPrettySizes(it, attachment.fileSize)
+        emitAttachmentTransferUpdate(it)
+    }
+
+    fun getPreparingCallback(attachment: SceytAttachment) = PreparingCallback {
+        attachment.transferState = it.state
         initPrettySizes(it, attachment.fileSize)
         emitAttachmentTransferUpdate(it)
     }

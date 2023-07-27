@@ -81,7 +81,7 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
                 viewHolderHelper.drawOriginalFile(binding.imageView)
             }
 
-            TransferState.ThumbLoaded -> Unit
+            TransferState.ThumbLoaded, TransferState.Preparing -> Unit
         }
     }
 

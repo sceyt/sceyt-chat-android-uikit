@@ -7,10 +7,15 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeExtension
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.*
+import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Cancelled
+import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Failure
+import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Progress
+import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Start
+import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Success
+import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeData
 import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeHelper
 import java.io.File
-import java.util.*
+import java.util.UUID
 
 fun Attachment.resizeImage(context: Context): Attachment {
     var resizedAttachment = this
@@ -58,7 +63,9 @@ suspend fun Attachment.transcodeVideo(context: Context, quality: VideoQuality): 
     return transcodeAttachment
 }
 
-fun transcodeVideo(context: Context, path: String?, quality: VideoQuality = VideoQuality.MEDIUM, callback: (Result<String>) -> Unit) {
+fun transcodeVideo(context: Context, path: String?, quality: VideoQuality = VideoQuality.MEDIUM,
+                   progressCallback: ((VideoTranscodeData) -> Unit)? = null,
+                   callback: (Result<String>) -> Unit) {
     path?.let {
         val dest = File("${context.filesDir}/" + UUID.randomUUID() + getMimeTypeTakeExtension(path))
         VideoTranscodeHelper.transcodeAsResultWithCallback(context, destination = dest, uri = it, quality) { data ->
@@ -66,7 +73,8 @@ fun transcodeVideo(context: Context, path: String?, quality: VideoQuality = Vide
                 Cancelled -> callback(Result.failure(Exception("Canceled")))
                 Failure -> callback(Result.failure(Exception(data.errorMessage)))
                 Success -> callback(Result.success(dest.path))
-                else -> {}
+                Progress -> progressCallback?.invoke(data)
+                Start -> progressCallback?.invoke(data)
             }
         }
     } ?: run { callback(Result.failure(Exception("Wrong file path"))) }

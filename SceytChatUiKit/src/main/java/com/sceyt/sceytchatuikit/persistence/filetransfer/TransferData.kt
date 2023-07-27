@@ -7,15 +7,15 @@ data class TransferData(
         var filePath: String?,
         val url: String?,
         val thumbData: ThumbData? = null,
-        var fileLoadedSize: String = "",
-        var fileTotalSize: String = "",
+        var fileLoadedSize: String? = null,
+        var fileTotalSize: String? = null,
 ) {
     override fun toString(): String {
         return "messageTid $messageTid, progressPercent $progressPercent, state $state, filePath $filePath," +
                 " url$url thumbData $thumbData fileLoadedSize $fileLoadedSize fileTotalSize $fileTotalSize"
     }
 
-    fun isCalculatedLoadedSize() = fileLoadedSize.isNotBlank() && fileTotalSize.isNotBlank()
+    fun isCalculatedLoadedSize() = !fileLoadedSize.isNullOrBlank() && !fileTotalSize.isNullOrBlank()
 
     fun isTransferring() = state == TransferState.Downloading || state == TransferState.Uploading
 }

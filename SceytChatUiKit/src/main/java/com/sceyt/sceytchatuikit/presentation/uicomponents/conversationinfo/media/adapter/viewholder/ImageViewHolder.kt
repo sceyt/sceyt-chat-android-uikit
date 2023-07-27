@@ -82,6 +82,8 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
 
                 viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
+
+            TransferState.Preparing -> Unit
         }
     }
 

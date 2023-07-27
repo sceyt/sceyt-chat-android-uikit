@@ -150,6 +150,8 @@ class IncImageMsgViewHolder(
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
+
+            TransferState.Preparing -> Unit
         }
     }
 

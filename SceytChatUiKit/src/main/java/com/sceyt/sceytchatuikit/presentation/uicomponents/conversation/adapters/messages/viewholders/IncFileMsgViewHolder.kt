@@ -116,11 +116,19 @@ class IncFileMsgViewHolder(
         }
     }
 
+    private fun setProgress(data: TransferData) {
+        if (!data.isCalculatedLoadedSize()) return
+        val text = "${data.fileLoadedSize} • ${data.fileTotalSize}"
+        binding.tvFileSize.text = text
+    }
+
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
             TransferState.Uploaded, TransferState.Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+                binding.tvFileSize.text = data.fileTotalSize
+                        ?: fileItem.file.fileSize.toPrettySize()
             }
 
             TransferState.PendingUpload -> {
@@ -133,13 +141,14 @@ class IncFileMsgViewHolder(
 
             TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
+                setProgress(data)
             }
 
             TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload, TransferState.PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
 
-            TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
+            TransferState.FilePathChanged, TransferState.ThumbLoaded, TransferState.Preparing -> return
         }
     }
 
