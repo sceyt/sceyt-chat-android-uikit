@@ -108,7 +108,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             VideoCompressor.cancel()
 
         when (state) {
-            TransferState.PendingUpload, TransferState.Uploading -> {
+            TransferState.PendingUpload, TransferState.Uploading, TransferState.Preparing -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     it.state = TransferState.PauseUpload
                     it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.PauseUpload))
