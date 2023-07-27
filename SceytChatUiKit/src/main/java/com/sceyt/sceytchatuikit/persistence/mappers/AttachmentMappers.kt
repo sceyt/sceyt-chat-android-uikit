@@ -101,10 +101,11 @@ fun SceytAttachment.toTransferData(): TransferData? {
     )
 }
 
-fun SceytAttachment.toTransferData(transferState: TransferState): TransferData {
+fun SceytAttachment.toTransferData(transferState: TransferState,
+                                   progress: Float = progressPercent ?: 0f): TransferData {
     return TransferData(
         messageTid = messageTid,
-        progressPercent = (progressPercent ?: 0).toFloat(),
+        progressPercent = progress,
         state = transferState,
         filePath = filePath,
         url = url

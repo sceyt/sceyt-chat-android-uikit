@@ -37,6 +37,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -409,7 +410,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun updateProgress(data: TransferData) {
         messagesRV.getData()?.find { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
-                TransferState.Uploading, TransferState.PendingUpload, TransferState.PauseUpload, TransferState.Uploaded -> { attachment ->
+                Uploading, PendingUpload, PauseUpload, Uploaded, Preparing -> { attachment ->
                     attachment.messageTid == data.messageTid
                 }
 
@@ -419,7 +420,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
             val foundAttachmentFile = (it as MessageItem).message.files?.find { listItem -> predicate(listItem.file) }
 
-            if (data.state == TransferState.ThumbLoaded) {
+            if (data.state == ThumbLoaded) {
                 if (data.thumbData?.key == ThumbFor.MessagesLisView.value)
                     foundAttachmentFile?.let { listItem ->
                         listItem.thumbPath = data.filePath

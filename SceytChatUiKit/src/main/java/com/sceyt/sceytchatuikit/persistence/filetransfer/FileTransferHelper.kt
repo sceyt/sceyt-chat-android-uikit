@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
+import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
@@ -28,6 +29,7 @@ object FileTransferHelper : SceytKoinComponent {
             messageTid = attachment.messageTid,
             state = attachment.transferState,
             progressCallback = getProgressUpdateCallback(attachment),
+            preparingCallback = getPreparingCallback(attachment),
             resumePauseCallback = getResumePauseCallback(attachment),
             resultCallback = if (isFromUpload) getUploadResultCallback(attachment)
             else getDownloadResultCallback(attachment),
@@ -38,11 +40,19 @@ object FileTransferHelper : SceytKoinComponent {
     fun getProgressUpdateCallback(attachment: SceytAttachment) = ProgressUpdateCallback {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
+        initPrettySizes(it, attachment.fileSize)
+        emitAttachmentTransferUpdate(it)
+    }
+
+    fun getPreparingCallback(attachment: SceytAttachment) = PreparingCallback {
+        attachment.transferState = it.state
+        initPrettySizes(it, attachment.fileSize)
         emitAttachmentTransferUpdate(it)
     }
 
     fun getResumePauseCallback(attachment: SceytAttachment) = ResumePauseCallback {
         attachment.transferState = it.state
+        initPrettySizes(it, attachment.fileSize)
         emitAttachmentTransferUpdate(it)
         messagesLogic.updateTransferDataByMsgTid(it)
     }
@@ -52,6 +62,7 @@ object FileTransferHelper : SceytKoinComponent {
             is SceytResponse.Success -> {
                 val transferData = TransferData(attachment.messageTid,
                     100f, TransferState.Downloaded, it.data, attachment.url)
+                initPrettySizes(transferData, attachment.fileSize)
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
@@ -61,7 +72,7 @@ object FileTransferHelper : SceytKoinComponent {
                 val transferData = TransferData(
                     attachment.messageTid, attachment.progressPercent ?: 0f,
                     TransferState.ErrorDownload, null, attachment.url)
-
+                initPrettySizes(transferData, attachment.fileSize)
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
@@ -75,6 +86,7 @@ object FileTransferHelper : SceytKoinComponent {
             is SceytResponse.Success -> {
                 val transferData = TransferData(attachment.messageTid,
                     100f, TransferState.Uploaded, attachment.filePath, result.data.toString())
+                initPrettySizes(transferData, attachment.fileSize)
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
@@ -84,7 +96,7 @@ object FileTransferHelper : SceytKoinComponent {
                 val transferData = TransferData(attachment.messageTid,
                     attachment.progressPercent ?: 0f,
                     TransferState.ErrorUpload, attachment.filePath, null)
-
+                initPrettySizes(transferData, attachment.fileSize)
                 emitAttachmentTransferUpdate(transferData)
                 messagesLogic.updateAttachmentWithTransferData(transferData)
                 SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
@@ -105,6 +117,7 @@ object FileTransferHelper : SceytKoinComponent {
             attachment.filePath = newPath
             attachment.fileSize = fileSize
             attachment.upsertSizeMetadata(dimensions)
+            initPrettySizes(transferData, attachment.fileSize)
             emitAttachmentTransferUpdate(transferData)
             messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
         }
@@ -114,6 +127,7 @@ object FileTransferHelper : SceytKoinComponent {
         val transferData = TransferData(attachment.messageTid, attachment.progressPercent ?: 0f,
             TransferState.ThumbLoaded, newPath, attachment.url, thumbData)
 
+        initPrettySizes(transferData, attachment.fileSize)
         emitAttachmentTransferUpdate(transferData)
     }
 
@@ -122,5 +136,12 @@ object FileTransferHelper : SceytKoinComponent {
         runOnMainThread {
             onTransferUpdatedLiveData_.value = data
         }
+    }
+
+    private fun initPrettySizes(data: TransferData, fileSize: Long) {
+        val progressPercent = data.progressPercent
+        val format = if (progressPercent > 99f) "%.2f" else "%.1f"
+        data.fileTotalSize = fileSize.toPrettySize()
+        data.fileLoadedSize = (fileSize * progressPercent / 100).toPrettySize(format)
     }
 }

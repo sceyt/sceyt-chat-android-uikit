@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDown
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
@@ -250,7 +251,7 @@ class MessagesCache {
                 messageHashMap[updateDate.messageTid]?.let { message ->
                     message.attachments?.forEach { attachment ->
                         when (updateDate.state) {
-                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
+                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing -> {
                                 if (attachment.filePath == updateDate.filePath)
                                     update(attachment)
                             }

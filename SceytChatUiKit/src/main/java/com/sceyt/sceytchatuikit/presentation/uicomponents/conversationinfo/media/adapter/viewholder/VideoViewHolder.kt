@@ -81,6 +81,8 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.image)
             }
+
+            TransferState.Preparing -> Unit
         }
     }
 
