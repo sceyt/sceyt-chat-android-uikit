@@ -42,6 +42,7 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
+            // We handling presence update with SceytPresenceChecker
             if (it.eventType != ChannelUpdatedType.Presence)
                 headerView.setChannel(it.channel)
         }
