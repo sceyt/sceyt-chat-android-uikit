@@ -576,7 +576,9 @@ class MessageListViewModel(
             }
 
             is MessageCommandEvent.AttachmentLoaderClick -> {
-                prepareToPauseOrResumeUpload(event.item)
+                viewModelScope.launch(Dispatchers.IO) {
+                    prepareToPauseOrResumeUpload(event.item)
+                }
             }
         }
     }
