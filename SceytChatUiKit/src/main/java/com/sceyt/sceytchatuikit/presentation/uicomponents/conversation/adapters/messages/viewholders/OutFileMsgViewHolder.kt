@@ -109,11 +109,18 @@ class OutFileMsgViewHolder(
         }
     }
 
+    private fun setProgress(data: TransferData) {
+        if (!data.isCalculatedLoadedSize()) return
+        val text = "${data.fileLoadedSize} • ${data.fileTotalSize}"
+        binding.tvFileSize.text = text
+    }
+
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
             TransferState.Uploaded, TransferState.Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+                setFileDetails(fileItem.file)
             }
 
             TransferState.PendingUpload -> {
@@ -126,6 +133,7 @@ class OutFileMsgViewHolder(
 
             TransferState.Downloading, TransferState.Uploading -> {
                 binding.icFile.setImageResource(0)
+                setProgress(data)
             }
 
             TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload, TransferState.PauseUpload -> {
