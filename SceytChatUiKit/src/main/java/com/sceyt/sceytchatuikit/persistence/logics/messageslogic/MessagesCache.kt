@@ -188,9 +188,23 @@ class MessagesCache {
     private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage) {
         val cashedMessage = getMessageByTid(channelId, messageToUpdate.tid)
         val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
+        updateAttachmentsPayLoads(attachmentPayLoadData, messageToUpdate)
 
-        attachmentPayLoadData?.filter { payLoad -> payLoad.messageTid == messageToUpdate.tid }?.let { data ->
-            messageToUpdate.attachments?.forEach { attachment ->
+        cashedMessage?.parentMessage?.let {
+            val parentPayLoadData = getAttachmentPayLoads(it)
+            updateAttachmentsPayLoads(parentPayLoadData, it)
+        }
+
+        val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
+        val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
+        pendingReactions.removeAll(needToAddReactions)
+        pendingReactions.addAll(needToAddReactions)
+        messageToUpdate.pendingReactions = pendingReactions.toList()
+    }
+
+    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?, message: SceytMessage) {
+        payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
+            message.attachments?.forEach { attachment ->
                 val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
                     { data.any { it.url == attachment.url } }
                 } else {
@@ -204,12 +218,6 @@ class MessagesCache {
                 }
             }
         }
-
-        val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
-        val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
-        pendingReactions.removeAll(needToAddReactions)
-        pendingReactions.addAll(needToAddReactions)
-        messageToUpdate.pendingReactions = pendingReactions.toList()
     }
 
     private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
