@@ -6,11 +6,12 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.message.ReactionTotal
+import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_FCM_TOKEN
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -100,12 +101,12 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         val user = getUserFromPushJson(remoteMessage)
         val channel = getChannelFromPushJson(remoteMessage)?.toSceytUiChannel()
         val message = getMessageBodyFromPushJson(remoteMessage, channel?.id, user)?.toSceytUiMessage()
-        val reactionTotal = getReactionTotalFromRemoteMessage(remoteMessage)
-        return RemoteMessageData(channel, message, user, reactionTotal)
+        val reaction = getReactionFromRemoteMessage(remoteMessage, message?.id, user)
+        return RemoteMessageData(channel, message, user, reaction)
     }
 
-    fun getReactionTotalFromRemoteMessage(remoteMessage: RemoteMessage): ReactionTotal? {
-        return getReactionTotalFromPushJson(remoteMessage.data["reaction"])
+    fun getReactionFromRemoteMessage(remoteMessage: RemoteMessage, id: Long?, user: User?): SceytReaction? {
+        return getReactionFromPushJson(remoteMessage.data["reaction"], id, user)
     }
 
     @Throws(IllegalStateException::class)

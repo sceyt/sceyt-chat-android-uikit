@@ -19,6 +19,16 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.common.checkLoadedFileIsCorrect
@@ -76,7 +86,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
             task.progressCallback.onProgress(TransferData(
-                task.messageTid, 0f, TransferState.Downloading, null, attachment.url))
+                task.messageTid, 0f, Downloading, null, attachment.url))
             attachment.url?.let { url ->
                 downloadingUrlMap[url] = url
                 Ion.with(context)
@@ -85,7 +95,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                         if (pausedTasksMap[attachment.messageTid] == null) {
                             val progress = ((downloaded / total.toFloat())) * 100
                             task.progressCallback.onProgress(TransferData(
-                                task.messageTid, progress, TransferState.Downloading, null, attachment.url))
+                                task.messageTid, progress, Downloading, null, attachment.url))
                         }
                     }
                     .write(loadedFile)
@@ -108,20 +118,20 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             VideoCompressor.cancel()
 
         when (state) {
-            TransferState.PendingUpload, TransferState.Uploading, TransferState.Preparing -> {
+            PendingUpload, Uploading, Preparing, FilePathChanged -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
-                    it.state = TransferState.PauseUpload
-                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.PauseUpload))
+                    it.state = PauseUpload
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(PauseUpload))
                 }
                 //todo
                 uploadNext()
 
             }
 
-            TransferState.PendingDownload, TransferState.Downloading -> {
+            PendingDownload, Downloading -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
-                    it.state = TransferState.PauseUpload
-                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.PauseDownload))
+                    it.state = PauseUpload
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(PauseDownload))
                 }
                 //todo
             }
@@ -133,18 +143,18 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     override fun resumeLoad(attachment: SceytAttachment, state: TransferState) {
         pausedTasksMap.remove(attachment.messageTid)
         when (state) {
-            TransferState.PendingDownload, TransferState.PauseDownload, TransferState.ErrorDownload -> {
+            PendingDownload, PauseDownload, ErrorDownload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     downloadingUrlMap.remove(attachment.messageTid.toString())
-                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.Downloading))
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(Downloading))
                     downloadFile(attachment, it)
                 }
             }
 
-            TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload -> {
+            PendingUpload, PauseUpload, ErrorUpload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
-                    it.state = TransferState.Uploading
-                    it.resumePauseCallback.onResumePause(attachment.toTransferData(TransferState.Uploading))
+                    it.state = Uploading
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(Uploading))
                     uploadFile(attachment, it)
                     //Todo need implement resume sharing files
                 }
@@ -220,7 +230,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 override fun onResult(progress: Float) {
                     if (progress == 1f) return
                     transferTask.progressCallback.onProgress(TransferData(transferTask.messageTid,
-                        progress * 100, TransferState.Uploading, attachment.filePath, null))
+                        progress * 100, Uploading, attachment.filePath, null))
                 }
 
                 override fun onError(exception: SceytException?) {
@@ -254,9 +264,9 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             override fun onResult(progress: Float) {
                 if (progress == 1f || pausedTasksMap[attachment.messageTid] != null) return
                 getAppropriateTasks(transferTask).forEach { task ->
-                    fileTransferService.getTasks()[task.messageTid.toString()]?.state = TransferState.Uploading
+                    fileTransferService.getTasks()[task.messageTid.toString()]?.state = Uploading
                     task.progressCallback.onProgress(TransferData(task.messageTid,
-                        progress * 100, TransferState.Uploading, task.attachment.filePath, null))
+                        progress * 100, Uploading, task.attachment.filePath, null))
                 }
             }
 
@@ -296,7 +306,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         }
         return fileTransferService.getTasks().values.filter {
             tasks.any { data -> data.messageTid == it.attachment.messageTid }
-                    && it.state != TransferState.PauseUpload
+                    && it.state != PauseUpload
         }
     }
 
@@ -314,7 +324,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
                 transcodeVideo(context, attachment.filePath, progressCallback = {
                     if (pausedTasksMap[attachment.messageTid] == null)
-                        task.preparingCallback.onPreparing(attachment.toTransferData(TransferState.Preparing, it.progressPercent))
+                        task.preparingCallback.onPreparing(attachment.toTransferData(Preparing, it.progressPercent))
                 }) {
                     callback(it)
                     resizingAttachmentsMap.remove(attachment.messageTid.toString())
