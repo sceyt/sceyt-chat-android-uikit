@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -35,10 +36,13 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
@@ -193,15 +197,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
-                        val path = attachment?.filePath
-                        val placeHolder = attachment?.metadata.getInfoFromMetadataByKey(SceytConstants.Thumb).toByteArraySafety()
-                            ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
-                        Glide.with(itemView.context)
-                            .load(path)
-                            .placeholder(placeHolder)
-                            .error(placeHolder)
-                            .override(imageAttachment.width, imageAttachment.height)
-                            .into(imageAttachment)
+                        loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
                         true
                     }
 
@@ -228,7 +224,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     measure(View.MeasureSpec.UNSPECIFIED, 0)
                     layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
                     val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
-                    if (measuredWidth < bubbleMeasuredWidth)
+                    if (measuredWidth <= bubbleMeasuredWidth)
                         layoutParams.width = bubbleMeasuredWidth
                 }
                 isVisible = true
@@ -240,6 +236,29 @@ abstract class BaseMsgViewHolder(private val view: View,
                 }
             }
         }
+    }
+
+    private fun loadReplyMessageImageOrObserveToDownload(attachment: SceytAttachment?, imageAttachment: ImageView) {
+        val path = attachment?.filePath
+        val placeHolder = attachment?.metadata.getInfoFromMetadataByKey(SceytConstants.Thumb).toByteArraySafety()
+            ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
+
+        fun loadImage(filePath: String?) {
+            Glide.with(itemView.context)
+                .load(filePath)
+                .placeholder(placeHolder)
+                .error(placeHolder)
+                .override(imageAttachment.width, imageAttachment.height)
+                .into(imageAttachment)
+        }
+
+        if (path.isNullOrBlank()) {
+            imageAttachment.setImageDrawable(placeHolder)
+            FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
+                if (it.state == TransferState.Downloaded && it.messageTid == attachment?.messageTid)
+                    loadImage(it.filePath)
+            }
+        } else loadImage(path)
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {

@@ -44,6 +44,7 @@ abstract class BaseMediaMessageViewHolder(
     }
     private val minSize = maxSize / 3
     protected var isAttachedToWindow = true
+    private var addedLister = false
 
     @CallSuper
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
@@ -139,6 +140,8 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     private fun setListener() {
+        if (addedLister) return
+        addedLister = true
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
             if (viewHolderHelper.updateTransferData(it, fileItem))
                 updateState(it)
