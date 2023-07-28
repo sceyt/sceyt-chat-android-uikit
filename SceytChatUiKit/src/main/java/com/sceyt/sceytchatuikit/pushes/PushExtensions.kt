@@ -6,13 +6,12 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityState
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import okhttp3.internal.toLongOrDefault
 import org.json.JSONObject
 
 fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
@@ -106,14 +105,17 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
     }
 }
 
-fun getReactionTotalFromPushJson(json: String?): ReactionTotal? {
+fun getReactionFromPushJson(json: String?, messageId: Long?, user: User?): SceytReaction? {
     return try {
         val jsonObject = JSONObject(json ?: return null)
+        val id = jsonObject.getString("id").toLong()
         val key = jsonObject.getString("key")
-        val score = jsonObject.getString("score").toLong()
-        val count = jsonObject.getString("count").toLongOrDefault(1)
-        if (key.isEmpty() || score == 0L) return null
-        ReactionTotal(key, count, score)
+        val score = jsonObject.getString("score").toInt()
+        val reason = jsonObject.getString("reason")
+        val createdAt = jsonObject.getString("created_at").toLong()
+
+        if (key.isEmpty() || score == 0 || messageId == null || user == null) return null
+        SceytReaction(id, messageId, key, score, reason, createdAt, user, false)
     } catch (e: Exception) {
         e.printStackTrace()
         null

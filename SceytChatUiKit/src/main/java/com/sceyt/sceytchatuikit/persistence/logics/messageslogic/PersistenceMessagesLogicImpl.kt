@@ -15,6 +15,8 @@ import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
+import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventEnum
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
@@ -35,8 +37,8 @@ import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
-import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
@@ -53,12 +55,12 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
@@ -101,6 +103,7 @@ internal class PersistenceMessagesLogicImpl(
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
+    private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
 
     override val coroutineContext: CoroutineContext
@@ -135,17 +138,16 @@ internal class PersistenceMessagesLogicImpl(
 
             val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
 
-            val isReaction = data.reactionTotal != null
+            val isReaction = data.reaction != null
 
             if (messageDb == null && !isReaction) {
                 onMessage(Pair(data.channel, data.message), false)
                 persistenceChannelsLogic.onFcmMessage(data)
             }
 
-            if (messageDb != null)
-                data.reactionTotal?.toReactionTotalEntity(message.id)?.let {
-                    reactionDao.insertReactionTotal(it)
-                }
+            if (messageDb != null && isReaction)
+                persistenceReactionLogic.onMessageReactionUpdated(ReactionUpdateEventData(
+                    messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
         }
     }
 

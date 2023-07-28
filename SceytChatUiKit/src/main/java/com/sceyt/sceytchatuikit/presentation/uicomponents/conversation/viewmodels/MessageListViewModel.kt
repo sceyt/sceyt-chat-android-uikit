@@ -317,7 +317,7 @@ class MessageListViewModel(
             PendingUpload else PendingDownload
 
         when (val state = item.file.transferState ?: return) {
-            PendingUpload, ErrorUpload, FilePathChanged -> {
+            PendingUpload, ErrorUpload -> {
                 SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id)
             }
 
@@ -339,7 +339,7 @@ class MessageListViewModel(
                 else SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id)
             }
 
-            Uploading, Downloading, Preparing -> {
+            Uploading, Downloading, Preparing, FilePathChanged -> {
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
             }
 
