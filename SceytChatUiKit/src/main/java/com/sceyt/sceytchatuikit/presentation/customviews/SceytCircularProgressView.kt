@@ -46,7 +46,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var centerIcon: Drawable? = null
     private var enableTrack = true
     private var rotateAnimEnabled = true
-    private var enableProgressDownAnimation = true
+    private var enableProgressDownAnimation = false
     private var trackThickness = dpToPxAsFloat(3.2f)
     private var roundedProgress = true
     private var trackColor = "#1A21CFB9".toColorInt()

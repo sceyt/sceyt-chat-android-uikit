@@ -37,7 +37,8 @@ object SendAttachmentWorkManager : SceytKoinComponent {
     internal const val MESSAGE_TID = "MESSAGE_TID"
     internal const val IS_SHARING = "IS_SHARING"
 
-    fun schedule(context: Context, messageTid: Long, channelId: Long?, isSharing: Boolean = false): Operation {
+    fun schedule(context: Context, messageTid: Long, channelId: Long?,
+                 workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP, isSharing: Boolean = false): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
         dataBuilder.putBoolean(IS_SHARING, isSharing)
@@ -48,7 +49,7 @@ object SendAttachmentWorkManager : SceytKoinComponent {
             .setInputData(dataBuilder.build())
             .build()
 
-        return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), ExistingWorkPolicy.KEEP, myWorkRequest)
+        return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), workPolicy, myWorkRequest)
             .enqueue()
     }
 }
@@ -76,11 +77,14 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                         continuation.safeResume(Pair(true, payload.url))
                     } else {
                         foundAttachmentToUpload = true
-                        val transferData = TransferData(tmpMessage.tid, 0f,
-                            TransferState.Uploading, attachment.filePath, attachment.url)
-                        attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        if (attachment.transferState != TransferState.PauseUpload) {
+                            val transferData = TransferData(tmpMessage.tid, 0f,
+                                TransferState.Uploading, attachment.filePath, attachment.url)
+                            attachmentLogic.updateAttachmentWithTransferData(transferData)
+                            FileTransferHelper.emitAttachmentTransferUpdate(transferData)
 
-                        uploadFile(attachment, continuation, isSharing)
+                            uploadFile(attachment, continuation, isSharing)
+                        }
                     }
                 }
                 if (!foundAttachmentToUpload)

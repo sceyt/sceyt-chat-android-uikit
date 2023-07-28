@@ -130,7 +130,8 @@ class OutVideoMsgViewHolder(
                 text = title
                 isVisible = true
             } else
-                isVisible = data.state == FilePathChanged || (data.progressPercent != 100f && data.state == ThumbLoaded)
+                if (data.state != ThumbLoaded && data.state != FilePathChanged)
+                    isVisible = false
         }
     }
 
@@ -162,10 +163,10 @@ class OutVideoMsgViewHolder(
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
-            Uploading -> {
+            Uploading, Preparing -> {
+                binding.videoViewController.showPlayPauseButtons(false)
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-                binding.videoViewController.showPlayPauseButtons(false)
             }
 
             PauseDownload -> {
@@ -186,8 +187,6 @@ class OutVideoMsgViewHolder(
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
             }
-
-            Preparing -> Unit
         }
     }
 

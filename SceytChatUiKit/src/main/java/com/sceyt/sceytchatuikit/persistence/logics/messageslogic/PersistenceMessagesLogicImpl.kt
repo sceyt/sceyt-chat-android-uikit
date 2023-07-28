@@ -370,7 +370,7 @@ internal class PersistenceMessagesLogicImpl(
             emitTmpMessageAndStore(channelId, message, this.channel)
 
         if (checkHasFileAttachments(message) && !isUploadedAttachments) {
-            SendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing).await()
+            SendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing = isSharing).await()
             trySend(SendMessageResult.StartedSendingAttachment)
             channel.close()
         } else {
@@ -470,8 +470,10 @@ internal class PersistenceMessagesLogicImpl(
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             } else {
                 pendingMessages.forEach {
-                    val message = it.toMessage()
-                    sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = true, isUploadedAttachments = false).collect()
+                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachmentDb -> attachmentDb.payLoad?.transferState != TransferState.PauseUpload }) {
+                        val message = it.toMessage()
+                        sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = true, isUploadedAttachments = false).collect()
+                    }
                 }
             }
         }

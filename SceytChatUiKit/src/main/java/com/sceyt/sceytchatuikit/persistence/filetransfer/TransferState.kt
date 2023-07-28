@@ -60,12 +60,11 @@ fun SceytCircularProgressView.getProgressWithState(state: TransferState, progres
 
         Preparing -> {
             setProgress(0f)
+            setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_cancel_transfer))
             isVisible = true
         }
 
-        Uploaded, Downloaded -> {
-            isVisible = false
-        }
+        Uploaded, Downloaded -> isVisible = false
 
         ThumbLoaded -> {
             if (progressPercent == 100f)

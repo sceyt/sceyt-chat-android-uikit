@@ -5,6 +5,7 @@ import android.text.Editable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -33,6 +34,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
@@ -92,6 +94,7 @@ class MessageListViewModel(
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
+    private val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
     internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val context: Context by inject()
@@ -336,7 +339,15 @@ class MessageListViewModel(
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
-                else SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id)
+                else {
+                    // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
+                    // not start uploading.
+                    persistenceAttachmentMiddleWare.updateTransferDataByMsgTid(TransferData(
+                        item.sceytMessage.tid, item.file.progressPercent
+                                ?: 0f, Uploading, item.file.filePath, item.file.url))
+
+                    SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id, ExistingWorkPolicy.REPLACE)
+                }
             }
 
             Uploading, Downloading, Preparing, FilePathChanged -> {
