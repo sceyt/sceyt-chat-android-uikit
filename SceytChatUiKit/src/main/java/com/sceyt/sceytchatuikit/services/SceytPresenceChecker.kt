@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.services
 
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
@@ -54,7 +55,7 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
     }
 
     private fun getUsers() {
-        if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground()) return
+        if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground() || !ConnectionEventsObserver.isConnected) return
         workJob = launch {
             val result = persistenceUsersMiddleWare.getUsersByIds(presenceCheckUsers.keys.toList())
             if (result is SceytResponse.Success) {
