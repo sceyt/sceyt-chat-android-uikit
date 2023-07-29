@@ -65,7 +65,6 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
     }
 
-    getChannel(channel.id)
     loadChannelMembersIfNeeded()
 
     onChannelUpdatedEventFlow.onEach {
