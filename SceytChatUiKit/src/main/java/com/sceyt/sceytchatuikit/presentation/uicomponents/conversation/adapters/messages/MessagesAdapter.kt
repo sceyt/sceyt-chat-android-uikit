@@ -48,6 +48,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         return messages.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return messages[position].getItemId()
+    }
+
     override fun onViewAttachedToWindow(holder: BaseMsgViewHolder) {
         super.onViewAttachedToWindow(holder)
         holder.onViewAttachedToWindow()

@@ -19,7 +19,8 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
@@ -62,7 +63,7 @@ abstract class BaseMediaMessageViewHolder(
         viewHolderHelper.transferData?.let {
             loadingProgressView.release(it.progressPercent)
             updateState(it, true)
-            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload && it.state != PauseDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
     }

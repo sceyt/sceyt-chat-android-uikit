@@ -23,5 +23,15 @@ sealed class MessageListItem {
         }
     }
 
+    fun getItemId(): Long {
+        return when (this) {
+            is MessageItem -> message.id
+            is DateSeparatorItem -> hashCode().toLong()
+            is UnreadMessagesSeparatorItem -> hashCode().toLong()
+            is LoadingPrevItem -> hashCode().toLong()
+            is LoadingNextItem -> hashCode().toLong()
+        }
+    }
+
     var highlighted = false
 }

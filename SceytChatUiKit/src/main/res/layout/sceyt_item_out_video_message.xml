@@ -82,22 +82,36 @@
             tools:text="Lore ipsum  is the correct text which"
             tools:visibility="visible" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytVideoControllerView
-            android:id="@+id/videoViewController"
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imageThumb"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_margin="2dp"
             android:background="@drawable/sceyt_rounded_video_background"
+            android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
             app:sceytVideoControllerCornerSize="18dp"
             app:sceytVideoControllerEnablePlayPauseClick="false"
             app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize"
+            app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
             tools:layout_height="200dp"
-            tools:sceytVideoControllerImage="@tools:sample/backgrounds/scenic" />
+            tools:sceytVideoControllerImage="@tools:sample/backgrounds/scenic"
+            tools:src="@tools:sample/backgrounds/scenic" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/playPauseItem"
+            android:layout_width="@dimen/messageProgressSize"
+            android:layout_height="@dimen/messageProgressSize"
+            android:background="@drawable/sceyt_bg_play_pause_button"
+            android:padding="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/imageThumb"
+            app:layout_constraintEnd_toEndOf="@+id/imageThumb"
+            app:layout_constraintStart_toStartOf="@+id/imageThumb"
+            app:layout_constraintTop_toTopOf="@+id/imageThumb"
+            app:srcCompat="@drawable/sceyt_ic_play" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvDuration"
@@ -115,7 +129,7 @@
             android:textSize="11sp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/videoViewController"
+            app:layout_constraintTop_toTopOf="@id/imageThumb"
             tools:text="0:11"
             tools:visibility="visible" />
 
@@ -127,10 +141,10 @@
             android:visibility="gone"
             app:backgroundColor="@color/sceyt_progress_bg_color"
             app:iconSizeInPercent="65"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/videoViewController"
+            app:layout_constraintBottom_toBottomOf="@+id/imageThumb"
+            app:layout_constraintEnd_toEndOf="@+id/imageThumb"
+            app:layout_constraintStart_toStartOf="@+id/imageThumb"
+            app:layout_constraintTop_toTopOf="@+id/imageThumb"
             app:minProgress="2"
             app:progressColor="@color/sceyt_color_white"
             app:trackColor="@android:color/transparent" />

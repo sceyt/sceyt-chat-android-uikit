@@ -40,13 +40,10 @@ class AttachmentViewHolderHelper(itemView: View) {
     }
 
     fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {
-        val width = resizedImageSize?.width ?: imageView.width
-        val height = resizedImageSize?.height ?: imageView.height
         Glide.with(context.applicationContext)
             .load(path)
             .transition(DrawableTransitionOptions.withCrossFade())
             .placeholder(blurredThumb)
-            .override(width, height)
             .into(imageView)
     }
 
