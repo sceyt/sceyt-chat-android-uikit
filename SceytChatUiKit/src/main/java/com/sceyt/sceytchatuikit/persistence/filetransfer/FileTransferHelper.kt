@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
 import org.koin.core.component.inject
@@ -19,6 +20,7 @@ import java.io.File
 object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
     private val messagesLogic by inject<PersistenceAttachmentLogic>()
+    private val messagesCache by inject<MessagesCache>()
 
     private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
     val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
@@ -41,12 +43,14 @@ object FileTransferHelper : SceytKoinComponent {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
         initPrettySizes(it, attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
         emitAttachmentTransferUpdate(it)
     }
 
     fun getPreparingCallback(attachment: SceytAttachment) = PreparingCallback {
         attachment.transferState = it.state
         initPrettySizes(it, attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
         emitAttachmentTransferUpdate(it)
     }
 
