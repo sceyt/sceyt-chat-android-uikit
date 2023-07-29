@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
@@ -78,8 +79,9 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     } else {
                         foundAttachmentToUpload = true
                         if (attachment.transferState != TransferState.PauseUpload) {
-                            val transferData = TransferData(tmpMessage.tid, 0f,
-                                TransferState.Uploading, attachment.filePath, attachment.url)
+                            val transferData = TransferData(tmpMessage.tid, 0f, TransferState.Uploading,
+                                attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
+
                             attachmentLogic.updateAttachmentWithTransferData(transferData)
                             FileTransferHelper.emitAttachmentTransferUpdate(transferData)
 
