@@ -114,11 +114,6 @@ class OutVideoMsgViewHolder(
 
     private fun setFileLoadProgress(data: TransferData) {
         with(binding.tvLoadSize) {
-            if (!data.isCalculatedLoadedSize()) {
-                isVisible = false
-                return
-            }
-
             if (data.state == Preparing) {
                 text = context.getString(R.string.preparing)
                 isVisible = true
@@ -129,53 +124,57 @@ class OutVideoMsgViewHolder(
                 val title = "${data.fileLoadedSize} / ${data.fileTotalSize}"
                 text = title
                 isVisible = true
-            } else
-                if (data.state != ThumbLoaded && data.state != FilePathChanged)
-                    isVisible = false
+            }
         }
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         val imageView = binding.imageThumb
-        setFileLoadProgress(data)
 
         when (data.state) {
             Downloaded, Uploaded -> {
                 binding.playPauseItem.isVisible = true
+                binding.tvLoadSize.isVisible = false
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+                binding.tvLoadSize.isVisible = true
                 binding.playPauseItem.isVisible = false
             }
 
             PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
                 binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             Downloading -> {
                 binding.playPauseItem.isVisible = false
+                setFileLoadProgress(data)
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             Uploading, Preparing -> {
                 binding.playPauseItem.isVisible = false
+                setFileLoadProgress(data)
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
             PauseDownload -> {
                 binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             ErrorDownload -> {
                 binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 

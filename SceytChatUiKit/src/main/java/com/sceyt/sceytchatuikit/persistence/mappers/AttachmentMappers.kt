@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataFromJson
@@ -98,7 +99,10 @@ fun SceytAttachment.toTransferData(): TransferData? {
         state = transferState ?: return null,
         filePath = filePath,
         url = url
-    )
+    ).apply {
+        if (transferState == TransferState.Uploading)
+            withPrettySizes(fileSize)
+    }
 }
 
 fun SceytAttachment.toTransferData(transferState: TransferState,
