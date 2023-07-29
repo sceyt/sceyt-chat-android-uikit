@@ -67,6 +67,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     if (channel.unread)
         markChannelAsRead(channel.id)
+    else getChannel(channel.id)
 
     if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
             || channel.lastDisplayedMessageId == channel.lastMessage?.id)
