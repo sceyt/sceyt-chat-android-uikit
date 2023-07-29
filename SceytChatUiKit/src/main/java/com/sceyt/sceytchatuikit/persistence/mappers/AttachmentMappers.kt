@@ -100,7 +100,7 @@ fun SceytAttachment.toTransferData(): TransferData? {
         filePath = filePath,
         url = url
     ).apply {
-        if (transferState == TransferState.Uploading)
+        if (transferState == TransferState.Uploading || transferState == TransferState.Downloading)
             withPrettySizes(fileSize)
     }
 }
