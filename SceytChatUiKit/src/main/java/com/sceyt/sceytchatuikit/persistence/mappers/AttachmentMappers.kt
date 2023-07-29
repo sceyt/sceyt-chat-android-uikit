@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import android.graphics.Bitmap
+import android.util.Log
 import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
@@ -99,10 +100,7 @@ fun SceytAttachment.toTransferData(): TransferData? {
         state = transferState ?: return null,
         filePath = filePath,
         url = url
-    ).apply {
-        if (transferState == TransferState.Uploading || transferState == TransferState.Downloading)
-            withPrettySizes(fileSize)
-    }
+    ).withPrettySizes(fileSize)
 }
 
 fun SceytAttachment.toTransferData(transferState: TransferState,
