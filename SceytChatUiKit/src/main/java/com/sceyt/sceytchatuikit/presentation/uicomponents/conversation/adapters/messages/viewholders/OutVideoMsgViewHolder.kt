@@ -61,11 +61,11 @@ class OutVideoMsgViewHolder(
                 messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
 
-            videoViewController.setOnClickListener {
+            imageThumb.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem)
             }
 
-            videoViewController.setOnLongClickListener {
+            imageThumb.setOnLongClickListener {
                 messageListeners?.onAttachmentLongClick(it, fileItem)
                 return@setOnLongClickListener true
             }
@@ -137,45 +137,45 @@ class OutVideoMsgViewHolder(
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
-        val imageView = binding.videoViewController.getImageView()
+        val imageView = binding.imageThumb
         setFileLoadProgress(data)
 
         when (data.state) {
             Downloaded, Uploaded -> {
-                binding.videoViewController.showPlayPauseButtons(true)
+                binding.playPauseItem.isVisible = true
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
             }
 
             PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             Downloading -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             Uploading, Preparing -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
             PauseDownload -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             ErrorDownload -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
@@ -191,7 +191,7 @@ class OutVideoMsgViewHolder(
     }
 
     override val fileContainer: View
-        get() = binding.videoViewController
+        get() = binding.imageThumb
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
