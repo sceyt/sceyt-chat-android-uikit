@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import android.graphics.Bitmap
-import android.util.Log
 import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
