@@ -22,6 +22,8 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData.Companion.
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataFromJson
+import com.sceyt.sceytchatuikit.shared.utils.BitmapUtil
+import com.sceyt.sceytchatuikit.shared.utils.ThumbHash
 import org.json.JSONObject
 
 fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId: Long) = AttachmentDb(
@@ -127,7 +129,15 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
             }
 
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
-                blurredThumbBitmap = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()?.decodeByteArrayToBitmap()
+                val bytes = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()
+                try {
+                    val image = ThumbHash.thumbHashToRGBA(bytes)
+                    blurredThumbBitmap = BitmapUtil.bitmapFromRgba(image.width, image.height, image.rgba)
+                } catch (_: Exception) {
+                }
+
+                if (blurredThumbBitmap == null && bytes != null)
+                    blurredThumbBitmap = bytes.decodeByteArrayToBitmap()
 
                 val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
                 val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
