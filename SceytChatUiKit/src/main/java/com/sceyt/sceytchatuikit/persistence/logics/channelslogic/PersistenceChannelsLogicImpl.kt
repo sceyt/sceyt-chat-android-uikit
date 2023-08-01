@@ -365,8 +365,7 @@ internal class PersistenceChannelsLogicImpl(
                 .collect { response ->
                     if (response is SceytResponse.Success) {
                         response.data?.let {
-                            val savedChannels = saveChannelsToDb(it)
-                            channelsCache.upsertChannel(*savedChannels.toTypedArray())
+                            saveChannelsToDb(it)
                             syncedChannels.addAll(it)
                             messageLogic.onSyncedChannels(it)
                         }
