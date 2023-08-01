@@ -42,7 +42,6 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.isPrivate
@@ -293,8 +292,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             members.text = if (channel.isPublic())
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
 
-            val myRole = channel.getMyRole()
-            val isOwnerOrAdmin = myRole?.name == RoleTypeEnum.Owner.toString() || myRole?.name == RoleTypeEnum.Admin.toString()
+            val myRole = channel.userRole
+            val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
 
             admins.isVisible = isOwnerOrAdmin || channel.isPrivate()
             groupChannelMembers.isVisible = isOwnerOrAdmin || channel.isPrivate()

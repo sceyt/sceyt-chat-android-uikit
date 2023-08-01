@@ -62,7 +62,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             SceytLoader.hideLoading()
             lifecycleScope.launch {
                 delay(100)
-                requireActivity().finish()
+                requireActivity().onBackPressed()
             }
         }
 
@@ -79,7 +79,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         tvDescription.doAfterTextChanged { checkSaveState() }
 
         layoutToolbar.navigationIcon.setOnClickListener {
-            requireActivity().finish()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
 
         icChangePhoto.setOnClickListener {
@@ -157,7 +157,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                 channelType = channel.getChannelType(),
                 avatarEdited = isEditedAvatar)
             viewModel.saveChanges(channel.id, data)
-        } else requireActivity().finish()
+        } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
     private fun FragmentEditChannelBinding.setupStyle() {

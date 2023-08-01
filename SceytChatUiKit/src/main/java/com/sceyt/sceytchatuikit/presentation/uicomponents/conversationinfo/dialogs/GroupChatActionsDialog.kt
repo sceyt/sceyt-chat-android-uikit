@@ -13,7 +13,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogGroupChannelActionsBinding
@@ -71,8 +70,8 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     }
 
     private fun determinateState() {
-        val myRole = channel.getMyRole()
-        val enabledActions = myRole?.name == RoleTypeEnum.Owner.toString()
+        val myRole = channel.userRole
+        val enabledActions = myRole == RoleTypeEnum.Owner.toString()
         binding.delete.isVisible = enabledActions
     }
 
