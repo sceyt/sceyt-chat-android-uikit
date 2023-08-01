@@ -807,12 +807,8 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
-        try {
-            val list = ids.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
-            pendingMarkersDao.insertMany(list)
-        } catch (e: Exception) {
-            SceytLog.e(TAG, "Couldn't insert pending markers.")
-        }
+        val list = ids.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
+        pendingMarkersDao.insertMany(list)
     }
 
     private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: MarkerTypeEnum, vararg ids: Long) {
