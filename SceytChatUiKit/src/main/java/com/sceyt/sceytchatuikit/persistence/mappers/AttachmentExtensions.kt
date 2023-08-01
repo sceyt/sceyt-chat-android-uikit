@@ -12,7 +12,9 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.toBase64
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.shared.utils.BitmapUtil
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import com.sceyt.sceytchatuikit.shared.utils.ThumbHash
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
@@ -65,7 +67,8 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
             when (type) {
                 AttachmentTypeEnum.Image.value() -> {
                     size = FileResizeUtil.getImageSizeOriented(Uri.parse(path))
-                    FileResizeUtil.getImageThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
+                    FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
+                        val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
                         base64String = bytes.toBase64()
                     }
                 }
@@ -73,7 +76,8 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
                 AttachmentTypeEnum.Video.value() -> {
                     size = FileResizeUtil.getVideoSizeOriented(path)
                     durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
-                    FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
+                    FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f)?.let { bm ->
+                        val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
                         base64String = bytes.toBase64()
                     }
                 }

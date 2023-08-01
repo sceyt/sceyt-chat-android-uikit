@@ -7,6 +7,7 @@ import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Size
+import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.sceytchatuikit.extensions.bitmapToByteArray
 import com.sceyt.sceytchatuikit.extensions.getFileSizeMb
@@ -16,6 +17,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.UUID
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -48,48 +50,21 @@ object FileResizeUtil {
         }
     }
 
-    fun resizeAndCompressImageAsByteArray(filePath: String,
-                                          reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): ByteArray? {
-        if (filePath.isBlank()) return null
-        return try {
-            val initialSize = getImageDimensionsSize(Uri.parse(filePath))
-            if (initialSize.width == -1 || initialSize.height == -1) return null
-
-            val inSimpleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-            val quality = calculateQuality(filePath, inSimpleSize)
-
-            var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
-                inSampleSize = inSimpleSize
-            })
-
-            bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath)
-            val bmpFile = ByteArrayOutputStream()
-            bmpPic.compress(Bitmap.CompressFormat.JPEG, quality, bmpFile)
-            bmpFile.flush()
-            bmpFile.close()
-            bmpFile.toByteArray()
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
     fun resizeAndCompressImageAsByteArray(bitmap: Bitmap,
-                                          reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): Bitmap? {
+                                          reqSize: Int = 800): Bitmap? {
         return try {
             val initialSize = Size(bitmap.width, bitmap.height)
             val byteArray = bitmap.bitmapToByteArray()
 
-            val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
-                    ?: return null, BitmapFactory.Options().apply {
-                inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-            })
+            val size = Size(initialSize.width, initialSize.height)
+            val w = (reqSize * size.width / max(size.width, size.height)).toDouble().roundToInt()
+            val h = (reqSize * size.height / max(size.width, size.height)).toDouble().roundToInt()
 
-            val bmpFile = ByteArrayOutputStream()
-            bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
-            bmpFile.flush()
-            bmpFile.close()
-            bmpPic
+            BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                    ?: return null, BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(initialSize, w, h)
+            }).scale(w, h, false)
+
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
             null
@@ -112,6 +87,33 @@ object FileResizeUtil {
             bmpFile.flush()
             bmpFile.close()
             File(dest)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun resizeAndCompressBitmapWithFilePath(filePath: String, reqSize: Int = 800): Bitmap? {
+        if (filePath.isBlank()) return null
+        return try {
+            val initialSize = getImageDimensionsSize(Uri.parse(filePath))
+            if (initialSize.width == -1 || initialSize.height == -1) return null
+
+
+            val size = Size(initialSize.width, initialSize.height)
+            val w = (reqSize * size.width / max(size.width, size.height)).toDouble().roundToInt()
+            val h = (reqSize * size.height / max(size.width, size.height)).toDouble().roundToInt()
+
+            val inSimpleSize = calculateInSampleSize(initialSize, w, h)
+
+            var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
+                inSampleSize = inSimpleSize
+            })
+
+            bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath).scale(w, h, false)
+
+            return bmpPic
+
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
             null
@@ -180,18 +182,9 @@ object FileResizeUtil {
         return timeInMilliSec
     }
 
-    fun getImageThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
+    fun getVideoThumbByUrlAsByteArray(url: String, maxImageSize: Float): Bitmap? {
         return try {
-            resizeAndCompressImageAsByteArray(url, reqSize = maxImageSize.roundToInt())
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            null
-        }
-    }
-
-    fun getVideoThumbByUrlAsByteArray(url: String, maxImageSize: Float): ByteArray? {
-        return try {
-            getVideoThumb(url, maxImageSize).bitmapToByteArray()
+            getVideoThumb(url, maxImageSize)
         } catch (ex: Exception) {
             ex.printStackTrace()
             null
@@ -271,7 +264,7 @@ object FileResizeUtil {
         }
     }
 
-    private fun calculateInSampleSize(size: Size, reqWidth: Int, reqHeight: Int): Int {
+    fun calculateInSampleSize(size: Size, reqWidth: Int, reqHeight: Int): Int {
         val (height: Int, width: Int) = size.run { height to width }
 
         var inSampleSize = 1
