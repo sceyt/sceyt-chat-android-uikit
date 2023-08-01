@@ -16,7 +16,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 import com.sceyt.sceytchatuikit.presentation.common.isPeerBlocked
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
@@ -97,9 +96,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
         val filtered = data.filter {
-            ((it.isPublic() && (it.getMyRole()?.name != RoleTypeEnum.Owner.toString() &&
-                    it.getMyRole()?.name != RoleTypeEnum.Admin.toString()))
-                    || ((it.isPeerDeleted() || it.isPeerBlocked())))
+            ((it.isPublic() && (it.userRole != RoleTypeEnum.Owner.toString() &&
+                    it.userRole != RoleTypeEnum.Admin.toString())) || ((it.isPeerDeleted() || it.isPeerBlocked())))
         }
 
         return data.minus(filtered.toSet())
