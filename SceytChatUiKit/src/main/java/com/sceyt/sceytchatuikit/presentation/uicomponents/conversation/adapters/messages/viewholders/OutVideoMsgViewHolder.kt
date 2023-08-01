@@ -141,7 +141,7 @@ class OutVideoMsgViewHolder(
 
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-                binding.tvLoadSize.isVisible = true
+                binding.tvLoadSize.isVisible = false
                 binding.playPauseItem.isVisible = false
             }
 
