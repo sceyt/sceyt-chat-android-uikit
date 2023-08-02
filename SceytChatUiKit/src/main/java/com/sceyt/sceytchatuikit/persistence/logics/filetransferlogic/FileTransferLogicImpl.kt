@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic
 
 import android.content.Context
 import android.util.Size
-import com.abedelazizshe.lightcompressorlibrary.VideoCompressor
+import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomVideoCompressor
 import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -115,7 +115,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     override fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
         pausedTasksMap[attachment.messageTid] = attachment.messageTid
         if (attachment.type == AttachmentTypeEnum.Video.value())
-            VideoCompressor.cancel()
+            CustomVideoCompressor.cancel()
 
         when (state) {
             PendingUpload, Uploading, Preparing, FilePathChanged -> {
