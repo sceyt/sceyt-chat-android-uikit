@@ -38,6 +38,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
@@ -85,7 +86,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.onCompletion
 import org.koin.core.component.inject
 
 internal class PersistenceChannelsLogicImpl(
@@ -346,39 +346,47 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
-        return callbackFlow {
-            val oldChannelsIds = channelDao.getAllChannelsIds().toSet()
-            awaitToConnectSceyt()
-            val syncedChannels = arrayListOf<SceytChannel>()
-            channelsRepository.getAllChannels(limit)
-                .onCompletion {
-                    if (syncedChannels.isNotEmpty()) {
-                        val syncedIds = syncedChannels.map { it.id }
-                        val deletedChannelIds = channelDao.getNotExistingChannelIdsByIds(syncedIds)
-                        val addedChannelsIds = syncedIds.minus(oldChannelsIds)
-
-                        if (deletedChannelIds.isNotEmpty())
-                            SceytLog.i("syncChannelsResult", "deletedChannelsIds: ${deletedChannelIds.map { it }}")
-
-                        deletedChannelIds.forEach { deleteChannelDb(channelId = it) }
-                        upsertChannelsToCache(syncedChannels.filter { addedChannelsIds.contains(it.id) })
+    override suspend fun syncChannels(limit: Int) = callbackFlow {
+        val oldChannelsIds = channelDao.getAllChannelsIds().toSet()
+        awaitToConnectSceyt()
+        val syncedChannels = arrayListOf<SceytChannel>()
+        channelsRepository.getAllChannels(limit)
+            .collect { response ->
+                when (response) {
+                    is GetAllChannelsResponse.Proportion -> {
+                        val channels = response.channels
+                        saveChannelsToDb(channels)
+                        syncedChannels.addAll(channels)
+                        messageLogic.onSyncedChannels(channels)
+                        channelsCache.upsertChannelIfExist(*channels.toTypedArray())
+                        trySend(response)
                     }
-                    channel.close()
-                }
-                .collect { response ->
-                    if (response is SceytResponse.Success) {
-                        response.data?.let {
-                            saveChannelsToDb(it)
-                            syncedChannels.addAll(it)
-                            messageLogic.onSyncedChannels(it)
+
+                    is GetAllChannelsResponse.SuccessfullyFinished -> {
+                        if (syncedChannels.isNotEmpty()) {
+                            val syncedIds = syncedChannels.map { it.id }
+                            val deletedChannelIds = channelDao.getNotExistingChannelIdsByIds(syncedIds)
+                            val addedChannelsIds = syncedIds.minus(oldChannelsIds)
+
+                            if (deletedChannelIds.isNotEmpty())
+                                SceytLog.i("syncChannelsResult", "deletedChannelsIds: ${deletedChannelIds.map { it }}")
+
+                            deletedChannelIds.forEach { deleteChannelDb(channelId = it) }
+                            upsertChannelsToCache(syncedChannels.filter { addedChannelsIds.contains(it.id) })
                         }
+                        trySend(response)
+                        channel.close()
                     }
-                    trySend(response)
-                }
 
-            awaitClose()
-        }
+                    is GetAllChannelsResponse.Error -> {
+                        trySend(response)
+                        channel.close()
+                        SceytLog.e("syncChannelsResult", "syncChannels error: ${response.error}")
+                    }
+                }
+            }
+
+        awaitClose()
     }
 
     private suspend fun getChannelsDb(offset: Int, searchQuery: String): List<SceytChannel> {
@@ -763,9 +771,12 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun initPendingLastMessageBeforeInsert(vararg channel: SceytChannel) {
-        val pendingLastMessages = channelDao.getChannelsById(channel.map { it.id })
-            .mapNotNull { it.lastMessage }
-            .filter { it.messageEntity.deliveryStatus == DeliveryStatus.Pending }
+        if (channel.isEmpty()) return
+        val channelIds = channel.map { it.id }
+        val messageTIds = channelDao.getChannelsLastMessageTIds(channelIds)
+        if (messageTIds.isEmpty()) return
+
+        val pendingLastMessages = messageDao.getPendingMessagesByTIds(messageTIds)
 
         pendingLastMessages.forEach { messageDb ->
             channel.find { it.id == messageDb.messageEntity.channelId }?.let { channel ->

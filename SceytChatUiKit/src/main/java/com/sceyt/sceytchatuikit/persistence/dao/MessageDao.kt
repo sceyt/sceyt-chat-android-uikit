@@ -189,6 +189,10 @@ abstract class MessageDao {
     @Query("select * from messages where tid =:tid")
     abstract suspend fun getMessageByTid(tid: Long): MessageDb?
 
+    @Transaction
+    @Query("select * from messages where deliveryStatus = 0 and tid in (:tIds)")
+    abstract suspend fun getPendingMessagesByTIds(tIds: List<Long>): List<MessageDb>
+
     @Query("select tid from messages where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 

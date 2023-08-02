@@ -26,6 +26,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toSceytMember
@@ -148,7 +149,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun getAllChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> = callbackFlow {
+    override suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse> = callbackFlow {
         val channelListQuery = ChannelListQuery.Builder()
             .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
             .withQueryParam(channelQueryParam)
@@ -158,18 +159,23 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
         channelListQuery.loadNext(object : ChannelsCallback {
             override fun onResult(channels: MutableList<Channel>?) {
-                if (channels.isNullOrEmpty())
-                    trySend(SceytResponse.Success(emptyList()))
+                if (channels.isNullOrEmpty()) {
+                    trySend(GetAllChannelsResponse.SuccessfullyFinished)
+                    channel.close()
+                }
                 else {
-                    trySend(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                    trySend(GetAllChannelsResponse.Proportion(channels.map { it.toSceytUiChannel() }))
                     if (channels.size == limit)
                         channelListQuery.loadNext(this)
-                    else channel.close()
+                    else {
+                        trySend(GetAllChannelsResponse.SuccessfullyFinished)
+                        channel.close()
+                    }
                 }
             }
 
             override fun onError(e: SceytException?) {
-                trySend(SceytResponse.Error(e))
+                trySend(GetAllChannelsResponse.Error(e))
                 channel.close()
                 SceytLog.e(TAG, "getAllChannels error: ${e?.message}")
             }
