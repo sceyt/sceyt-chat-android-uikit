@@ -49,6 +49,7 @@ import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.toSha256
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.DraftMessageDao
@@ -354,10 +355,13 @@ internal class PersistenceChannelsLogicImpl(
                 .onCompletion {
                     if (syncedChannels.isNotEmpty()) {
                         val syncedIds = syncedChannels.map { it.id }
-                        val deletedChannels = channelDao.getNotExistingChannelIdsByIds(syncedIds)
+                        val deletedChannelIds = channelDao.getNotExistingChannelIdsByIds(syncedIds)
                         val addedChannelsIds = syncedIds.minus(oldChannelsIds)
 
-                        deletedChannels.forEach { deleteChannelDb(channelId = it) }
+                        if (deletedChannelIds.isNotEmpty())
+                            SceytLog.i("syncChannelsResult", "deletedChannelsIds: ${deletedChannelIds.map { it }}")
+
+                        deletedChannelIds.forEach { deleteChannelDb(channelId = it) }
                         upsertChannelsToCache(syncedChannels.filter { addedChannelsIds.contains(it.id) })
                     }
                     channel.close()
