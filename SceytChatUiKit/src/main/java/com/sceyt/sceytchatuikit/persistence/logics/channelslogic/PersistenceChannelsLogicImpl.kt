@@ -358,7 +358,7 @@ internal class PersistenceChannelsLogicImpl(
                         saveChannelsToDb(channels)
                         syncedChannels.addAll(channels)
                         messageLogic.onSyncedChannels(channels)
-                        channelsCache.upsertChannelIfExist(*channels.toTypedArray())
+                        channelsCache.upsertChannel(*channels.toTypedArray())
                         trySend(response)
                     }
 
