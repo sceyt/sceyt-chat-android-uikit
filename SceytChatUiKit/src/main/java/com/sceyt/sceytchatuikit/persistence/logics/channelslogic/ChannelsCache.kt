@@ -130,6 +130,18 @@ class ChannelsCache {
         }
     }
 
+    fun upsertChannelIfExist(vararg channels: SceytChannel) {
+        synchronized(lock) {
+          channels.forEach {
+              val oldMsg = cachedData[it.id]?.lastMessage
+              if (putAndCheckHasDiff(it).hasDifference()) {
+                  val needSort = checkNeedSortByLastMessage(oldMsg, it.lastMessage)
+                  channelUpdated(it, needSort, ChannelUpdatedType.Updated)
+              }
+          }
+        }
+    }
+
     fun updateLastMessage(channelId: Long, message: SceytMessage?) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->

@@ -22,6 +22,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
@@ -135,7 +136,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, loadKey, onlyMine, ignoreDb)
     }
 
-    override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
+    override suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse> {
         return channelLogic.syncChannels(limit)
     }
 

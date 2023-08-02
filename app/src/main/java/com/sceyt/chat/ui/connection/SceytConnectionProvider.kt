@@ -79,7 +79,8 @@ class SceytConnectionProvider(
 
     fun connectChatClient() {
         scope.launch {
-            val isLoggedIn = !preference.getUserId().isNullOrBlank()
+            val userId = preference.getUserId()
+            val isLoggedIn = !userId.isNullOrBlank()
 
             if (!isLoggedIn) {
                 SceytLog.i(Tag, "$Tag connectChatClient ignore login because user is not logged in.")
@@ -107,12 +108,12 @@ class SceytConnectionProvider(
 
             if (!sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
-                SceytKitClient.connect(sceytToken, SceytKitClient.myId.toString())
+                SceytKitClient.connect(sceytToken, userId.toString())
             } else {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token.")
-                chatClientConnectionInterceptor.getChatToken(SceytKitClient.myId.toString())?.let { token ->
+                chatClientConnectionInterceptor.getChatToken(userId.toString())?.let { token ->
                     SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
-                    SceytKitClient.connect(token, SceytKitClient.myId.toString())
+                    SceytKitClient.connect(token, userId.toString())
                 } ?: run {
                     SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in connectChatClient")
                 }

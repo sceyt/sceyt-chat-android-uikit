@@ -5,6 +5,7 @@ import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -16,7 +17,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.CoroutineContext
@@ -75,18 +75,25 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             suspendCancellableCoroutine { cont ->
                 launch {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    channelsMiddleWare.syncChannels(CHANNELS_LOAD_SIZE)
-                        .onCompletion {
-                            syncChannelsFinished_.postValue(syncChannelData)
-                            cont.resume(syncResultData)
-                        }.collect {
-                            if (it is SceytResponse.Success) {
-                                it.data?.let { channels ->
-                                    syncChannelsMessages(channels)
-                                    syncChannelData.channels.addAll(channels)
-                                }
-                            } else syncChannelData.withError = true
+                    channelsMiddleWare.syncChannels(CHANNELS_LOAD_SIZE).collect {
+                        when (it) {
+                            is GetAllChannelsResponse.Error -> {
+                                syncChannelData.withError = true
+                                cont.resume(syncResultData)
+                            }
+
+                            is GetAllChannelsResponse.Proportion -> {
+                                val channels = it.channels
+                                syncChannelsMessages(channels)
+                                syncChannelData.channels.addAll(channels)
+                            }
+
+                            GetAllChannelsResponse.SuccessfullyFinished -> {
+                                syncChannelsFinished_.postValue(syncChannelData)
+                                cont.resume(syncResultData)
+                            }
                         }
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,7 @@ interface PersistenceChanelMiddleWare {
     suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>, loadKey: LoadKeyData?,
                                           onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
-    suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>>
+    suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
