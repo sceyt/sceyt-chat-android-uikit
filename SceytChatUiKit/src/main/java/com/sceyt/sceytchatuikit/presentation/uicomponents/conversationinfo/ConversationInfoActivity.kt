@@ -295,8 +295,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             val myRole = channel.userRole
             val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
 
-            admins.isVisible = isOwnerOrAdmin || channel.isPrivate()
-            groupChannelMembers.isVisible = isOwnerOrAdmin || channel.isPrivate()
+            admins.isVisible = !channel.isDirect() && isOwnerOrAdmin
+            groupChannelMembers.isVisible = !channel.isDirect() && (isOwnerOrAdmin || channel.isPrivate())
             icEdit.isVisible = isOwnerOrAdmin
 
             setChannelTitle(channel)
