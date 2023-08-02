@@ -1,11 +1,9 @@
-package com.sceyt.sceytchatuikit.shared.utils
+package com.sceyt.sceytchatuikit.shared.mediaencoder
 
 import android.content.Context
 import android.net.Uri
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
-import com.abedelazizshe.lightcompressorlibrary.VideoCompressor
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
-import com.abedelazizshe.lightcompressorlibrary.config.Configuration
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
@@ -13,14 +11,14 @@ import kotlin.coroutines.resume
 
 object VideoTranscodeHelper {
 
-    suspend fun transcodeAsResult(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.MEDIUM): VideoTranscodeData {
+    suspend fun transcodeAsResult(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.VERY_LOW): VideoTranscodeData {
         return suspendCancellableCoroutine {
             try {
-                VideoCompressor.start(
+                CustomVideoCompressor.start(
                     context = context,
                     srcUri = Uri.parse(uri),
                     destPath = destination.absolutePath,
-                    configureWith = Configuration(
+                    configureWith = CustomConfiguration(
                         quality = quality,
                         isMinBitrateCheckEnabled = false,
                         disableAudio = false,
@@ -55,14 +53,15 @@ object VideoTranscodeHelper {
 
     fun transcodeAsResultWithCallback(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.MEDIUM, callback: (VideoTranscodeData) -> Unit) {
         try {
-            VideoCompressor.start(
+            CustomVideoCompressor.start(
                 context = context,
                 srcUri = Uri.parse(uri),
                 destPath = destination.absolutePath,
-                configureWith = Configuration(
+                configureWith = CustomConfiguration(
                     quality = quality,
                     isMinBitrateCheckEnabled = false,
                     disableAudio = false,
+                    videoBitrateCoefficient = 0.09f,
                 ),
                 listener = object : CompressionListener {
                     override fun onCancelled() {

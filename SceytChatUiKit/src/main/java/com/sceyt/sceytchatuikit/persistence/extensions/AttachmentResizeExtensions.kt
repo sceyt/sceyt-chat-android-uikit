@@ -7,13 +7,13 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeExtension
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Cancelled
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Failure
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Progress
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Start
-import com.sceyt.sceytchatuikit.shared.utils.TranscodeResultEnum.Success
-import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeData
-import com.sceyt.sceytchatuikit.shared.utils.VideoTranscodeHelper
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Cancelled
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Failure
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Progress
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Start
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Success
+import com.sceyt.sceytchatuikit.shared.mediaencoder.VideoTranscodeData
+import com.sceyt.sceytchatuikit.shared.mediaencoder.VideoTranscodeHelper
 import java.io.File
 import java.util.UUID
 
