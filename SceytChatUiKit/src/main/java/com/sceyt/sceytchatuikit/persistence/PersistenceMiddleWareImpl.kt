@@ -29,6 +29,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
@@ -375,16 +376,24 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
-    override fun updateTransferDataByMsgTid(data: TransferData) {
+    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) {
+        attachmentsLogic.updateAttachmentIdAndMessageId(message)
+    }
+
+    override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         attachmentsLogic.updateTransferDataByMsgTid(data)
     }
 
-    override fun updateAttachmentWithTransferData(data: TransferData) {
+    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
         attachmentsLogic.updateAttachmentWithTransferData(data)
     }
 
-    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         attachmentsLogic.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+    }
+
+    override suspend fun getFileChecksumData(checksum: Long): FileChecksumEntity? {
+        return attachmentsLogic.getFileChecksumData(checksum)
     }
 
     override suspend fun loadUsers(query: String): SceytResponse<List<User>> {

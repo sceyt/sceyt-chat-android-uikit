@@ -19,8 +19,10 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
+import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageIdAndTid
@@ -43,6 +45,7 @@ internal class PersistenceAttachmentLogicImpl(
         private val messageDao: MessageDao,
         private val attachmentDao: AttachmentDao,
         private val userDao: UserDao,
+        private val fileChecksumDao: FileChecksumDao,
         private val messagesCache: MessagesCache,
         private val attachmentsCache: AttachmentsCache,
         private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
@@ -74,19 +77,23 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    override fun updateTransferDataByMsgTid(data: TransferData) {
+    override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
         messagesCache.updateAttachmentTransferData(data)
     }
 
-    override fun updateAttachmentWithTransferData(data: TransferData) {
+    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
         attachmentDao.updateAttachmentAndPayLoad(data)
         messagesCache.updateAttachmentTransferData(data)
     }
 
-    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
+    }
+
+    override suspend fun getFileChecksumData(checksum: Long): FileChecksumEntity? {
+        return fileChecksumDao.getChecksum(checksum)
     }
 
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,

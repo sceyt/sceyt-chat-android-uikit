@@ -8,6 +8,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
@@ -33,6 +34,8 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.common.checkLoadedFileIsCorrect
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
 import java.io.File
 import java.io.FileNotFoundException
@@ -312,6 +315,12 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment,
                                                  task: TransferTask, callback: (Result<String?>) -> Unit) {
+
+        val path = checkMaybeAlreadyResizedWithCheckSum(attachment.filePath)
+        if (path != null) {
+            callback(Result.success(path))
+            return
+        }
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
@@ -333,6 +342,18 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
             else -> callback.invoke(Result.success(null))
         }
+    }
+
+    private fun checkMaybeAlreadyResizedWithCheckSum(filePath: String?): String? {
+        filePath ?: return null
+        var path: String? = null
+
+        FileResizeUtil.calculateChecksumFor10Mb(filePath)?.let { checksum ->
+            runBlocking(Dispatchers.IO) {
+                path = SceytKitClient.getAttachmentsMiddleWare().getFileChecksumData(checksum)?.resizedFilePath
+            }
+        }
+        return path
     }
 
     private fun getAttachmentThumbPath(context: Context, attachment: SceytAttachment, size: Size): Result<String?> {
