@@ -3,6 +3,8 @@ package com.sceyt.sceytchatuikit.persistence
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +20,9 @@ interface PersistenceAttachmentsMiddleWare {
     suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>,
                                    offset: Int, ignoreDb: Boolean = false, loadKeyData: LoadKeyData = LoadKeyData()): Flow<PaginationResponse<AttachmentWithUserData>>
 
-    fun updateTransferDataByMsgTid(data: TransferData)
-    fun updateAttachmentWithTransferData(data: TransferData)
-    fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?)
+    suspend fun updateAttachmentIdAndMessageId(message: SceytMessage)
+    suspend fun updateTransferDataByMsgTid(data: TransferData)
+    suspend fun updateAttachmentWithTransferData(data: TransferData)
+    suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?)
+    suspend fun getFileChecksumData(checksum: Long): FileChecksumEntity?
 }

@@ -34,7 +34,7 @@ class SceytUiKitApp : Application() {
 
     private fun initSceyt() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
-        ChatClient.setEnableNetworkChangeDetection(false)
+        ChatClient.setEnableNetworkChangeDetection(true)
         chatClient = SceytUIKitInitializer(this).initialize(
             clientId = UUID.randomUUID().toString(),
             appId = "yzr58x11rm",
