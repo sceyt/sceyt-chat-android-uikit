@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.di
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Room
 import com.sceyt.sceytchatuikit.BuildConfig
 import com.sceyt.sceytchatuikit.SceytSyncManager
@@ -83,10 +82,11 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
         return if (enableDatabase)
             Room.databaseBuilder(context, SceytDatabase::class.java, "sceyt_ui_kit_database")
                 .fallbackToDestructiveMigration()
-                .allowMainThreadQueries()
                 .build()
         else {
-            Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java).build()
+            Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
+                .fallbackToDestructiveMigration()
+                .build()
         }
     }
 
@@ -101,6 +101,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().channelUsersReactionDao() }
     single { get<SceytDatabase>().pendingMarkersDao() }
     single { get<SceytDatabase>().pendingReactionDao() }
+    single { get<SceytDatabase>().fileChecksumDao() }
 
     single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
@@ -112,7 +113,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
     factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }

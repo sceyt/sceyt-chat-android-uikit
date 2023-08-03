@@ -1,18 +1,39 @@
 package com.sceyt.sceytchatuikit.persistence
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.sceyt.sceytchatuikit.persistence.converters.ChannelConverter
 import com.sceyt.sceytchatuikit.persistence.converters.ListStringConverter
 import com.sceyt.sceytchatuikit.persistence.converters.MessageConverter
-import com.sceyt.sceytchatuikit.persistence.dao.*
+import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
+import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
+import com.sceyt.sceytchatuikit.persistence.dao.DraftMessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
+import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
+import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
+import com.sceyt.sceytchatuikit.persistence.dao.PendingReactionDao
+import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
+import com.sceyt.sceytchatuikit.persistence.dao.UserDao
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MentionUserMessageLink
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 
 @Database(entities = [
     ChannelEntity::class,
@@ -29,8 +50,11 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.*
     ChatUserReactionEntity::class,
     PendingMarkerEntity::class,
     PendingReactionEntity::class,
-    AttachmentPayLoadEntity::class
-], version = 1, exportSchema = false)
+    AttachmentPayLoadEntity::class,
+    FileChecksumEntity::class
+], version = 2, autoMigrations = [
+    AutoMigration(from = 1, to = 2)
+])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
@@ -44,4 +68,5 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelUsersReactionDao(): ChatUsersReactionDao
     abstract fun pendingMarkersDao(): PendingMarkersDao
     abstract fun pendingReactionDao(): PendingReactionDao
+    abstract fun fileChecksumDao(): FileChecksumDao
 }

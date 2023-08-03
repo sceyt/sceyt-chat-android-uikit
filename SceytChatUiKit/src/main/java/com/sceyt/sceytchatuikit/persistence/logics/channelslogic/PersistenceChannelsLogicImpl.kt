@@ -355,10 +355,10 @@ internal class PersistenceChannelsLogicImpl(
                 when (response) {
                     is GetAllChannelsResponse.Proportion -> {
                         val channels = response.channels
-                        saveChannelsToDb(channels)
+                        val savedChannels = saveChannelsToDb(channels)
                         syncedChannels.addAll(channels)
                         messageLogic.onSyncedChannels(channels)
-                        channelsCache.upsertChannel(*channels.toTypedArray())
+                        channelsCache.upsertChannel(*savedChannels.toTypedArray())
                         trySend(response)
                     }
 
