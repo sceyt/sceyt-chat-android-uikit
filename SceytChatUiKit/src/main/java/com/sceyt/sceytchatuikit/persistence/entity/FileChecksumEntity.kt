@@ -8,5 +8,7 @@ data class FileChecksumEntity(
         @PrimaryKey
         val checksum: Long,
         val resizedFilePath: String?,
-        val url: String?
+        val url: String?,
+        val metadata: String?,
+        val fileSize: Long?
 )

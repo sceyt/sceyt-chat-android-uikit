@@ -51,9 +51,9 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun getProgressUpdateCallback(attachment: SceytAttachment) = ProgressUpdateCallback {
+        attachment.transferState = it.state
+        attachment.progressPercent = it.progressPercent
         launch {
-            attachment.transferState = it.state
-            attachment.progressPercent = it.progressPercent
             it.withPrettySizes(attachment.fileSize)
             messagesCache.updateAttachmentTransferData(it)
             emitAttachmentTransferUpdate(it)
@@ -61,8 +61,8 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun getPreparingCallback(attachment: SceytAttachment) = PreparingCallback {
+        attachment.transferState = it.state
         launch {
-            attachment.transferState = it.state
             it.withPrettySizes(attachment.fileSize)
             messagesCache.updateAttachmentTransferData(it)
             emitAttachmentTransferUpdate(it)
@@ -70,8 +70,8 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun getResumePauseCallback(attachment: SceytAttachment) = ResumePauseCallback {
+        attachment.transferState = it.state
         launch {
-            attachment.transferState = it.state
             it.withPrettySizes(attachment.fileSize)
             emitAttachmentTransferUpdate(it)
             messagesLogic.updateTransferDataByMsgTid(it)
@@ -79,80 +79,85 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun getDownloadResultCallback(attachment: SceytAttachment) = TransferResultCallback {
-        launch {
-            when (it) {
-                is SceytResponse.Success -> {
-                    val transferData = TransferData(attachment.messageTid, 100f,
-                        TransferState.Downloaded, it.data, attachment.url).withPrettySizes(attachment.fileSize)
+        when (it) {
+            is SceytResponse.Success -> {
+                val transferData = TransferData(attachment.messageTid, 100f,
+                    TransferState.Downloaded, it.data, attachment.url).withPrettySizes(attachment.fileSize)
 
-                    attachment.updateWithTransferData(transferData)
-                    emitAttachmentTransferUpdate(transferData)
+                attachment.updateWithTransferData(transferData)
+                emitAttachmentTransferUpdate(transferData)
+                launch {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
                 }
+            }
 
-                is SceytResponse.Error -> {
-                    val transferData = TransferData(
-                        attachment.messageTid, attachment.progressPercent ?: 0f,
-                        ErrorDownload, null, attachment.url).withPrettySizes(attachment.fileSize)
+            is SceytResponse.Error -> {
+                val transferData = TransferData(
+                    attachment.messageTid, attachment.progressPercent ?: 0f,
+                    ErrorDownload, null, attachment.url).withPrettySizes(attachment.fileSize)
 
-                    attachment.updateWithTransferData(transferData)
-                    emitAttachmentTransferUpdate(transferData)
+                attachment.updateWithTransferData(transferData)
+                emitAttachmentTransferUpdate(transferData)
+                launch {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
-                    SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
                 }
+                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
             }
         }
     }
 
     fun getUploadResultCallback(attachment: SceytAttachment) = TransferResultCallback { result ->
-        launch {
-            when (result) {
-                is SceytResponse.Success -> {
-                    val transferData = TransferData(attachment.messageTid, 100f,
-                        Uploaded, attachment.filePath, result.data.toString()).withPrettySizes(attachment.fileSize)
+        when (result) {
+            is SceytResponse.Success -> {
+                val transferData = TransferData(attachment.messageTid, 100f,
+                    Uploaded, attachment.filePath, result.data.toString()).withPrettySizes(attachment.fileSize)
 
-                    attachment.updateWithTransferData(transferData)
-                    emitAttachmentTransferUpdate(transferData)
+                attachment.updateWithTransferData(transferData)
+                emitAttachmentTransferUpdate(transferData)
+                launch {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
                 }
+            }
 
-                is SceytResponse.Error -> {
-                    val transferData = TransferData(attachment.messageTid, attachment.progressPercent
-                            ?: 0f,
-                        ErrorUpload, attachment.filePath, null).withPrettySizes(attachment.fileSize)
+            is SceytResponse.Error -> {
+                val transferData = TransferData(attachment.messageTid,
+                    attachment.progressPercent ?: 0f,
+                    ErrorUpload, attachment.filePath, null).withPrettySizes(attachment.fileSize)
 
-                    emitAttachmentTransferUpdate(transferData)
+                attachment.updateWithTransferData(transferData)
+                emitAttachmentTransferUpdate(transferData)
+                launch {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
-                    SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
                 }
+                SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
             }
-            fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {
-                it.invoke((result is SceytResponse.Success), result.data)
-            }
+        }
+        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {
+            it.invoke((result is SceytResponse.Success), result.data)
         }
     }
 
     fun getUpdateFileLocationCallback(attachment: SceytAttachment) = UpdateFileLocationCallback { newPath ->
-        launch {
-            val transferData = TransferData(attachment.messageTid, 0f,
-                TransferState.FilePathChanged, newPath, attachment.url)
+        val transferData = TransferData(attachment.messageTid, 0f,
+            TransferState.FilePathChanged, newPath, attachment.url)
 
-            val originalFilePath = attachment.filePath
-            val newFile = File(newPath)
-            if (newFile.exists()) {
-                val fileSize = getFileSize(newPath)
-                val dimensions = getDimensions(attachment.type, newPath)
-                attachment.filePath = newPath
-                attachment.fileSize = fileSize
-                attachment.upsertSizeMetadata(dimensions)
+        val originalFilePath = attachment.filePath
+        val newFile = File(newPath)
+        if (newFile.exists()) {
+            val fileSize = getFileSize(newPath)
+            val dimensions = getDimensions(attachment.type, newPath)
+            attachment.filePath = newPath
+            attachment.fileSize = fileSize
+            attachment.upsertSizeMetadata(dimensions)
 
-                emitAttachmentTransferUpdate(transferData.withPrettySizes(fileSize))
+            emitAttachmentTransferUpdate(transferData.withPrettySizes(fileSize))
+            launch {
                 messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
 
                 originalFilePath?.let {
                     val checksum = FileResizeUtil.calculateChecksumFor10Mb(originalFilePath)
                     if (checksum != null)
-                        fileChecksumDao.updateResizedFilePath(checksum, newPath)
+                        fileChecksumDao.updateResizedFilePathAndSize(checksum, newPath, fileSize)
                 }
             }
         }

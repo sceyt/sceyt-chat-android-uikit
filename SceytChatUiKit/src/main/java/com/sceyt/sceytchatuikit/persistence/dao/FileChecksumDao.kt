@@ -18,6 +18,6 @@ interface FileChecksumDao {
     @Query("update FileChecksum set url = :url where checksum = :checksum")
     suspend fun updateUrl(checksum: Long, url: String?)
 
-    @Query("update FileChecksum set resizedFilePath = :path where checksum = :checksum")
-    suspend fun updateResizedFilePath(checksum: Long, path: String?)
+    @Query("update FileChecksum set resizedFilePath = :path, fileSize =:fileSize where checksum = :checksum")
+    suspend fun updateResizedFilePathAndSize(checksum: Long, path: String?, fileSize: Long?)
 }
