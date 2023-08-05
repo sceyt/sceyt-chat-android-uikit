@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -35,6 +36,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.calculateChecksumFor10Mb
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
@@ -96,10 +98,19 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     }
 
                     val result = suspendCancellableCoroutine { continuation ->
-                        if (attachment.transferState != TransferState.PauseUpload)
-                            uploadFile(attachment, continuation, isSharing)
-                    }
+                        if (attachment.transferState != TransferState.PauseUpload) {
 
+                            val transferData = TransferData(tmpMessage.tid, 0f, TransferState.Uploading,
+                                attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
+
+                            runBlocking {
+                                attachmentLogic.updateAttachmentWithTransferData(transferData)
+                            }
+                            FileTransferHelper.emitAttachmentTransferUpdate(transferData)
+
+                            uploadFile(attachment, continuation, isSharing)
+                        }
+                    }
                     if (result.first && result.second.isNotNullOrBlank() && checksum != null)
                         fileChecksumDao.updateUrl(checksum, result.second)
 
