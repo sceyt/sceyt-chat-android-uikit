@@ -78,18 +78,18 @@ internal class PersistenceAttachmentLogicImpl(
     }
 
     override suspend fun updateTransferDataByMsgTid(data: TransferData) {
-        attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
         messagesCache.updateAttachmentTransferData(data)
+        attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
     }
 
     override suspend fun updateAttachmentWithTransferData(data: TransferData) {
-        attachmentDao.updateAttachmentAndPayLoad(data)
         messagesCache.updateAttachmentTransferData(data)
+        attachmentDao.updateAttachmentAndPayLoad(data)
     }
 
     override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
-        attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
+        attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
     }
 
     override suspend fun getFileChecksumData(checksum: Long): FileChecksumEntity? {

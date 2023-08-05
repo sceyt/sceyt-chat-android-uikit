@@ -35,7 +35,6 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.calculateChecksumFor10Mb
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
@@ -97,19 +96,10 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     }
 
                     val result = suspendCancellableCoroutine { continuation ->
-                        if (attachment.transferState != TransferState.PauseUpload) {
-
-                            val transferData = TransferData(tmpMessage.tid, 0f, TransferState.Uploading,
-                                attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
-
-                            runBlocking {
-                                attachmentLogic.updateAttachmentWithTransferData(transferData)
-                            }
-                            FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-
+                        if (attachment.transferState != TransferState.PauseUpload)
                             uploadFile(attachment, continuation, isSharing)
-                        }
                     }
+
                     if (result.first && result.second.isNotNullOrBlank() && checksum != null)
                         fileChecksumDao.updateUrl(checksum, result.second)
 
@@ -125,6 +115,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         fileChecksumDao.getChecksum(checksum)?.let {
             if (it.url.isNotNullOrBlank()) {
                 attachment.url = it.url
+                attachment.filePath = it.resizedFilePath ?: attachment.filePath
+                attachment.metadata = it.metadata
+                attachment.fileSize = it.fileSize ?: attachment.fileSize
+
+                if (it.resizedFilePath.isNotNullOrBlank())
+                    FileTransferHelper.emitAttachmentTransferUpdate(TransferData(msgTid, 100f, TransferState.FilePathChanged,
+                        it.resizedFilePath, attachment.url).withPrettySizes(attachment.fileSize))
 
                 val transferData = TransferData(msgTid, 100f, TransferState.Uploaded,
                     attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
@@ -134,7 +131,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 return Pair(true, attachment.url)
             }
         } ?: run {
-            val checksumEntity = FileChecksumEntity(checksum, null, null)
+            val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
             fileChecksumDao.insert(checksumEntity)
         }
         return null
