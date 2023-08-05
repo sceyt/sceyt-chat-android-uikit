@@ -317,7 +317,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment,
                                                  task: TransferTask, callback: (Result<String?>) -> Unit) {
 
-        val path = checkMaybeAlreadyResizedWithCheckSum(attachment.filePath)
+        val path = checkMaybeAlreadyResizedWithCheckSum(attachment.originalFilePath)
         if (path != null) {
             callback(Result.success(path))
             return

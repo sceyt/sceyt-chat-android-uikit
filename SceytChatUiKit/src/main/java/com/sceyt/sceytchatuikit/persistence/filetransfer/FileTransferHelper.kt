@@ -66,6 +66,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
             it.withPrettySizes(attachment.fileSize)
             messagesCache.updateAttachmentTransferData(it)
             emitAttachmentTransferUpdate(it)
+            messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
 
@@ -73,6 +74,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
         attachment.transferState = it.state
         launch {
             it.withPrettySizes(attachment.fileSize)
+            messagesCache.updateAttachmentTransferData(it)
             emitAttachmentTransferUpdate(it)
             messagesLogic.updateTransferDataByMsgTid(it)
         }
