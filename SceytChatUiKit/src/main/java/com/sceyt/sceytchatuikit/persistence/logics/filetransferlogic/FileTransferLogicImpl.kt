@@ -85,33 +85,34 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         if (file != null) {
             task.resultCallback.onResult(SceytResponse.Success(file.path))
         } else {
-            if (downloadingUrlMap[attachment.url] != null) return
+            val downloadMapKey = attachment.url + attachment.messageTid
+            if (downloadingUrlMap[downloadMapKey] != null) return
+
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
             task.progressCallback.onProgress(TransferData(
                 task.messageTid, 0f, Downloading, null, attachment.url))
-            attachment.url?.let { url ->
-                downloadingUrlMap[url] = url
-                Ion.with(context)
-                    .load(attachment.url)
-                    .progress { downloaded, total ->
-                        if (pausedTasksMap[attachment.messageTid] == null) {
-                            val progress = ((downloaded / total.toFloat())) * 100
-                            task.progressCallback.onProgress(TransferData(
-                                task.messageTid, progress, Downloading, null, attachment.url))
-                        }
-                    }
-                    .write(loadedFile)
-                    .setCallback { e, result ->
-                        if (result == null && e != null) {
-                            loadedFile.delete()
-                            task.resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
-                        } else
-                            task.resultCallback.onResult(SceytResponse.Success(result.path))
+            downloadingUrlMap[downloadMapKey] = downloadMapKey
 
-                        downloadingUrlMap.remove(attachment.url)
+            Ion.with(context)
+                .load(attachment.url)
+                .progress { downloaded, total ->
+                    if (pausedTasksMap[attachment.messageTid] == null) {
+                        val progress = ((downloaded / total.toFloat())) * 100
+                        task.progressCallback.onProgress(TransferData(
+                            task.messageTid, progress, Downloading, null, attachment.url))
                     }
-            }
+                }
+                .write(loadedFile)
+                .setCallback { e, result ->
+                    if (result == null && e != null) {
+                        loadedFile.delete()
+                        task.resultCallback.onResult(SceytResponse.Error(SceytException(0, e.message)))
+                    } else
+                        task.resultCallback.onResult(SceytResponse.Success(result.path))
+
+                    downloadingUrlMap.remove(downloadMapKey)
+                }
         }
     }
 
@@ -148,7 +149,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         when (state) {
             PendingDownload, PauseDownload, ErrorDownload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
-                    downloadingUrlMap.remove(attachment.messageTid.toString())
+                    pausedTasksMap.remove(attachment.messageTid)
                     it.resumePauseCallback.onResumePause(attachment.toTransferData(Downloading))
                     downloadFile(attachment, it)
                 }
