@@ -52,10 +52,9 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
     PendingReactionEntity::class,
     AttachmentPayLoadEntity::class,
     FileChecksumEntity::class
-], version = 4, autoMigrations = [
+], version = 3, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
-    AutoMigration(from = 3, to = 4),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

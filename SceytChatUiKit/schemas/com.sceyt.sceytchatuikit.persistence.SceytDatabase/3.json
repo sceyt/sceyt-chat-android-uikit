@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "d76fa326ea6bb6f98fdfa4687def4ca3",
+    "identityHash": "de3d8e709253125091380c4de068b48b",
     "entities": [
       {
         "tableName": "channels",
@@ -748,7 +748,7 @@
       },
       {
         "tableName": "AttachmentEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`primaryKey` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id` INTEGER, `messageId` INTEGER NOT NULL, `messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `userId` TEXT, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `fileSize` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `url` TEXT, `filePath` TEXT, FOREIGN KEY(`messageTid`) REFERENCES `messages`(`tid`) ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`primaryKey` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id` INTEGER, `messageId` INTEGER NOT NULL, `messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `userId` TEXT, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `fileSize` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `url` TEXT, `filePath` TEXT, `originalFilePath` TEXT, FOREIGN KEY(`messageTid`) REFERENCES `messages`(`tid`) ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
         "fields": [
           {
             "fieldPath": "primaryKey",
@@ -825,6 +825,12 @@
           {
             "fieldPath": "filePath",
             "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "originalFilePath",
+            "columnName": "originalFilePath",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -1561,7 +1567,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd76fa326ea6bb6f98fdfa4687def4ca3')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'de3d8e709253125091380c4de068b48b')"
     ]
   }
 }
