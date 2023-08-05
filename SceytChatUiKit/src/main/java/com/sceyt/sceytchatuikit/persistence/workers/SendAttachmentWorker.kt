@@ -103,10 +103,11 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                             val transferData = TransferData(tmpMessage.tid, 0f, TransferState.Uploading,
                                 attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
 
+                            FileTransferHelper.emitAttachmentTransferUpdate(transferData)
+
                             runBlocking {
                                 attachmentLogic.updateAttachmentWithTransferData(transferData)
                             }
-                            FileTransferHelper.emitAttachmentTransferUpdate(transferData)
 
                             uploadFile(attachment, continuation, isSharing)
                         }
