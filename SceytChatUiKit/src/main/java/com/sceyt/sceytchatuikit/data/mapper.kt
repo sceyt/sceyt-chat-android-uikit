@@ -39,6 +39,7 @@ fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
     filePath = filePath,
     transferState = transferState,
     progressPercent = progress,
+    originalFilePath = filePath
 )
 
 
