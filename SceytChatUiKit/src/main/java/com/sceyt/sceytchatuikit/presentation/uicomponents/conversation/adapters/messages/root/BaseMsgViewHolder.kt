@@ -40,10 +40,9 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
+import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
@@ -240,8 +239,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private fun loadReplyMessageImageOrObserveToDownload(attachment: SceytAttachment?, imageAttachment: ImageView) {
         val path = attachment?.filePath
-        val placeHolder = attachment?.metadata.getInfoFromMetadataByKey(SceytConstants.Thumb).toByteArraySafety()
-            ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
+        val placeHolder = getThumbFromMetadata(attachment?.metadata)?.toDrawable(context.resources)?.mutate()
 
         fun loadImage(filePath: String?) {
             Glide.with(itemView.context)
