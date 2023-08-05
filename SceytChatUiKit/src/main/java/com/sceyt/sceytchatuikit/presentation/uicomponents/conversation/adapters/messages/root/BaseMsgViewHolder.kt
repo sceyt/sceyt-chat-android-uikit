@@ -122,19 +122,20 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private var reactionsAdapter: ReactionsAdapter? = null
 
-    protected fun setMessageBody(messageBody: TextView, message: SceytMessage, isLink: Boolean = false) {
+    protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
+                                 checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
         val bodyText = message.body.trim()
         val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
             bodyText
         } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
             message.metadata, message.mentionedUsers, enableClick = false)
 
-        setTextAutoLinkMasks(messageBody, text.toString(), isLink)
+        setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
         messageBody.setText(text, TextView.BufferType.SPANNABLE)
     }
 
-    private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, isLink: Boolean) {
-        if (isLink) {
+    private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, checkLinks: Boolean, isLinkViewHolder: Boolean) {
+        if (isLinkViewHolder || (checkLinks && bodyText.extractLinks().isNotEmpty())) {
             messageBody.autoLinkMask = Linkify.WEB_URLS
             return
         }
