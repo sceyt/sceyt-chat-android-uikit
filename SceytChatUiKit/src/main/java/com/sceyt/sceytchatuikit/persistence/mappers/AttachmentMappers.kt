@@ -129,15 +129,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
             }
 
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
-                val bytes = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()
-                try {
-                    val image = ThumbHash.thumbHashToRGBA(bytes)
-                    blurredThumbBitmap = BitmapUtil.bitmapFromRgba(image.width, image.height, image.rgba)
-                } catch (_: Exception) {
-                }
-
-                if (blurredThumbBitmap == null && bytes != null)
-                    blurredThumbBitmap = bytes.decodeByteArrayToBitmap()
+                blurredThumbBitmap = getThumbFromMetadata(metadata)
 
                 val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
                 val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
@@ -156,6 +148,22 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     }
 
     return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
+}
+
+fun getThumbFromMetadata(metadata: String?): Bitmap? {
+    metadata ?: return null
+    var blurredThumbBitmap: Bitmap? = null
+    val bytes = metadata.getInfoFromMetadataByKey(SceytConstants.Thumb)?.toByteArraySafety()
+    try {
+        val image = ThumbHash.thumbHashToRGBA(bytes)
+        blurredThumbBitmap = BitmapUtil.bitmapFromRgba(image.width, image.height, image.rgba)
+    } catch (_: Exception) {
+    }
+
+    if (blurredThumbBitmap == null && bytes != null)
+        blurredThumbBitmap = bytes.decodeByteArrayToBitmap()
+
+    return blurredThumbBitmap
 }
 
 fun SceytAttachment.getMetadataFromAttachment(): AudioMetadata {

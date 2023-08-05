@@ -35,7 +35,6 @@ import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
@@ -48,14 +47,12 @@ import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
-import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
-import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
-import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
+import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
@@ -492,8 +489,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun loadReplyMessageImage(attachment: Attachment) {
         when {
             attachment.type.isEqualsVideoOrImage() -> {
-                val placeHolder = attachment.metadata.getInfoFromMetadataByKey(SceytConstants.Thumb)?.toByteArraySafety()
-                    ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
+                val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
                 Glide.with(context)
                     .load(attachment.filePath)
                     .placeholder(placeHolder)
