@@ -110,7 +110,7 @@ class OutImageMsgViewHolder(
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.Uploading -> {
+            TransferState.Uploading, TransferState.Preparing -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
@@ -141,8 +141,6 @@ class OutImageMsgViewHolder(
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
-
-            TransferState.Preparing -> Unit
         }
     }
 

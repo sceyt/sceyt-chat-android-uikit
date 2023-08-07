@@ -1,11 +1,11 @@
 package com.sceyt.chat.ui.di
 
+import com.sceyt.chat.ui.data.interceptors.RetryInterceptor
 import com.sceyt.chat.ui.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.ui.connection.SceytConnectionProvider
 import com.sceyt.chat.ui.data.AppSharedPreference
 import com.sceyt.chat.ui.data.AppSharedPreferenceImpl
 import com.sceyt.chat.ui.data.api.AuthApiService
-import com.sceyt.chat.ui.data.interceptors.RetryInterceptor
 import com.sceyt.chat.ui.data.repositories.ConnectionRepo
 import com.sceyt.chat.ui.presentation.addmembers.viewmodel.UsersViewModel
 import com.sceyt.chat.ui.presentation.changerole.viewmodel.RoleViewModel

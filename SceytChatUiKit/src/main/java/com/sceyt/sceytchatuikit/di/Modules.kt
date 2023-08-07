@@ -79,15 +79,15 @@ internal val appModules = module {
 internal fun databaseModule(enableDatabase: Boolean) = module {
 
     fun provideDatabase(context: Context): SceytDatabase {
-        return if (enableDatabase)
+        val builder = if (enableDatabase)
             Room.databaseBuilder(context, SceytDatabase::class.java, "sceyt_ui_kit_database")
-                .fallbackToDestructiveMigration()
-                .build()
-        else {
+        else
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
-                .fallbackToDestructiveMigration()
-                .build()
-        }
+
+        return builder
+            .fallbackToDestructiveMigration()
+            .allowMainThreadQueries()
+            .build()
     }
 
     single { provideDatabase(get()) }
