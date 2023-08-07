@@ -80,7 +80,7 @@ class MessageFileViewHolder(
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            Downloading, Uploading -> {
+            Downloading, Uploading, Preparing -> {
                 binding.icFile.setImageResource(0)
             }
 
@@ -92,7 +92,7 @@ class MessageFileViewHolder(
                 binding.icFile.setImageResource(0)
             }
 
-            FilePathChanged, ThumbLoaded, Preparing -> return
+            FilePathChanged, ThumbLoaded -> return
         }
     }
 

@@ -119,7 +119,7 @@ class IncImageMsgViewHolder(
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.Uploading -> {
+            TransferState.Uploading, TransferState.Preparing -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
@@ -150,8 +150,6 @@ class IncImageMsgViewHolder(
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
-
-            TransferState.Preparing -> Unit
         }
     }
 

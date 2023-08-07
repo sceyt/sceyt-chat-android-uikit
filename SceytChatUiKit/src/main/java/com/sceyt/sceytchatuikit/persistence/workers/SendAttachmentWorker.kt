@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -82,7 +81,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     return Pair(true, payload.url)
                 } else {
 
-                    val filePath = attachment.filePath
+                    val filePath = attachment.originalFilePath ?: attachment.filePath
 
                     if (filePath.isNullOrEmpty()) {
                         SceytLog.i(TAG, "Skip uploading a file path is null or empty")
@@ -92,9 +91,8 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     val checksum = calculateChecksumFor10Mb(filePath)
 
                     if (checksum != null) {
-                        val data = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, tmpMessage.tid, attachment)
-                        if (data != null)
-                            return data
+                        val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
+                        fileChecksumDao.insert(checksumEntity)
                     }
 
                     val result = suspendCancellableCoroutine { continuation ->
@@ -112,6 +110,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                             uploadFile(attachment, continuation, isSharing)
                         }
                     }
+
                     if (result.first && result.second.isNotNullOrBlank() && checksum != null)
                         fileChecksumDao.updateUrl(checksum, result.second)
 
@@ -120,33 +119,6 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             }
             return Pair(false, "Could not find any attachment to upload")
         } ?: return Pair(false, "Attachments are empty")
-    }
-
-    private suspend fun checkMaybeAlreadyUploadedWithAnotherMessage(checksum: Long, msgTid: Long,
-                                                                    attachment: SceytAttachment): Pair<Boolean, String?>? {
-        fileChecksumDao.getChecksum(checksum)?.let {
-            if (it.url.isNotNullOrBlank()) {
-                attachment.url = it.url
-                attachment.filePath = it.resizedFilePath ?: attachment.filePath
-                attachment.metadata = it.metadata
-                attachment.fileSize = it.fileSize ?: attachment.fileSize
-
-                if (it.resizedFilePath.isNotNullOrBlank())
-                    FileTransferHelper.emitAttachmentTransferUpdate(TransferData(msgTid, 100f, TransferState.FilePathChanged,
-                        it.resizedFilePath, attachment.url).withPrettySizes(attachment.fileSize))
-
-                val transferData = TransferData(msgTid, 100f, TransferState.Uploaded,
-                    attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
-
-                attachmentLogic.updateAttachmentWithTransferData(transferData)
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-                return Pair(true, attachment.url)
-            }
-        } ?: run {
-            val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
-            fileChecksumDao.insert(checksumEntity)
-        }
-        return null
     }
 
     private fun uploadFile(attachment: SceytAttachment, continuation: CancellableContinuation<Pair<Boolean, String?>>, isSharing: Boolean) {
