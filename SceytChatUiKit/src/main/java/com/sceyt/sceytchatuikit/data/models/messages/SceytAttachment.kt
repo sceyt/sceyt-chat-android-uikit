@@ -19,13 +19,13 @@ data class SceytAttachment(
         var url: String?,
         var filePath: String?,
         var transferState: TransferState?,
-        var progressPercent: Float?
-
+        var progressPercent: Float?,
+        var originalFilePath: String?
 ) : Parcelable, Cloneable {
 
     public override fun clone(): SceytAttachment {
         return SceytAttachment(id, messageId, messageTid, userId, name, type, metadata, fileSize,
-            createdAt, url, filePath, transferState, progressPercent)
+            createdAt, url, filePath, transferState, progressPercent, originalFilePath)
     }
 
     fun updateWithTransferData(data: TransferData) {

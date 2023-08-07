@@ -139,7 +139,7 @@ class IncFileMsgViewHolder(
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            TransferState.Downloading, TransferState.Uploading -> {
+            TransferState.Downloading, TransferState.Uploading, TransferState.Preparing-> {
                 binding.icFile.setImageResource(0)
                 setProgress(data)
             }
@@ -148,7 +148,7 @@ class IncFileMsgViewHolder(
                 binding.icFile.setImageResource(0)
             }
 
-            TransferState.FilePathChanged, TransferState.ThumbLoaded, TransferState.Preparing -> return
+            TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
         }
     }
 

@@ -15,13 +15,13 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
-import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
@@ -48,9 +48,10 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
     private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
     private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
-    private val persistenceAttachmentsLogic by inject<PersistenceAttachmentLogic>()
+    private val persistenceAttachmentsMiddleWare by inject<PersistenceAttachmentsMiddleWare>()
     private val sceytSyncManager by inject<SceytSyncManager>()
     private val filesTransferService by inject<FileTransferService>()
+    private val globalScope by inject<CoroutineScope>()
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
     private var clientUserId: String? = null
 
@@ -154,7 +155,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     fun getMessagesMiddleWare() = persistenceMessagesMiddleWare
 
-    fun getAttachmentsLogic() = persistenceAttachmentsLogic
+    fun getAttachmentsMiddleWare() = persistenceAttachmentsMiddleWare
 
     fun getMembersMiddleWare() = persistenceMembersMiddleWare
 
@@ -169,9 +170,11 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     }
 
     fun clearData() {
-        database.clearAllTables()
-        preferences.clear()
-        channelsCache.clear()
+        globalScope.launch(Dispatchers.IO) {
+            database.clearAllTables()
+            preferences.clear()
+            channelsCache.clear()
+        }
     }
 
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {

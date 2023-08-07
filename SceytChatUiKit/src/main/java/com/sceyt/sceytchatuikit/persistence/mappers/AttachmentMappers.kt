@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
@@ -13,6 +14,7 @@ import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
@@ -39,7 +41,8 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         metadata = metadata,
         fileSize = fileSize,
         url = url,
-        filePath = filePath), null
+        filePath = filePath,
+        originalFilePath = originalFilePath), null
 )
 
 fun AttachmentDb.toAttachment(): SceytAttachment {
@@ -57,7 +60,8 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             url = payLoad?.url ?: url,
             filePath = payLoad?.filePath ?: filePath,
             transferState = payLoad?.transferState,
-            progressPercent = payLoad?.progressPercent)
+            progressPercent = payLoad?.progressPercent,
+            originalFilePath = originalFilePath)
     }
 }
 
@@ -115,6 +119,10 @@ fun SceytAttachment.toTransferData(transferState: TransferState,
     )
 }
 
+fun FileChecksumEntity.toFileChecksumData() = FileChecksumData(
+    checksum, resizedFilePath, url, metadata, fileSize
+)
+
 fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     var size: Size? = null
     var duration: Long? = null
@@ -129,15 +137,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
             }
 
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
-                val bytes = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()
-                try {
-                    val image = ThumbHash.thumbHashToRGBA(bytes)
-                    blurredThumbBitmap = BitmapUtil.bitmapFromRgba(image.width, image.height, image.rgba)
-                } catch (_: Exception) {
-                }
-
-                if (blurredThumbBitmap == null && bytes != null)
-                    blurredThumbBitmap = bytes.decodeByteArrayToBitmap()
+                blurredThumbBitmap = getThumbFromMetadata(metadata)
 
                 val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
                 val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
@@ -156,6 +156,22 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     }
 
     return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
+}
+
+fun getThumbFromMetadata(metadata: String?): Bitmap? {
+    metadata ?: return null
+    var blurredThumbBitmap: Bitmap? = null
+    val bytes = metadata.getInfoFromMetadataByKey(SceytConstants.Thumb)?.toByteArraySafety()
+    try {
+        val image = ThumbHash.thumbHashToRGBA(bytes)
+        blurredThumbBitmap = BitmapUtil.bitmapFromRgba(image.width, image.height, image.rgba)
+    } catch (_: Exception) {
+    }
+
+    if (blurredThumbBitmap == null && bytes != null)
+        blurredThumbBitmap = bytes.decodeByteArrayToBitmap()
+
+    return blurredThumbBitmap
 }
 
 fun SceytAttachment.getMetadataFromAttachment(): AudioMetadata {

@@ -342,9 +342,11 @@ class MessageListViewModel(
                 else {
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.
-                    persistenceAttachmentMiddleWare.updateTransferDataByMsgTid(TransferData(
-                        item.sceytMessage.tid, item.file.progressPercent
-                                ?: 0f, Uploading, item.file.filePath, item.file.url))
+                    viewModelScope.launch(Dispatchers.IO) {
+                        persistenceAttachmentMiddleWare.updateTransferDataByMsgTid(TransferData(
+                            item.sceytMessage.tid, item.file.progressPercent
+                                    ?: 0f, Uploading, item.file.filePath, item.file.url))
+                    }
 
                     SendAttachmentWorkManager.schedule(context, item.sceytMessage.tid, channel.id, ExistingWorkPolicy.REPLACE)
                 }

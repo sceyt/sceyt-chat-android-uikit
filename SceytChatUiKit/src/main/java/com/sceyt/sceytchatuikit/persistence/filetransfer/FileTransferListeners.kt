@@ -21,7 +21,6 @@ sealed interface FileTransferListeners {
         fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState)
     }
 
-
     fun interface ResumeListener : FileTransferListeners {
         fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState)
     }
