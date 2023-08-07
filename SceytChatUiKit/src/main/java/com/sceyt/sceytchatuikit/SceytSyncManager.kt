@@ -2,15 +2,16 @@ package com.sceyt.sceytchatuikit
 
 import androidx.lifecycle.LiveData
 import com.hadilq.liveevent.LiveEvent
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
@@ -24,13 +25,13 @@ import kotlin.coroutines.resume
 
 class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWare,
                        private val messagesMiddleWare: PersistenceMessagesMiddleWare,
-                       private val preference: SceytSharedPreference) : SceytKoinComponent, CoroutineScope {
+                       private val channelsCache: ChannelsCache) : SceytKoinComponent, CoroutineScope {
 
     private var syncResultData: SyncResultData = SyncResultData()
 
     @Volatile
     private var syncIsInProcess: Boolean = false
-    private val syncResultCallbacks = ConcurrentHashSet<(SyncResultData) -> Unit>()
+    private val syncResultCallbacks = ConcurrentHashSet<(Result<SyncResultData>) -> Unit>()
 
     companion object {
         private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
@@ -39,28 +40,28 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
         val syncChannelMessagesFinished: LiveData<Pair<SceytChannel, List<SceytMessage>>> = syncChannelMessagesFinished_
     }
 
-    fun startSync(resultCallback: ((SyncResultData) -> Unit)? = null) {
+    fun startSync(force: Boolean, resultCallback: ((Result<SyncResultData>) -> Unit)? = null) {
         resultCallback?.let { syncResultCallbacks.add(it) }
+
         if (syncIsInProcess)
             return
 
+        if (!channelsCache.initialized && !force) {
+            val errorMessage = "Ui kit still not have loaded channels to sync, no need to sync"
+            finishSyncWithError(Exception(errorMessage))
+            SceytLog.e(TAG, errorMessage)
+            return
+        }
+
         launch {
-            val haveLoadedChannelsToSync = preference.getBoolean(KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE)
-            if (haveLoadedChannelsToSync) {
-                syncIsInProcess = true
-                syncResultData = SyncResultData()
-                val result = getChannels()
-                syncResultCallbacks.forEach {
-                    it(result)
-                }
-                syncResultCallbacks.clear()
-                syncIsInProcess = false
-            } else {
-                syncResultCallbacks.forEach {
-                    it(syncResultData)
-                }
-                syncResultCallbacks.clear()
+            syncIsInProcess = true
+            syncResultData = SyncResultData()
+            val result = getChannels()
+            syncResultCallbacks.forEach {
+                it(Result.success(result))
             }
+            syncResultCallbacks.clear()
+            syncIsInProcess = false
         }
     }
 
@@ -132,6 +133,13 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
                     syncResultData.syncedMessagesCount += messages.size
                 }
         }
+    }
+
+    private fun finishSyncWithError(exception: java.lang.Exception) {
+        syncResultCallbacks.forEach {
+            it(Result.failure(exception))
+        }
+        syncResultCallbacks.clear()
     }
 
     data class SyncChannelData(
