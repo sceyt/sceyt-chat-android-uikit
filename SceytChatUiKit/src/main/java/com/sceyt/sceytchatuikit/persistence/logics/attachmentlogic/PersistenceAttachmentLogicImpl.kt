@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
@@ -22,7 +23,6 @@ import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
-import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageIdAndTid
@@ -33,9 +33,11 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getTid
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachment
+import com.sceyt.sceytchatuikit.persistence.mappers.toFileChecksumData
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -92,8 +94,9 @@ internal class PersistenceAttachmentLogicImpl(
         attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
     }
 
-    override suspend fun getFileChecksumData(checksum: Long): FileChecksumEntity? {
-        return fileChecksumDao.getChecksum(checksum)
+    override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
+        val checksum = FileResizeUtil.calculateChecksumFor10Mb(filePath ?: return null)
+        return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()
     }
 
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,

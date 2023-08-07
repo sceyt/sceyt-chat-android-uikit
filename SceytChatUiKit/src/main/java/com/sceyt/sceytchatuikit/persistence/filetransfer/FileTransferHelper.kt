@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
@@ -53,29 +54,27 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     fun getProgressUpdateCallback(attachment: SceytAttachment) = ProgressUpdateCallback {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
-        launch {
-            it.withPrettySizes(attachment.fileSize)
-            messagesCache.updateAttachmentTransferData(it)
-            emitAttachmentTransferUpdate(it)
-        }
+        it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
+        emitAttachmentTransferUpdate(it)
     }
 
     fun getPreparingCallback(attachment: SceytAttachment) = PreparingCallback {
         attachment.transferState = it.state
+        it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
+        emitAttachmentTransferUpdate(it)
         launch {
-            it.withPrettySizes(attachment.fileSize)
-            messagesCache.updateAttachmentTransferData(it)
-            emitAttachmentTransferUpdate(it)
             messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
 
     fun getResumePauseCallback(attachment: SceytAttachment) = ResumePauseCallback {
         attachment.transferState = it.state
+        it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
+        emitAttachmentTransferUpdate(it)
         launch {
-            it.withPrettySizes(attachment.fileSize)
-            messagesCache.updateAttachmentTransferData(it)
-            emitAttachmentTransferUpdate(it)
             messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
@@ -173,7 +172,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
-        launch(Dispatchers.Main) {
+        runOnMainThread {
             onTransferUpdatedLiveData_.value = data
         }
     }

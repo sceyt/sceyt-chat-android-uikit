@@ -9,7 +9,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 @Dao
 interface FileChecksumDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(fileChecksum: FileChecksumEntity)
 
     @Query("select * from FileChecksum where checksum = :checksum")

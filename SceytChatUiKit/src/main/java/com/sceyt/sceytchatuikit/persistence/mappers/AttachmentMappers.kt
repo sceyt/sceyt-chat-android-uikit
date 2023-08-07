@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
@@ -13,6 +14,7 @@ import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
@@ -116,6 +118,10 @@ fun SceytAttachment.toTransferData(transferState: TransferState,
         url = url
     )
 }
+
+fun FileChecksumEntity.toFileChecksumData() = FileChecksumData(
+    checksum, resizedFilePath, url, metadata, fileSize
+)
 
 fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     var size: Size? = null
