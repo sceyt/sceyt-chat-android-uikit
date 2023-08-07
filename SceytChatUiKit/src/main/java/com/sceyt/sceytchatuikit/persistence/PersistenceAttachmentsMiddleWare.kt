@@ -3,8 +3,8 @@ package com.sceyt.sceytchatuikit.persistence
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import kotlinx.coroutines.flow.Flow
@@ -24,5 +24,5 @@ interface PersistenceAttachmentsMiddleWare {
     suspend fun updateTransferDataByMsgTid(data: TransferData)
     suspend fun updateAttachmentWithTransferData(data: TransferData)
     suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?)
-    suspend fun getFileChecksumData(checksum: Long): FileChecksumEntity?
+    suspend fun getFileChecksumData(filePath: String?): FileChecksumData?
 }

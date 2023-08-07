@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getFileSize
+import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
@@ -173,9 +174,9 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
-        launch(Dispatchers.Main) {
-            onTransferUpdatedLiveData_.value = data
-        }
+       runOnMainThread {
+           onTransferUpdatedLiveData_.value = data
+       }
     }
 
     @JvmStatic
