@@ -54,29 +54,27 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     fun getProgressUpdateCallback(attachment: SceytAttachment) = ProgressUpdateCallback {
         attachment.transferState = it.state
         attachment.progressPercent = it.progressPercent
-        launch {
-            it.withPrettySizes(attachment.fileSize)
-            messagesCache.updateAttachmentTransferData(it)
-            emitAttachmentTransferUpdate(it)
-        }
+        it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
+        emitAttachmentTransferUpdate(it)
     }
 
     fun getPreparingCallback(attachment: SceytAttachment) = PreparingCallback {
         attachment.transferState = it.state
+        it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
+        emitAttachmentTransferUpdate(it)
         launch {
-            it.withPrettySizes(attachment.fileSize)
-            messagesCache.updateAttachmentTransferData(it)
-            emitAttachmentTransferUpdate(it)
             messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
 
     fun getResumePauseCallback(attachment: SceytAttachment) = ResumePauseCallback {
         attachment.transferState = it.state
+        it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
+        emitAttachmentTransferUpdate(it)
         launch {
-            it.withPrettySizes(attachment.fileSize)
-            messagesCache.updateAttachmentTransferData(it)
-            emitAttachmentTransferUpdate(it)
             messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
@@ -174,9 +172,9 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     }
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
-       runOnMainThread {
-           onTransferUpdatedLiveData_.value = data
-       }
+        runOnMainThread {
+            onTransferUpdatedLiveData_.value = data
+        }
     }
 
     @JvmStatic

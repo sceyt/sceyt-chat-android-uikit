@@ -50,7 +50,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private val fileTransferService: FileTransferService by inject()
     private var downloadingUrlMap = hashMapOf<String, String>()
     private var thumbPaths = hashMapOf<String, ThumbPathsData>()
-    private var preparingThumbsMap = hashMapOf<String, Long>()
+    private var preparingThumbsMap = hashMapOf<Long, Long>()
     private var pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
     private var currentUploadingAttachment: SceytAttachment? = null
     private var pausedTasksMap = hashMapOf<Long, Long>()
@@ -184,16 +184,17 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     }
 
     override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
+        attachment.filePath ?: return
         val size = thumbData.size
-        val thumbKey = getPreparingThumbKey(messageTid, size)
-        if (preparingThumbsMap[thumbKey] != null) return
+        val thumbKey = getPreparingThumbKey(attachment.filePath.toString(), thumbData)
+        if (preparingThumbsMap[messageTid] != null) return
         val task = fileTransferService.findOrCreateTransferTask(attachment)
         val readyThumb = thumbPaths[thumbKey]
         if (readyThumb != null) {
             task.thumbCallback.onThumb(readyThumb.path, thumbData)
             return
         } else {
-            preparingThumbsMap[thumbKey] = messageTid
+            preparingThumbsMap[messageTid] = messageTid
             val result = getAttachmentThumbPath(context, attachment, size)
             if (result.isSuccess)
                 result.getOrNull()?.let { path ->
@@ -201,14 +202,14 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                     task.thumbCallback.onThumb(path, thumbData)
                 }
         }
-        preparingThumbsMap.remove(thumbKey)
+        preparingThumbsMap.remove(messageTid)
     }
 
     override fun clearPreparingThumbPaths() {
         preparingThumbsMap.clear()
     }
 
-    private fun getPreparingThumbKey(messageTid: Long, size: Size) = "$messageTid$size"
+    private fun getPreparingThumbKey(filePath: String, data: ThumbData) = "$filePath${data.size}"
 
     private fun checkAndUpload(attachment: SceytAttachment, task: TransferTask) {
         if (currentUploadingAttachment == null) {
