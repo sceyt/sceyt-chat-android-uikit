@@ -392,7 +392,7 @@ internal class PersistenceMessagesLogicImpl(
             user = ClientWrapper.currentUser ?: User(preference.getUserId())
             this.channelId = channelId
             attachments?.map {
-                it.transferState = TransferState.Uploading
+                it.transferState = TransferState.Preparing
                 it.progressPercent = 0f
                 if (!it.existThumb())
                     it.addAttachmentMetadata(context)

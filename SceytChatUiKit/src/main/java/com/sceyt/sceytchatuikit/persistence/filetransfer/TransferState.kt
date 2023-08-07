@@ -29,11 +29,11 @@ enum class TransferState {
     PauseDownload,
     ErrorUpload,
     ErrorDownload,
+    Preparing,
 
     //This state is not saving to db.
     FilePathChanged,
-    ThumbLoaded,
-    Preparing
+    ThumbLoaded
 }
 
 fun SceytCircularProgressView.getProgressWithState(state: TransferState, progressPercent: Float = 0f) {

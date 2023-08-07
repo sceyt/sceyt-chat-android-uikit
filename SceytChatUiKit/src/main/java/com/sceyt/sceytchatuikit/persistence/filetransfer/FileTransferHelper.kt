@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
@@ -18,12 +19,19 @@ import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAt
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
+import kotlin.coroutines.CoroutineContext
 
-object FileTransferHelper : SceytKoinComponent {
+object FileTransferHelper : SceytKoinComponent, CoroutineScope {
     private val fileTransferService by inject<FileTransferService>()
     private val messagesLogic by inject<PersistenceAttachmentLogic>()
+    private val fileChecksumDao by inject<FileChecksumDao>()
     private val messagesCache by inject<MessagesCache>()
 
     private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
@@ -56,13 +64,19 @@ object FileTransferHelper : SceytKoinComponent {
         it.withPrettySizes(attachment.fileSize)
         messagesCache.updateAttachmentTransferData(it)
         emitAttachmentTransferUpdate(it)
+        launch {
+            messagesLogic.updateTransferDataByMsgTid(it)
+        }
     }
 
     fun getResumePauseCallback(attachment: SceytAttachment) = ResumePauseCallback {
         attachment.transferState = it.state
         it.withPrettySizes(attachment.fileSize)
+        messagesCache.updateAttachmentTransferData(it)
         emitAttachmentTransferUpdate(it)
-        messagesLogic.updateTransferDataByMsgTid(it)
+        launch {
+            messagesLogic.updateTransferDataByMsgTid(it)
+        }
     }
 
     fun getDownloadResultCallback(attachment: SceytAttachment) = TransferResultCallback {
@@ -73,7 +87,9 @@ object FileTransferHelper : SceytKoinComponent {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                messagesLogic.updateAttachmentWithTransferData(transferData)
+                launch {
+                    messagesLogic.updateAttachmentWithTransferData(transferData)
+                }
             }
 
             is SceytResponse.Error -> {
@@ -83,7 +99,9 @@ object FileTransferHelper : SceytKoinComponent {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                messagesLogic.updateAttachmentWithTransferData(transferData)
+                launch {
+                    messagesLogic.updateAttachmentWithTransferData(transferData)
+                }
                 SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
             }
         }
@@ -97,16 +115,21 @@ object FileTransferHelper : SceytKoinComponent {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                messagesLogic.updateAttachmentWithTransferData(transferData)
+                launch {
+                    messagesLogic.updateAttachmentWithTransferData(transferData)
+                }
             }
 
             is SceytResponse.Error -> {
-                val transferData = TransferData(attachment.messageTid, attachment.progressPercent
-                        ?: 0f,
+                val transferData = TransferData(attachment.messageTid,
+                    attachment.progressPercent ?: 0f,
                     ErrorUpload, attachment.filePath, null).withPrettySizes(attachment.fileSize)
 
+                attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                messagesLogic.updateAttachmentWithTransferData(transferData)
+                launch {
+                    messagesLogic.updateAttachmentWithTransferData(transferData)
+                }
                 SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
             }
         }
@@ -119,6 +142,7 @@ object FileTransferHelper : SceytKoinComponent {
         val transferData = TransferData(attachment.messageTid, 0f,
             TransferState.FilePathChanged, newPath, attachment.url)
 
+        val originalFilePath = attachment.filePath
         val newFile = File(newPath)
         if (newFile.exists()) {
             val fileSize = getFileSize(newPath)
@@ -128,7 +152,15 @@ object FileTransferHelper : SceytKoinComponent {
             attachment.upsertSizeMetadata(dimensions)
 
             emitAttachmentTransferUpdate(transferData.withPrettySizes(fileSize))
-            messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
+            launch {
+                messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
+
+                originalFilePath?.let {
+                    val checksum = FileResizeUtil.calculateChecksumFor10Mb(originalFilePath)
+                    if (checksum != null)
+                        fileChecksumDao.updateResizedFilePathAndSize(checksum, newPath, fileSize)
+                }
+            }
         }
     }
 
@@ -152,4 +184,7 @@ object FileTransferHelper : SceytKoinComponent {
         val fileLoadedSize = (fileSize * progressPercent / 100).toPrettySize(format)
         return Pair(fileLoadedSize, fileTotalSize)
     }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 }

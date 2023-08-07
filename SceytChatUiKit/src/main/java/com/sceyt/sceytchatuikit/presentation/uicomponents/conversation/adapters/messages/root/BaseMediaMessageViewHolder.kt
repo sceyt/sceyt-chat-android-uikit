@@ -133,6 +133,9 @@ abstract class BaseMediaMessageViewHolder(
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
         isAttachedToWindow = true
+        viewHolderHelper.transferData?.let {
+            loadingProgressView.getProgressWithState(it.state, it.progressPercent)
+        }
     }
 
     override fun onViewDetachedFromWindow() {

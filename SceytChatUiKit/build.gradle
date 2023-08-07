@@ -65,6 +65,11 @@ android {
         minSdk min_sdk_version
         targetSdk target_sdk_version
 
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
         vectorDrawables.useSupportLibrary = true
     }
 

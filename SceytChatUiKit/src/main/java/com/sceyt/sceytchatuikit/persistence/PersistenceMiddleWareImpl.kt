@@ -26,6 +26,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -82,48 +83,48 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
 
     private fun onChannelEvent(data: ChannelEventData) {
-        launch { channelLogic.onChannelEvent(data) }
+        launch(Dispatchers.IO) { channelLogic.onChannelEvent(data) }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        launch { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
+        launch(Dispatchers.IO) { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
     }
 
     private fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        launch { membersLogic.onChannelMemberEvent(data) }
+        launch(Dispatchers.IO) { membersLogic.onChannelMemberEvent(data) }
     }
 
     private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
-        launch { membersLogic.onChannelOwnerChangedEvent(data) }
+        launch(Dispatchers.IO) { membersLogic.onChannelOwnerChangedEvent(data) }
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        launch {
+        launch(Dispatchers.IO) {
             messagesLogic.onMessageStatusChangeEvent(data)
             channelLogic.onMessageStatusChangeEvent(data)
         }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch {
+        launch(Dispatchers.IO) {
             messagesLogic.onMessage(data)
             channelLogic.onMessage(data)
         }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
-        launch { reactionsLogic.onMessageReactionUpdated(data) }
+        launch(Dispatchers.IO) { reactionsLogic.onMessageReactionUpdated(data) }
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
-        launch {
+        launch(Dispatchers.IO) {
             messagesLogic.onMessageEditedOrDeleted(sceytMessage)
             channelLogic.onMessageEditedOrDeleted(sceytMessage)
         }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
-        launch { connectionLogic.onChangedConnectStatus(data) }
+        launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
@@ -375,16 +376,24 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
-    override fun updateTransferDataByMsgTid(data: TransferData) {
+    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) {
+        attachmentsLogic.updateAttachmentIdAndMessageId(message)
+    }
+
+    override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         attachmentsLogic.updateTransferDataByMsgTid(data)
     }
 
-    override fun updateAttachmentWithTransferData(data: TransferData) {
+    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
         attachmentsLogic.updateAttachmentWithTransferData(data)
     }
 
-    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         attachmentsLogic.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+    }
+
+    override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
+        return attachmentsLogic.getFileChecksumData(filePath)
     }
 
     override suspend fun loadUsers(query: String): SceytResponse<List<User>> {

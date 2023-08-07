@@ -58,7 +58,7 @@ class IncTextMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {
-                    setMessageBody(messageBody, message)
+                    setMessageBody(messageBody, message, false)
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
