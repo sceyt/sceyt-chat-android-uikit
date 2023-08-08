@@ -11,8 +11,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserActivityState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
-import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Blocked
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
@@ -96,7 +94,6 @@ internal class PersistenceChannelsLogicImpl(
         private val draftMessageDao: DraftMessageDao,
         private val chatUsersReactionDao: ChatUsersReactionDao,
         private val pendingReactionDao: PendingReactionDao,
-        private val preference: SceytSharedPreference,
         private val context: Context,
         private val channelsCache: ChannelsCache) : PersistenceChannelsLogic, SceytKoinComponent {
 
@@ -301,7 +298,6 @@ internal class PersistenceChannelsLogicImpl(
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb))
 
-                preference.setBoolean(KEY_HAVE_SUCCESS_LOADED_CHANNELS_RESPONSE, true)
                 messageLogic.onSyncedChannels(channels)
             }
 

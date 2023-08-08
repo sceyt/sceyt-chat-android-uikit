@@ -20,6 +20,9 @@ class ChannelsCache {
     private var cachedData = hashMapOf<Long, SceytChannel>()
     private var pendingChannelsData = hashMapOf<Long, SceytChannel>()
 
+    internal val initialized: Boolean
+        get() = cachedData.isNotEmpty()
+
     /** fromPendingToRealChannelsData is used to store created pending channel ids and their real channel ids,
      * to escape creating channel every time when sending message*/
     private var fromPendingToRealChannelsData = hashMapOf<Long, Long>()
