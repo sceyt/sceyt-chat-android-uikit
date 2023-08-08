@@ -75,7 +75,8 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
             }
 
             TransferState.FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             TransferState.ThumbLoaded -> {

@@ -134,7 +134,8 @@ class OutImageMsgViewHolder(
             }
 
             TransferState.FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             TransferState.ThumbLoaded -> {
