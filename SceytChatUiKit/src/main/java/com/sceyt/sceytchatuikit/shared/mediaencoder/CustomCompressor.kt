@@ -18,15 +18,22 @@ import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setUpMP4Movi
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.validateInputs
 import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
 import com.abedelazizshe.lightcompressorlibrary.video.*
+import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.ByteBuffer
+import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
 /**
  * Created by AbedElaziz Shehadeh on 27 Jan, 2020
  * elaziz.shehadeh@gmail.com
  */
-object CustomCompressor {
+object CustomCompressor: CoroutineScope {
 
     // 2Mbps
     private const val MIN_BITRATE = 2000000
@@ -220,11 +227,17 @@ object CustomCompressor {
                 val decoder: MediaCodec
 
                 val hasQTI = hasQTI()
+                val hasOMX = hasOMX()
 
-                val encoder = prepareEncoder(outputFormat, hasQTI)
+                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)
 
                 val inputSurface: InputSurface
                 val outputSurface: OutputSurface
+
+                var inputBufferIndex: Int
+                var inputBuffer: ByteBuffer?
+                var chunkSize: Int
+                var frameIndex: Long = 0
 
                 try {
                     var inputDone = false
@@ -247,44 +260,40 @@ object CustomCompressor {
                     while (!outputDone) {
                         if (!inputDone) {
 
+                            ++frameIndex
+
                             val index = extractor.sampleTrackIndex
 
                             if (index == videoIndex) {
-                                val inputBufferIndex =
+                                inputBufferIndex =
                                         decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
                                 if (inputBufferIndex >= 0) {
-                                    val inputBuffer = decoder.getInputBuffer(inputBufferIndex)
-                                    val chunkSize = extractor.readSampleData(inputBuffer!!, 0)
-                                    when {
-                                        chunkSize < 0 -> {
+                                    inputBuffer = decoder.getInputBuffer(inputBufferIndex)
+                                    chunkSize = extractor.readSampleData(inputBuffer!!, 0)
 
-                                            decoder.queueInputBuffer(
-                                                inputBufferIndex,
-                                                0,
-                                                0,
-                                                0L,
-                                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                                            )
-                                            inputDone = true
-                                        }
-
-                                        else -> {
-
-                                            decoder.queueInputBuffer(
-                                                inputBufferIndex,
-                                                0,
-                                                chunkSize,
-                                                extractor.sampleTime,
-                                                0
-                                            )
-                                            extractor.advance()
-
-                                        }
+                                    if (chunkSize < 0) {
+                                        decoder.queueInputBuffer(
+                                            inputBufferIndex,
+                                            0,
+                                            0,
+                                            0L,
+                                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                                        )
+                                        inputDone = true
+                                    } else {
+                                        decoder.queueInputBuffer(
+                                            inputBufferIndex,
+                                            0,
+                                            chunkSize,
+                                            extractor.sampleTime,
+                                            0
+                                        )
+                                        extractor.advance()
                                     }
                                 }
 
                             } else if (index == -1) { //end of file
-                                val inputBufferIndex =
+                                inputBufferIndex =
                                         decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
                                 if (inputBufferIndex >= 0) {
                                     decoder.queueInputBuffer(
@@ -302,6 +311,10 @@ object CustomCompressor {
                         var decoderOutputAvailable = true
                         var encoderOutputAvailable = true
 
+                        var encoderStatus: Int
+                        var encodedData: ByteBuffer? = null
+                        var doRender: Boolean
+
                         loop@ while (decoderOutputAvailable || encoderOutputAvailable) {
 
                             if (!isRunning) {
@@ -313,7 +326,7 @@ object CustomCompressor {
                             }
 
                             //Encoder
-                            val encoderStatus =
+                            encoderStatus =
                                     encoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
 
                             when {
@@ -332,7 +345,7 @@ object CustomCompressor {
 
                                 encoderStatus < 0 -> throw RuntimeException("unexpected result from encoder.dequeueOutputBuffer: $encoderStatus")
                                 else -> {
-                                    val encodedData = encoder.getOutputBuffer(encoderStatus)
+                                    encodedData = encoder.getOutputBuffer(encoderStatus)
                                             ?: throw RuntimeException("encoderOutputBuffer $encoderStatus was null")
 
                                     if (bufferInfo.size > 1) {
@@ -369,7 +382,7 @@ object CustomCompressor {
 
                                 decoderStatus < 0 -> throw RuntimeException("unexpected result from decoder.dequeueOutputBuffer: $decoderStatus")
                                 else -> {
-                                    val doRender = bufferInfo.size != 0
+                                    doRender = bufferInfo.size != 0
 
                                     decoder.releaseOutputBuffer(decoderStatus, doRender)
                                     if (doRender) {
@@ -388,10 +401,15 @@ object CustomCompressor {
                                             outputSurface.drawImage()
 
                                             inputSurface.setPresentationTime(bufferInfo.presentationTimeUs * 1000)
-
-                                            compressionProgressListener.onProgressChanged(bufferInfo.presentationTimeUs.toFloat() / duration.toFloat() * 100)
-
                                             inputSurface.swapBuffers()
+
+                                            //Notify progress every 10 frames
+                                            if (frameIndex % 10 == 0L) {
+                                                launch {
+                                                    compressionProgressListener.onProgressChanged(bufferInfo.presentationTimeUs.toFloat() / duration.toFloat() * 100)
+                                                }
+                                            }
+
                                         }
                                     }
                                     if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -503,7 +521,7 @@ object CustomCompressor {
         }
     }
 
-    private fun prepareEncoder(outputFormat: MediaFormat, hasQTI: Boolean): MediaCodec {
+    private fun prepareEncoder(outputFormat: MediaFormat, hasQTI: Boolean, hasOMX: Boolean): MediaCodec {
 
         // This seems to cause an issue with certain phones
         // val encoderName = MediaCodecList(REGULAR_CODECS).findEncoderForFormat(outputFormat)
@@ -511,9 +529,14 @@ object CustomCompressor {
         // Log.i("encoderName", encoder.name)
         // c2.qti.avc.encoder results in a corrupted .mp4 video that does not play in
         // Mac and iphones
-        val encoder = if (hasQTI) {
+        val encoder = if (hasOMX) {
+            SceytLog.i("Compressor", "Using OMX.qcom.video.encoder.avc")
+            MediaCodec.createByCodecName("OMX.qcom.video.encoder.avc")
+        } else if (hasQTI) {
+            SceytLog.i("Compressor", "Using c2.android.avc.encoder")
             MediaCodec.createByCodecName("c2.android.avc.encoder")
         } else {
+            SceytLog.i("Compressor", "Using default encoder")
             MediaCodec.createEncoderByType(MIME_TYPE)
         }
         encoder.configure(
@@ -564,4 +587,7 @@ object CustomCompressor {
         inputSurface.release()
         outputSurface.release()
     }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Default + SupervisorJob()
 }

@@ -259,4 +259,15 @@ object CompressorUtils {
         }
         return false
     }
+
+    fun hasOMX(): Boolean {
+        val list = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
+        for (codec in list) {
+            Log.i("CODECS: ", codec.name)
+            if (codec.name.contains("OMX.qcom.video.encoder.avc")) {
+                return true
+            }
+        }
+        return false
+    }
 }
