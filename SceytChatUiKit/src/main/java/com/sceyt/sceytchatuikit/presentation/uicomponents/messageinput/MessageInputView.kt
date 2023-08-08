@@ -145,8 +145,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 isVisible = canShowRecorderView()
             })
         }
-
-        Handler(Looper.getMainLooper()).postDelayed({ binding.messageInput.requestFocus() }, 500)
     }
 
     private fun init() {
@@ -612,6 +610,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
                 else message.toSceytUiMessage().getShowBody(context)
             }
+            context.showSoftInput(binding.messageInput)
         }
     }
 
@@ -834,6 +833,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun getPickerListener(): GalleryMediaPicker.PickerListener {
         return GalleryMediaPicker.PickerListener {
             addAttachment(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+            // Remove attachments that are not in the picker result
+            allAttachments.filter { attachment ->
+                it.none { mediaData -> mediaData.realPath == attachment.filePath }
+            }.forEach { attachment ->
+                val item = AttachmentItem(attachment)
+                attachmentsAdapter.removeItem(item)
+                allAttachments.remove(attachment)
+            }
         }
     }
 
@@ -847,7 +854,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     // Choose file type popup listeners
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
-        chooseAttachmentHelper?.openSceytGallery(getPickerListener(), *allAttachments.map { it.url }.toTypedArray())
+        chooseAttachmentHelper?.openSceytGallery(getPickerListener(), *allAttachments.map { it.filePath }.toTypedArray())
     }
 
     override fun onTakePhotoClick() {

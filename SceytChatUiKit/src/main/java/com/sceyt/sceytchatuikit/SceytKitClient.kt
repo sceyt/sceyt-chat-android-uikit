@@ -116,7 +116,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
                         persistenceMessagesMiddleWare.sendAllPendingReactions()
-                        sceytSyncManager.startSync()
+                        sceytSyncManager.startSync(false)
                     }
                 }
 
