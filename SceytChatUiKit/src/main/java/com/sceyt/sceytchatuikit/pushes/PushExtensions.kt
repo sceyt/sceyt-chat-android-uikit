@@ -97,8 +97,12 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
         val data = attachment.getString("data")
         val name = attachment.getString("name")
         val type = attachment.getString("type")
+        val metadata = attachment.getString("metadata")
         val size = attachment.getString("size").toLong()
-        Attachment.Builder("", data, type).setFileSize(size).setName(name).build()
+        Attachment.Builder("", data, type)
+            .setFileSize(size)
+            .setName(name)
+            .setMetadata(metadata).build()
     } catch (e: Exception) {
         e.printStackTrace()
         null
