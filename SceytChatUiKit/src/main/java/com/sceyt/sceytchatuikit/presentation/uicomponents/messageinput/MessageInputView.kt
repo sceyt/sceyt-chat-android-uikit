@@ -145,8 +145,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 isVisible = canShowRecorderView()
             })
         }
-
-        Handler(Looper.getMainLooper()).postDelayed({ binding.messageInput.requestFocus() }, 500)
     }
 
     private fun init() {
@@ -612,6 +610,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
                 else message.toSceytUiMessage().getShowBody(context)
             }
+            context.showSoftInput(binding.messageInput)
         }
     }
 
