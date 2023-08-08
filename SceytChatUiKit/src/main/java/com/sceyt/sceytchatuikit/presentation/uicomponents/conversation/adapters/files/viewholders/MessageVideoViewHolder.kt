@@ -125,7 +125,8 @@ class MessageVideoViewHolder(
             }
 
             FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             ThumbLoaded -> {

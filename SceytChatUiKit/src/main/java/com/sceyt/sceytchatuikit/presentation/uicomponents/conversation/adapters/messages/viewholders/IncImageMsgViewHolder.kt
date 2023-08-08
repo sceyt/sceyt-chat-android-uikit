@@ -143,7 +143,8 @@ class IncImageMsgViewHolder(
             }
 
             TransferState.FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             TransferState.ThumbLoaded -> {

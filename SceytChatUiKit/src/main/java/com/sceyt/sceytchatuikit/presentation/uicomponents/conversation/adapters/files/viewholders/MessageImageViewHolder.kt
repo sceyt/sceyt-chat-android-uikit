@@ -105,7 +105,8 @@ class MessageImageViewHolder(
             }
 
             FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             ThumbLoaded -> {

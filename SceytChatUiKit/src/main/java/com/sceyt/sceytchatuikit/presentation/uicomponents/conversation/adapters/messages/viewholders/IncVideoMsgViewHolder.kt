@@ -189,7 +189,8 @@ class IncVideoMsgViewHolder(
             }
 
             FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             ThumbLoaded -> {

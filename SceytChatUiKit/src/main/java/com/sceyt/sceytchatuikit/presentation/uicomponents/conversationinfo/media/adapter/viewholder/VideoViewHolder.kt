@@ -74,7 +74,8 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
             }
 
             TransferState.FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             TransferState.ThumbLoaded -> {

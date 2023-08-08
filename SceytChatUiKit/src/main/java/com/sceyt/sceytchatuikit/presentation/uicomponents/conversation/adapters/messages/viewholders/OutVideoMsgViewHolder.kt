@@ -179,7 +179,8 @@ class OutVideoMsgViewHolder(
             }
 
             FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
             ThumbLoaded -> {
