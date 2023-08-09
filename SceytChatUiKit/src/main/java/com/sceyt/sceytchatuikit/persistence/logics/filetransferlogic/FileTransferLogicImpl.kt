@@ -355,8 +355,8 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             AttachmentTypeEnum.Image.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
                 val result = resizeImage(context, attachment.filePath, 1080)
-                callback(result)
                 resizingAttachmentsMap.remove(attachment.messageTid.toString())
+                callback(result)
             }
 
             AttachmentTypeEnum.Video.value() -> {
@@ -365,8 +365,8 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                     if (pausedTasksMap[attachment.messageTid] == null)
                         task.preparingCallback.onPreparing(attachment.toTransferData(Preparing, it.progressPercent))
                 }) {
-                    callback(it)
                     resizingAttachmentsMap.remove(attachment.messageTid.toString())
+                    callback(it)
                 }
             }
 
