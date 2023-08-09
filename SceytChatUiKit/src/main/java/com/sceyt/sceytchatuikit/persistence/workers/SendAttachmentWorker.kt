@@ -98,7 +98,8 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     val result = suspendCancellableCoroutine { continuation ->
                         if (attachment.transferState != TransferState.PauseUpload) {
 
-                            val transferData = TransferData(tmpMessage.tid, 0f, TransferState.Preparing,
+                            val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
+                                    ?: 0f, TransferState.Preparing,
                                 attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
 
                             FileTransferHelper.emitAttachmentTransferUpdate(transferData)
