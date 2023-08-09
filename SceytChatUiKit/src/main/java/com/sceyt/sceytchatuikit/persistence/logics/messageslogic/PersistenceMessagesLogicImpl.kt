@@ -35,7 +35,6 @@ import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
@@ -116,9 +115,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean) {
         val message = data.second
 
-        message.parentMessage?.let { parent ->
-            saveMessagesToDb(arrayListOf(message, parent))
-        } ?: run { saveMessagesToDb(arrayListOf(message)) }
+        saveMessagesToDb(arrayListOf(message))
 
         messagesCache.add(data.first.id, message)
         onMessageFlow.tryEmit(data)
@@ -742,7 +739,6 @@ internal class PersistenceMessagesLogicImpl(
         if (list.isNullOrEmpty()) return
 
         val usersDb = arrayListOf<UserEntity>()
-
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
         for (message in list) {

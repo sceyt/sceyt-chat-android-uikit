@@ -239,8 +239,9 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private fun loadReplyMessageImageOrObserveToDownload(attachment: SceytAttachment?, imageAttachment: ImageView) {
-        val path = attachment?.filePath
-        val placeHolder = getThumbFromMetadata(attachment?.metadata)?.toDrawable(context.resources)?.mutate()
+        attachment?: return
+        val path = attachment.filePath
+        val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
 
         fun loadImage(filePath: String?) {
             Glide.with(itemView.context)
@@ -254,7 +255,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (path.isNullOrBlank()) {
             imageAttachment.setImageDrawable(placeHolder)
             FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-                if (it.state == TransferState.Downloaded && it.messageTid == attachment?.messageTid) {
+                if (it.state == TransferState.Downloaded && it.messageTid == attachment.messageTid) {
                     attachment.filePath = it.filePath
                     loadImage(it.filePath)
                 }

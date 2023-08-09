@@ -190,8 +190,9 @@ class MessagesCache {
         val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
         updateAttachmentsPayLoads(attachmentPayLoadData, messageToUpdate)
 
-        cashedMessage?.parentMessage?.let {
-            val parentPayLoadData = getAttachmentPayLoads(it)
+        messageToUpdate.parentMessage?.let {
+            val cashedParentMessage = getMessageByTid(channelId, it.tid)
+            val parentPayLoadData = getAttachmentPayLoads(cashedParentMessage)
             updateAttachmentsPayLoads(parentPayLoadData, it)
         }
 
