@@ -186,7 +186,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
         attachment.filePath ?: return
         val size = thumbData.size
-        val thumbKey = getPreparingThumbKey(attachment.originalFilePath.toString(), thumbData)
+        val thumbKey = getPreparingThumbKey(attachment, thumbData)
         if (preparingThumbsMap[messageTid] != null) return
         val task = fileTransferService.findOrCreateTransferTask(attachment)
         val readyThumb = thumbPaths[thumbKey]
@@ -209,7 +209,11 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
         preparingThumbsMap.clear()
     }
 
-    private fun getPreparingThumbKey(filePath: String, data: ThumbData) = "$filePath${data.size}"
+    private fun getPreparingThumbKey(attachment: SceytAttachment, data: ThumbData): String {
+        val path = if (attachment.originalFilePath.isNullOrBlank())
+            attachment.filePath else attachment.originalFilePath
+        return "$path${data.size}"
+    }
 
     private fun checkAndUpload(attachment: SceytAttachment, task: TransferTask) {
         if (currentUploadingAttachment == null) {
