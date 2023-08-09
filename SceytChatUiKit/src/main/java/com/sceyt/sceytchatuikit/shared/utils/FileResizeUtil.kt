@@ -33,6 +33,9 @@ object FileResizeUtil {
             val inSimpleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
             val quality = calculateQuality(filePath, inSimpleSize)
 
+            if (inSimpleSize == 1 && quality == 100)
+                return File(filePath)
+
             var bmpPic = BitmapFactory.decodeFile(filePath, BitmapFactory.Options().apply {
                 inSampleSize = inSimpleSize
             })
@@ -50,37 +53,20 @@ object FileResizeUtil {
         }
     }
 
-    fun resizeAndCompressImageAsByteArray(bitmap: Bitmap,
-                                          reqSize: Int = 800): Bitmap? {
-        return try {
-            val initialSize = Size(bitmap.width, bitmap.height)
-            val byteArray = bitmap.bitmapToByteArray()
-
-            val size = Size(initialSize.width, initialSize.height)
-            val w = (reqSize * size.width / max(size.width, size.height)).toDouble().roundToInt()
-            val h = (reqSize * size.height / max(size.width, size.height)).toDouble().roundToInt()
-
-            BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
-                    ?: return null, BitmapFactory.Options().apply {
-                inSampleSize = calculateInSampleSize(initialSize, w, h)
-            }).scale(w, h, false)
-
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
     private fun resizeAndCompressImageAsFile(context: Context, bitmap: Bitmap,
                                              reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
         return try {
             val initialSize = Size(bitmap.width, bitmap.height)
             val byteArray = bitmap.bitmapToByteArray()
-            val bmpPic = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
-                    ?: return null, BitmapFactory.Options().apply {
-                inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-            })
+            val inSimpleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
 
+            val bmpPic = if (inSimpleSize == 1) bitmap
+            else {
+                BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                        ?: return null, BitmapFactory.Options().apply {
+                    inSampleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
+                })
+            }
             val dest = "${context.cacheDir}/" + UUID.randomUUID() + ".JPEG"
             val bmpFile = FileOutputStream(dest)
             bmpPic.compress(Bitmap.CompressFormat.JPEG, 80, bmpFile)
@@ -113,6 +99,28 @@ object FileResizeUtil {
             bmpPic = getOrientationCorrectedBitmap(bitmap = bmpPic, filePath).scale(w, h, false)
 
             return bmpPic
+
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
+    fun resizeAndCompressImageAsByteArray(bitmap: Bitmap,
+                                          reqSize: Int = 800): Bitmap? {
+        return try {
+            val initialSize = Size(bitmap.width, bitmap.height)
+            val byteArray = bitmap.bitmapToByteArray()
+
+            val size = Size(initialSize.width, initialSize.height)
+            val w = (reqSize * size.width / max(size.width, size.height)).toDouble().roundToInt()
+            val h = (reqSize * size.height / max(size.width, size.height)).toDouble().roundToInt()
+
+            BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size
+                    ?: return null, BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(initialSize, w, h)
+            }).scale(w, h, false)
 
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -273,7 +281,7 @@ object FileResizeUtil {
             val heightRatio = (height.toFloat() / reqHeight.toFloat()).roundToInt()
             val widthRatio = (width.toFloat() / reqWidth.toFloat()).roundToInt()
 
-            inSampleSize = min(heightRatio, widthRatio)
+            inSampleSize = max(heightRatio, widthRatio)
         }
         return inSampleSize
     }
