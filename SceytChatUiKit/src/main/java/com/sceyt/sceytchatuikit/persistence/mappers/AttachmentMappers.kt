@@ -8,11 +8,9 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
-import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
 import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
@@ -151,8 +149,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
         if (type == AttachmentTypeEnum.Video.value() || type == AttachmentTypeEnum.Voice.value())
             duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
 
-    } catch (ex: Exception) {
-        SceytLog.i(TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
+    } catch (_: Exception) {
     }
 
     return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
@@ -200,7 +197,6 @@ fun String?.getInfoFromMetadataByKey(key: String): String? {
         val jsonObject = JSONObject(this ?: return null)
         return jsonObject.getFromJsonObject(key)
     } catch (ex: Exception) {
-        SceytLog.i("GetInfoFromMeta", "Couldn't get data from attachment metadata with reason ${ex.message}")
         return null
     }
 }

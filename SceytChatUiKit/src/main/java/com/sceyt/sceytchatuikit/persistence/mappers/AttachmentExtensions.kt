@@ -111,7 +111,6 @@ fun SceytAttachment.existThumb(): Boolean {
         val jsonObject = JSONObject(metadata ?: return false)
         jsonObject.getString(SceytConstants.Thumb).isNotNullOrBlank()
     } catch (ex: Exception) {
-        Log.i("MetadataReader", "Couldn't get data from attachment metadata with reason ${ex.message}")
         false
     }
 }
