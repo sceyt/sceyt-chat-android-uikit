@@ -67,7 +67,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     if (channel.unread)
         markChannelAsRead(channel.id)
-    else getChannel(channel.id)
+
+    // If userRole is null or empty, get channel again to update channel
+    if (channel.userRole.isNullOrEmpty())
+        getChannel(channel.id)
 
     if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
             || channel.lastDisplayedMessageId == channel.lastMessage?.id)
