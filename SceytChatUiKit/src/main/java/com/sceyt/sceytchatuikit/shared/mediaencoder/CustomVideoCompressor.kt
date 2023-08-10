@@ -9,8 +9,9 @@ import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomCompressor.isRunning
 import com.abedelazizshe.lightcompressorlibrary.config.Configuration
 import com.abedelazizshe.lightcompressorlibrary.video.Result
 import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
-object CustomVideoCompressor : CoroutineScope by MainScope() {
+object CustomVideoCompressor : CoroutineScope  {
 
     private var job: Job? = null
 
@@ -127,4 +128,7 @@ object CustomVideoCompressor : CoroutineScope by MainScope() {
             },
         )
     }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 }

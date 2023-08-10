@@ -1,14 +1,22 @@
 package com.sceyt.sceytchatuikit.persistence.workers
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -33,6 +41,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHARING
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
+import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.calculateChecksumFor10Mb
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -43,6 +52,7 @@ object SendAttachmentWorkManager : SceytKoinComponent {
 
     internal const val MESSAGE_TID = "MESSAGE_TID"
     internal const val IS_SHARING = "IS_SHARING"
+    internal const val UPLOAD_CHANNEL_ID = "Sceyt_Upload_Attachment_Channel"
 
     fun schedule(context: Context, messageTid: Long, channelId: Long?,
                  workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP, isSharing: Boolean = false): Operation {
@@ -144,7 +154,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
-
+        startForeground()
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
@@ -165,5 +175,26 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             } else Result.retry()
 
         } else Result.failure()
+    }
+
+    private suspend fun startForeground() {
+        val foregroundInfo = ForegroundInfo(34, creteNotification())
+        setForeground(foregroundInfo)
+    }
+
+    private fun creteNotification(): Notification {
+        val notificationBuilder = NotificationCompat.Builder(applicationContext, UPLOAD_CHANNEL_ID)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(UPLOAD_CHANNEL_ID, "Upload Attachments", NotificationManager.IMPORTANCE_MIN)
+            NotificationManagerCompat.from(applicationContext).createNotificationChannel(channel)
+        }
+
+        notificationBuilder
+            .setContentTitle(applicationContext.getString(R.string.sending_attachment))
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setSmallIcon(R.drawable.sceyt_ic_upload)
+        return notificationBuilder.build()
     }
 }
