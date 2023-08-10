@@ -1,8 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.SpannableString
 import android.util.AttributeSet
@@ -834,8 +832,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return GalleryMediaPicker.PickerListener {
             addAttachment(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
             // Remove attachments that are not in the picker result
-            allAttachments.filter { attachment ->
-                it.none { mediaData -> mediaData.realPath == attachment.filePath }
+            allAttachments.filter { item ->
+                item.type.isEqualsVideoOrImage() && it.none { mediaData -> mediaData.realPath == item.filePath }
             }.forEach { attachment ->
                 val item = AttachmentItem(attachment)
                 attachmentsAdapter.removeItem(item)
