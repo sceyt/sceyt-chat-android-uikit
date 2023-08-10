@@ -26,7 +26,7 @@ internal interface PersistenceMessagesLogic {
                                  ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
                                    loadKey: LoadKeyData,

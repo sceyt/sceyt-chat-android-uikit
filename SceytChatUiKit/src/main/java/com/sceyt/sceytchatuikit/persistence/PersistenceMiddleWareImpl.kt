@@ -276,8 +276,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, limit, loadKey, ignoreDb)
+                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, limit, loadKey, ignoreDb, ignoreServer)
     }
 
     override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,

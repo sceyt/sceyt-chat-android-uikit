@@ -234,13 +234,13 @@ class MessageListViewModel(
         }
     }
 
-    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData) {
+    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
         setPagingLoadingStarted(LoadNear)
 
         viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
             persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread,
-                limit, loadKey).collect { response ->
+                limit, loadKey, ignoreServer = ignoreServer).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
