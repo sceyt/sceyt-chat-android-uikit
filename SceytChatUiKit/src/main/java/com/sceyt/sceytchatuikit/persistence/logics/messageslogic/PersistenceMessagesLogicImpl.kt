@@ -173,8 +173,8 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replyInThread, 0, limit, loadKey, ignoreDb)
+                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return loadMessages(LoadNear, conversationId, messageId, replyInThread, 0, limit, loadKey, ignoreDb, ignoreServer)
     }
 
     override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
@@ -548,7 +548,7 @@ internal class PersistenceMessagesLogicImpl(
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
                              replyInThread: Boolean, offset: Int, limit: Int,
                              loadKey: LoadKeyData = LoadKeyData(value = messageId),
-                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+                             ignoreDb: Boolean, ignoreServer: Boolean = false): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             if (offset == 0) messagesCache.clear()
 
@@ -556,8 +556,9 @@ internal class PersistenceMessagesLogicImpl(
             if (!ignoreDb)
                 trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, limit, loadKey))
             // Load from server
-            trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, limit, replyInThread,
-                loadKey, ignoreDb))
+            if (!ignoreServer)
+                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, limit, replyInThread,
+                    loadKey, ignoreDb))
 
             channel.close()
             awaitClose()

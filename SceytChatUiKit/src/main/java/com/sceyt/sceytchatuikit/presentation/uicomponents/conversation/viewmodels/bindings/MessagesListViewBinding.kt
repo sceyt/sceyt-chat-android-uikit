@@ -77,7 +77,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         loadPrevMessages(0, 0)
     else {
         pinnedLastReadMessageId = channel.lastDisplayedMessageId
-        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue))
+        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue), false)
     }
 
     messagesListView.setUnreadCount(channel.newMessageCount.toInt())
@@ -291,12 +291,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         it.second.highlighted = true
                         messagesListView.scrollToPositionAndHighlight(it.first, true)
                     }
-                } /*?: run {
-                    // todo when uncomment this logic, please make sure that should save loaded messages in db
+                } ?: run {
                     loadNearMessages(parentId, LoadKeyData(
                         key = LoadKeyType.ScrollToMessageById.longValue,
-                        value = parentId))
-                }*/
+                        value = parentId), true)
+                }
             }
         }
     }
