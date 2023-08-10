@@ -121,8 +121,10 @@ open class SceytMessage(var id: Long,
             autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetails,
             pendingReactions = pendingReactions).also {
-            it.messageReactions = messageReactions
+            it.canShowAvatarAndName = canShowAvatarAndName
+            it.isGroup = isGroup
             it.files = files
+            it.messageReactions = messageReactions
         }
     }
 

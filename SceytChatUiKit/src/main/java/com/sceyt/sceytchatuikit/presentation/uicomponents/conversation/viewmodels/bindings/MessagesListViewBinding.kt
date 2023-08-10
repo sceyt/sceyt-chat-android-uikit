@@ -240,7 +240,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     MessagesCache.messageUpdatedFlow.onEach { data ->
         viewModelScope.launch(Dispatchers.Default) {
             data.second.forEach {
-                val message = initMessageInfoData(it)
+                val message = initMessageInfoData(it, initNameAndAvatar = true)
                 withContext(Dispatchers.Main) {
                     if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
                         messagesListView.messageEditedOrDeleted(message)
