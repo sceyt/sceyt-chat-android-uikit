@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic
 
 import android.content.Context
+import android.util.Log
 import android.util.Size
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomVideoCompressor
 import com.koushikdutta.ion.Ion
@@ -14,6 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
@@ -267,6 +269,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 }
 
                 override fun onError(exception: SceytException?) {
+                    Log.e(TAG, "Error upload file ${exception?.message}")
                     transferTask.resultCallback.onResult(SceytResponse.Error(exception))
                 }
             }, object : UrlCallback {
@@ -276,6 +279,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 }
 
                 override fun onError(exception: SceytException?) {
+                    Log.e(TAG, "Error upload file ${exception?.message}")
                     transferTask.resultCallback.onResult(SceytResponse.Error(exception))
                     uploadNext()
                 }
