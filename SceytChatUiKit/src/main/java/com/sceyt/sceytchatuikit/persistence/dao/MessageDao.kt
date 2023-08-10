@@ -5,6 +5,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
@@ -53,7 +54,8 @@ abstract class MessageDao {
         if (attachmentPairs.isNotEmpty()) {
             insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
             insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
-                pair.first.map { it.toAttachmentPayLoad(pair.second.messageEntity) }
+                pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value() }
+                    .map { it.toAttachmentPayLoad(pair.second.messageEntity) }
             })
         }
 

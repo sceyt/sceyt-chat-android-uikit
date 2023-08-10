@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentPayLoadData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -206,6 +207,7 @@ class MessagesCache {
     private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?, message: SceytMessage) {
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
             message.attachments?.forEach { attachment ->
+                if (attachment.type == AttachmentTypeEnum.Link.value()) return@forEach
                 val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
                     { data.any { it.url == attachment.url } }
                 } else {
@@ -222,7 +224,7 @@ class MessagesCache {
     }
 
     private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
-        val payloads = cashedMessage?.attachments?.map { attachment ->
+        val payloads = cashedMessage?.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { attachment ->
             AttachmentPayLoadData(
                 messageTid = cashedMessage.tid,
                 transferState = attachment.transferState,
@@ -258,7 +260,10 @@ class MessagesCache {
 
             cachedMessages.values.forEach { messageHashMap ->
                 messageHashMap[updateDate.messageTid]?.let { message ->
-                    message.attachments?.forEach { attachment ->
+                    message.attachments?.forEach att@{ attachment ->
+                        if (attachment.type == AttachmentTypeEnum.Link.value())
+                            return@att
+
                         when (updateDate.state) {
                             PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing -> {
                                 if (attachment.filePath == updateDate.filePath)
@@ -282,7 +287,9 @@ class MessagesCache {
         synchronized(lock) {
             cachedMessages.values.forEach { messageHashMap ->
                 messageHashMap[messageTid]?.let { message ->
-                    message.attachments?.forEach { attachment ->
+                    message.attachments?.forEach att@{ attachment ->
+                        if (attachment.type == AttachmentTypeEnum.Link.value())
+                            return@att
                         attachment.filePath = path
                         attachment.metadata = metadata
                     }
