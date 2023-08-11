@@ -38,12 +38,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Collections
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     clearPreparingThumbs()
 
-    val pendingDisplayMsgIds by lazy { mutableSetOf<Long>() }
+    val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
 
     /** Send pending markers and pending messages when lifecycle come back onResume state,
      * Also set update current chat Id in ChannelsCache*/
