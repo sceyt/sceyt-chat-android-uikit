@@ -526,7 +526,13 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
-        return messagesRepository.getMessageById(channelId, messageId)
+        val result = messagesRepository.getMessageById(channelId, messageId)
+        if (result is SceytResponse.Success) {
+            result.data?.let { message ->
+                messageDao.insertMessageIgnored(message.toMessageDb(true))
+            }
+        }
+        return  result
     }
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {

@@ -94,7 +94,7 @@ fun Reaction.toSceytReaction() = SceytReaction(id, messageId, key, score, reason
 
 fun ReactionTotalEntity.toReactionTotal(): ReactionTotal = ReactionTotal(key, count, score.toLong())
 
-fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt, isAdd)
+fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt, isAdd, incomingMsg)
 
 fun PendingReactionData.toSceytReaction() = SceytReaction(0, messageId, key, score, "", createdAt, ClientWrapper.currentUser
         ?: User(SceytKitClient.myId), true)

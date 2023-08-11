@@ -2,8 +2,10 @@ package com.sceyt.sceytchatuikit.persistence
 
 import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.RenameColumn
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.AutoMigrationSpec
 import com.sceyt.sceytchatuikit.persistence.converters.ChannelConverter
 import com.sceyt.sceytchatuikit.persistence.converters.ListStringConverter
 import com.sceyt.sceytchatuikit.persistence.converters.MessageConverter
@@ -52,9 +54,10 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
     PendingReactionEntity::class,
     AttachmentPayLoadEntity::class,
     FileChecksumEntity::class
-], version = 3, autoMigrations = [
+], version = 4, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
+    AutoMigration(from = 3, to = 4, spec = SceytDatabase.RenameAutoMigration::class),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -70,4 +73,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun pendingMarkersDao(): PendingMarkersDao
     abstract fun pendingReactionDao(): PendingReactionDao
     abstract fun fileChecksumDao(): FileChecksumDao
+
+    @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
+    class RenameAutoMigration : AutoMigrationSpec
 }

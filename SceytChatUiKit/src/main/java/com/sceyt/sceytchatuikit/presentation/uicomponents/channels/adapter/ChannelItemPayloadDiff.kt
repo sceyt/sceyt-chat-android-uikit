@@ -3,7 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter
 data class ChannelItemPayloadDiff(
         val subjectChanged: Boolean,
         val avatarViewChanged: Boolean,
-        val lastMessageChanged: Boolean,
+        var lastMessageChanged: Boolean,
         val lastMessageStatusChanged: Boolean,
         val unreadCountChanged: Boolean,
         val muteStateChanged: Boolean,
@@ -36,6 +36,22 @@ data class ChannelItemPayloadDiff(
             typingStateChanged = true,
             membersChanged = true,
             metadataUpdated = true
+        )
+
+        val DEFAULT_FALSE = ChannelItemPayloadDiff(
+            subjectChanged = false,
+            avatarViewChanged = false,
+            lastMessageChanged = false,
+            lastMessageStatusChanged = false,
+            unreadCountChanged = false,
+            muteStateChanged = false,
+            onlineStateChanged = false,
+            markedUsUnreadChanged = false,
+            lastReadMsdChanged = false,
+            peerBlockedChanged = false,
+            typingStateChanged = false,
+            membersChanged = false,
+            metadataUpdated = false
         )
     }
 }

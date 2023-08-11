@@ -35,6 +35,12 @@ class ChannelsCache {
         )
         val channelUpdatedFlow: SharedFlow<ChannelUpdateData> = channelUpdatedFlow_
 
+        private val channelReactionMsgLoadedFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelReactionMsgLoadedFlow: SharedFlow<SceytChannel> = channelReactionMsgLoadedFlow_
+
         private val channelDeletedFlow_ = MutableSharedFlow<Long>(
             extraBufferCapacity = 5,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -272,6 +278,14 @@ class ChannelsCache {
                         removeAll(it.toSet())
                     }
                 }
+            }
+        }
+    }
+
+    fun channelLastReactionLoaded(channelId: Long) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                channelReactionMsgLoadedFlow_.tryEmit(channel)
             }
         }
     }

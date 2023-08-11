@@ -40,5 +40,6 @@ data class MessageEntity(
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
         @ColumnInfo(index = true)
-        var isParentMessage: Boolean
+        // This flag is used to ignore getting this message, when querying get channel messages
+        var unList: Boolean
 )
