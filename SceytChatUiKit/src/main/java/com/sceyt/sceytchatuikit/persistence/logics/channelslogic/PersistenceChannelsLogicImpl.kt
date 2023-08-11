@@ -727,16 +727,17 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
     }
 
-    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>) {
+    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
+                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         val draftMessage = if (message.isNullOrBlank()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
             null
         } else {
             val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
-                MentionUserHelper.initMentionMetaData(message, mentionUsers))
+                MentionUserHelper.initMentionMetaData(message, mentionUsers), replyOrEditMessage?.id, isReply)
             draftMessageDao.insert(draftMessageEntity)
             draftMessageDao.insertDraftMessageUserLinks(mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) })
-            draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) })
+            draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) }, replyOrEditMessage)
         }
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "8a412196460a96a8f99d671119d71fb4",
+    "identityHash": "a3e57805b3ac9b6629036f4d6aa913f3",
     "entities": [
       {
         "tableName": "channels",
@@ -661,7 +661,7 @@
       },
       {
         "tableName": "DraftMessageEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chatId` INTEGER NOT NULL, `message` TEXT, `createdAt` INTEGER NOT NULL, `metadata` TEXT, PRIMARY KEY(`chatId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chatId` INTEGER NOT NULL, `message` TEXT, `createdAt` INTEGER NOT NULL, `metadata` TEXT, `replyOrEditMessageId` INTEGER, `isReplyMessage` INTEGER, PRIMARY KEY(`chatId`))",
         "fields": [
           {
             "fieldPath": "chatId",
@@ -685,6 +685,18 @@
             "fieldPath": "metadata",
             "columnName": "metadata",
             "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "replyOrEditMessageId",
+            "columnName": "replyOrEditMessageId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isReplyMessage",
+            "columnName": "isReplyMessage",
+            "affinity": "INTEGER",
             "notNull": false
           }
         ],
@@ -1574,7 +1586,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a412196460a96a8f99d671119d71fb4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3e57805b3ac9b6629036f4d6aa913f3')"
     ]
   }
 }

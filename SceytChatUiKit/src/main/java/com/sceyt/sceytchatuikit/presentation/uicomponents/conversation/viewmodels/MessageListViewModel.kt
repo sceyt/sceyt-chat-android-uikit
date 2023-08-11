@@ -422,9 +422,9 @@ class MessageListViewModel(
         }
     }
 
-    fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>) {
+    fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(), mentionUsers)
+            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(), mentionUsers, replyOrEditMessage, isReply)
         }
     }
 

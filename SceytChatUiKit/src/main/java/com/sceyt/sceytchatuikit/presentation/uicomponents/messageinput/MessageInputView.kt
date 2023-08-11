@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 import android.content.Context
 import android.text.Editable
 import android.text.SpannableString
+import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -28,6 +29,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -51,6 +53,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
+import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
@@ -110,13 +113,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var enableMention: Boolean = true
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
+    private var inputTextWatcher: TextWatcher? = null
     var messageInputActionCallback: MessageInputActionCallback? = null
 
     var isInputHidden = false
         private set
-    var editMessage: Message? = null
+    var editMessage: SceytMessage? = null
         private set
-    var replyMessage: Message? = null
+    var replyMessage: SceytMessage? = null
         private set
     var replyThreadMessageId: Long? = null
         private set
@@ -151,22 +155,35 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             setOnClickListeners()
             addMentionUserListener()
             determineInputState()
+            addInputTextWatcher()
             post { onStateChanged(inputState) }
-
-            messageInput.doAfterTextChanged { text ->
-                if (isRecording())
-                    return@doAfterTextChanged
-
-                determineInputState()
-                typingJob?.cancel()
-                typingJob = MainScope().launch {
-                    messageInputActionCallback?.typing(text.isNullOrBlank().not())
-                    messageInputActionCallback?.updateDraftMessage(text, binding.messageInput.mentions)
-                    delay(2000)
-                    messageInputActionCallback?.typing(false)
-                }
-            }
         }
+    }
+
+    private fun addInputTextWatcher() {
+        inputTextWatcher = binding.messageInput.doAfterTextChanged { text ->
+            onInputChanged(text)
+        }
+    }
+
+    private fun onInputChanged(text: Editable?) {
+        if (isRecording())
+            return
+
+        determineInputState()
+        typingJob?.cancel()
+        typingJob = MainScope().launch {
+            messageInputActionCallback?.typing(text.isNullOrBlank().not())
+            updateDraftMessage()
+            delay(2000)
+            messageInputActionCallback?.typing(false)
+        }
+    }
+
+    private fun updateDraftMessage() {
+        val replyOrEditMessage = replyMessage ?: editMessage
+        val isReply = replyMessage != null
+        messageInputActionCallback?.updateDraftMessage(binding.messageInput.text, binding.messageInput.mentions, replyOrEditMessage, isReply)
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
@@ -254,7 +271,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             .build()
 
         if (withMentionedUsers)
-            checkAndAddMentionedUsers(message)
+            checkAndAddMentionedUsers(message.toSceytUiMessage())
 
         return message
     }
@@ -262,7 +279,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun Message.MessageBuilder.initRelyMessage(): Message.MessageBuilder {
         replyMessage?.let {
             setParentMessageId(it.id)
-            setParentMessage(it)
+            setParentMessage(it.toMessage())
             // setReplyInThread(replyThreadMessageId != null)
         } ?: replyThreadMessageId?.let {
             setParentMessageId(it)
@@ -284,7 +301,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
             editMessage?.let {
                 cancelReply {
-                    messageInputActionCallback?.sendEditMessage(it.toSceytUiMessage())
+                    messageInputActionCallback?.sendEditMessage(it)
                     reset()
                 }
             }
@@ -295,7 +312,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun checkAndAddMentionedUsers(message: Message) {
+    private fun checkAndAddMentionedUsers(message: SceytMessage) {
         val mentionedUsers = binding.messageInput.mentions
         if (mentionedUsers.isEmpty()) {
             message.metadata = ""
@@ -482,7 +499,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun loadReplyMessageImage(attachment: Attachment) {
+    private fun loadReplyMessageImage(attachment: SceytAttachment?) {
+        attachment ?: return
         when {
             attachment.type.isEqualsVideoOrImage() -> {
                 val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
@@ -554,7 +572,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         eventListeners.onInputStateChanged(binding.icSendMessage, newState)
     }
 
-    private fun initInputWithEditMessage(message: Message) {
+    private fun initInputWithEditMessage(message: SceytMessage) {
         with(binding) {
             var body = SpannableString(message.body)
             if (!message.mentionedUsers.isNullOrEmpty()) {
@@ -567,11 +585,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun editMessage(message: Message) {
+    internal fun editMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
             editMessage = message
             determineInputState()
-            initInputWithEditMessage(message)
+            if (!initWithDraft)
+                initInputWithEditMessage(message)
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
                 ViewUtil.expandHeight(root, 1, 200)
@@ -580,35 +599,41 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 tvName.text = getString(R.string.sceyt_edit_message)
                 tvMessageBody.text = if (message.isTextMessage())
                     MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
-                else message.toSceytUiMessage().getShowBody(context)
+                else message.getShowBody(context)
             }
+            if (!initWithDraft)
+                updateDraftMessage()
         }
     }
 
-    internal fun replyMessage(message: Message) {
+    internal fun replyMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
             replyMessage = message
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
                 ViewUtil.expandHeight(root, 1, 200)
-                val name = userNameBuilder?.invoke(message.user)
-                        ?: message.user.getPresentableName()
+                val name = message.user?.let { userNameBuilder?.invoke(it) }
+                        ?: message.user?.getPresentableName() ?: ""
                 val text = "${getString(R.string.sceyt_reply)} $name".run {
                     setBoldSpan(length - name.length, length)
                 }
                 tvName.text = text
                 icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
 
-                if (message.attachments.isNullOrEmpty().not()) {
+                if (!message.attachments.isNullOrEmpty()) {
                     binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
-                    loadReplyMessageImage(message.attachments[0])
+                    loadReplyMessageImage(message.attachments?.getOrNull(0))
                 } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
                 tvMessageBody.text = if (message.isTextMessage())
                     MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
-                else message.toSceytUiMessage().getShowBody(context)
+                else message.getShowBody(context)
             }
-            context.showSoftInput(binding.messageInput)
+
+            if (!initWithDraft) {
+                context.showSoftInput(binding.messageInput)
+                updateDraftMessage()
+            }
         }
     }
 
@@ -620,14 +645,21 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (draftMessage == null || draftMessage.message.isNullOrEmpty())
             return
         var body = SpannableString(draftMessage.message)
+        binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)
+
+            if (draftMessage.replyOrEditMessage != null)
+                if (draftMessage.isReply)
+                    replyMessage(draftMessage.replyOrEditMessage, initWithDraft = true)
+                else editMessage(draftMessage.replyOrEditMessage, initWithDraft = true)
         }
         determineInputState()
+        addInputTextWatcher()
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
@@ -717,6 +749,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         allAttachments.clear()
         attachmentsAdapter.clear()
         determineInputState()
+        updateDraftMessage()
     }
 
     fun disableInputWithMessage(message: String, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
@@ -753,7 +786,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
-        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>)
+        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean)
         fun mention(query: String)
         fun join()
     }

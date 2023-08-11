@@ -15,9 +15,6 @@ interface DraftMessageDao {
     @Query("select * from DraftMessageEntity where chatId = :chatId")
     suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
 
-/*    @Query("select * from DraftMessageEntity join users on user_id in (DraftMessageEntity.mentionUsersIds) where chatId = :chatId")
-    suspend fun getDraftByChannelId2(chatId: Long): Map<DraftMessageEntity, List<UserEntity>?>*/
-
     @Query("delete from DraftMessageEntity where chatId = :chatId")
     suspend fun deleteDraftByChannelId(chatId: Long)
 
