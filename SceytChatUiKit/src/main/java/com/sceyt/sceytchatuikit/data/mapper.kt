@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
@@ -76,15 +77,19 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     message = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
     metadata = draftMessageEntity.metadata,
-    mentionUsers = mentionUsers?.map { it.toUser() }
+    mentionUsers = mentionUsers?.map { it.toUser() },
+    replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
+    isReply = draftMessageEntity.isReplyMessage ?: false
 )
 
-fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?) = DraftMessage(
+fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: SceytMessage?) = DraftMessage(
     chatId = chatId,
     message = message,
     createdAt = createdAt,
     metadata = metadata,
-    mentionUsers = mentionUsers
+    mentionUsers = mentionUsers,
+    replyOrEditMessage = replyMessage,
+    isReply = isReplyMessage ?: false
 )
 
 fun User.copy() = User(

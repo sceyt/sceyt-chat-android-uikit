@@ -88,7 +88,7 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
     }
 }
 
-fun Message.isTextMessage() = attachments.isNullOrEmpty()
+fun SceytMessage.isTextMessage() = attachments.isNullOrEmpty()
 
 fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     if (this == null) return null

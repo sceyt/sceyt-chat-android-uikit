@@ -13,7 +13,6 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.mappers.isDeleted
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
@@ -95,11 +94,11 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     }
 
     onEditMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.editMessage(it.toMessage())
+        messageInputView.editMessage(it, false)
     }
 
     onReplyMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.replyMessage(it.toMessage())
+        messageInputView.replyMessage(it, false)
     }
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
@@ -148,8 +147,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>) {
-            this@bind.updateDraftMessage(text, mentionUserIds)
+        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+            this@bind.updateDraftMessage(text, mentionUserIds, replyOrEditMessage, isReply)
         }
 
         override fun mention(query: String) {
