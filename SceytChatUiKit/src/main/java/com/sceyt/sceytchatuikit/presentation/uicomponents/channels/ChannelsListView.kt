@@ -116,6 +116,14 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return null
     }
 
+    internal fun channelUpdatedWithDiff(channel: SceytChannel, diff: ChannelItemPayloadDiff) {
+        channelsRV.getChannelIndexed(channel.id)?.let { pair ->
+            val channelItem = pair.second
+            channelItem.channel = channel
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+        }
+    }
+
     fun replaceChannel(first: Long, second: SceytChannel) {
         channelsRV.getChannelIndexed(first)?.let { pair ->
             val channelItem = pair.second

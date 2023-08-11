@@ -56,7 +56,6 @@ import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
-import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
@@ -273,12 +272,11 @@ internal class PersistenceChannelsLogicImpl(
             val dbChannels = getChannelsDb(offset, searchQuery)
             var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
 
-            ChatReactionMessagesCache.getNeededMessages(dbChannels)
-
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
 
             channelsCache.addAll(dbChannels.map { it.clone() }, false)
+            ChatReactionMessagesCache.getNeededMessages(dbChannels)
 
             awaitToConnectSceyt()
 
@@ -292,11 +290,11 @@ internal class PersistenceChannelsLogicImpl(
                 val hasDiff = channelsCache.addAll(savedChannels.map { it.clone() }, offset != 0) || offset == 0
                 hasNext = response.data?.size == CHANNELS_LOAD_SIZE
 
-                ChatReactionMessagesCache.getNeededMessages(response.data ?: arrayListOf())
-
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb))
+
+                ChatReactionMessagesCache.getNeededMessages(response.data ?: arrayListOf())
 
                 messageLogic.onSyncedChannels(channels)
             }
@@ -388,28 +386,13 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun getChannelsDb(offset: Int, searchQuery: String): List<SceytChannel> {
         return if (searchQuery.isBlank()) {
             channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel ->
-                addMessagesToChatReactionsCache(channel)
                 channel.toChannel()
             }
         } else {
             val ids = usersDao.getUserIdsByDisplayName(searchQuery)
             channelDao.getChannelsByQueryAndUserIds(query = searchQuery, userIds = ids, limit = CHANNELS_LOAD_SIZE,
                 offset = offset, false).map { channel ->
-                addMessagesToChatReactionsCache(channel)
                 channel.toChannel()
-            }
-        }
-    }
-
-    private suspend fun addMessagesToChatReactionsCache(channelDb: ChannelDb) {
-        val lastReaction = channelDb.newReactions?.maxByOrNull { it.reaction.id } ?: return
-        val lastMessage = channelDb.lastMessage
-        if (lastReaction.reaction.id > (lastMessage?.messageEntity?.id ?: 0) &&
-                lastMessage?.messageEntity?.deliveryStatus != DeliveryStatus.Pending) {
-            lastReaction.message?.let { messageDb ->
-                ChatReactionMessagesCache.addMessage(messageDb.toSceytMessage())
-            } ?: run {
-                ChatReactionMessagesCache.getNeededMessages(mapOf(Pair(channelDb.channelEntity.id, lastReaction.reaction.messageId)))
             }
         }
     }

@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import java.util.Date
 
-fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
+fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
     // Set id null if message is not sent yet, because id id unique in db
     id = if (id == 0L) null else id,
@@ -40,7 +40,7 @@ fun SceytMessage.toMessageEntity(isParentMessage: Boolean) = MessageEntity(
     displayCount = displayCount,
     autoDeleteAt = autoDeleteAt,
     forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
-    isParentMessage = isParentMessage
+    unList = unList
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -50,10 +50,10 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
 }
 
 
-fun SceytMessage.toMessageDb(isParentMessage: Boolean): MessageDb {
+fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
     val tid = getTid(id, tid, incoming)
     return MessageDb(
-        messageEntity = toMessageEntity(isParentMessage),
+        messageEntity = toMessageEntity(unList),
         from = user?.toUserEntity(),
         parent = parentMessage?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },

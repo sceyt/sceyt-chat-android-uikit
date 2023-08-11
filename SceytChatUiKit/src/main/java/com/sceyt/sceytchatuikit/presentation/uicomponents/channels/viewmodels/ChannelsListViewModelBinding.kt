@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateDa
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
@@ -115,6 +116,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                     getChannels(0, query = searchQuery)
             }
         } else needToUpdateChannelsAfterResume[data.channel.id] = data
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
+        viewModelScope.launch {
+            channelsListView.channelUpdatedWithDiff(data, ChannelItemPayloadDiff.DEFAULT_FALSE.apply {
+                lastMessageChanged = true
+            })
+        }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     fun createJobToAddNewChannelWithOnResumed(sceytChannel: SceytChannel) {

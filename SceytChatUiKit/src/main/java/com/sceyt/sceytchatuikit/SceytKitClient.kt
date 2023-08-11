@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
@@ -116,6 +117,8 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
                         persistenceMessagesMiddleWare.sendAllPendingReactions()
+                        if (!channelsCache.initialized)
+                            delay(1000) // Await 1 second maybe channel cache will be initialized
                         sceytSyncManager.startSync(false)
                     }
                 }

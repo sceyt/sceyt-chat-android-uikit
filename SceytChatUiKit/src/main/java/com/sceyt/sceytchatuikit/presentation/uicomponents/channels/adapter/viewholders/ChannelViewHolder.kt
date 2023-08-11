@@ -165,18 +165,20 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
         if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false
-        val pendingAddOrRemoveReaction = channel.pendingReactions?.groupBy { it.isAdd }
+        val pendingAddOrRemoveReaction = channel.pendingReactions?.filter { !it.incomingMsg }?.groupBy { it.isAdd }
         val addReactions = pendingAddOrRemoveReaction?.get(true)
         val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
         val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
                 ?: channel.newReactions?.filter {
-                    removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
+                    it.user?.id != SceytKitClient.myId &&
+                            removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
                 }?.maxByOrNull { it.id } ?: return false
 
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
+                ?: return false
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = if (message != null) "\"${message.getShowBody(context)}\"" else itemView.getString(R.string.sceyt_message).lowercase()
+            val toMessage = "\"${message.getShowBody(context)}\""
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {

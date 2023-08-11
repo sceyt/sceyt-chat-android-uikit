@@ -26,6 +26,8 @@ data class PendingReactionEntity(
         val channelId: Long,
         var isAdd: Boolean,
         var createdAt: Long,
+        @ColumnInfo(defaultValue = "false")
+        var incomingMsg: Boolean,
         @PrimaryKey(autoGenerate = true)
         val id: Long = 0
 )

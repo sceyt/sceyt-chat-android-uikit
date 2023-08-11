@@ -40,6 +40,13 @@ abstract class MessageDao {
         insertMessagesPayloads(insertedMessages)
     }
 
+    @Transaction
+    open suspend fun insertMessageIgnored(messagesDb: MessageDb) {
+        val rowId = insert(messagesDb.messageEntity)
+        if (rowId != -1L)
+            insertMessagesPayloads(listOf(messagesDb))
+    }
+
     private suspend fun insertMessagesPayloads(messages: List<MessageDb>) {
         if (messages.isEmpty()) return
 
@@ -138,16 +145,16 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
-            "and not isParentMessage and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
+            "and not unList and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <=:lastMessageId " +
-            "and not isParentMessage and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
+            "and not unList and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and message_id >:messageId and not isParentMessage " +
+    @Query("select * from messages where channelId =:channelId and message_id >:messageId and not unList " +
             "and deliveryStatus != $msgPendingStatus order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 

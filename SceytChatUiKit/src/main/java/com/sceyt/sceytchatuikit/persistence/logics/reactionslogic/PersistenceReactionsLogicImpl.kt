@@ -288,7 +288,7 @@ internal class PersistenceReactionsLogicImpl(
 
         } else {
             val entity = PendingReactionEntity(messageId = messageId, channelId = channelId, key = key,
-                score = 1, createdAt = System.currentTimeMillis(), isAdd = isAdd, count = 1)
+                score = 1, createdAt = System.currentTimeMillis(), isAdd = isAdd, incomingMsg = messageDb.messageEntity.incoming, count = 1)
             pendingReactions.add(entity)
             pendingReactionEntity = entity
         }
@@ -302,7 +302,8 @@ internal class PersistenceReactionsLogicImpl(
         if (pendingReactionEntity != null)
             pendingReactionDao.insert(pendingReactionEntity)
 
-        notifyChannelReactionUpdated(channelId)
+        if (!message.incoming)
+            notifyChannelReactionUpdated(channelId)
         return wasPending
     }
 
