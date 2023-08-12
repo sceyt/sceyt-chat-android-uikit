@@ -48,6 +48,7 @@ import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
@@ -348,6 +349,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         setListener(object : RecordingListener {
             override fun onRecordingStarted() {
                 val directoryToSaveRecording = context.filesDir.path + "/Audio"
+                AudioPlayerHelper.pauseAll()
                 AudioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
                 voiceMessageRecorderView?.keepScreenOn = true

@@ -77,34 +77,47 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
 
     private fun initAudioPlayer() {
         AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
-            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer) {
+            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String) {
+                if (!checkIsValid(filePath)) return
+
                 if (!alreadyInitialized)
                     AudioPlayerHelper.toggle(lastFilePath)
             }
 
-            override fun onProgress(position: Long, duration: Long) {
+            override fun onProgress(position: Long, duration: Long, filePath: String) {
+                if (!checkIsValid(filePath)) return
                 runOnMainThread {
                     binding.tvDuration.text = position.durationToMinSecShort()
                 }
             }
 
-            override fun onSeek(position: Long) {
+            override fun onSeek(position: Long, filePath: String) {
             }
 
-            override fun onToggle(playing: Boolean) {
+            override fun onToggle(playing: Boolean, filePath: String) {
+                if (!checkIsValid(filePath)) return
                 binding.root.post { setPlayingState(playing) }
             }
 
-            override fun onStop() {
+            override fun onStop(filePath: String) {
+                if (!checkIsValid(filePath)) return
                 binding.root.post {
                     setPlayingState(false)
                 }
             }
 
-            override fun onSpeedChanged(speed: Float) {
+            override fun onPaused(filePath: String?) {
+                if (!checkIsValid(filePath)) return
+                binding.root.post {
+                    setPlayingState(false)
+                }
             }
 
-            override fun onError() {
+            override fun onSpeedChanged(speed: Float, filePath: String) {
+            }
+
+            override fun onError(filePath: String) {
+                if (!checkIsValid(filePath)) return
                 binding.root.post {
                     setPlayingState(false)
                 }
@@ -135,6 +148,12 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
 
         if (!playing)
             setVoiceDuration()
+    }
+
+    private fun checkIsValid(filePath: String?): Boolean {
+        filePath ?: return false
+        if (!viewHolderHelper.isFileItemInitialized) return false
+        return fileItem.file.filePath == filePath
     }
 
     private fun setVoiceDuration() {
