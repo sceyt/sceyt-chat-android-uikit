@@ -273,7 +273,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    private fun setupPagerAdapter(viewPager: ViewPager2?, tabLayout: TabLayout?) {
+    protected fun setupPagerAdapter(viewPager: ViewPager2?, tabLayout: TabLayout?) {
         val fragments = arrayListOf<Fragment>(
             getChannelMediaFragment(channel),
             getChannelFilesFragment(channel),
@@ -287,7 +287,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
     }
 
-    private fun setChannelDetails(channel: SceytChannel) {
+    protected fun setChannelDetails(channel: SceytChannel) {
         with(binding ?: return) {
             members.text = if (channel.isPublic())
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
