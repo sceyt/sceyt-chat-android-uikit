@@ -33,7 +33,7 @@ import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityState
+import com.sceyt.chat.models.user.UserState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
@@ -437,7 +437,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private fun isDeletedUser(user: User?): Boolean {
-        return user?.activityState == UserActivityState.Deleted
+        return user?.activityState == UserState.Deleted
     }
 
     private fun getBubbleMaxWidth(context: Context): Int {
