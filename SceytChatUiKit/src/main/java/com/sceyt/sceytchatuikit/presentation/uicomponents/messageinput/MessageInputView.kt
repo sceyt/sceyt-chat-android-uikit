@@ -55,7 +55,6 @@ import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -271,8 +270,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             .initRelyMessage()
             .build()
 
-        if (withMentionedUsers)
-            checkAndAddMentionedUsers(message.toSceytUiMessage())
+        if (withMentionedUsers) {
+            val data = getMentionUsersAndMetadata()
+            message.metadata = data.first
+            message.mentionedUsers = data.second
+        }
 
         return message
     }
@@ -298,7 +300,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
             editMessage?.body = messageBody
             editMessage?.let {
-                checkAndAddMentionedUsers(it)
+                val data = getMentionUsersAndMetadata()
+                it.metadata = data.first
+                it.mentionedUsers = data.second
             }
             editMessage?.let {
                 cancelReply {
@@ -313,17 +317,16 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun checkAndAddMentionedUsers(message: SceytMessage) {
+    private fun getMentionUsersAndMetadata(): Pair<String?, Array<User>?> {
         val mentionedUsers = binding.messageInput.mentions
-        if (mentionedUsers.isEmpty()) {
-            message.metadata = ""
-            message.mentionedUsers = null
-            return
-        }
+        if (mentionedUsers.isEmpty())
+            return Pair("", null)
+        var metadata: String
         MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
-            message.metadata = it
+            metadata = it
         }
-        message.mentionedUsers = mentionedUsers.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
+        val mentionedUsersData = mentionedUsers.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
+        return Pair(metadata, mentionedUsersData)
     }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
