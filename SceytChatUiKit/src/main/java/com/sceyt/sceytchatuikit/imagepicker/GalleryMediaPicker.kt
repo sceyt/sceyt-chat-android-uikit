@@ -45,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 
@@ -53,6 +54,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
     private val selectedMedia = mutableSetOf<MediaModel>()
     private var selectedMediaPaths = mutableSetOf<String>()
+    private var requestedSelectionMediaPaths = mutableSetOf<String>()
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
     private var maxSelectCount: Int = GalleryPickerStyle.maxSelectCount
@@ -76,7 +78,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
             selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
         } ?: run {
             arguments?.getStringArray(STATE_SELECTION)?.let {
-                selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
+                requestedSelectionMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
             }
         }
 
@@ -225,7 +227,14 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     }
 
     private fun checkSelectedItems(mediaItem: MediaItem): Boolean {
-        val contains = selectedMediaPaths.contains(mediaItem.media.realPath)
+        val realPath = mediaItem.media.realPath
+        var contains = selectedMediaPaths.contains(realPath)
+
+        if (!contains && requestedSelectionMediaPaths.contains(realPath)) {
+            contains = true
+            selectedMediaPaths.add(realPath)
+        }
+
         if (contains) selectedMedia.add(mediaItem.media)
         return contains
     }
@@ -279,9 +288,10 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                 if (data.isNotEmpty())
                     trySend(data)
 
-                channel.close()
             } catch (ex: Exception) {
                 SceytLog.e(this@GalleryMediaPicker.TAG, ex.message.toString())
+            } finally {
+                withContext(Dispatchers.Main) { setCounter() }
                 channel.close()
             }
         }
