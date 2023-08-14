@@ -344,8 +344,8 @@ class ChooseAttachmentHelper {
         addAttachmentLauncher.launch(intent)
     }
 
-    fun setSaveUrlsPlace(list: MutableSet<String>) {
-        placeToSavePathsList = list
+    fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
+        placeToSavePathsList = savePathsTo
     }
 
     private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
