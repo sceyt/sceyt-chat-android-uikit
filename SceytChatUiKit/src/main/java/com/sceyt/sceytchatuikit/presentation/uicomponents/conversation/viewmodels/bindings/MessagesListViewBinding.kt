@@ -397,7 +397,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (it.eventType) {
             ClearedHistory -> messagesListView.clearData()
             Left -> {
-                val leftUser = channel.members?.getOrNull(0)?.id
+                val leftUser = it.channel?.members?.getOrNull(0)?.id
                 if (leftUser == myId && !channel.isPublic())
                     messagesListView.context.asActivity().finish()
             }
