@@ -820,8 +820,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         selectFileTypePopupClickListeners = listener
     }
 
-    fun setSaveUrlsPlace(savePaths: MutableSet<String>) {
-        chooseAttachmentHelper?.setSaveUrlsPlace(savePaths)
+    fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
+        chooseAttachmentHelper?.setSaveUrlsPlace(savePathsTo)
     }
 
     fun setMentionList(data: List<SceytMember>) {
