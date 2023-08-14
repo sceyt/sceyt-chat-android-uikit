@@ -281,11 +281,9 @@ internal class PersistenceReactionsLogicImpl(
                 pendingReactions.remove(pendingReactionEntity)
                 pendingReactionDao.deletePendingReaction(messageId, key)
                 messagesCache.deletePendingReaction(channelId, messageDb.messageEntity.tid, key)
-                notifyChannelReactionUpdated(channelId)
                 pendingReactionEntity = null
                 wasPending = true
             }
-
         } else {
             val entity = PendingReactionEntity(messageId = messageId, channelId = channelId, key = key,
                 score = 1, createdAt = System.currentTimeMillis(), isAdd = isAdd, incomingMsg = messageDb.messageEntity.incoming, count = 1)
@@ -304,6 +302,7 @@ internal class PersistenceReactionsLogicImpl(
 
         if (!message.incoming)
             notifyChannelReactionUpdated(channelId)
+
         return wasPending
     }
 
