@@ -9,7 +9,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityState
+import com.sceyt.chat.models.user.UserState
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
@@ -63,7 +63,7 @@ fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
         val meta = userJsonObject.getString("metadata")
         val presence = userJsonObject.getString("presence_status")
         User(id, fName, lName, "", meta, Presence(PresenceState.Online, presence, 0),
-            UserActivityState.Active, false)
+            UserState.Active, false)
     } catch (e: Exception) {
         e.printStackTrace()
         null

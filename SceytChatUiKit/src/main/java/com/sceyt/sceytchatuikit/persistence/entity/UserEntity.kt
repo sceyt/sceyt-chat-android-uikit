@@ -5,7 +5,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.user.Presence
-import com.sceyt.chat.models.user.UserActivityState
+import com.sceyt.chat.models.user.UserState
 
 @Entity(tableName = "users")
 data class UserEntity(
@@ -18,6 +18,6 @@ data class UserEntity(
         val metadata: String?,
         @Embedded
         val presence: Presence? = null,
-        val activityStatus: UserActivityState? = null,
+        val activityStatus: UserState? = null,
         val blocked: Boolean = false
 )

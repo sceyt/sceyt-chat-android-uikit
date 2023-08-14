@@ -8,7 +8,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityState
+import com.sceyt.chat.models.user.UserState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
@@ -441,7 +441,7 @@ internal class PersistenceChannelsLogicImpl(
             } else {
                 val members = arrayListOf<SceytMember>()
                 channel.getFirstMember()?.let {
-                    if (it.user.activityState == UserActivityState.Deleted)
+                    if (it.user.activityState == UserState.Deleted)
                         directChatsWithDeletedPeers.add(channel.id)
                     members.add(it)
                 }
