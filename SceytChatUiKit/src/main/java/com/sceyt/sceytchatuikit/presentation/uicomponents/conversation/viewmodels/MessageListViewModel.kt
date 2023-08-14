@@ -438,7 +438,11 @@ class MessageListViewModel(
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
-            _channelLiveData.postValue(response)
+            // If response is Error, try to get channel from db.
+            if (response is SceytResponse.Error)
+                persistenceChanelMiddleWare.getChannelFromDb(channelId)?.let {
+                    _channelLiveData.postValue(SceytResponse.Success(it))
+                } ?: _channelLiveData.postValue(response)
         }
     }
 
