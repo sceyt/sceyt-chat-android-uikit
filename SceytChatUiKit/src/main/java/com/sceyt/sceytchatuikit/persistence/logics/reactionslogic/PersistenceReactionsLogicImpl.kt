@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
@@ -62,11 +63,18 @@ internal class PersistenceReactionsLogicImpl(
 
             when (data.eventType) {
                 Add -> {
+                    // Check maybe reaction already added by my, and this event comes from carbon user,
+                    // and ignore adding reactionTotal.
+                    val reaction = data.reaction.user?.id?.let { userId ->
+                        reactionDao.getUserReactionByKey(messageId, userId, data.reaction.key)
+                    }
                     reactionDao.insertReaction(data.reaction.toReactionEntity())
-                    increaseReactionTotal(messageId, data.reaction.key, data.reaction.score)
+
+                    if (reaction == null)
+                        increaseReactionTotal(messageId, data.reaction.key, data.reaction.score)
                 }
 
-                Remove -> reactionDao.deleteReactionAndTotal(messageId, data.reaction.key, data.reaction.user?.id)
+                Remove -> reactionDao.deleteReactionAndTotal(messageId, data.reaction.key, data.reaction.user?.id, data.reaction.score)
             }
 
             val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
@@ -217,7 +225,9 @@ internal class PersistenceReactionsLogicImpl(
                 resultMessage.userReactions?.let {
                     reactionDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
                 }
-                increaseReactionTotal(messageId, key, score)
+                resultMessage.reactionTotals?.let { totals ->
+                    reactionDao.insertReactionTotals(totals.map { it.toReactionTotalEntity(messageId) })
+                }
 
                 messageDao.getMessageTidById(messageId)?.let { tid ->
                     messagesCache.deletePendingReaction(channelId, tid, key)
@@ -246,9 +256,15 @@ internal class PersistenceReactionsLogicImpl(
         val response = reactionsRepository.deleteReaction(channelId, messageId, key)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
-                SceytKitClient.myId?.let { fromId ->
-                    reactionDao.deleteReactionAndTotal(messageId, key, fromId)
+                reactionDao.deleteAllReactionsAndTotals(messageId)
+
+                resultMessage.userReactions?.let {
+                    reactionDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
                 }
+                resultMessage.reactionTotals?.let { totals ->
+                    reactionDao.insertReactionTotals(totals.map { it.toReactionTotalEntity(messageId) })
+                }
+
                 pendingReactionDao.deletePendingReaction(messageId, key)
                 messageDao.getMessageTidById(messageId)?.let { tid ->
                     messagesCache.deletePendingReaction(channelId, tid, key)
