@@ -162,8 +162,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 if (channels.isNullOrEmpty()) {
                     trySend(GetAllChannelsResponse.SuccessfullyFinished)
                     channel.close()
-                }
-                else {
+                } else {
                     trySend(GetAllChannelsResponse.Proportion(channels.map { it.toSceytUiChannel() }))
                     if (channels.size == limit)
                         channelListQuery.loadNext(this)
@@ -428,7 +427,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             }
 
             when (data.channelType) {
-                ChannelTypeEnum.Private -> {
+                ChannelTypeEnum.Private, ChannelTypeEnum.Direct -> {
                     ChannelOperator.build(channelId).updateChannel("", data.newSubject, data.metadata,
                         data.avatarUrl ?: "", channelCallback)
                 }
@@ -437,8 +436,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     ChannelOperator.build(channelId).updateChannel(data.channelUri, data.newSubject, data.metadata,
                         data.avatarUrl ?: "", channelCallback)
                 }
-
-                else -> continuation.safeResume(SceytResponse.Error(SceytException(0, "This is Direct channel")))
             }
         }
     }
