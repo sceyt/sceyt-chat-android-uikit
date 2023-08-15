@@ -51,6 +51,10 @@ abstract class ReactionDao {
     @Query("select * from ReactionEntity where messageId =:messageId and fromId =:myId ")
     abstract suspend fun getSelfReactionsByMessageId(messageId: Long, myId: String): List<ReactionDb>
 
+    @Transaction
+    @Query("select * from ReactionEntity where messageId =:messageId and fromId =:userId and reaction_key =:key")
+    abstract suspend fun getUserReactionByKey(messageId: Long, userId: String, key: String): ReactionDb?
+
     @Update
     abstract suspend fun updateReactionTotal(reactionTotal: ReactionTotalEntity)
 
@@ -70,12 +74,12 @@ abstract class ReactionDao {
     protected abstract suspend fun deleteAllReactionsByMessageId(messageId: Long)
 
     @Transaction
-    open suspend fun deleteReactionAndTotal(messageId: Long, key: String, fromId: String?) {
+    open suspend fun deleteReactionAndTotal(messageId: Long, key: String, fromId: String?, score: Int) {
         val row = deleteReaction(messageId, key, fromId)
         if (row > 0)
             getReactionTotal(messageId, key)?.let {
                 if (it.score > 1) {
-                    it.score--
+                    it.score -= score
                     updateReactionTotal(it)
                 } else
                     deleteReactionTotalByTotalId(it.id)
