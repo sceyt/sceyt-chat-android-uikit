@@ -73,7 +73,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "getChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -99,7 +99,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelFromServerByUrl error: ${e?.message}")
+                    SceytLog.e(TAG, "getChannelFromServerByUrl error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -120,7 +120,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannels error: ${e?.message}")
+                    SceytLog.e(TAG, "getChannels error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -143,7 +143,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "loadMoreChannels error: ${e?.message}")
+                    SceytLog.e(TAG, "loadMoreChannels error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -177,7 +177,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             override fun onError(e: SceytException?) {
                 trySend(GetAllChannelsResponse.Error(e))
                 channel.close()
-                SceytLog.e(TAG, "getAllChannels error: ${e?.message}")
+                SceytLog.e(TAG, "getAllChannels error: ${e?.message}, code: ${e?.code}")
             }
         })
 
@@ -209,7 +209,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
 
                 is SceytResponse.Error -> {
-                    SceytLog.e(TAG, "uploadAvatar error: ${uploadResult.message}")
+                    SceytLog.e(TAG, "uploadAvatar error: ${uploadResult.message}, code: ${uploadResult.code}")
                     return SceytResponse.Error(uploadResult.exception)
                 }
             }
@@ -223,9 +223,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
 
-                override fun onError(e: SceytException) {
+                override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "createChannel error: ${e.message}")
+                    SceytLog.e(TAG, "createChannel error: ${e?.message}, code: ${e?.code}")
                 }
             }) ?: run {
                 continuation.safeResume(SceytResponse.Error(SceytException(0, "Invalid channel type")))
@@ -252,7 +252,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "markChannelAsRead error: ${e?.message}")
+                    SceytLog.e(TAG, "markChannelAsRead error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -267,7 +267,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "markChannelAsUnRead error: ${e?.message}")
+                    SceytLog.e(TAG, "markChannelAsUnRead error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -282,7 +282,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "leaveChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "leaveChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -297,7 +297,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "clearHistory error: ${e?.message}")
+                    SceytLog.e(TAG, "clearHistory error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -312,7 +312,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "hideChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "hideChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -327,7 +327,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "blockUser error: ${e?.message}")
+                    SceytLog.e(TAG, "blockUser error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -342,7 +342,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "unblockUser error: ${e?.message}")
+                    SceytLog.e(TAG, "unblockUser error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -357,7 +357,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "blockChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "blockChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -372,7 +372,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "unBlockChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "unBlockChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -387,7 +387,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "deleteChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "deleteChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -408,7 +408,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "uploadAvatar error: ${e?.message}")
+                    SceytLog.e(TAG, "uploadAvatar error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -423,7 +423,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "editChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "editChannel error: ${e?.message}, code: ${e?.code}")
                 }
             }
 
@@ -456,7 +456,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                     override fun onError(e: SceytException?) {
                         continuation.safeResume(SceytResponse.Error(e))
-                        SceytLog.e(TAG, "loadChannelMembers error: ${e?.message}")
+                        SceytLog.e(TAG, "loadChannelMembers error: ${e?.message}, code: ${e?.code}")
                     }
                 })
         }
@@ -471,7 +471,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "addMembersToChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "addMembersToChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -486,7 +486,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "changeChannelMemberRole error: ${e?.message}")
+                    SceytLog.e(TAG, "changeChannelMemberRole error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -501,7 +501,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "changeChannelOwner error: ${e?.message}")
+                    SceytLog.e(TAG, "changeChannelOwner error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -516,7 +516,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "deleteMember error: ${e?.message}")
+                    SceytLog.e(TAG, "deleteMember error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -531,7 +531,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "blockAndDeleteMember error: ${e?.message}")
+                    SceytLog.e(TAG, "blockAndDeleteMember error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -546,7 +546,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "unMuteChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "unMuteChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -561,7 +561,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "muteChannel error: ${e?.message}")
+                    SceytLog.e(TAG, "muteChannel error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -576,7 +576,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
-                    SceytLog.e(TAG, "join error: ${error?.message}")
+                    SceytLog.e(TAG, "join error: ${error?.message}, code: ${error?.code}")
                 }
             })
         }
