@@ -128,7 +128,9 @@ abstract class BaseMsgViewHolder(private val view: View,
         val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
             bodyText
         } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
-            message.metadata, message.mentionedUsers, enableClick = false)
+            message.metadata, message.mentionedUsers) {
+            messageListeners?.onMentionClick(messageBody, it)
+        }
 
         setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
         messageBody.setText(text, TextView.BufferType.SPANNABLE)
