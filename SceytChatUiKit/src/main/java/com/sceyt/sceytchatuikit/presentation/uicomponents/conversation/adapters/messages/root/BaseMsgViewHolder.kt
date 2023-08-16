@@ -239,7 +239,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private fun loadReplyMessageImageOrObserveToDownload(attachment: SceytAttachment?, imageAttachment: ImageView) {
-        attachment?: return
+        attachment ?: return
         val path = attachment.filePath
         val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
 
@@ -392,7 +392,9 @@ abstract class BaseMsgViewHolder(private val view: View,
         val currentViewWidth = currentView.measuredWidth
         nextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val nextViewWidth = nextView.measuredWidth
-
+        val px12 = dpToPx(12f)
+        val px8 = dpToPx(8f)
+        val px5 = dpToPx(5f)
         val body = currentView.text.toString()
         val constraintLayout: ConstraintLayout = parentLayout
         val constraintSet = ConstraintSet()
@@ -401,23 +403,23 @@ abstract class BaseMsgViewHolder(private val view: View,
         constraintSet.clear(currentView.id, ConstraintSet.END)
         constraintSet.clear(currentView.id, ConstraintSet.BOTTOM)
 
-        if (currentViewWidth + nextViewWidth > maxWidth) {
-            constraintSet.connect(currentView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, dpToPx(12f))
+        if (currentViewWidth + nextViewWidth + px12 > maxWidth) {
+            constraintSet.connect(currentView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, px12)
 
             currentView.paint.getStaticLayout(body, currentView.includeFontPadding, maxWidth).apply {
                 if (lineCount > 1) {
                     val bodyIsRtl = body.isRtl()
                     val appIsRtl = context.isRtl()
                     if (getLineMax(lineCount - 1) + nextViewWidth < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
-                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
+                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
                     } else
-                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
+                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, px5)
                 } else
-                    constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
+                    constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, px5)
             }
         } else {
-            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, dpToPx(12f))
-            constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
+            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, px12)
+            constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
         }
         constraintSet.applyTo(constraintLayout)
     }

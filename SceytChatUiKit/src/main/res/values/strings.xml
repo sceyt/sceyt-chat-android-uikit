@@ -160,8 +160,8 @@
     <string name="sceyt_media_permission_disabled_title">Sending Media</string>
     <string name="sceyt_media_permission_disabled_desc">To send media, allow access to your device’s photos, media, and files. Tap on Settings, go to Permissions, and turn “Photos and videos” and “Music and audio” on.</string>
     <string name="sceyt_settings">Settings</string>
-    <string name="empty_message_body_message">Please enter message body</string>
-    <string name="preparing">Preparing…</string>
-    <string name="sending_attachment">Sending an attachment</string>
+    <string name="sceyt_empty_message_body_message">Please enter message body</string>
+    <string name="sceyt_preparing">Preparing…</string>
+    <string name="sceyt_sending_attachment">Sending an attachment</string>
 
 </resources>
