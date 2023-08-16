@@ -45,6 +45,7 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
 
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
+        val isLink = type == AttachmentTypeEnum.Link.value()
         return SceytAttachment(
             id = id,
             messageId = messageId,
@@ -55,17 +56,18 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             metadata = metadata,
             fileSize = fileSize,
             createdAt = createdAt,
-            url = payLoad?.url ?: url,
-            filePath = payLoad?.filePath ?: filePath,
-            transferState = payLoad?.transferState,
-            progressPercent = payLoad?.progressPercent,
-            originalFilePath = originalFilePath)
+            url = if (isLink) url else payLoad?.url ?: url,
+            filePath = if (isLink) null else payLoad?.filePath ?: filePath,
+            transferState = if (isLink) TransferState.PendingDownload else payLoad?.transferState,
+            progressPercent = if (isLink) 0f else payLoad?.progressPercent,
+            originalFilePath = if (isLink) null else originalFilePath)
     }
 }
 
 fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
     with(attachmentEntity) {
-        return Attachment.Builder(filePath ?: "", url ?: "", type)
+        val isLink = type == AttachmentTypeEnum.Link.value()
+        return Attachment.Builder(if (isLink) "" else filePath ?: "", url ?: "", type)
             .setMetadata(metadata ?: "")
             .setName(name)
             .setUpload(upload)
@@ -75,14 +77,15 @@ fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
 
 fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPayLoadEntity {
     return with(attachmentEntity) {
+        val isLink = type == AttachmentTypeEnum.Link.value()
         AttachmentPayLoadEntity(
             messageTid = messageTid,
             transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == DeliveryStatus.Pending
-                    && messageStatus.forwardingDetailsDb == null)
+                    && messageStatus.forwardingDetailsDb == null && !isLink)
                 TransferState.PendingUpload else TransferState.PendingDownload,
             progressPercent = 0f,
             url = url,
-            filePath = filePath)
+            filePath = if (isLink) null else filePath)
     }
 }
 
