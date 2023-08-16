@@ -231,7 +231,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         val messageBody = binding.messageInput.text.toString().trim()
         if (messageBody.isEmpty() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
             if (isEditingMessage())
-                customToastSnackBar(this, context.getString(R.string.empty_message_body_message))
+                customToastSnackBar(this, context.getString(R.string.sceyt_empty_message_body_message))
             return
         }
 
