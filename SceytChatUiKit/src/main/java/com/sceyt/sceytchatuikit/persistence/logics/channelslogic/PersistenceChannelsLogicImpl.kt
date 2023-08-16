@@ -471,8 +471,9 @@ internal class PersistenceChannelsLogicImpl(
             return SceytResponse.Success(channelDb.toChannel())
 
         val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel"))
-        val createdBy = ClientWrapper.currentUser ?: usersDao.getUserById(myId
-                ?: return fail)?.toUser() ?: User(myId ?: return fail)
+        val myId = myId ?: return fail
+        val createdBy = ClientWrapper.currentUser ?: usersDao.getUserById(myId)?.toUser()
+        ?: User(myId)
 
         val role = Role(RoleTypeEnum.Owner.toString())
         val members = listOf(SceytMember(role, user), SceytMember(role, createdBy))

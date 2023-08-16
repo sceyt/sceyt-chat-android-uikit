@@ -120,6 +120,10 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     protected fun loadInitialLinksList() {
+        if (channel.pending) {
+            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
+            return
+        }
         viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 

@@ -49,6 +49,10 @@ sealed interface MessageClickListeners {
         fun onAttachmentLongClick(view: View, item: FileListItem)
     }
 
+    fun interface MentionClickListener : MessageClickListeners {
+        fun onMentionClick(view: View, userId: String)
+    }
+
     fun interface AttachmentLoaderClickListener : MessageClickListeners {
         fun onAttachmentLoaderClick(view: View, item: FileListItem)
     }
@@ -74,6 +78,7 @@ sealed interface MessageClickListeners {
             ReactionLongClickListener,
             AttachmentClickListener,
             AttachmentLongClickListener,
+            MentionClickListener,
             ScrollToDownClickListener,
             AttachmentLoaderClickListener
 }
