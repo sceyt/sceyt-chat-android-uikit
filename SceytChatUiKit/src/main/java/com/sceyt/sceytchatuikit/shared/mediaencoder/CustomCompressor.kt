@@ -36,11 +36,11 @@ import kotlin.math.roundToInt
 object CustomCompressor: CoroutineScope {
 
     // 2Mbps
-    private const val MIN_BITRATE = 2000000
+    private const val MIN_BITRATE = 1500000
 
     // H.264 Advanced Video Coding
     private const val MIME_TYPE = "video/avc"
-    private const val MEDIACODEC_TIMEOUT_DEFAULT = 100L
+    private const val MEDIACODEC_TIMEOUT_DEFAULT = 1L
 
     // MediaExtractor extracts encoded media data from the source
     private lateinit var extractor: MediaExtractor
@@ -384,7 +384,6 @@ object CustomCompressor: CoroutineScope {
                                 else -> {
                                     doRender = bufferInfo.size != 0
 
-                                    decoder.releaseOutputBuffer(decoderStatus, doRender)
                                     if (doRender) {
                                         var errorWait = false
                                         try {
@@ -403,8 +402,8 @@ object CustomCompressor: CoroutineScope {
                                             inputSurface.setPresentationTime(bufferInfo.presentationTimeUs * 1000)
                                             inputSurface.swapBuffers()
 
-                                            //Notify progress every 10 frames
-                                            if (frameIndex % 10 == 0L) {
+                                            //Notify progress every 50 frames
+                                            if (frameIndex % 50 == 0L) {
                                                 launch {
                                                     compressionProgressListener.onProgressChanged(bufferInfo.presentationTimeUs.toFloat() / duration.toFloat() * 100)
                                                 }
@@ -412,6 +411,8 @@ object CustomCompressor: CoroutineScope {
 
                                         }
                                     }
+                                    decoder.releaseOutputBuffer(decoderStatus, doRender)
+
                                     if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                                         decoderOutputAvailable = false
                                         encoder.signalEndOfInputStream()
