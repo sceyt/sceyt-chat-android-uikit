@@ -107,6 +107,10 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     open fun getUserNameBuilder(): ((User) -> String)? = SceytKitConfig.userNameBuilder
 
     protected fun loadInitialFilesList() {
+        if (channel.pending) {
+            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
+            return
+        }
         viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 

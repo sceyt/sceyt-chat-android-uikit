@@ -115,7 +115,7 @@ class OutVideoMsgViewHolder(
     private fun setFileLoadProgress(data: TransferData) {
         with(binding.tvLoadSize) {
             if (data.state == Preparing) {
-                text = context.getString(R.string.preparing)
+                text = context.getString(R.string.sceyt_preparing)
                 isVisible = true
                 return
             }

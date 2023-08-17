@@ -9,6 +9,7 @@ import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
@@ -39,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceReactionsMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -65,6 +67,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -96,6 +99,7 @@ class MessageListViewModel(
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
     private val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
     internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
+    internal val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val context: Context by inject()
     private val syncManager: SceytSyncManager by inject()
@@ -592,6 +596,18 @@ class MessageListViewModel(
             is MessageCommandEvent.AttachmentLoaderClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     prepareToPauseOrResumeUpload(event.item)
+                }
+            }
+
+            is MessageCommandEvent.UserClick -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val user = persistenceUsersMiddleWare.getUserDbById(event.userId)
+                            ?: User(event.userId)
+                    val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
+                    if (response is SceytResponse.Success)
+                        response.data?.let {
+                            ConversationInfoActivity.newInstance(event.view.context, response.data)
+                        }
                 }
             }
         }

@@ -508,7 +508,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
         suspend fun doOnSuccess(message: SceytMessage) {
-            messageDao.updateMessage(message.toMessageEntity(false))
+            messageDao.upsertMessage(message.toMessageDb(false))
             messagesCache.messageUpdated(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
         }

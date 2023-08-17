@@ -173,6 +173,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onAttachmentLongClick(view, item)
             }
 
+            override fun onMentionClick(view: View, userId: String) {
+                clickListeners.onMentionClick(view, userId)
+            }
+
             override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
                 clickListeners.onAttachmentLoaderClick(view, item)
             }
@@ -642,7 +646,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
-
+        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, item.message.user?.id
+                ?: return))
     }
 
     override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
@@ -690,6 +695,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onAttachmentLongClick(view: View, item: FileListItem) {
         clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
+    }
+
+    override fun onMentionClick(view: View, userId: String) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, userId))
     }
 
     override fun onAttachmentLoaderClick(view: View, item: FileListItem) {

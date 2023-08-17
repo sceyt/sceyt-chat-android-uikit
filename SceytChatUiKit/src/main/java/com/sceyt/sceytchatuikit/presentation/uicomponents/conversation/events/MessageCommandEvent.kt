@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events
 
+import android.view.View
 import android.widget.PopupWindow
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
@@ -36,5 +37,10 @@ sealed class MessageCommandEvent {
 
     data class AttachmentLoaderClick(
             val item: FileListItem
+    ) : MessageCommandEvent()
+
+    data class UserClick(
+            val view: View,
+            val userId: String
     ) : MessageCommandEvent()
 }

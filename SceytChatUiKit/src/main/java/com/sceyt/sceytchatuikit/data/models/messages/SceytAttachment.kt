@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 import android.os.Parcelable
+import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import kotlinx.parcelize.Parcelize
@@ -26,6 +27,20 @@ data class SceytAttachment(
     public override fun clone(): SceytAttachment {
         return SceytAttachment(id, messageId, messageTid, userId, name, type, metadata, fileSize,
             createdAt, url, filePath, transferState, progressPercent, originalFilePath)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is SceytAttachment) return false
+        return id == other.id && messageId == other.messageId && messageTid == other.messageTid
+                && userId == other.userId && name.equalsIgnoreNull(other.name) && type == other.type
+                && metadata.equalsIgnoreNull(other.metadata) && fileSize == other.fileSize
+                && createdAt == other.createdAt && url.equalsIgnoreNull(other.url) && filePath.equalsIgnoreNull(other.filePath)
+                && transferState == other.transferState && progressPercent == other.progressPercent
+                && originalFilePath.equalsIgnoreNull(other.originalFilePath)
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
     }
 
     fun updateWithTransferData(data: TransferData) {
