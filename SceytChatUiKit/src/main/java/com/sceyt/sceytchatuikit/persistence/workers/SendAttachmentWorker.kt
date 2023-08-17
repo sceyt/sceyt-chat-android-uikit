@@ -41,6 +41,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHARING
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
+import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.calculateChecksumFor10Mb
 import kotlinx.coroutines.CancellableContinuation
@@ -53,6 +54,7 @@ object SendAttachmentWorkManager : SceytKoinComponent {
     internal const val MESSAGE_TID = "MESSAGE_TID"
     internal const val IS_SHARING = "IS_SHARING"
     internal const val UPLOAD_CHANNEL_ID = "Sceyt_Upload_Attachment_Channel"
+    internal const val NOTIFICATION_ID = 1223344
 
     fun schedule(context: Context, messageTid: Long, channelId: Long?,
                  workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP, isSharing: Boolean = false): Operation {
@@ -178,7 +180,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     }
 
     private suspend fun startForeground() {
-        val foregroundInfo = ForegroundInfo(34, creteNotification())
+        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification())
         setForeground(foregroundInfo)
     }
 
@@ -191,10 +193,11 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         }
 
         notificationBuilder
-            .setContentTitle(applicationContext.getString(R.string.sending_attachment))
+            .setContentTitle(applicationContext.getString(R.string.sceyt_sending_attachment))
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
+
         return notificationBuilder.build()
     }
 }

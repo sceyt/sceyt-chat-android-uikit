@@ -297,7 +297,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
             admins.isVisible = !channel.isDirect() && isOwnerOrAdmin
             groupChannelMembers.isVisible = !channel.isDirect() && (isOwnerOrAdmin || channel.isPrivate())
-            icEdit.isVisible = isOwnerOrAdmin
+            icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
 
             setChannelTitle(channel)
             setPresenceOrMembers(channel)

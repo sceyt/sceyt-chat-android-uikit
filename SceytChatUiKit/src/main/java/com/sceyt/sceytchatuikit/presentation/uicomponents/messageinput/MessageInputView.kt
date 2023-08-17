@@ -31,6 +31,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
@@ -51,6 +52,7 @@ import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
@@ -231,7 +233,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         val messageBody = binding.messageInput.text.toString().trim()
         if (messageBody.isEmpty() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
             if (isEditingMessage())
-                customToastSnackBar(this, context.getString(R.string.empty_message_body_message))
+                customToastSnackBar(this, context.getString(R.string.sceyt_empty_message_body_message))
             return
         }
 
@@ -292,24 +294,29 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun checkIsEditingMessage(messageBody: String): Boolean {
-        if (editMessage != null) {
-            if (editMessage?.body?.trim() == messageBody.trim()) {
+        editMessage?.let { message ->
+            if (message.body.trim() == messageBody.trim()) {
                 cancelReply()
                 reset()
                 return true
             }
-            editMessage?.body = messageBody
-            editMessage?.let {
-                val data = getMentionUsersAndMetadata()
-                it.metadata = data.first
-                it.mentionedUsers = data.second
+            val linkAttachment = getLinkAttachmentFromBody()?.toSceytAttachment(message.tid, TransferState.Uploaded)
+            message.body = messageBody
+
+            if (linkAttachment != null)
+                if (message.attachments.isNullOrEmpty())
+                    message.attachments = arrayOf(linkAttachment)
+            else message.attachments = (message.attachments?: arrayOf()).plus(linkAttachment)
+
+            val data = getMentionUsersAndMetadata()
+            message.metadata = data.first
+            message.mentionedUsers = data.second
+
+            cancelReply {
+                messageInputActionCallback?.sendEditMessage(message)
+                reset()
             }
-            editMessage?.let {
-                cancelReply {
-                    messageInputActionCallback?.sendEditMessage(it)
-                    reset()
-                }
-            }
+
             return true
         }
         return false

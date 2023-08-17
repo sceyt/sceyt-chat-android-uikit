@@ -66,18 +66,17 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     override fun uploadSharedFile(attachment: SceytAttachment, task: TransferTask) {
         fileTransferService.getTasks()[task.messageTid.toString()] = task
-        val data = ShareFilesData(attachment.filePath.toString(), attachment.filePath.toString(), attachment.messageTid)
-        if (sharingFilesPath.none { it.originalPath == attachment.filePath }) {
+        val data = ShareFilesData(attachment.originalFilePath.toString(), attachment.messageTid)
+        if (sharingFilesPath.none { it.originalPath == attachment.originalFilePath }) {
             val checksum = getAttachmentChecksum(attachment.originalFilePath)
 
             val result = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task, attachment)
             if (result != null && result.first && result.second != null) {
-                data.resizedPath = checksum?.resizedFilePath ?: attachment.filePath ?: ""
                 sharingFilesPath.add(data)
                 getAppropriateTasks(task).forEach { transferTask ->
                     transferTask.resultCallback.onResult(SceytResponse.Success(result.second))
                 }
-                removeFromSharingPath(attachment.filePath)
+                removeFromSharingPath(attachment.originalFilePath)
                 return
             }
 
@@ -85,7 +84,6 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback.onUpdateFileLocation(path)
-                        data.resizedPath = path
                     }
                 } else SceytLog.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
 
@@ -302,27 +300,27 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Error(exception))
                 }
-                removeFromSharingPath(attachment.filePath)
+                removeFromSharingPath(attachment.originalFilePath)
             }
         }, object : UrlCallback {
             override fun onResult(p0: String?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Success(p0))
                 }
-                removeFromSharingPath(attachment.filePath)
+                removeFromSharingPath(attachment.originalFilePath)
             }
 
             override fun onError(exception: SceytException?) {
                 getAppropriateTasks(transferTask).forEach { task ->
                     task.resultCallback.onResult(SceytResponse.Error(exception))
                 }
-                removeFromSharingPath(attachment.filePath)
+                removeFromSharingPath(attachment.originalFilePath)
             }
         })
     }
 
     private fun removeFromSharingPath(filePath: String?) {
-        val current = sharingFilesPath.firstOrNull { it.resizedPath == filePath }
+        val current = sharingFilesPath.firstOrNull { it.originalPath == filePath }
                 ?: return
         sharingFilesPath.removeAll {
             it.originalPath == current.originalPath
@@ -334,7 +332,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun getAppropriateTasks(transferTask: TransferTask): List<TransferTask> {
         //Get current task original path with resized path
         val currentTaskOriginalPath = sharingFilesPath.firstOrNull {
-            it.resizedPath == transferTask.attachment.filePath
+            it.originalPath == transferTask.attachment.originalFilePath
         }?.originalPath
 
         //Find all tasks with the same original file path, to update transfer state
@@ -442,7 +440,6 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
     data class ShareFilesData(
             val originalPath: String,
-            var resizedPath: String,
             val messageTid: Long
     )
 }
