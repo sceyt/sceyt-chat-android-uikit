@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.extensions
 
 import android.content.Context
+import androidx.fragment.app.Fragment
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
@@ -60,6 +61,9 @@ private fun isDeletedUser(status: UserState): Boolean {
 
 
 val Any.TAG: String
+    get() = this::class.java.simpleName
+
+val Fragment.TAG_NAME: String
     get() = javaClass.simpleName
 
 val Any.TAG_REF: String
