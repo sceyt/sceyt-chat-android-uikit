@@ -28,6 +28,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG_NAME
 import com.sceyt.sceytchatuikit.extensions.animationListener
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
@@ -173,7 +174,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             }
         }
         supportFragmentManager.commit(allowStateLoss = true) {
-            replace(R.id.layout_buttons, fragment)
+            replace(R.id.layout_buttons, fragment, fragment.TAG_NAME)
         }
     }
 
@@ -369,8 +370,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onMembersClick(channel: SceytChannel) {
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-            addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(getRootFragmentId(), getChannelMembersFragment(channel, getMembersType()))
+            val fragment = getChannelMembersFragment(channel, getMembersType())
+            addToBackStack(fragment.TAG_NAME)
+            replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
     }
 
@@ -378,8 +380,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-            addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(getRootFragmentId(), getChannelMembersFragment(channel, MemberTypeEnum.Admin))
+            val fragment = getChannelMembersFragment(channel, MemberTypeEnum.Admin)
+            addToBackStack(fragment.TAG_NAME)
+            replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
     }
 
@@ -387,8 +390,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-            addToBackStack(EditChannelFragment::class.java.simpleName)
-            replace(getRootFragmentId(), getEditChannelFragment(channel))
+            val fragment = getEditChannelFragment(channel)
+            addToBackStack(fragment.TAG_NAME)
+            replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
     }
 
@@ -604,7 +608,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             }
         }
         supportFragmentManager.commit(allowStateLoss = true) {
-            replace(R.id.frame_layout_members_by_role, fragment)
+            replace(R.id.frame_layout_members_by_role, fragment, fragment.TAG_NAME)
         }
     }
 
@@ -664,7 +668,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         val fragment = getChannelDescriptionFragment(channel)
         supportFragmentManager.commit(allowStateLoss = true) {
-            replace(R.id.frame_layout_description, fragment)
+            replace(R.id.frame_layout_description, fragment, fragment.TAG_NAME)
         }
     }
 
@@ -672,7 +676,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         val fragment = getChannelAdditionalInfoFragment(channel) ?: return
         supportFragmentManager.commit(allowStateLoss = true) {
-            replace(R.id.frame_layout_additional_info, fragment)
+            replace(R.id.frame_layout_additional_info, fragment, fragment.TAG_NAME)
         }
     }
 
