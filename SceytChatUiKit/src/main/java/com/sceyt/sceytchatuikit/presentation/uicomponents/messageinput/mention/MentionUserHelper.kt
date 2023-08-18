@@ -22,7 +22,8 @@ import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 object MentionUserHelper {
-    private var userNameBuilder = SceytKitConfig.userNameBuilder
+    var userNameBuilder = SceytKitConfig.userNameBuilder
+        private set
 
     fun initMentionMetaData(body: String, mentionUsers: List<Mention>): String {
         if (body.isEmpty() || mentionUsers.isEmpty()) return ""
