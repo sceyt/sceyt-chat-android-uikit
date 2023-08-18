@@ -86,7 +86,7 @@ open class InfoButtonsDirectChatFragment : Fragment() {
     }
 
     private fun SceytInfoPageLayoutButtonsDirectChannelBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(video, audio, muteUnMute, more),
+        setTextViewsDrawableColor(listOf(video, audio, muteUnMute, more, chat),
             requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
