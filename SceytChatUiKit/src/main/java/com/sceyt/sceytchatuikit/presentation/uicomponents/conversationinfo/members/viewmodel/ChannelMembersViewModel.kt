@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.memb
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
@@ -11,17 +12,20 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEve
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
+import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersMiddleWare) : BaseViewModel() {
+class ChannelMembersViewModel(private val channelsLogic: PersistenceChannelsLogic,
+                              private val membersLogic: PersistenceMembersLogic) : BaseViewModel() {
 
     private val _membersLiveData = MutableLiveData<PaginationResponse<MemberItem>>()
     val membersLiveData: LiveData<PaginationResponse<MemberItem>> = _membersLiveData
@@ -43,6 +47,9 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
 
     private val _channelRemoveMemberLiveData = MutableLiveData<List<SceytMember>>()
     val channelRemoveMemberLiveData = _channelRemoveMemberLiveData.asLiveData()
+
+    private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
+    val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
 
     init {
         viewModelScope.launch {
@@ -69,7 +76,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
         notifyPageLoadingState(offset > 0)
 
         viewModelScope.launch(Dispatchers.IO) {
-            membersMiddleWare.loadChannelMembers(channelId, offset, role).collect {
+            membersLogic.loadChannelMembers(channelId, offset, role).collect {
                 initResponse(it)
             }
         }
@@ -114,7 +121,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
 
     fun changeOwner(channelId: Long, id: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.changeChannelOwner(channelId, id)
+            val response = membersLogic.changeChannelOwner(channelId, id)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch)
                 _changeOwnerLiveData.postValue((groupChannel.members?.find { it.role.name == "owner" }
@@ -126,8 +133,8 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
 
     fun kickMember(channelId: Long, memberId: String, block: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = if (block) membersMiddleWare.blockAndDeleteMember(channelId, memberId)
-            else membersMiddleWare.deleteMember(channelId, memberId)
+            val response = if (block) membersLogic.blockAndDeleteMember(channelId, memberId)
+            else membersLogic.deleteMember(channelId, memberId)
 
             if (response is SceytResponse.Success) {
                 val channel = response.data ?: return@launch
@@ -148,7 +155,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
     fun changeRole(channelId: Long, vararg member: SceytMember) {
         if (member.isEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.changeChannelMemberRole(channelId, *member)
+            val response = membersLogic.changeChannelMemberRole(channelId, *member)
             if (response is SceytResponse.Success) {
                 val channel = response.data ?: return@launch
                 val members = channel.members ?: return@launch
@@ -166,7 +173,7 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
     fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
             val membersToAdd = users.map { it.toMember() }
-            val response = membersMiddleWare.addMembersToChannel(channelId, membersToAdd)
+            val response = membersLogic.addMembersToChannel(channelId, membersToAdd)
             if (response is SceytResponse.Success) {
                 val channel = response.data ?: return@launch
                 val members = channel.members ?: return@launch
@@ -178,6 +185,16 @@ class ChannelMembersViewModel(private val membersMiddleWare: PersistenceMembersM
                 ))
                 _channelAddMemberLiveData.postValue(members)
             }
+
+            notifyPageStateWithResponse(response)
+        }
+    }
+
+    fun findOrCreateChat(user: User) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsLogic.findOrCreateDirectChannel(user)
+            if (response is SceytResponse.Success)
+                _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
 
             notifyPageStateWithResponse(response)
         }

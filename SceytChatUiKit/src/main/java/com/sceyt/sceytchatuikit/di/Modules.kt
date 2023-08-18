@@ -142,7 +142,7 @@ internal val viewModelModule = module {
         MessageListViewModel(params.get(), params.get(), params.get())
     }
     viewModel { ChannelAttachmentsViewModel() }
-    viewModel { ChannelMembersViewModel(get()) }
+    viewModel { ChannelMembersViewModel(get(), get()) }
     viewModel { CreateChatViewModel() }
     viewModel { ConversationInfoViewModel() }
     viewModel { ChannelsViewModel() }

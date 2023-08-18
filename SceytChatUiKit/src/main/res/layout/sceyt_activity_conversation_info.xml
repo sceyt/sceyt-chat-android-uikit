@@ -70,7 +70,7 @@
                         android:layout_marginTop="3dp"
                         android:gravity="center"
                         android:textColor="@color/sceyt_color_gray_800"
-                        android:textSize="13sp"
+                        android:textSize="15sp"
                         app:layout_constraintEnd_toEndOf="@+id/avatar"
                         app:layout_constraintStart_toStartOf="@+id/avatar"
                         app:layout_constraintTop_toBottomOf="@+id/subject"
