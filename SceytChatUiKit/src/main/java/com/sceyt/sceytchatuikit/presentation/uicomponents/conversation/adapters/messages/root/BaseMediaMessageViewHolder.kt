@@ -34,9 +34,9 @@ abstract class BaseMediaMessageViewHolder(
         val view: View,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)? = null,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(view, messageListeners, displayedListener, senderNameBuilder) {
+) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null

@@ -19,8 +19,8 @@ class IncTextMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?
-) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder) {
 
     init {
         with(binding) {

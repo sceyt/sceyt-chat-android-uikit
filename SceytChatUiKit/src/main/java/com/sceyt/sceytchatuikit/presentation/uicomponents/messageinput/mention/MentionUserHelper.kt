@@ -21,7 +21,6 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-
 object MentionUserHelper {
     private var userNameBuilder = SceytKitConfig.userNameBuilder
 

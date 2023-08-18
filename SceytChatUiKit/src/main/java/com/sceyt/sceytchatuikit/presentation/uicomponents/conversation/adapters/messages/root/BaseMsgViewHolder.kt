@@ -68,7 +68,7 @@ import kotlin.math.min
 abstract class BaseMsgViewHolder(private val view: View,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
-                                 private val senderNameBuilder: ((User) -> String)? = null)
+                                 private val userNameBuilder: ((User) -> String)? = null)
     : RecyclerView.ViewHolder(view) {
 
     protected val context: Context by lazy { view.context }
@@ -437,7 +437,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private fun getSenderName(user: User?): String {
         user ?: return ""
-        return senderNameBuilder?.invoke(user) ?: user.getPresentableNameCheckDeleted(context)
+        return userNameBuilder?.invoke(user) ?: user.getPresentableNameCheckDeleted(context)
     }
 
     private fun isDeletedUser(user: User?): Boolean {

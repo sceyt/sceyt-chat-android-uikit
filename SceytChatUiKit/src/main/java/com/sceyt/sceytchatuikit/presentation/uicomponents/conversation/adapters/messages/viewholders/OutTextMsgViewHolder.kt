@@ -18,8 +18,8 @@ class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?
-) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?
+) : BaseMsgViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder) {
 
     init {
         with(binding) {

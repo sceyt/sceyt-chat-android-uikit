@@ -36,9 +36,9 @@ class OutVideoMsgViewHolder(
         private val binding: SceytItemOutVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {

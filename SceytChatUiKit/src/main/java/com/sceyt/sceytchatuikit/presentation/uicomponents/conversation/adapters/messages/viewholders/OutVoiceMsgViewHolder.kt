@@ -52,9 +52,9 @@ class OutVoiceMsgViewHolder(
         private val binding: SceytItemOutVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
     private var lastFilePath: String? = ""
 
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1

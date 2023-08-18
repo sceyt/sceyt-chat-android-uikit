@@ -21,8 +21,8 @@ class IncLinkMsgViewHolder(
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?,
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, userNameBuilder) {
 
     init {
         with(binding) {

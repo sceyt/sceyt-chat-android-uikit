@@ -25,9 +25,9 @@ class IncAttachmentsMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
