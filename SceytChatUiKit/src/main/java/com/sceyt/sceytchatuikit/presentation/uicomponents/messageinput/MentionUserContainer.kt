@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.MaxHeightLinearLayoutManager
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.metions.UserViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.metions.MentionUserViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.metions.UsersAdapter
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
@@ -50,7 +50,7 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
         if (users.isEmpty() && mentionUsersAdapter == null) return
 
         if (mentionUsersAdapter == null) {
-            mentionUsersAdapter = UsersAdapter(users.toArrayList(), UserViewHolderFactory(context) {
+            mentionUsersAdapter = UsersAdapter(users.toArrayList(), MentionUserViewHolderFactory(context) {
                 userClickListener?.onClick(it)
                 hide()
             })

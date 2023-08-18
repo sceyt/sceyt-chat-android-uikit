@@ -11,7 +11,7 @@ import com.sceyt.sceytchatuikit.shared.utils.MyDiffUtil
 
 class UsersAdapter(
         private var usersList: ArrayList<SceytMember>,
-        private val factory: UserViewHolderFactory,
+        private val factory: MentionUserViewHolderFactory,
 ) : RecyclerView.Adapter<BaseViewHolder<SceytMember>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<SceytMember> {

@@ -7,12 +7,12 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytItemMemberBinding
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 
-class UserViewHolderFactory(context: Context, private val listeners: UsersAdapter.ClickListener) {
+class MentionUserViewHolderFactory(context: Context, private val listeners: UsersAdapter.ClickListener) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
     fun createViewHolder(parent: ViewGroup): BaseViewHolder<SceytMember> {
-        return UserViewHolder(SceytItemMemberBinding.inflate(layoutInflater, parent, false),
+        return MentionUserViewHolder(SceytItemMemberBinding.inflate(layoutInflater, parent, false),
             listeners)
     }
 }

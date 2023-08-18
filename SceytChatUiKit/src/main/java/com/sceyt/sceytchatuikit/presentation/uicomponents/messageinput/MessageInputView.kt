@@ -306,7 +306,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (linkAttachment != null)
                 if (message.attachments.isNullOrEmpty())
                     message.attachments = arrayOf(linkAttachment)
-            else message.attachments = (message.attachments?: arrayOf()).plus(linkAttachment)
+                else message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
 
             val data = getMentionUsersAndMetadata()
             message.metadata = data.first
@@ -572,7 +572,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        val name = (SceytKitConfig.userNameBuilder?.invoke(it.user)
+                        val name = (MentionUserHelper.userNameBuilder?.invoke(it.user)
                                 ?: it.getPresentableName()).notAutoCorrectable()
                         binding.messageInput.replaceTextWithMention(name, it.id)
                     }
