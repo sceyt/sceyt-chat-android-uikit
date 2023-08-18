@@ -600,6 +600,7 @@ class MessageListViewModel(
             }
 
             is MessageCommandEvent.UserClick -> {
+                if (event.userId == SceytKitClient.myId) return
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = persistenceUsersMiddleWare.getUserDbById(event.userId)
                             ?: User(event.userId)
