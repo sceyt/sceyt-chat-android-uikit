@@ -420,7 +420,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ConversationInfoActivity.newInstance(requireContext(), sceytChannel)
+        ConversationInfoActivity.newInstance(requireContext(), sceytChannel, true)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {

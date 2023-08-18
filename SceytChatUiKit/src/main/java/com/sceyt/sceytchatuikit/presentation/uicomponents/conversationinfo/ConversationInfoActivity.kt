@@ -49,6 +49,7 @@ import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.AudioCall
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.CallOut
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.Chat
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.More
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.Mute
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.UnMute
@@ -94,6 +95,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private var binding: SceytActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
     private var alphaAnimation: AlphaAnimation? = null
+    private var showStartChatIcon: Boolean = false
 
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,6 +118,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun getBundleArguments() {
         channel = requireNotNull(intent.parcelable(CHANNEL))
+        showStartChatIcon = intent.getBooleanExtra(SHOW_OPEN_CHAT_BUTTON, false)
     }
 
     private fun initViewModel() {
@@ -150,13 +153,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         viewModel.channelAddMemberLiveData.observe(this, ::onAddMember)
 
+        viewModel.findOrCreateChatLiveData.observe(this, ::onFindOrCreateChat)
+
         viewModel.pageStateLiveData.observe(this, ::onPageStateChange)
     }
 
     private fun initButtons() {
         val fragment: Fragment = when (channel.getChannelType()) {
             Direct -> {
-                getInfoButtonsDirectChatFragment(channel).also {
+                getInfoButtonsDirectChatFragment(channel, showStartChatIcon).also {
                     it.setClickActionsListener(::onButtonClick)
                 }
             }
@@ -207,6 +212,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun onButtonClick(clickActionsEnum: InfoButtonsDirectChatFragment.ClickActionsEnum) {
         when (clickActionsEnum) {
+            Chat -> onStartChatCallClick(channel)
             VideCall -> onVideoCallClick(channel)
             AudioCall -> onAudioCallClick(channel)
             CallOut -> onCallOutClick(channel)
@@ -462,6 +468,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         })
     }
 
+    open fun onStartChatCallClick(channel: SceytChannel) {
+        if (!channel.isDirect()) return
+        val peer = channel.getFirstMember() ?: return
+        viewModel.findOrCreateChat(peer.user)
+    }
+
     open fun onVideoCallClick(channel: SceytChannel) {
     }
 
@@ -474,13 +486,16 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onAddMember(data: ChannelMembersEventData) {
     }
 
+    open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
+    }
+
     open fun onMoreClick(channel: SceytChannel) {
         if (channel.isGroup) {
             GroupChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onGroupChatMoreActionClick)
             }.show()
         } else
-            DirectChatActionsDialog.newInstance(this, channel).apply {
+            DirectChatActionsDialog.newInstance(this, channel, showStartChatIcon).apply {
                 setChooseTypeCb(::onDirectChatMoreActionClick)
             }.show()
     }
@@ -501,6 +516,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             BlockUser -> onBlockUnBlockUserClick(channel, true)
             UnBlockUser -> onBlockUnBlockUserClick(channel, false)
             Delete -> onDeleteChatClick(channel)
+            DirectChatActionsDialog.ActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
+            DirectChatActionsDialog.ActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
         }
     }
 
@@ -695,7 +712,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
 
     //Buttons
-    open fun getInfoButtonsDirectChatFragment(channel: SceytChannel) = InfoButtonsDirectChatFragment.newInstance(channel)
+    open fun getInfoButtonsDirectChatFragment(channel: SceytChannel, showOpenChatButton: Boolean) = InfoButtonsDirectChatFragment.newInstance(channel, showOpenChatButton)
 
     open fun getInfoButtonsPrivateChatFragment(channel: SceytChannel) = InfoButtonsPrivateChatFragment.newInstance(channel)
 
@@ -736,10 +753,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        const val SHOW_OPEN_CHAT_BUTTON = "SHOW_OPEN_CHAT_BUTTON"
 
-        fun newInstance(context: Context, channel: SceytChannel) {
+        fun newInstance(context: Context, channel: SceytChannel, showOpenChatButton: Boolean = false) {
             context.launchActivity<ConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
+                putExtra(SHOW_OPEN_CHAT_BUTTON, showOpenChatButton)
             }
             context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
         }

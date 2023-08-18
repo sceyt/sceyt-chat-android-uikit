@@ -18,6 +18,7 @@ open class InfoButtonsDirectChatFragment : Fragment() {
     private lateinit var binding: SceytInfoPageLayoutButtonsDirectChannelBinding
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
+    private var showStartChatIcon: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytInfoPageLayoutButtonsDirectChannelBinding.inflate(layoutInflater, container, false)
@@ -35,12 +36,15 @@ open class InfoButtonsDirectChatFragment : Fragment() {
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        showStartChatIcon = arguments?.getBoolean(SHOW_OPEN_CHAT_BUTTON) ?: false
     }
 
     private fun SceytInfoPageLayoutButtonsDirectChannelBinding.initViews() {
         val isPeerDeleted = channel.isPeerDeleted()
         video.isVisible = !isPeerDeleted
         audio.isVisible = !isPeerDeleted
+        muteUnMute.isVisible = !showStartChatIcon
+        chat.isVisible = showStartChatIcon
 
         muteUnMute.apply {
             if (channel.muted) {
@@ -50,6 +54,10 @@ open class InfoButtonsDirectChatFragment : Fragment() {
                 text = getString(R.string.sceyt_mute)
                 setDrawableTop(R.drawable.sceyt_ic_muted_channel, SceytKitConfig.sceytColorAccent)
             }
+        }
+
+        chat.setOnClickListenerDisableClickViewForWhile {
+            buttonsListener?.invoke(ClickActionsEnum.Chat)
         }
 
         video.setOnClickListenerDisableClickViewForWhile {
@@ -74,7 +82,7 @@ open class InfoButtonsDirectChatFragment : Fragment() {
     }
 
     enum class ClickActionsEnum {
-        Mute, UnMute, VideCall, AudioCall, CallOut, More
+        Chat, Mute, UnMute, VideCall, AudioCall, CallOut, More
     }
 
     private fun SceytInfoPageLayoutButtonsDirectChannelBinding.setupStyle() {
@@ -84,11 +92,13 @@ open class InfoButtonsDirectChatFragment : Fragment() {
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        const val SHOW_OPEN_CHAT_BUTTON = "SHOW_OPEN_CHAT_BUTTON"
 
-        fun newInstance(channel: SceytChannel): InfoButtonsDirectChatFragment {
+        fun newInstance(channel: SceytChannel, showOpenChatButton: Boolean): InfoButtonsDirectChatFragment {
             val fragment = InfoButtonsDirectChatFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
+                putBoolean(SHOW_OPEN_CHAT_BUTTON, showOpenChatButton)
             }
             return fragment
         }

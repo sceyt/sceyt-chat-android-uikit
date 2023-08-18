@@ -163,5 +163,8 @@
     <string name="sceyt_empty_message_body_message">Please enter message body</string>
     <string name="sceyt_preparing">Preparing…</string>
     <string name="sceyt_sending_attachment">Sending an attachment</string>
+    <string name="sceyt_chat">chat</string>
+    <string name="sceyt_mute_">Mute</string>
+    <string name="sceyt_un_mute_">Unmute</string>
 
 </resources>
