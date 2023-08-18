@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,6 +51,8 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _channelAddMemberLiveData = MutableLiveData<ChannelMembersEventData>()
     val channelAddMemberLiveData: LiveData<ChannelMembersEventData> = _channelAddMemberLiveData
 
+    private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
+    val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
 
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -141,6 +144,16 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
                     eventType = ChannelMembersEventEnum.Added
                 ))
             }
+
+            notifyPageStateWithResponse(response)
+        }
+    }
+
+    fun findOrCreateChat(user: User) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsMiddleWare.findOrCreateDirectChannel(user)
+            if (response is SceytResponse.Success)
+                _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
 
             notifyPageStateWithResponse(response)
         }
