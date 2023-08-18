@@ -33,7 +33,6 @@ import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
@@ -44,7 +43,6 @@ import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
-import com.sceyt.sceytchatuikit.presentation.common.isPrivate
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
@@ -58,6 +56,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.butto
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPrivateChatFragment.ClickActionsEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment.PublicChannelClickActionsEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.description.InfoDescriptionFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.BlockUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.ClearHistory
@@ -72,6 +71,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membersbyrolebuttons.InfoMembersByRoleButtonsFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -242,14 +242,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             finish()
         }
 
-        members.setOnClickListenerDisableClickViewForWhile {
-            onMembersClick(channel)
-        }
-
-        admins.setOnClickListenerDisableClickViewForWhile {
-            onAdminsClick(channel)
-        }
-
         icEdit.setOnClickListenerDisableClickViewForWhile {
             onEditClick(channel)
         }
@@ -285,25 +277,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         setPagerAdapter(pagerAdapter)
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
-    }
-
-    protected fun setChannelDetails(channel: SceytChannel) {
-        with(binding ?: return) {
-            members.text = if (channel.isPublic())
-                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
-
-            val myRole = channel.userRole
-            val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
-
-            admins.isVisible = !channel.isDirect() && isOwnerOrAdmin
-            groupChannelMembers.isVisible = !channel.isDirect() && (isOwnerOrAdmin || channel.isPrivate())
-            icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
-
-            setChannelTitle(channel)
-            setPresenceOrMembers(channel)
-            setChannelDescription(channel)
-            setChannelAvatar(channel)
-        }
     }
 
     protected fun setupTabLayout(tabLayout: TabLayout, viewPager: ViewPager2) {
@@ -371,6 +344,22 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         } else MemberTypeEnum.Member
     }
 
+    open fun setChannelDetails(channel: SceytChannel) {
+        with(binding ?: return) {
+            val myRole = channel.userRole
+            val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
+
+            icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
+
+            setChannelTitle(channel)
+            setChannelMembersByRoleButtons(channel)
+            setPresenceOrMembers(channel)
+            setChannelDescription(channel)
+            setChannelAvatar(channel)
+            setChannelAdditionalInfoFragment(channel)
+        }
+    }
+
     open fun setActivityContentView() {
         setContentView(SceytActivityConversationInfoBinding.inflate(layoutInflater)
             .also { binding = it }
@@ -378,11 +367,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onMembersClick(channel: SceytChannel) {
-        binding ?: return
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
             addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, getMembersType()))
+            replace(getRootFragmentId(), getChannelMembersFragment(channel, getMembersType()))
         }
     }
 
@@ -391,7 +379,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
             addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, MemberTypeEnum.Admin))
+            replace(getRootFragmentId(), getChannelMembersFragment(channel, MemberTypeEnum.Admin))
         }
     }
 
@@ -400,7 +388,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
             addToBackStack(EditChannelFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getEditChannelFragment(channel))
+            replace(getRootFragmentId(), getEditChannelFragment(channel))
         }
     }
 
@@ -605,6 +593,21 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    private fun setChannelMembersByRoleButtons(channel: SceytChannel) {
+        binding ?: return
+        val fragment = getChannelMembersByRoleFragment(channel).also {
+            it.setClickActionsListener { actionsEnum ->
+                when (actionsEnum) {
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(channel)
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(channel)
+                }
+            }
+        }
+        supportFragmentManager.commit(allowStateLoss = true) {
+            replace(R.id.frame_layout_members_by_role, fragment)
+        }
+    }
+
     open fun setPresenceOrMembers(channel: SceytChannel) {
         with(binding ?: return) {
             if (channel.isPeerDeleted()) {
@@ -658,22 +661,18 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun setChannelDescription(channel: SceytChannel) {
-        with(binding ?: return) {
-            if (channel.isDirect()) {
-                val status = channel.getFirstMember()?.user?.presence?.status
-                        ?: SceytKitConfig.presenceStatusText
-                if (status.isNotNullOrBlank()) {
-                    tvTitle.text = getString(R.string.sceyt_about)
-                    tvDescription.text = status
-                } else groupChannelDescription.isVisible = false
-            } else {
-                /*todo need to set channel description
-                if (channel.label.isNotNullOrBlank()) {
-                     tvTitle.text = getString(R.string.sceyt_description)
-                     tvDescription.text = channel.label
-                     groupChannelDescription.isVisible = true
-                 } else*/ groupChannelDescription.isVisible = false
-            }
+        binding ?: return
+        val fragment = getChannelDescriptionFragment(channel)
+        supportFragmentManager.commit(allowStateLoss = true) {
+            replace(R.id.frame_layout_description, fragment)
+        }
+    }
+
+    open fun setChannelAdditionalInfoFragment(channel: SceytChannel) {
+        binding ?: return
+        val fragment = getChannelAdditionalInfoFragment(channel) ?: return
+        supportFragmentManager.commit(allowStateLoss = true) {
+            replace(R.id.frame_layout_additional_info, fragment)
         }
     }
 
@@ -698,6 +697,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun getInfoButtonsPublicChannelFragment(channel: SceytChannel) = InfoButtonsPublicChannelFragment.newInstance(channel)
 
+    //Description
+    open fun getChannelDescriptionFragment(channel: SceytChannel) = InfoDescriptionFragment.newInstance(channel)
+
+    //Members by role buttons
+    open fun getChannelMembersByRoleFragment(channel: SceytChannel) = InfoMembersByRoleButtonsFragment.newInstance(channel)
+
+    //Additional info
+    open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
+
     open fun onPageStateChange(pageState: PageState) {
         if (pageState is PageState.StateError) {
             setChannelDetails(channel)
@@ -709,6 +717,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun getViewPagerY(): Int {
         return (binding?.appbar?.height ?: 0)
     }
+
+    open fun getRootFragmentId(): Int = R.id.rootFrameLayout
 
     override fun finish() {
         super.finish()
