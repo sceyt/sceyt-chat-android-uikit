@@ -13,7 +13,7 @@ import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
-internal interface PersistenceMessagesLogic {
+interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
     fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)

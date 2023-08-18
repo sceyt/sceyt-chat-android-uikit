@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import kotlinx.coroutines.flow.Flow
 
-internal interface PersistenceChannelsLogic {
+interface PersistenceChannelsLogic {
     suspend fun onChannelEvent(data: ChannelEventData)
     suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)

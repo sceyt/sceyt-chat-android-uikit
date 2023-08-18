@@ -12,6 +12,7 @@
         android:layout_height="@dimen/_28sdp"
         android:layout_alignTop="@+id/layoutDetails"
         android:layout_marginEnd="8dp"
+        android:background="?selectableItemBackgroundBorderless"
         android:visibility="gone"
         app:sceytAvatarViewTextSize="15sp"
         tools:sceytAvatarViewFullName="Ar"

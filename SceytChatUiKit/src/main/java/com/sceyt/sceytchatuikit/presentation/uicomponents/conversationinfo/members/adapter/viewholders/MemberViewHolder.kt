@@ -28,6 +28,10 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
     private lateinit var memberItem: MemberItem.Member
 
     init {
+        binding.root.setOnClickListener {
+            memberClickListeners.onMemberClick(it, memberItem)
+        }
+
         binding.root.setOnLongClickListener {
             memberClickListeners.onMemberLongClick(it, memberItem)
             return@setOnLongClickListener true
@@ -77,6 +81,7 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
             RoleTypeEnum.Owner.toString() -> {
                 setRoleNameColor(SceytKitConfig.sceytColorAccent)
             }
+
             RoleTypeEnum.Admin.toString() -> {
                 setRoleNameColor(R.color.sceyt_color_admin_role)
             }

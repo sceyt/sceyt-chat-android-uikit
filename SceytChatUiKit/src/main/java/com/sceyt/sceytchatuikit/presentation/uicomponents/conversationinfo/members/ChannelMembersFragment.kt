@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.SceytSharedPreference
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Invited
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Joined
@@ -40,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -53,11 +54,9 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.component.inject
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
-    private val preferences: SceytSharedPreference by inject()
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
         private set
@@ -112,6 +111,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.channelRemoveMemberLiveData.observe(viewLifecycleOwner, ::onRemovedMember)
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
+
+        viewModel.findOrCreateChatLiveData.observe(viewLifecycleOwner, ::onFindOrCreateChat)
     }
 
     private fun initViews() {
@@ -152,7 +153,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun getCurrentUserRole() {
-        channel.members?.find { it.id == preferences.getUserId() }?.let {
+        channel.members?.find { it.id == SceytKitClient.myId }?.let {
             currentUserRole = it.role
         }
     }
@@ -214,8 +215,13 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    protected open fun showMemberLongClick(item: MemberItem.Member) {
-        if (currentUserIsOwnerOrAdmin().not() || item.member.id == preferences.getUserId()) return
+    protected open fun onMemberClick(item: MemberItem.Member) {
+        if (item.member.id == SceytKitClient.myId) return
+        viewModel.findOrCreateChat(item.member.user)
+    }
+
+    protected open fun onMemberLongClick(item: MemberItem.Member) {
+        if (currentUserIsOwnerOrAdmin().not() || item.member.id == SceytKitClient.myId) return
 
         MemberActionsDialog
             .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.toString())
@@ -232,14 +238,20 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
             val currentUser = channel.members?.find {
-                it.id == preferences.getUserId()
+                it.id == SceytKitClient.myId
             }
             currentUserRole = currentUser?.role
 
             membersAdapter = ChannelMembersAdapter(data.toArrayList(),
                 ChannelMembersViewHolderFactory(requireContext()).also {
-                    it.setOnClickListener(MemberClickListeners.MemberLongClickListener { _, item ->
-                        showMemberLongClick(item)
+                    it.setOnClickListener(object : MemberClickListeners.ClickListeners {
+                        override fun onMemberClick(view: View, item: MemberItem.Member) {
+                            onMemberClick(item)
+                        }
+
+                        override fun onMemberLongClick(view: View, item: MemberItem.Member) {
+                            onMemberLongClick(item)
+                        }
                     })
                 })
 
@@ -405,6 +417,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
     protected open fun onChannelOwnerChanged(eventData: ChannelOwnerChangedEventData) {
         setNewOwner(eventData.newOwner.id)
+    }
+
+    protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
+        ConversationInfoActivity.newInstance(requireContext(), sceytChannel)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
