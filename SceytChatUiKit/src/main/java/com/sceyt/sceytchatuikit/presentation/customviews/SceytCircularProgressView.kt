@@ -289,6 +289,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setTransferring(transferring: Boolean) {
         this.transferring = transferring
+        if (!transferring)
+            rotateAnim?.cancel()
         invalidate()
     }
 
@@ -322,6 +324,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             if (isVisible) {
                 goneAnim = scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
                     super.setVisibility(GONE)
+                    rotateAnim?.cancel()
                 }
             }
         }
@@ -334,6 +337,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             else setGoneWithAnim()
         } else {
             super.setVisibility(visibility)
+            if (visibility == GONE)
+                rotateAnim?.cancel()
             drawingProgressAnimEndCb = null
         }
     }
