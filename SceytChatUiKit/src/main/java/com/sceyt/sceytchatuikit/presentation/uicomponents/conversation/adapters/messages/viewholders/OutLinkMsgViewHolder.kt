@@ -20,8 +20,8 @@ class OutLinkMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, userNameBuilder = userNameBuilder) {
 
     init {
         with(binding) {

@@ -11,9 +11,9 @@ import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         displayedListener: ((MessageListItem) -> Unit)?
-) : BaseMsgViewHolder(binding.root, senderNameBuilder = senderNameBuilder, displayedListener = displayedListener) {
+) : BaseMsgViewHolder(binding.root, userNameBuilder = userNameBuilder, displayedListener = displayedListener) {
 
     init {
         binding.setMessageItemStyle()

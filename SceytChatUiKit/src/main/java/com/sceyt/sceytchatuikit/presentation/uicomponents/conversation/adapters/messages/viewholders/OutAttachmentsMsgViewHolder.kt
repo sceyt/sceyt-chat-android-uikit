@@ -23,9 +23,9 @@ class OutAttachmentsMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+) : BaseMsgViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
