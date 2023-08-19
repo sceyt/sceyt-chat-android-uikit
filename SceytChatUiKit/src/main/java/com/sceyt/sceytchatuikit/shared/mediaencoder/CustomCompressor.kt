@@ -312,7 +312,7 @@ object CustomCompressor: CoroutineScope {
                         var encoderOutputAvailable = true
 
                         var encoderStatus: Int
-                        var encodedData: ByteBuffer? = null
+                        var encodedData: ByteBuffer?
                         var doRender: Boolean
 
                         loop@ while (decoderOutputAvailable || encoderOutputAvailable) {

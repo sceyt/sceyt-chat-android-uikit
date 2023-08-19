@@ -62,7 +62,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             SceytLoader.hideLoading()
             lifecycleScope.launch {
                 delay(100)
-                requireActivity().onBackPressed()
+                requireActivity().onBackPressedDispatcher.onBackPressed()
             }
         }
 

@@ -8,6 +8,7 @@ import android.database.Cursor
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
@@ -33,7 +34,6 @@ import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
 import com.sceyt.sceytchatuikit.extensions.dismissSafety
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getOrientation
-import com.sceyt.sceytchatuikit.extensions.hasPermissions
 import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -64,14 +64,9 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (requireContext().hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
-        } else {
-            requireContext().checkAndAskPermissions(initPermissionLauncher {
-                if (it) {
-                    LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
-                }
-            }, Manifest.permission.READ_EXTERNAL_STORAGE)
+
+        checkPermissions {
+            if (it) LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
         }
 
         savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
@@ -85,6 +80,22 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         arguments?.getInt(MAX_SELECTION_COUNT)?.let {
             maxSelectCount = it
         }
+    }
+
+    private fun checkPermissions(callBack: (Boolean) -> Unit) {
+        val resultLauncher = initPermissionLauncher {
+            if (it) callBack.invoke(true)
+        }
+
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+        } else
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+
+        val hasAccess = requireContext().checkAndAskPermissions(resultLauncher, *permissions)
+
+        if (hasAccess)
+            callBack.invoke(true)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
