@@ -242,7 +242,7 @@ internal class PersistenceAttachmentLogicImpl(
                 val usersMap = response.data.second
 
                 // Checking maybe all messages is exist in database
-                val existMsgIdsData = messageDao.getExistMessagesByIds(attachments.map { it.messageId })
+                val existMsgIdsData = messageDao.getExistMessagesIdTidByIds(attachments.map { it.messageId })
                 val attachmentsAndMissingMessages = getExistAttachmentsAndMissedMsgIds(attachments, existMsgIdsData)
                 val sceytAttachments = attachmentsAndMissingMessages.first.toMutableList()
 
