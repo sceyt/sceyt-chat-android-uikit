@@ -192,7 +192,10 @@ abstract class MessageDao {
     abstract suspend fun getMessageById(id: Long): MessageDb?
 
     @Query("select message_id as id, tid from messages where message_id in (:ids)")
-    abstract suspend fun getExistMessagesByIds(ids: List<Long>): List<MessageIdAndTid>
+    abstract suspend fun getExistMessagesIdTidByIds(ids: List<Long>): List<MessageIdAndTid>
+
+    @Query("select message_id from messages where message_id in (:ids)")
+    abstract suspend fun getExistMessageByIds(ids: List<Long>): List<Long>
 
     @Transaction
     @Query("select * from messages where tid =:tid")

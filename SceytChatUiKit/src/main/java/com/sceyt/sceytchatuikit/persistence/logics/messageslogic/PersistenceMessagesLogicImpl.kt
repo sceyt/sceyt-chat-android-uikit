@@ -532,7 +532,7 @@ internal class PersistenceMessagesLogicImpl(
                 messageDao.insertMessageIgnored(message.toMessageDb(true))
             }
         }
-        return  result
+        return result
     }
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
@@ -802,6 +802,7 @@ internal class PersistenceMessagesLogicImpl(
             val response = if (status == Displayed)
                 messagesRepository.markAsDisplayed(channelId, *typedArray)
             else messagesRepository.markAsReceived(channelId, *typedArray)
+
             onMarkerResponse(channelId, response, status, *typedArray)
             responseList.add(response)
         }
@@ -810,25 +811,36 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
-        val list = ids.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
+        if (ids.isEmpty()) return
+        val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
+        if (existMessageIds.isEmpty()) return
+        val list = existMessageIds.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
         pendingMarkersDao.insertMany(list)
     }
 
     private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: MarkerTypeEnum, vararg ids: Long) {
-        if (response is SceytResponse.Success) {
-            response.data?.let { data ->
-                val deliveryStatus = status.toDeliveryStatus()
-                messageDao.updateMessagesStatus(channelId, data.messageIds, deliveryStatus)
-                val tIds = messageDao.getMessageTIdsByIds(*ids)
-                messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
+        when (response) {
+            is SceytResponse.Success -> {
+                response.data?.let { data ->
+                    val deliveryStatus = status.toDeliveryStatus()
+                    messageDao.updateMessagesStatus(channelId, data.messageIds, deliveryStatus)
+                    val tIds = messageDao.getMessageTIdsByIds(*ids)
+                    messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
-                pendingMarkersDao.deleteMessagesMarkersByStatus(response.data.messageIds, status)
-                ids.forEach {
-                    SceytKitClient.myId?.let { userId ->
-                        val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
-                        messageDao.insertUserMarker(markerEntity)
+                    pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
+                    ids.forEach {
+                        SceytKitClient.myId?.let { userId ->
+                            val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
+                            messageDao.insertUserMarker(markerEntity)
+                        }
                     }
                 }
+            }
+
+            is SceytResponse.Error -> {
+                // Check if error code is 1301 (not allowed) then delete pending markers
+                if (response.exception?.code == 1301)
+                    pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
             }
         }
     }
