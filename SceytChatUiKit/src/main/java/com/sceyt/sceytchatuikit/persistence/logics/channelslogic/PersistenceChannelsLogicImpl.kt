@@ -713,6 +713,14 @@ internal class PersistenceChannelsLogicImpl(
             channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
             channelsCache.updateLastMessage(channelId, message)
         } else {
+            // Check if sent message is last message of channel
+            channelsCache.get(channelId)?.let {
+                if (it.lastMessage?.tid != message.tid) return
+            } ?: run {
+                channelDao.getChannelById(channelId)?.let {
+                    if (it.channelEntity.lastMessageTid != message.tid) return
+                }
+            }
             channelDao.updateLastMessageWithLastRead(channelId, message.tid, message.id, message.createdAt)
             channelsCache.updateLastMessageWithLastRead(channelId, message)
         }

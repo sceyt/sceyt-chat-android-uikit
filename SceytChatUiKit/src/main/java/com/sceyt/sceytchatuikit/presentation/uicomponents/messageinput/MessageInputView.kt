@@ -178,6 +178,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             messageInputActionCallback?.typing(text.isNullOrBlank().not())
             updateDraftMessage()
             delay(2000)
+            updateDraftMessage()
             messageInputActionCallback?.typing(false)
         }
     }
