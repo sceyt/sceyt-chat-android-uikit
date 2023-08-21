@@ -141,7 +141,7 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncDeletedMsgViewHolder(
             SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
-            userNameBuilder, displayedListener)
+            userNameBuilder, displayedListener, clickListeners)
     }
 
     open fun createOutDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -199,6 +199,7 @@ open class MessageViewHolderFactory(context: Context) {
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
+
             else -> if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
         }
         return type.ordinal

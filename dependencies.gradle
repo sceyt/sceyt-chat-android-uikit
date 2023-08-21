@@ -1,5 +1,5 @@
 ext {
-    compile_sdk_version = 33
+    compile_sdk_version = 34
     target_sdk_version = 33
     min_sdk_version = 21
 
@@ -22,17 +22,17 @@ ext {
 
     datastore_version = '1.0.0'
 
-    exo_player_media_version = '1.1.0-alpha01'
-    emoji_bundled_version = '1.4.0-beta04'
+    exo_player_media_version = '1.1.1'
+    emoji_bundled_version = '1.4.0'
 
     jsoup_version = '1.16.1'
-    material_version = '1.9.0-beta01'
+    material_version = '1.11.0-alpha02'
     moshi_converter_version = '2.9.0'
 
     fragment_ktx_version = '1.6.1'
     firebase_core_version = '20.0.2'
-    firebase_messaging_version = '23.2.0'
-    firebase_bom_version = '32.2.0'
+    firebase_messaging_version = '23.2.1'
+    firebase_bom_version = '32.2.2'
     firebase_crashlitics_version = '18.2.6'
     flex_box_version = "3.0.0"
 
@@ -42,7 +42,7 @@ ext {
     glide_compiler_version = '4.12.0'
     gson_version = '2.8.9'
     glide_transformations_version = '4.3.0'
-    google_code_lib_phone_version = '8.13.17'
+    google_code_lib_phone_version = '8.13.19'
 
     ion_version = "3.1.0"
 
@@ -55,7 +55,7 @@ ext {
     light_compressor_version = '1.0.1'
 
     voley_version = '1.2.1'
-    vanniktech_google_emoji_version = '0.16.0'
+    vanniktech_google_emoji_version = '0.17.0'
 
     ok_http_version = '5.0.0-alpha.8'
 

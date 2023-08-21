@@ -7,12 +7,14 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
         userNameBuilder: ((User) -> String)?,
-        displayedListener: ((MessageListItem) -> Unit)?
+        displayedListener: ((MessageListItem) -> Unit)?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
 ) : BaseMsgViewHolder(binding.root, userNameBuilder = userNameBuilder, displayedListener = displayedListener) {
 
     init {
@@ -31,6 +33,11 @@ class IncDeletedMsgViewHolder(
 
                 if (diff.showAvatarAndNameChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
+
+                if (item.message.canShowAvatarAndName)
+                    avatar.setOnClickListener {
+                        messageListeners?.onAvatarClick(it, item)
+                    }
             }
         }
     }
