@@ -63,7 +63,7 @@
             android:hint="@string/sceyt_message"
             android:includeFontPadding="false"
             android:inputType="textMultiLine|textCapSentences"
-            android:maxLines="3"
+            android:maxLines="6"
             android:minHeight="24dp"
             android:textColor="@color/sceyt_color_black_themed"
             android:textColorHint="@color/sceyt_color_hint"
