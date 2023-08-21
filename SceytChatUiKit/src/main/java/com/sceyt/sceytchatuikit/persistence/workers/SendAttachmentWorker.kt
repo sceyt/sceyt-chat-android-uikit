@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -20,11 +21,13 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.initPendingIntent
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
@@ -55,6 +58,8 @@ object SendAttachmentWorkManager : SceytKoinComponent {
     internal const val IS_SHARING = "IS_SHARING"
     internal const val UPLOAD_CHANNEL_ID = "Sceyt_Upload_Attachment_Channel"
     internal const val NOTIFICATION_ID = 1223344
+    const val CHANNEL_KEY = "CHANNEL_KEY"
+
 
     fun schedule(context: Context, messageTid: Long, channelId: Long?,
                  workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP, isSharing: Boolean = false): Operation {
@@ -156,13 +161,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
-        startForeground()
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
         if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
             return Result.success()
 
+        startForeground(tmpMessage.channelId)
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
         return if (result.first && result.second.isNotNullOrBlank() && !isStopped) {
@@ -179,17 +184,18 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         } else Result.failure()
     }
 
-    private suspend fun startForeground() {
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification())
+    private suspend fun startForeground(channelId: Long) {
+        val channel = SceytKitClient.getChannelsMiddleWare().getChannelFromDb(channelId)
+        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification(channel))
         setForeground(foregroundInfo)
     }
 
-    private fun creteNotification(): Notification {
+    private fun creteNotification(channel: SceytChannel?): Notification {
         val notificationBuilder = NotificationCompat.Builder(applicationContext, UPLOAD_CHANNEL_ID)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(UPLOAD_CHANNEL_ID, "Upload Attachments", NotificationManager.IMPORTANCE_MIN)
-            NotificationManagerCompat.from(applicationContext).createNotificationChannel(channel)
+            val notificationChannel = NotificationChannel(UPLOAD_CHANNEL_ID, "Upload Attachments", NotificationManager.IMPORTANCE_MIN)
+            NotificationManagerCompat.from(applicationContext).createNotificationChannel(notificationChannel)
         }
 
         notificationBuilder
@@ -197,6 +203,15 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
+
+        if (channel != null) {
+            val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, Class.forName("com.sceyt.chat.ui.presentation.conversation.ConversationActivity")).apply {
+                putExtra("CHANNEL", channel)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            })
+
+            notificationBuilder.setContentIntent(pendingIntent)
+        }
 
         return notificationBuilder.build()
     }
