@@ -131,18 +131,6 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun channelDraftMessageUpdated(channelId: Long, draftMessage: DraftMessage?): ChannelItemPayloadDiff? {
-        channelsRV.getChannelIndexed(channelId)?.let { pair ->
-            val channelItem = pair.second
-            val oldChannel = channelItem.channel.clone()
-            channelItem.channel.draftMessage = draftMessage
-            val diff = oldChannel.diff(channelItem.channel)
-            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
-            return diff
-        }
-        return null
-    }
-
     internal fun onTyping(data: ChannelTypingEventData) {
         channelsRV.getChannelIndexed(data.channel.id)?.let { pair ->
             val channelItem = pair.second
