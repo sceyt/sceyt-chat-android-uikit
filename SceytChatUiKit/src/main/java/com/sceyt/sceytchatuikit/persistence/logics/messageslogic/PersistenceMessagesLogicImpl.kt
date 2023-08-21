@@ -433,6 +433,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
+            message.state = MessageState.Deleted
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.deleteMessage(channelId, message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
