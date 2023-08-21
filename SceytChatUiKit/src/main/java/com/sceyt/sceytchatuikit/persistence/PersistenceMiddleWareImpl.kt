@@ -359,6 +359,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.getMessageDbById(messageId)
     }
 
+    override suspend fun getMessageDbByTid(messageTid: Long): SceytMessage? {
+        return messagesLogic.getMessageDbByTid(messageTid)
+    }
+
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
 
     override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
