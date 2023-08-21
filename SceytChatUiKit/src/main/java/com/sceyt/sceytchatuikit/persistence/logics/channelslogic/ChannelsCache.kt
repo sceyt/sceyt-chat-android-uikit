@@ -1,13 +1,11 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
-import androidx.lifecycle.MutableLiveData
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -59,8 +57,11 @@ class ChannelsCache {
         )
         val pendingChannelCreatedFlow: SharedFlow<Pair<Long, SceytChannel>> = pendingChannelCreatedFlow_
 
-        private val channelDraftMessageChangesLiveData_ = MutableLiveData<Pair<Long, DraftMessage?>>()
-        val channelDraftMessageChangesLiveData = channelDraftMessageChangesLiveData_.asLiveData()
+        private val channelDraftMessageChangesFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelDraftMessageChangesFlow: SharedFlow<SceytChannel> = channelDraftMessageChangesFlow_
 
         var currentChannelId: Long? = null
     }
@@ -243,16 +244,24 @@ class ChannelsCache {
     }
 
     fun updateMembersCount(channel: SceytChannel) {
-        cachedData[channel.id]?.let {
-            it.memberCount = channel.memberCount
-            channelUpdated(it, false, ChannelUpdatedType.Members)
-        } ?: upsertChannel(channel)
+        var found = false
+        synchronized(lock) {
+            cachedData[channel.id]?.let {
+                it.memberCount = channel.memberCount
+                channelUpdated(it, false, ChannelUpdatedType.Members)
+                found = true
+            }
+        }
+        if (!found)
+            upsertChannel(channel)
     }
 
     fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
-        get(channelId)?.let {
-            it.draftMessage = draftMessage?.copy()
-            channelDraftMessageChangesLiveData_.postValue(Pair(channelId, draftMessage))
+        synchronized(lock) {
+            cachedData[channelId]?.let {
+                it.draftMessage = draftMessage?.copy()
+                channelDraftMessageChangesFlow_.tryEmit(it.clone())
+            }
         }
     }
 

@@ -153,10 +153,19 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelDraftMessageChangesLiveData.observe(lifecycleOwner) { (channelId, draftMessage) ->
-        channelsListView.channelDraftMessageUpdated(channelId, draftMessage)
-        needToUpdateChannelsAfterResume[channelId]?.channel?.draftMessage = draftMessage
-    }
+    ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.apply {
+                lastMessageChanged = true
+            })
+        } else {
+            val pendingUpdate = needToUpdateChannelsAfterResume[channel.id]
+            if (pendingUpdate != null) {
+                pendingUpdate.channel = channel
+            } else
+                needToUpdateChannelsAfterResume[channel.id] = ChannelUpdateData(channel, false)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelEventsObserver.onChannelTypingEventFlow
         .filter { it.member.id != SceytKitClient.myId }

@@ -85,6 +85,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -108,7 +109,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var eventListeners = InputEventsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
-    private var typingJob: Job? = null
+    private val typingDebounceHelper = DebounceHelper(100)
+    private var typingTimeoutJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
@@ -173,13 +175,16 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             return
 
         determineInputState()
-        typingJob?.cancel()
-        typingJob = MainScope().launch {
+
+        typingTimeoutJob?.cancel()
+        typingTimeoutJob = MainScope().launch {
+            delay(2000)
+            messageInputActionCallback?.typing(false)
+        }
+
+        typingDebounceHelper.submit {
             messageInputActionCallback?.typing(text.isNullOrBlank().not())
             updateDraftMessage()
-            delay(2000)
-            updateDraftMessage()
-            messageInputActionCallback?.typing(false)
         }
     }
 
