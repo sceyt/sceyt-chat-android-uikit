@@ -1,61 +1,59 @@
 package com.sceyt.sceytchatuikit.shared.mediaencoder
 
-import android.content.Context
+import android.app.Application
 import android.net.Uri
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
+import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Cancelled
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Failure
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Progress
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Start
+import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Success
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.koin.core.component.inject
 import java.io.File
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.resume
 
-object VideoTranscodeHelper {
+object VideoTranscodeHelper : SceytKoinComponent {
+    private val application by inject<Application>()
+    private var pendingTranscodeQue: ConcurrentLinkedQueue<PendingTranscodeData> = ConcurrentLinkedQueue()
 
-    suspend fun transcodeAsResult(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.VERY_LOW): VideoTranscodeData {
+    @Volatile
+    private var currentTranscodePath: String? = null
+
+    suspend fun transcodeAsResult(destination: File, path: String, quality: VideoQuality = VideoQuality.MEDIUM): VideoTranscodeData {
         return suspendCancellableCoroutine {
-            try {
-                CustomVideoCompressor.start(
-                    context = context,
-                    srcUri = Uri.parse(uri),
-                    destPath = destination.absolutePath,
-                    configureWith = CustomConfiguration(
-                        quality = quality,
-                        isMinBitrateCheckEnabled = true,
-                        disableAudio = false,
-                    ),
-                    listener = object : CompressionListener {
-                        override fun onCancelled() {
-                            it.resume(VideoTranscodeData(TranscodeResultEnum.Cancelled))
-                        }
+            checkAndTranscode(destination, path, quality) { data ->
+                when (data.resultType) {
+                    Cancelled -> it.resume(VideoTranscodeData(Cancelled))
+                    Failure -> {
+                        SceytLog.i("transcodeVideoFailure", data.errorMessage)
+                        it.resume(VideoTranscodeData(Failure, data.errorMessage))
+                    }
 
-                        override fun onFailure(failureMessage: String) {
-                            SceytLog.i("transcodeVideoFailure", failureMessage)
-                            it.resume(VideoTranscodeData(TranscodeResultEnum.Failure, failureMessage))
-                        }
-
-                        override fun onProgress(percent: Float) {
-                        }
-
-                        override fun onStart() {
-                        }
-
-                        override fun onSuccess() {
-                            it.resume(VideoTranscodeData(TranscodeResultEnum.Success))
-                        }
-                    },
-                )
-            } catch (ex: Exception) {
-                SceytLog.e("transcodeVideoException", ex.message.toString())
-                it.resume(VideoTranscodeData(TranscodeResultEnum.Failure, ex.message.toString()))
+                    Success -> it.resume(VideoTranscodeData(Success))
+                    Progress, Start -> Unit
+                }
             }
         }
     }
 
-    fun transcodeAsResultWithCallback(context: Context, destination: File, uri: String, quality: VideoQuality = VideoQuality.MEDIUM, callback: (VideoTranscodeData) -> Unit) {
-        try {
+    fun transcodeAsResultWithCallback(destination: File, path: String, quality: VideoQuality = VideoQuality.MEDIUM,
+                                      callback: (VideoTranscodeData) -> Unit) {
+        checkAndTranscode(destination, path, quality, callback)
+    }
+
+    private fun checkAndTranscode(destination: File, filePath: String, quality: VideoQuality = VideoQuality.MEDIUM,
+                                  callback: (VideoTranscodeData) -> Unit) {
+
+        if (currentTranscodePath == null) {
+            currentTranscodePath = filePath
             CustomVideoCompressor.start(
-                context = context,
-                srcUri = Uri.parse(uri),
+                context = application,
+                srcUri = Uri.parse(filePath),
                 destPath = destination.absolutePath,
                 configureWith = CustomConfiguration(
                     quality = quality,
@@ -65,33 +63,52 @@ object VideoTranscodeHelper {
                 ),
                 listener = object : CompressionListener {
                     override fun onCancelled() {
-                        callback(VideoTranscodeData(TranscodeResultEnum.Cancelled))
+                        callback(VideoTranscodeData(Cancelled))
+                        uploadNext()
                     }
 
                     override fun onFailure(failureMessage: String) {
-                        callback(VideoTranscodeData(TranscodeResultEnum.Failure, failureMessage))
+                        callback(VideoTranscodeData(Failure, failureMessage))
+                        uploadNext()
                     }
 
                     override fun onProgress(percent: Float) {
-                        callback(VideoTranscodeData(TranscodeResultEnum.Progress, progressPercent = percent))
+                        callback(VideoTranscodeData(Progress, progressPercent = percent))
                     }
 
                     override fun onStart() {
-                        callback(VideoTranscodeData(TranscodeResultEnum.Start))
+                        callback(VideoTranscodeData(Start))
                     }
 
                     override fun onSuccess() {
-                        callback(VideoTranscodeData(TranscodeResultEnum.Success))
+                        callback(VideoTranscodeData(Success))
+                        uploadNext()
                     }
                 },
             )
-        } catch (ex: Exception) {
-            SceytLog.e("transcodeVideoException", ex.message.toString())
-            callback(VideoTranscodeData(TranscodeResultEnum.Failure, ex.message.toString()))
+        } else {
+            val alreadyExist = currentTranscodePath == filePath || pendingTranscodeQue.any { it.filePath == filePath }
+
+            if (!alreadyExist)
+                pendingTranscodeQue.add(PendingTranscodeData(destination, filePath, quality, callback))
+        }
+    }
+
+    private fun uploadNext() {
+        currentTranscodePath = null
+        if (pendingTranscodeQue.isEmpty()) return
+        pendingTranscodeQue.poll()?.let {
+            checkAndTranscode(it.destination, it.filePath, it.quality, it.callback)
         }
     }
 }
 
+private data class PendingTranscodeData(
+        val destination: File,
+        val filePath: String,
+        val quality: VideoQuality,
+        val callback: (VideoTranscodeData) -> Unit
+)
 
 data class VideoTranscodeData(
         val resultType: TranscodeResultEnum,
