@@ -71,6 +71,10 @@ object SendAttachmentWorkManager : SceytKoinComponent {
         return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), workPolicy, myWorkRequest)
             .enqueue()
     }
+
+    fun cancelWorksByTag(context: Context, tag: String) {
+        WorkManager.getInstance(context).cancelAllWorkByTag(tag)
+    }
 }
 
 class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {

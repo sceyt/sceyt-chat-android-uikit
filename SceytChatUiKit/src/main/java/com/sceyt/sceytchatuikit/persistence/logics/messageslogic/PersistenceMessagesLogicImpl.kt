@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import android.content.Context
-import androidx.work.WorkManager
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -437,7 +436,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.deleteMessage(channelId, message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
-            WorkManager.getInstance(context).cancelAllWorkByTag(message.tid.toString())
+            SendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
             message.attachments?.firstOrNull()?.let {
                 fileTransferService.pause(it.messageTid, it, it.transferState
                         ?: TransferState.Uploading)
