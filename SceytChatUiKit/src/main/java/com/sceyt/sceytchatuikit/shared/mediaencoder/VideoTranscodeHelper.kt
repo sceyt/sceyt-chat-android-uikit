@@ -20,7 +20,7 @@ object VideoTranscodeHelper {
                     destPath = destination.absolutePath,
                     configureWith = CustomConfiguration(
                         quality = quality,
-                        isMinBitrateCheckEnabled = false,
+                        isMinBitrateCheckEnabled = true,
                         disableAudio = false,
                     ),
                     listener = object : CompressionListener {
@@ -59,7 +59,7 @@ object VideoTranscodeHelper {
                 destPath = destination.absolutePath,
                 configureWith = CustomConfiguration(
                     quality = quality,
-                    isMinBitrateCheckEnabled = false,
+                    isMinBitrateCheckEnabled = true,
                     disableAudio = false,
                     videoBitrateCoefficient = 0.09f,
                 ),
