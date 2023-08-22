@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAt
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
-import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -156,7 +156,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
                 messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
 
                 originalFilePath?.let {
-                    val checksum = FileResizeUtil.calculateChecksumFor10Mb(originalFilePath)
+                    val checksum = FileChecksumCalculator.calculateFileChecksum(originalFilePath)
                     if (checksum != null)
                         fileChecksumDao.updateResizedFilePathAndSize(checksum, newPath, fileSize)
                 }

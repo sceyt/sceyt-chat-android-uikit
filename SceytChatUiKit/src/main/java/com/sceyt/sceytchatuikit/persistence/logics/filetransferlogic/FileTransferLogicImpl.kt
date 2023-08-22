@@ -349,7 +349,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
                                                  task: TransferTask, callback: (Result<String?>) -> Unit) {
 
         val path = checksumData?.resizedFilePath
-        if (path != null) {
+        if (path != null && File(path).exists()) {
             callback(Result.success(path))
             return
         }
