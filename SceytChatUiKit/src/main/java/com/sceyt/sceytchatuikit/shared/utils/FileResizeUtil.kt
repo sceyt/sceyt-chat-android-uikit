@@ -16,9 +16,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.UUID
-import java.util.zip.CRC32
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 object FileResizeUtil {
@@ -323,26 +321,5 @@ object FileResizeUtil {
             e.printStackTrace()
         }
         return rotate
-    }
-
-    fun calculateChecksumFor10Mb(filePath: String): Long? {
-        return try {
-            val loopBufferSize = 8192 * 4 //32 kb
-            val maxBufferSize = 1024 * 1024 * 10 //10 mb
-            var bytesRead = 0
-            val crc32 = CRC32()
-            val fis = FileInputStream(File(filePath))
-            var loadedBufferSize = 0
-            val buffer = ByteArray(loopBufferSize)
-            while (loadedBufferSize < maxBufferSize && fis.read(buffer).also { bytesRead = it } != -1) {
-                loadedBufferSize += loopBufferSize
-                crc32.update(buffer, 0, bytesRead)
-            }
-            fis.close()
-            crc32.value
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
     }
 }
