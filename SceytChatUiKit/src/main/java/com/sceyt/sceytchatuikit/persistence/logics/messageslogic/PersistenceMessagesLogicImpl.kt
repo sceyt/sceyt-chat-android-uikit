@@ -592,6 +592,10 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.upsertNotifyUpdateAnyway(message.channelId, message)
     }
 
+    override suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?) {
+        saveMessagesToDb(list)
+    }
+
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
 
@@ -786,7 +790,7 @@ internal class PersistenceMessagesLogicImpl(
         } else list
     }
 
-    override suspend fun saveMessagesToDb(list: List<SceytMessage>?): List<SceytMessage> {
+    private suspend fun saveMessagesToDb(list: List<SceytMessage>?): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
         val usersDb = arrayListOf<UserEntity>()

@@ -437,7 +437,7 @@ internal class PersistenceChannelsLogicImpl(
             fillChannelsNeededInfo(channel)
         }
         usersDao.insertUsers(users)
-        messageLogic.saveMessagesToDb(lastMessages.map { it.toSceytMessage() })
+        messageLogic.saveChannelLastMessagesToDb(lastMessages.map { it.toSceytMessage() })
         chatUsersReactionDao.replaceChannelUserReactions(userReactions)
 
         // Delete old links where channel peer is deleted.
