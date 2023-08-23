@@ -149,7 +149,7 @@ open class ConversationActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val CHANNEL = "CHANNEL"
+        const val CHANNEL = "CHANNEL"
         private const val REPLY_IN_THREAD = "REPLY_IN_THREAD"
         private const val REPLY_IN_THREAD_MESSAGE = "REPLY_IN_THREAD_MESSAGE"
 

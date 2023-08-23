@@ -21,7 +21,6 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -46,6 +45,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -58,8 +58,6 @@ object SendAttachmentWorkManager : SceytKoinComponent {
     internal const val IS_SHARING = "IS_SHARING"
     internal const val UPLOAD_CHANNEL_ID = "Sceyt_Upload_Attachment_Channel"
     internal const val NOTIFICATION_ID = 1223344
-    const val CHANNEL_KEY = "CHANNEL_KEY"
-
 
     fun schedule(context: Context, messageTid: Long, channelId: Long?,
                  workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP, isSharing: Boolean = false): Operation {
@@ -189,12 +187,11 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     }
 
     private suspend fun startForeground(channelId: Long) {
-        val channel = SceytKitClient.getChannelsMiddleWare().getChannelFromDb(channelId)
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification(channel))
+        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification(channelId))
         setForeground(foregroundInfo)
     }
 
-    private fun creteNotification(channel: SceytChannel?): Notification {
+    private suspend fun creteNotification(channelId: Long): Notification {
         val notificationBuilder = NotificationCompat.Builder(applicationContext, UPLOAD_CHANNEL_ID)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -208,10 +205,18 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
 
-        if (channel != null) {
-            val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, Class.forName("com.sceyt.chat.ui.presentation.conversation.ConversationActivity")).apply {
-                putExtra("CHANNEL", channel)
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val clickData = SceytKitConfig.backgroundUploadNotificationClickData
+        val channel = if (clickData != null)
+            SceytKitClient.getChannelsMiddleWare().getChannelFromDb(channelId) else null
+
+        if (channel != null && clickData != null) {
+            val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {
+                clickData.channelToParcelKey?.let {
+                    putExtra(it, channel)
+                }
+                clickData.intentFlags?.let {
+                    flags = clickData.intentFlags
+                }
             })
 
             notificationBuilder.setContentIntent(pendingIntent)

@@ -49,6 +49,8 @@ object SceytKitConfig {
 
     var messageTransformer: MessageTransformer? = null
 
+    var backgroundUploadNotificationClickData: BackgroundUploadNotificationClickData? = null
+
     class ThemeConfig : BaseObservable() {
         @Bindable
         var isDarkMode = false
