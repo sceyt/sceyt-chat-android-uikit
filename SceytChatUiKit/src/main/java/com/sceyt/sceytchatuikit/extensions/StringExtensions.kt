@@ -1,12 +1,15 @@
 package com.sceyt.sceytchatuikit.extensions
 
+import android.content.Context
 import android.graphics.Typeface
 import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import android.text.util.Linkify
 import android.util.Base64
 import android.util.Patterns
+import android.widget.TextView
 import androidx.core.text.isDigitsOnly
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
@@ -95,6 +98,11 @@ fun String?.extractLinks(): Array<String> {
         links.add(url)
     }
     return links.toTypedArray()
+}
+
+fun String?.isValidUrl(context: Context): Boolean {
+    this ?: return false
+    return Linkify.addLinks(TextView(context).apply { text = this@isValidUrl }, Linkify.WEB_URLS)
 }
 
 fun String?.isValidEmail(): Boolean {

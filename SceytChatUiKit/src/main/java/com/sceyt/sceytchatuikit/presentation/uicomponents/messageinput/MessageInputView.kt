@@ -43,6 +43,7 @@ import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.extensions.isValidUrl
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
@@ -417,7 +418,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun getLinkAttachmentFromBody(): Attachment? {
         val body = binding.messageInput.text.toString()
         val links = body.extractLinks()
-        val isContainsLink = links.isNotEmpty()
+        val isContainsLink = links.isNotEmpty() && links[0].isValidUrl(context)
         if (isContainsLink) {
             return Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
                 .withTid(ClientWrapper.generateTid())
