@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chat.ui.databinding.ActivityConversationBinding
 import com.sceyt.chat.ui.presentation.conversationinfo.CustomConversationInfoActivity
+import com.sceyt.chat.ui.presentation.mainactivity.MainActivity
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -149,7 +150,7 @@ open class ConversationActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val CHANNEL = "CHANNEL"
+        const val CHANNEL = "CHANNEL"
         private const val REPLY_IN_THREAD = "REPLY_IN_THREAD"
         private const val REPLY_IN_THREAD_MESSAGE = "REPLY_IN_THREAD_MESSAGE"
 
@@ -171,6 +172,10 @@ open class ConversationActivity : AppCompatActivity() {
     }
 
     override fun finish() {
+        if (isTaskRoot) {
+            launchActivity<MainActivity>()
+            overridePendingTransition(0,0)
+        }
         super.finish()
         overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
     }

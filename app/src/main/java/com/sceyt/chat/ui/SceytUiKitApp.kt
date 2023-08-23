@@ -9,8 +9,11 @@ import com.sceyt.chat.ui.di.apiModule
 import com.sceyt.chat.ui.di.appModules
 import com.sceyt.chat.ui.di.repositoryModule
 import com.sceyt.chat.ui.di.viewModelModules
+import com.sceyt.chat.ui.presentation.conversation.ConversationActivity
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.sceytconfigs.BackgroundUploadNotificationClickData
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -40,6 +43,10 @@ class SceytUiKitApp : Application() {
             appId = "yzr58x11rm",
             host = "https://uk-london-south-api-2-staging.waafi.com",
             enableDatabase = true)
+
+        SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(
+            ConversationActivity::class.java, ConversationActivity.CHANNEL
+        )
 
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
             when (i) {

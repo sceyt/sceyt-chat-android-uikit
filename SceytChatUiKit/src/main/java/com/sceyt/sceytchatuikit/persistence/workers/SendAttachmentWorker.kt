@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -25,6 +26,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.initPendingIntent
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
@@ -43,6 +45,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -160,13 +163,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
-        startForeground()
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
                 ?: return Result.failure()
 
         if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
             return Result.success()
 
+        startForeground(tmpMessage.channelId)
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
         return if (result.first && result.second.isNotNullOrBlank() && !isStopped) {
@@ -183,17 +186,17 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         } else Result.failure()
     }
 
-    private suspend fun startForeground() {
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification())
+    private suspend fun startForeground(channelId: Long) {
+        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification(channelId))
         setForeground(foregroundInfo)
     }
 
-    private fun creteNotification(): Notification {
+    private suspend fun creteNotification(channelId: Long): Notification {
         val notificationBuilder = NotificationCompat.Builder(applicationContext, UPLOAD_CHANNEL_ID)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(UPLOAD_CHANNEL_ID, "Upload Attachments", NotificationManager.IMPORTANCE_MIN)
-            NotificationManagerCompat.from(applicationContext).createNotificationChannel(channel)
+            val notificationChannel = NotificationChannel(UPLOAD_CHANNEL_ID, "Upload Attachments", NotificationManager.IMPORTANCE_MIN)
+            NotificationManagerCompat.from(applicationContext).createNotificationChannel(notificationChannel)
         }
 
         notificationBuilder
@@ -201,6 +204,23 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
+
+        val clickData = SceytKitConfig.backgroundUploadNotificationClickData
+        val channel = if (clickData != null)
+            SceytKitClient.getChannelsMiddleWare().getChannelFromDb(channelId) else null
+
+        if (channel != null && clickData != null) {
+            val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {
+                clickData.channelToParcelKey?.let {
+                    putExtra(it, channel)
+                }
+                clickData.intentFlags?.let {
+                    flags = clickData.intentFlags
+                }
+            })
+
+            notificationBuilder.setContentIntent(pendingIntent)
+        }
 
         return notificationBuilder.build()
     }
