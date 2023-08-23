@@ -325,8 +325,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (it is SceytResponse.Success) {
             if (it.data?.deliveryStatus == DeliveryStatus.Pending && it.data.state == MessageState.Deleted)
                 messagesListView.forceDeleteMessageByTid(it.data.tid)
-        } else
-            customToastSnackBar(messagesListView, it.message ?: "")
+        }
     }
 
     onNewOutGoingMessageFlow.onEach {

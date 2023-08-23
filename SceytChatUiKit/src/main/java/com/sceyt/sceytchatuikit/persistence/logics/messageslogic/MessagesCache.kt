@@ -187,15 +187,16 @@ class MessagesCache {
     }
 
     private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage) {
-        val cashedMessage = getMessageByTid(channelId, messageToUpdate.tid)
-        val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
-        updateAttachmentsPayLoads(attachmentPayLoadData, messageToUpdate)
-
-        messageToUpdate.parentMessage?.let {
-            val cashedParentMessage = getMessageByTid(channelId, it.tid)
-            val parentPayLoadData = getAttachmentPayLoads(cashedParentMessage)
-            updateAttachmentsPayLoads(parentPayLoadData, it)
+        fun setPayloads(message: SceytMessage): SceytMessage? {
+            val cashedMessage = getMessageByTid(channelId, message.tid)
+            val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
+            updateAttachmentsPayLoads(attachmentPayLoadData, message)
+            return cashedMessage
         }
+
+        val cashedMessage = setPayloads(messageToUpdate)
+        // Set payloads for parent message
+        messageToUpdate.parentMessage?.let { setPayloads(it) }
 
         val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
         val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
