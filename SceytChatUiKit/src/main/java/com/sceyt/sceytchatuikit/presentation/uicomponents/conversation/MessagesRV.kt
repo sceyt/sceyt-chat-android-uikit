@@ -8,6 +8,7 @@ import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
@@ -23,6 +24,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
+import com.sceyt.sceytchatuikit.shared.helpers.SwipeControllerActions
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -155,6 +158,16 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
+
+            val messageSwipeController = MessageSwipeController(context, object : SwipeControllerActions {
+                override fun showReplyUI(position: Int) {
+                    //quotedMessagePos = position
+                    //showQuotedMessage(messageList[position])
+                }
+            })
+
+            val itemTouchHelper = ItemTouchHelper(messageSwipeController)
+            itemTouchHelper.attachToRecyclerView(this)
         } else if (force)
             mAdapter.forceUpdate(messages)
         else
