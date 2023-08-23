@@ -116,6 +116,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
                     launch(Dispatchers.IO) {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
+                        persistenceMessagesMiddleWare.sendAllPendingMessageStateUpdates()
                         persistenceMessagesMiddleWare.sendAllPendingReactions()
                         if (!channelsCache.initialized)
                             delay(1000) // Await 1 second maybe channel cache will be initialized

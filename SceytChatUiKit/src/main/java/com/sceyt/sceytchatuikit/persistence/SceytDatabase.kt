@@ -17,11 +17,12 @@ import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
+import com.sceyt.sceytchatuikit.persistence.dao.PendingMessageStateDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
-import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkerEntity
+import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
@@ -33,9 +34,10 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MentionUserMessageLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
+import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMessageStateEntity
 
 @Database(entities = [
     ChannelEntity::class,
@@ -52,12 +54,14 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
     ChatUserReactionEntity::class,
     PendingMarkerEntity::class,
     PendingReactionEntity::class,
+    PendingMessageStateEntity::class,
     AttachmentPayLoadEntity::class,
     FileChecksumEntity::class
-], version = 4, autoMigrations = [
+], version = 5, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.RenameAutoMigration::class),
+    AutoMigration(from = 4, to = 5),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -72,6 +76,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelUsersReactionDao(): ChatUsersReactionDao
     abstract fun pendingMarkersDao(): PendingMarkersDao
     abstract fun pendingReactionDao(): PendingReactionDao
+    abstract fun pendingMessageStateDao(): PendingMessageStateDao
     abstract fun fileChecksumDao(): FileChecksumDao
 
     @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
