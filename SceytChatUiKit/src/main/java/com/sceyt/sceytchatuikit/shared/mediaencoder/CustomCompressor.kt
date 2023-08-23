@@ -20,10 +20,8 @@ import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
 import com.abedelazizshe.lightcompressorlibrary.video.*
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest.ExtractDecodeEditEncodeMuxTest
+import kotlinx.coroutines.*
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -170,7 +168,12 @@ object CustomCompressor: CoroutineScope {
             else -> rotation
         }
 
+
+
+
         return start(
+            context,
+            srcUri,
             newWidth,
             newHeight,
             destination,
@@ -183,6 +186,8 @@ object CustomCompressor: CoroutineScope {
 
     @Suppress("DEPRECATION")
     private fun start(
+        context: Context?,
+        srcUri: Uri?,
             newWidth: Int,
             newHeight: Int,
             destination: String,
@@ -240,200 +245,206 @@ object CustomCompressor: CoroutineScope {
                 var frameIndex: Long = 0
 
                 try {
-                    var inputDone = false
-                    var outputDone = false
 
-                    var videoTrackIndex = -5
-
-                    inputSurface = InputSurface(encoder.createInputSurface())
-                    inputSurface.makeCurrent()
-                    //Move to executing state
-                    encoder.start()
-
-                    outputSurface = OutputSurface()
-
-                    decoder = prepareDecoder(inputFormat, outputSurface)
-
-                    //Move to executing state
-                    decoder.start()
-
-                    while (!outputDone) {
-                        if (!inputDone) {
-
-                            ++frameIndex
-
-                            val index = extractor.sampleTrackIndex
-
-                            if (index == videoIndex) {
-                                inputBufferIndex =
-                                        decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
-                                if (inputBufferIndex >= 0) {
-                                    inputBuffer = decoder.getInputBuffer(inputBufferIndex)
-                                    chunkSize = extractor.readSampleData(inputBuffer!!, 0)
-
-                                    if (chunkSize < 0) {
-                                        decoder.queueInputBuffer(
-                                            inputBufferIndex,
-                                            0,
-                                            0,
-                                            0L,
-                                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                                        )
-                                        inputDone = true
-                                    } else {
-                                        decoder.queueInputBuffer(
-                                            inputBufferIndex,
-                                            0,
-                                            chunkSize,
-                                            extractor.sampleTime,
-                                            0
-                                        )
-                                        extractor.advance()
-                                    }
-                                }
-
-                            } else if (index == -1) { //end of file
-                                inputBufferIndex =
-                                        decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
-                                if (inputBufferIndex >= 0) {
-                                    decoder.queueInputBuffer(
-                                        inputBufferIndex,
-                                        0,
-                                        0,
-                                        0L,
-                                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                                    )
-                                    inputDone = true
-                                }
-                            }
-                        }
-
-                        var decoderOutputAvailable = true
-                        var encoderOutputAvailable = true
-
-                        var encoderStatus: Int
-                        var encodedData: ByteBuffer?
-                        var doRender: Boolean
-
-                        loop@ while (decoderOutputAvailable || encoderOutputAvailable) {
-
-                            if (!isRunning) {
-                                compressionProgressListener.onProgressCancelled()
-                                return Result(
-                                    success = false,
-                                    failureMessage = "The compression has stopped!"
-                                )
-                            }
-
-                            //Encoder
-                            encoderStatus =
-                                    encoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
-
-                            when {
-                                encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> encoderOutputAvailable =
-                                        false
-
-                                encoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                                    val newFormat = encoder.outputFormat
-                                    if (videoTrackIndex == -5)
-                                        videoTrackIndex = mediaMuxer.addTrack(newFormat, false)
-                                }
-
-                                encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-                                    // ignore this status
-                                }
-
-                                encoderStatus < 0 -> throw RuntimeException("unexpected result from encoder.dequeueOutputBuffer: $encoderStatus")
-                                else -> {
-                                    encodedData = encoder.getOutputBuffer(encoderStatus)
-                                            ?: throw RuntimeException("encoderOutputBuffer $encoderStatus was null")
-
-                                    if (bufferInfo.size > 1) {
-                                        if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0) {
-                                            mediaMuxer.writeSampleData(
-                                                videoTrackIndex,
-                                                encodedData, bufferInfo, false
-                                            )
-                                        }
-
-                                    }
-
-                                    outputDone =
-                                            bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
-                                    encoder.releaseOutputBuffer(encoderStatus, false)
-                                }
-                            }
-                            if (encoderStatus != MediaCodec.INFO_TRY_AGAIN_LATER) continue@loop
-
-                            //Decoder
-                            val decoderStatus =
-                                    decoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
-                            when {
-                                decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> decoderOutputAvailable =
-                                        false
-
-                                decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-                                    // ignore this status
-                                }
-
-                                decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                                    // ignore this status
-                                }
-
-                                decoderStatus < 0 -> throw RuntimeException("unexpected result from decoder.dequeueOutputBuffer: $decoderStatus")
-                                else -> {
-                                    doRender = bufferInfo.size != 0
-
-                                    if (doRender) {
-                                        var errorWait = false
-                                        try {
-                                            outputSurface.awaitNewImage()
-                                        } catch (e: Exception) {
-                                            errorWait = true
-                                            Log.e(
-                                                "Compressor",
-                                                e.message ?: "Compression failed at swapping buffer"
-                                            )
-                                        }
-
-                                        if (!errorWait) {
-                                            outputSurface.drawImage()
-
-                                            inputSurface.setPresentationTime(bufferInfo.presentationTimeUs * 1000)
-                                            inputSurface.swapBuffers()
-
-                                            //Notify progress every 50 frames
-                                            if (frameIndex % 50 == 0L) {
-                                                launch {
-                                                    compressionProgressListener.onProgressChanged(bufferInfo.presentationTimeUs.toFloat() / duration.toFloat() * 100)
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                    decoder.releaseOutputBuffer(decoderStatus, doRender)
-
-                                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                                        decoderOutputAvailable = false
-                                        encoder.signalEndOfInputStream()
-                                    }
-                                }
-                            }
-                        }
+                    runBlocking {
+                        val test = ExtractDecodeEditEncodeMuxTest(context)
+                        test.testExtractDecodeEditEncodeMux720p(srcUri?.path, destination, newWidth, newHeight, outputFormat)
                     }
+
+//                    var inputDone = false
+//                    var outputDone = false
+//
+//                    var videoTrackIndex = -5
+//
+//                    inputSurface = InputSurface(encoder.createInputSurface())
+//                    inputSurface.makeCurrent()
+//                    //Move to executing state
+//                    encoder.start()
+//
+//                    outputSurface = OutputSurface()
+//
+//                    decoder = prepareDecoder(inputFormat, outputSurface)
+//
+//                    //Move to executing state
+//                    decoder.start()
+//
+//                    while (!outputDone) {
+//                        if (!inputDone) {
+//
+//                            ++frameIndex
+//
+//                            val index = extractor.sampleTrackIndex
+//
+//                            if (index == videoIndex) {
+//                                inputBufferIndex =
+//                                        decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
+//                                if (inputBufferIndex >= 0) {
+//                                    inputBuffer = decoder.getInputBuffer(inputBufferIndex)
+//                                    chunkSize = extractor.readSampleData(inputBuffer!!, 0)
+//
+//                                    if (chunkSize < 0) {
+//                                        decoder.queueInputBuffer(
+//                                            inputBufferIndex,
+//                                            0,
+//                                            0,
+//                                            0L,
+//                                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+//                                        )
+//                                        inputDone = true
+//                                    } else {
+//                                        decoder.queueInputBuffer(
+//                                            inputBufferIndex,
+//                                            0,
+//                                            chunkSize,
+//                                            extractor.sampleTime,
+//                                            0
+//                                        )
+//                                        extractor.advance()
+//                                    }
+//                                }
+//
+//                            } else if (index == -1) { //end of file
+//                                inputBufferIndex =
+//                                        decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
+//                                if (inputBufferIndex >= 0) {
+//                                    decoder.queueInputBuffer(
+//                                        inputBufferIndex,
+//                                        0,
+//                                        0,
+//                                        0L,
+//                                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+//                                    )
+//                                    inputDone = true
+//                                }
+//                            }
+//                        }
+//
+//                        var decoderOutputAvailable = true
+//                        var encoderOutputAvailable = true
+//
+//                        var encoderStatus: Int
+//                        var encodedData: ByteBuffer?
+//                        var doRender: Boolean
+//
+//                        loop@ while (decoderOutputAvailable || encoderOutputAvailable) {
+//
+//                            if (!isRunning) {
+//                                compressionProgressListener.onProgressCancelled()
+//                                return Result(
+//                                    success = false,
+//                                    failureMessage = "The compression has stopped!"
+//                                )
+//                            }
+//
+//                            //Encoder
+//                            encoderStatus =
+//                                    encoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
+//
+//                            when {
+//                                encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> encoderOutputAvailable =
+//                                        false
+//
+//                                encoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+//                                    val newFormat = encoder.outputFormat
+//                                    if (videoTrackIndex == -5)
+//                                        videoTrackIndex = mediaMuxer.addTrack(newFormat, false)
+//                                }
+//
+//                                encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
+//                                    // ignore this status
+//                                }
+//
+//                                encoderStatus < 0 -> throw RuntimeException("unexpected result from encoder.dequeueOutputBuffer: $encoderStatus")
+//                                else -> {
+//                                    encodedData = encoder.getOutputBuffer(encoderStatus)
+//                                            ?: throw RuntimeException("encoderOutputBuffer $encoderStatus was null")
+//
+//                                    if (bufferInfo.size > 1) {
+//                                        if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0) {
+//                                            mediaMuxer.writeSampleData(
+//                                                videoTrackIndex,
+//                                                encodedData, bufferInfo, false
+//                                            )
+//                                        }
+//
+//                                    }
+//
+//                                    outputDone =
+//                                            bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
+//                                    encoder.releaseOutputBuffer(encoderStatus, false)
+//                                }
+//                            }
+//                            if (encoderStatus != MediaCodec.INFO_TRY_AGAIN_LATER) continue@loop
+//
+//                            //Decoder
+//                            val decoderStatus =
+//                                    decoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
+//                            when {
+//                                decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> decoderOutputAvailable =
+//                                        false
+//
+//                                decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
+//                                    // ignore this status
+//                                }
+//
+//                                decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+//                                    // ignore this status
+//                                }
+//
+//                                decoderStatus < 0 -> throw RuntimeException("unexpected result from decoder.dequeueOutputBuffer: $decoderStatus")
+//                                else -> {
+//                                    doRender = bufferInfo.size != 0
+//
+//                                    if (doRender) {
+//                                        var errorWait = false
+//                                        try {
+//                                            outputSurface.awaitNewImage()
+//                                        } catch (e: Exception) {
+//                                            errorWait = true
+//                                            Log.e(
+//                                                "Compressor",
+//                                                e.message ?: "Compression failed at swapping buffer"
+//                                            )
+//                                        }
+//
+//                                        if (!errorWait) {
+//                                            outputSurface.drawImage()
+//
+//                                            inputSurface.setPresentationTime(bufferInfo.presentationTimeUs * 1000)
+//                                            inputSurface.swapBuffers()
+//
+//                                            //Notify progress every 50 frames
+//                                            if (frameIndex % 50 == 0L) {
+//                                                launch {
+//                                                    compressionProgressListener.onProgressChanged(bufferInfo.presentationTimeUs.toFloat() / duration.toFloat() * 100)
+//                                                }
+//                                            }
+//
+//                                        }
+//                                    }
+//                                    decoder.releaseOutputBuffer(decoderStatus, doRender)
+//
+//                                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+//                                        decoderOutputAvailable = false
+//                                        encoder.signalEndOfInputStream()
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
 
                 } catch (exception: Exception) {
                     printException(exception)
                     return Result(success = false, failureMessage = exception.message)
                 }
 
-                dispose(
-                    videoIndex,
-                    decoder,
-                    encoder,
-                    inputSurface,
-                    outputSurface,
-                )
+//                dispose(
+//                    videoIndex,
+//                    decoder,
+//                    encoder,
+//                    inputSurface,
+//                    outputSurface,
+//                )
 
                 processAudio(
                     mediaMuxer = mediaMuxer,
