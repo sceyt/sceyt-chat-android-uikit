@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.persistence.entity
+package com.sceyt.sceytchatuikit.persistence.entity.pendings
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

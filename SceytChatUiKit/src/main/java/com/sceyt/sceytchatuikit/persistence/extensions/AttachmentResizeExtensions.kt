@@ -50,7 +50,7 @@ fun resizeImage(context: Context, path: String?, reqSize: Int = 600): Result<Str
 suspend fun Attachment.transcodeVideo(context: Context, quality: VideoQuality): Attachment {
     var transcodeAttachment = this
     val dest = File(context.cacheDir.toString() + UUID.randomUUID())
-    val result = VideoTranscodeHelper.transcodeAsResult(context, destination = dest, uri = url, quality)
+    val result = VideoTranscodeHelper.transcodeAsResult(destination = dest, path = url, quality)
     if (result.resultType == Success) {
         transcodeAttachment = Attachment.Builder(dest.path, url, type)
             .withTid(tid)
@@ -68,7 +68,7 @@ fun transcodeVideo(context: Context, path: String?, quality: VideoQuality = Vide
                    callback: (Result<String>) -> Unit) {
     path?.let {
         val dest = File("${context.filesDir}/" + UUID.randomUUID() + getMimeTypeTakeExtension(path))
-        VideoTranscodeHelper.transcodeAsResultWithCallback(context, destination = dest, uri = it, quality) { data ->
+        VideoTranscodeHelper.transcodeAsResultWithCallback(destination = dest, path = it, quality) { data ->
             when (data.resultType) {
                 Cancelled -> callback(Result.failure(Exception("Canceled")))
                 Failure -> callback(Result.failure(Exception(data.errorMessage)))

@@ -37,7 +37,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toFileChecksumData
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -95,7 +95,7 @@ internal class PersistenceAttachmentLogicImpl(
     }
 
     override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
-        val checksum = FileResizeUtil.calculateChecksumFor10Mb(filePath ?: return null)
+        val checksum = FileChecksumCalculator.calculateFileChecksum(filePath ?: return null)
         return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()
     }
 

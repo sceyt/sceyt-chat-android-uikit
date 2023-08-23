@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import android.content.Context
-import androidx.work.WorkManager
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -74,6 +73,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
+import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
@@ -404,7 +404,6 @@ internal class PersistenceChannelsLogicImpl(
         val users = arrayListOf<UserEntity>()
         val directChatsWithDeletedPeers = arrayListOf<Long>()
         val lastMessages = arrayListOf<MessageDb>()
-        val parentMessages = arrayListOf<MessageDb>()
         val userReactions = arrayListOf<ChatUserReactionEntity>()
 
         fun addEntitiesToLists(channelId: Long, members: List<SceytMember>?, lastMessage: SceytMessage?, userMessageReactions: List<SceytReaction>?) {
@@ -415,19 +414,6 @@ internal class PersistenceChannelsLogicImpl(
 
             lastMessage?.let {
                 lastMessages.add(it.toMessageDb(false))
-                lastMessage.parentMessage?.let { parent ->
-                    parentMessages.add(parent.toMessageDb(true))
-                    if (lastMessage.incoming)
-                        parent.user?.let { user -> users.add(user.toUserEntity()) }
-                }
-
-                //Add user from last message
-                it.user?.let { user ->
-                    // Add if not exist
-                    users.find { entity -> entity.id == user.id } ?: run {
-                        users.add(user.toUserEntity())
-                    }
-                }
             }
 
             userMessageReactions?.forEach {
@@ -451,8 +437,7 @@ internal class PersistenceChannelsLogicImpl(
             fillChannelsNeededInfo(channel)
         }
         usersDao.insertUsers(users)
-        messageDao.upsertMessages(lastMessages)
-        messageDao.insertMessagesIgnored(parentMessages)
+        messageLogic.saveChannelLastMessagesToDb(lastMessages.map { it.toSceytMessage() })
         chatUsersReactionDao.replaceChannelUserReactions(userReactions)
 
         // Delete old links where channel peer is deleted.
@@ -554,7 +539,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
+            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
             channelsCache.clearedHistory(channelId)
@@ -567,7 +552,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.blockChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
+            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelDb(channelId)
         }
 
@@ -578,7 +563,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.leaveChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
+            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelDb(channelId)
         }
 
@@ -594,7 +579,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.deleteChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            WorkManager.getInstance(context).cancelAllWorkByTag(channelId.toString())
+            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelDb(channelId)
         }
 

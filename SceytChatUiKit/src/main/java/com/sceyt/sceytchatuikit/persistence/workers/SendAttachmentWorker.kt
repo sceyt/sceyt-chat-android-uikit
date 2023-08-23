@@ -46,7 +46,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.IS
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
-import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil.calculateChecksumFor10Mb
+import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -75,6 +75,10 @@ object SendAttachmentWorkManager : SceytKoinComponent {
 
         return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), workPolicy, myWorkRequest)
             .enqueue()
+    }
+
+    fun cancelWorksByTag(context: Context, tag: String) {
+        WorkManager.getInstance(context).cancelAllWorkByTag(tag)
     }
 }
 
@@ -105,7 +109,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                         continue
                     }
 
-                    val checksum = calculateChecksumFor10Mb(filePath)
+                    val checksum = FileChecksumCalculator.calculateFileChecksum(filePath)
 
                     if (checksum != null) {
                         val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
