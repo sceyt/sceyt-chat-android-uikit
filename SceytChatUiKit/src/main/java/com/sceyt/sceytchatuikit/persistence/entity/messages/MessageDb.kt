@@ -4,6 +4,7 @@ import androidx.room.Embedded
 import androidx.room.Relation
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
+import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingReactionEntity
 
 data class MessageDb(
         @Embedded

@@ -48,13 +48,15 @@ interface PersistenceMessagesLogic {
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()
-    suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
+    suspend fun sendAllPendingMessageStateUpdates()
     suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>>
     suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
+    suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun getMessageDbById(messageId: Long): SceytMessage?
     suspend fun getMessageDbByTid(tid: Long): SceytMessage?
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun attachmentSuccessfullySent(message: SceytMessage)
+    suspend fun saveMessagesToDb(list: List<SceytMessage>?): List<SceytMessage>
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

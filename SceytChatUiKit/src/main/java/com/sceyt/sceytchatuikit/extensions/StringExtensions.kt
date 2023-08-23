@@ -63,7 +63,7 @@ fun String?.isLink(): Boolean {
 }
 
 fun CharSequence?.isNotNullOrBlank(): Boolean {
-    return isNullOrBlank().not()
+    return !isNullOrBlank()
 }
 
 fun CharSequence?.setBoldSpan(from: Int, to: Int): SpannableStringBuilder {

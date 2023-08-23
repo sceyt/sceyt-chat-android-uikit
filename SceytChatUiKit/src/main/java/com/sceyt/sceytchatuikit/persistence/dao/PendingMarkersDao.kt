@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
-import com.sceyt.sceytchatuikit.persistence.entity.PendingMarkerEntity
+import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMarkerEntity
 
 @Dao
 interface PendingMarkersDao {
