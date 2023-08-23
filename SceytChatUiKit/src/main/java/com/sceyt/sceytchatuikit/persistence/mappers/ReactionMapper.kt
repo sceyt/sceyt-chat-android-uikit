@@ -11,7 +11,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.PendingReactionEntity
+import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity

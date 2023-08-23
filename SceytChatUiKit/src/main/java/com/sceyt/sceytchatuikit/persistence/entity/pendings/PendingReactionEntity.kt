@@ -1,10 +1,11 @@
-package com.sceyt.sceytchatuikit.persistence.entity.messages
+package com.sceyt.sceytchatuikit.persistence.entity.pendings
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 
 @Entity(tableName = "pendingReaction",
     foreignKeys = [

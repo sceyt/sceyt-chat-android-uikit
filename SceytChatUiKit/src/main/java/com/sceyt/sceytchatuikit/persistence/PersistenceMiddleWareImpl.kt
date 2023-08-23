@@ -331,12 +331,12 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         messagesLogic.sendAllPendingMarkers()
     }
 
-    override suspend fun sendAllPendingReactions() {
-        reactionsLogic.sendAllPendingReactions()
+    override suspend fun sendAllPendingMessageStateUpdates() {
+        messagesLogic.sendAllPendingMessageStateUpdates()
     }
 
-    override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteMessage(channelId, message, onlyForMe)
+    override suspend fun sendAllPendingReactions() {
+        reactionsLogic.sendAllPendingReactions()
     }
 
     override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
@@ -349,6 +349,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
         return messagesLogic.editMessage(channelId, message)
+    }
+
+    override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channelId, message, onlyForMe)
     }
 
     override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {

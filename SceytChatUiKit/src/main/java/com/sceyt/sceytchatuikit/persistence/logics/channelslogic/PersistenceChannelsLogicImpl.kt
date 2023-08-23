@@ -404,7 +404,6 @@ internal class PersistenceChannelsLogicImpl(
         val users = arrayListOf<UserEntity>()
         val directChatsWithDeletedPeers = arrayListOf<Long>()
         val lastMessages = arrayListOf<MessageDb>()
-        val parentMessages = arrayListOf<MessageDb>()
         val userReactions = arrayListOf<ChatUserReactionEntity>()
 
         fun addEntitiesToLists(channelId: Long, members: List<SceytMember>?, lastMessage: SceytMessage?, userMessageReactions: List<SceytReaction>?) {
@@ -415,19 +414,6 @@ internal class PersistenceChannelsLogicImpl(
 
             lastMessage?.let {
                 lastMessages.add(it.toMessageDb(false))
-                lastMessage.parentMessage?.let { parent ->
-                    parentMessages.add(parent.toMessageDb(true))
-                    if (lastMessage.incoming)
-                        parent.user?.let { user -> users.add(user.toUserEntity()) }
-                }
-
-                //Add user from last message
-                it.user?.let { user ->
-                    // Add if not exist
-                    users.find { entity -> entity.id == user.id } ?: run {
-                        users.add(user.toUserEntity())
-                    }
-                }
             }
 
             userMessageReactions?.forEach {
@@ -451,8 +437,7 @@ internal class PersistenceChannelsLogicImpl(
             fillChannelsNeededInfo(channel)
         }
         usersDao.insertUsers(users)
-        messageDao.upsertMessages(lastMessages)
-        messageDao.insertMessagesIgnored(parentMessages)
+        messageLogic.saveMessagesToDb(lastMessages.map { it.toSceytMessage() })
         chatUsersReactionDao.replaceChannelUserReactions(userReactions)
 
         // Delete old links where channel peer is deleted.
