@@ -630,7 +630,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             replyMessage = message.clone()
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
-                ViewUtil.expandHeight(root, 1, 200)
+                if (!root.isVisible || root.height <= 1)
+                    ViewUtil.expandHeight(root, 1, 200)
                 val name = message.user?.let { userNameBuilder?.invoke(it) }
                         ?: message.user?.getPresentableName() ?: ""
                 val text = "${getString(R.string.sceyt_reply)} $name".run {
