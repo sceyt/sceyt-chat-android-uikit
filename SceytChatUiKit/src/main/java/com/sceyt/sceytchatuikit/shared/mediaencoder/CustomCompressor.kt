@@ -4,7 +4,6 @@ import android.content.Context
 import android.media.*
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.findTrack
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.generateWidthAndHeight
@@ -20,7 +19,7 @@ import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
 import com.abedelazizshe.lightcompressorlibrary.video.*
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
-import com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest.ExtractDecodeEditEncodeMuxTest
+import com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest.CallbackBasedTranscoder
 import kotlinx.coroutines.*
 import java.io.File
 import java.nio.ByteBuffer
@@ -186,8 +185,8 @@ object CustomCompressor: CoroutineScope {
 
     @Suppress("DEPRECATION")
     private fun start(
-        context: Context?,
-        srcUri: Uri?,
+            context: Context?,
+            srcUri: Uri?,
             newWidth: Int,
             newHeight: Int,
             destination: String,
@@ -247,8 +246,16 @@ object CustomCompressor: CoroutineScope {
                 try {
 
                     runBlocking {
-                        val test = ExtractDecodeEditEncodeMuxTest(context)
-                        test.testExtractDecodeEditEncodeMux720p(srcUri?.path, destination, newWidth, newHeight, outputFormat)
+                        val callbackBasedTranscoder = CallbackBasedTranscoder(context)
+                        callbackBasedTranscoder.setSize(newWidth, newHeight)
+                        callbackBasedTranscoder.setMediaMuxer(mediaMuxer)
+                        callbackBasedTranscoder.setMediaExtractor(extractor)
+                        callbackBasedTranscoder.setCopyVideo()
+                        callbackBasedTranscoder.setOutputFilePath(destination)
+                        callbackBasedTranscoder.setOutputVideoFormat(outputFormat)
+                        callbackBasedTranscoder.printAllLogs(true)
+
+                        callbackBasedTranscoder.runTranscode()
                     }
 
 //                    var inputDone = false
@@ -445,6 +452,8 @@ object CustomCompressor: CoroutineScope {
 //                    inputSurface,
 //                    outputSurface,
 //                )
+
+                extractor.unselectTrack(videoIndex)
 
                 processAudio(
                     mediaMuxer = mediaMuxer,
