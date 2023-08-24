@@ -94,8 +94,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         private set
 
     init {
-        setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
-
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
             MessagesStyle.updateWithAttributes(a)
@@ -115,6 +113,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 scrollDownIcon.isVisible = show
             }
         })
+
+        messagesRV.setSwipeToReplyListener { message ->
+            messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
+        }
 
         if (!isInEditMode)
             addView(PageStateView(context).also {
