@@ -246,6 +246,7 @@ object CustomCompressor: CoroutineScope {
                 try {
 
                     runBlocking {
+                        // Using this only for video trasncode
                         val callbackBasedTranscoder = CallbackBasedTranscoder(context)
                         callbackBasedTranscoder.setSize(newWidth, newHeight)
                         callbackBasedTranscoder.setMediaMuxer(mediaMuxer)
@@ -253,7 +254,7 @@ object CustomCompressor: CoroutineScope {
                         callbackBasedTranscoder.setCopyVideo()
                         callbackBasedTranscoder.setOutputFilePath(destination)
                         callbackBasedTranscoder.setOutputVideoFormat(outputFormat)
-                        callbackBasedTranscoder.printAllLogs(true)
+                        callbackBasedTranscoder.printAllLogs(false)
 
                         callbackBasedTranscoder.runTranscode()
                     }
