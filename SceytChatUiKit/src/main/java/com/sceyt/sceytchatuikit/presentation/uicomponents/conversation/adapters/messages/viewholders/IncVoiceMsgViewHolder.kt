@@ -158,7 +158,8 @@ class IncVoiceMsgViewHolder(
             currentPlaybackSpeed = PlaybackSpeed.fromValue(AudioPlayerHelper.getCurrentPlayer()?.playbackSpeed)
             true
         } else {
-            binding.voiceDuration.text = fileItem.duration?.durationToMinSecShort()
+            binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
+                ?.durationToMinSecShort()
             binding.seekBar.progress = 0f
             currentPlaybackSpeed = PlaybackSpeed.X1
             false
@@ -214,7 +215,8 @@ class IncVoiceMsgViewHolder(
                 runOnMainThread {
                     setPlayButtonIcon(false, binding.playPauseButton)
                     binding.seekBar.progress = 0f
-                    binding.voiceDuration.text = fileItem.duration?.durationToMinSecShort()
+                    binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
+                        ?.durationToMinSecShort()
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
                 }
