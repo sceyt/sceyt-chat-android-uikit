@@ -23,7 +23,6 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.media.MediaMuxer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -55,10 +54,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * MediaMuxer.
  */
 @TargetApi(18)
-public class ExtractDecodeEditEncodeMuxTest {
+public class CallbackBasedTranscoder {
 
-    private static final String TAG = ExtractDecodeEditEncodeMuxTest.class.getSimpleName();
-    private static final boolean VERBOSE = true; // lots of logging
+    private static final String TAG = CallbackBasedTranscoder.class.getSimpleName();
+    private static boolean VERBOSE = true; // lots of logging
 
     /** How long to wait for the next buffer to become available. */
     private static final int TIMEOUT_USEC = 10000;
@@ -118,7 +117,7 @@ public class ExtractDecodeEditEncodeMuxTest {
 
     private MediaFormat mOutputVideoFormat;
 
-    public ExtractDecodeEditEncodeMuxTest(Context applicationContext) {
+    public CallbackBasedTranscoder(Context applicationContext) {
         mContext = applicationContext;
     }
 
@@ -147,12 +146,33 @@ public class ExtractDecodeEditEncodeMuxTest {
         TestWrapper.runTest(this);
     }
 
-    private void setSourceFile(String s) {
+    public void runTranscode() throws Throwable {
+        TestWrapper wrapper = new TestWrapper(this);
+        wrapper.run();
+        if (wrapper.mThrowable != null) {
+            throw wrapper.mThrowable;
+        }
+
+    }
+
+    public void setSourceFile(String s) {
         mInputFile = new File(s);
     }
 
-    private void setOutputVideoFormat(MediaFormat outputVideoFormat) {
+    public void setOutputVideoFormat(MediaFormat outputVideoFormat) {
         mOutputVideoFormat = outputVideoFormat;
+    }
+
+    public void setMediaExtractor(MediaExtractor mediaExtractor) {
+        mVideoExtractorExternal = mediaExtractor;
+    }
+
+    public void setMediaMuxer(MP4Builder mediaMuxer) {
+        mMuxerExternal = mediaMuxer;
+    }
+
+    public void printAllLogs(boolean print) {
+        VERBOSE = print;
     }
 
 //    public void testExtractDecodeEditEncodeMuxAudio() throws Throwable {
@@ -173,9 +193,9 @@ public class ExtractDecodeEditEncodeMuxTest {
     /** Wraps testExtractDecodeEditEncodeMux() */
     private static class TestWrapper implements Runnable {
         private Throwable mThrowable;
-        private ExtractDecodeEditEncodeMuxTest mTest;
+        private CallbackBasedTranscoder mTest;
 
-        private TestWrapper(ExtractDecodeEditEncodeMuxTest test) {
+        private TestWrapper(CallbackBasedTranscoder test) {
             mTest = test;
         }
 
@@ -191,7 +211,7 @@ public class ExtractDecodeEditEncodeMuxTest {
         /**
          * Entry point.
          */
-        public static void runTest(ExtractDecodeEditEncodeMuxTest test) throws Throwable {
+        public static void runTest(CallbackBasedTranscoder test) throws Throwable {
 //            test.setOutputFile();
             TestWrapper wrapper = new TestWrapper(test);
             Thread th = new Thread(wrapper, "codec test");
@@ -206,7 +226,7 @@ public class ExtractDecodeEditEncodeMuxTest {
     /**
      * Sets the test to copy the video stream.
      */
-    private void setCopyVideo() {
+    public void setCopyVideo() {
         mCopyVideo = true;
     }
 
@@ -220,7 +240,7 @@ public class ExtractDecodeEditEncodeMuxTest {
     /**
      * Sets the desired frame size.
      */
-    private void setSize(int width, int height) {
+    public void setSize(int width, int height) {
         if ((width % 16) != 0 || (height % 16) != 0) {
             Log.w(TAG, "WARNING: width or height not multiple of 16");
         }
@@ -264,7 +284,7 @@ public class ExtractDecodeEditEncodeMuxTest {
 //        new File(mOutputFile).createNewFile();
     }
 
-    private void setOutputFilePath(String outputFilePath) {
+    public void setOutputFilePath(String outputFilePath) {
         mOutputFile = outputFilePath;
     }
 
@@ -273,6 +293,8 @@ public class ExtractDecodeEditEncodeMuxTest {
     }
 
     private MediaExtractor mVideoExtractor = null;
+
+    private MediaExtractor mVideoExtractorExternal = null;
     private MediaExtractor mAudioExtractor = null;
     private InputSurface mInputSurface = null;
     private OutputSurface mOutputSurface = null;
@@ -281,6 +303,7 @@ public class ExtractDecodeEditEncodeMuxTest {
     private MediaCodec mVideoEncoder = null;
     private MediaCodec mAudioEncoder = null;
     private MP4Builder mMuxer = null;
+    private MP4Builder mMuxerExternal = null;
 
     /**
      * Tests encoding and subsequently decoding video from frames generated into a buffer.
@@ -338,10 +361,18 @@ public class ExtractDecodeEditEncodeMuxTest {
 
         try {
             // Creates a muxer but do not start or add tracks just yet.
-            mMuxer = createMuxer();
+            if (mMuxerExternal != null)
+                mMuxer = mMuxerExternal;
+            else
+                mMuxer = createMuxer();
 
             if (mCopyVideo) {
-                mVideoExtractor = createExtractor();
+
+                if (mVideoExtractorExternal != null)
+                    mVideoExtractor = mVideoExtractorExternal;
+                else
+                    mVideoExtractor = createExtractor();
+
                 int videoInputTrack = getAndSelectVideoTrackIndex(mVideoExtractor);
                 MediaFormat inputFormat = mVideoExtractor.getTrackFormat(videoInputTrack);
 
@@ -375,7 +406,10 @@ public class ExtractDecodeEditEncodeMuxTest {
                 mInputSurface.makeCurrent();
                 // Create a MediaCodec for the decoder, based on the extractor's format.
                 mOutputSurface = new OutputSurface();
-                mOutputSurface.changeFragmentShader(FRAGMENT_SHADER);
+
+                // This shader mix colors
+                //mOutputSurface.changeFragmentShader(FRAGMENT_SHADER);
+
                 mVideoDecoder = createVideoDecoder(inputFormat, mOutputSurface.getSurface());
                 mInputSurface.releaseEGLContext();
             }
@@ -408,7 +442,9 @@ public class ExtractDecodeEditEncodeMuxTest {
             // is reported as the cause of the error, everything is (attempted) to be released, and
             // all other exceptions appear in the logs.
             try {
-                if (mVideoExtractor != null) {
+
+                // Do not release external extractor
+                if (mVideoExtractor != null && mVideoExtractorExternal == null) {
                     mVideoExtractor.release();
                 }
             } catch(Exception e) {
@@ -482,7 +518,8 @@ public class ExtractDecodeEditEncodeMuxTest {
                 }
             }
             try {
-                if (mMuxer != null) {
+                // Do not release external muxer
+                if (mMuxer != null && mMuxerExternal == null) {
 //                    mMuxer.stop();
 //                    mMuxer.release();
                     mMuxer.finishMovie();
@@ -642,6 +679,14 @@ public class ExtractDecodeEditEncodeMuxTest {
                 if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
                     if (VERBOSE) Log.d(TAG, "video decoder: codec config buffer");
                     codec.releaseOutputBuffer(index, false);
+
+                    // Check end of stream also, some devices return both flags
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                        if (VERBOSE) Log.d(TAG, "video decoder: EOS");
+                        mVideoDecoderDone = true;
+                        mVideoEncoder.signalEndOfInputStream();
+                    }
+
                     return;
                 }
                 if (VERBOSE) {
@@ -1156,6 +1201,11 @@ public class ExtractDecodeEditEncodeMuxTest {
             MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
 
             if (!codecInfo.isEncoder()) {
+                continue;
+            }
+
+            if (codecInfo.getName().contains("qti.avc")) {
+                //Broken codec
                 continue;
             }
 
