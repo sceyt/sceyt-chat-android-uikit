@@ -26,7 +26,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
-import com.sceyt.sceytchatuikit.shared.helpers.SwipeControllerActions
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -48,7 +47,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
-    private var swipeToReplyListener: ((SceytMessage) -> Unit)? = null
+    private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
 
     init {
         init()
@@ -161,17 +160,13 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
 
-            val messageSwipeController = MessageSwipeController(context, object : SwipeControllerActions {
-                override fun showReplyUI(position: Int) {
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        mAdapter.getData().getOrNull(position)?.let {
-                            (it as? MessageListItem.MessageItem)?.message?.let { message ->
-                                swipeToReplyListener?.invoke(message)
-                            }
-                        }
-                    },100)
-                }
-            })
+            val messageSwipeController = MessageSwipeController(context) { position ->
+                Handler(Looper.getMainLooper()).postDelayed({
+                    mAdapter.getData().getOrNull(position)?.let {
+                        swipeToReplyListener?.invoke(it)
+                    }
+                }, 100)
+            }
 
             val itemTouchHelper = ItemTouchHelper(messageSwipeController)
             itemTouchHelper.attachToRecyclerView(this)
@@ -268,7 +263,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         showHideDownScroller = listener
     }
 
-    fun setSwipeToReplyListener(listener: (SceytMessage) -> Unit) {
+    fun setSwipeToReplyListener(listener: (MessageListItem) -> Unit) {
         swipeToReplyListener = listener
     }
 
