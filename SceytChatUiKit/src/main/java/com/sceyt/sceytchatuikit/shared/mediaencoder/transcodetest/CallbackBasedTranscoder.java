@@ -117,6 +117,8 @@ public class CallbackBasedTranscoder {
 
     private MediaFormat mOutputVideoFormat;
 
+    private long lastDecodedPresentationTimeUs = 0;
+
     public CallbackBasedTranscoder(Context applicationContext) {
         mContext = applicationContext;
     }
@@ -342,6 +344,8 @@ public class CallbackBasedTranscoder {
         mAudioExtractedFrameCount = 0;
         mAudioDecodedFrameCount = 0;
         mAudioEncodedFrameCount = 0;
+        lastDecodedPresentationTimeUs = 0;
+
 
         MediaCodecInfo videoCodecInfo = selectCodec(OUTPUT_VIDEO_MIME_TYPE);
         if (videoCodecInfo == null) {
@@ -693,8 +697,11 @@ public class CallbackBasedTranscoder {
                     Log.d(TAG, "video decoder: returned buffer for time "
                             + info.presentationTimeUs);
                 }
-                boolean render = info.size != 0;
+
+                // Some devices return old timestamp buffers again after new ones, ignore these and skip them.
+                boolean render = info.size != 0 && info.presentationTimeUs > lastDecodedPresentationTimeUs;
                 codec.releaseOutputBuffer(index, render);
+
                 if (render) {
                     mInputSurface.makeCurrent();
                     if (VERBOSE) Log.d(TAG, "output surface: await new image");
@@ -714,6 +721,8 @@ public class CallbackBasedTranscoder {
                     mVideoDecoderDone = true;
                     mVideoEncoder.signalEndOfInputStream();
                 }
+
+                lastDecodedPresentationTimeUs = info.presentationTimeUs;
                 mVideoDecodedFrameCount++;
                 logState();
             }
