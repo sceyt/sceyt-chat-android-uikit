@@ -16,7 +16,6 @@ import com.sceyt.sceytchatuikit.extensions.screenWidthPx
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 
 
@@ -27,6 +26,8 @@ class MessageSwipeController(private val context: Context, private val swipeCont
     private var currentItemViewHolder: RecyclerView.ViewHolder? = null
     private lateinit var mView: View
     private var swipeBack = false
+    private var dX: Float = 0f
+    private var maxAcceptableExpand = context.screenWidthPx() * 0.3
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
         mView = viewHolder.itemView
@@ -62,7 +63,15 @@ class MessageSwipeController(private val context: Context, private val swipeCont
         if (actionState == ACTION_STATE_SWIPE) {
             setTouchListener(recyclerView, viewHolder)
         }
-        val newDx = max(0f, dX - dX * 0.4f)
+
+        var newDx: Float = dX
+        // if swipe more than maxAcceptableExpand, then slow down the swipe
+        if (dX > maxAcceptableExpand) {
+            val diff = dX - this.dX
+            newDx = this.dX + diff * 0.2f
+        } else
+            this.dX = dX
+
         super.onChildDraw(c, recyclerView, viewHolder, newDx, dY, actionState, isCurrentlyActive)
         currentItemViewHolder = viewHolder
         drawReplyButton(c, dX)
@@ -90,17 +99,15 @@ class MessageSwipeController(private val context: Context, private val swipeCont
         shareRound.alpha = alpha
         imageDrawable?.alpha = alpha
 
-        val stopScalingX = dpToPx(130f)
-
-        val x: Int = if (mView.translationX > stopScalingX) {
-            stopScalingX / 2
+        val x: Int = if (dX > maxAcceptableExpand) {
+            (maxAcceptableExpand / 2).toInt()
         } else {
-            (mView.translationX / 2).toInt()
+            (dX / 2).toInt()
         }
 
         val y = (mView.top + mView.measuredHeight / 2).toFloat()
 
-        val roundSize = dpToPx(15f) * scale
+        val roundSize = dpToPx(16f) * scale
         shareRound.setBounds(
             (x - roundSize).toInt(),
             (y - roundSize).toInt(),
