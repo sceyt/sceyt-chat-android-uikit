@@ -82,7 +82,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
         recyclerView.setOnTouchListener { _, event ->
             swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP
             if (swipeBack) {
-                if (abs(mView.translationX) >= context.screenWidthPx() * 0.18)
+                if (abs(mView.translationX) >= maxAcceptableExpand)
                     swipeControllerActions.showReplyUI(viewHolder.bindingAdapterPosition)
             }
             false
