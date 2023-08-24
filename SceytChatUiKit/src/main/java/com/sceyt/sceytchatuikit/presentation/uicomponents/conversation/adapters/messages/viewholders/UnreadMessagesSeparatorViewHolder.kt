@@ -11,6 +11,8 @@ class UnreadMessagesSeparatorViewHolder(
         binding.setMessageItemStyle()
     }
 
+    override val enableReply = false
+
     private fun SceytItemUnreadMessagesSeparatorBinding.setMessageItemStyle() {
         with(context) {
             /* messageDay.apply {

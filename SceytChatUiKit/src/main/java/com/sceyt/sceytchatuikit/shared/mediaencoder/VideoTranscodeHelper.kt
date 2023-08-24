@@ -73,7 +73,7 @@ object VideoTranscodeHelper : SceytKoinComponent {
                     }
 
                     override fun onProgress(percent: Float) {
-                        callback(VideoTranscodeData(Progress, progressPercent = percent))
+                        callback(VideoTranscodeData(Progress, progressPercent = 0f))
                     }
 
                     override fun onStart() {

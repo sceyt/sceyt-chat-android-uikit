@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
@@ -47,6 +48,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
+    private var swipeToReplyListener: ((SceytMessage) -> Unit)? = null
 
     init {
         init()
@@ -161,8 +163,13 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             val messageSwipeController = MessageSwipeController(context, object : SwipeControllerActions {
                 override fun showReplyUI(position: Int) {
-                    //quotedMessagePos = position
-                    //showQuotedMessage(messageList[position])
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        mAdapter.getData().getOrNull(position)?.let {
+                            (it as? MessageListItem.MessageItem)?.message?.let { message ->
+                                swipeToReplyListener?.invoke(message)
+                            }
+                        }
+                    },100)
                 }
             })
 
@@ -259,6 +266,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setScrollDownControllerListener(listener: (Boolean) -> Unit) {
         showHideDownScroller = listener
+    }
+
+    fun setSwipeToReplyListener(listener: (SceytMessage) -> Unit) {
+        swipeToReplyListener = listener
     }
 
     /** Call this function to customise MessageViewHolderFactory and set your own.

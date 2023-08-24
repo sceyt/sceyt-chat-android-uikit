@@ -81,6 +81,9 @@ object MessagesStyle {
     @ColorRes
     var selfReactionBorderColor = R.color.sceyt_color_divider
 
+    @DrawableRes
+    var swipeReplyIcon: Int = R.drawable.sceyt_is_reply_swipe
+
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
@@ -104,6 +107,7 @@ object MessagesStyle {
         fileAttachmentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiFileAttachmentIcon, fileAttachmentIcon)
         selfReactionBackgroundColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBackgroundColor, selfReactionBackgroundColor)
         selfReactionBorderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBorderColor, selfReactionBorderColor)
+        swipeReplyIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSwipeReplyIcon, swipeReplyIcon)
         return this
     }
 }
