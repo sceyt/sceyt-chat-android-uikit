@@ -26,8 +26,9 @@ interface PersistenceChannelsLogic {
     suspend fun loadChannels(offset: Int, searchQuery: String,
                              loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
-    suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>, loadKey: LoadKeyData?,
-                                          onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+    suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String,
+                                          userIds: List<String>, includeUserNames: Boolean,
+                                          loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel>
