@@ -25,7 +25,6 @@ import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.awaitToScrollFinish
 import com.sceyt.sceytchatuikit.extensions.findIndexed
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getFragmentManager
 import com.sceyt.sceytchatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
@@ -94,8 +93,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         private set
 
     init {
-        setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
-
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
             MessagesStyle.updateWithAttributes(a)
@@ -115,6 +112,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 scrollDownIcon.isVisible = show
             }
         })
+
+        messagesRV.setSwipeToReplyListener { item ->
+            (item as? MessageItem)?.message?.let { message ->
+                messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
+            }
+        }
 
         if (!isInEditMode)
             addView(PageStateView(context).also {

@@ -8,9 +8,11 @@ import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
@@ -23,6 +25,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -44,6 +47,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
+    private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
 
     init {
         init()
@@ -155,6 +159,17 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
+
+            val messageSwipeController = MessageSwipeController(context) { position ->
+                Handler(Looper.getMainLooper()).postDelayed({
+                    mAdapter.getData().getOrNull(position)?.let {
+                        swipeToReplyListener?.invoke(it)
+                    }
+                }, 100)
+            }
+
+            val itemTouchHelper = ItemTouchHelper(messageSwipeController)
+            itemTouchHelper.attachToRecyclerView(this)
         } else if (force)
             mAdapter.forceUpdate(messages)
         else
@@ -246,6 +261,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setScrollDownControllerListener(listener: (Boolean) -> Unit) {
         showHideDownScroller = listener
+    }
+
+    fun setSwipeToReplyListener(listener: (MessageListItem) -> Unit) {
+        swipeToReplyListener = listener
     }
 
     /** Call this function to customise MessageViewHolderFactory and set your own.

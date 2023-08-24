@@ -464,4 +464,6 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.start()
         highlightAnim?.doOnEnd { messageListItem.highlighted = false }
     }
+
+    open val enableReply = true
 }
