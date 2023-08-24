@@ -59,7 +59,7 @@ fun SceytCircularProgressView.getProgressWithState(state: TransferState, progres
         }
 
         Preparing -> {
-            setProgress(0f)
+            setProgress(progressPercent)
             setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_cancel_transfer))
             isVisible = true
         }
