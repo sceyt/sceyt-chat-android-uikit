@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
@@ -22,10 +21,12 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asFragmentActivity
 import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
+import com.sceyt.sceytchatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.sceytchatuikit.extensions.initAttachmentLauncher
 import com.sceyt.sceytchatuikit.extensions.initCameraLauncher
 import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.initVideoCameraLauncher
+import com.sceyt.sceytchatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.sceytchatuikit.extensions.permissionIgnored
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -155,11 +156,7 @@ class ChooseAttachmentHelper {
     }
 
     fun openSceytGallery(pickerListener: GalleryMediaPicker.PickerListener, vararg selections: String) {
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-        } else
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-
+        val permissions = getPermissionsForMangeStorage()
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher, *permissions)) {
             openSceytGalleryPicker(pickerListener, *selections)
         } else GalleryMediaPicker.pickerListener = pickerListener
@@ -274,7 +271,7 @@ class ChooseAttachmentHelper {
     private fun onSceytGalleryPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             openSceytGalleryPicker()
-        } else if (context.permissionIgnored(Manifest.permission.READ_EXTERNAL_STORAGE))
+        } else if (context.oneOfPermissionsIgnored(*getPermissionsForMangeStorage()))
             showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
     }
 

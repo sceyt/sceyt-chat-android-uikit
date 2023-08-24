@@ -84,15 +84,18 @@ fun Context.getPathFromFile(uri: Uri?): String? {
     uri ?: return null
     try {
         return FileUtils(this).getPath(uri)
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
     return null
 }
 
 fun saveToGallery(context: Context, path: String, name: String, mimeType: String): File? {
-    Environment.getExternalStoragePublicDirectory(
-        Environment.DIRECTORY_PICTURES
-    )?.let { parent ->
+    val environment = when (mimeType) {
+        "image/jpeg" -> Environment.DIRECTORY_PICTURES
+        "video/mp4" -> Environment.DIRECTORY_MOVIES
+        else -> Environment.DIRECTORY_DOWNLOADS
+    }
+    Environment.getExternalStoragePublicDirectory(environment)?.let { parent ->
         try {
             val file = checkAndCreateNewFile(parent, name)
             FileOutputStream(file).use { fileOutputStream ->
