@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.imagepicker
 
-import android.Manifest
 import android.content.ContentUris
 import android.content.res.ColorStateList
 import android.content.res.Configuration
@@ -8,7 +7,6 @@ import android.database.Cursor
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
@@ -34,6 +32,7 @@ import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
 import com.sceyt.sceytchatuikit.extensions.dismissSafety
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getOrientation
+import com.sceyt.sceytchatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
@@ -87,11 +86,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
             if (it) callBack.invoke(true)
         }
 
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-        } else
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-
+        val permissions = getPermissionsForMangeStorage()
         val hasAccess = requireContext().checkAndAskPermissions(resultLauncher, *permissions)
 
         if (hasAccess)

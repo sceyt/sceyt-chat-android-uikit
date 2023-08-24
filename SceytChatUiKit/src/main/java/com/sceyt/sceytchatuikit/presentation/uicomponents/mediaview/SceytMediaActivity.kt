@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview
 
-import android.Manifest
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -31,6 +30,7 @@ import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getMimeType
+import com.sceyt.sceytchatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
 import com.sceyt.sceytchatuikit.extensions.isFirstItemDisplaying
@@ -298,7 +298,8 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
             when (it) {
                 ActionDialog.Action.Save -> {
                     fileToSaveAfterPermission = file
-                    if (checkAndAskPermissions(requestPermissionLauncher, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                    val permissions = getPermissionsForMangeStorage()
+                    if (checkAndAskPermissions(requestPermissionLauncher, *permissions))
                         save(file)
                 }
 
