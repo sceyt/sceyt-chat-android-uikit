@@ -305,11 +305,16 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
-                                                   loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+                                                   includeUserNames: Boolean, loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCache.clear()
 
-            val dbChannels = channelDao.getChannelsByQueryAndUserIds(searchQuery, userIds, limit, offset, onlyMine).map {
+            val searchUserIds = HashSet<String>(userIds)
+            if (includeUserNames){
+                val ids = usersDao.getUserIdsByDisplayName(searchQuery)
+                searchUserIds.addAll(ids)
+            }
+            val dbChannels = channelDao.getChannelsByQueryAndUserIds(searchQuery, searchUserIds.toList(), limit, offset, onlyMine).map {
                 it.toChannel()
             }
             var hasNext = dbChannels.size == limit

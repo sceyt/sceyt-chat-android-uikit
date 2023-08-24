@@ -65,7 +65,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun searchChannelsWithUserIds(offset: Int, @IntRange(0, 50) limit: Int, searchQuery: String, userIds: List<String>,
+    fun searchChannelsWithUserIds(offset: Int, @IntRange(0, 50) limit: Int, searchQuery: String,
+                                  userIds: List<String>, includeUserNames: Boolean,
                                   notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false,
                                   loadKey: LoadKeyData? = null) {
         if (notifyFlow == NotifyFlow.LOAD) {
@@ -76,7 +77,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, loadKey, onlyMine, ignoreDb).collect {
+            channelMiddleWare.searchChannelsWithUserIds(offset, limit, searchQuery, userIds,
+                includeUserNames, loadKey, onlyMine, ignoreDb).collect {
                 when (notifyFlow) {
                     // Notifies chanel list like getChannels
                     NotifyFlow.LOAD -> initPaginationResponse(it)

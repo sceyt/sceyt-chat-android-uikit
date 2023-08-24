@@ -32,19 +32,19 @@ interface ChannelDao {
     suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where userRole !=:ignoreRole and (not pending or lastMessageTid != 0) " +
+    @Query("select * from channels where userRole !=:ignoreRole and not pending " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
 
     @Transaction
-    @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0)" +
+    @Query("select * from channels where subject LIKE '%' || :query || '%' and not pending " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannelsBySubject(limit: Int, offset: Int, query: String): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels " +
             "join UserChatLink as link on link.chat_id = channels.chat_id " +
-            "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directChannelType " +
+            "where ((subject like '%' || :query || '%' and not pending and type <> :directChannelType " +
             "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
             "or (type =:directChannelType and link.user_id in (:userIds))) " +
             "group by channels.chat_id " +
