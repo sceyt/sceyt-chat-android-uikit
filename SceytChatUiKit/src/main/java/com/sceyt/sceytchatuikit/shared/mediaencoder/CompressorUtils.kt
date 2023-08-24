@@ -93,13 +93,18 @@ object CompressorUtils {
             newBitrate: Int,
             frameRate: Int?,
     ) {
-        val newFrameRate = getFrameRate(inputFormat, frameRate)
+        var newFrameRate = getFrameRate(inputFormat, frameRate)
         val iFrameInterval = getIFrameIntervalRate(inputFormat)
         outputFormat.apply {
             setInteger(
                 MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
             )
+
+            if (newFrameRate > 60) {
+                // Some encoders behave unexpectedly when frame rate is above 60
+                newFrameRate = 60
+            }
 
             setInteger(MediaFormat.KEY_FRAME_RATE, newFrameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
