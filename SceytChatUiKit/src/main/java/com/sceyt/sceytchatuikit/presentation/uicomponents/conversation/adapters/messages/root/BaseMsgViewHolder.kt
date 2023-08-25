@@ -412,7 +412,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 if (lineCount > 1) {
                     val bodyIsRtl = body.isRtl()
                     val appIsRtl = context.isRtl()
-                    if (getLineMax(lineCount - 1) + nextViewWidth < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
+                    if (getLineMax(lineCount - 1) + nextViewWidth + px12 < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
                         constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
                     } else
                         constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, px5)
