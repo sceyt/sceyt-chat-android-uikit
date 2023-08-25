@@ -151,7 +151,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        val updatedMessages = messageDao.updateMessageStatusWithBefore(data.status, data.messageIds.maxOf { it })
+        val updatedMessages = messageDao.updateMessageStatusWithBefore(data.channel.id, data.status, data.messageIds.maxOf { it })
         messagesCache.updateMessagesStatus(data.channel.id, data.status, *updatedMessages.map { it.tid }.toLongArray())
     }
 

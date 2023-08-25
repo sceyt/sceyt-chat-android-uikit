@@ -15,7 +15,7 @@ import kotlinx.parcelize.Parcelize
 import java.util.Date
 
 @Parcelize
-open class SceytMessage(var id: Long,
+data class SceytMessage(var id: Long,
                         var tid: Long,
                         var channelId: Long,
                         var body: String,
