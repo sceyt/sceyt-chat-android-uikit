@@ -211,8 +211,8 @@ abstract class MessageDao {
     @Query("select tid from messages where message_id =:id")
     abstract suspend fun getMessageTidById(id: Long): Long?
 
-    @Query("select message_id as id, tid from messages where message_id <= :id and deliveryStatus in (:status)")
-    abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
+    @Query("select message_id as id, tid from messages where channelId =:channelId and message_id <= :id and deliveryStatus in (:status)")
+    abstract suspend fun getMessagesTidAndIdLoverThanByStatus(channelId: Long, id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
@@ -231,10 +231,10 @@ abstract class MessageDao {
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
     @Transaction
-    open suspend fun updateMessageStatusWithBefore(status: DeliveryStatus, id: Long): List<MessageIdAndTid> {
+    open suspend fun updateMessageStatusWithBefore(channelId: Long, status: DeliveryStatus, id: Long): List<MessageIdAndTid> {
         val ids = when (status) {
-            Displayed -> getMessagesTidAndIdLoverThanByStatus(id, Sent, Received)
-            else -> getMessagesTidAndIdLoverThanByStatus(id, Sent)
+            Displayed -> getMessagesTidAndIdLoverThanByStatus(channelId, id, Sent, Received)
+            else -> getMessagesTidAndIdLoverThanByStatus(channelId, id, Sent)
         }.filter { it.id != 0L }
 
         if (ids.isNotEmpty()) {
