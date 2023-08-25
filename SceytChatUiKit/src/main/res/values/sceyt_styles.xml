@@ -20,10 +20,11 @@
         <item name="android:fontFamily">@font/roboto_regular</item>
     </style>
 
-    <style xmlns:tools="http://schemas.android.com/tools" name="SceytPreviewTheme" parent="SceytAppTheme">
+    <style xmlns:tools="http://schemas.android.com/tools" name="SceytPreviewThemeDark" parent="SceytAppTheme">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges
+        </item>
         <item name="android:navigationBarColor">@color/sceyt_media_primary_color</item>
     </style>
 

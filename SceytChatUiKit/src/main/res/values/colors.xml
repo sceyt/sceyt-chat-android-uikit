@@ -39,5 +39,6 @@
     <color name="sceyt_self_reaction_color">#4BBEFD</color>
     <color name="sceyt_auto_link_color">#438CED</color>
     <color name="sceyt_media_primary_color">#CC000000</color>
+    <color name="sceyt_color_acceent_light_transparent">#80FFFFFF</color>
 
 </resources>

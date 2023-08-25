@@ -4,8 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_black"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    tools:context=".presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity">
+
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imageView"
@@ -17,18 +23,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@tools:sample/backgrounds/scenic" />
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icBack"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_margin="12dp"
-        android:background="?selectableItemBackgroundBorderless"
-        android:padding="4dp"
-        android:tint="@color/sceyt_color_white"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_media_view_ic_arrow_back" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

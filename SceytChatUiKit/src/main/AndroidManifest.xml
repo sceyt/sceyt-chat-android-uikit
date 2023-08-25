@@ -26,7 +26,7 @@
             android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".presentation.uicomponents.mediaview.SceytMediaActivity"
-            android:theme="@style/SceytPreviewTheme" />
+            android:theme="@style/SceytPreviewThemeDark" />
 
         <activity
             android:name=".presentation.uicomponents.forward.SceytForwardActivity"
@@ -38,7 +38,7 @@
 
         <activity
             android:name=".presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity"
-            android:theme="@style/SceytPreviewTheme" />
+            android:theme="@style/DefaultFontTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

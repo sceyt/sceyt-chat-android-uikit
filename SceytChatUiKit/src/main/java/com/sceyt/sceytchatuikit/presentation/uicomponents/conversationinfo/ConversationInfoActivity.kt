@@ -409,8 +409,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun onAvatarClick(channel: SceytChannel) {
         val icon = channel.iconUrl
-        if (!icon.isNullOrBlank())
-            SceytPhotoPreviewActivity.launchActivity(this, icon)
+        if (!icon.isNullOrBlank()) {
+            val title = if (channel.isDirect()) {
+                val user = channel.getFirstMember()?.user
+                if (user != null) SceytKitConfig.userNameBuilder?.invoke(user)
+                        ?: user.getPresentableName() else null
+            } else channel.subject
+
+            SceytPhotoPreviewActivity.launchActivity(this, icon, title)
+        }
     }
 
     open fun onClearHistoryClick(channel: SceytChannel) {
