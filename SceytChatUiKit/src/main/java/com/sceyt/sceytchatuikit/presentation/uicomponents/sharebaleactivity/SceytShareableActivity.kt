@@ -31,7 +31,6 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected val channelsViewModel: ChannelsViewModel by viewModels()
     protected var channelsAdapter: ShareableChannelsAdapter? = null
     private val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this) }
-    protected val selectedChannels = mutableSetOf<Long>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,6 +128,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun onSearchQueryChanged(query: String) {
         channelsViewModel.getChannels(0, query)
     }
+
+    protected open val selectedChannels get() = channelsViewModel.selectedChannels
 
     open fun finishSharingAction() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)

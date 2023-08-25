@@ -74,6 +74,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membersbyrolebuttons.InfoMembersByRoleButtonsFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -252,6 +253,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         icEdit.setOnClickListenerDisableClickViewForWhile {
             onEditClick(channel)
         }
+
+        avatar.setOnClickListener {
+            onAvatarClick(channel)
+        }
     }
 
     protected fun addAppBarOffsetChangeListener(appBar: AppBarLayout?) {
@@ -400,6 +405,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             addToBackStack(fragment.TAG_NAME)
             replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
+    }
+
+    open fun onAvatarClick(channel: SceytChannel) {
+        val icon = channel.iconUrl
+        if (!icon.isNullOrBlank())
+            SceytPhotoPreviewActivity.launchActivity(this, icon)
     }
 
     open fun onClearHistoryClick(channel: SceytChannel) {

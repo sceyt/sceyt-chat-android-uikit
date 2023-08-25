@@ -26,18 +26,19 @@
             android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".presentation.uicomponents.mediaview.SceytMediaActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/SceytPreviewTheme" />
 
         <activity
             android:name=".presentation.uicomponents.forward.SceytForwardActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/DefaultFontTheme" />
 
         <activity
             android:name=".presentation.uicomponents.share.SceytShareActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/DefaultFontTheme" />
+
+        <activity
+            android:name=".presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity"
+            android:theme="@style/SceytPreviewTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
