@@ -388,42 +388,43 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected fun setBodyTextPosition(currentView: TextView, nextView: View, parentLayout: ConstraintLayout) {
-        val maxWidth = getBodyMaxAcceptableWidth(currentView)
-        currentView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        val currentViewWidth = currentView.measuredWidth
-        nextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        val nextViewWidth = nextView.measuredWidth
-        val px12 = dpToPx(12f)
-        val px8 = dpToPx(8f)
-        val px5 = dpToPx(5f)
-        val body = currentView.text.toString()
-        val constraintLayout: ConstraintLayout = parentLayout
+    protected fun setBodyTextPosition(bodyTextView: TextView, dateView: View, parentLayout: ConstraintLayout) {
+        val maxWidth = getBodyMaxAcceptableWidth(bodyTextView)
+        bodyTextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+        val currentViewWidth = bodyTextView.measuredWidth
+        dateView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+        val nextViewWidth = dateView.measuredWidth
+        val px12 = dpToPx(12f) // this is horizontal margins
+        val px8 = dpToPx(8f) // bottom margins
+        val px5 = dpToPx(5f) // top margins
+        val body = bodyTextView.text.toString()
         val constraintSet = ConstraintSet()
-        constraintSet.clone(constraintLayout)
+        constraintSet.clone(parentLayout)
 
-        constraintSet.clear(currentView.id, ConstraintSet.END)
-        constraintSet.clear(currentView.id, ConstraintSet.BOTTOM)
+        constraintSet.clear(bodyTextView.id, ConstraintSet.END)
+        constraintSet.clear(bodyTextView.id, ConstraintSet.BOTTOM)
 
+        // If messageBody + dateView + px12 (margins) > maxWidth, then set messageBody to endOf parentLayout,
+        // else set messageBody to endOf dateView
         if (currentViewWidth + nextViewWidth + px12 > maxWidth) {
-            constraintSet.connect(currentView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, px12)
+            constraintSet.connect(bodyTextView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, px12)
 
-            currentView.paint.getStaticLayout(body, currentView.includeFontPadding, maxWidth).apply {
+            bodyTextView.paint.getStaticLayout(body, bodyTextView.includeFontPadding, maxWidth).apply {
                 if (lineCount > 1) {
                     val bodyIsRtl = body.isRtl()
                     val appIsRtl = context.isRtl()
                     if (getLineMax(lineCount - 1) + nextViewWidth + px12 < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
-                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
+                        constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
                     } else
-                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, px5)
+                        constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, dateView.id, ConstraintSet.TOP, px5)
                 } else
-                    constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, px5)
+                    constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, dateView.id, ConstraintSet.TOP, px5)
             }
         } else {
-            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, px12)
-            constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
+            constraintSet.connect(bodyTextView.id, ConstraintSet.END, dateView.id, ConstraintSet.START, px12)
+            constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
         }
-        constraintSet.applyTo(constraintLayout)
+        constraintSet.applyTo(parentLayout)
     }
 
     private fun getBodyMaxAcceptableWidth(textView: TextView): Int {
