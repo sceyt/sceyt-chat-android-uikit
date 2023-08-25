@@ -33,6 +33,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val channelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
     private var getChannelsJog: Job? = null
+    val selectedChannels = mutableSetOf<Long>()
 
     var searchQuery = ""
         private set
