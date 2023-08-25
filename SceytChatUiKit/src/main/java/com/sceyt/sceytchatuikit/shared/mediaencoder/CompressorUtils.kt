@@ -7,7 +7,6 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
-import com.abedelazizshe.lightcompressorlibrary.utils.generateWidthHeightValue
 import com.abedelazizshe.lightcompressorlibrary.video.Mp4Movie
 import java.io.File
 import kotlin.math.roundToInt
@@ -43,11 +42,11 @@ object CompressorUtils {
 
     fun prepareVideoWidth(
             mediaMetadataRetriever: MediaMetadataRetriever,
-    ): Double {
+    ): Double? {
         val widthData =
                 mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
         return if (widthData.isNullOrEmpty()) {
-            MIN_WIDTH
+            null
         } else {
             widthData.toDouble()
         }
@@ -55,11 +54,11 @@ object CompressorUtils {
 
     fun prepareVideoHeight(
             mediaMetadataRetriever: MediaMetadataRetriever,
-    ): Double {
+    ): Double? {
         val heightData =
                 mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
         return if (heightData.isNullOrEmpty()) {
-            MIN_HEIGHT
+            null
         } else {
             heightData.toDouble()
         }
@@ -232,25 +231,34 @@ object CompressorUtils {
         val newWidth: Int
         val newHeight: Int
 
-        when {
-            width >= 1920 || height >= 1920 -> {
-                newWidth = generateWidthHeightValue(width, 0.3)
-                newHeight = generateWidthHeightValue(height, 0.3)
-            }
-            width >= 1280 || height >= 1280 -> {
-                newWidth = generateWidthHeightValue(width, 0.75)
-                newHeight = generateWidthHeightValue(height, 0.75)
-            }
-            width >= 960 || height >= 960 -> {
-                newWidth = generateWidthHeightValue(width, 0.95)
-                newHeight = generateWidthHeightValue(height, 0.95)
-            }
-            else -> {
-                newWidth = generateWidthHeightValue(width, 0.9)
-                newHeight = generateWidthHeightValue(height, 0.9)
-            }
+        if (width > height) {
+            newHeight = 480
+            newWidth = (480 * width / height / 16).roundToInt() * 16
+        } else {
+            newWidth = 480
+            newHeight = (480 * height / width / 16).roundToInt() * 16
         }
 
+        /* when {
+             width >= 1920 || height >= 1920 -> {
+                 newWidth = generateWidthHeightValue(width, 0.3)
+                 newHeight = generateWidthHeightValue(height, 0.3)
+             }
+             width >= 1280 || height >= 1280 -> {
+                 newWidth = generateWidthHeightValue(width, 0.75)
+                 newHeight = generateWidthHeightValue(height, 0.75)
+             }
+             width >= 960 || height >= 960 -> {
+                 newWidth = generateWidthHeightValue(width, 0.95)
+                 newHeight = generateWidthHeightValue(height, 0.95)
+             }
+             else -> {
+                 newWidth = generateWidthHeightValue(width, 0.9)
+                 newHeight = generateWidthHeightValue(height, 0.9)
+             }
+         }*/
+
+        Log.i("CompressorUtil", "New width: $newWidth, new height: $newHeight")
         return Pair(newWidth, newHeight)
     }
 

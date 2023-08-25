@@ -4,10 +4,15 @@ import android.content.Context
 import android.media.*
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
+import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
+import com.abedelazizshe.lightcompressorlibrary.video.*
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.findTrack
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.generateWidthAndHeight
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.getBitrate
+import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasQTI
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.prepareVideoHeight
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.prepareVideoWidth
@@ -15,10 +20,6 @@ import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.printExcepti
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setOutputFileParameters
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setUpMP4Movie
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.validateInputs
-import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
-import com.abedelazizshe.lightcompressorlibrary.video.*
-import com.sceyt.sceytchatuikit.logger.SceytLog
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
 import com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest.CallbackBasedTranscoder
 import kotlinx.coroutines.*
 import java.io.File
@@ -30,7 +31,7 @@ import kotlin.math.roundToInt
  * Created by AbedElaziz Shehadeh on 27 Jan, 2020
  * elaziz.shehadeh@gmail.com
  */
-object CustomCompressor: CoroutineScope {
+object CustomCompressor : CoroutineScope {
 
     // 2Mbps
     private const val MIN_BITRATE = 1500000
@@ -106,9 +107,15 @@ object CustomCompressor: CoroutineScope {
             extractor.setDataSource(file.toString())
         }
 
-        val height: Double = prepareVideoHeight(mediaMetadataRetriever)
+        val height = prepareVideoHeight(mediaMetadataRetriever) ?: return Result(
+            success = false,
+            failureMessage = "Failed to get video height"
+        )
 
-        val width: Double = prepareVideoWidth(mediaMetadataRetriever)
+        val width: Double = prepareVideoWidth(mediaMetadataRetriever) ?: return Result(
+            success = false,
+            failureMessage = "Failed to get video width"
+        )
 
         val rotationData =
                 mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
@@ -134,8 +141,15 @@ object CustomCompressor: CoroutineScope {
 
         // Check for a min video bitrate before compression
         // Note: this is an experimental value
-        if (configuration.isMinBitrateCheckEnabled && bitrate <= MIN_BITRATE)
+        if (configuration.isMinBitrateCheckEnabled && bitrate <= MIN_BITRATE) {
+            Log.i("CompressorUtil", "Ignore compressing: INVALID_BITRATE = $bitrate")
             return Result(success = false, failureMessage = INVALID_BITRATE)
+        }
+
+        if (width <= 480 || height <= 480) {
+            Log.i("CompressorUtil", "Ignore compressing: Video ratio is too small to resize width = $width, height = $height")
+            return Result(success = false, failureMessage = "Video ratio is too small to resize width = $width, height = $height")
+        }
 
         //Handle new bitrate value
         val newBitrate: Int =
@@ -166,9 +180,6 @@ object CustomCompressor: CoroutineScope {
             180 -> 0
             else -> rotation
         }
-
-
-
 
         return start(
             context,
@@ -229,11 +240,11 @@ object CustomCompressor: CoroutineScope {
                 )
 
                 val decoder: MediaCodec
-
+/*
                 val hasQTI = hasQTI()
                 val hasOMX = hasOMX()
 
-                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)
+                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)*/
 
                 val inputSurface: InputSurface
                 val outputSurface: OutputSurface
