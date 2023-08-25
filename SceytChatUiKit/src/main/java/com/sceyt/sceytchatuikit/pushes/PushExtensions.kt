@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
 fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
+    channelId ?: return null
     return try {
         val messageJson = remoteMessage.data["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
@@ -22,6 +23,7 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, u
         // Do not getLong from json when its a string
         // double.parse corrupts the value
         val messageIdString = messageJsonObject.getString("id")
+        val parentMessageIdString = messageJsonObject.getStringOrNull("parent_id")?.toLong()
         val bodyString = messageJsonObject.getString("body")
         val messageType = messageJsonObject.getString("type")
         val meta = messageJsonObject.getString("metadata")
@@ -40,13 +42,13 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, u
                 }
             }
         }
-
+        val parentMessage = if (parentMessageIdString != null) Message(parentMessageIdString, channelId, MessageState.Unmodified) else null
         val messageId = messageIdString.toLong()
-        Message(messageId, messageId, channelId
-                ?: return null, bodyString, messageType, meta, createdAt?.time ?: 0,
+        Message(messageId, messageId, channelId, bodyString, messageType, meta, createdAt?.time
+                ?: 0,
             0L, true, transient, false, deliveryStatus, state,
             user, attachmentArray.toTypedArray(), null, null, null, null,
-            null, null, 0, 0, 0, null)
+            null, parentMessage, 0, 0, 0, null)
     } catch (e: Exception) {
         e.printStackTrace()
         null
@@ -151,5 +153,13 @@ private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
     } catch (e: Exception) {
         e.printStackTrace()
         MessageState.Unmodified
+    }
+}
+
+private fun JSONObject.getStringOrNull(key: String): String? {
+    return try {
+        getString(key)
+    } catch (e: Exception) {
+        null
     }
 }

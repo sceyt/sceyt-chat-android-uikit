@@ -41,11 +41,11 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             channelsListView.post {
                 if (needToUpdateChannelsAfterResume.isNotEmpty()) {
                     val isCanceled = channelsListView.cancelLastSort()
-                    var needSort = false
+                    var needSort = isCanceled
                     needToUpdateChannelsAfterResume.values.forEach { data ->
                         val diff = channelsListView.channelUpdated(data.channel)
                         if (diff != null && !needSort) {
-                            if (diff.lastMessageChanged || data.needSorting || isCanceled)
+                            if (diff.lastMessageChanged || data.needSorting)
                                 needSort = true
                         }
                     }
