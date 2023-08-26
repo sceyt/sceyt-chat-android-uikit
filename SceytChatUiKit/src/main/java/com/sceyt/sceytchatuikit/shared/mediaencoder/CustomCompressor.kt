@@ -233,10 +233,18 @@ object CustomCompressor : CoroutineScope {
                 val bufferInfo = MediaCodec.BufferInfo()
 
                 // Setup mp4 movie
-                val movie = setUpMP4Movie(rotation, cacheFile)
+//                val movie = setUpMP4Movie(rotation, cacheFile)
 
                 // MediaMuxer outputs MP4 in this app
-                val mediaMuxer = MP4Builder().createMovie(movie)
+//                val mediaMuxer = MP4Builder().createMovie(movie)
+                val mediaMuxer = MediaMuxer(cacheFile.toString(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+                mediaMuxer.setOrientationHint(rotation)
+
+                val audioIndex = findTrack(extractor, isVideo = false)
+                extractor.selectTrack(audioIndex)
+                val audioFormat = extractor.getTrackFormat(audioIndex)
+                val muxerTrackIndex = mediaMuxer.addTrack(audioFormat)
+                extractor.unselectTrack(audioIndex)
 
                 // Start with video track
                 val videoIndex = findTrack(extractor, isVideo = true)
@@ -499,11 +507,14 @@ object CustomCompressor : CoroutineScope {
                     mediaMuxer = mediaMuxer,
                     bufferInfo = bufferInfo,
                     disableAudio = disableAudio,
+                    muxerTrackIndex= muxerTrackIndex,
                 )
 
                 extractor.release()
                 try {
-                    mediaMuxer.finishMovie()
+//                    mediaMuxer.finishMovie()
+                    mediaMuxer.stop()
+                    mediaMuxer.release()
                 } catch (e: Exception) {
                     printException(e)
                 }
@@ -530,15 +541,19 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun processAudio(
-        mediaMuxer: MP4Builder,
+        mediaMuxer: MediaMuxer,
         bufferInfo: MediaCodec.BufferInfo,
         disableAudio: Boolean,
+        muxerTrackIndex: Int,
     ) {
         val audioIndex = findTrack(extractor, isVideo = false)
         if (audioIndex >= 0 && !disableAudio) {
             extractor.selectTrack(audioIndex)
             val audioFormat = extractor.getTrackFormat(audioIndex)
-            val muxerTrackIndex = mediaMuxer.addTrack(audioFormat, true)
+
+            //Added before muxer.start()
+            //val muxerTrackIndex = mediaMuxer.addTrack(audioFormat, true)
+
             var maxBufferSize = audioFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)
 
             if (maxBufferSize <= 0) {
@@ -567,7 +582,7 @@ object CustomCompressor : CoroutineScope {
                             offset = 0
                             flags = MediaCodec.BUFFER_FLAG_KEY_FRAME
                         }
-                        mediaMuxer.writeSampleData(muxerTrackIndex, buffer, bufferInfo, true)
+                        mediaMuxer.writeSampleData(muxerTrackIndex, buffer, bufferInfo)
                         extractor.advance()
 
                     } else {

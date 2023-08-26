@@ -23,6 +23,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.media.MediaMuxer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -176,7 +177,7 @@ public class CallbackBasedTranscoder {
         mVideoExtractorExternal = mediaExtractor;
     }
 
-    public void setMediaMuxer(MP4Builder mediaMuxer) {
+    public void setMediaMuxer(MediaMuxer mediaMuxer) {
         mMuxerExternal = mediaMuxer;
     }
 
@@ -322,8 +323,8 @@ public class CallbackBasedTranscoder {
     private MediaCodec mAudioDecoder = null;
     private MediaCodec mVideoEncoder = null;
     private MediaCodec mAudioEncoder = null;
-    private MP4Builder mMuxer = null;
-    private MP4Builder mMuxerExternal = null;
+    private MediaMuxer mMuxer = null;
+    private MediaMuxer mMuxerExternal = null;
 
     /**
      * Tests encoding and subsequently decoding video from frames generated into a buffer.
@@ -542,9 +543,9 @@ public class CallbackBasedTranscoder {
             try {
                 // Do not release external muxer
                 if (mMuxer != null && mMuxerExternal == null) {
-//                    mMuxer.stop();
-//                    mMuxer.release();
-                    mMuxer.finishMovie();
+                    mMuxer.stop();
+                    mMuxer.release();
+//                    mMuxer.finishMovie();
                 }
             } catch(Exception e) {
                 Log.e(TAG, "error while releasing muxer", e);
@@ -660,8 +661,8 @@ public class CallbackBasedTranscoder {
                 // We feed packets regardless of whether the muxer is set up or not.
                 // If the muxer isn't set up yet, the encoder output will be queued up,
                 // finally blocking the decoder as well.
-                //if (mVideoEncoderDone)
-                //    return;
+                if (mVideoEncoderDone)
+                    return;
 
                 try {
                     ByteBuffer decoderInputBuffer = codec.getInputBuffer(index);
@@ -701,8 +702,8 @@ public class CallbackBasedTranscoder {
                 }
             }
             public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
-                //if(mVideoEncoderDone)
-                //    return;
+                if(mVideoEncoderDone)
+                    return;
 
                 try {
                     if (VERBOSE) {
@@ -1005,14 +1006,14 @@ public class CallbackBasedTranscoder {
                 && (!mCopyVideo || mEncoderOutputVideoFormat != null)) {
             if (mCopyVideo) {
                 Log.d(TAG, "muxer: adding video track.");
-                mOutputVideoTrack = mMuxer.addTrack(mEncoderOutputVideoFormat, false);
+                mOutputVideoTrack = mMuxer.addTrack(mEncoderOutputVideoFormat);
             }
             if (mCopyAudio) {
                 Log.d(TAG, "muxer: adding audio track.");
-                mOutputAudioTrack = mMuxer.addTrack(mEncoderOutputAudioFormat, true);
+                mOutputAudioTrack = mMuxer.addTrack(mEncoderOutputAudioFormat);
             }
             Log.d(TAG, "muxer: starting");
-//            mMuxer.start();
+            mMuxer.start();
             mMuxing = true;
 
             MediaCodec.BufferInfo info;
@@ -1046,7 +1047,7 @@ public class CallbackBasedTranscoder {
         }
         if (info.size != 0) {
             mMuxer.writeSampleData(
-                    mOutputVideoTrack, encoderOutputBuffer, info, false);
+                    mOutputVideoTrack, encoderOutputBuffer, info);
         }
         mVideoEncoder.releaseOutputBuffer(index, false);
         mVideoEncodedFrameCount++;
@@ -1077,7 +1078,7 @@ public class CallbackBasedTranscoder {
         }
         if (info.size != 0) {
             mMuxer.writeSampleData(
-                    mOutputAudioTrack, encoderOutputBuffer, info, true);
+                    mOutputAudioTrack, encoderOutputBuffer, info);
         }
         mAudioEncoder.releaseOutputBuffer(index, false);
         mAudioEncodedFrameCount++;
@@ -1096,12 +1097,12 @@ public class CallbackBasedTranscoder {
      *
      * <p>The muxer is not started as it needs to be started only after all streams have been added.
      */
-    private MP4Builder createMuxer() throws Exception {
+    private MediaMuxer createMuxer() throws Exception {
         Mp4Movie movie = new Mp4Movie();
         movie.setCacheFile(new File(mOutputFile));
         movie.setRotation(mVideoRotation);
 
-        return new MP4Builder().createMovie(movie);
+        return new MediaMuxer(mOutputFile, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
     }
 
     private int getAndSelectVideoTrackIndex(MediaExtractor extractor) {
