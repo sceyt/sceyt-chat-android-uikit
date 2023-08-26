@@ -69,6 +69,7 @@ object CustomVideoCompressor : CoroutineScope  {
     fun cancel() {
         job?.cancel()
         isRunning = false
+        CustomCompressor.cancel()
     }
 
     private fun doVideoCompression(

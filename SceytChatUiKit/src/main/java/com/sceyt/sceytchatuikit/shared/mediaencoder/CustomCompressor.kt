@@ -47,19 +47,29 @@ object CustomCompressor : CoroutineScope {
     private var rotation: Int = 0
 
     private const val INVALID_BITRATE =
-            "The provided bitrate is smaller than what is needed for compression " +
-                    "try to set isMinBitRateEnabled to false"
+        "The provided bitrate is smaller than what is needed for compression " +
+                "try to set isMinBitRateEnabled to false"
 
     var isRunning = true
+    var isCancelled = false
+
+    private var callbackBasedTranscoder: CallbackBasedTranscoder? = null
+
+
+    fun cancel() {
+        callbackBasedTranscoder?.cancel()
+        isCancelled = true
+    }
+
 
     fun compressVideo(
-            context: Context?,
-            srcUri: Uri?,
-            srcPath: String?,
-            destination: String,
-            streamableFile: String?,
-            configuration: CustomConfiguration,
-            listener: CompressionProgressListener,
+        context: Context?,
+        srcUri: Uri?,
+        srcPath: String?,
+        destination: String,
+        streamableFile: String?,
+        configuration: CustomConfiguration,
+        listener: CompressionProgressListener,
     ): Result {
 
         extractor = MediaExtractor()
@@ -118,13 +128,13 @@ object CustomCompressor : CoroutineScope {
         )
 
         val rotationData =
-                mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
 
         val bitrateData =
-                mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
 
         val durationData =
-                mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
 
 
         if (rotationData.isNullOrEmpty() || bitrateData.isNullOrEmpty() || durationData.isNullOrEmpty()) {
@@ -147,20 +157,26 @@ object CustomCompressor : CoroutineScope {
         }
 
         if (width <= 480 || height <= 480) {
-            Log.i("CompressorUtil", "Ignore compressing: Video ratio is too small to resize width = $width, height = $height")
-            return Result(success = false, failureMessage = "Video ratio is too small to resize width = $width, height = $height")
+            Log.i(
+                "CompressorUtil",
+                "Ignore compressing: Video ratio is too small to resize width = $width, height = $height"
+            )
+            return Result(
+                success = false,
+                failureMessage = "Video ratio is too small to resize width = $width, height = $height"
+            )
         }
 
         //Handle new bitrate value
         val newBitrate: Int =
-                when {
-                    configuration.videoBitrate != null -> configuration.videoBitrate!!
-                    configuration.videoBitrateCoefficient != null -> {
-                        (bitrate * configuration.videoBitrateCoefficient!!).roundToInt()
-                    }
-
-                    else -> getBitrate(bitrate, configuration.quality)
+            when {
+                configuration.videoBitrate != null -> configuration.videoBitrate!!
+                configuration.videoBitrateCoefficient != null -> {
+                    (bitrate * configuration.videoBitrateCoefficient!!).roundToInt()
                 }
+
+                else -> getBitrate(bitrate, configuration.quality)
+            }
 
         //Handle new width and height values
         var (newWidth, newHeight) = generateWidthAndHeight(
@@ -196,15 +212,15 @@ object CustomCompressor : CoroutineScope {
 
     @Suppress("DEPRECATION")
     private fun start(
-            context: Context?,
-            srcUri: Uri?,
-            newWidth: Int,
-            newHeight: Int,
-            destination: String,
-            newBitrate: Int,
-            streamableFile: String?,
-            frameRate: Int?,
-            disableAudio: Boolean
+        context: Context?,
+        srcUri: Uri?,
+        newWidth: Int,
+        newHeight: Int,
+        destination: String,
+        newBitrate: Int,
+        streamableFile: String?,
+        frameRate: Int?,
+        disableAudio: Boolean
     ): Result {
 
         if (newWidth != 0 && newHeight != 0) {
@@ -230,7 +246,7 @@ object CustomCompressor : CoroutineScope {
                 val inputFormat = extractor.getTrackFormat(videoIndex)
 
                 val outputFormat: MediaFormat =
-                        MediaFormat.createVideoFormat(MIME_TYPE, newWidth, newHeight)
+                    MediaFormat.createVideoFormat(MIME_TYPE, newWidth, newHeight)
                 //set output format
                 setOutputFileParameters(
                     inputFormat,
@@ -256,18 +272,30 @@ object CustomCompressor : CoroutineScope {
 
                 try {
 
-                    runBlocking {
-                        // Using this only for video trasncode
-                        val callbackBasedTranscoder = CallbackBasedTranscoder(context)
-                        callbackBasedTranscoder.setSize(newWidth, newHeight)
-                        callbackBasedTranscoder.setMediaMuxer(mediaMuxer)
-                        callbackBasedTranscoder.setMediaExtractor(extractor)
-                        callbackBasedTranscoder.setCopyVideo()
-                        callbackBasedTranscoder.setOutputFilePath(destination)
-                        callbackBasedTranscoder.setOutputVideoFormat(outputFormat)
-                        callbackBasedTranscoder.printAllLogs(false)
+                    // Using this only for video transcode
+                    callbackBasedTranscoder = CallbackBasedTranscoder(context)
+                    callbackBasedTranscoder!!.setSize(newWidth, newHeight)
+                    callbackBasedTranscoder!!.setMediaMuxer(mediaMuxer)
+                    callbackBasedTranscoder!!.setMediaExtractor(extractor)
+                    callbackBasedTranscoder!!.setCopyVideo()
+                    callbackBasedTranscoder!!.setOutputFilePath(destination)
+                    callbackBasedTranscoder!!.setOutputVideoFormat(outputFormat)
+                    callbackBasedTranscoder!!.printAllLogs(false)
 
-                        callbackBasedTranscoder.runTranscode()
+                    callbackBasedTranscoder!!.runTranscode()
+
+                    callbackBasedTranscoder = null
+                    isRunning = false
+
+                    if (isCancelled) {
+                        isCancelled = false
+
+                        compressionProgressListener.onProgressCancelled()
+
+                        return Result(
+                            success = false,
+                            failureMessage = "The compression has stopped!"
+                        )
                     }
 
 //                    var inputDone = false
@@ -502,9 +530,9 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun processAudio(
-            mediaMuxer: MP4Builder,
-            bufferInfo: MediaCodec.BufferInfo,
-            disableAudio: Boolean,
+        mediaMuxer: MP4Builder,
+        bufferInfo: MediaCodec.BufferInfo,
+        disableAudio: Boolean,
     ) {
         val audioIndex = findTrack(extractor, isVideo = false)
         if (audioIndex >= 0 && !disableAudio) {
@@ -554,7 +582,11 @@ object CustomCompressor : CoroutineScope {
         }
     }
 
-    private fun prepareEncoder(outputFormat: MediaFormat, hasQTI: Boolean, hasOMX: Boolean): MediaCodec {
+    private fun prepareEncoder(
+        outputFormat: MediaFormat,
+        hasQTI: Boolean,
+        hasOMX: Boolean
+    ): MediaCodec {
 
         // This seems to cause an issue with certain phones
         // val encoderName = MediaCodecList(REGULAR_CODECS).findEncoderForFormat(outputFormat)
@@ -581,8 +613,8 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun prepareDecoder(
-            inputFormat: MediaFormat,
-            outputSurface: OutputSurface,
+        inputFormat: MediaFormat,
+        outputSurface: OutputSurface,
     ): MediaCodec {
         // This seems to cause an issue with certain phones
         // val decoderName =
@@ -603,11 +635,11 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun dispose(
-            videoIndex: Int,
-            decoder: MediaCodec,
-            encoder: MediaCodec,
-            inputSurface: InputSurface,
-            outputSurface: OutputSurface,
+        videoIndex: Int,
+        decoder: MediaCodec,
+        encoder: MediaCodec,
+        inputSurface: InputSurface,
+        outputSurface: OutputSurface,
     ) {
         extractor.unselectTrack(videoIndex)
 

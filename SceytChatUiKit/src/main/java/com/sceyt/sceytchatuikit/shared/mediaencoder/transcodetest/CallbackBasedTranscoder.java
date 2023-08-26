@@ -148,13 +148,20 @@ public class CallbackBasedTranscoder {
         TestWrapper.runTest(this);
     }
 
+    private TestWrapper mTestWrapper;
+
     public void runTranscode() throws Throwable {
-        TestWrapper wrapper = new TestWrapper(this);
-        wrapper.run();
-        if (wrapper.mThrowable != null) {
-            throw wrapper.mThrowable;
+        mTestWrapper = new TestWrapper(this);
+        mTestWrapper.run();
+        if (mTestWrapper.mThrowable != null) {
+            throw mTestWrapper.mThrowable;
         }
 
+    }
+
+    public void cancel(){
+        if (mTestWrapper != null)
+            mTestWrapper.cancel();
     }
 
     public void setSourceFile(String s) {
@@ -195,7 +202,7 @@ public class CallbackBasedTranscoder {
     /** Wraps testExtractDecodeEditEncodeMux() */
     private static class TestWrapper implements Runnable {
         private Throwable mThrowable;
-        private CallbackBasedTranscoder mTest;
+        private final CallbackBasedTranscoder mTest;
 
         private TestWrapper(CallbackBasedTranscoder test) {
             mTest = test;
@@ -222,6 +229,17 @@ public class CallbackBasedTranscoder {
             if (wrapper.mThrowable != null) {
                 throw wrapper.mThrowable;
             }
+        }
+
+        public void cancel() {
+            if (mTest != null) {
+                synchronized (mTest){
+                    mTest.mVideoEncoderDone = true;
+                    mTest.mAudioEncoderDone = true;
+                    mTest.notifyAll();
+                }
+            }
+
         }
     }
 
@@ -642,89 +660,103 @@ public class CallbackBasedTranscoder {
                 // We feed packets regardless of whether the muxer is set up or not.
                 // If the muxer isn't set up yet, the encoder output will be queued up,
                 // finally blocking the decoder as well.
-                ByteBuffer decoderInputBuffer = codec.getInputBuffer(index);
-                while (!mVideoExtractorDone) {
-                    int size = mVideoExtractor.readSampleData(decoderInputBuffer, 0);
-                    long presentationTime = mVideoExtractor.getSampleTime();
-                    if (VERBOSE) {
-                        Log.d(TAG, "video extractor: returned buffer of size " + size);
-                        Log.d(TAG, "video extractor: returned buffer for time " + presentationTime);
-                    }
+                //if (mVideoEncoderDone)
+                //    return;
 
-                    mVideoExtractorDone = !mVideoExtractor.advance();
-                    if (mVideoExtractorDone) {
-                        if (VERBOSE) Log.d(TAG, "video extractor: EOS");
-                        codec.queueInputBuffer(
-                                index,
-                                0,
-                                0,
-                                0,
-                                MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                    } else if (size >= 0){
-                        codec.queueInputBuffer(
-                                index,
-                                0,
-                                size,
-                                presentationTime,
-                                mVideoExtractor.getSampleFlags());
-                    }
+                try {
+                    ByteBuffer decoderInputBuffer = codec.getInputBuffer(index);
+                    while (!mVideoExtractorDone) {
+                        int size = mVideoExtractor.readSampleData(decoderInputBuffer, 0);
+                        long presentationTime = mVideoExtractor.getSampleTime();
+                        if (VERBOSE) {
+                            Log.d(TAG, "video extractor: returned buffer of size " + size);
+                            Log.d(TAG, "video extractor: returned buffer for time " + presentationTime);
+                        }
 
-                    mVideoExtractedFrameCount++;
-                    logState();
-                    if (size >= 0)
-                        break;
+                        mVideoExtractorDone = !mVideoExtractor.advance();
+                        if (mVideoExtractorDone) {
+                            if (VERBOSE) Log.d(TAG, "video extractor: EOS");
+                            codec.queueInputBuffer(
+                                    index,
+                                    0,
+                                    0,
+                                    0,
+                                    MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                        } else if (size >= 0){
+                            codec.queueInputBuffer(
+                                    index,
+                                    0,
+                                    size,
+                                    presentationTime,
+                                    mVideoExtractor.getSampleFlags());
+                        }
+
+                        mVideoExtractedFrameCount++;
+                        logState();
+                        if (size >= 0)
+                            break;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "error while decoding video", e);
                 }
             }
             public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
-                if (VERBOSE) {
-                    Log.d(TAG, "video decoder: returned output buffer: " + index);
-                    Log.d(TAG, "video decoder: returned buffer of size " + info.size);
-                }
-                if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-                    if (VERBOSE) Log.d(TAG, "video decoder: codec config buffer");
-                    codec.releaseOutputBuffer(index, false);
+                //if(mVideoEncoderDone)
+                //    return;
 
-                    // Check end of stream also, some devices return both flags
+                try {
+                    if (VERBOSE) {
+                        Log.d(TAG, "video decoder: returned output buffer: " + index);
+                        Log.d(TAG, "video decoder: returned buffer of size " + info.size);
+                    }
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                        if (VERBOSE) Log.d(TAG, "video decoder: codec config buffer");
+                        codec.releaseOutputBuffer(index, false);
+
+                        // Check end of stream also, some devices return both flags
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            if (VERBOSE) Log.d(TAG, "video decoder: EOS");
+                            mVideoDecoderDone = true;
+                            mVideoEncoder.signalEndOfInputStream();
+                        }
+
+                        return;
+                    }
+                    if (VERBOSE) {
+                        Log.d(TAG, "video decoder: returned buffer for time "
+                                + info.presentationTimeUs);
+                    }
+
+                    // Some devices return old timestamp buffers again after new ones, ignore these and skip them.
+                    boolean render = info.size != 0 && info.presentationTimeUs > lastDecodedPresentationTimeUs;
+                    codec.releaseOutputBuffer(index, render);
+
+                    if (render) {
+                        mInputSurface.makeCurrent();
+                        if (VERBOSE) Log.d(TAG, "output surface: await new image");
+                        mOutputSurface.awaitNewImage();
+                        // Edit the frame and send it to the encoder.
+                        if (VERBOSE) Log.d(TAG, "output surface: draw image");
+                        mOutputSurface.drawImage();
+                        mInputSurface.setPresentationTime(
+                                info.presentationTimeUs * 1000);
+                        if (VERBOSE) Log.d(TAG, "input surface: swap buffers");
+                        mInputSurface.swapBuffers();
+                        if (VERBOSE) Log.d(TAG, "video encoder: notified of new frame");
+                        mInputSurface.releaseEGLContext();
+                    }
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         if (VERBOSE) Log.d(TAG, "video decoder: EOS");
                         mVideoDecoderDone = true;
                         mVideoEncoder.signalEndOfInputStream();
                     }
 
-                    return;
+                    lastDecodedPresentationTimeUs = info.presentationTimeUs;
+                    mVideoDecodedFrameCount++;
+                    logState();
+                } catch (Exception e) {
+                    Log.e(TAG, "error while decoding video", e);
                 }
-                if (VERBOSE) {
-                    Log.d(TAG, "video decoder: returned buffer for time "
-                            + info.presentationTimeUs);
-                }
-
-                // Some devices return old timestamp buffers again after new ones, ignore these and skip them.
-                boolean render = info.size != 0 && info.presentationTimeUs > lastDecodedPresentationTimeUs;
-                codec.releaseOutputBuffer(index, render);
-
-                if (render) {
-                    mInputSurface.makeCurrent();
-                    if (VERBOSE) Log.d(TAG, "output surface: await new image");
-                    mOutputSurface.awaitNewImage();
-                    // Edit the frame and send it to the encoder.
-                    if (VERBOSE) Log.d(TAG, "output surface: draw image");
-                    mOutputSurface.drawImage();
-                    mInputSurface.setPresentationTime(
-                            info.presentationTimeUs * 1000);
-                    if (VERBOSE) Log.d(TAG, "input surface: swap buffers");
-                    mInputSurface.swapBuffers();
-                    if (VERBOSE) Log.d(TAG, "video encoder: notified of new frame");
-                    mInputSurface.releaseEGLContext();
-                }
-                if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    if (VERBOSE) Log.d(TAG, "video decoder: EOS");
-                    mVideoDecoderDone = true;
-                    mVideoEncoder.signalEndOfInputStream();
-                }
-
-                lastDecodedPresentationTimeUs = info.presentationTimeUs;
-                mVideoDecodedFrameCount++;
-                logState();
             }
         };
         // Create the decoder on a different thread, in order to have the callbacks there.
@@ -769,11 +801,11 @@ public class CallbackBasedTranscoder {
                 if (VERBOSE) Log.d(TAG, "video encoder: output format changed");
                 if (mOutputVideoTrack >= 0) {
                 }
-                mEncoderOutputVideoFormat = codec.getOutputFormat();
                 try {
+                    mEncoderOutputVideoFormat = codec.getOutputFormat();
                     setupMuxer();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    Log.e(TAG, "error while muxing video format", e);
                 }
             }
             public void onInputBufferAvailable(MediaCodec codec, int index) {
@@ -786,7 +818,7 @@ public class CallbackBasedTranscoder {
                 try {
                     muxVideo(index, info);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    Log.e(TAG, "error while muxing video", e);
                 }
             }
         });
