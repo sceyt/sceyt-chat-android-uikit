@@ -37,6 +37,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.common.checkLoadedFileIsCorrect
+import com.sceyt.sceytchatuikit.shared.mediaencoder.VideoTranscodeHelper
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -134,7 +135,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     override fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
         pausedTasksMap[attachment.messageTid] = attachment.messageTid
         if (attachment.type == AttachmentTypeEnum.Video.value())
-            CustomVideoCompressor.cancel()
+            VideoTranscodeHelper.cancel(attachment.filePath)
 
         when (state) {
             PendingUpload, Uploading, Preparing, FilePathChanged -> {
