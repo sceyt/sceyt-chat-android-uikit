@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.common.ExoPlayerHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.OnMediaClickCallback
@@ -50,7 +50,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             updateState(it, true)
             binding.progress.release(it.progressPercent)
 
-            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
 
@@ -140,49 +140,49 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
-        binding.progress.isVisible = data.state == TransferState.Downloading
+        binding.progress.isVisible = data.state == Downloading
 
         when (data.state) {
-            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
 
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
                 viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
             }
 
-            TransferState.Downloading -> {
+            Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
 
                 binding.progress.setProgress(data.progressPercent)
             }
 
-            TransferState.Uploading -> {
+            Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
 
-            TransferState.Downloaded, TransferState.Uploaded -> {
+            Downloaded, Uploaded -> {
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
                 if (isAttachedToWindow)
                     initPlayerHelper()
             }
 
-            TransferState.PauseDownload -> {
+            PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
             }
 
-            TransferState.ErrorDownload -> {
+            ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
             }
 
-            TransferState.FilePathChanged -> {
+            FilePathChanged -> {
                 viewHolderHelper.drawOriginalFile(binding.icThumb)
             }
 
-            TransferState.ThumbLoaded, TransferState.Preparing -> Unit
+            ThumbLoaded, Preparing, WaitingToUpload -> Unit
         }
     }
 
