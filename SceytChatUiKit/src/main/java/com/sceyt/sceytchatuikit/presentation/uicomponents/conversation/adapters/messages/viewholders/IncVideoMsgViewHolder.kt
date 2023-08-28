@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -24,6 +25,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -172,6 +174,13 @@ class IncVideoMsgViewHolder(
             Uploading, Preparing -> {
                 binding.playPauseItem.isVisible = false
                 setFileLoadProgress(data)
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+            }
+
+            WaitingToUpload -> {
+                binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }

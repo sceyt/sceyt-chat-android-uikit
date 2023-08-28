@@ -118,7 +118,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                         if (attachment.transferState != TransferState.PauseUpload) {
 
                             val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
-                                    ?: 0f, TransferState.Uploading,
+                                    ?: 0f, TransferState.WaitingToUpload,
                                 attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
 
                             FileTransferHelper.emitAttachmentTransferUpdate(transferData)

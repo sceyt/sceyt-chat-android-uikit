@@ -34,6 +34,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
 import com.sceyt.sceytchatuikit.presentation.common.checkLoadedFileIsCorrect
@@ -138,7 +139,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
             VideoTranscodeHelper.cancel(attachment.filePath)
 
         when (state) {
-            PendingUpload, Uploading, Preparing, FilePathChanged -> {
+            PendingUpload, Uploading, Preparing, FilePathChanged, WaitingToUpload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
                     it.state = PauseUpload
                     it.resumePauseCallback.onResumePause(attachment.toTransferData(PauseUpload))
@@ -173,8 +174,8 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
 
             PendingUpload, PauseUpload, ErrorUpload -> {
                 fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
-                    it.state = Uploading
-                    it.resumePauseCallback.onResumePause(attachment.toTransferData(Uploading))
+                    it.state = WaitingToUpload
+                    it.resumePauseCallback.onResumePause(attachment.toTransferData(WaitingToUpload))
                     uploadFile(attachment, it)
                     //Todo need implement resume sharing files
                 }

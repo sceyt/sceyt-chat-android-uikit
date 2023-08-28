@@ -36,6 +36,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
@@ -153,7 +154,7 @@ class OutVoiceMsgViewHolder(
             true
         } else {
             binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
-                    ?.durationToMinSecShort()
+                ?.durationToMinSecShort()
             binding.seekBar.progress = 0f
             currentPlaybackSpeed = PlaybackSpeed.X1
             false
@@ -247,7 +248,7 @@ class OutVoiceMsgViewHolder(
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            Downloading, Uploading, Preparing -> {
+            Downloading, Uploading, Preparing, WaitingToUpload -> {
                 binding.playPauseButton.setImageResource(0)
             }
 

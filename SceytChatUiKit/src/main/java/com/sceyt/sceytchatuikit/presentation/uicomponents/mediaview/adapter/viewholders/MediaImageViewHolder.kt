@@ -7,7 +7,20 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 
@@ -29,7 +42,7 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
             updateState(it, true)
             binding.progress.release(it.progressPercent)
 
-            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
     }
@@ -37,51 +50,51 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
         if (!viewHolderHelper.updateTransferData(data, fileItem)) return
 
-        binding.progress.isVisible = data.state == TransferState.Downloading
+        binding.progress.isVisible = data.state == Downloading
 
         when (data.state) {
-            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawOriginalFile(binding.imageView)
             }
 
-            TransferState.Uploading -> {
+            Uploading -> {
                 if (isOnBind)
                     viewHolderHelper.drawOriginalFile(binding.imageView)
             }
 
-            TransferState.Uploaded -> {
+            Uploaded -> {
                 viewHolderHelper.drawOriginalFile(binding.imageView)
             }
 
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            TransferState.Downloading -> {
+            Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
 
                 binding.progress.setProgress(data.progressPercent)
             }
 
-            TransferState.Downloaded -> {
+            Downloaded -> {
                 viewHolderHelper.drawOriginalFile(binding.imageView)
             }
 
-            TransferState.PauseDownload -> {
+            PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
             }
 
-            TransferState.ErrorDownload -> {
+            ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
             }
 
-            TransferState.FilePathChanged -> {
+            FilePathChanged -> {
                 viewHolderHelper.drawOriginalFile(binding.imageView)
             }
 
-            TransferState.ThumbLoaded, TransferState.Preparing -> Unit
+            ThumbLoaded, Preparing, WaitingToUpload -> Unit
         }
     }
 

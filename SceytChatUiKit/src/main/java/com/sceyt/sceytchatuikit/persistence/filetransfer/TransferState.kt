@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 
 enum class TransferState {
@@ -30,6 +31,7 @@ enum class TransferState {
     ErrorUpload,
     ErrorDownload,
     Preparing,
+    WaitingToUpload,
 
     //This state is not saving to db.
     FilePathChanged,
@@ -52,14 +54,14 @@ fun SceytCircularProgressView.getProgressWithState(state: TransferState, progres
             isVisible = true
         }
 
-        Downloading, Uploading, FilePathChanged -> {
+        Downloading, Uploading, FilePathChanged, Preparing -> {
             setProgress(progressPercent)
             setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_cancel_transfer))
             isVisible = true
         }
 
-        Preparing -> {
-            setProgress(progressPercent)
+        WaitingToUpload -> {
+            setProgress(0f)
             setIcon(context.getCompatDrawable(R.drawable.sceyt_ic_cancel_transfer))
             isVisible = true
         }

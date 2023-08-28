@@ -4,14 +4,14 @@ import android.content.Context
 import android.net.Uri
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
 import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomCompressor.compressVideo
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomCompressor.isRunning
 import com.abedelazizshe.lightcompressorlibrary.config.Configuration
 import com.abedelazizshe.lightcompressorlibrary.video.Result
+import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomCompressor.compressVideo
+import com.sceyt.sceytchatuikit.shared.mediaencoder.CustomCompressor.isRunning
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-object CustomVideoCompressor : CoroutineScope  {
+object CustomVideoCompressor : CoroutineScope {
 
     private var job: Job? = null
 
@@ -82,7 +82,6 @@ object CustomVideoCompressor : CoroutineScope  {
             listener: CompressionListener,
     ) = launch {
         isRunning = true
-        listener.onStart()
         val result = startCompression(
             context,
             srcUri,
@@ -127,7 +126,9 @@ object CustomVideoCompressor : CoroutineScope  {
                     listener.onCancelled()
                 }
             },
-        )
+            startCompressingListener = {
+                listener.onStart()
+            })
     }
 
     override val coroutineContext: CoroutineContext
