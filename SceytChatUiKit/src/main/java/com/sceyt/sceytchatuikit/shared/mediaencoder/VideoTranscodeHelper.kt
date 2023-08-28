@@ -101,6 +101,17 @@ object VideoTranscodeHelper : SceytKoinComponent {
             checkAndTranscode(it.destination, it.filePath, it.quality, it.callback)
         }
     }
+
+    fun cancel(filePath: String?) {
+        filePath ?: return
+        if (currentTranscodePath == filePath) {
+            CustomVideoCompressor.cancel()
+        } else {
+            pendingTranscodeQue.find { it.filePath == filePath }?.let {
+                pendingTranscodeQue.remove(it)
+            }
+        }
+    }
 }
 
 private data class PendingTranscodeData(

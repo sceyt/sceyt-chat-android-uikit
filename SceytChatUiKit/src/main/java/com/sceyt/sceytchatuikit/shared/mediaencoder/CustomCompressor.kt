@@ -61,7 +61,6 @@ object CustomCompressor : CoroutineScope {
         isCancelled = true
     }
 
-
     fun compressVideo(
         context: Context?,
         srcUri: Uri?,
@@ -210,7 +209,6 @@ object CustomCompressor : CoroutineScope {
         )
     }
 
-    @Suppress("DEPRECATION")
     private fun start(
         context: Context?,
         srcUri: Uri?,
@@ -229,7 +227,7 @@ object CustomCompressor : CoroutineScope {
 
             try {
                 // MediaCodec accesses encoder and decoder components and processes the new video
-                //input to generate a compressed/smaller size video
+                // input to generate a compressed/smaller size video
                 val bufferInfo = MediaCodec.BufferInfo()
 
                 // Setup mp4 movie
@@ -282,15 +280,15 @@ object CustomCompressor : CoroutineScope {
 
                     // Using this only for video transcode
                     callbackBasedTranscoder = CallbackBasedTranscoder(context)
-                    callbackBasedTranscoder!!.setSize(newWidth, newHeight)
-                    callbackBasedTranscoder!!.setMediaMuxer(mediaMuxer)
-                    callbackBasedTranscoder!!.setMediaExtractor(extractor)
-                    callbackBasedTranscoder!!.setCopyVideo()
-                    callbackBasedTranscoder!!.setOutputFilePath(destination)
-                    callbackBasedTranscoder!!.setOutputVideoFormat(outputFormat)
-                    callbackBasedTranscoder!!.printAllLogs(false)
+                    callbackBasedTranscoder?.setSize(newWidth, newHeight)
+                    callbackBasedTranscoder?.setMediaMuxer(mediaMuxer)
+                    callbackBasedTranscoder?.setMediaExtractor(extractor)
+                    callbackBasedTranscoder?.setCopyVideo()
+                    callbackBasedTranscoder?.setOutputFilePath(destination)
+                    callbackBasedTranscoder?.setOutputVideoFormat(outputFormat)
+                    callbackBasedTranscoder?.printAllLogs(false)
 
-                    callbackBasedTranscoder!!.runTranscode()
+                    callbackBasedTranscoder?.runTranscode()
 
                     callbackBasedTranscoder = null
                     isRunning = false
