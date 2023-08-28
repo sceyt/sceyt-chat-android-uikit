@@ -389,7 +389,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     protected fun setBodyTextPosition(bodyTextView: TextView, dateView: View, parentLayout: ConstraintLayout) {
-        val maxWidth = getBodyMaxAcceptableWidth(bodyTextView)
+        val maxWidth = getBodyMaxAcceptableWidth(bodyTextView, dateView)
         bodyTextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val currentViewWidth = bodyTextView.measuredWidth
         dateView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
@@ -427,8 +427,8 @@ abstract class BaseMsgViewHolder(private val view: View,
         constraintSet.applyTo(parentLayout)
     }
 
-    private fun getBodyMaxAcceptableWidth(textView: TextView): Int {
-        return bubbleMaxWidth - (textView.marginStart + textView.marginEnd)
+    private fun getBodyMaxAcceptableWidth(textView: TextView, dateView: View): Int {
+        return bubbleMaxWidth - (textView.marginStart + dateView.marginEnd)
     }
 
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
