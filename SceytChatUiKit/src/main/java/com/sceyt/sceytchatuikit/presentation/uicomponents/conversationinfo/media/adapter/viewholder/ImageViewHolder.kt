@@ -49,7 +49,7 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
 
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -93,7 +93,8 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
             }
 
             ThumbLoaded -> {
-                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
             }
 
             Preparing, WaitingToUpload -> Unit

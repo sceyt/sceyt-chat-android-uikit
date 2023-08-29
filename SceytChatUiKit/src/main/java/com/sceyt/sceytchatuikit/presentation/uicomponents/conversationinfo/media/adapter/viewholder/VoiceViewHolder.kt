@@ -126,7 +126,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     }
 
     private fun updateState(data: TransferData) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         when (data.state) {
             TransferState.PendingDownload -> needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))

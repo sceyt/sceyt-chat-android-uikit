@@ -70,7 +70,7 @@ class MessageFileViewHolder(
     }
 
     private fun updateState(data: TransferData) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
