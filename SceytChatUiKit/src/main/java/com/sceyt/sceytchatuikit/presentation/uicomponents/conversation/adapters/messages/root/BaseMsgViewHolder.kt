@@ -222,11 +222,11 @@ abstract class BaseMsgViewHolder(private val view: View,
             with(root) {
                 if (calculateWith) {
                     layoutParams.width = LayoutParams.WRAP_CONTENT
-                    maxWidth = bubbleMaxWidth
+                    (layoutParams as ConstraintLayout.LayoutParams).matchConstraintMaxWidth = bubbleMaxWidth
                     measure(View.MeasureSpec.UNSPECIFIED, 0)
                     layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
-                    val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
-                    if (measuredWidth <= bubbleMeasuredWidth)
+                    val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth ?: 0)
+                    if (measuredWidth < bubbleMeasuredWidth)
                         layoutParams.width = bubbleMeasuredWidth
                 }
                 isVisible = true
@@ -389,14 +389,14 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     protected fun setBodyTextPosition(bodyTextView: TextView, dateView: View, parentLayout: ConstraintLayout) {
-        val maxWidth = getBodyMaxAcceptableWidth(bodyTextView)
+        bodyTextView.minWidth = 0
         bodyTextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val currentViewWidth = bodyTextView.measuredWidth
         dateView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val nextViewWidth = dateView.measuredWidth
-        val px12 = dpToPx(12f) // this is horizontal margins
-        val px8 = dpToPx(8f) // bottom margins
-        val px5 = dpToPx(5f) // top margins
+        val px12 = dpToPx(12f) // bodyTextView end margins
+        val px8 = dpToPx(8f) // bodyTextView bottom margins
+        val px5 = dpToPx(5f) // bodyTextView top margins
         val body = bodyTextView.text.toString()
         val constraintSet = ConstraintSet()
         constraintSet.clone(parentLayout)
@@ -404,16 +404,22 @@ abstract class BaseMsgViewHolder(private val view: View,
         constraintSet.clear(bodyTextView.id, ConstraintSet.END)
         constraintSet.clear(bodyTextView.id, ConstraintSet.BOTTOM)
 
-        // If messageBody + dateView + px12 (margins) > maxWidth, then set messageBody to endOf parentLayout,
-        // else set messageBody to endOf dateView
-        if (currentViewWidth + nextViewWidth + px12 > maxWidth) {
-            constraintSet.connect(bodyTextView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, px12)
+        // Calculate maxWidth when dateView and bodyTextView are in the same line
+        val maxWidthWithDate = bubbleMaxWidth - (bodyTextView.marginStart + dateView.marginEnd)
 
-            bodyTextView.paint.getStaticLayout(body, bodyTextView.includeFontPadding, maxWidth).apply {
+        // If messageBody + dateView + px12 (margins) > maxWidthWithDate, then set messageBody to endOf parentLayout,
+        // else set messageBody to endOf dateView
+        if (currentViewWidth + nextViewWidth + px12 > maxWidthWithDate) {
+            constraintSet.connect(bodyTextView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, px12)
+            // Calculate lines like bodyTextView end connected to parentLayout end
+            val maxWidthWithoutDate = bubbleMaxWidth - (bodyTextView.marginStart + px12)
+            bodyTextView.paint.getStaticLayout(body, bodyTextView.includeFontPadding, maxWidthWithoutDate).apply {
                 if (lineCount > 1) {
                     val bodyIsRtl = body.isRtl()
                     val appIsRtl = context.isRtl()
-                    if (getLineMax(lineCount - 1) + nextViewWidth + px12 < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
+                    val reqMinWidth = getLineMax(lineCount - 1) + nextViewWidth + px12
+                    if (reqMinWidth < maxWidthWithDate && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
+                        bodyTextView.minWidth = reqMinWidth.toInt()
                         constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
                     } else
                         constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, dateView.id, ConstraintSet.TOP, px5)
@@ -425,10 +431,6 @@ abstract class BaseMsgViewHolder(private val view: View,
             constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
         }
         constraintSet.applyTo(parentLayout)
-    }
-
-    private fun getBodyMaxAcceptableWidth(textView: TextView): Int {
-        return bubbleMaxWidth - (textView.marginStart + textView.marginEnd)
     }
 
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
