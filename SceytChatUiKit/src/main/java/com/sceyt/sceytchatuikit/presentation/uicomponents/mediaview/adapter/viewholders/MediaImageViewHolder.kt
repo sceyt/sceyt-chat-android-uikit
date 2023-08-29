@@ -48,7 +48,7 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         binding.progress.isVisible = data.state == Downloading
 
