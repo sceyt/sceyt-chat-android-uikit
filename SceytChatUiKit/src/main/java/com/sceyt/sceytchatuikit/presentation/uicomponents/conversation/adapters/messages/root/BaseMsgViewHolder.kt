@@ -222,11 +222,11 @@ abstract class BaseMsgViewHolder(private val view: View,
             with(root) {
                 if (calculateWith) {
                     layoutParams.width = LayoutParams.WRAP_CONTENT
-                    maxWidth = bubbleMaxWidth
+                    (layoutParams as ConstraintLayout.LayoutParams).matchConstraintMaxWidth = bubbleMaxWidth
                     measure(View.MeasureSpec.UNSPECIFIED, 0)
                     layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
-                    val bubbleMeasuredWidth = layoutBubble?.measuredWidth ?: 0
-                    if (measuredWidth <= bubbleMeasuredWidth)
+                    val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth ?: 0)
+                    if (measuredWidth < bubbleMeasuredWidth)
                         layoutParams.width = bubbleMeasuredWidth
                 }
                 isVisible = true
