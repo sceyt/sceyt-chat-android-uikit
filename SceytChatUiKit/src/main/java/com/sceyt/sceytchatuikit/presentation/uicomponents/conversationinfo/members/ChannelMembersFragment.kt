@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R
@@ -51,8 +50,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
@@ -281,10 +278,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected fun loadInitialMembers() {
-        lifecycleScope.launch {
-            delay(300)
-            viewModel.getChannelMembers(channel.id, 0, getRole())
-        }
+        viewModel.getChannelMembers(channel.id, 0, getRole())
     }
 
     protected fun loadMoreMembers(offset: Int) {
