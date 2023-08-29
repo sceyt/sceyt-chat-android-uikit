@@ -279,7 +279,7 @@ object FileResizeUtil {
             val heightRatio = (height.toFloat() / reqHeight.toFloat()).roundToInt()
             val widthRatio = (width.toFloat() / reqWidth.toFloat()).roundToInt()
 
-            inSampleSize = max(heightRatio, widthRatio)
+            inSampleSize = (heightRatio + widthRatio) / 2
         }
         return inSampleSize
     }
