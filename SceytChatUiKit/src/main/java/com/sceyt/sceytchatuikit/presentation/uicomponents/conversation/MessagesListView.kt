@@ -89,8 +89,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
-
-    var enabledClickActions = true
+    private var forceDisabledActions = false
+    var enabledActions = true
         private set
 
     init {
@@ -620,11 +620,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageActionsViewClickListeners = listener
     }
 
-    fun enableDisableClickActions(enabled: Boolean, force: Boolean) {
-        if (force)
-            enabledClickActions = enabled
-        else if (enabledClickActions)
-            enabledClickActions = enabled
+    fun enableDisableActions(enabled: Boolean, force: Boolean) {
+        if (force) {
+            forceDisabledActions = !enabled
+            enabledActions = enabled
+        } else if (!forceDisabledActions)
+            enabledActions = enabled
+
+        messagesRV.enableDisableSwipeToReply(enabledActions)
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
@@ -636,7 +639,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
-        if (enabledClickActions) {
+        if (enabledActions) {
             if (reactionsPopupWindow == null)
                 showModifyReactionsPopup(view, item.message)
             else reactionsPopupWindow = null
@@ -644,7 +647,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMessageLongClick(view: View, item: MessageItem) {
-        if (enabledClickActions) {
+        if (enabledActions) {
             val popup = showModifyReactionsPopup(view, item.message)
             messageCommandEventListener?.invoke(MessageCommandEvent.ShowHideMessageActions(item.message, show = true, popupWindow = popup))
         }
@@ -664,7 +667,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAddReactionClick(view: View, message: SceytMessage) {
-        if (enabledClickActions)
+        if (enabledActions)
             showAddEmojiDialog(message)
     }
 
@@ -680,7 +683,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-        if (enabledClickActions)
+        if (enabledActions)
             showReactionActionsPopup(view, item)
     }
 

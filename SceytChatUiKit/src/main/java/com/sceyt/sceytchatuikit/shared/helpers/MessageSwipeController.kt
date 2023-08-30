@@ -28,6 +28,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
     private var swipeBack = false
     private var dX: Float = 0f
     private var maxAcceptableExpand = context.screenWidthPx() * 0.3
+    private var enableSwipe: Boolean = true
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
         mView = viewHolder.itemView
@@ -58,7 +59,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
                              dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
 
 
-        if ((viewHolder as? BaseMsgViewHolder)?.enableReply != true) return
+        if ((viewHolder as? BaseMsgViewHolder)?.enableReply != true || !enableSwipe) return
 
         if (actionState == ACTION_STATE_SWIPE) {
             setTouchListener(recyclerView, viewHolder)
@@ -123,5 +124,9 @@ class MessageSwipeController(private val context: Context, private val swipeCont
             (y + dpToPx(10f) * scale).toInt()
         )
         imageDrawable?.draw(canvas)
+    }
+
+    fun enableDisableSwipe(enable: Boolean) {
+        enableSwipe = enable
     }
 }

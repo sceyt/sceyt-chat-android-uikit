@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
@@ -21,8 +20,8 @@ import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ItemOffsetDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
@@ -33,6 +32,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
+    private var messageSwipeController: MessageSwipeController? = null
 
     // Loading prev properties
     private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
@@ -48,6 +48,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
     private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
+    private var enableSwipe: Boolean = true
 
     init {
         init()
@@ -160,15 +161,16 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
 
-            val messageSwipeController = MessageSwipeController(context) { position ->
+            val swipeController = MessageSwipeController(context) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({
                     mAdapter.getData().getOrNull(position)?.let {
                         swipeToReplyListener?.invoke(it)
                     }
                 }, 100)
-            }
+            }.also { messageSwipeController = it }
+            swipeController.enableDisableSwipe(enableSwipe)
 
-            val itemTouchHelper = ItemTouchHelper(messageSwipeController)
+            val itemTouchHelper = ItemTouchHelper(swipeController)
             itemTouchHelper.attachToRecyclerView(this)
         } else if (force)
             mAdapter.forceUpdate(messages)
@@ -304,5 +306,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
         if (::mAdapter.isInitialized)
             mAdapter.deleteAllMessagesBefore(predicate)
+    }
+
+    fun enableDisableSwipeToReply(enabled: Boolean) {
+        if (::mAdapter.isInitialized)
+            messageSwipeController?.enableDisableSwipe(enabled)
+        enableSwipe = enabled
     }
 }

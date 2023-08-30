@@ -38,7 +38,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
-        userRole != null
+        !userRole.isNullOrEmpty()
     } else true
 }
 
