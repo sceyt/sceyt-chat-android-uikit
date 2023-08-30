@@ -1,27 +1,32 @@
 package com.sceyt.sceytchatuikit.shared.mediaencoder
 
 import android.content.Context
-import android.media.*
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
+import android.media.MediaMuxer
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
 import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
-import com.abedelazizshe.lightcompressorlibrary.video.*
+import com.abedelazizshe.lightcompressorlibrary.video.InputSurface
+import com.abedelazizshe.lightcompressorlibrary.video.OutputSurface
+import com.abedelazizshe.lightcompressorlibrary.video.Result
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.findTrack
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.generateWidthAndHeight
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.getBitrate
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasQTI
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.prepareVideoHeight
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.prepareVideoWidth
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.printException
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setOutputFileParameters
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setUpMP4Movie
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.validateInputs
 import com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest.CallbackBasedTranscoder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -88,7 +93,7 @@ object CustomCompressor : CoroutineScope {
 
             try {
                 mediaMetadataRetriever.setDataSource(context, srcUri)
-            } catch (exception: IllegalArgumentException) {
+            } catch (exception: Exception) {
                 printException(exception)
                 return Result(
                     success = false,
@@ -100,7 +105,7 @@ object CustomCompressor : CoroutineScope {
         } else {
             try {
                 mediaMetadataRetriever.setDataSource(srcPath)
-            } catch (exception: IllegalArgumentException) {
+            } catch (exception: Exception) {
                 printException(exception)
                 return Result(
                     success = false,
@@ -114,7 +119,15 @@ object CustomCompressor : CoroutineScope {
                 failureMessage = "The source file cannot be accessed!"
             )
 
-            extractor.setDataSource(file.toString())
+            try {
+                extractor.setDataSource(file.toString())
+            } catch (ex: Exception) {
+                printException(ex)
+                return Result(
+                    success = false,
+                    failureMessage = "${ex.message}"
+                )
+            }
         }
 
         val height = prepareVideoHeight(mediaMetadataRetriever) ?: return Result(
