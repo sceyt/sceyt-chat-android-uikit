@@ -293,9 +293,9 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun emitTmpMessageAndStore(channelId: Long, message: Message, sendChannel: SendChannel<SendMessageResult>) {
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         sendChannel.trySend(SendMessageResult.TempMessage(tmpMessage))
-        insertTmpMessageToDb(tmpMessage)
-        messagesCache.add(channelId, tmpMessage)
         MessageEventsObserver.emitOutgoingMessage(tmpMessage)
+        messagesCache.add(channelId, tmpMessage)
+        insertTmpMessageToDb(tmpMessage)
     }
 
     private suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
