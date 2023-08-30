@@ -34,7 +34,7 @@ interface ChannelDao {
     @Transaction
     @Query("select * from channels where userRole !=:ignoreRole and (not pending or lastMessageTid != 0) " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
+    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: String = RoleTypeEnum.None.toString()): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0) " +
