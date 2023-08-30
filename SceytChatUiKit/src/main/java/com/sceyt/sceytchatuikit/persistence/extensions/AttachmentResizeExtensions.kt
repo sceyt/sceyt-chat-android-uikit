@@ -5,7 +5,6 @@ import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeExtension
-import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Cancelled
 import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Failure
@@ -17,21 +16,6 @@ import com.sceyt.sceytchatuikit.shared.mediaencoder.VideoTranscodeHelper
 import java.io.File
 import java.util.UUID
 
-fun Attachment.resizeImage(context: Context): Attachment {
-    var resizedAttachment = this
-    try {
-        val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context, url, reqSize = 600)
-        resizedAttachment = Attachment.Builder(resizedImageFile?.path ?: filePath, url, type)
-            .withTid(tid)
-            .setName(name)
-            .setMetadata(metadata)
-            .setUpload(true)
-            .build()
-    } catch (ex: Exception) {
-        SceytLog.e("ImageResize", ex.message.toString())
-    }
-    return resizedAttachment
-}
 
 fun resizeImage(context: Context, path: String?, reqSize: Int = 600): Result<String> {
     return try {

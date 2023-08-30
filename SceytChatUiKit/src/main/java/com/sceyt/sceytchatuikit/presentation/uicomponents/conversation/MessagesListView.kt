@@ -41,6 +41,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -419,9 +420,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData) {
-        messagesRV.getData()?.find { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+        val messages = messagesRV.getData() ?: return
+        ArrayList(messages).find { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
-                Uploading, PendingUpload, PauseUpload, Uploaded, Preparing -> { attachment ->
+                Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
                     attachment.messageTid == data.messageTid
                 }
 

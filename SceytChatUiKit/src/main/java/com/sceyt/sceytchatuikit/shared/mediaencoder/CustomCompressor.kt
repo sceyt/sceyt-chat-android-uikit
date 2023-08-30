@@ -1,27 +1,32 @@
 package com.sceyt.sceytchatuikit.shared.mediaencoder
 
 import android.content.Context
-import android.media.*
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
+import android.media.MediaMuxer
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
 import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
-import com.abedelazizshe.lightcompressorlibrary.video.*
+import com.abedelazizshe.lightcompressorlibrary.video.InputSurface
+import com.abedelazizshe.lightcompressorlibrary.video.OutputSurface
+import com.abedelazizshe.lightcompressorlibrary.video.Result
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.findTrack
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.generateWidthAndHeight
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.getBitrate
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasOMX
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.hasQTI
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.prepareVideoHeight
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.prepareVideoWidth
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.printException
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setOutputFileParameters
-import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.setUpMP4Movie
 import com.sceyt.sceytchatuikit.shared.mediaencoder.CompressorUtils.validateInputs
 import com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest.CallbackBasedTranscoder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -47,8 +52,8 @@ object CustomCompressor : CoroutineScope {
     private var rotation: Int = 0
 
     private const val INVALID_BITRATE =
-        "The provided bitrate is smaller than what is needed for compression " +
-                "try to set isMinBitRateEnabled to false"
+            "The provided bitrate is smaller than what is needed for compression " +
+                    "try to set isMinBitRateEnabled to false"
 
     var isRunning = true
     var isCancelled = false
@@ -61,15 +66,15 @@ object CustomCompressor : CoroutineScope {
         isCancelled = true
     }
 
-
     fun compressVideo(
-        context: Context?,
-        srcUri: Uri?,
-        srcPath: String?,
-        destination: String,
-        streamableFile: String?,
-        configuration: CustomConfiguration,
-        listener: CompressionProgressListener,
+            context: Context?,
+            srcUri: Uri?,
+            srcPath: String?,
+            destination: String,
+            streamableFile: String?,
+            configuration: CustomConfiguration,
+            listener: CompressionProgressListener,
+            startCompressingListener: () -> Unit,
     ): Result {
 
         extractor = MediaExtractor()
@@ -88,7 +93,7 @@ object CustomCompressor : CoroutineScope {
 
             try {
                 mediaMetadataRetriever.setDataSource(context, srcUri)
-            } catch (exception: IllegalArgumentException) {
+            } catch (exception: Exception) {
                 printException(exception)
                 return Result(
                     success = false,
@@ -100,7 +105,7 @@ object CustomCompressor : CoroutineScope {
         } else {
             try {
                 mediaMetadataRetriever.setDataSource(srcPath)
-            } catch (exception: IllegalArgumentException) {
+            } catch (exception: Exception) {
                 printException(exception)
                 return Result(
                     success = false,
@@ -114,7 +119,15 @@ object CustomCompressor : CoroutineScope {
                 failureMessage = "The source file cannot be accessed!"
             )
 
-            extractor.setDataSource(file.toString())
+            try {
+                extractor.setDataSource(file.toString())
+            } catch (ex: Exception) {
+                printException(ex)
+                return Result(
+                    success = false,
+                    failureMessage = "${ex.message}"
+                )
+            }
         }
 
         val height = prepareVideoHeight(mediaMetadataRetriever) ?: return Result(
@@ -128,13 +141,13 @@ object CustomCompressor : CoroutineScope {
         )
 
         val rotationData =
-            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+                mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
 
         val bitrateData =
-            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
 
         val durationData =
-            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
 
 
         if (rotationData.isNullOrEmpty() || bitrateData.isNullOrEmpty() || durationData.isNullOrEmpty()) {
@@ -167,16 +180,19 @@ object CustomCompressor : CoroutineScope {
             )
         }
 
+        // Video min bitrate, and resolution is acceptable, start compressing
+        startCompressingListener.invoke()
+
         //Handle new bitrate value
         val newBitrate: Int =
-            when {
-                configuration.videoBitrate != null -> configuration.videoBitrate!!
-                configuration.videoBitrateCoefficient != null -> {
-                    (bitrate * configuration.videoBitrateCoefficient!!).roundToInt()
-                }
+                when {
+                    configuration.videoBitrate != null -> configuration.videoBitrate!!
+                    configuration.videoBitrateCoefficient != null -> {
+                        (bitrate * configuration.videoBitrateCoefficient!!).roundToInt()
+                    }
 
-                else -> getBitrate(bitrate, configuration.quality)
-            }
+                    else -> getBitrate(bitrate, configuration.quality)
+                }
 
         //Handle new width and height values
         var (newWidth, newHeight) = generateWidthAndHeight(
@@ -210,17 +226,16 @@ object CustomCompressor : CoroutineScope {
         )
     }
 
-    @Suppress("DEPRECATION")
     private fun start(
-        context: Context?,
-        srcUri: Uri?,
-        newWidth: Int,
-        newHeight: Int,
-        destination: String,
-        newBitrate: Int,
-        streamableFile: String?,
-        frameRate: Int?,
-        disableAudio: Boolean
+            context: Context?,
+            srcUri: Uri?,
+            newWidth: Int,
+            newHeight: Int,
+            destination: String,
+            newBitrate: Int,
+            streamableFile: String?,
+            frameRate: Int?,
+            disableAudio: Boolean
     ): Result {
 
         if (newWidth != 0 && newHeight != 0) {
@@ -229,7 +244,7 @@ object CustomCompressor : CoroutineScope {
 
             try {
                 // MediaCodec accesses encoder and decoder components and processes the new video
-                //input to generate a compressed/smaller size video
+                // input to generate a compressed/smaller size video
                 val bufferInfo = MediaCodec.BufferInfo()
 
                 // Setup mp4 movie
@@ -259,7 +274,7 @@ object CustomCompressor : CoroutineScope {
                 val inputFormat = extractor.getTrackFormat(videoIndex)
 
                 val outputFormat: MediaFormat =
-                    MediaFormat.createVideoFormat(MIME_TYPE, newWidth, newHeight)
+                        MediaFormat.createVideoFormat(MIME_TYPE, newWidth, newHeight)
                 //set output format
                 setOutputFileParameters(
                     inputFormat,
@@ -269,11 +284,11 @@ object CustomCompressor : CoroutineScope {
                 )
 
                 val decoder: MediaCodec
-/*
-                val hasQTI = hasQTI()
-                val hasOMX = hasOMX()
+                /*
+                                val hasQTI = hasQTI()
+                                val hasOMX = hasOMX()
 
-                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)*/
+                                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)*/
 
                 val inputSurface: InputSurface
                 val outputSurface: OutputSurface
@@ -287,15 +302,15 @@ object CustomCompressor : CoroutineScope {
 
                     // Using this only for video transcode
                     callbackBasedTranscoder = CallbackBasedTranscoder(context)
-                    callbackBasedTranscoder!!.setSize(newWidth, newHeight)
-                    callbackBasedTranscoder!!.setMediaMuxer(mediaMuxer)
-                    callbackBasedTranscoder!!.setMediaExtractor(extractor)
-                    callbackBasedTranscoder!!.setCopyVideo()
-                    callbackBasedTranscoder!!.setOutputFilePath(destination)
-                    callbackBasedTranscoder!!.setOutputVideoFormat(outputFormat)
-                    callbackBasedTranscoder!!.printAllLogs(false)
+                    callbackBasedTranscoder?.setSize(newWidth, newHeight)
+                    callbackBasedTranscoder?.setMediaMuxer(mediaMuxer)
+                    callbackBasedTranscoder?.setMediaExtractor(extractor)
+                    callbackBasedTranscoder?.setCopyVideo()
+                    callbackBasedTranscoder?.setOutputFilePath(destination)
+                    callbackBasedTranscoder?.setOutputVideoFormat(outputFormat)
+                    callbackBasedTranscoder?.printAllLogs(false)
 
-                    callbackBasedTranscoder!!.runTranscode()
+                    callbackBasedTranscoder?.runTranscode()
 
                     callbackBasedTranscoder = null
                     isRunning = false
@@ -512,7 +527,7 @@ object CustomCompressor : CoroutineScope {
                     mediaMuxer = mediaMuxer,
                     bufferInfo = bufferInfo,
                     disableAudio = disableAudio,
-                    muxerTrackIndex= muxerTrackIndex,
+                    muxerTrackIndex = muxerTrackIndex,
                 )
 
                 extractor.release()
@@ -546,10 +561,10 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun processAudio(
-        mediaMuxer: MediaMuxer,
-        bufferInfo: MediaCodec.BufferInfo,
-        disableAudio: Boolean,
-        muxerTrackIndex: Int,
+            mediaMuxer: MediaMuxer,
+            bufferInfo: MediaCodec.BufferInfo,
+            disableAudio: Boolean,
+            muxerTrackIndex: Int,
     ) {
         val audioIndex = findTrack(extractor, isVideo = false)
         if (audioIndex >= 0 && !disableAudio) {
@@ -603,9 +618,9 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun prepareEncoder(
-        outputFormat: MediaFormat,
-        hasQTI: Boolean,
-        hasOMX: Boolean
+            outputFormat: MediaFormat,
+            hasQTI: Boolean,
+            hasOMX: Boolean
     ): MediaCodec {
 
         // This seems to cause an issue with certain phones
@@ -633,8 +648,8 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun prepareDecoder(
-        inputFormat: MediaFormat,
-        outputSurface: OutputSurface,
+            inputFormat: MediaFormat,
+            outputSurface: OutputSurface,
     ): MediaCodec {
         // This seems to cause an issue with certain phones
         // val decoderName =
@@ -655,11 +670,11 @@ object CustomCompressor : CoroutineScope {
     }
 
     private fun dispose(
-        videoIndex: Int,
-        decoder: MediaCodec,
-        encoder: MediaCodec,
-        inputSurface: InputSurface,
-        outputSurface: OutputSurface,
+            videoIndex: Int,
+            decoder: MediaCodec,
+            encoder: MediaCodec,
+            inputSurface: InputSurface,
+            outputSurface: OutputSurface,
     ) {
         extractor.unselectTrack(videoIndex)
 

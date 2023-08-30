@@ -147,7 +147,7 @@ abstract class BaseMediaMessageViewHolder(
         if (addedLister) return
         addedLister = true
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-            if (viewHolderHelper.updateTransferData(it, fileItem))
+            if (viewHolderHelper.updateTransferData(it, fileItem, ::isValidThumb))
                 updateState(it)
         }
     }

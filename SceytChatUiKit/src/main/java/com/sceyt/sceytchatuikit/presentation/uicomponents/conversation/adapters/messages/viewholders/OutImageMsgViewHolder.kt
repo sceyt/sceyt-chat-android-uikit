@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -102,43 +103,43 @@ class OutImageMsgViewHolder(
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
-            TransferState.Downloaded, TransferState.Uploaded -> {
+            Downloaded, Uploaded -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.Uploading, TransferState.Preparing -> {
+            Uploading, Preparing, WaitingToUpload -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            TransferState.Downloading -> {
+            Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.PauseDownload -> {
+            PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.ErrorDownload -> {
+            ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.FilePathChanged -> {
+            FilePathChanged -> {
                 if (fileItem.thumbPath.isNullOrBlank())
                     requestThumb()
             }
 
-            TransferState.ThumbLoaded -> {
+            ThumbLoaded -> {
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }

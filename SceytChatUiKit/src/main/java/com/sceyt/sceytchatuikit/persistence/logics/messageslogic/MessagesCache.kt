@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.removeAllIf
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -21,6 +22,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
@@ -266,7 +268,7 @@ class MessagesCache {
                             return@att
 
                         when (updateDate.state) {
-                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing -> {
+                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
                                 if (attachment.filePath == updateDate.filePath)
                                     update(attachment)
                             }

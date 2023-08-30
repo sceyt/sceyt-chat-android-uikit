@@ -45,6 +45,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -58,6 +59,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -356,7 +358,7 @@ class MessageListViewModel(
                 }
             }
 
-            Uploading, Downloading, Preparing, FilePathChanged -> {
+            Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
             }
 
