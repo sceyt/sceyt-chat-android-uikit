@@ -240,11 +240,16 @@ object CustomCompressor : CoroutineScope {
                 val mediaMuxer = MediaMuxer(cacheFile.toString(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
                 mediaMuxer.setOrientationHint(rotation)
 
-                val audioIndex = findTrack(extractor, isVideo = false)
-                extractor.selectTrack(audioIndex)
-                val audioFormat = extractor.getTrackFormat(audioIndex)
-                val muxerTrackIndex = mediaMuxer.addTrack(audioFormat)
-                extractor.unselectTrack(audioIndex)
+                var audioIndex = -5
+                var muxerTrackIndex = -5
+
+                audioIndex = findTrack(extractor, isVideo = false)
+                if (audioIndex > 0) {
+                    extractor.selectTrack(audioIndex)
+                    val audioFormat = extractor.getTrackFormat(audioIndex)
+                    muxerTrackIndex = mediaMuxer.addTrack(audioFormat)
+                    extractor.unselectTrack(audioIndex)
+                }
 
                 // Start with video track
                 val videoIndex = findTrack(extractor, isVideo = true)
