@@ -20,7 +20,6 @@ import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
@@ -88,7 +87,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun checkEnableDisableActions(channel: SceytChannel) {
-        messagesListView.enableDisableClickActions(
+        messagesListView.enableDisableActions(
             enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
                     && (channel.isGroup || channel.getFirstMember()?.user?.blocked != true), false)
     }
