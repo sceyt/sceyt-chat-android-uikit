@@ -22,6 +22,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
@@ -74,7 +75,7 @@ class MessageVideoViewHolder(
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         val imageView = binding.videoViewController.getImageView()
@@ -96,7 +97,7 @@ class MessageVideoViewHolder(
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
-            Uploading, Preparing -> {
+            Uploading, Preparing, WaitingToUpload -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
@@ -130,7 +131,8 @@ class MessageVideoViewHolder(
             }
 
             ThumbLoaded -> {
-                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
             }
         }
     }

@@ -149,41 +149,55 @@ object FileResizeUtil {
         return size
     }
 
-    fun getVideoSize(path: String): Size {
+    fun getVideoSize(path: String): Size? {
         val metaRetriever = MediaMetadataRetriever()
-        metaRetriever.setDataSource(path)
-        val height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
-                ?: 0
-        val width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
-                ?: 0
-        return Size(width, height)
+        return try {
+            metaRetriever.setDataSource(path)
+            val height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
+                    ?: 0
+            val width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
+                    ?: 0
+            Size(width, height)
+        } catch (e: Throwable) {
+            null
+        } finally {
+            metaRetriever.release()
+        }
     }
 
-    fun getVideoSizeOriented(path: String): Size {
+    fun getVideoSizeOriented(path: String): Size? {
         val metaRetriever = MediaMetadataRetriever()
-        metaRetriever.setDataSource(path)
-        val rotation = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull()
-                ?: 0
-        val height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
-                ?: 0
-        val width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
-                ?: 0
-        if (rotation == 90 || rotation == 270)
-            return Size(height, width)
+        return try {
+            metaRetriever.setDataSource(path)
+            val rotation = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull()
+                    ?: 0
+            val height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
+                    ?: 0
+            val width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
+                    ?: 0
+            if (rotation == 90 || rotation == 270)
+                return Size(height, width)
 
-        return Size(width, height)
+            return Size(width, height)
+        } catch (e: Throwable) {
+            null
+        } finally {
+            metaRetriever.release()
+        }
     }
 
     fun getVideoDuration(context: Context, path: String): Long? {
+        val retriever = MediaMetadataRetriever()
         val timeInMilliSec: Long? = try {
-            val retriever = MediaMetadataRetriever()
             retriever.setDataSource(context, Uri.parse(path))
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             retriever.release()
             time?.toLongOrNull()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             e.printStackTrace()
             null
+        } finally {
+            retriever.release()
         }
         return timeInMilliSec
     }
@@ -279,7 +293,7 @@ object FileResizeUtil {
             val heightRatio = (height.toFloat() / reqHeight.toFloat()).roundToInt()
             val widthRatio = (width.toFloat() / reqWidth.toFloat()).roundToInt()
 
-            inSampleSize = max(heightRatio, widthRatio)
+            inSampleSize = (heightRatio + widthRatio) / 2
         }
         return inSampleSize
     }

@@ -5,7 +5,6 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
-import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListFilterQueryType
 import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
@@ -84,7 +83,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             val query = ChannelListQuery.Builder()
                 .limit(1)
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
-                .queryType(ChannelListFilterQueryType.ListQueryFilterEqual)
+                .queryType(ChannelListQuery.SearchQueryOperator.SearchQueryOperatorEqual)
                 .query(url)
                 .build()
 
@@ -151,7 +150,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse> = callbackFlow {
         val channelListQuery = ChannelListQuery.Builder()
-            .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
             .withQueryParam(channelQueryParam)
             .order(getOrder())
             .limit(limit)
@@ -581,7 +579,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     private fun createChannelListQuery(query: String? = null): ChannelListQuery {
         return ChannelListQuery.Builder()
-            .type(ChannelListQuery.ChannelQueryType.ListQueryChannelAll)
             .order(getOrder())
             .query(query?.ifBlank { null })
             .withQueryParam(channelQueryParam)
