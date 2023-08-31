@@ -127,7 +127,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    var mentionJog: Job? = null
+    var mentionJob: Job? = null
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
@@ -152,12 +152,12 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
 
         override fun mention(query: String) {
-            mentionJog?.cancel()
+            mentionJob?.cancel()
             if (messageInputView.getComposedMessage().isNullOrBlank()) {
                 messageInputView.setMentionList(emptyList())
                 return
             }
-            mentionJog = viewModelScope.launch(Dispatchers.IO) {
+            mentionJob = viewModelScope.launch(Dispatchers.IO) {
                 val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
                 if (query.isEmpty())
                     loadedMembers = result

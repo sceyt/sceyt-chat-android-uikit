@@ -35,6 +35,7 @@ import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
@@ -761,7 +762,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
     private fun SceytActivityConversationInfoBinding.setupStyle() {
@@ -778,7 +779,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 putExtra(CHANNEL, channel)
                 putExtra(SHOW_OPEN_CHAT_BUTTON, showOpenChatButton)
             }
-            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
     }
 }

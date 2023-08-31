@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -171,7 +172,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
+        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {
