@@ -310,7 +310,7 @@ internal class PersistenceChannelsLogicImpl(
             if (offset == 0) channelsCache.clear()
 
             val searchUserIds = HashSet<String>(userIds)
-            if (includeUserNames){
+            if (includeUserNames) {
                 val ids = usersDao.getUserIdsByDisplayName(searchQuery)
                 searchUserIds.addAll(ids)
             }
@@ -501,7 +501,7 @@ internal class PersistenceChannelsLogicImpl(
             // Set new channel last message to pending channel last message with new channel id
             newChannel.lastMessage = channel.lastMessage?.apply { channelId = newChannelId }
 
-            channelDao.deleteChannelAndLinks(pendingChannelId)
+            channelDao.updateUserChatLinksChatId(pendingChannelId, newChannelId)
             channelDao.insertChannel(newChannel.toChannelEntity())
             messageDao.updateMessagesChannelId(pendingChannelId, newChannelId)
 
