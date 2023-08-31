@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.hideSoftInput
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -115,7 +116,7 @@ class CreateGroupActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
+        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right,false)
     }
 
     companion object {

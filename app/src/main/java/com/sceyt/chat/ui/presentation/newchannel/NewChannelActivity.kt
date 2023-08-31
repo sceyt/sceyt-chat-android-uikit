@@ -19,7 +19,13 @@ import com.sceyt.chat.ui.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
+import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -82,12 +88,12 @@ class NewChannelActivity : AppCompatActivity() {
 
         binding.toolbar.setNavigationIconClickListener {
             onBackPressedDispatcher.onBackPressed()
-            overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
+            overrideTransitions(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
         }
 
         binding.tvNewGroup.setOnClickListener {
             addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this))
-            overridePendingTransition(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
+            overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
         }
     }
 
@@ -125,14 +131,14 @@ class NewChannelActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right)
+        overrideTransitions(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {
 
         fun launch(context: Context) {
             context.launchActivity<NewChannelActivity>()
-            context.asActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
+            context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
         }
     }
 }

@@ -168,7 +168,7 @@ fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 fun Activity.recreateWithoutAnim() {
     finish()
     startActivity(intent)
-    overridePendingTransition(0, 0)
+    overrideTransitions(0, 0,false)
 }
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL

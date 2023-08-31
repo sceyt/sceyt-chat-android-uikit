@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -27,7 +28,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
 
     override fun onAddSubscribersClick(channel: SceytChannel) {
         addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this, MemberTypeEnum.Subscriber))
-        overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
+        overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
     }
 
     class CustomMembersFragment : ChannelMembersFragment() {
@@ -35,7 +36,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
 
         override fun onAddMembersClick(memberType: MemberTypeEnum) {
             addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType))
-            requireContext().asActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
+            requireContext().asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
         }
 
         override fun onAddedMember(data: List<SceytMember>) {
@@ -83,7 +84,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
             context.launchActivity<CustomConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
             }
-            context.asActivity().overridePendingTransition(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
+            context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
         }
     }
 }

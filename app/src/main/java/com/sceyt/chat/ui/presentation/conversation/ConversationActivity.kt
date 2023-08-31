@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.filetransfer.*
@@ -158,7 +159,7 @@ open class ConversationActivity : AppCompatActivity() {
             context.launchActivity<ConversationActivity> {
                 putExtra(CHANNEL, channel)
             }
-            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
 
         fun newInstance(context: Context, channel: SceytChannel, message: SceytMessage) {
@@ -167,17 +168,17 @@ open class ConversationActivity : AppCompatActivity() {
                 putExtra(REPLY_IN_THREAD, true)
                 putExtra(REPLY_IN_THREAD_MESSAGE, message)
             }
-            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
     }
 
     override fun finish() {
         if (isTaskRoot) {
             launchActivity<MainActivity>()
-            overridePendingTransition(0,0)
+            overrideTransitions(0, 0, true)
         }
         super.finish()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, true)
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
