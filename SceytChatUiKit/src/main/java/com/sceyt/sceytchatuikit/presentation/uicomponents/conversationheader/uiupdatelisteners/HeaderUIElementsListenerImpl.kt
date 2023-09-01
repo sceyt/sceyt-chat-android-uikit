@@ -30,9 +30,10 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         avatarListener?.onAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(message: SceytMessage, menuResId: Int, listener: ((MenuItem) -> Unit)?): Menu? {
-        val menu = defaultListeners.onShowMessageActionsMenu(message, menuResId, listener)
-        return actionMenuListener?.onShowMessageActionsMenu(message, menuResId, listener)
+    override fun onShowMessageActionsMenu(vararg messages: SceytMessage, menuResId: Int,
+                                          listener: ((MenuItem) -> Unit)?): Menu? {
+        val menu = defaultListeners.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
+        return actionMenuListener?.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
                 ?: menu
     }
 

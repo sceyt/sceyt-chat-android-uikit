@@ -308,7 +308,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
                 R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, false)
+                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, onlyForMe = false)
             }
             false
         }
@@ -809,9 +809,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
+    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean) {
         DeleteMessageDialog(context, positiveClickListener = {
-            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(message, onlyForMe))
+            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(), onlyForMe = onlyForMe))
         }).show()
     }
 
@@ -819,8 +819,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.EditMessage(message))
     }
 
-    override fun onForwardMessageClick(message: SceytMessage) {
-        SceytForwardActivity.launch(context, message)
+    override fun onForwardMessageClick(vararg messages: SceytMessage) {
+        SceytForwardActivity.launch(context, *messages)
     }
 
     override fun onReactMessageClick(message: SceytMessage) {

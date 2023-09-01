@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ui
 
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -24,7 +23,9 @@ sealed interface HeaderUIElementsListener {
     }
 
     interface ActionsMenuListener : HeaderUIElementsListener {
-        fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, listener: ((MenuItem) -> Unit)?): Menu?
+        fun onShowMessageActionsMenu(vararg messages: SceytMessage, @MenuRes menuResId: Int,
+                                     listener: ((MenuItem) -> Unit)?): Menu?
+
         fun onHideMessageActionsMenu()
     }
 

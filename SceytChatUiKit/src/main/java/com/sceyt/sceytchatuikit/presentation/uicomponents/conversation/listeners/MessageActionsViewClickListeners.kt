@@ -9,7 +9,7 @@ sealed interface MessageActionsViewClickListeners {
     }
 
     fun interface DeleteMessage : MessageActionsViewClickListeners {
-        fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean)
+        fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean)
     }
 
     fun interface EditMessage : MessageActionsViewClickListeners {
@@ -17,7 +17,7 @@ sealed interface MessageActionsViewClickListeners {
     }
 
     fun interface ForwardMessage : MessageActionsViewClickListeners {
-        fun onForwardMessageClick(message: SceytMessage)
+        fun onForwardMessageClick(vararg messages: SceytMessage)
     }
 
     fun interface ReactMessage : MessageActionsViewClickListeners {
