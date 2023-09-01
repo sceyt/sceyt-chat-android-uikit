@@ -74,7 +74,7 @@ class OutTextMsgViewHolder(
         }
     }
 
-    override val selectMessageCheckBox = binding.selectView
+    override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
         with(context) {

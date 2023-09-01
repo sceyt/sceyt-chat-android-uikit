@@ -161,6 +161,8 @@ class OutFileMsgViewHolder(
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
+    override val selectMessageView get() = binding.selectView
+
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }

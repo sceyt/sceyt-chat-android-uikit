@@ -154,6 +154,8 @@ class OutImageMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
+    override val selectMessageView get() = binding.selectView
+
     private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))

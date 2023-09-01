@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -96,6 +95,8 @@ class IncAttachmentsMsgViewHolder(
             }
         }
     }
+
+    override val selectMessageView get() = binding.selectView
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 

@@ -206,6 +206,8 @@ class OutVideoMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
+    override val selectMessageView get() = binding.selectView
+
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))

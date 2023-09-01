@@ -414,9 +414,8 @@ class MessageListViewModel(
     }
 
     fun deleteMessages(message: List<SceytMessage>, onlyForMe: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-           /* val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
-            _messageForceDeleteLiveData.postValue(response)*/
+        message.forEach {
+            deleteMessage(it, onlyForMe)
         }
     }
 

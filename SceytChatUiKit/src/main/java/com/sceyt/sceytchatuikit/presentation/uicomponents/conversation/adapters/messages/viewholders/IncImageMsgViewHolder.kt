@@ -167,6 +167,9 @@ class IncImageMsgViewHolder(
         }
     }
 
+    override val selectMessageView
+        get() = binding.selectView
+
     override val fileContainer: ImageView
         get() = binding.fileImage
 
