@@ -11,8 +11,10 @@ import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.changeAlphaWithAnim
+import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener.ToolbarActionsVisibilityListener
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -42,11 +44,17 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
         visibilityInitializer?.onInitToolbarActionsVisibility(*messages, menu = menu)
     }
 
-    fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg message: SceytMessage): Menu? {
+    fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg messages: SceytMessage): Menu? {
         menu.clear()
         inflateMenu(menuRes).also {
-            initMenu(*message)
+            initMenu(*messages)
         }
+        setTitleTextAppearance(context, R.style.SceytToolbarApperiance)
+        setTitleMargin(dpToPx(20f), 0, 0, 0)
+
+        title = if (messages.isNotEmpty())
+            messages.size.toString()
+        else ""
 
         val autoTransition = ChangeBounds()
         autoTransition.duration = 100
