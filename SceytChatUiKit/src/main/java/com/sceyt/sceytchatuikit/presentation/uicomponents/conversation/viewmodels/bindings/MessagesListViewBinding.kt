@@ -451,6 +451,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.OnMultiselectEvent -> {
+                if (event.message.deliveryStatus == DeliveryStatus.Pending) return@setMessageCommandEventListener
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
 
                 event.message.isSelected = !wasSelected
@@ -461,7 +462,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     if (selectedMessagesMap.isEmpty()) {
                         messageActionBridge.hideMessageActions()
                         messagesListView.cancelMultiSelectMode()
-                    }else{
+                    } else {
                         messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     }
                 } else {

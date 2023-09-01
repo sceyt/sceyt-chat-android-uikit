@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
-import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -86,7 +85,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
         setMaxWidth()
-        if (diff.selectionChanged)
+        if (diff.selectionChanged || diff.statusChanged)
             selectableAnimHelper.doOnBind(selectMessageCheckBox, item)
         if (messageListItem.highlighted)
             highlight()
@@ -467,7 +466,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     open fun cancelSelectableState() {
-        selectableAnimHelper.cancelSelectableState(selectMessageCheckBox)
+        selectableAnimHelper.cancelSelectableState(selectMessageCheckBox, messageListItem)
     }
 
     open fun highlight() {
