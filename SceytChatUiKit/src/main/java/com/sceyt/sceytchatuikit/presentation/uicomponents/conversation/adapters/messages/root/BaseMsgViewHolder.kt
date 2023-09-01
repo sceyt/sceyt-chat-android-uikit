@@ -80,7 +80,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
     private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
-    open val selectMessageCheckBox: CheckBox? = null
+    open val selectMessageCheckBox: View? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {

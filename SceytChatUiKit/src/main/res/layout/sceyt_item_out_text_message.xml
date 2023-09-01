@@ -7,12 +7,11 @@
     android:paddingStart="0dp"
     android:paddingEnd="12dp">
 
-    <androidx.appcompat.widget.AppCompatCheckBox
-        android:id="@+id/checkBox"
+    <View
+        android:id="@+id/selectView"
         android:layout_width="22dp"
         android:layout_height="22dp"
-        android:background="@null"
-        android:button="@drawable/sceyt_custom_radiobutton"
+        android:background="@drawable/sceyt_custom_radiobutton_view"
         android:clickable="false"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

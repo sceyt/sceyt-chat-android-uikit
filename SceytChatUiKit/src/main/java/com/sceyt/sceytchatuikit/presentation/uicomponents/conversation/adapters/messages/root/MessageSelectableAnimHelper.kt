@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.CheckBox
 import androidx.core.animation.addListener
@@ -17,56 +18,63 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
     private val checkBoxSize = dpToPx(22f)
     private var animation: ValueAnimator? = null
 
-    fun doOnBind(checkBox: CheckBox?, message: MessageListItem) {
-        checkBox ?: return
+    fun doOnBind(view: View?, message: MessageListItem) {
+        view ?: return
         val isMultiSelectableMode = (viewHolder.bindingAdapter as? MessagesAdapter)?.isMultiSelectableMode()
                 ?: false
-        checkBox.isVisible = isMultiSelectableMode
+        view.isVisible = isMultiSelectableMode
 
         if (isMultiSelectableMode) {
-            checkBox.isChecked = (message as? MessageListItem.MessageItem)?.message?.isSelected ?: false
-            checkBox.updateLayoutParams<MarginLayoutParams> {
+            val isSelected = (message as? MessageListItem.MessageItem)?.message?.isSelected ?: false
+            if (view is CheckBox) {
+                view.isChecked = isSelected
+            } else view.isSelected = isSelected
+            view.updateLayoutParams<MarginLayoutParams> {
                 marginStart = checkBoxSize / 2
             }
-        } else checkBox.isVisible = false
+        } else view.isVisible = false
     }
 
-    fun doOnAttach(checkBox: CheckBox?, message: MessageListItem) {
+    fun doOnAttach(checkBox: View?, message: MessageListItem) {
         doOnBind(checkBox, message)
     }
 
-    fun setSelectableState(checkBox: CheckBox?, message: MessageListItem) {
-        checkBox ?: return
-        checkBox.isChecked = (message as? MessageListItem.MessageItem)?.message?.isSelected ?: false
-        if (!checkBox.isVisible)
-            checkBox.updateLayoutParams<MarginLayoutParams> {
+    fun setSelectableState(view: View?, message: MessageListItem) {
+        view ?: return
+        val isSelected = (message as? MessageListItem.MessageItem)?.message?.isSelected ?: false
+        if (view is CheckBox) {
+            view.isChecked = isSelected
+        } else view.isSelected = isSelected
+
+        if (!view.isVisible)
+            view.updateLayoutParams<MarginLayoutParams> {
                 marginStart = -checkBoxSize
             }
 
-        checkBox.isVisible = true
+        view.isVisible = true
         animation?.cancel()
-        animation = ObjectAnimator.ofFloat(checkBox.marginStart.toFloat(), checkBoxSize / 2f)
+        animation = ObjectAnimator.ofFloat(view.marginStart.toFloat(), checkBoxSize / 2f)
         animation?.addUpdateListener {
-            checkBox.updateLayoutParams<MarginLayoutParams> {
+            view.updateLayoutParams<MarginLayoutParams> {
                 marginStart = (it.animatedValue as Float).toInt()
             }
         }
         animation?.start()
     }
 
-    fun cancelSelectableState(checkBox: CheckBox?) {
-        checkBox ?: return
-        checkBox.isVisible = true
+    fun cancelSelectableState(view: View?) {
+        view ?: return
+        view.isVisible = true
         animation?.cancel()
-        animation = ObjectAnimator.ofFloat(checkBox.marginStart.toFloat(), -checkBoxSize.toFloat())
+        animation = ObjectAnimator.ofFloat(view.marginStart.toFloat(), -checkBoxSize.toFloat())
         animation?.addUpdateListener {
-            checkBox.updateLayoutParams<MarginLayoutParams> {
+            view.updateLayoutParams<MarginLayoutParams> {
                 marginStart = (it.animatedValue as Float).toInt()
             }
         }
         animation?.addListener(onEnd = {
-            if (checkBox.marginStart == -checkBoxSize)
-                checkBox.isVisible = false
+            if (view.marginStart == -checkBoxSize)
+                view.isVisible = false
         })
         animation?.start()
     }
