@@ -2,7 +2,7 @@
 <resources>
     //Themed colors
     <color name="sceyt_color_primary_dark">#ffffff</color>
-    <color name="sceyt_color_primary">#4F6AFF</color>
+    <color name="sceyt_color_primary">#5159F6</color>
 
     <color name="sceyt_color_status_bar">#33000000</color>
     <color name="sceyt_color_bottom_nav">#ffffff</color>
@@ -20,8 +20,8 @@
     <color name="sceyt_color_light_themed">#FFFFFFFF</color>
 
     // Not themed colors
-    <color name="colorAccent">#4F6AFF</color>
-    <color name="sceyt_color_accent">#4F6AFF</color>
+    <color name="colorAccent">#5159F6</color>
+    <color name="sceyt_color_accent">#5159F6</color>
     <color name="sceyt_color_black">#000000</color>
     <color name="sceyt_color_white">#FFFFFFFF</color>
     <color name="sceyt_color_hint">#9B9DA8</color>

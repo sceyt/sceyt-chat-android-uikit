@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
@@ -20,6 +21,7 @@ import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
@@ -30,7 +32,10 @@ import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -41,6 +46,7 @@ import java.util.Collections
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
+    messagesListView.setMultiselectDestination(selectedMessagesMap)
     clearPreparingThumbs()
 
     val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
@@ -434,7 +440,83 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setMessageCommandEventListener {
-        onMessageCommandEvent(it)
+        when (val event = it) {
+            is MessageCommandEvent.DeleteMessage -> {
+                deleteMessages(event.message.toList(), event.onlyForMe)
+            }
+
+            is MessageCommandEvent.EditMessage -> {
+                prepareToEditMessage(event.message)
+            }
+
+            is MessageCommandEvent.ShowHideMessageActions -> {
+                prepareToShowMessageActions(event)
+            }
+
+            is MessageCommandEvent.OnMultiselectEvent -> {
+                if (event.message.deliveryStatus == DeliveryStatus.Pending) return@setMessageCommandEventListener
+                val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
+
+                if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
+                    val errorMessage = String.format(messagesListView.context.getString(R.string.rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
+                    customToastSnackBar(messagesListView, errorMessage)
+                    return@setMessageCommandEventListener
+                }
+
+                event.message.isSelected = !wasSelected
+                messagesListView.updateMessageSelection(event.message)
+
+                if (wasSelected) {
+                    selectedMessagesMap.remove(event.message.tid)
+                    if (selectedMessagesMap.isEmpty()) {
+                        messageActionBridge.hideMessageActions()
+                        messagesListView.cancelMultiSelectMode()
+                    } else {
+                        messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
+                    }
+                } else {
+                    selectedMessagesMap[event.message.tid] = event.message
+                    messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
+                    messagesListView.setMultiSelectableMode()
+                }
+            }
+
+            is MessageCommandEvent.OnCancelMultiselectEvent -> {
+                selectedMessagesMap.clear()
+                messagesListView.cancelMultiSelectMode()
+            }
+
+            is MessageCommandEvent.Reply -> {
+                prepareToReplyMessage(event.message)
+            }
+
+            is MessageCommandEvent.ScrollToDown -> {
+                prepareToScrollToNewMessage()
+            }
+
+            is MessageCommandEvent.ScrollToReplyMessage -> {
+                prepareToScrollToReplyMessage(event.message)
+            }
+
+            is MessageCommandEvent.AttachmentLoaderClick -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    prepareToPauseOrResumeUpload(event.item)
+                }
+            }
+
+            is MessageCommandEvent.UserClick -> {
+                if (event.userId == myId) return@setMessageCommandEventListener
+                viewModelScope.launch(Dispatchers.IO) {
+                    val user = persistenceUsersMiddleWare.getUserDbById(event.userId)
+                            ?: User(event.userId)
+                    val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
+                    if (response is SceytResponse.Success)
+                        response.data?.let {
+                            ConversationInfoActivity.newInstance(event.view.context, response.data, true)
+                        }
+                }
+            }
+        }
     }
 
     messagesListView.setMessageReactionsEventListener {

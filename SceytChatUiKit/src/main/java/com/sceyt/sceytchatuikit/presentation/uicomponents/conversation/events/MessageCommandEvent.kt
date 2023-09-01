@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events
 
 import android.view.View
-import android.widget.PopupWindow
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.ScrollToDownView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -9,7 +8,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 sealed class MessageCommandEvent {
 
     data class DeleteMessage(
-            val message: SceytMessage,
+            val message: List<SceytMessage>,
             val onlyForMe: Boolean
     ) : MessageCommandEvent()
 
@@ -19,9 +18,14 @@ sealed class MessageCommandEvent {
 
     data class ShowHideMessageActions(
             val message: SceytMessage,
-            val show: Boolean,
-            val popupWindow: PopupWindow? = null
+            val show: Boolean
     ) : MessageCommandEvent()
+
+    data class OnMultiselectEvent(
+            val message: SceytMessage,
+    ) : MessageCommandEvent()
+
+    object OnCancelMultiselectEvent : MessageCommandEvent()
 
     data class Reply(
             val message: SceytMessage,

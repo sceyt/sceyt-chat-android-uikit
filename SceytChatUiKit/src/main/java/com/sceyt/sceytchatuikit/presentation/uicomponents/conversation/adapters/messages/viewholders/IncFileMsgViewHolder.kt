@@ -120,6 +120,8 @@ class IncFileMsgViewHolder(
         }
     }
 
+    override val selectMessageView get() = binding.selectView
+
     override val layoutBubbleConfig get() = Pair(binding.root, false)
 
     private fun setFileDetails(file: SceytAttachment) {

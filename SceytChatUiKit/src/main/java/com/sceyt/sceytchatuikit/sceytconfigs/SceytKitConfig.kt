@@ -33,6 +33,9 @@ object SceytKitConfig {
     @IntRange(from = 1, to = 6)
     var MAX_SELF_REACTIONS_SIZE = 6
 
+    @IntRange(from = 1, to = 50)
+    var MAX_MULTISELECT_MESSAGES_COUNT = 30
+
     var enableDarkMode = true
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
     var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg

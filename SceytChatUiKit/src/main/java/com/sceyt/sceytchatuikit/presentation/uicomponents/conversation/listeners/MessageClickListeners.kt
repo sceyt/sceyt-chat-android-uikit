@@ -65,6 +65,10 @@ sealed interface MessageClickListeners {
         fun onScrollToDownClick(view: ScrollToDownView)
     }
 
+    fun interface MultiSelectClickListener : MessageClickListeners {
+        fun onMultiSelectClick(view: View, message: SceytMessage)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             MessageClickListener,
@@ -80,5 +84,6 @@ sealed interface MessageClickListeners {
             AttachmentLongClickListener,
             MentionClickListener,
             ScrollToDownClickListener,
-            AttachmentLoaderClickListener
+            AttachmentLoaderClickListener,
+            MultiSelectClickListener
 }

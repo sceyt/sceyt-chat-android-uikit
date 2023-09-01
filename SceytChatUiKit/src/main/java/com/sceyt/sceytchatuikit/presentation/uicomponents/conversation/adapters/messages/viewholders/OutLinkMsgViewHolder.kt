@@ -80,6 +80,8 @@ class OutLinkMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
+    override val selectMessageView get() = binding.selectView
+
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
