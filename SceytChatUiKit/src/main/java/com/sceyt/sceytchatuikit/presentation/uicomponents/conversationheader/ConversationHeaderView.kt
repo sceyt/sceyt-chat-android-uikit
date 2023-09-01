@@ -230,7 +230,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         val menu: Menu?
         with(binding) {
             toolBarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
-                uiElementsListeners.onInitToolbarActionsVisibility(*messages, menu = menu)
+                uiElementsListeners.onInitToolbarActionsMenu(*messages, menu = menu)
             }
             menu = toolBarMessageActions.setupMenuWithMessages(resId, *messages)
             toolBarMessageActions.isVisible = true
@@ -464,7 +464,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         hideMessageActions()
     }
 
-    override fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu) {
+    override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
         val isSingleMessage = messages.size == 1
         val firstMessage = messages.getOrNull(0)
 

@@ -30,7 +30,7 @@ sealed interface HeaderUIElementsListener {
     }
 
     fun interface ToolbarActionsVisibilityListener : HeaderUIElementsListener {
-        fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu)
+        fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu)
     }
 
     /** Use this if you want to implement all callbacks */
