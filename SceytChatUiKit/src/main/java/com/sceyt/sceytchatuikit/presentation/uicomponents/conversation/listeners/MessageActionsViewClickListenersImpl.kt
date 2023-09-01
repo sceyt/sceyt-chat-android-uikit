@@ -13,9 +13,9 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
     private var replyMessageListener: MessageActionsViewClickListeners.ReplyMessage? = null
     private var replyInThreadMessageListener: MessageActionsViewClickListeners.ReplyInThreadMessage? = null
 
-    override fun onCopyMessageClick(message: SceytMessage) {
-        defaultListeners.onCopyMessageClick(message)
-        copyMessageListener?.onCopyMessageClick(message)
+    override fun onCopyMessagesClick(vararg messages: SceytMessage) {
+        defaultListeners.onCopyMessagesClick(*messages)
+        copyMessageListener?.onCopyMessagesClick(*messages)
     }
 
     override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean) {
