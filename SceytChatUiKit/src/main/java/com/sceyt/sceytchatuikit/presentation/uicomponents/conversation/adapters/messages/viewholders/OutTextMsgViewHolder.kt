@@ -44,6 +44,8 @@ class OutTextMsgViewHolder(
         }
     }
 
+    override val selectMessageCheckBox = binding.checkBox
+
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
 

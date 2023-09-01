@@ -24,6 +24,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var attachmentLoaderClickListener: MessageClickListeners.AttachmentLoaderClickListener? = null
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
+    private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
 
 
     internal constructor()
@@ -102,6 +103,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         scrollToDownClickListener?.onScrollToDownClick(view)
     }
 
+    override fun onMultiSelectClick(view: View, message: SceytMessage) {
+        defaultListeners?.onMultiSelectClick(view, message)
+        multiSelectClickListener?.onMultiSelectClick(view, message)
+    }
+
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
@@ -119,6 +125,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 linkClickListener = listener
                 scrollToDownClickListener = listener
                 attachmentLoaderClickListener = listener
+                multiSelectClickListener = listener
             }
 
             is MessageClickListeners.MessageClickListener -> {
@@ -175,6 +182,10 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
             is MessageClickListeners.ScrollToDownClickListener -> {
                 scrollToDownClickListener = listener
+            }
+
+            is MessageClickListeners.MultiSelectClickListener -> {
+                multiSelectClickListener = listener
             }
         }
     }

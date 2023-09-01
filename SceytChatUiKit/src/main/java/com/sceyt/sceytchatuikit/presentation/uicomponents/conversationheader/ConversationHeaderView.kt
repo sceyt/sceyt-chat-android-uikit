@@ -80,7 +80,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var enablePresence: Boolean = true
     private var isShowingMessageActions = false
-
+    private var toolbarActionsHiddenCallback: (() -> Unit)? = null
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -342,6 +342,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         eventListeners.onPresenceUpdateEvent(user)
     }
 
+    internal fun setToolbarActionHiddenCallback(callback: () -> Unit) {
+        toolbarActionsHiddenCallback = callback
+    }
+
     fun isTyping() = isTyping
 
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -395,7 +399,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    fun showMessageActions(message: SceytMessage, @MenuRes resId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
+    fun showMessageActionsInToolbar(message: SceytMessage, @MenuRes resId: Int, listener: ((MenuItem) -> Unit)?): Menu? {
         val menu: Menu?
         with(binding) {
             menu = toolBarMessageActions.setupMenuWithMessage(resId, message)
@@ -405,13 +409,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             toolBarMessageActions.setMenuItemClickListener {
                 listener?.invoke(it)
                 hideMessageActions()
-            }
-
-            reactionsPopupWindow?.setOnDismissListener {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    if (!toolBarMessageActions.handledClick && !toolBarMessageActions.isOverflowMenuShowing)
-                        hideMessageActions()
-                }, 100)
+                toolbarActionsHiddenCallback?.invoke()
             }
         }
         return menu
@@ -446,8 +444,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         setAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
-        return showMessageActions(message, menuResId, reactionsPopupWindow, listener)
+    override fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, listener: ((MenuItem) -> Unit)?): Menu? {
+        return showMessageActionsInToolbar(message, menuResId, listener)
+    }
+
+    override fun onHideMessageActionsMenu() {
+        hideMessageActions()
     }
 
     //Click listeners
@@ -462,9 +464,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onBackClick(view: View) {
-        if (isShowingMessageActions)
+        if (isShowingMessageActions) {
             hideMessageActions()
-        else
+            toolbarActionsHiddenCallback?.invoke()
+        } else
             context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
     }
 }

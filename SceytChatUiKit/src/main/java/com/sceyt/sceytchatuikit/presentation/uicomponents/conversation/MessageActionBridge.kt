@@ -2,8 +2,10 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.view.Menu
 import android.widget.PopupWindow
+import androidx.core.view.get
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 
 class MessageActionBridge {
@@ -16,12 +18,15 @@ class MessageActionBridge {
 
     fun setHeaderView(headerView: ConversationHeaderView) {
         this.headerView = headerView
+        headerView.setToolbarActionHiddenCallback {
+            messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.OnCancelMultiselectEvent)
+        }
     }
 
-    fun showMessageActions(message: SceytMessage, popupWindow: PopupWindow?): Menu? {
+    fun showMessageActions(message: SceytMessage): Menu? {
         val messageActionListener = messagesListView?.messageActionsViewClickListeners
                 ?: return null
-        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(message, R.menu.sceyt_menu_message_actions, popupWindow) {
+        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(message, R.menu.sceyt_menu_message_actions) {
             when (it.itemId) {
                 R.id.sceyt_edit_message -> messageActionListener.onEditMessageClick(message)
                 R.id.sceyt_forward -> messageActionListener.onForwardMessageClick(message)
@@ -31,5 +36,9 @@ class MessageActionBridge {
                 R.id.sceyt_delete_message -> messageActionListener.onDeleteMessageClick(message, false)
             }
         }
+    }
+
+    fun hideMessageActions() {
+        headerView?.uiElementsListeners?.onHideMessageActionsMenu()
     }
 }
