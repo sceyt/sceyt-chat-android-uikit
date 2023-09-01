@@ -45,7 +45,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
         firstMessage?.let { message ->
             menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
             menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
-            menu.findItem(R.id.sceyt_copy_message).isVisible = isSingleMessage && message.body.isNotNullOrBlank()
+            menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
         }
     }
 
@@ -57,7 +57,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
 
         val autoTransition = ChangeBounds()
         autoTransition.duration = 100
-        TransitionManager.beginDelayedTransition(this.getChildAt(0) as ActionMenuView,autoTransition)
+        TransitionManager.beginDelayedTransition(this.getChildAt(0) as ActionMenuView, autoTransition)
         return menu
     }
 
