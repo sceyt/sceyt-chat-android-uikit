@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.forEach
 import androidx.core.view.isVisible
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
@@ -76,8 +77,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var enablePresence: Boolean = true
-    private var isShowingMessageActions = false
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
+    private var addedMenu: Menu? = null
+    var isShowingMessageActions = false
+        private set
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -228,6 +231,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             toolBarMessageActions.isVisible = true
             layoutToolbarDetails.isVisible = false
             isShowingMessageActions = true
+            addedMenu?.forEach { it.isVisible = false }
             toolBarMessageActions.setMenuItemClickListener {
                 listener?.invoke(it)
                 hideMessageActions()
@@ -346,6 +350,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.toolBarMessageActions.isVisible = false
         binding.layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
+        addedMenu?.forEach { item -> item.isVisible = true }
     }
 
     internal fun onTyping(data: ChannelTypingEventData) {
@@ -410,6 +415,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         with(binding.headerToolbar) {
             inflateMenu(resId)
             setOnMenuItemClickListener(listener)
+            addedMenu = menu
         }
     }
 
