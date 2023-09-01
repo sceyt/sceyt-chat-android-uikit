@@ -144,6 +144,7 @@
     <string name="sceyt_photo">Photo</string>
     <string name="sceyt_slide_to_cancel">"\u003C Slide to cancel"</string>
     <string name="sceyt_message_copied">Message copied</string>
+    <string name="sceyt_messages_copied">Messages copied</string>
     <string name="sceyt_forward_message">Forward message</string>
     <string name="sceyt_forwarded_message">Forwarded message</string>
     <string name="sceyt_all">All</string>
