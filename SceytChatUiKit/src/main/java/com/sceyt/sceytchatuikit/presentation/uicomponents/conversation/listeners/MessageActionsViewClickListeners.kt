@@ -5,7 +5,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 sealed interface MessageActionsViewClickListeners {
 
     fun interface CopyMessage : MessageActionsViewClickListeners {
-        fun onCopyMessageClick(message: SceytMessage)
+        fun onCopyMessagesClick(vararg messages: SceytMessage)
     }
 
     fun interface DeleteMessage : MessageActionsViewClickListeners {

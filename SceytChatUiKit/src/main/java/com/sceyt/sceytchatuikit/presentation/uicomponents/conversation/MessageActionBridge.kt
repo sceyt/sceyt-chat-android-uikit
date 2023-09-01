@@ -31,7 +31,10 @@ class MessageActionBridge {
                     messageActionListener.onEditMessageClick(message)
                 }
 
-                R.id.sceyt_forward -> messageActionListener.onForwardMessageClick(*selectedMessages)
+                R.id.sceyt_forward -> {
+                    messageActionListener.onForwardMessageClick(*selectedMessages)
+                }
+
                 R.id.sceyt_reply -> firstMessage?.let { message ->
                     messageActionListener.onReplyMessageClick(message)
                 }
@@ -40,8 +43,8 @@ class MessageActionBridge {
                     messageActionListener.onReplyMessageInThreadClick(message)
                 }
 
-                R.id.sceyt_copy_message -> firstMessage?.let { message ->
-                    messageActionListener.onCopyMessageClick(message)
+                R.id.sceyt_copy_message -> {
+                    messageActionListener.onCopyMessagesClick(*selectedMessages)
                 }
 
                 R.id.sceyt_delete_message -> {

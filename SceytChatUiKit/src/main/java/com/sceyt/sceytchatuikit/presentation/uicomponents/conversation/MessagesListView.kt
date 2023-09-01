@@ -307,7 +307,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_react -> messageActionsViewClickListeners.onReactMessageClick(message)
                 R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
                 R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
-                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessageClick(message)
+                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(message)
                 R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, onlyForMe = false)
             }
             false
@@ -804,8 +804,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
 
     // Message popup events
-    override fun onCopyMessageClick(message: SceytMessage) {
-        context.setClipboard(message.body.trim())
+    override fun onCopyMessagesClick(vararg messages: SceytMessage) {
+        val text = messages.joinToString("\n\n") { it.body.trim() }
+        context.setClipboard(text.trim())
         Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 
