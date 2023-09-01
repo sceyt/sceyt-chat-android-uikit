@@ -483,6 +483,7 @@ class MessageListViewModel(
         withContext(Dispatchers.Default) {
             var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
             data.forEachIndexed { index, sceytMessage ->
+                sceytMessage.isSelected = selectedMessagesMap.containsKey(sceytMessage.tid)
                 var prevMessage = compareMessage
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
