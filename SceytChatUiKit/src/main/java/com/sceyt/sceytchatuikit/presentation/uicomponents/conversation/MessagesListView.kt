@@ -807,7 +807,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onCopyMessagesClick(vararg messages: SceytMessage) {
         val text = messages.joinToString("\n\n") { it.body.trim() }
         context.setClipboard(text.trim())
-        Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
+        val toastMessage = if (messages.size == 1) context.getString(R.string.sceyt_message_copied)
+        else context.getString(R.string.sceyt_messages_copied)
+        Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
     }
 
     override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit) {
