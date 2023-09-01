@@ -79,14 +79,14 @@ abstract class BaseMsgViewHolder(private val view: View,
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
     private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
-    open val selectMessageCheckBox: View? = null
+    open val selectMessageView: View? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)
-            selectableAnimHelper.doOnBind(selectMessageCheckBox, item)
+            selectableAnimHelper.doOnBind(selectMessageView, item)
         if (messageListItem.highlighted)
             highlight()
     }
@@ -122,7 +122,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     open fun onViewAttachedToWindow() {
         if (::messageListItem.isInitialized) {
             displayedListener?.invoke(messageListItem)
-            selectableAnimHelper.doOnAttach(selectMessageCheckBox, messageListItem)
+            selectableAnimHelper.doOnAttach(selectMessageView, messageListItem)
         }
     }
 
@@ -462,11 +462,11 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     open fun setSelectableState() {
-        selectableAnimHelper.setSelectableState(selectMessageCheckBox, messageListItem)
+        selectableAnimHelper.setSelectableState(selectMessageView, messageListItem)
     }
 
     open fun cancelSelectableState() {
-        selectableAnimHelper.cancelSelectableState(selectMessageCheckBox, messageListItem)
+        selectableAnimHelper.cancelSelectableState(selectMessageView, messageListItem)
     }
 
     open fun highlight() {

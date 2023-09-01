@@ -89,6 +89,8 @@ class OutAttachmentsMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
+    override val selectMessageView get() = binding.selectView
+
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)
 
