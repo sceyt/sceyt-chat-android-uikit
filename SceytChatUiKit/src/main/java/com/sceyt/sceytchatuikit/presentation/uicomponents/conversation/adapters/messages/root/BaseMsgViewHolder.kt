@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -78,11 +79,15 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
+    private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
+    open val selectMessageCheckBox: CheckBox? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
         setMaxWidth()
+        if (diff.selectionChanged)
+            selectableAnimHelper.doOnBind(selectMessageCheckBox, item)
         if (messageListItem.highlighted)
             highlight()
     }
@@ -116,8 +121,10 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-        if (::messageListItem.isInitialized)
+        if (::messageListItem.isInitialized) {
             displayedListener?.invoke(messageListItem)
+            selectableAnimHelper.doOnAttach(selectMessageCheckBox, messageListItem)
+        }
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null
@@ -455,7 +462,15 @@ abstract class BaseMsgViewHolder(private val view: View,
         return if (::messageListItem.isInitialized) messageListItem else null
     }
 
-    fun highlight() {
+    open fun setSelectableState() {
+        selectableAnimHelper.setSelectableState(selectMessageCheckBox, messageListItem)
+    }
+
+    open fun cancelSelectableState() {
+        selectableAnimHelper.cancelSelectableState(selectMessageCheckBox)
+    }
+
+    open fun highlight() {
         highlightAnim?.cancel()
         val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         view.setBackgroundColor(colorFrom)

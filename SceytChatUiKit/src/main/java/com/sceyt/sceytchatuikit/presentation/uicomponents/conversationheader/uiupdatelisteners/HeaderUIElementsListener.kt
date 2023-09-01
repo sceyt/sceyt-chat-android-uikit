@@ -23,8 +23,9 @@ sealed interface HeaderUIElementsListener {
         fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean)
     }
 
-    fun interface ActionsMenuListener : HeaderUIElementsListener {
-        fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu?
+    interface ActionsMenuListener : HeaderUIElementsListener {
+        fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, listener: ((MenuItem) -> Unit)?): Menu?
+        fun onHideMessageActionsMenu()
     }
 
     /** Use this if you want to implement all callbacks */

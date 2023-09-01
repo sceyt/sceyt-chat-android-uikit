@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ui
 
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.PopupWindow
 import android.widget.TextView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -31,10 +30,15 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         avatarListener?.onAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(message: SceytMessage, menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
-        val menu = defaultListeners.onShowMessageActionsMenu(message, menuResId, reactionsPopupWindow, listener)
-        return actionMenuListener?.onShowMessageActionsMenu(message, menuResId, reactionsPopupWindow, listener)
+    override fun onShowMessageActionsMenu(message: SceytMessage, menuResId: Int, listener: ((MenuItem) -> Unit)?): Menu? {
+        val menu = defaultListeners.onShowMessageActionsMenu(message, menuResId, listener)
+        return actionMenuListener?.onShowMessageActionsMenu(message, menuResId, listener)
                 ?: menu
+    }
+
+    override fun onHideMessageActionsMenu() {
+        defaultListeners.onHideMessageActionsMenu()
+        actionMenuListener?.onHideMessageActionsMenu()
     }
 
     fun setListener(listener: HeaderUIElementsListener) {
@@ -45,15 +49,19 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
                 avatarListener = listener
                 actionMenuListener = listener
             }
+
             is HeaderUIElementsListener.TitleListener -> {
                 titleListener = listener
             }
+
             is HeaderUIElementsListener.SubTitleListener -> {
                 subTitleListener = listener
             }
+
             is HeaderUIElementsListener.AvatarListener -> {
                 avatarListener = listener
             }
+
             is HeaderUIElementsListener.ActionsMenuListener -> {
                 actionMenuListener = listener
             }

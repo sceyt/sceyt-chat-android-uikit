@@ -25,6 +25,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
+    private var isMultiSelectableMode = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -207,6 +208,12 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 recyclerView.scrollToPosition(itemCount - 1)
         }
     }
+
+    fun setMultiSelectableMode(enables: Boolean) {
+        isMultiSelectableMode = enables
+    }
+
+    fun isMultiSelectableMode() = isMultiSelectableMode
 
     companion object {
         private var updateJob: Job? = null

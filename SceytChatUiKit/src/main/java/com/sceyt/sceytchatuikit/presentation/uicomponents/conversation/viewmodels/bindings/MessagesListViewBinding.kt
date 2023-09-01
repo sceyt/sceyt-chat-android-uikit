@@ -30,7 +30,9 @@ import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -41,6 +43,7 @@ import java.util.Collections
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
+    messagesListView.setMultiselectDestination(selectedMessagesMap)
     clearPreparingThumbs()
 
     val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
@@ -434,7 +437,74 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setMessageCommandEventListener {
-        onMessageCommandEvent(it)
+        when (val event = it) {
+            is MessageCommandEvent.DeleteMessage -> {
+                deleteMessage(event.message, event.onlyForMe)
+            }
+
+            is MessageCommandEvent.EditMessage -> {
+                prepareToEditMessage(event.message)
+            }
+
+            is MessageCommandEvent.ShowHideMessageActions -> {
+                prepareToShowMessageActions(event)
+            }
+
+            is MessageCommandEvent.OnMultiselectEvent -> {
+                val wasSelected = selectedMessagesMap.containsKey(event.message.id)
+
+                event.message.isSelected = !wasSelected
+                messagesListView.updateMessageSelection(event.message)
+
+                if (wasSelected) {
+                    selectedMessagesMap.remove(event.message.id)
+                    if (selectedMessagesMap.isEmpty()) {
+                        messageActionBridge.hideMessageActions()
+                        messagesListView.cancelMultiSelectMode()
+                    }
+                } else {
+                    selectedMessagesMap[event.message.id] = event.message
+                    messageActionBridge.showMessageActions(event.message)
+                    messagesListView.setMultiSelectableMode()
+                }
+            }
+
+            is MessageCommandEvent.OnCancelMultiselectEvent -> {
+                selectedMessagesMap.clear()
+                messagesListView.cancelMultiSelectMode()
+            }
+
+            is MessageCommandEvent.Reply -> {
+                prepareToReplyMessage(event.message)
+            }
+
+            is MessageCommandEvent.ScrollToDown -> {
+                prepareToScrollToNewMessage()
+            }
+
+            is MessageCommandEvent.ScrollToReplyMessage -> {
+                prepareToScrollToReplyMessage(event.message)
+            }
+
+            is MessageCommandEvent.AttachmentLoaderClick -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    prepareToPauseOrResumeUpload(event.item)
+                }
+            }
+
+            is MessageCommandEvent.UserClick -> {
+                if (event.userId == myId) return@setMessageCommandEventListener
+                viewModelScope.launch(Dispatchers.IO) {
+                    val user = persistenceUsersMiddleWare.getUserDbById(event.userId)
+                            ?: User(event.userId)
+                    val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
+                    if (response is SceytResponse.Success)
+                        response.data?.let {
+                            ConversationInfoActivity.newInstance(event.view.context, response.data, true)
+                        }
+                }
+            }
+        }
     }
 
     messagesListView.setMessageReactionsEventListener {

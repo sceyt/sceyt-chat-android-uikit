@@ -313,4 +313,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             messageSwipeController?.enableDisableSwipe(enabled)
         enableSwipe = enabled
     }
+
+    fun getMessagesAdapter() = if (::mAdapter.isInitialized) mAdapter else null
 }

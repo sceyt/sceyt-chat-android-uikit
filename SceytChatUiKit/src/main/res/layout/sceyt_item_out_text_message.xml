@@ -4,7 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="10dp">
+    android:paddingStart="0dp"
+    android:paddingEnd="12dp">
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@null"
+        android:button="@drawable/sceyt_custom_radiobutton"
+        android:clickable="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
         android:id="@+id/toReplyLine"
