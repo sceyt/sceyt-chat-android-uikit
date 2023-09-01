@@ -5,13 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <androidx.appcompat.widget.AppCompatCheckBox
-        android:id="@+id/checkBox"
+    <View
+        android:id="@+id/selectView"
         android:layout_width="22dp"
         android:layout_height="22dp"
-        android:button="@drawable/sceyt_custom_radiobutton"
+        android:background="@drawable/sceyt_custom_radiobutton_view"
         android:clickable="false"
-        android:background="@null"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -25,7 +24,7 @@
         android:layout_marginEnd="8dp"
         android:background="?selectableItemBackgroundBorderless"
         android:visibility="gone"
-        app:layout_constraintStart_toEndOf="@+id/checkBox"
+        app:layout_constraintStart_toEndOf="@+id/selectView"
         app:layout_constraintTop_toTopOf="@+id/layoutDetails"
         app:layout_goneMarginStart="12dp"
         app:sceytAvatarViewTextSize="15sp"

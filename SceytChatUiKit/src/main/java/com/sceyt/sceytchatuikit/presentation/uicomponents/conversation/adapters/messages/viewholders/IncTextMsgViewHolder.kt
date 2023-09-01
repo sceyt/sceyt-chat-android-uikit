@@ -83,7 +83,7 @@ class IncTextMsgViewHolder(
         }
     }
 
-    override val selectMessageCheckBox = binding.checkBox
+    override val selectMessageCheckBox = binding.selectView
 
     private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
         with(context) {
