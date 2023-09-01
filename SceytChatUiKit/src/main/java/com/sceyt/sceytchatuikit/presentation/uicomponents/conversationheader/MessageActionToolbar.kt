@@ -49,7 +49,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
         inflateMenu(menuRes).also {
             initMenu(*messages)
         }
-        setTitleTextAppearance(context, R.style.SceytToolbarApperiance)
+        setTitleTextAppearance(context, R.style.SceytToolbarAppearance)
         setTitleMargin(dpToPx(20f), 0, 0, 0)
 
         title = if (messages.isNotEmpty())

@@ -32,6 +32,12 @@
         <item name="bottomSheetStyle">@style/SceytAppModalStyle</item>
     </style>
 
+    <style name="SceytToolbarAppearance">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+        <item name="android:textColor">@color/sceyt_color_text_themed</item>
+    </style>
+
     <style name="SceytAppModalStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@drawable/sceyt_bg_bottom_sheet_dialog</item>
     </style>
