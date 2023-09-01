@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ui
 
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.PopupWindow
 import android.widget.TextView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -15,6 +14,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
     private var subTitleListener: HeaderUIElementsListener.SubTitleListener? = null
     private var avatarListener: HeaderUIElementsListener.AvatarListener? = null
     private var actionMenuListener: HeaderUIElementsListener.ActionsMenuListener? = null
+    private var toolbarActionsVisibilityListener: HeaderUIElementsListener.ToolbarActionsVisibilityListener? = null
 
     override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
         defaultListeners.onTitle(titleTextView, channel, replyMessage, replyInThread)
@@ -31,10 +31,21 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         avatarListener?.onAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(message: SceytMessage, menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
-        val menu = defaultListeners.onShowMessageActionsMenu(message, menuResId, reactionsPopupWindow, listener)
-        return actionMenuListener?.onShowMessageActionsMenu(message, menuResId, reactionsPopupWindow, listener)
+    override fun onShowMessageActionsMenu(vararg messages: SceytMessage, menuResId: Int,
+                                          listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
+        val menu = defaultListeners.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
+        return actionMenuListener?.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
                 ?: menu
+    }
+
+    override fun onHideMessageActionsMenu() {
+        defaultListeners.onHideMessageActionsMenu()
+        actionMenuListener?.onHideMessageActionsMenu()
+    }
+
+    override fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu) {
+        defaultListeners.onInitToolbarActionsVisibility(*messages, menu = menu)
+        toolbarActionsVisibilityListener?.onInitToolbarActionsVisibility(*messages, menu = menu)
     }
 
     fun setListener(listener: HeaderUIElementsListener) {
@@ -44,18 +55,27 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
                 subTitleListener = listener
                 avatarListener = listener
                 actionMenuListener = listener
+                toolbarActionsVisibilityListener = listener
             }
+
             is HeaderUIElementsListener.TitleListener -> {
                 titleListener = listener
             }
+
             is HeaderUIElementsListener.SubTitleListener -> {
                 subTitleListener = listener
             }
+
             is HeaderUIElementsListener.AvatarListener -> {
                 avatarListener = listener
             }
+
             is HeaderUIElementsListener.ActionsMenuListener -> {
                 actionMenuListener = listener
+            }
+
+            is HeaderUIElementsListener.ToolbarActionsVisibilityListener -> {
+                toolbarActionsVisibilityListener = listener
             }
         }
     }

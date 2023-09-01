@@ -166,5 +166,6 @@
     <string name="sceyt_chat">chat</string>
     <string name="sceyt_mute_">Mute</string>
     <string name="sceyt_un_mute_">Unmute</string>
+    <string name="rich_max_message_select_count">You can select up to %1$s messages.</string>
 
 </resources>

@@ -60,6 +60,9 @@ data class SceytMessage(var id: Long,
     // todo reply in thread
     val isReplied get() = parentMessage != null && parentMessage?.id != 0L /*&& !replyInThread*/
 
+    @IgnoredOnParcel
+    var isSelected: Boolean = false
+
     fun updateMessage(message: SceytMessage) {
         id = message.id
         tid = message.tid
@@ -125,6 +128,7 @@ data class SceytMessage(var id: Long,
             it.isGroup = isGroup
             it.files = files
             it.messageReactions = messageReactions
+            it.isSelected = isSelected
         }
     }
 

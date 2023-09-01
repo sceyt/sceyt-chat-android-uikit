@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
@@ -279,6 +280,9 @@ class IncVoiceMsgViewHolder(
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
+
+    override val selectMessageView: View
+        get() = binding.selectView
 
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth

@@ -2,18 +2,16 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.content.Context
 import android.graphics.drawable.ColorDrawable
-import android.os.Handler
-import android.os.Looper
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.forEach
 import androidx.core.view.isVisible
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
@@ -21,6 +19,7 @@ import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
@@ -35,6 +34,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -79,8 +79,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var enablePresence: Boolean = true
-    private var isShowingMessageActions = false
-
+    private var toolbarActionsHiddenCallback: (() -> Unit)? = null
+    private var addedMenu: Menu? = null
+    var isShowingMessageActions = false
+        private set
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
@@ -223,6 +225,29 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
+    private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,
+                                            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
+        val menu: Menu?
+        with(binding) {
+            toolBarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
+                uiElementsListeners.onInitToolbarActionsVisibility(*messages, menu = menu)
+            }
+            menu = toolBarMessageActions.setupMenuWithMessages(resId, *messages)
+            toolBarMessageActions.isVisible = true
+            layoutToolbarDetails.isVisible = false
+            isShowingMessageActions = true
+            addedMenu?.forEach { it.isVisible = false }
+
+            toolBarMessageActions.setMenuItemClickListener {
+                listener?.invoke(it) {
+                    hideMessageActions()
+                    toolbarActionsHiddenCallback?.invoke()
+                }
+            }
+        }
+        return menu
+    }
+
     internal fun setChannel(channel: SceytChannel) {
         this.channel = channel
         isGroup = channel.isGroup
@@ -332,6 +357,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.toolBarMessageActions.isVisible = false
         binding.layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
+        addedMenu?.forEach { item -> item.isVisible = true }
     }
 
     internal fun onTyping(data: ChannelTypingEventData) {
@@ -340,6 +366,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     internal fun onPresenceUpdate(user: User) {
         eventListeners.onPresenceUpdateEvent(user)
+    }
+
+    internal fun setToolbarActionHiddenCallback(callback: () -> Unit) {
+        toolbarActionsHiddenCallback = callback
     }
 
     fun isTyping() = isTyping
@@ -392,29 +422,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         with(binding.headerToolbar) {
             inflateMenu(resId)
             setOnMenuItemClickListener(listener)
+            addedMenu = menu
         }
-    }
-
-    fun showMessageActions(message: SceytMessage, @MenuRes resId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
-        val menu: Menu?
-        with(binding) {
-            menu = toolBarMessageActions.setupMenuWithMessage(resId, message)
-            toolBarMessageActions.isVisible = true
-            layoutToolbarDetails.isVisible = false
-            isShowingMessageActions = true
-            toolBarMessageActions.setMenuItemClickListener {
-                listener?.invoke(it)
-                hideMessageActions()
-            }
-
-            reactionsPopupWindow?.setOnDismissListener {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    if (!toolBarMessageActions.handledClick && !toolBarMessageActions.isOverflowMenuShowing)
-                        hideMessageActions()
-                }, 100)
-            }
-        }
-        return menu
     }
 
     fun enableDisableToShowPresence(enable: Boolean) {
@@ -446,8 +455,25 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         setAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu? {
-        return showMessageActions(message, menuResId, reactionsPopupWindow, listener)
+    override fun onShowMessageActionsMenu(vararg messages: SceytMessage, @MenuRes menuResId: Int,
+                                          listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
+        return showMessageActionsInToolbar(*messages, resId = menuResId, listener = listener)
+    }
+
+    override fun onHideMessageActionsMenu() {
+        hideMessageActions()
+    }
+
+    override fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu) {
+        val isSingleMessage = messages.size == 1
+        val firstMessage = messages.getOrNull(0)
+
+        firstMessage?.let { message ->
+            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
+            menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
+            menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
+            menu.findItem(R.id.sceyt_delete_message).isVisible = messages.none { it.incoming }
+        }
     }
 
     //Click listeners
@@ -462,9 +488,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onBackClick(view: View) {
-        if (isShowingMessageActions)
+        if (isShowingMessageActions) {
             hideMessageActions()
-        else
+            toolbarActionsHiddenCallback?.invoke()
+        } else
             context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
     }
 }

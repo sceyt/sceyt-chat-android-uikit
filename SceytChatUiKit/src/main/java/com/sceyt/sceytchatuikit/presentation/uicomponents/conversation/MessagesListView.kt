@@ -85,10 +85,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private lateinit var clickListeners: MessageClickListenersImpl
     internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
     private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
-    private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
+    private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
+    private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
     var enabledActions = true
         private set
@@ -138,43 +139,63 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         defaultClickListeners = object : MessageClickListenersImpl() {
             override fun onMessageClick(view: View, item: MessageItem) {
-                clickListeners.onMessageClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onMessageClick(view, item)
+                }
             }
 
             override fun onMessageLongClick(view: View, item: MessageItem) {
-                clickListeners.onMessageLongClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onMessageLongClick(view, item)
+                }
             }
 
             override fun onAvatarClick(view: View, item: MessageItem) {
-                clickListeners.onAvatarClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onAvatarClick(view, item)
+                }
             }
 
             override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
-                clickListeners.onReplyMessageContainerClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onReplyMessageContainerClick(view, item)
+                }
             }
 
             override fun onReplyCountClick(view: View, item: MessageItem) {
-                clickListeners.onReplyCountClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onReplyCountClick(view, item)
+                }
             }
 
             override fun onAddReactionClick(view: View, message: SceytMessage) {
-                clickListeners.onAddReactionClick(view, message)
+                checkMaybeInMultiSelectMode(view, message) {
+                    clickListeners.onAddReactionClick(view, message)
+                }
             }
 
             override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-                clickListeners.onReactionClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onReactionClick(view, item)
+                }
             }
 
             override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-                clickListeners.onReactionLongClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onReactionLongClick(view, item)
+                }
             }
 
             override fun onAttachmentClick(view: View, item: FileListItem) {
-                clickListeners.onAttachmentClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.sceytMessage) {
+                    clickListeners.onAttachmentClick(view, item)
+                }
             }
 
             override fun onAttachmentLongClick(view: View, item: FileListItem) {
-                clickListeners.onAttachmentLongClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.sceytMessage) {
+                    clickListeners.onAttachmentLongClick(view, item)
+                }
             }
 
             override fun onMentionClick(view: View, userId: String) {
@@ -182,11 +203,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
-                clickListeners.onAttachmentLoaderClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.sceytMessage) {
+                    clickListeners.onAttachmentLoaderClick(view, item)
+                }
             }
 
             override fun onLinkClick(view: View, item: MessageItem) {
-                clickListeners.onLinkClick(view, item)
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onLinkClick(view, item)
+                }
+            }
+
+            override fun onMultiSelectClick(view: View, message: SceytMessage) {
+                clickListeners.onMultiSelectClick(view, message)
             }
 
             override fun onScrollToDownClick(view: ScrollToDownView) {
@@ -198,6 +227,24 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         scrollDownIcon.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
         }
+    }
+
+    fun setMultiSelectableMode() {
+        (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(true)
+        messagesRV.enableDisableSwipeToReply(false)
+        for (i in 0 until messagesRV.childCount) {
+            messagesRV.getChildAt(i)?.let {
+                val holder = messagesRV.getChildViewHolder(it)
+                (holder as? BaseMsgViewHolder)?.setSelectableState()
+
+            }
+        }
+    }
+
+    private fun checkMaybeInMultiSelectMode(view: View, message: SceytMessage, action: () -> Unit) {
+        if (multiselectDestination.isNullOrEmpty()) {
+            action.invoke()
+        } else clickListeners.onMultiSelectClick(view, message)
     }
 
     private fun addKeyBoardListener() {
@@ -260,8 +307,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_react -> messageActionsViewClickListeners.onReactMessageClick(message)
                 R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
                 R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
-                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, false)
+                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(message)
+                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, onlyForMe = false, actionFinish = {})
             }
             false
         }
@@ -329,6 +376,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val oldMessage = item.message.clone()
                 item.message.updateMessage(message)
                 updateItem(index, item, oldMessage.diff(item.message))
+                break
+            }
+        }
+    }
+
+    internal fun updateMessageSelection(message: SceytMessage) {
+        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
+            if (item is MessageItem && item.message.tid == message.tid) {
+                item.message.isSelected = message.isSelected
+                updateItem(index, item, MessageItemPayloadDiff.DEFAULT_FALSE.copy(selectionChanged = true))
                 break
             }
         }
@@ -522,6 +579,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         onWindowFocusChangeListener = listener
     }
 
+    internal fun getMessageCommandEventListener() = messageCommandEventListener
+
     fun hideLoadingPrev() {
         messagesRV.hideLoadingPrevItem()
     }
@@ -588,8 +647,26 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun getData() = messagesRV.getData()
+    fun cancelMultiSelectMode() {
+        (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(false)
+        messagesRV.enableDisableSwipeToReply(true)
+        for (i in 0 until messagesRV.childCount) {
+            messagesRV.getChildAt(i)?.let {
+                val holder = messagesRV.getChildViewHolder(it)
+                (holder as? BaseMsgViewHolder)?.cancelSelectableState()
+            }
+        }
+        ArrayList(messagesRV.getData() ?: return).forEach { item ->
+            if (item is MessageItem)
+                item.message.isSelected = false
+        }
+    }
 
+    fun setMultiselectDestination(map: Map<Long, SceytMessage>) {
+        multiselectDestination = map
+    }
+
+    fun getData() = messagesRV.getData()
 
     fun getFirstMessage() = messagesRV.getFirstMsg()
 
@@ -647,10 +724,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMessageLongClick(view: View, item: MessageItem) {
-        if (enabledActions) {
-            val popup = showModifyReactionsPopup(view, item.message)
-            messageCommandEventListener?.invoke(MessageCommandEvent.ShowHideMessageActions(item.message, show = true, popupWindow = popup))
-        }
+        if (enabledActions)
+            messageCommandEventListener?.invoke(MessageCommandEvent.OnMultiselectEvent(item.message))
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
@@ -719,20 +794,26 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    override fun onMultiSelectClick(view: View, message: SceytMessage) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.OnMultiselectEvent(message))
+    }
+
     override fun onScrollToDownClick(view: ScrollToDownView) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
     }
 
 
     // Message popup events
-    override fun onCopyMessageClick(message: SceytMessage) {
-        context.setClipboard(message.body.trim())
+    override fun onCopyMessagesClick(vararg messages: SceytMessage) {
+        val text = messages.joinToString("\n\n") { it.body.trim() }
+        context.setClipboard(text.trim())
         Toast.makeText(context, context.getString(R.string.sceyt_message_copied), Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
+    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit) {
         DeleteMessageDialog(context, positiveClickListener = {
-            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(message, onlyForMe))
+            actionFinish.invoke()
+            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(), onlyForMe = onlyForMe))
         }).show()
     }
 
@@ -740,8 +821,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.EditMessage(message))
     }
 
-    override fun onForwardMessageClick(message: SceytMessage) {
-        SceytForwardActivity.launch(context, message)
+    override fun onForwardMessageClick(vararg messages: SceytMessage) {
+        SceytForwardActivity.launch(context, *messages)
     }
 
     override fun onReactMessageClick(message: SceytMessage) {

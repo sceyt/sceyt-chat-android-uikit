@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ui
 
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.MenuRes
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -23,10 +22,18 @@ sealed interface HeaderUIElementsListener {
         fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean)
     }
 
-    fun interface ActionsMenuListener : HeaderUIElementsListener {
-        fun onShowMessageActionsMenu(message: SceytMessage, @MenuRes menuResId: Int, reactionsPopupWindow: PopupWindow?, listener: ((MenuItem) -> Unit)?): Menu?
+    interface ActionsMenuListener : HeaderUIElementsListener {
+        fun onShowMessageActionsMenu(vararg messages: SceytMessage, @MenuRes menuResId: Int,
+                                     listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu?
+
+        fun onHideMessageActionsMenu()
+    }
+
+    fun interface ToolbarActionsVisibilityListener : HeaderUIElementsListener {
+        fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu)
     }
 
     /** Use this if you want to implement all callbacks */
-    interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener, ActionsMenuListener
+    interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener,
+            ActionsMenuListener, ToolbarActionsVisibilityListener
 }

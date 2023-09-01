@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="10dp">
+    android:paddingHorizontal="12dp">
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
@@ -25,7 +25,8 @@
         android:layout_marginStart="8dp"
         android:background="@drawable/sceyt_bg_inc_message"
         app:layout_constraintStart_toEndOf="@+id/avatar"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginStart="0dp">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"

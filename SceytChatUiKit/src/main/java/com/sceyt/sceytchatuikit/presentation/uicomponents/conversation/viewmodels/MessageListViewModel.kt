@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 
 import android.app.Application
 import android.text.Editable
+import android.view.Menu
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -9,7 +10,6 @@ import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
@@ -45,7 +45,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -69,7 +68,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -97,7 +95,7 @@ class MessageListViewModel(
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
-    private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
+    internal val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
     private val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
     internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
@@ -110,6 +108,7 @@ class MessageListViewModel(
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
+    internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
 
     private val isGroup = channel.isGroup
 
@@ -304,8 +303,8 @@ class MessageListViewModel(
         _onEditMessageCommandLiveData.postValue(message)
     }
 
-    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
-        messageActionBridge.showMessageActions(event.message, event.popupWindow)
+    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions): Menu? {
+        return messageActionBridge.showMessageActions(event.message)
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
@@ -412,6 +411,12 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
             _messageForceDeleteLiveData.postValue(response)
+        }
+    }
+
+    fun deleteMessages(message: List<SceytMessage>, onlyForMe: Boolean) {
+        message.forEach {
+            deleteMessage(it, onlyForMe)
         }
     }
 
@@ -566,53 +571,6 @@ class MessageListViewModel(
             val sameSender = prevMessage.user?.id == sceytMessage.user?.id
             isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
                     || prevMessage.type == MessageTypeEnum.System.value())
-        }
-    }
-
-    internal fun onMessageCommandEvent(event: MessageCommandEvent) {
-        when (event) {
-            is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message, event.onlyForMe)
-            }
-
-            is MessageCommandEvent.EditMessage -> {
-                prepareToEditMessage(event.message)
-            }
-
-            is MessageCommandEvent.ShowHideMessageActions -> {
-                prepareToShowMessageActions(event)
-            }
-
-            is MessageCommandEvent.Reply -> {
-                prepareToReplyMessage(event.message)
-            }
-
-            is MessageCommandEvent.ScrollToDown -> {
-                prepareToScrollToNewMessage()
-            }
-
-            is MessageCommandEvent.ScrollToReplyMessage -> {
-                prepareToScrollToReplyMessage(event.message)
-            }
-
-            is MessageCommandEvent.AttachmentLoaderClick -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    prepareToPauseOrResumeUpload(event.item)
-                }
-            }
-
-            is MessageCommandEvent.UserClick -> {
-                if (event.userId == SceytKitClient.myId) return
-                viewModelScope.launch(Dispatchers.IO) {
-                    val user = persistenceUsersMiddleWare.getUserDbById(event.userId)
-                            ?: User(event.userId)
-                    val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
-                    if (response is SceytResponse.Success)
-                        response.data?.let {
-                            ConversationInfoActivity.newInstance(event.view.context, response.data, true)
-                        }
-                }
-            }
         }
     }
 

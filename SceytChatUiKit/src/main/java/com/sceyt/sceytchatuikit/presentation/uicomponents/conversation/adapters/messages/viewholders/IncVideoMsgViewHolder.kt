@@ -11,7 +11,6 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -214,6 +213,8 @@ class IncVideoMsgViewHolder(
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
+
+    override val selectMessageView get() = binding.selectView
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 

@@ -120,9 +120,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
         viewModelScope.launch {
-            channelsListView.channelUpdatedWithDiff(data, ChannelItemPayloadDiff.DEFAULT_FALSE.apply {
-                lastMessageChanged = true
-            })
+            channelsListView.channelUpdatedWithDiff(data, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
@@ -155,9 +153,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
         if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-            channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.apply {
-                lastMessageChanged = true
-            })
+            channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         } else {
             val pendingUpdate = needToUpdateChannelsAfterResume[channel.id]
             if (pendingUpdate != null) {

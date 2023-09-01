@@ -99,6 +99,8 @@ fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     return null
 }
 
+fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
+
 internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
@@ -111,7 +113,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
-        filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
+        filesChanged = attachments.equalsIgnoreNull(other.attachments).not(),
+        selectionChanged = isSelected != other.isSelected
     )
 }
 
@@ -127,6 +130,7 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
-        filesChanged = attachments.equalsIgnoreNull(other.attachments).not()
+        filesChanged = attachments.equalsIgnoreNull(other.attachments).not(),
+        selectionChanged = isSelected != other.isSelected
     )
 }

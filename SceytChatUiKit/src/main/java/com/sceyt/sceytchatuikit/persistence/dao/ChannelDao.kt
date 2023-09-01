@@ -41,6 +41,7 @@ interface ChannelDao {
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannelsBySubject(limit: Int, offset: Int, query: String): List<ChannelDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels " +
             "join UserChatLink as link on link.chat_id = channels.chat_id " +
@@ -73,6 +74,7 @@ interface ChannelDao {
         return getChannelsById(links.map { it.chatId })
     }
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:channelTypeEnum")

@@ -78,11 +78,15 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
+    private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
+    open val selectMessageView: View? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
         setMaxWidth()
+        if (diff.selectionChanged || diff.statusChanged)
+            selectableAnimHelper.doOnBind(selectMessageView, item)
         if (messageListItem.highlighted)
             highlight()
     }
@@ -116,8 +120,10 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-        if (::messageListItem.isInitialized)
+        if (::messageListItem.isInitialized) {
             displayedListener?.invoke(messageListItem)
+            selectableAnimHelper.doOnAttach(selectMessageView, messageListItem)
+        }
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null
@@ -455,7 +461,15 @@ abstract class BaseMsgViewHolder(private val view: View,
         return if (::messageListItem.isInitialized) messageListItem else null
     }
 
-    fun highlight() {
+    open fun setSelectableState() {
+        selectableAnimHelper.setSelectableState(selectMessageView, messageListItem)
+    }
+
+    open fun cancelSelectableState() {
+        selectableAnimHelper.cancelSelectableState(selectMessageView, messageListItem)
+    }
+
+    open fun highlight() {
         highlightAnim?.cancel()
         val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         view.setBackgroundColor(colorFrom)

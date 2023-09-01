@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import android.widget.CheckBox
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -81,6 +82,8 @@ class IncTextMsgViewHolder(
             }
         }
     }
+
+    override val selectMessageView get() = binding.selectView
 
     private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
         with(context) {
