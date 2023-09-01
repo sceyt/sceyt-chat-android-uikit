@@ -99,6 +99,8 @@ fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     return null
 }
 
+fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
+
 internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
