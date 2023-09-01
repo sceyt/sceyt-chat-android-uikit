@@ -24,11 +24,16 @@ sealed interface HeaderUIElementsListener {
 
     interface ActionsMenuListener : HeaderUIElementsListener {
         fun onShowMessageActionsMenu(vararg messages: SceytMessage, @MenuRes menuResId: Int,
-                                     listener: ((MenuItem) -> Unit)?): Menu?
+                                     listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu?
 
         fun onHideMessageActionsMenu()
     }
 
+    fun interface ToolbarActionsVisibilityListener : HeaderUIElementsListener {
+        fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu)
+    }
+
     /** Use this if you want to implement all callbacks */
-    interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener, ActionsMenuListener
+    interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener,
+            ActionsMenuListener, ToolbarActionsVisibilityListener
 }

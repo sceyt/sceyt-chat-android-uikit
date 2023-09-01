@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 
 import android.app.Application
 import android.text.Editable
+import android.view.Menu
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -302,8 +303,8 @@ class MessageListViewModel(
         _onEditMessageCommandLiveData.postValue(message)
     }
 
-    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
-        messageActionBridge.showMessageActions(event.message)
+    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions): Menu? {
+        return messageActionBridge.showMessageActions(event.message)
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {

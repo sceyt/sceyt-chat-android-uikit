@@ -9,7 +9,7 @@ sealed interface MessageActionsViewClickListeners {
     }
 
     fun interface DeleteMessage : MessageActionsViewClickListeners {
-        fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean)
+        fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit)
     }
 
     fun interface EditMessage : MessageActionsViewClickListeners {

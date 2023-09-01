@@ -11,18 +11,17 @@ import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.changeAlphaWithAnim
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener.ToolbarActionsVisibilityListener
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class MessageActionToolbar @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
     : Toolbar(context, attributeSet, defStyleAttr) {
 
     private var itemClickListener: ((MenuItem) -> Unit)? = null
+    private var visibilityInitializer: ToolbarActionsVisibilityListener? = null
 
     @Volatile
     var handledClick: Boolean = false
@@ -40,15 +39,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
             return@setOnMenuItemClickListener true
         }
 
-        val isSingleMessage = messages.size == 1
-        val firstMessage = messages.getOrNull(0)
-
-        firstMessage?.let { message ->
-            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
-            menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
-            menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
-            menu.findItem(R.id.sceyt_delete_message).isVisible = messages.none { it.incoming }
-        }
+        visibilityInitializer?.onInitToolbarActionsVisibility(*messages, menu = menu)
     }
 
     fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg message: SceytMessage): Menu? {
@@ -65,6 +56,10 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
 
     fun setMenuItemClickListener(listener: ((MenuItem) -> Unit)?) {
         itemClickListener = listener
+    }
+
+    fun setToolbarIconsVisibilityInitializer(listener: ToolbarActionsVisibilityListener) {
+        visibilityInitializer = listener
     }
 
     override fun setVisibility(visibility: Int) {
