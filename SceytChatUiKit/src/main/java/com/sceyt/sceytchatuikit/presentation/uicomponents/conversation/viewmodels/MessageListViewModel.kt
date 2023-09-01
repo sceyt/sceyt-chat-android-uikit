@@ -9,7 +9,6 @@ import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
@@ -68,7 +67,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -412,6 +410,13 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
             _messageForceDeleteLiveData.postValue(response)
+        }
+    }
+
+    fun deleteMessages(message: List<SceytMessage>, onlyForMe: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+           /* val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
+            _messageForceDeleteLiveData.postValue(response)*/
         }
     }
 

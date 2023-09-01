@@ -439,7 +439,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.setMessageCommandEventListener {
         when (val event = it) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message, event.onlyForMe)
+                deleteMessages(event.message.toList(), event.onlyForMe)
             }
 
             is MessageCommandEvent.EditMessage -> {
@@ -451,20 +451,22 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.OnMultiselectEvent -> {
-                val wasSelected = selectedMessagesMap.containsKey(event.message.id)
+                val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
 
                 event.message.isSelected = !wasSelected
                 messagesListView.updateMessageSelection(event.message)
 
                 if (wasSelected) {
-                    selectedMessagesMap.remove(event.message.id)
+                    selectedMessagesMap.remove(event.message.tid)
                     if (selectedMessagesMap.isEmpty()) {
                         messageActionBridge.hideMessageActions()
                         messagesListView.cancelMultiSelectMode()
+                    }else{
+                        messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     }
                 } else {
-                    selectedMessagesMap[event.message.id] = event.message
-                    messageActionBridge.showMessageActions(event.message)
+                    selectedMessagesMap[event.message.tid] = event.message
+                    messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     messagesListView.setMultiSelectableMode()
                 }
             }

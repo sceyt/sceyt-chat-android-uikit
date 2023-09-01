@@ -1,8 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
 import android.view.Menu
-import android.widget.PopupWindow
-import androidx.core.view.get
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -23,17 +21,32 @@ class MessageActionBridge {
         }
     }
 
-    fun showMessageActions(message: SceytMessage): Menu? {
+    fun showMessageActions(vararg selectedMessages: SceytMessage): Menu? {
         val messageActionListener = messagesListView?.messageActionsViewClickListeners
                 ?: return null
-        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(message, R.menu.sceyt_menu_message_actions) {
+        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages, menuResId = R.menu.sceyt_menu_message_actions) {
+            val firstMessage = selectedMessages.getOrNull(0)
             when (it.itemId) {
-                R.id.sceyt_edit_message -> messageActionListener.onEditMessageClick(message)
-                R.id.sceyt_forward -> messageActionListener.onForwardMessageClick(message)
-                R.id.sceyt_reply -> messageActionListener.onReplyMessageClick(message)
-                R.id.sceyt_reply_in_thread -> messageActionListener.onReplyMessageInThreadClick(message)
-                R.id.sceyt_copy_message -> messageActionListener.onCopyMessageClick(message)
-                R.id.sceyt_delete_message -> messageActionListener.onDeleteMessageClick(message, false)
+                R.id.sceyt_edit_message -> firstMessage?.let { message ->
+                    messageActionListener.onEditMessageClick(message)
+                }
+
+                R.id.sceyt_forward -> messageActionListener.onForwardMessageClick(*selectedMessages)
+                R.id.sceyt_reply -> firstMessage?.let { message ->
+                    messageActionListener.onReplyMessageClick(message)
+                }
+
+                R.id.sceyt_reply_in_thread -> firstMessage?.let { message ->
+                    messageActionListener.onReplyMessageInThreadClick(message)
+                }
+
+                R.id.sceyt_copy_message -> firstMessage?.let { message ->
+                    messageActionListener.onCopyMessageClick(message)
+                }
+
+                R.id.sceyt_delete_message -> {
+                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = false)
+                }
             }
         }
     }

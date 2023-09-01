@@ -1,10 +1,13 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.content.Context
+import android.transition.ChangeBounds
+import android.transition.TransitionManager
 import android.util.AttributeSet
 import android.view.Menu
 import android.view.MenuItem
 import androidx.annotation.MenuRes
+import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
@@ -25,7 +28,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
     var handledClick: Boolean = false
         private set
 
-    private fun initMenu(message: SceytMessage) {
+    private fun initMenu(vararg messages: SceytMessage) {
         menu.forEach {
             it.icon?.setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         }
@@ -36,19 +39,25 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
             return@setOnMenuItemClickListener true
         }
 
-        val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending
+        val isSingleMessage = messages.size == 1
+        val firstMessage = messages.getOrNull(0)
 
-        menu.findItem(R.id.sceyt_reply).isVisible = !statusPendingOrFailed
-        menu.findItem(R.id.sceyt_forward).isVisible = !statusPendingOrFailed
-        menu.findItem(R.id.sceyt_edit_message).isVisible = !message.incoming && message.body.isNotNullOrBlank()
-        menu.findItem(R.id.sceyt_copy_message).isVisible = message.body.isNotNullOrBlank()
+        firstMessage?.let { message ->
+            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
+            menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
+            menu.findItem(R.id.sceyt_copy_message).isVisible = isSingleMessage && message.body.isNotNullOrBlank()
+        }
     }
 
-    fun setupMenuWithMessage(@MenuRes menuRes: Int, message: SceytMessage): Menu? {
+    fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg message: SceytMessage): Menu? {
         menu.clear()
         inflateMenu(menuRes).also {
-            initMenu(message)
+            initMenu(*message)
         }
+
+        val autoTransition = ChangeBounds()
+        autoTransition.duration = 100
+        TransitionManager.beginDelayedTransition(this.getChildAt(0) as ActionMenuView,autoTransition)
         return menu
     }
 
