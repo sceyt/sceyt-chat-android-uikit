@@ -18,9 +18,9 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
         copyMessageListener?.onCopyMessagesClick(*messages)
     }
 
-    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean) {
-        defaultListeners.onDeleteMessageClick(*messages, onlyForMe = onlyForMe)
-        deleteMessageListener?.onDeleteMessageClick(*messages, onlyForMe = onlyForMe)
+    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit) {
+        defaultListeners.onDeleteMessageClick(*messages, onlyForMe = onlyForMe, actionFinish = actionFinish)
+        deleteMessageListener?.onDeleteMessageClick(*messages, onlyForMe = onlyForMe, actionFinish = actionFinish)
     }
 
     override fun onEditMessageClick(message: SceytMessage) {

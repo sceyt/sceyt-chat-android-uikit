@@ -24,31 +24,36 @@ class MessageActionBridge {
     fun showMessageActions(vararg selectedMessages: SceytMessage): Menu? {
         val messageActionListener = messagesListView?.messageActionsViewClickListeners
                 ?: return null
-        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages, menuResId = R.menu.sceyt_menu_message_actions) {
+        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages, menuResId = R.menu.sceyt_menu_message_actions) { it, actionFinish ->
             val firstMessage = selectedMessages.getOrNull(0)
             when (it.itemId) {
                 R.id.sceyt_edit_message -> firstMessage?.let { message ->
+                    actionFinish.invoke()
                     messageActionListener.onEditMessageClick(message)
                 }
 
                 R.id.sceyt_forward -> {
+                    actionFinish.invoke()
                     messageActionListener.onForwardMessageClick(*selectedMessages)
                 }
 
                 R.id.sceyt_reply -> firstMessage?.let { message ->
+                    actionFinish.invoke()
                     messageActionListener.onReplyMessageClick(message)
                 }
 
                 R.id.sceyt_reply_in_thread -> firstMessage?.let { message ->
+                    actionFinish.invoke()
                     messageActionListener.onReplyMessageInThreadClick(message)
                 }
 
                 R.id.sceyt_copy_message -> {
+                    actionFinish.invoke()
                     messageActionListener.onCopyMessagesClick(*selectedMessages)
                 }
 
                 R.id.sceyt_delete_message -> {
-                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = false)
+                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = false, actionFinish = actionFinish)
                 }
             }
         }

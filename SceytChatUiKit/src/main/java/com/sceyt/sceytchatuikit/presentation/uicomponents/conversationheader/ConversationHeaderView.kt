@@ -19,6 +19,7 @@ import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
@@ -33,6 +34,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -224,18 +226,23 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,
-                                            listener: ((MenuItem) -> Unit)?): Menu? {
+                                            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
         val menu: Menu?
         with(binding) {
+            toolBarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
+                uiElementsListeners.onInitToolbarActionsVisibility(*messages, menu = menu)
+            }
             menu = toolBarMessageActions.setupMenuWithMessages(resId, *messages)
             toolBarMessageActions.isVisible = true
             layoutToolbarDetails.isVisible = false
             isShowingMessageActions = true
             addedMenu?.forEach { it.isVisible = false }
+
             toolBarMessageActions.setMenuItemClickListener {
-                listener?.invoke(it)
-                hideMessageActions()
-                toolbarActionsHiddenCallback?.invoke()
+                listener?.invoke(it) {
+                    hideMessageActions()
+                    toolbarActionsHiddenCallback?.invoke()
+                }
             }
         }
         return menu
@@ -449,12 +456,24 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onShowMessageActionsMenu(vararg messages: SceytMessage, @MenuRes menuResId: Int,
-                                          listener: ((MenuItem) -> Unit)?): Menu? {
+                                          listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
         return showMessageActionsInToolbar(*messages, resId = menuResId, listener = listener)
     }
 
     override fun onHideMessageActionsMenu() {
         hideMessageActions()
+    }
+
+    override fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu) {
+        val isSingleMessage = messages.size == 1
+        val firstMessage = messages.getOrNull(0)
+
+        firstMessage?.let { message ->
+            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
+            menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
+            menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
+            menu.findItem(R.id.sceyt_delete_message).isVisible = messages.none { it.incoming }
+        }
     }
 
     //Click listeners

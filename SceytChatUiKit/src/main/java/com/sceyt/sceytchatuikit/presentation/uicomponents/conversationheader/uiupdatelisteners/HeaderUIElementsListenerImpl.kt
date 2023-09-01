@@ -14,6 +14,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
     private var subTitleListener: HeaderUIElementsListener.SubTitleListener? = null
     private var avatarListener: HeaderUIElementsListener.AvatarListener? = null
     private var actionMenuListener: HeaderUIElementsListener.ActionsMenuListener? = null
+    private var toolbarActionsVisibilityListener: HeaderUIElementsListener.ToolbarActionsVisibilityListener? = null
 
     override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
         defaultListeners.onTitle(titleTextView, channel, replyMessage, replyInThread)
@@ -31,7 +32,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
     }
 
     override fun onShowMessageActionsMenu(vararg messages: SceytMessage, menuResId: Int,
-                                          listener: ((MenuItem) -> Unit)?): Menu? {
+                                          listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
         val menu = defaultListeners.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
         return actionMenuListener?.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
                 ?: menu
@@ -42,6 +43,11 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         actionMenuListener?.onHideMessageActionsMenu()
     }
 
+    override fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu) {
+        defaultListeners.onInitToolbarActionsVisibility(*messages, menu = menu)
+        toolbarActionsVisibilityListener?.onInitToolbarActionsVisibility(*messages, menu = menu)
+    }
+
     fun setListener(listener: HeaderUIElementsListener) {
         when (listener) {
             is HeaderUIElementsListener.ElementsListeners -> {
@@ -49,6 +55,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
                 subTitleListener = listener
                 avatarListener = listener
                 actionMenuListener = listener
+                toolbarActionsVisibilityListener = listener
             }
 
             is HeaderUIElementsListener.TitleListener -> {
@@ -65,6 +72,10 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
 
             is HeaderUIElementsListener.ActionsMenuListener -> {
                 actionMenuListener = listener
+            }
+
+            is HeaderUIElementsListener.ToolbarActionsVisibilityListener -> {
+                toolbarActionsVisibilityListener = listener
             }
         }
     }
