@@ -43,9 +43,9 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         actionMenuListener?.onHideMessageActionsMenu()
     }
 
-    override fun onInitToolbarActionsVisibility(vararg messages: SceytMessage, menu: Menu) {
-        defaultListeners.onInitToolbarActionsVisibility(*messages, menu = menu)
-        toolbarActionsVisibilityListener?.onInitToolbarActionsVisibility(*messages, menu = menu)
+    override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
+        defaultListeners.onInitToolbarActionsMenu(*messages, menu = menu)
+        toolbarActionsVisibilityListener?.onInitToolbarActionsMenu(*messages, menu = menu)
     }
 
     fun setListener(listener: HeaderUIElementsListener) {

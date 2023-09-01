@@ -41,7 +41,7 @@ class MessageActionToolbar @JvmOverloads constructor(context: Context, attribute
             return@setOnMenuItemClickListener true
         }
 
-        visibilityInitializer?.onInitToolbarActionsVisibility(*messages, menu = menu)
+        visibilityInitializer?.onInitToolbarActionsMenu(*messages, menu = menu)
     }
 
     fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg messages: SceytMessage): Menu? {
