@@ -35,7 +35,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity.Companion.launch
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
