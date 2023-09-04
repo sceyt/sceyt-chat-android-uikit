@@ -242,6 +242,13 @@ abstract class BaseMsgViewHolder(private val view: View,
                         messageListeners?.onReplyMessageContainerClick(it, item)
                     }
                 }
+
+                setOnLongClickListener {
+                    (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                        messageListeners?.onMessageLongClick(it, item)
+                    }
+                    return@setOnLongClickListener true
+                }
             }
         }
     }
