@@ -259,7 +259,7 @@ object CustomCompressor : CoroutineScope {
                 var muxerTrackIndex = -5
 
                 audioIndex = findTrack(extractor, isVideo = false)
-                if (audioIndex > 0) {
+                if (audioIndex >= 0) {
                     extractor.selectTrack(audioIndex)
                     val audioFormat = extractor.getTrackFormat(audioIndex)
                     muxerTrackIndex = mediaMuxer.addTrack(audioFormat)
