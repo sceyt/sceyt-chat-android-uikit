@@ -5,10 +5,12 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 
 class MessageActionBridge {
     private var messagesListView: MessagesListView? = null
     private var headerView: ConversationHeaderView? = null
+    private var inputView: MessageInputView? = null
 
     fun setMessagesListView(messagesListView: MessagesListView) {
         this.messagesListView = messagesListView
@@ -18,12 +20,18 @@ class MessageActionBridge {
         this.headerView = headerView
         headerView.setToolbarActionHiddenCallback {
             messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.OnCancelMultiselectEvent)
+            inputView?.getEventListeners()?.onMultiselectModeListener(false)
         }
+    }
+
+    fun setInputView(inputView: MessageInputView) {
+        this.inputView = inputView
     }
 
     fun showMessageActions(vararg selectedMessages: SceytMessage): Menu? {
         val messageActionListener = messagesListView?.messageActionsViewClickListeners
                 ?: return null
+        inputView?.getEventListeners()?.onMultiselectModeListener(true)
         return headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages, menuResId = R.menu.sceyt_menu_message_actions) { it, actionFinish ->
             val firstMessage = selectedMessages.getOrNull(0)
             when (it.itemId) {
@@ -53,7 +61,9 @@ class MessageActionBridge {
                 }
 
                 R.id.sceyt_delete_message -> {
-                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = selectedMessages.any { it.incoming }, actionFinish = actionFinish)
+                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = selectedMessages.any { it.incoming }, actionFinish = {
+                        actionFinish.invoke()
+                    })
                 }
             }
         }
@@ -61,5 +71,12 @@ class MessageActionBridge {
 
     fun hideMessageActions() {
         headerView?.uiElementsListeners?.onHideMessageActionsMenu()
+        inputView?.getEventListeners()?.onMultiselectModeListener(false)
+    }
+
+    fun cancelMultiSelectMode() {
+        headerView?.uiElementsListeners?.onHideMessageActionsMenu()
+        inputView?.getEventListeners()?.onMultiselectModeListener(false)
+        messagesListView?.cancelMultiSelectMode()
     }
 }

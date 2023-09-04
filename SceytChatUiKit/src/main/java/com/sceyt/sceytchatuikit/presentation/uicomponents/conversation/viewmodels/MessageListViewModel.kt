@@ -472,6 +472,12 @@ class MessageListViewModel(
         }
     }
 
+    fun clearHistory(forEveryOne: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceChanelMiddleWare.clearHistory(channel.id, forEveryOne)
+        }
+    }
+
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,

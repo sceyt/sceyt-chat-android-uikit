@@ -33,6 +33,10 @@ sealed interface MessageInputClickListeners {
         fun onJoinClick()
     }
 
+    fun interface ClearChatClickListener : MessageInputClickListeners {
+        fun onClearChatClick()
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             SendMsgClickListener,
@@ -41,5 +45,6 @@ sealed interface MessageInputClickListeners {
             RemoveAttachmentClickListener,
             JoinClickListener,
             VoiceClickListener,
-            VoiceLongClickListener
+            VoiceLongClickListener,
+            ClearChatClickListener
 }

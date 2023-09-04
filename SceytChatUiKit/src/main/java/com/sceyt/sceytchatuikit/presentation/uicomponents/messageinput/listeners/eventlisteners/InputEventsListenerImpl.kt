@@ -8,6 +8,7 @@ open class InputEventsListenerImpl(view: MessageInputView) : InputEventsListener
     private var defaultListeners: InputEventsListener.InputEventListeners = view
     private var inputStateListener: InputEventsListener.InputStateListener? = null
     private var mentionListener: InputEventsListener.MentionUsersListener? = null
+    private var multiselectModeListener: InputEventsListener.MultiselectModeListener? = null
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
         defaultListeners.onInputStateChanged(sendImage, state)
@@ -19,17 +20,29 @@ open class InputEventsListenerImpl(view: MessageInputView) : InputEventsListener
         mentionListener?.onMentionUsersListener(query)
     }
 
+    override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
+        defaultListeners.onMultiselectModeListener(isMultiselectMode)
+        multiselectModeListener?.onMultiselectModeListener(isMultiselectMode)
+    }
+
     fun setListener(listener: InputEventsListener) {
         when (listener) {
             is InputEventsListener.InputEventListeners -> {
                 inputStateListener = listener
                 mentionListener = listener
+                multiselectModeListener = listener
             }
+
             is InputEventsListener.InputStateListener -> {
                 inputStateListener = listener
             }
+
             is InputEventsListener.MentionUsersListener -> {
                 mentionListener = listener
+            }
+
+            is InputEventsListener.MultiselectModeListener -> {
+                multiselectModeListener = listener
             }
         }
     }
