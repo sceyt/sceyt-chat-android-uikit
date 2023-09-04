@@ -472,7 +472,6 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
             menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
             menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
-            menu.findItem(R.id.sceyt_delete_message).isVisible = messages.none { it.incoming }
         }
     }
 
