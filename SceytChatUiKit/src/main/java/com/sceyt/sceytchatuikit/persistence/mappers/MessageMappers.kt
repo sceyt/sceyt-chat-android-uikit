@@ -260,7 +260,7 @@ fun SceytMessage.toMessage(): Message {
         replyCount,
         displayCount,
         autoDeleteAt ?: 0L,
-        ForwardingDetails(id, channelId, user, 0))
+        forwardingDetails)
 }
 
 fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(

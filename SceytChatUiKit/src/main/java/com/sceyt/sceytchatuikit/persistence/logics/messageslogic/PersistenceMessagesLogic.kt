@@ -43,7 +43,7 @@ interface PersistenceMessagesLogic {
     suspend fun sendMessages(channelId: Long, messages: List<Message>)
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendSharedFileMessage(channelId: Long, message: Message)
-    suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean>
+    suspend fun sendFrowardMessages(channelId: Long, vararg messageToSend: Message): SceytResponse<Boolean>
     suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage>
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
@@ -55,6 +55,7 @@ interface PersistenceMessagesLogic {
     suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun getMessageDbById(messageId: Long): SceytMessage?
     suspend fun getMessageDbByTid(tid: Long): SceytMessage?
+    suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage>
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun attachmentSuccessfullySent(message: SceytMessage)
     suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?)
