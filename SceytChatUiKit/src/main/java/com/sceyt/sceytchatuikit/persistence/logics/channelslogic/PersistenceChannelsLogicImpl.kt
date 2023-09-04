@@ -74,6 +74,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
@@ -545,6 +546,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             channelDao.updateLastMessage(channelId, null, null)
             messageDao.deleteAllMessages(channelId)
             channelsCache.clearedHistory(channelId)
@@ -558,6 +560,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelDb(channelId)
         }
 
@@ -569,6 +572,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelDb(channelId)
         }
 
@@ -585,6 +589,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelDb(channelId)
         }
 

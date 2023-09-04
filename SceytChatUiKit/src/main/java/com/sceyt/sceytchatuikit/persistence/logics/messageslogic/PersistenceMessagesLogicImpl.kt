@@ -66,6 +66,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.CoroutineScope
@@ -310,9 +311,9 @@ internal class PersistenceMessagesLogicImpl(
         sendMessageImpl(channelId, message, isSharing = true, isPendingMessage = false, false).collect()
     }
 
-    override suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean> {
-        var areSentAllWithSuccessResult = true
-        messagesToSend.forEach {
+    override suspend fun sendFrowardMessages(channelId: Long, vararg messageToSend: Message): SceytResponse<Boolean> {
+        // At first save messages to db and emit them to UI as outgoing message
+        messageToSend.forEach {
             val tmpMessage = it.toSceytUiMessage().apply {
                 createdAt = System.currentTimeMillis()
                 user = ClientWrapper.currentUser ?: User(preference.getUserId())
@@ -326,11 +327,11 @@ internal class PersistenceMessagesLogicImpl(
                             TransferState.Uploaded, attachment.filePath, attachment.url))
             }
             messagesCache.add(channelId, tmpMessage)
-            val response = sendMessageWithUploadedAttachments(channelId, it)
-            if (response is SceytResponse.Error)
-                areSentAllWithSuccessResult = false
         }
-        return SceytResponse.Success(areSentAllWithSuccessResult)
+
+        // Then send messages
+        SendForwardMessagesWorkManager.schedule(context, channelId, *messageToSend.map { it.tid }.toLongArray())
+        return SceytResponse.Success(true)
     }
 
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
@@ -585,6 +586,10 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun getMessageDbByTid(tid: Long): SceytMessage? {
         return messageDao.getMessageByTid(tid)?.toSceytMessage()
+    }
+
+    override suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage> {
+        return messageDao.getMessagesByTid(tIds).map { it.toSceytMessage() }
     }
 
     override suspend fun attachmentSuccessfullySent(message: SceytMessage) {

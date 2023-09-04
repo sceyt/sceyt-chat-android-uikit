@@ -41,7 +41,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                 messagesToSend.add(message)
             }
 
-            messagesMiddleWare.sendFrowardMessages(channelId, messagesToSend)
+            messagesMiddleWare.sendFrowardMessages(channelId, *messagesToSend.toTypedArray())
         }
         trySend(State.Finish)
         awaitClose()
