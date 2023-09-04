@@ -3,19 +3,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:paddingHorizontal="12dp">
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/selectView"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:alpha=".3"
+        android:background="@drawable/sceyt_custom_radiobutton_view"
+        android:clickable="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
+        android:layout_marginStart="12dp"
         android:background="?selectableItemBackgroundBorderless"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/selectView"
+        app:layout_constraintTop_toTopOf="@+id/layoutDetails"
+        app:layout_goneMarginStart="12dp"
         app:sceytAvatarViewTextSize="15sp"
-        tools:sceytAvatarViewFullName="a"
+        tools:sceytAvatarViewFullName="Ar"
         tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -26,7 +39,7 @@
         android:background="@drawable/sceyt_bg_inc_message"
         app:layout_constraintStart_toEndOf="@+id/avatar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginStart="0dp">
+        app:layout_goneMarginStart="12dp">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"

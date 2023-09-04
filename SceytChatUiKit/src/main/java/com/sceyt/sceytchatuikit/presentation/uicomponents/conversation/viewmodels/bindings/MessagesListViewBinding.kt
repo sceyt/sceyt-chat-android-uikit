@@ -458,7 +458,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
 
                 if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
-                    val errorMessage = String.format(messagesListView.context.getString(R.string.rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
+                    val errorMessage = String.format(messagesListView.context.getString(R.string.sceyt_rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
                     customToastSnackBar(messagesListView, errorMessage)
                     return@setMessageCommandEventListener
                 }

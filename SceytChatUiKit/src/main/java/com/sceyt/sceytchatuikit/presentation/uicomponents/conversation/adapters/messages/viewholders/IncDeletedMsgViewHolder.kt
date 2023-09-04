@@ -44,6 +44,8 @@ class IncDeletedMsgViewHolder(
 
     override val enableReply = false
 
+    override val selectMessageView get() = binding.selectView
+
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))

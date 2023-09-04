@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listener
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClearChatClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CloseReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.JoinClickListener
@@ -21,6 +22,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
     private var closeReplyMessageViewClickListener: CloseReplyMessageViewClickListener? = null
     private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
     private var joinClickListener: JoinClickListener? = null
+    private var clearChatClickListener: ClearChatClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners.onSendMsgClick(view)
@@ -57,6 +59,11 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
         joinClickListener?.onJoinClick()
     }
 
+    override fun onClearChatClick() {
+        defaultListeners.onClearChatClick()
+        clearChatClickListener?.onClearChatClick()
+    }
+
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
             is ClickListeners -> {
@@ -67,6 +74,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
                 closeReplyMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
+                clearChatClickListener = listener
             }
             is SendMsgClickListener -> {
                 sendMsgClickListener = listener
@@ -88,6 +96,9 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
             }
             is JoinClickListener -> {
                 joinClickListener = listener
+            }
+            is ClearChatClickListener -> {
+                clearChatClickListener = listener
             }
         }
     }

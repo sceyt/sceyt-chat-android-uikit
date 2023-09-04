@@ -93,6 +93,8 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
+import com.vanniktech.ui.animateToGone
+import com.vanniktech.ui.animateToVisible
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
@@ -218,6 +220,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         btnJoin.setOnClickListener {
             clickListeners.onJoinClick()
+        }
+
+        btnClearChat.setOnClickListener {
+            clickListeners.onClearChatClick()
         }
     }
 
@@ -452,6 +458,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
         btnJoin.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        btnClearChat.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         with(layoutReplyOrEditMessage) {
             icReplyOrEdit.setColorFilter(context.getCompatColorByTheme(SceytKitConfig.sceytColorAccent))
             tvName.setTextColor(context.getCompatColorByTheme(MessageInputViewStyle.userNameTextColor))
@@ -606,6 +613,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun editMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
+            replyMessage = null
             editMessage = message.clone()
             determineInputState()
             if (!initWithDraft)
@@ -627,6 +635,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun replyMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
+            editMessage = null
             replyMessage = message.clone()
             with(binding.layoutReplyOrEditMessage) {
                 isVisible = true
@@ -720,6 +729,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         showHideJoinButton(true)
     }
 
+    internal fun getEventListeners() = eventListeners
+
     fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
         if (isRecording()) {
             SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording,
@@ -809,6 +820,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean)
         fun mention(query: String)
         fun join()
+        fun clearChat()
     }
 
     fun setClickListener(listener: MessageInputClickListeners) {
@@ -934,5 +946,27 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onMentionUsersListener(query: String) {
         messageInputActionCallback?.mention(query)
+    }
+
+    override fun onClearChatClick() {
+        messageInputActionCallback?.clearChat()
+    }
+
+    override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
+        with(binding) {
+            layoutInput.isInvisible = isMultiselectMode
+            rvAttachments.isVisible = !isMultiselectMode && allAttachments.isNotEmpty()
+            if (isMultiselectMode) {
+                hideAndStopVoiceRecorder()
+                cancelReply()
+                btnClearChat.animateToVisible(150)
+            } else {
+                when {
+                    replyMessage != null -> replyMessage(replyMessage!!, initWithDraft = true)
+                    editMessage != null -> editMessage(editMessage!!, initWithDraft = true)
+                }
+                btnClearChat.animateToGone(150)
+            }
+        }
     }
 }
