@@ -264,7 +264,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(viewModelScope)
 
-    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(lifecycleOwner.lifecycleScope)
+    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(viewModelScope)
 
     onChannelUpdatedEventFlow.onEach {
         channel = it

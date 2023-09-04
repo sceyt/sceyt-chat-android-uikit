@@ -89,7 +89,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
+    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(viewModelScope)
 
     ChannelsCache.channelDeletedFlow.onEach { channelId ->
         lifecycleOwner.lifecycleScope.launch {
@@ -125,7 +125,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     fun createJobToAddNewChannelWithOnResumed(sceytChannel: SceytChannel) {
-        val job = lifecycleOwner.lifecycleScope.launch {
+        val job = viewModelScope.launch {
             lifecycleOwner.withResumed {
                 val updatedChannel = needToUpdateChannelsAfterResume[sceytChannel.id]?.channel
                         ?: sceytChannel
