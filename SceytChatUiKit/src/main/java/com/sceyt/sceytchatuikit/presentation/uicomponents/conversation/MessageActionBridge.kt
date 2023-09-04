@@ -53,7 +53,7 @@ class MessageActionBridge {
                 }
 
                 R.id.sceyt_delete_message -> {
-                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = false, actionFinish = actionFinish)
+                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = selectedMessages.any { it.incoming }, actionFinish = actionFinish)
                 }
             }
         }
