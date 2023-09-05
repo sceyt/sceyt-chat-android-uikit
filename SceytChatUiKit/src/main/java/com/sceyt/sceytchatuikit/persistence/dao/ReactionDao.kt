@@ -8,13 +8,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.ReactionTotalEntity
 @Dao
 abstract class ReactionDao {
 
-    @Transaction
-    open suspend fun insertReactionsAndTotals(messageId: Long, reactionsDb: List<ReactionEntity>, totalsDb: List<ReactionTotalEntity>) {
-        deleteAllReactionTotalsByMessageId(messageId)
-        insertReactions(reactionsDb)
-        insertReactionTotals(totalsDb)
-    }
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReaction(reaction: ReactionEntity)
 

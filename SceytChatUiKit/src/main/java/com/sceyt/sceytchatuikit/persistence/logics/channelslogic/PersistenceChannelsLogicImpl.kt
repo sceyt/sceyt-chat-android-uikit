@@ -739,8 +739,8 @@ internal class PersistenceChannelsLogicImpl(
         } else {
             val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
                 MentionUserHelper.initMentionMetaData(message, mentionUsers), replyOrEditMessage?.id, isReply)
-            draftMessageDao.insert(draftMessageEntity)
-            draftMessageDao.insertDraftMessageUserLinks(mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) })
+            val links = mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) }
+            draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
             draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) }, replyOrEditMessage)
         }
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
