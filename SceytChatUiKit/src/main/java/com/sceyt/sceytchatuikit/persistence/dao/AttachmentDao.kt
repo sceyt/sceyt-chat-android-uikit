@@ -43,7 +43,7 @@ abstract class AttachmentDao {
     @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
     abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
 
-    @Query("select * from AttachmentEntity  where type =:type and url <> ''")
+    @Query("select * from AttachmentEntity where type =:type and url <> ''")
     abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
 
     @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")

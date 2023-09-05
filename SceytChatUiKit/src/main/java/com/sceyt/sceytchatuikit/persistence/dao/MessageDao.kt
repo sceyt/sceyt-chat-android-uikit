@@ -99,7 +99,7 @@ abstract class MessageDao {
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        entitiesToUpdate.forEach { updateMessage(it) }
+        updateMessages(entitiesToUpdate)
     }
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -110,6 +110,9 @@ abstract class MessageDao {
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun updateMessage(messageEntity: MessageEntity)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun updateMessages(messageEntity: List<MessageEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
