@@ -40,7 +40,7 @@ val apiModule = module {
     single<Retrofit> {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://hm25ehfh6i.execute-api.eu-central-1.amazonaws.com/")
+            .baseUrl("https://tlnig20qy7.execute-api.us-east-2.amazonaws.com/")
             .apply { client(get()) }
             .build()
     }
