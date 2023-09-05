@@ -893,7 +893,8 @@ internal class PersistenceMessagesLogicImpl(
                     messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
                     pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
-                    ids.forEach {
+                    val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
+                    existMessageIds.forEach {
                         SceytKitClient.myId?.let { userId ->
                             val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
                             messageDao.insertUserMarker(markerEntity)
