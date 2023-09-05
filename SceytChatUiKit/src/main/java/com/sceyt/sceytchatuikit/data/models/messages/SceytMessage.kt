@@ -92,7 +92,7 @@ data class SceytMessage(var id: Long,
         }
         // Update inner data
         messageReactions = message.messageReactions
-        files = message.files
+        files = message.files?.map { it.sceytMessage = this; it }
         pendingReactions = message.pendingReactions
     }
 
