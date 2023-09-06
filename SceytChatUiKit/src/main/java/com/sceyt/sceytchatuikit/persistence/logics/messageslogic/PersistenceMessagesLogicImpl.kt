@@ -141,7 +141,9 @@ internal class PersistenceMessagesLogicImpl(
             val isReaction = data.reaction != null
 
             if (messageDb == null && !isReaction) {
-                onMessage(Pair(data.channel, data.message), false)
+                saveMessagesToDb(arrayListOf(message), false)
+                messagesCache.add(data.channel.id, message)
+                onMessageFlow.tryEmit(Pair(data.channel, message))
                 persistenceChannelsLogic.onFcmMessage(data)
             }
 
@@ -795,7 +797,7 @@ internal class PersistenceMessagesLogicImpl(
         } else list
     }
 
-    private suspend fun saveMessagesToDb(list: List<SceytMessage>?): List<SceytMessage> {
+    private suspend fun saveMessagesToDb(list: List<SceytMessage>?, includeParents: Boolean = true): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
         val usersDb = arrayListOf<UserEntity>()
@@ -805,16 +807,19 @@ internal class PersistenceMessagesLogicImpl(
         for (message in list) {
             updateMessageStatesWithPendingStates(message, pendingStates)
             messagesDb.add(message.toMessageDb(false))
-            message.parentMessage?.let { parent ->
-                if (parent.id != 0L) {
-                    parentMessagesDb.add(parent.toMessageDb(true))
-                    if (parent.incoming)
-                        parent.user?.let { user -> usersDb.add(user.toUserEntity()) }
+            if (includeParents) {
+                message.parentMessage?.let { parent ->
+                    if (parent.id != 0L) {
+                        parentMessagesDb.add(parent.toMessageDb(true))
+                        if (parent.incoming)
+                            parent.user?.let { user -> usersDb.add(user.toUserEntity()) }
+                    }
                 }
             }
         }
         messageDao.upsertMessages(messagesDb)
-        messageDao.insertMessagesIgnored(parentMessagesDb)
+        if (parentMessagesDb.isNotEmpty())
+            messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
         list.filter { it.incoming && it.user != null }.map { it.user!! }.toSet().let { users ->
