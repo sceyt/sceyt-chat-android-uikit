@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.0'
 
     implementation supportDependencies.coreKtx
     implementation supportDependencies.appCompat
