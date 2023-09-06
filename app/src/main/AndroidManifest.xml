@@ -17,13 +17,14 @@
         android:required="false" />
 
     <application
-        android:name=".SceytUiKitApp"
+        android:name=".SceytChatDemoApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/SceytAppTheme">
+
         <activity
             android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.share.SceytShareActivity"
             android:exported="true">
@@ -52,7 +53,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.sceyt.chat.ui.presentation.changerole.ChangeRoleActivity"
+            android:name="com.sceyt.chat.demo.presentation.changerole.ChangeRoleActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
@@ -66,15 +67,15 @@
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name="com.sceyt.chat.ui.presentation.addmembers.AddMembersActivity"
+            android:name="com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name="com.sceyt.chat.ui.presentation.newchannel.NewChannelActivity"
+            android:name="com.sceyt.chat.demo.presentation.newchannel.NewChannelActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name="com.sceyt.chat.ui.presentation.creategroup.CreateGroupActivity"
+            android:name="com.sceyt.chat.demo.presentation.creategroup.CreateGroupActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
