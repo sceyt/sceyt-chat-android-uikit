@@ -10,6 +10,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.data.SDKErrorTypeEnum
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
@@ -380,7 +381,7 @@ internal class PersistenceMessagesLogicImpl(
                 .onCompletion { channel.close() }
                 .collect { result ->
                     if (result.isServerResponse()) {
-                        onMessageSentResponse(channelId, result.response())
+                        onMessageSentResponse(channelId, result.response(), message)
                         trySend(result)
                     }
                 }
@@ -423,15 +424,22 @@ internal class PersistenceMessagesLogicImpl(
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
     }
 
-    private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?) {
-        if (response is SceytResponse.Success) {
-            response.data?.let { responseMsg ->
-                messageDao.updateMessageByParams(
-                    tid = responseMsg.tid, serverId = responseMsg.id,
-                    date = responseMsg.createdAt, status = DeliveryStatus.Sent)
+    private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?, message: Message) {
+        when (response ?: return) {
+            is SceytResponse.Success -> {
+                response.data?.let { responseMsg ->
+                    messageDao.updateMessageByParams(
+                        tid = responseMsg.tid, serverId = responseMsg.id,
+                        date = responseMsg.createdAt, status = DeliveryStatus.Sent)
 
-                messagesCache.messageUpdated(channelId, responseMsg)
-                persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
+                    messagesCache.messageUpdated(channelId, responseMsg)
+                    persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
+                }
+            }
+
+            is SceytResponse.Error -> {
+                if ((response as? SceytResponse.Error)?.exception?.type == SDKErrorTypeEnum.BadParam.toString())
+                    messageDao.deleteMessageByTid(message.tid)
             }
         }
     }
