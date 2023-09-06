@@ -38,7 +38,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:324675278450:android:bf0a8f736c8e2de6ec94eb",
         "android_client_info": {
-          "package_name": "com.sceyt.chat.ui"
+          "package_name": "com.sceyt.chat.demo"
         }
       },
       "oauth_client": [

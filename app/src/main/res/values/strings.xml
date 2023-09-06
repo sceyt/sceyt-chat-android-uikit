@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SceytUiKit</string>
+    <string name="app_name">SceytChatDemo</string>
 
     <string name="login_title">Getting Started</string>
     <string name="login_subtitle">Just enter your username, click connect button and start</string>
