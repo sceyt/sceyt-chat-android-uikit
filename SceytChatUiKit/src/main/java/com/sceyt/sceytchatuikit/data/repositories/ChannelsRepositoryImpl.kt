@@ -83,7 +83,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             val query = ChannelListQuery.Builder()
                 .limit(1)
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
-                .queryType(ChannelListQuery.SearchQueryOperator.SearchQueryOperatorEqual)
+                .queryType(ChannelListQuery.SearchQueryOperator.SearchQueryOperatorEQ)
                 .query(url)
                 .build()
 
