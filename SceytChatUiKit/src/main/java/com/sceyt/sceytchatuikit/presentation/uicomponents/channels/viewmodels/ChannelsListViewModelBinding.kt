@@ -105,17 +105,18 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
-        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-            lifecycleOwner.lifecycleScope.launch {
-                val isCanceled = channelsListView.cancelLastSort()
-                val diff = channelsListView.channelUpdated(data.channel)
-                if (diff != null) {
-                    if (diff.lastMessageChanged || data.needSorting || isCanceled)
-                        channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-                } else
-                    getChannels(0, query = searchQuery)
-            }
-        } else needToUpdateChannelsAfterResume[data.channel.id] = data
+        if (lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED)
+            needToUpdateChannelsAfterResume[data.channel.id] = data
+
+        lifecycleOwner.lifecycleScope.launch {
+            val isCanceled = channelsListView.cancelLastSort()
+            val diff = channelsListView.channelUpdated(data.channel)
+            if (diff != null) {
+                if (diff.lastMessageChanged || data.needSorting || isCanceled)
+                    channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+            } else
+                getChannels(0, query = searchQuery)
+        }
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
@@ -153,9 +154,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
-        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-            channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
-        } else {
+        channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
+        if (lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED) {
             val pendingUpdate = needToUpdateChannelsAfterResume[channel.id]
             if (pendingUpdate != null) {
                 pendingUpdate.channel = channel

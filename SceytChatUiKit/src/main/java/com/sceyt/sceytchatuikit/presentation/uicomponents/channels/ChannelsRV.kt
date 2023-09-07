@@ -42,7 +42,10 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
     private fun init() {
         setHasFixedSize(true)
         setItemViewCacheSize(10)
-        itemAnimator = DefaultItemAnimator()
+        itemAnimator = DefaultItemAnimator().apply {
+            moveDuration = 0
+            changeDuration = 0
+        }
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         // edgeEffectFactory = BounceEdgeEffectFactory()
         addOnScrollListener()
