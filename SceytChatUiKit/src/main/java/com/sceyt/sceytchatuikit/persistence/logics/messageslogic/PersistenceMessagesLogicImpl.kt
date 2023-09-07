@@ -35,6 +35,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
@@ -438,8 +439,11 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             is SceytResponse.Error -> {
-                if ((response as? SceytResponse.Error)?.exception?.type == SDKErrorTypeEnum.BadParam.toString())
+                if ((response as? SceytResponse.Error)?.exception?.type == SDKErrorTypeEnum.BadParam.toString()) {
                     messageDao.deleteMessageByTid(message.tid)
+                    SceytLog.e(TAG, "Received BadParam error: ${response.exception?.message}, " +
+                            "deleting message from db tid:${message.tid} id:${message.id}")
+                }
             }
         }
     }
