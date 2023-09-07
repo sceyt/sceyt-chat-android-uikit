@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".presentation.MainActivity">
 
     <com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
         android:id="@+id/channelsListView"

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sceyt_color_bg"
-    tools:context=".ConversationActivity">
+    tools:context=".presentation.ConversationActivity">
 
     <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
         android:id="@+id/headerView"

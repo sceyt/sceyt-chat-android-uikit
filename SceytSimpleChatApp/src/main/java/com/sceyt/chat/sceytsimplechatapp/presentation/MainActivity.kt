@@ -1,4 +1,4 @@
-package com.sceyt.chat.sceytsimplechatapp
+package com.sceyt.chat.sceytsimplechatapp.presentation
 
 import android.os.Bundle
 import androidx.activity.viewModels
