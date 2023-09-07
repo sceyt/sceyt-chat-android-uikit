@@ -118,9 +118,6 @@ interface ChannelDao {
     @Query("update channels set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
-    @Query("update UserChatLink set chat_id =:newChannelId where chat_id =:oldChannelId")
-    suspend fun updateUserChatLinksChatId(oldChannelId: Long, newChannelId: Long)
-
     @Query("delete from channels where chat_id =:channelId")
     suspend fun deleteChannel(channelId: Long)
 
