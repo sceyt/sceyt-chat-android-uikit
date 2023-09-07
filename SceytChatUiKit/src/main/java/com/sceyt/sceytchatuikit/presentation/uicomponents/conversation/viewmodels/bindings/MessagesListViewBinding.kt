@@ -270,7 +270,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         channel = it
         messagesListView.setUnreadCount(it.newMessageCount.toInt())
         checkEnableDisableActions(channel)
-        if (channel.lastMessage == null)
+        if (it.lastMessage == null)
             messagesListView.clearData()
     }.launchIn(viewModelScope)
 
