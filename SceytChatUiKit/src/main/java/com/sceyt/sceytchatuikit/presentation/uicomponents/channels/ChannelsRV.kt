@@ -70,8 +70,10 @@ internal class ChannelsRV @JvmOverloads constructor(context: Context, attrs: Att
                 .also { mAdapter = it }
         } else {
             mAdapter.notifyUpdate(channels, this)
-            if (isFirstItemDisplaying())
-                scrollToPosition(0)
+            awaitAnimationEnd {
+                if (isFirstItemDisplaying())
+                    scrollToPosition(0)
+            }
 
             context.maybeComponentActivity()?.let {
                 it.lifecycleScope.launch {
