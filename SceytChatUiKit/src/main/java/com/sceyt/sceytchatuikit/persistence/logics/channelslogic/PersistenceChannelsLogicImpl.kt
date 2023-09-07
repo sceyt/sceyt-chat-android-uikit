@@ -502,8 +502,10 @@ internal class PersistenceChannelsLogicImpl(
             // Set new channel last message to pending channel last message with new channel id
             newChannel.lastMessage = channel.lastMessage?.apply { channelId = newChannelId }
 
-            channelDao.updateUserChatLinksChatId(pendingChannelId, newChannelId)
-            channelDao.insertChannel(newChannel.toChannelEntity())
+            channelDao.deleteChannelAndLinks(pendingChannelId)
+            channelDao.insertChannelAndLinks(newChannel.toChannelEntity(), newChannel.members?.map {
+                UserChatLink(userId = it.id, chatId = newChannelId, role = it.role.name)
+            } ?: emptyList())
             messageDao.updateMessagesChannelId(pendingChannelId, newChannelId)
 
             channelsCache.pendingChannelCreated(pendingChannelId, newChannel)
