@@ -50,6 +50,7 @@
         <attr name="sceytUiSelfReactionBackgroundColor" format="reference" />
         <attr name="sceytUiSelfReactionBorderColor" format="reference" />
 
+        <attr name="sceytUiSwipeReplyIcon" format="reference" />
 
     </declare-styleable>
 </resources>

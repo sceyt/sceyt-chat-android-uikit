@@ -5,7 +5,9 @@ import android.util.DisplayMetrics
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 import kotlin.math.pow
@@ -50,13 +52,12 @@ private fun getPow10(skip: Double): Double {
     } else 10.0
 }
 
-fun Long.toPrettySize(): String {
-    val sizeInKb = (this / 1000f).toDouble()
+fun Number.toPrettySize(format: String = "%.2f"): String {
+    val sizeInKb = toDouble() / 1000
     val sizeInMb = sizeInKb / 1000f
-    val format = DecimalFormat("##.##")
     return when {
-        sizeInMb >= 1 -> format.format(sizeInMb) + "MB"
-        sizeInKb >= 1 -> format.format(sizeInKb) + "KB"
+        sizeInMb >= 1 -> String.format(format, sizeInMb) + "MB"
+        sizeInKb >= 1 -> String.format(format, sizeInKb) + "KB"
         else -> "${this}B"
     }
 }
@@ -90,4 +91,8 @@ fun Long.durationToMinSecShort(): String {
         timeZone = TimeZone.getTimeZone("UTC")
     }
     return timeFormatter.format(Date(this))
+}
+
+fun Float.inNotNanOrZero(): Float {
+    return if (isNaN()) 0f else this
 }

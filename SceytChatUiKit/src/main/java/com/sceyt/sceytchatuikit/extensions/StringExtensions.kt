@@ -1,12 +1,15 @@
 package com.sceyt.sceytchatuikit.extensions
 
+import android.content.Context
 import android.graphics.Typeface
 import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import android.text.util.Linkify
 import android.util.Base64
 import android.util.Patterns
+import android.widget.TextView
 import androidx.core.text.isDigitsOnly
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
@@ -18,6 +21,9 @@ import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE
 import java.lang.Character.getDirectionality
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -60,7 +66,7 @@ fun String?.isLink(): Boolean {
 }
 
 fun CharSequence?.isNotNullOrBlank(): Boolean {
-    return isNullOrBlank().not()
+    return !isNullOrBlank()
 }
 
 fun CharSequence?.setBoldSpan(from: Int, to: Int): SpannableStringBuilder {
@@ -92,6 +98,11 @@ fun String?.extractLinks(): Array<String> {
         links.add(url)
     }
     return links.toTypedArray()
+}
+
+fun String?.isValidUrl(context: Context): Boolean {
+    this ?: return false
+    return Linkify.addLinks(TextView(context).apply { text = this@isValidUrl }, Linkify.WEB_URLS)
 }
 
 fun String?.isValidEmail(): Boolean {
@@ -156,4 +167,12 @@ fun String.notAutoCorrectable(): String {
 
 fun String.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
+}
+
+fun String.toSha256(): Long {
+    val bytes = toByteArray(StandardCharsets.UTF_8)
+    val md = MessageDigest.getInstance("SHA-256")
+    val digest = md.digest(bytes)
+    val bigInt = BigInteger(1, digest)
+    return bigInt.toLong()
 }

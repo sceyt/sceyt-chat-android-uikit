@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragment
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.sceyt.chat.models.message.Reaction
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.findIndexed
 
 class ViewPagerAdapterReactedUsers(fragment: Fragment,
@@ -27,7 +27,7 @@ class ViewPagerAdapterReactedUsers(fragment: Fragment,
         }
     }
 
-    fun addOrUpdateItem(fragment: FragmentReactedUsers, reaction: Reaction) {
+    fun addOrUpdateItem(fragment: FragmentReactedUsers, reaction: SceytReaction) {
         fragments.findIndexed { it.getKey() == reaction.key }?.second?.update() ?: run {
             this.fragments.add(fragment)
             notifyItemInserted(fragments.lastIndex)

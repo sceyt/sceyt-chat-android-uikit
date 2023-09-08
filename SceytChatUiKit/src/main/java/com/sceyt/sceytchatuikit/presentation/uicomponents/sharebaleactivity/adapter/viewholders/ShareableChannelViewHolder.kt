@@ -4,13 +4,17 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.*
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Broadcast
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Direct
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Group
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Private
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -33,17 +37,19 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
         binding.checkbox.isChecked = item.selected
 
         binding.tvMemberCount.apply {
-            val membersText = when (channel.channelType) {
-                Private -> {
-                    if ((channel as SceytGroupChannel).memberCount > 0)
+            val membersText = when (channel.getChannelType()) {
+                Private, Group -> {
+                    if (channel.memberCount > 0)
                         getString(R.string.sceyt_members_count, channel.memberCount)
                     else getString(R.string.sceyt_member_count, channel.memberCount)
                 }
-                Public -> {
-                    if ((channel as SceytGroupChannel).memberCount > 0)
+
+                Public, Broadcast -> {
+                    if (channel.memberCount > 0)
                         getString(R.string.sceyt_subscribers_count, channel.memberCount)
                     else getString(R.string.sceyt_subscriber_count, channel.memberCount)
                 }
+
                 Direct -> null
             }
             text = membersText
@@ -56,7 +62,7 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: SceytAvatarView) {
-        if (channel is SceytDirectChannel && channel.isPeerDeleted()) {
+        if (channel.isPeerDeleted()) {
             binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
         } else
             binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
@@ -65,7 +71,7 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
     open fun setSubject(channel: SceytChannel, textView: TextView) {
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
-            (channel as? SceytDirectChannel)?.peer?.user?.let { from ->
+            channel.getFirstMember()?.user?.let { from ->
                 userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }

@@ -8,8 +8,8 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:button="@drawable/sceyt_custom_radiobutton"
         android:clickable="false"
         app:layout_constraintBottom_toBottomOf="parent"

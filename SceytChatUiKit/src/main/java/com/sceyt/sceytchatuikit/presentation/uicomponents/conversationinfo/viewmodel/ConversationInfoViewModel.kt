@@ -10,11 +10,11 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.data.toGroupChannel
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +51,8 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _channelAddMemberLiveData = MutableLiveData<ChannelMembersEventData>()
     val channelAddMemberLiveData: LiveData<ChannelMembersEventData> = _channelAddMemberLiveData
 
+    private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
+    val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
 
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -134,15 +136,24 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
             val members = users.map { it.toMember() }
             val response = membersMiddleWare.addMembersToChannel(channelId, members)
             if (response is SceytResponse.Success) {
-                val groupChannel = (response.data ?: return@launch).toGroupChannel()
-                if (groupChannel.lastActiveMembers.isNullOrEmpty()) return@launch
+                val groupChannel = (response.data ?: return@launch)
 
                 _channelAddMemberLiveData.postValue(ChannelMembersEventData(
                     channel = groupChannel,
-                    members = groupChannel.lastActiveMembers,
+                    members = groupChannel.members ?: return@launch,
                     eventType = ChannelMembersEventEnum.Added
                 ))
             }
+
+            notifyPageStateWithResponse(response)
+        }
+    }
+
+    fun findOrCreateChat(user: User) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsMiddleWare.findOrCreateDirectChannel(user)
+            if (response is SceytResponse.Success)
+                _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
 
             notifyPageStateWithResponse(response)
         }

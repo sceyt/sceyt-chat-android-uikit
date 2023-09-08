@@ -1,11 +1,14 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentPayLoadData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.removeAllIf
-import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
@@ -15,9 +18,11 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDown
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
@@ -43,7 +48,8 @@ class MessagesCache {
     }
 
 
-    /** Added messages like upsert, and check is differences between messages*/
+    /** Upsert messages to cash.
+     * @param checkDifference if true check differences and add payloads, otherwise only put to cash. */
     fun addAll(channelId: Long, list: List<SceytMessage>, checkDifference: Boolean): Boolean {
         synchronized(lock) {
             return if (checkDifference)
@@ -58,10 +64,8 @@ class MessagesCache {
     fun add(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
             val hasDiff = putAndCheckHasDiff(channelId, false, message)
-            if (hasDiff) {
-                val payLoad = getPayLoads(channelId, message)
-                emitMessageUpdated(channelId, payLoad?.toList(), message)
-            }
+            if (hasDiff)
+                emitMessageUpdated(channelId, message)
         }
     }
 
@@ -97,11 +101,10 @@ class MessagesCache {
 
     fun messageUpdated(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
-            val payLoad = getPayLoads(channelId, *message)
             message.forEach {
-                updateMessage(channelId, it)
+                updateMessage(channelId, it, true)
             }
-            emitMessageUpdated(channelId, payLoad, *message)
+            emitMessageUpdated(channelId, *message)
         }
     }
 
@@ -114,8 +117,7 @@ class MessagesCache {
                     updatesMessages.add(message)
                 }
             }
-            val payLoad = getPayLoads(channelId, *updatesMessages.toTypedArray())
-            emitMessageUpdated(channelId, payLoad, *updatesMessages.toTypedArray())
+            emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
         }
     }
 
@@ -136,9 +138,8 @@ class MessagesCache {
     fun upsertMessages(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
-                val payLoad = getPayLoads(channelId, it)
                 if (putAndCheckHasDiff(channelId, false, it))
-                    emitMessageUpdated(channelId, payLoad, it)
+                    emitMessageUpdated(channelId, it)
             }
         }
     }
@@ -146,15 +147,13 @@ class MessagesCache {
     fun upsertNotifyUpdateAnyway(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
-                val payLoad = getPayLoads(channelId, it)
-                updateMessage(channelId, it)
-                emitMessageUpdated(channelId, payLoad, it)
+                updateMessage(channelId, it, true)
+                emitMessageUpdated(channelId, it)
             }
         }
     }
 
-    private fun emitMessageUpdated(channelId: Long, payLoads: List<AttachmentPayLoadEntity>?, vararg message: SceytMessage) {
-        setPayloads(payLoads, message.toList())
+    private fun emitMessageUpdated(channelId: Long, vararg message: SceytMessage) {
         messageUpdatedFlow_.tryEmit(Pair(channelId, message.map { it.clone() }))
     }
 
@@ -170,16 +169,10 @@ class MessagesCache {
         }
     }
 
-    private fun putMessage(channelId: Long, message: SceytMessage) {
+    private fun updateMessage(channelId: Long, message: SceytMessage, initPayloads: Boolean) {
         cachedMessages[channelId]?.let {
-            it[message.tid] = message
-        } ?: run {
-            cachedMessages[channelId] = hashMapOf(message.tid to message)
-        }
-    }
-
-    private fun updateMessage(channelId: Long, message: SceytMessage) {
-        cachedMessages[channelId]?.let {
+            if (initPayloads)
+                initMessagePayLoads(channelId, message)
             it[message.tid] = message
         }
     }
@@ -190,32 +183,58 @@ class MessagesCache {
         }
     }
 
-    private fun setPayloads(payloads: List<AttachmentPayLoadEntity>?, messages: List<SceytMessage>) {
-        payloads ?: return
-        messages.forEach {
-            payloads.find { payLoad -> payLoad.messageTid == it.tid }?.let { entity ->
-                it.attachments?.forEach { attachment ->
-                    attachment.transferState = entity.transferState
-                    attachment.progressPercent = entity.progressPercent
-                    attachment.filePath = entity.filePath
-                    attachment.url = entity.url
+    /** Set message attachments and pending reactions from cash, which saved in local db.*/
+    private fun initMessagePayLoads(channelId: Long, messageToUpdate: SceytMessage) {
+        setPayloads(channelId, messageToUpdate)
+    }
+
+    private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage) {
+        fun setPayloads(message: SceytMessage): SceytMessage? {
+            val cashedMessage = getMessageByTid(channelId, message.tid)
+            val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
+            updateAttachmentsPayLoads(attachmentPayLoadData, message)
+            return cashedMessage
+        }
+
+        val cashedMessage = setPayloads(messageToUpdate)
+        // Set payloads for parent message
+        messageToUpdate.parentMessage?.let { setPayloads(it) }
+
+        val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
+        val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
+        pendingReactions.removeAll(needToAddReactions)
+        pendingReactions.addAll(needToAddReactions)
+        messageToUpdate.pendingReactions = pendingReactions.toList()
+    }
+
+    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?, message: SceytMessage) {
+        payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
+            message.attachments?.forEach { attachment ->
+                if (attachment.type == AttachmentTypeEnum.Link.value()) return@forEach
+                val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
+                    { data.any { it.url == attachment.url } }
+                } else {
+                    { data.any { it.filePath == attachment.filePath } }
+                }
+                data.find(predicate)?.let {
+                    attachment.transferState = it.transferState
+                    attachment.progressPercent = it.progressPercent
+                    attachment.filePath = it.filePath
+                    attachment.url = it.url
                 }
             }
         }
     }
 
-    private fun getPayLoads(channelId: Long, vararg messages: SceytMessage): List<AttachmentPayLoadEntity>? {
-        var payloads: List<AttachmentPayLoadEntity>? = null
-        messages.forEach {
-            payloads = getMessageByTid(channelId, it.tid)?.attachments?.map { attachment ->
-                AttachmentPayLoadEntity(
-                    messageTid = it.tid,
-                    transferState = attachment.transferState,
-                    progressPercent = attachment.progressPercent,
-                    url = attachment.url,
-                    filePath = attachment.filePath
-                )
-            }
+    private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
+        val payloads = cashedMessage?.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { attachment ->
+            AttachmentPayLoadData(
+                messageTid = cashedMessage.tid,
+                transferState = attachment.transferState,
+                progressPercent = attachment.progressPercent,
+                url = attachment.url,
+                filePath = attachment.filePath
+            )
         }
         return payloads
     }
@@ -223,38 +242,44 @@ class MessagesCache {
     private fun putAndCheckHasDiff(channelId: Long, includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
         messages.forEach {
+            initMessagePayLoads(channelId, it)
             if (!detectedDiff) {
                 val old = getMessageByTid(channelId, it.tid)
                 detectedDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
             }
-            updateMessage(channelId, it)
+            updateMessage(channelId, it, false)
         }
         return detectedDiff
     }
 
     fun updateAttachmentTransferData(updateDate: TransferData) {
-        fun update(attachment: SceytAttachment) {
-            attachment.transferState = updateDate.state
-            attachment.progressPercent = updateDate.progressPercent
-            attachment.filePath = updateDate.filePath
-            attachment.url = updateDate.url
-        }
+        synchronized(lock) {
+            fun update(attachment: SceytAttachment) {
+                attachment.transferState = updateDate.state
+                attachment.progressPercent = updateDate.progressPercent
+                attachment.filePath = updateDate.filePath
+                attachment.url = updateDate.url
+            }
 
-        cachedMessages.values.forEach { messageHashMap ->
-            messageHashMap[updateDate.messageTid]?.let { message ->
-                message.attachments?.forEach { attachment ->
-                    when (updateDate.state) {
-                        PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload -> {
-                            if (attachment.filePath == updateDate.filePath)
-                                update(attachment)
+            cachedMessages.values.forEach { messageHashMap ->
+                messageHashMap[updateDate.messageTid]?.let { message ->
+                    message.attachments?.forEach att@{ attachment ->
+                        if (attachment.type == AttachmentTypeEnum.Link.value())
+                            return@att
+
+                        when (updateDate.state) {
+                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
+                                if (attachment.filePath == updateDate.filePath)
+                                    update(attachment)
+                            }
+
+                            Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
+                                if (attachment.url == updateDate.url)
+                                    update(attachment)
+                            }
+
+                            FilePathChanged, ThumbLoaded -> return
                         }
-
-                        Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
-                            if (attachment.url == updateDate.url)
-                                update(attachment)
-                        }
-
-                        FilePathChanged, ThumbLoaded -> return
                     }
                 }
             }
@@ -262,12 +287,37 @@ class MessagesCache {
     }
 
     fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) {
-        cachedMessages.values.forEach { messageHashMap ->
-            messageHashMap[messageTid]?.let { message ->
-                message.attachments?.forEach { attachment ->
-                    attachment.filePath = path
-                    attachment.metadata = metadata
+        synchronized(lock) {
+            cachedMessages.values.forEach { messageHashMap ->
+                messageHashMap[messageTid]?.let { message ->
+                    message.attachments?.forEach att@{ attachment ->
+                        if (attachment.type == AttachmentTypeEnum.Link.value())
+                            return@att
+                        attachment.filePath = path
+                        attachment.metadata = metadata
+                    }
                 }
+            }
+        }
+    }
+
+    fun moveMessagesToNewChannel(pendingChannelId: Long, newChannelId: Long) {
+        synchronized(lock) {
+            cachedMessages[newChannelId] = cachedMessages[pendingChannelId] ?: return
+            cachedMessages.remove(pendingChannelId)
+        }
+    }
+
+    internal fun deletePendingReaction(channelId: Long, tid: Long, key: String): SceytMessage? {
+        synchronized(lock) {
+            return cachedMessages[channelId]?.get(tid)?.let {
+                val newReactions = it.pendingReactions?.toMutableSet()?.apply {
+                    find { data -> data.key == key }?.let { reactionData ->
+                        remove(reactionData)
+                    }
+                }
+                it.pendingReactions = newReactions?.toList()
+                it
             }
         }
     }

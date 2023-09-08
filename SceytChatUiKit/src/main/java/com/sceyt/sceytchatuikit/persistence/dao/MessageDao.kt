@@ -3,11 +3,11 @@ package com.sceyt.sceytchatuikit.persistence.dao
 import androidx.room.*
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.DeliveryStatus.*
-import com.sceyt.chat.models.message.MarkerCount
+import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlin.math.max
 
@@ -40,6 +40,13 @@ abstract class MessageDao {
         insertMessagesPayloads(insertedMessages)
     }
 
+    @Transaction
+    open suspend fun insertMessageIgnored(messagesDb: MessageDb) {
+        val rowId = insert(messagesDb.messageEntity)
+        if (rowId != -1L)
+            insertMessagesPayloads(listOf(messagesDb))
+    }
+
     private suspend fun insertMessagesPayloads(messages: List<MessageDb>) {
         if (messages.isEmpty()) return
 
@@ -47,26 +54,32 @@ abstract class MessageDao {
         deleteAttachmentsChunked(messages.map { it.messageEntity.tid })
 
         //Delete reactions scores before insert
-        deleteMessageReactionScoresChunked(messages.mapNotNull { it.messageEntity.id })
+        deleteMessageReactionTotalsChunked(messages.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
         val attachmentPairs = messages.map { Pair(it.attachments ?: arrayListOf(), it) }
         if (attachmentPairs.isNotEmpty()) {
             insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
             insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
-                pair.first.map { it.toAttachmentPayLoad(pair.second.messageEntity) }
+                pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value() }
+                    .map { it.toAttachmentPayLoad(pair.second.messageEntity) }
             })
         }
+
+        //Insert user markers
+        val userMarkers = messages.flatMap { it.userMarkers ?: arrayListOf() }
+        if (userMarkers.isNotEmpty())
+            insertUserMarkers(userMarkers)
 
         //Insert reactions
         val reactions = messages.flatMap { it.reactions ?: arrayListOf() }
         if (reactions.isNotEmpty())
             insertReactions(reactions.map { it.reaction })
 
-        //Insert reaction scores
-        val reactionScores = messages.flatMap { it.reactionsScores ?: arrayListOf() }
-        if (reactionScores.isNotEmpty())
-            insertReactionScores(reactionScores)
+        //Insert reaction totals
+        val reactionTotals = messages.flatMap { it.reactionsTotals ?: arrayListOf() }
+        if (reactionTotals.isNotEmpty())
+            insertReactionTotals(reactionTotals)
 
         //Inset mentioned users links
         insertMentionedUsersMessageLinks(*messages.map { it.messageEntity }.toTypedArray())
@@ -86,7 +99,7 @@ abstract class MessageDao {
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        entitiesToUpdate.forEach { updateMessage(it) }
+        updateMessages(entitiesToUpdate)
     }
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -98,6 +111,9 @@ abstract class MessageDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun updateMessage(messageEntity: MessageEntity)
 
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun updateMessages(messageEntity: List<MessageEntity>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
 
@@ -105,10 +121,16 @@ abstract class MessageDao {
     abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertUserMarker(userMarker: MarkerEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionScores(reactionScores: List<ReactionScoreEntity>)
+    abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
@@ -126,16 +148,16 @@ abstract class MessageDao {
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <:lastMessageId " +
-            "and not isParentMessage and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
+            "and not unList and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and message_id <=:lastMessageId " +
-            "and not isParentMessage and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
+            "and not unList and deliveryStatus != $msgPendingStatus order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and message_id >:messageId and not isParentMessage " +
+    @Query("select * from messages where channelId =:channelId and message_id >:messageId and not unList " +
             "and deliveryStatus != $msgPendingStatus order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
@@ -173,20 +195,31 @@ abstract class MessageDao {
     abstract suspend fun getMessageById(id: Long): MessageDb?
 
     @Query("select message_id as id, tid from messages where message_id in (:ids)")
-    abstract suspend fun getExistMessagesByIds(ids: List<Long>): List<MessageIdAndTid>
+    abstract suspend fun getExistMessagesIdTidByIds(ids: List<Long>): List<MessageIdAndTid>
+
+    @Query("select message_id from messages where message_id in (:ids)")
+    abstract suspend fun getExistMessageByIds(ids: List<Long>): List<Long>
 
     @Transaction
     @Query("select * from messages where tid =:tid")
     abstract suspend fun getMessageByTid(tid: Long): MessageDb?
 
-    @Query("select tid from  messages where message_id in (:ids)")
+    @Transaction
+    @Query("select * from messages where tid in (:tIds)")
+    abstract suspend fun getMessagesByTid(tIds: List<Long>): List<MessageDb>
+
+    @Transaction
+    @Query("select * from messages where deliveryStatus = 0 and tid in (:tIds)")
+    abstract suspend fun getPendingMessagesByTIds(tIds: List<Long>): List<MessageDb>
+
+    @Query("select tid from messages where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 
-    @Query("select message_id as id, tid from messages where message_id <= :id and deliveryStatus in (:status)")
-    abstract suspend fun getMessagesTidAndIdLoverThanByStatus(id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
+    @Query("select tid from messages where message_id =:id")
+    abstract suspend fun getMessageTidById(id: Long): Long?
 
-    @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
-    abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
+    @Query("select message_id as id, tid from messages where channelId =:channelId and message_id <= :id and deliveryStatus in (:status)")
+    abstract suspend fun getMessagesTidAndIdLoverThanByStatus(channelId: Long, id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
@@ -205,10 +238,10 @@ abstract class MessageDao {
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
     @Transaction
-    open suspend fun updateMessageStatusWithBefore(status: DeliveryStatus, id: Long): List<MessageIdAndTid> {
+    open suspend fun updateMessageStatusWithBefore(channelId: Long, status: DeliveryStatus, id: Long): List<MessageIdAndTid> {
         val ids = when (status) {
-            Read -> getMessagesTidAndIdLoverThanByStatus(id, Sent, Delivered)
-            else -> getMessagesTidAndIdLoverThanByStatus(id, Sent)
+            Displayed -> getMessagesTidAndIdLoverThanByStatus(channelId, id, Sent, Received)
+            else -> getMessagesTidAndIdLoverThanByStatus(channelId, id, Sent)
         }.filter { it.id != 0L }
 
         if (ids.isNotEmpty()) {
@@ -221,25 +254,16 @@ abstract class MessageDao {
     }
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId")
-    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = Read)
+    abstract suspend fun updateAllMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = Displayed)
 
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
-    @Query("update messages set selfMarkers =:markers where channelId =:channelId and message_id =:messageId")
-    abstract suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, markers: List<String>?)
-
     @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
-    abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerCount>?)
+    abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerTotal>?)
 
-    @Transaction
-    open suspend fun updateMessageSelfMarkers(channelId: Long, messageId: Long, marker: String) {
-        getMessageById(messageId)?.let { messageDb ->
-            val selfMarkers = messageDb.messageEntity.selfMarkers?.toArrayList()
-            selfMarkers?.add(marker)
-            updateMessageSelfMarkers(channelId, messageId, selfMarkers?.toSet()?.toList())
-        }
-    }
+    @Query("update messages set channelId =:newChannelId where channelId =:oldChannelId")
+    abstract suspend fun updateMessagesChannelId(oldChannelId: Long, newChannelId: Long): Int
 
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
@@ -264,8 +288,8 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun deleteMessageReactionScoresChunked(messageIdes: List<Long>) {
-        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndScores)
+    open suspend fun deleteMessageReactionTotalsChunked(messageIdes: List<Long>) {
+        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndTotals)
     }
 
     @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
@@ -275,12 +299,12 @@ abstract class MessageDao {
     abstract fun deleteAttachmentsPayLoad(messageTides: List<Long>)
 
     @Transaction
-    open fun deleteAllReactionsAndScores(messageIds: List<Long>) {
-        deleteAllReactionScoresByMessageId(messageIds)
+    open fun deleteAllReactionsAndTotals(messageIds: List<Long>) {
+        deleteAllReactionTotalsByMessageId(messageIds)
     }
 
-    @Query("delete from ReactionScoreEntity where messageId in (:messageId)")
-    abstract fun deleteAllReactionScoresByMessageId(messageId: List<Long>)
+    @Query("delete from ReactionTotalEntity where messageId in (:messageId)")
+    abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
 
     @Query("delete from ReactionEntity where messageId in (:messageId)")
     protected abstract fun deleteAllReactionsByMessageId(messageId: List<Long>)

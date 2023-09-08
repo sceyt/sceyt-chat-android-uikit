@@ -1,12 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragments.adapters
 
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.presentation.common.SelectableItem
 
 sealed class ReactionHeaderItem : SelectableItem() {
 
     data class Reaction(
-            var reactionScore: ReactionScore
+            var reactionTotal: SceytReactionTotal
     ) : ReactionHeaderItem()
 
     data class All(

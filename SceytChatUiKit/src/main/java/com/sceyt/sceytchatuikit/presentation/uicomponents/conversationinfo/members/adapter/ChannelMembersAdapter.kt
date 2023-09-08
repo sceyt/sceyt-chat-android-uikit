@@ -63,8 +63,11 @@ class ChannelMembersAdapter(
     fun addNewItemsToStart(items: List<MemberItem>?) {
         if (items.isNullOrEmpty()) return
 
-        members.addAll(0, items)
-        notifyItemRangeInserted(0, items.size)
+        items.minus(ArrayList(members).toSet())
+            .takeIf { it.isNotEmpty() }?.let {
+                members.addAll(0, it)
+                notifyItemRangeInserted(0, it.size)
+            }
     }
 
     fun notifyUpdate(data: List<MemberItem>, showMoreIconChanged: Boolean = false) {

@@ -7,13 +7,15 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
-        senderNameBuilder: ((User) -> String)?,
-        displayedListener: ((MessageListItem) -> Unit)?
-) : BaseMsgViewHolder(binding.root, senderNameBuilder = senderNameBuilder, displayedListener = displayedListener) {
+        userNameBuilder: ((User) -> String)?,
+        displayedListener: ((MessageListItem) -> Unit)?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
+) : BaseMsgViewHolder(binding.root, userNameBuilder = userNameBuilder, displayedListener = displayedListener) {
 
     init {
         binding.setMessageItemStyle()
@@ -31,9 +33,18 @@ class IncDeletedMsgViewHolder(
 
                 if (diff.showAvatarAndNameChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
+
+                if (item.message.canShowAvatarAndName)
+                    avatar.setOnClickListener {
+                        messageListeners?.onAvatarClick(it, item)
+                    }
             }
         }
     }
+
+    override val enableReply = false
+
+    override val selectMessageView get() = binding.selectView
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
         with(context) {

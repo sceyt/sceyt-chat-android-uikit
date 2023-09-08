@@ -36,6 +36,8 @@ class DateSeparatorViewHolder(
         }
     }
 
+    override val enableReply = false
+
     private fun getDateText(createdAt: Long, data: DateFormatData): String {
         if (data.format == null)
             return "${data.beginTittle}${data.endTitle}"

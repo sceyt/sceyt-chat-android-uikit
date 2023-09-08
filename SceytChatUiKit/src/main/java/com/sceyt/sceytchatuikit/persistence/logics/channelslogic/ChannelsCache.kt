@@ -1,15 +1,11 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
-import androidx.lifecycle.MutableLiveData
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -17,10 +13,17 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import java.util.Date
 
 class ChannelsCache {
     private var cachedData = hashMapOf<Long, SceytChannel>()
+    private var pendingChannelsData = hashMapOf<Long, SceytChannel>()
+
+    internal val initialized: Boolean
+        get() = cachedData.isNotEmpty()
+
+    /** fromPendingToRealChannelsData is used to store created pending channel ids and their real channel ids,
+     * to escape creating channel every time when sending message*/
+    private var fromPendingToRealChannelsData = hashMapOf<Long, Long>()
     private val lock = Any()
 
     companion object {
@@ -29,6 +32,12 @@ class ChannelsCache {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow: SharedFlow<ChannelUpdateData> = channelUpdatedFlow_
+
+        private val channelReactionMsgLoadedFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelReactionMsgLoadedFlow: SharedFlow<SceytChannel> = channelReactionMsgLoadedFlow_
 
         private val channelDeletedFlow_ = MutableSharedFlow<Long>(
             extraBufferCapacity = 5,
@@ -42,8 +51,17 @@ class ChannelsCache {
         )
         val channelAddedFlow: SharedFlow<SceytChannel> = channelAddedFlow_
 
-        private val channelDraftMessageChangesLiveData_ = MutableLiveData<Pair<Long, DraftMessage?>>()
-        val channelDraftMessageChangesLiveData = channelDraftMessageChangesLiveData_.asLiveData()
+        private val pendingChannelCreatedFlow_ = MutableSharedFlow<Pair<Long, SceytChannel>>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val pendingChannelCreatedFlow: SharedFlow<Pair<Long, SceytChannel>> = pendingChannelCreatedFlow_
+
+        private val channelDraftMessageChangesFlow_ = MutableSharedFlow<SceytChannel>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val channelDraftMessageChangesFlow: SharedFlow<SceytChannel> = channelDraftMessageChangesFlow_
 
         var currentChannelId: Long? = null
     }
@@ -63,6 +81,14 @@ class ChannelsCache {
     fun add(channel: SceytChannel) {
         synchronized(lock) {
             if (putAndCheckHasDiff(channel).hasDifference())
+                channelAdded(channel)
+        }
+    }
+
+    fun addPendingChannel(channel: SceytChannel) {
+        synchronized(lock) {
+            pendingChannelsData[channel.id] = channel
+            if (channel.lastMessage != null)
                 channelAdded(channel)
         }
     }
@@ -87,7 +113,13 @@ class ChannelsCache {
 
     fun get(channelId: Long): SceytChannel? {
         synchronized(lock) {
-            return cachedData[channelId]?.clone()
+            return cachedData[channelId]?.clone() ?: pendingChannelsData[channelId]?.clone()
+        }
+    }
+
+    fun getRealChannelIdWithPendingChannelId(pendingChannelId: Long): Long? {
+        synchronized(lock) {
+            return fromPendingToRealChannelsData[pendingChannelId]
         }
     }
 
@@ -123,7 +155,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 channel.lastMessage = message.clone()
-                channel.lastReadMessageId = message.id
+                channel.lastDisplayedMessageId = message.id
                 channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
@@ -133,10 +165,11 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 channel.lastMessage = null
-                channel.unreadMessageCount = 0
-                channel.unreadMentionCount = 0
-                channel.unreadReactionCount = 0
-                channel.userMessageReactions = null
+                channel.newMessageCount = 0
+                channel.newMentionCount = 0
+                channel.newReactedMessageCount = 0
+                channel.newReactions = null
+                channel.pendingReactions = null
                 channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
             }
         }
@@ -147,7 +180,7 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 if (muted) {
                     channel.muted = true
-                    channel.muteExpireDate = Date(muteUntil)
+                    channel.mutedTill = muteUntil
                 } else channel.muted = false
 
                 channelUpdated(channel, false, ChannelUpdatedType.MuteState)
@@ -158,12 +191,10 @@ class ChannelsCache {
     fun addedMembers(channelId: Long, sceytMember: SceytMember) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                (channel as? SceytGroupChannel)?.let {
-                    it.members = it.members.toArrayList().apply {
-                        add(sceytMember.copy())
-                    }
-                    channelUpdated(channel, false, ChannelUpdatedType.Members)
+                channel.members = channel.members?.toArrayList()?.apply {
+                    add(sceytMember.copy())
                 }
+                channelUpdated(channel, false, ChannelUpdatedType.Members)
             }
         }
     }
@@ -171,8 +202,8 @@ class ChannelsCache {
     fun updateUnreadCount(channelId: Long, count: Int) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channel.unreadMessageCount = count.toLong()
-                channel.markedUsUnread = false
+                channel.newMessageCount = count.toLong()
+                channel.unread = false
                 channelUpdated(channel, false, ChannelUpdatedType.UnreadCount)
             }
         }
@@ -185,6 +216,25 @@ class ChannelsCache {
         }
     }
 
+    fun removeFromPendingToRealChannelsData(pendingChannelId: Long) {
+        synchronized(lock) {
+            fromPendingToRealChannelsData.remove(pendingChannelId)
+        }
+    }
+
+    fun pendingChannelCreated(pendingChannelId: Long, newChannel: SceytChannel) {
+        synchronized(lock) {
+            // Removing pending channel
+            pendingChannelsData.remove(pendingChannelId)
+            // Adding already created channel to cache
+            cachedData[newChannel.id] = newChannel.clone()
+            // Adding pending channel id with real channel id for future getting real channel id by pending channel id
+            fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
+            // Emitting to flow
+            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+        }
+    }
+
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
     }
@@ -193,30 +243,58 @@ class ChannelsCache {
         channelAddedFlow_.tryEmit(channel.clone())
     }
 
-    fun updateMembersCount(channel: SceytGroupChannel) {
-        cachedData[channel.id]?.let {
-            (it as? SceytGroupChannel)?.memberCount = channel.memberCount
-            channelUpdated(it, false, ChannelUpdatedType.Members)
-        } ?: upsertChannel(channel)
+    fun updateMembersCount(channel: SceytChannel) {
+        var found = false
+        synchronized(lock) {
+            cachedData[channel.id]?.let {
+                it.memberCount = channel.memberCount
+                channelUpdated(it, false, ChannelUpdatedType.Members)
+                found = true
+            }
+        }
+        if (!found)
+            upsertChannel(channel)
     }
 
     fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
-        cachedData[channelId]?.let {
-            it.draftMessage = draftMessage?.copy()
-            channelDraftMessageChangesLiveData_.postValue(Pair(channelId, draftMessage))
+        synchronized(lock) {
+            cachedData[channelId]?.let {
+                it.draftMessage = draftMessage?.copy()
+                channelDraftMessageChangesFlow_.tryEmit(it.clone())
+            }
         }
     }
 
     fun updateChannelPeer(id: Long, user: User) {
         synchronized(lock) {
-            cachedData[id]?.let {
-                (it as? SceytDirectChannel)?.let { channel ->
-                    val oldUser = channel.peer?.user
-                    if (oldUser?.presence?.hasDiff(user.presence) == true) {
-                        channel.peer?.user = user
+            cachedData[id]?.let { channel ->
+                channel.members?.find { member -> member.user.id == user.id }?.let {
+                    val oldUser = it.user
+                    if (oldUser.presence?.hasDiff(user.presence) == true) {
+                        it.user = user
                         channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }
                 }
+            }
+        }
+    }
+
+    fun removeChannelMessageReactions(channelId: Long, messageId: Long) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                channel.newReactions?.filter { it.messageId == messageId }?.let {
+                    channel.newReactions = channel.newReactions?.toArrayList()?.apply {
+                        removeAll(it.toSet())
+                    }
+                }
+            }
+        }
+    }
+
+    fun channelLastReactionLoaded(channelId: Long) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                channelReactionMsgLoadedFlow_.tryEmit(channel)
             }
         }
     }

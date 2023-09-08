@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.persistence
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -23,10 +22,13 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
+import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -81,48 +83,48 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
 
     private fun onChannelEvent(data: ChannelEventData) {
-        launch { channelLogic.onChannelEvent(data) }
+        launch(Dispatchers.IO) { channelLogic.onChannelEvent(data) }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        launch { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
+        launch(Dispatchers.IO) { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
     }
 
     private fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        launch { membersLogic.onChannelMemberEvent(data) }
+        launch(Dispatchers.IO) { membersLogic.onChannelMemberEvent(data) }
     }
 
     private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
-        launch { membersLogic.onChannelOwnerChangedEvent(data) }
+        launch(Dispatchers.IO) { membersLogic.onChannelOwnerChangedEvent(data) }
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        launch {
+        launch(Dispatchers.IO) {
             messagesLogic.onMessageStatusChangeEvent(data)
             channelLogic.onMessageStatusChangeEvent(data)
         }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch {
+        launch(Dispatchers.IO) {
             messagesLogic.onMessage(data)
             channelLogic.onMessage(data)
         }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
-        launch { reactionsLogic.onMessageReactionUpdated(data) }
+        launch(Dispatchers.IO) { reactionsLogic.onMessageReactionUpdated(data) }
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
-        launch {
+        launch(Dispatchers.IO) {
             messagesLogic.onMessageEditedOrDeleted(sceytMessage)
             channelLogic.onMessageEditedOrDeleted(sceytMessage)
         }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
-        launch { connectionLogic.onChangedConnectStatus(data) }
+        launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
@@ -130,12 +132,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
     }
 
-    override suspend fun searchChannels(offset: Int, limit: Int, searchItems: List<String>,
-                                        loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannels(offset, limit, searchItems, loadKey, onlyMine, ignoreDb)
+    override suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
+                                                   includeUserNames: Boolean, loadKey: LoadKeyData?,
+                                                   onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, includeUserNames, loadKey, onlyMine, ignoreDb)
     }
 
-    override suspend fun syncChannels(limit: Int): Flow<SceytResponse<List<SceytChannel>>> {
+    override suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse> {
         return channelLogic.syncChannels(limit)
     }
 
@@ -163,8 +166,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.leaveChannel(channelId)
     }
 
-    override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
-        return channelLogic.createDirectChannel(user)
+    override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
+        return channelLogic.findOrCreateDirectChannel(user)
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
@@ -211,8 +214,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.hideChannel(channelId)
     }
 
-    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>) {
-        channelLogic.updateDraftMessage(channelId, message, mentionUsers)
+    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
+                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+        channelLogic.updateDraftMessage(channelId, message, mentionUsers, replyOrEditMessage, isReply)
     }
 
     override fun getTotalUnreadCount(): Flow<Int> {
@@ -274,8 +278,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, limit, loadKey, ignoreDb)
+                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>> {
+        return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, limit, loadKey, ignoreDb, ignoreServer)
     }
 
     override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
@@ -308,8 +312,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.sendSharedFileMessage(channelId, message)
     }
 
-    override suspend fun sendFrowardMessages(channelId: Long, messagesToSend: List<Message>): SceytResponse<Boolean> {
-        return messagesLogic.sendFrowardMessages(channelId, messagesToSend)
+    override suspend fun sendFrowardMessages(channelId: Long, vararg messagesToSend: Message): SceytResponse<Boolean> {
+        return messagesLogic.sendFrowardMessages(channelId, *messagesToSend)
     }
 
     override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
@@ -317,19 +321,23 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun sendPendingMessages(channelId: Long) {
-        return messagesLogic.sendPendingMessages(channelId)
+        messagesLogic.sendPendingMessages(channelId)
     }
 
     override suspend fun sendAllPendingMessages() {
-        return messagesLogic.sendAllPendingMessages()
+        messagesLogic.sendAllPendingMessages()
     }
 
     override suspend fun sendAllPendingMarkers() {
-        return messagesLogic.sendAllPendingMarkers()
+        messagesLogic.sendAllPendingMarkers()
     }
 
-    override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteMessage(channelId, message, onlyForMe)
+    override suspend fun sendAllPendingMessageStateUpdates() {
+        messagesLogic.sendAllPendingMessageStateUpdates()
+    }
+
+    override suspend fun sendAllPendingReactions() {
+        reactionsLogic.sendAllPendingReactions()
     }
 
     override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
@@ -344,12 +352,20 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.editMessage(channelId, message)
     }
 
+    override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channelId, message, onlyForMe)
+    }
+
     override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
         return messagesLogic.getMessageFromServerById(channelId, messageId)
     }
 
     override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
         return messagesLogic.getMessageDbById(messageId)
+    }
+
+    override suspend fun getMessageDbByTid(messageTid: Long): SceytMessage? {
+        return messagesLogic.getMessageDbByTid(messageTid)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
@@ -370,16 +386,24 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
-    override fun updateTransferDataByMsgTid(data: TransferData) {
+    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) {
+        attachmentsLogic.updateAttachmentIdAndMessageId(message)
+    }
+
+    override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         attachmentsLogic.updateTransferDataByMsgTid(data)
     }
 
-    override fun updateAttachmentWithTransferData(data: TransferData) {
+    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
         attachmentsLogic.updateAttachmentWithTransferData(data)
     }
 
-    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         attachmentsLogic.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+    }
+
+    override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
+        return attachmentsLogic.getFileChecksumData(filePath)
     }
 
     override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
@@ -434,19 +458,19 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.unMuteNotifications()
     }
 
-    override suspend fun loadReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<Reaction>> {
+    override suspend fun loadReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytReaction>> {
         return reactionsLogic.loadReactions(messageId, offset, key, loadKey, ignoreDb)
     }
 
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<Reaction> {
+    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<SceytReaction> {
         return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return reactionsLogic.addReaction(channelId, messageId, scoreKey)
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
+        return reactionsLogic.addReaction(channelId, messageId, key, score)
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
-        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey)
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String, isPending: Boolean): SceytResponse<SceytMessage> {
+        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey, isPending)
     }
 }

@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
@@ -19,6 +20,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
+import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
@@ -31,9 +33,11 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getTid
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachment
+import com.sceyt.sceytchatuikit.persistence.mappers.toFileChecksumData
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -43,6 +47,7 @@ internal class PersistenceAttachmentLogicImpl(
         private val messageDao: MessageDao,
         private val attachmentDao: AttachmentDao,
         private val userDao: UserDao,
+        private val fileChecksumDao: FileChecksumDao,
         private val messagesCache: MessagesCache,
         private val attachmentsCache: AttachmentsCache,
         private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
@@ -50,7 +55,7 @@ internal class PersistenceAttachmentLogicImpl(
     private val messagesLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
-        return messageDao.getAllAttachmentPayLoadsByMsgTid(tid)
+        return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid)
     }
 
     override suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>,
@@ -74,19 +79,24 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    override fun updateTransferDataByMsgTid(data: TransferData) {
+    override suspend fun updateTransferDataByMsgTid(data: TransferData) {
+        messagesCache.updateAttachmentTransferData(data)
         attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
-        messagesCache.updateAttachmentTransferData(data)
     }
 
-    override fun updateAttachmentWithTransferData(data: TransferData) {
+    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
+        messagesCache.updateAttachmentTransferData(data)
         attachmentDao.updateAttachmentAndPayLoad(data)
-        messagesCache.updateAttachmentTransferData(data)
     }
 
-    override fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
-        attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
+        attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+    }
+
+    override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
+        val checksum = FileChecksumCalculator.calculateFileChecksum(filePath ?: return null)
+        return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()
     }
 
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
@@ -232,7 +242,7 @@ internal class PersistenceAttachmentLogicImpl(
                 val usersMap = response.data.second
 
                 // Checking maybe all messages is exist in database
-                val existMsgIdsData = messageDao.getExistMessagesByIds(attachments.map { it.messageId })
+                val existMsgIdsData = messageDao.getExistMessagesIdTidByIds(attachments.map { it.messageId })
                 val attachmentsAndMissingMessages = getExistAttachmentsAndMissedMsgIds(attachments, existMsgIdsData)
                 val sceytAttachments = attachmentsAndMissingMessages.first.toMutableList()
 
@@ -256,7 +266,7 @@ internal class PersistenceAttachmentLogicImpl(
             return Pair(emptyList(), emptyList())
 
         val msgIds = attachments.map { it.messageId }
-        val transferData = messageDao.getAllAttachmentPayLoadsByMsgTid(*idsData.map { it.tid }.toLongArray())
+        val transferData = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*idsData.map { it.tid }.toLongArray())
         val missedMsgIds: MutableList<Long> = msgIds.minus(idsData.mapNotNull { it.id }.toSet()).toMutableList()
         val sceytAttachments = arrayListOf<SceytAttachment>()
 

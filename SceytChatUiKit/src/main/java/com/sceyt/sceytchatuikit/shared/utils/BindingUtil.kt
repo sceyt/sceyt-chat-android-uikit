@@ -61,7 +61,6 @@ object BindingUtil {
         when (view) {
             is TextView -> view.setTextColor(color)
             is Toolbar -> view.setTitleTextColor(color)
-            is SwitchCompat -> view.setTextColor(color)
         }
     }
 

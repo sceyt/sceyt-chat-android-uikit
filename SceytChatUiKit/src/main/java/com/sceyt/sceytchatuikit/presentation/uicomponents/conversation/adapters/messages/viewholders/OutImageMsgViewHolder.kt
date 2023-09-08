@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -24,9 +25,9 @@ class OutImageMsgViewHolder(
         private val binding: SceytItemOutImageMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -42,7 +43,11 @@ class OutImageMsgViewHolder(
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
 
             fileImage.setOnClickListener {
@@ -98,42 +103,43 @@ class OutImageMsgViewHolder(
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
-            TransferState.Downloaded, TransferState.Uploaded -> {
+            Downloaded, Uploaded -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.Uploading -> {
+            Uploading, Preparing, WaitingToUpload -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            TransferState.Downloading -> {
+            Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.PauseDownload -> {
+            PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.ErrorDownload -> {
+            ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.FilePathChanged -> {
-                requestThumb()
+            FilePathChanged -> {
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
-            TransferState.ThumbLoaded -> {
+            ThumbLoaded -> {
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
@@ -147,6 +153,8 @@ class OutImageMsgViewHolder(
         get() = binding.loadProgress
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+
+    override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
         with(context) {

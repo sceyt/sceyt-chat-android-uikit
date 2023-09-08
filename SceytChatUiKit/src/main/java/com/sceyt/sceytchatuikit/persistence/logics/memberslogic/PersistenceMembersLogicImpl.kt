@@ -1,23 +1,18 @@
 package com.sceyt.sceytchatuikit.persistence.logics.memberslogic
 
-import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
-import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
@@ -31,8 +26,9 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
@@ -67,7 +63,8 @@ internal class PersistenceMembersLogicImpl(
                 it.forEach { presenceUser ->
                     channelsCache.getData().forEach { channel ->
                         val user = presenceUser.user
-                        if (channel is SceytDirectChannel && channel.peer?.id == user.id)
+                        val peer = channel.getFirstMember()
+                        if (channel.isDirect() && peer?.id == user.id)
                             channelsCache.updateChannelPeer(channel.id, user)
                     }
                 }
@@ -85,16 +82,16 @@ internal class PersistenceMembersLogicImpl(
                 })
 
                 if (data.eventType == ChannelMembersEventEnum.Added)
-                    channelDao.updateMemberCount(chatId, (data.channel as GroupChannel).memberCount.toInt())
+                    channelDao.updateMemberCount(chatId, data.channel.memberCount.toInt())
 
                 channelDao.getChannelById(chatId)?.let {
                     channelsCache.upsertChannel(it.toChannel())
                 } ?: run {
                     channelDao.insertChannel(data.channel.toChannelEntity())
-                    data.channel.lastMessage?.toSceytUiMessage()?.toMessageDb(false)?.let {
+                    data.channel.lastMessage?.toMessageDb(false)?.let {
                         messageDao.upsertMessage(it)
                     }
-                    channelsCache.add(data.channel.toSceytUiChannel())
+                    channelsCache.add(data.channel)
                 }
             }
 
@@ -103,7 +100,7 @@ internal class PersistenceMembersLogicImpl(
                     deleteChannelDb(chatId)
                 } else {
                     channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())
-                    channelDao.updateMemberCount(chatId, (data.channel as GroupChannel).memberCount.toInt())
+                    channelDao.updateMemberCount(chatId, data.channel.memberCount.toInt())
                     channelDao.getChannelById(chatId)?.let {
                         channelsCache.upsertChannel(it.toChannel())
                     }
@@ -208,7 +205,7 @@ internal class PersistenceMembersLogicImpl(
         val response = channelsRepository.changeChannelOwner(channelId, newOwnerId)
 
         if (response is SceytResponse.Success) {
-            (response.data as? SceytGroupChannel)?.members?.getOrNull(0)?.let { member ->
+            response.data?.members?.getOrNull(0)?.let { member ->
                 membersDao.updateOwner(channelId = channelId, newOwnerId = member.id)
                 channelDao.getChannelById(channelId)?.let {
                     channelsCache.upsertChannel(it.toChannel())
@@ -222,7 +219,7 @@ internal class PersistenceMembersLogicImpl(
         val response = channelsRepository.changeChannelMemberRole(channelId, *member.map { it.toMember() }.toTypedArray())
 
         if (response is SceytResponse.Success) {
-            (response.data as? SceytGroupChannel)?.members?.let { members ->
+            response.data?.members?.let { members ->
                 channelDao.insertUserChatLinks(members.map { sceytMember ->
                     UserChatLink(
                         userId = sceytMember.id,
@@ -243,7 +240,7 @@ internal class PersistenceMembersLogicImpl(
             channelDao.insertUserChatLinks(members.map {
                 UserChatLink(userId = it.id, chatId = channelId, role = it.role.name)
             })
-            (response.data as? SceytGroupChannel)?.let { channelsCache.updateMembersCount(it) }
+            response.data?.let { channelsCache.updateMembersCount(it) }
         }
         return response
     }
@@ -253,7 +250,7 @@ internal class PersistenceMembersLogicImpl(
 
         if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
-            (response.data as? SceytGroupChannel)?.let { channelsCache.updateMembersCount(it) }
+            response.data?.let { channelsCache.updateMembersCount(it) }
         }
 
         return response
@@ -264,7 +261,7 @@ internal class PersistenceMembersLogicImpl(
 
         if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
-            (response.data as? SceytGroupChannel)?.let { channelsCache.updateMembersCount(it) }
+            response.data?.let { channelsCache.updateMembersCount(it) }
         }
 
         return response

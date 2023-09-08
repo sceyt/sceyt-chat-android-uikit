@@ -3,26 +3,20 @@ package com.sceyt.sceytchatuikit.pushes
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.channel.DirectChannel
-import com.sceyt.chat.models.channel.PrivateChannel
-import com.sceyt.chat.models.channel.PublicChannel
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.ReactionScore
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
+import com.sceyt.chat.models.user.UserState
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
-fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, from: User?): Message? {
+fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
+    channelId ?: return null
     return try {
         val messageJson = remoteMessage.data["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
@@ -30,11 +24,15 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
         // Do not getLong from json when its a string
         // double.parse corrupts the value
         val messageIdString = messageJsonObject.getString("id")
+        val parentMessageIdString = messageJsonObject.getStringOrNull("parent_id")?.toLongOrNull()
         val bodyString = messageJsonObject.getString("body")
         val messageType = messageJsonObject.getString("type")
         val meta = messageJsonObject.getString("metadata")
         val createdAtString = messageJsonObject.getString("created_at")
         val transient = messageJsonObject.getBoolean("transient")
+        val deliveryStatus = getDeliveryStatusFromPushJson(messageJsonObject)
+        val state = getStateFromPushJson(messageJsonObject)
+        val forwardingDetails = getForwardingDetailsFromPushJson(messageJsonObject)
         val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
         val attachmentArray = ArrayList<Attachment>()
@@ -46,14 +44,13 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, f
                 }
             }
         }
-
-        val messageId = messageIdString.toLong()
-
-        Message(messageId, messageId, channelId
-                ?: return null, "", bodyString, messageType, meta, createdAt?.time ?: 0,
-            0L, true, true, transient, false, false, DeliveryStatus.Sent, MessageState.None,
-            from, attachmentArray.toTypedArray(), null, null, null, null,
-            null, null, false, 0, 0, null)
+        val parentMessage = if (parentMessageIdString != null) Message(parentMessageIdString, channelId, MessageState.Unmodified) else null
+        val messageId = messageIdString.toLongOrNull() ?: return null
+        Message(messageId, messageId, channelId, bodyString, messageType, meta, createdAt?.time
+                ?: 0,
+            0L, true, transient, false, deliveryStatus, state,
+            user, attachmentArray.toTypedArray(), null, null, null, null,
+            null, parentMessage, 0, 0, 0, forwardingDetails)
     } catch (e: Exception) {
         e.printStackTrace()
         null
@@ -70,36 +67,27 @@ fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
         val meta = userJsonObject.getString("metadata")
         val presence = userJsonObject.getString("presence_status")
         User(id, fName, lName, "", meta, Presence(PresenceState.Online, presence, 0),
-            UserActivityStatus.Active, false)
+            UserState.Active, false)
     } catch (e: Exception) {
         e.printStackTrace()
         null
     }
 }
 
-fun getChannelFromPushJson(remoteMessage: RemoteMessage, peer: User?): Channel? {
+fun getChannelFromPushJson(remoteMessage: RemoteMessage): Channel? {
     val channelJson = remoteMessage.data["channel"] ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
-        val id = channelJsonObject.getString("id").toLong()
+        val id = channelJsonObject.getString("id").toLongOrNull() ?: return null
         val type = channelJsonObject.getString("type")
         val uri = channelJsonObject.getString("uri")
         val subject = channelJsonObject.getString("subject")
         val meta = channelJsonObject.getString("metadata")
-        val membersCount = channelJsonObject.getInt("members_count")
-        val channel: Channel = when (stringToEnum(type)) {
-            ChannelTypeEnum.Direct -> DirectChannel(id, meta, "", 0, 0,
-                Member(Role(RoleTypeEnum.Owner.name), peer), null, 0L, 0, 0, false, 0, false,
-                0L, 0L, 0, null, null, null)
-
-            ChannelTypeEnum.Public -> PublicChannel(id, uri, subject, meta, null, "", 0,
-                0, arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
-                false, 0, 0, 0, null, null, null)
-
-            ChannelTypeEnum.Private -> PrivateChannel(id, subject, meta, "", "", 0, 0,
-                arrayOf(), null, 0, 0, 0, membersCount.toLong(), false, 0,
-                false, 0, 0, 0, null, null, null)
-        }
+        val membersCount = channelJsonObject.getLong("members_count")
+        val channel = Channel(id, 0, uri, type, subject, null, meta, 0, 0,
+            0, membersCount, null, "", false, 0, 0,
+            0, false, false, false, 0, 0, 0,
+            0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
         channel
     } catch (e: Exception) {
         e.printStackTrace()
@@ -113,23 +101,81 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
         val data = attachment.getString("data")
         val name = attachment.getString("name")
         val type = attachment.getString("type")
-        val size = attachment.getString("size").toLong()
-        Attachment.Builder("", data, type).setFileSize(size).setName(name).build()
+        val metadata = attachment.getString("metadata")
+        val size = attachment.getString("size").toLongOrNull() ?: return null
+        Attachment.Builder("", data, type)
+            .setFileSize(size)
+            .setName(name)
+            .setMetadata(metadata).build()
     } catch (e: Exception) {
         e.printStackTrace()
         null
     }
 }
 
-fun getReactionScoreFromPushJson(json: String?): ReactionScore? {
+fun getReactionFromPushJson(json: String?, messageId: Long?, user: User?): SceytReaction? {
     return try {
         val jsonObject = JSONObject(json ?: return null)
+        val id = jsonObject.getString("id").toLongOrNull() ?: return null
         val key = jsonObject.getString("key")
-        val score = jsonObject.getString("score").toLong()
-        if (key.isEmpty() || score == 0L) return null
-        ReactionScore(key, score)
+        val score = jsonObject.getString("score").toInt()
+        val reason = jsonObject.getString("reason")
+        val createdAt = jsonObject.getString("created_at").toLongOrNull() ?: return null
+
+        if (key.isEmpty() || score == 0 || messageId == null || user == null) return null
+        SceytReaction(id, messageId, key, score, reason, createdAt, user, false)
     } catch (e: Exception) {
         e.printStackTrace()
+        null
+    }
+}
+
+private fun getDeliveryStatusFromPushJson(jsonObject: JSONObject): DeliveryStatus {
+    return try {
+        when (jsonObject.getString("delivery_status")) {
+            "sent" -> DeliveryStatus.Sent
+            "delivered" -> DeliveryStatus.Received
+            "read" -> DeliveryStatus.Displayed
+            else -> DeliveryStatus.Sent
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        DeliveryStatus.Sent
+    }
+}
+
+private fun getForwardingDetailsFromPushJson(jsonObject: JSONObject): ForwardingDetails? {
+    return try {
+        val data = jsonObject.getJSONObject("forwarding_details")
+        val channelId = data.getString("channel_id").toLongOrNull() ?: return null
+        val messageId = data.getString("message_id").toLongOrNull() ?: return null
+        val userId = data.getString("user_id")
+        val hops = data.getString("hops").toIntOrNull() ?: 0
+        ForwardingDetails(messageId, channelId, User(userId), hops)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
+    return try {
+        when (jsonObject.getString("state")) {
+            "none" -> MessageState.Unmodified
+            "edited" -> MessageState.Edited
+            "deleted" -> MessageState.Deleted
+            else -> MessageState.Unmodified
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        MessageState.Unmodified
+    }
+}
+
+private fun JSONObject.getStringOrNull(key: String): String? {
+    return try {
+        getString(key)
+    } catch (e: Exception) {
         null
     }
 }

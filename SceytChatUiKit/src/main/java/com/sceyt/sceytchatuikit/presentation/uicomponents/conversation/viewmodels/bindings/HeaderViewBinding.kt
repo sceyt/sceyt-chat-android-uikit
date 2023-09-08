@@ -4,10 +4,11 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdatedType
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
@@ -27,11 +28,12 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     else
         headerView.setChannel(channel)
 
-    if (channel is SceytDirectChannel) {
-        SceytPresenceChecker.addNewUserToPresenceCheck((channel as SceytDirectChannel).peer?.id)
+    val peerId = channel.getFirstMember()?.id
+    if (channel.isDirect()) {
+        SceytPresenceChecker.addNewUserToPresenceCheck(peerId)
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
             .onEach {
-                it.find { user -> user.user.id == (channel as? SceytDirectChannel)?.peer?.id }?.let { presenceUser ->
+                it.find { user -> user.user.id == peerId }?.let { presenceUser ->
                     headerView.onPresenceUpdate(presenceUser.user)
                 }
             }.launchIn(lifecycleOwner.lifecycleScope)
@@ -40,11 +42,9 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
-            if (it.eventType == ChannelUpdatedType.Presence) {
-                (it.channel as? SceytDirectChannel)?.peer?.user?.let { user ->
-                    headerView.onPresenceUpdate(user)
-                } ?: headerView.setChannel(it.channel)
-            } else headerView.setChannel(it.channel)
+            // We handling presence update with SceytPresenceChecker
+            if (it.eventType != ChannelUpdatedType.Presence)
+                headerView.setChannel(it.channel)
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 

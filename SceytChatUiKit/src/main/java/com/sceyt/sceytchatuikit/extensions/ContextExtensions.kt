@@ -88,6 +88,7 @@ fun Context.asComponentActivity(): ComponentActivity {
                 baseContext as ComponentActivity
             else throw RuntimeException("Context should be ComponentActivity but was $this")
         }
+
         else -> throw RuntimeException("Context should be ComponentActivity but was $this")
     }
 }
@@ -100,6 +101,7 @@ fun Context.maybeComponentActivity(): ComponentActivity? {
                 baseContext as ComponentActivity
             else null
         }
+
         else -> null
     }
 }
@@ -112,6 +114,7 @@ fun Context.asActivity(): Activity {
                 baseContext as Activity
             else throw RuntimeException("Context should be Activity but was $this")
         }
+
         else -> throw RuntimeException("Context should be Activity but was $this")
     }
 }
@@ -124,6 +127,7 @@ fun Context.asFragmentActivity(): FragmentActivity {
                 baseContext as FragmentActivity
             else throw RuntimeException("Context should be FragmentActivity but was $this")
         }
+
         else -> throw RuntimeException("Context should be FragmentActivity but was $this")
     }
 }
@@ -214,14 +218,14 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
     return false
 }
 
-
+@Suppress("DEPRECATION")
 fun Context.hasActiveNetwork(): Boolean {
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         val capability = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
         capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
     } else {
-        connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo!!.isConnected
+        connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo?.isConnected == true
     }
 }
 

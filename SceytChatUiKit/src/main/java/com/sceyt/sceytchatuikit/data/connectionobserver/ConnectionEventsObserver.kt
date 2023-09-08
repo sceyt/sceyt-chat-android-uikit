@@ -15,6 +15,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onSubscription
@@ -60,17 +61,8 @@ object ConnectionEventsObserver {
         if (isConnected)
             return true
 
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        return suspendCancellableCoroutine { continuation ->
-            scope.launch {
-                onChangedConnectStatusFlow.collect {
-                    if (it.state == ConnectionState.Connected) {
-                        continuation.safeResume(true)
-                        scope.cancel()
-                    }
-                }
-            }
-        }
+        onChangedConnectStatusFlow.firstOrNull { it.state == ConnectionState.Connected }
+        return connectionState == ConnectionState.Connected
     }
 
     suspend fun awaitToConnectSceytWithTimeout(timeout: Long): Boolean {

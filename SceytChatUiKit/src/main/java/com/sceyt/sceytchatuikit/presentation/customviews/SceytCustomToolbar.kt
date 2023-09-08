@@ -47,7 +47,8 @@ class SceytCustomToolbar @JvmOverloads constructor(
         binding.imvRightMenu.setOnClickListener { listener.invoke() }
     }
 
-    fun setTitle(title: String) {
+    fun setTitle(title: String?) {
+        title ?: return
         binding.tvTitle.text = title
     }
 

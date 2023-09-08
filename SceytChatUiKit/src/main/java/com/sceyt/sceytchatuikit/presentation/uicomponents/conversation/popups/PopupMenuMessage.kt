@@ -25,10 +25,10 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var m
         gravity = if (message.incoming) GravityCompat.START else GravityCompat.END
 
 
-        val statusPendingOrFailed = message.deliveryStatus == DeliveryStatus.Pending || message.deliveryStatus == DeliveryStatus.Failed
+        val isPending = message.deliveryStatus == DeliveryStatus.Pending
 
-        menu.findItem(R.id.sceyt_reply).isVisible = !statusPendingOrFailed
-        menu.findItem(R.id.sceyt_forward).isVisible = !statusPendingOrFailed
+        menu.findItem(R.id.sceyt_reply).isVisible = !isPending
+        menu.findItem(R.id.sceyt_forward).isVisible = !isPending
         menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank()
 
 

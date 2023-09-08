@@ -5,18 +5,19 @@ import android.text.Editable
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.channel.GroupChannel
 import com.sceyt.chat.models.message.Message
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.persistence.mappers.isDeleted
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
@@ -34,6 +35,8 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(messageInputView: MessageInputView,
                               replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
+
+    messageActionBridge.setInputView(messageInputView)
 
     if (placeToSavePathsList.isNotEmpty())
         messageInputView.addAttachment(*placeToSavePathsList.toTypedArray())
@@ -62,12 +65,11 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     })
 
     viewModelScope.launch(Dispatchers.IO) {
-        SceytKitClient.getChannelsMiddleWare().getChannelFromDb(channel.id)?.let {
+        persistenceChanelMiddleWare.getChannelFromDb(channel.id)?.let {
             withContext(Dispatchers.Main) { messageInputView.setDraftMessage(it.draftMessage) }
         }
     }
 
-    getChannel(channel.id)
     loadChannelMembersIfNeeded()
 
     onChannelUpdatedEventFlow.onEach {
@@ -90,7 +92,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         when (it) {
             is SceytResponse.Success -> {
                 messageInputView.joinSuccess()
-                (channel as SceytGroupChannel).members = (it.data as SceytGroupChannel).members
+                channel.members = it.data?.members
             }
 
             is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
@@ -98,11 +100,11 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     }
 
     onEditMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.editMessage(it.toMessage())
+        messageInputView.editMessage(it, false)
     }
 
     onReplyMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.replyMessage(it.toMessage())
+        messageInputView.replyMessage(it, false)
     }
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
@@ -112,16 +114,16 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     onChannelEventFlow.onEach {
         when (it.eventType) {
             ChannelEventEnum.Left -> {
-                if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                if (channel.isPublic()) {
+                    val leftUser = channel.members?.getOrNull(0)?.id
                     if (leftUser == SceytKitClient.myId)
                         messageInputView.onChannelLeft()
                 }
             }
 
             ChannelEventEnum.Joined -> {
-                if (channel.channelType == ChannelTypeEnum.Public) {
-                    val leftUser = (it.channel as? GroupChannel)?.lastActiveMembers?.getOrNull(0)?.id
+                if (channel.isPublic()) {
+                    val leftUser = channel.members?.getOrNull(0)?.id
                     if (leftUser == SceytKitClient.myId)
                         messageInputView.joinSuccess()
                 }
@@ -131,7 +133,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    var mentionJog: Job? = null
+    var mentionJob: Job? = null
 
     messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
@@ -151,18 +153,18 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>) {
-            this@bind.updateDraftMessage(text, mentionUserIds)
+        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+            this@bind.updateDraftMessage(text, mentionUserIds, replyOrEditMessage, isReply)
         }
 
         override fun mention(query: String) {
-            mentionJog?.cancel()
+            mentionJob?.cancel()
             if (messageInputView.getComposedMessage().isNullOrBlank()) {
                 messageInputView.setMentionList(emptyList())
                 return
             }
-            mentionJog = viewModelScope.launch(Dispatchers.IO) {
-                val result = SceytKitClient.getMembersMiddleWare().loadChannelMembersByDisplayName(channel.id, query)
+            mentionJob = viewModelScope.launch(Dispatchers.IO) {
+                val result = persistenceMembersMiddleWare.loadChannelMembersByDisplayName(channel.id, query)
                 if (query.isEmpty())
                     loadedMembers = result
 
@@ -174,6 +176,19 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
         override fun join() {
             this@bind.join()
+        }
+
+        override fun clearChat() {
+            val descId: Int = when (channel.getChannelType()) {
+                ChannelTypeEnum.Direct -> R.string.sceyt_clear_direct_history_desc
+                ChannelTypeEnum.Private, ChannelTypeEnum.Group -> R.string.sceyt_clear_private_chat_history_desc
+                ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> R.string.sceyt_clear_public_chat_history_desc
+            }
+            SceytDialog.showSceytDialog(messageInputView.context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
+                clearHistory(channel.isPublic())
+                messageActionBridge.cancelMultiSelectMode()
+                selectedMessagesMap.clear()
+            })
         }
     }
 }

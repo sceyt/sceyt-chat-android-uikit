@@ -25,6 +25,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
+    private var isMultiSelectableMode = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -46,6 +47,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     override fun getItemCount(): Int {
         return messages.size
+    }
+
+    override fun getItemId(position: Int): Long {
+        return messages[position].getItemId()
     }
 
     override fun onViewAttachedToWindow(holder: BaseMsgViewHolder) {
@@ -85,7 +90,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
-                prevMessage.canShowAvatarAndName = prevMessage.incoming && prevMessage.from?.id != newItem.message.from?.id
+                prevMessage.canShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
                 notifyItemChanged(prevIndex, Unit)
             }
 
@@ -203,6 +208,12 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 recyclerView.scrollToPosition(itemCount - 1)
         }
     }
+
+    fun setMultiSelectableMode(enables: Boolean) {
+        isMultiSelectableMode = enables
+    }
+
+    fun isMultiSelectableMode() = isMultiSelectableMode
 
     companion object {
         private var updateJob: Job? = null

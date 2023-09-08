@@ -20,9 +20,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
+    private var mentionUserClickListener: MessageClickListeners.MentionClickListener? = null
     private var attachmentLoaderClickListener: MessageClickListeners.AttachmentLoaderClickListener? = null
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
+    private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
 
 
     internal constructor()
@@ -81,6 +83,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         attachmentLongClickListener?.onAttachmentLongClick(view, item)
     }
 
+    override fun onMentionClick(view: View, userId: String) {
+        defaultListeners?.onMentionClick(view, userId)
+        mentionUserClickListener?.onMentionClick(view, userId)
+    }
+
     override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
         defaultListeners?.onAttachmentLoaderClick(view, item)
         attachmentLoaderClickListener?.onAttachmentLoaderClick(view, item)
@@ -96,6 +103,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         scrollToDownClickListener?.onScrollToDownClick(view)
     }
 
+    override fun onMultiSelectClick(view: View, message: SceytMessage) {
+        defaultListeners?.onMultiSelectClick(view, message)
+        multiSelectClickListener?.onMultiSelectClick(view, message)
+    }
+
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
@@ -109,48 +121,71 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 reactionLongClickListener = listener
                 attachmentClickListener = listener
                 attachmentLongClickListener = listener
+                mentionUserClickListener = listener
                 linkClickListener = listener
                 scrollToDownClickListener = listener
                 attachmentLoaderClickListener = listener
+                multiSelectClickListener = listener
             }
+
             is MessageClickListeners.MessageClickListener -> {
                 messageClickListener = listener
             }
+
             is MessageClickListeners.MessageLongClickListener -> {
                 messageLongClickListener = listener
             }
+
             is MessageClickListeners.AvatarClickListener -> {
                 avatarClickListener = listener
             }
+
             is MessageClickListeners.ReplyMessageContainerClickListener -> {
                 replyMessageContainerClickListener = listener
             }
+
             is MessageClickListeners.ReplyCountClickListener -> {
                 replyCountClickListener = listener
             }
+
             is MessageClickListeners.AddReactionClickListener -> {
                 addReactionClickListener = listener
             }
+
             is MessageClickListeners.ReactionClickListener -> {
                 reactionClickListener = listener
             }
+
             is MessageClickListeners.ReactionLongClickListener -> {
                 reactionLongClickListener = listener
             }
+
             is MessageClickListeners.AttachmentClickListener -> {
                 attachmentClickListener = listener
             }
+
             is MessageClickListeners.AttachmentLongClickListener -> {
                 attachmentLongClickListener = listener
             }
+
+            is MessageClickListeners.MentionClickListener -> {
+                mentionUserClickListener = listener
+            }
+
             is MessageClickListeners.AttachmentLoaderClickListener -> {
                 attachmentLoaderClickListener = listener
             }
+
             is MessageClickListeners.LinkClickListener -> {
                 linkClickListener = listener
             }
+
             is MessageClickListeners.ScrollToDownClickListener -> {
                 scrollToDownClickListener = listener
+            }
+
+            is MessageClickListeners.MultiSelectClickListener -> {
+                multiSelectClickListener = listener
             }
         }
     }

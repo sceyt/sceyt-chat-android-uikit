@@ -1,43 +1,46 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.chat.models.message.*
+import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.ForwardingDetails
+import com.sceyt.chat.models.message.Marker
+import com.sceyt.chat.models.message.MarkerTotal
+import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import java.util.*
+import java.util.Date
 
 @Parcelize
-open class SceytMessage(var id: Long,
+data class SceytMessage(var id: Long,
                         var tid: Long,
                         var channelId: Long,
-                        var to: String?,
                         var body: String,
                         var type: String,
                         var metadata: String?,
                         var createdAt: Long,
                         var updatedAt: Date,
                         var incoming: Boolean,
-                        var receipt: Boolean,
                         var isTransient: Boolean,
                         var silent: Boolean,
-                        var direct: Boolean,
                         var deliveryStatus: DeliveryStatus,
                         var state: MessageState,
-                        var from: User?,
+                        var user: User?,
                         var attachments: Array<SceytAttachment>?,
-                        var selfReactions: Array<Reaction>?,
-                        var reactionScores: Array<ReactionScore>?,
-                        var markerCount: Array<MarkerCount>?,
-                        var selfMarkers: Array<String>?,
+                        var userReactions: Array<SceytReaction>?,
+                        var reactionTotals: Array<ReactionTotal>?,
+                        var markerTotals: Array<MarkerTotal>?,
+                        var userMarkers: Array<Marker>?,
                         var mentionedUsers: Array<User>?,
-                        var parent: SceytMessage?,
-                        var replyInThread: Boolean,
+                        var parentMessage: SceytMessage?,
                         var replyCount: Long,
                         val displayCount: Short,
-                        var forwardingDetails: ForwardingDetails?) : Parcelable, Cloneable {
+                        var autoDeleteAt: Long?,
+                        var forwardingDetails: ForwardingDetails?,
+                        var pendingReactions: List<PendingReactionData>?) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
@@ -54,40 +57,43 @@ open class SceytMessage(var id: Long,
 
     val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L
 
-    val isReplied get() = parent != null && parent?.id != 0L && !replyInThread
+    // todo reply in thread
+    val isReplied get() = parentMessage != null && parentMessage?.id != 0L /*&& !replyInThread*/
+
+    @IgnoredOnParcel
+    var isSelected: Boolean = false
 
     fun updateMessage(message: SceytMessage) {
         id = message.id
         tid = message.tid
         channelId = message.channelId
-        to = message.to
         body = message.body
         type = message.type
         metadata = message.metadata
         //createdAt = message.createdAt
         updatedAt = message.updatedAt
         incoming = message.incoming
-        receipt = message.receipt
         isTransient = message.isTransient
         silent = message.silent
         deliveryStatus = message.deliveryStatus
         state = message.state
-        from = message.from
+        user = message.user
         attachments = message.attachments
-        selfReactions = message.selfReactions
-        reactionScores = message.reactionScores
-        markerCount = message.markerCount
-        selfMarkers = message.selfMarkers
+        userReactions = message.userReactions
+        reactionTotals = message.reactionTotals
+        markerTotals = message.markerTotals
+        userMarkers = message.userMarkers
         mentionedUsers = message.mentionedUsers
-        parent = message.parent
-        replyInThread = message.replyInThread
+        parentMessage = message.parentMessage
         replyCount = message.replyCount
-        reactionScores?.toMutableSet()?.retainAll {
+        autoDeleteAt = message.autoDeleteAt
+        reactionTotals?.toMutableSet()?.retainAll {
             it.key == ""
         }
         // Update inner data
         messageReactions = message.messageReactions
-        files = message.files
+        files = message.files?.map { it.sceytMessage = this; it }
+        pendingReactions = message.pendingReactions
     }
 
     public override fun clone(): SceytMessage {
@@ -95,33 +101,34 @@ open class SceytMessage(var id: Long,
             id = id,
             tid = tid,
             channelId = channelId,
-            to = to,
             body = body,
             type = type,
             metadata = metadata,
             createdAt = createdAt,
             updatedAt = updatedAt,
             incoming = incoming,
-            receipt = receipt,
             isTransient = isTransient,
             silent = silent,
-            direct = direct,
             deliveryStatus = deliveryStatus,
             state = state,
-            from = from,
+            user = user,
             attachments = attachments?.map(SceytAttachment::clone)?.toTypedArray(),
-            selfReactions = selfReactions,
-            reactionScores = reactionScores,
-            markerCount = markerCount,
-            selfMarkers = selfMarkers,
+            userReactions = userReactions,
+            reactionTotals = reactionTotals,
+            markerTotals = markerTotals,
+            userMarkers = userMarkers,
             mentionedUsers = mentionedUsers,
-            parent = parent,
-            replyInThread = replyInThread,
+            parentMessage = parentMessage?.clone(),
             replyCount = replyCount,
             displayCount = displayCount,
-            forwardingDetails = forwardingDetails).also {
-            it.messageReactions = messageReactions
+            autoDeleteAt = autoDeleteAt,
+            forwardingDetails = forwardingDetails,
+            pendingReactions = pendingReactions).also {
+            it.canShowAvatarAndName = canShowAvatarAndName
+            it.isGroup = isGroup
             it.files = files
+            it.messageReactions = messageReactions
+            it.isSelected = isSelected
         }
     }
 

@@ -9,8 +9,8 @@ import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.toSceytMember
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -147,35 +147,40 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
 
             override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {
                 if (channel == null || members == null) return
-                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Role))
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel.toSceytUiChannel(),
+                    members.map { it.toSceytMember() }, ChannelMembersEventEnum.Role))
             }
 
             override fun onMembersKicked(channel: Channel?, members: MutableList<Member>?) {
                 if (channel == null || members == null) return
-                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Kicked))
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel.toSceytUiChannel(),
+                    members.map { it.toSceytMember() }, ChannelMembersEventEnum.Kicked))
             }
 
             override fun onMembersBlocked(channel: Channel?, members: MutableList<Member>?) {
                 if (channel == null || members == null) return
-                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Blocked))
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel.toSceytUiChannel(),
+                    members.map { it.toSceytMember() }, ChannelMembersEventEnum.Blocked))
             }
 
             override fun onMembersUnblocked(channel: Channel?, members: MutableList<Member>?) {
                 if (channel == null || members == null) return
-                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.UnBlocked))
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel.toSceytUiChannel(),
+                    members.map { it.toSceytMember() }, ChannelMembersEventEnum.UnBlocked))
             }
 
             override fun onMembersAdded(channel: Channel?, members: MutableList<Member>?) {
                 if (channel == null || members == null) return
-                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel, members, ChannelMembersEventEnum.Added))
+                eventManager.onChangedMembersEvent(ChannelMembersEventData(channel.toSceytUiChannel(),
+                    members.map { it.toSceytMember() }, ChannelMembersEventEnum.Added))
             }
 
             override fun onDeliveryReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Delivered, messageIds))
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Received, messageIds))
             }
 
             override fun onReadReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Read, messageIds))
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Displayed, messageIds))
             }
         })
     }
