@@ -60,6 +60,8 @@ fun SceytChannel.getFirstMember(): SceytMember? {
 
 fun ChannelTypeEnum?.isGroup() = this == ChannelTypeEnum.Private || this == ChannelTypeEnum.Public
 
+fun ChannelTypeEnum?.isDirect() = this == ChannelTypeEnum.Private || this == ChannelTypeEnum.Public
+
 fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
 
 fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString()

@@ -32,7 +32,6 @@ import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
@@ -492,7 +491,12 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
         val pendingChannelId = channel.id
-        val response = channelsRepository.createChannel(CreateChannelData(ChannelTypeEnum.Direct,
+        val response = channelsRepository.createChannel(CreateChannelData(
+            channelType = channel.type,
+            uri = channel.uri ?: "",
+            subject = channel.subject ?: "",
+            avatarUrl = channel.avatarUrl ?: "",
+            metadata = channel.metadata ?: "",
             members = channel.members?.map { it.toMember() } ?: arrayListOf()))
         if (response is SceytResponse.Success) {
             val newChannel = response.data

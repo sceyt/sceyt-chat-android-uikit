@@ -1,4 +1,4 @@
-package com.sceyt.chat.sceytsimplechatapp
+package com.sceyt.chat.simpleapp
 
 import android.app.Application
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer

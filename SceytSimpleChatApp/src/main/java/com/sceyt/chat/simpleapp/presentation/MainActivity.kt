@@ -1,9 +1,9 @@
-package com.sceyt.chat.sceytsimplechatapp.presentation
+package com.sceyt.chat.simpleapp.presentation
 
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.sceyt.chat.sceytsimplechatapp.databinding.ActivityMainBinding
+import com.sceyt.chat.simpleapp.databinding.ActivityMainBinding
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel

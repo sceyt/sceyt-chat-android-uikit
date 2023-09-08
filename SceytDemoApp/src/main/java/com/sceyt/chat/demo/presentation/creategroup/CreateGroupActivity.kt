@@ -29,7 +29,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCreateGroupBinding
     private val viewModel: CreateChatViewModel by viewModels()
     private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
-    private val createChannelData by lazy { CreateChannelData() }
+    private val createChannelData by lazy { CreateChannelData("") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,7 +90,8 @@ class CreateGroupActivity : AppCompatActivity() {
         }
 
         switchChannelMode.setOnCheckedChangeListener { _, isChecked ->
-            createChannelData.channelType = if (isChecked) ChannelTypeEnum.Private else ChannelTypeEnum.Public
+            createChannelData.channelType = if (isChecked) ChannelTypeEnum.Private.getString()
+            else ChannelTypeEnum.Public.getString()
             binding.groupURI.isVisible = !isChecked
         }
 
@@ -116,7 +117,7 @@ class CreateGroupActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right,false)
+        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {

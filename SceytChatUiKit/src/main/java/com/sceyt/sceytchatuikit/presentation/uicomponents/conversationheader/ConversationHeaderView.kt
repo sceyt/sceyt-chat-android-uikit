@@ -178,14 +178,14 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                         }
                     }
 
-                    ChannelTypeEnum.Private -> {
+                    ChannelTypeEnum.Private, ChannelTypeEnum.Group -> {
                         val memberCount = channel.memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_members_count, memberCount)
                         else getString(R.string.sceyt_member_count, memberCount)
                     }
 
-                    ChannelTypeEnum.Public -> {
+                    ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
                         val memberCount = channel.memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_subscribers_count, memberCount)

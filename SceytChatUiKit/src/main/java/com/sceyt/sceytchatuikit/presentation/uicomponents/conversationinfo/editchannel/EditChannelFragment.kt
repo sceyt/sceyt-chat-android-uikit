@@ -154,7 +154,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                 metadata = channel.metadata,
                 avatarUrl = avatarUrl,
                 channelUri = channel.uri,
-                channelType = channel.getChannelType(),
+                channelType = channel.type,
                 avatarEdited = isEditedAvatar)
             viewModel.saveChanges(channel.id, data)
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
