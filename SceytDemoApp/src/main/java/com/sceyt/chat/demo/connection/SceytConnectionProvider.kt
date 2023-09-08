@@ -122,8 +122,6 @@ class SceytConnectionProvider(
         }
     }
 
-
-
     private fun observeToAppLifecycle() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
             when (event) {
@@ -143,15 +141,17 @@ class SceytConnectionProvider(
     private fun observeToConnectionState() {
         scope.launch {
             ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                if (it.state == ConnectionState.Failed || (it.state == ConnectionState.Disconnected && it.exception != null)) {
-                    SceytLog.e(Tag, "observeToConnectionState state is ${it.state} exception: ${it.exception?.message}")
-                    preference.setToken(null)
-                    chatClientConnectionInterceptor.getChatToken(SceytKitClient.myId.toString())?.let { token ->
-                        SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: $token")
-                        SceytKitClient.connect(token, SceytKitClient.myId.toString())
-                    } ?: run {
-                        SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in observeToConnectionState")
+                when (it.state) {
+                    ConnectionState.Failed -> SceytLog.e(Tag, "${it.exception?.message}")
+                    ConnectionState.Disconnected -> {
+                        if (it.exception?.code == 1021) {
+                            SceytLog.i(Tag, "disconnected, reason ${it.exception?.message}, clear old token because of 1021 error")
+                            preference.setToken(null)
+                        } else
+                            SceytLog.i(Tag, "$Tag disconnected ${it.exception?.message}")
                     }
+
+                    else -> Unit
                 }
             }
         }

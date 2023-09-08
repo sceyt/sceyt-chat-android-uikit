@@ -461,7 +461,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private fun getBubbleMaxWidth(context: Context): Int {
-        return (context.screenPortraitWidthPx() * 0.77f).toInt()
+        return (context.screenPortraitWidthPx() * 0.75f).toInt()
     }
 
     fun getMessageItem(): MessageListItem? {
