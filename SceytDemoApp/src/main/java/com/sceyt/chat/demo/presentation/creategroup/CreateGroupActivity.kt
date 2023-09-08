@@ -29,7 +29,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCreateGroupBinding
     private val viewModel: CreateChatViewModel by viewModels()
     private val chooseAttachmentHelper = ChooseAttachmentHelper(this)
-    private val createChannelData by lazy { CreateChannelData("") }
+    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Public.getString()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
