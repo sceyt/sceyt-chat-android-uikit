@@ -72,7 +72,7 @@ class ChannelsCache {
             return if (checkDifference)
                 putAndCheckHasDiff(list)
             else {
-                cachedData.putAll(list.map { it.clone() }.associateBy { it.id })
+                putToCache(*list.toTypedArray())
                 false
             }
         }
@@ -306,7 +306,7 @@ class ChannelsCache {
                 val old = cachedData[it.id]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: true
             }
-            cachedData[it.id] = it.clone()
+            putToCache(it)
         }
         return detectedDiff
     }
@@ -315,6 +315,15 @@ class ChannelsCache {
         val old = cachedData[channel.id]
         cachedData[channel.id] = channel.clone()
         return old?.diff(channel) ?: ChannelItemPayloadDiff.DEFAULT
+    }
+
+    private fun putToCache(vararg channel: SceytChannel) {
+        channel.groupBy { it.pending }.forEach { group ->
+            if (group.key)
+                pendingChannelsData.putAll(group.value.map { it.clone() }.associateBy { channel -> channel.id })
+            else
+                cachedData.putAll(group.value.map { it.clone() }.associateBy { channel -> channel.id })
+        }
     }
 
     private fun checkNeedSortByLastMessage(oldMsg: SceytMessage?, newMsg: SceytMessage?): Boolean {
