@@ -6,6 +6,6 @@ import retrofit2.http.*
 
 interface AuthApiService {
 
-    @GET("/load-test/user/genToken")
+    @GET("dev/user/genToken")
     suspend fun getSceytToken(@Query("user") userId: String): Response<GetTokenData>
 }
