@@ -14,7 +14,7 @@ enum class PlaybackSpeed(val value: Float, val displayValue: String) {
     }
 
     companion object {
-        fun fromValue(value: Float): PlaybackSpeed {
+        fun fromValue(value: Float?): PlaybackSpeed {
             return when (value) {
                 X1.value -> X1
                 X1_5.value -> X1_5

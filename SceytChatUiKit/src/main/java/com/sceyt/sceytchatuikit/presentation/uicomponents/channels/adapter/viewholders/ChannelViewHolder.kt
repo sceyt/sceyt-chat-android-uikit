@@ -16,14 +16,14 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
@@ -75,8 +75,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
 
-                setUnreadCount(channel.unreadMessageCount, binding.unreadMessagesCount)
-                setMentionUserSymbol(channel.unreadMentionCount, channel.unreadMessageCount, binding.icMention)
+                setUnreadCount(channel.newMessageCount, binding.unreadMessagesCount)
+                setMentionUserSymbol(channel.newMentionCount, channel.newMessageCount, binding.icMention)
 
                 diff.run {
                     if (!hasDifference()) return@run
@@ -106,6 +106,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                         setTypingState(channel, binding.lastMessage)
                 }
             }
+
             ChannelListItem.LoadingMoreItem -> Unit
         }
     }
@@ -141,7 +142,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 context.getString(R.string.sceyt_attachment) else message.body
 
             val fromText = if (message.incoming) {
-                val from = channel.lastMessage?.from
+                val from = channel.lastMessage?.user
                 val userFirstName = from?.let {
                     userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
                 }
@@ -164,20 +165,30 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
         if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false
-        val lastReaction = channel.userMessageReactions?.maxByOrNull { it.id } ?: return false
-        val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
+        val pendingAddOrRemoveReaction = channel.pendingReactions?.filter { !it.incomingMsg }?.groupBy { it.isAdd }
+        val addReactions = pendingAddOrRemoveReaction?.get(true)
+        val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
+        val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
+                ?: channel.newReactions?.filter {
+                    it.user?.id != SceytKitClient.myId &&
+                            removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
+                }?.maxByOrNull { it.id } ?: return false
 
-        if (lastReaction.id > (channel.lastMessage?.id ?: 0)) {
-            val toMessage = if (message != null) "\"${message.getShowBody(context)}\"" else itemView.getString(R.string.sceyt_message).lowercase()
+        val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
+                ?: return false
+
+        if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
+            val toMessage = "\"${message.getShowBody(context)}\""
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {
-                channel is SceytGroupChannel -> {
-                    val name = SceytKitConfig.userNameBuilder?.invoke(lastReaction.user)
+                channel.isGroup -> {
+                    val name = lastReaction.user?.let { SceytKitConfig.userNameBuilder?.invoke(it) }
                             ?: lastReaction.user?.getPresentableNameWithYou(context)
                     "$name ${reactedWord.lowercase()}"
                 }
-                lastReaction.user.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
+
+                lastReaction.user?.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
                 else -> reactedWord
             }
 
@@ -207,7 +218,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun setSubject(channel: SceytChannel, textView: TextView) {
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
-            (channel as? SceytDirectChannel)?.peer?.user?.let { from ->
+            channel.getFirstMember()?.user?.let { from ->
                 userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }
@@ -222,7 +233,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
-        if (channel is SceytDirectChannel && channel.isPeerDeleted()) {
+        if (channel.isDirect() && channel.isPeerDeleted()) {
             binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
         } else
             binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
@@ -235,8 +246,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
-        val isOnline = (channel?.channelType == ChannelTypeEnum.Direct)
-                && (channel as? SceytDirectChannel)?.peer?.user?.presence?.state == PresenceState.Online
+        val isOnline = channel?.isDirect() == true && channel.getFirstMember()?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline
     }
 
@@ -260,8 +270,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setChannelMarkedUsUnread(channel: SceytChannel, unreadMessagesCount: TextView) {
-        if (channel.unreadMessageCount == 0L) {
-            if (channel.markedUsUnread)
+        if (channel.newMessageCount == 0L) {
+            if (channel.unread)
                 unreadMessagesCount.apply {
                     text = "  "
                     isVisible = true
@@ -293,15 +303,17 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 shouldShowStatus = false
                 channel.draftMessage?.createdAt
             }
+
             channel.lastMessage != null -> {
                 val lastMessageCreatedAt = channel.lastMessage?.createdAt ?: 0L
-                val lastReactionCreatedAt = channel.userMessageReactions?.maxByOrNull { it.id }?.createdAt?.time
+                val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt
                         ?: 0
                 if (lastReactionCreatedAt > lastMessageCreatedAt)
                     lastReactionCreatedAt
                 else lastMessageCreatedAt
             }
-            else -> channel.createdAt / 1000
+
+            else -> channel.createdAt
         }
         return Pair(DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt), shouldShowStatus)
     }

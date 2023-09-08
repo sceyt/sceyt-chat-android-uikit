@@ -10,7 +10,20 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -25,9 +38,9 @@ class IncImageMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -43,9 +56,12 @@ class IncImageMsgViewHolder(
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
             }
 
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+            }
             fileImage.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem)
             }
@@ -108,47 +124,51 @@ class IncImageMsgViewHolder(
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
-            TransferState.Uploaded, TransferState.Downloaded -> {
+            Uploaded, Downloaded -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.PendingUpload, TransferState.ErrorUpload, TransferState.PauseUpload -> {
+            PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.Uploading -> {
+            Uploading, Preparing, WaitingToUpload -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            TransferState.PendingDownload -> {
+            PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            TransferState.Downloading -> {
+            Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.PauseDownload -> {
+            PauseDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.ErrorDownload -> {
+            ErrorDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            TransferState.FilePathChanged -> {
-                requestThumb()
+            FilePathChanged -> {
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
 
-            TransferState.ThumbLoaded -> {
+            ThumbLoaded -> {
                 if (isValidThumb(data.thumbData))
                     viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
             }
         }
     }
+
+    override val selectMessageView
+        get() = binding.selectView
 
     override val fileContainer: ImageView
         get() = binding.fileImage

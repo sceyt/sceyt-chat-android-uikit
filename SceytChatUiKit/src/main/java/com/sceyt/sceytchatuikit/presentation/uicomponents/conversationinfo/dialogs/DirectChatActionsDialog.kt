@@ -8,16 +8,20 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogDirectChannelActionsBinding
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.setDrawableStart
 import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogDirectChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
-    private lateinit var channel: SceytDirectChannel
+    private lateinit var channel: SceytChannel
+    private var showMuteIcon: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,8 +40,9 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         }
     }
 
-    private fun setChannel(channel: SceytDirectChannel) {
+    private fun setData(channel: SceytChannel, showStartChatIcon: Boolean) {
         this.channel = channel
+        this.showMuteIcon = showStartChatIcon
     }
 
     fun setChooseTypeCb(cb: (ActionsEnum) -> Unit) {
@@ -45,9 +50,27 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.initView() {
-        channel.peer?.let {
+        channel.getFirstMember()?.let {
             blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
             unBlockUser.isVisible = it.user.blocked
+        }
+
+        muteUnMute.apply {
+            if (showMuteIcon) {
+                if (channel.muted) {
+                    text = getString(R.string.sceyt_un_mute_)
+                    setDrawableStart(R.drawable.sceyt_ic_un_mute, SceytKitConfig.sceytColorAccent)
+                } else {
+                    text = getString(R.string.sceyt_mute_)
+                    setDrawableStart(R.drawable.sceyt_ic_muted_channel, SceytKitConfig.sceytColorAccent)
+                }
+            }
+            isVisible = showMuteIcon
+        }
+
+        muteUnMute.setOnClickListener {
+            listener?.invoke(if (channel.muted) ActionsEnum.UnMute else ActionsEnum.Mute)
+            dismiss()
         }
 
         clearHistory.setOnClickListener {
@@ -72,7 +95,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     enum class ActionsEnum {
-        ClearHistory, BlockUser, UnBlockUser, Delete
+        ClearHistory, BlockUser, UnBlockUser, Delete, Mute, UnMute
     }
 
     private fun SceytDialogDirectChannelActionsBinding.setupStyle() {
@@ -80,9 +103,9 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     companion object {
-        fun newInstance(context: Context, channel: SceytDirectChannel): DirectChatActionsDialog {
+        fun newInstance(context: Context, channel: SceytChannel, showMuteIcon: Boolean): DirectChatActionsDialog {
             val dialog = DirectChatActionsDialog(context)
-            dialog.setChannel(channel)
+            dialog.setData(channel, showMuteIcon)
             return dialog
         }
     }

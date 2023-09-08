@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -25,9 +24,9 @@ class IncAttachmentsMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
@@ -44,7 +43,11 @@ class IncAttachmentsMsgViewHolder(
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
         }
     }
@@ -92,6 +95,8 @@ class IncAttachmentsMsgViewHolder(
             }
         }
     }
+
+    override val selectMessageView get() = binding.selectView
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 

@@ -13,14 +13,14 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
     private var replyMessageListener: MessageActionsViewClickListeners.ReplyMessage? = null
     private var replyInThreadMessageListener: MessageActionsViewClickListeners.ReplyInThreadMessage? = null
 
-    override fun onCopyMessageClick(message: SceytMessage) {
-        defaultListeners.onCopyMessageClick(message)
-        copyMessageListener?.onCopyMessageClick(message)
+    override fun onCopyMessagesClick(vararg messages: SceytMessage) {
+        defaultListeners.onCopyMessagesClick(*messages)
+        copyMessageListener?.onCopyMessagesClick(*messages)
     }
 
-    override fun onDeleteMessageClick(message: SceytMessage, onlyForMe: Boolean) {
-        defaultListeners.onDeleteMessageClick(message, onlyForMe)
-        deleteMessageListener?.onDeleteMessageClick(message, onlyForMe)
+    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit) {
+        defaultListeners.onDeleteMessageClick(*messages, onlyForMe = onlyForMe, actionFinish = actionFinish)
+        deleteMessageListener?.onDeleteMessageClick(*messages, onlyForMe = onlyForMe, actionFinish = actionFinish)
     }
 
     override fun onEditMessageClick(message: SceytMessage) {
@@ -33,9 +33,9 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
         reactMessageListener?.onReactMessageClick(message)
     }
 
-    override fun onForwardMessageClick(message: SceytMessage) {
-        defaultListeners.onForwardMessageClick(message)
-        forwardMessageListener?.onForwardMessageClick(message)
+    override fun onForwardMessageClick(vararg messages: SceytMessage) {
+        defaultListeners.onForwardMessageClick(*messages)
+        forwardMessageListener?.onForwardMessageClick(*messages)
     }
 
     override fun onReplyMessageClick(message: SceytMessage) {
@@ -59,24 +59,31 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
                 replyMessageListener = listener
                 replyInThreadMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.CopyMessage -> {
                 copyMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.DeleteMessage -> {
                 deleteMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.EditMessage -> {
                 editMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.ForwardMessage -> {
                 forwardMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.ReactMessage -> {
                 reactMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.ReplyMessage -> {
                 replyMessageListener = listener
             }
+
             is MessageActionsViewClickListeners.ReplyInThreadMessage -> {
                 replyInThreadMessageListener = listener
             }

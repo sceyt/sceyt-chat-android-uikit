@@ -23,9 +23,9 @@ class OutAttachmentsMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+) : BaseMsgViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
@@ -42,7 +42,11 @@ class OutAttachmentsMsgViewHolder(
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(messageBody, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
         }
     }
@@ -84,6 +88,8 @@ class OutAttachmentsMsgViewHolder(
     }
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
+
+    override val selectMessageView get() = binding.selectView
 
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)

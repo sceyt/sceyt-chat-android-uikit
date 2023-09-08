@@ -168,7 +168,7 @@ fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 fun Activity.recreateWithoutAnim() {
     finish()
     startActivity(intent)
-    overridePendingTransition(0, 0)
+    overrideTransitions(0, 0,false)
 }
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
@@ -178,7 +178,10 @@ fun Context.isLandscape(): Boolean {
 }
 
 fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
-    window.statusBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
+    val themeColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
+    window.statusBarColor = themeColor
+    if (isDark)
+        window.navigationBarColor = themeColor
 
     if (SDK_INT >= M) {
         if (SDK_INT >= Build.VERSION_CODES.R) {

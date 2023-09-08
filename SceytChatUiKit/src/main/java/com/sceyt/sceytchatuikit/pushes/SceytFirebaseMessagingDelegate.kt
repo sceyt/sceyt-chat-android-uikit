@@ -6,16 +6,17 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_FCM_TOKEN
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import org.koin.core.component.inject
 
@@ -98,14 +99,14 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
 
     fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): RemoteMessageData {
         val user = getUserFromPushJson(remoteMessage)
-        val channel = getChannelFromPushJson(remoteMessage, user)?.toSceytUiChannel()
+        val channel = getChannelFromPushJson(remoteMessage)?.toSceytUiChannel()
         val message = getMessageBodyFromPushJson(remoteMessage, channel?.id, user)?.toSceytUiMessage()
-        val reactionScore = getReactionScoreFromRemoteMessage(remoteMessage)
-        return RemoteMessageData(channel, message, user, reactionScore)
+        val reaction = getReactionFromRemoteMessage(remoteMessage, message?.id, user)
+        return RemoteMessageData(channel, message, user, reaction)
     }
 
-    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionScore? {
-        return getReactionScoreFromPushJson(remoteMessage.data["reaction"])
+    fun getReactionFromRemoteMessage(remoteMessage: RemoteMessage, id: Long?, user: User?): SceytReaction? {
+        return getReactionFromPushJson(remoteMessage.data["reaction"], id, user)
     }
 
     @Throws(IllegalStateException::class)

@@ -20,35 +20,39 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Direct
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.TAG_NAME
 import com.sceyt.sceytchatuikit.extensions.animationListener
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
+import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.AudioCall
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.CallOut
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.Chat
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.More
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.Mute
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment.ClickActionsEnum.UnMute
@@ -57,6 +61,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.butto
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPrivateChatFragment.ClickActionsEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment.PublicChannelClickActionsEnum
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.description.InfoDescriptionFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.BlockUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.ClearHistory
@@ -71,7 +76,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.ChannelMediaFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membersbyrolebuttons.InfoMembersByRoleButtonsFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -93,6 +99,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private var binding: SceytActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
     private var alphaAnimation: AlphaAnimation? = null
+    private var showStartChatIcon: Boolean = false
 
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,6 +122,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun getBundleArguments() {
         channel = requireNotNull(intent.parcelable(CHANNEL))
+        showStartChatIcon = intent.getBooleanExtra(SHOW_OPEN_CHAT_BUTTON, false)
     }
 
     private fun initViewModel() {
@@ -149,31 +157,33 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         viewModel.channelAddMemberLiveData.observe(this, ::onAddMember)
 
+        viewModel.findOrCreateChatLiveData.observe(this, ::onFindOrCreateChat)
+
         viewModel.pageStateLiveData.observe(this, ::onPageStateChange)
     }
 
     private fun initButtons() {
-        val fragment: Fragment = when (channel.channelType) {
+        val fragment: Fragment = when (channel.getChannelType()) {
             Direct -> {
-                getInfoButtonsDirectChatFragment(channel).also {
+                getInfoButtonsDirectChatFragment(channel, showStartChatIcon).also {
                     it.setClickActionsListener(::onButtonClick)
                 }
             }
 
-            Private -> {
+            Private, Group -> {
                 getInfoButtonsPrivateChatFragment(channel).also {
                     it.setClickActionsListener(::onGroupButtonClick)
                 }
             }
 
-            Public -> {
+            Public, Broadcast -> {
                 getInfoButtonsPublicChannelFragment(channel).also {
                     it.setClickActionsListener(::onPublicButtonClick)
                 }
             }
         }
         supportFragmentManager.commit(allowStateLoss = true) {
-            replace(R.id.layout_buttons, fragment)
+            replace(R.id.layout_buttons, fragment, fragment.TAG_NAME)
         }
     }
 
@@ -188,10 +198,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun observeUserUpdateIfNeeded() {
-        if (!channel.isGroup)
+        if (channel.isDirect()) {
             SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
                 .onEach {
-                    it.find { user -> user.user.id == (getChannel() as? SceytDirectChannel)?.peer?.id }?.let { presenceUser ->
+                    it.find { user -> user.user.id == getChannel().getFirstMember()?.id }?.let { presenceUser ->
                         with(getBinding() ?: return@onEach) {
                             val user = presenceUser.user
                             val userName = SceytKitConfig.userNameBuilder?.invoke(user)
@@ -201,10 +211,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                         }
                     }
                 }.launchIn(lifecycleScope)
+        }
     }
 
     private fun onButtonClick(clickActionsEnum: InfoButtonsDirectChatFragment.ClickActionsEnum) {
         when (clickActionsEnum) {
+            Chat -> onStartChatCallClick(channel)
             VideCall -> onVideoCallClick(channel)
             AudioCall -> onAudioCallClick(channel)
             CallOut -> onCallOutClick(channel)
@@ -241,16 +253,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             finish()
         }
 
-        members.setOnClickListenerDisableClickViewForWhile {
-            onMembersClick(channel)
-        }
-
-        admins.setOnClickListenerDisableClickViewForWhile {
-            onAdminsClick(channel)
-        }
-
         icEdit.setOnClickListenerDisableClickViewForWhile {
             onEditClick(channel)
+        }
+
+        avatar.setOnClickListener {
+            onAvatarClick(channel)
         }
     }
 
@@ -272,7 +280,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    private fun setupPagerAdapter(viewPager: ViewPager2?, tabLayout: TabLayout?) {
+    protected fun setupPagerAdapter(viewPager: ViewPager2?, tabLayout: TabLayout?) {
         val fragments = arrayListOf<Fragment>(
             getChannelMediaFragment(channel),
             getChannelFilesFragment(channel),
@@ -284,25 +292,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         setPagerAdapter(pagerAdapter)
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
-    }
-
-    private fun setChannelDetails(channel: SceytChannel) {
-        with(binding ?: return) {
-            members.text = if (channel.channelType == Public)
-                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
-
-            val myRole = channel.getMyRole()
-            val isOwnerOrAdmin = myRole?.name == RoleTypeEnum.Owner.toString() || myRole?.name == RoleTypeEnum.Admin.toString()
-
-            admins.isVisible = isOwnerOrAdmin || channel.channelType == Private
-            groupChannelMembers.isVisible = isOwnerOrAdmin || channel.channelType == Private
-            icEdit.isVisible = isOwnerOrAdmin
-
-            setChannelTitle(channel)
-            setPresenceOrMembers(channel)
-            setChannelDescription(channel)
-            setChannelAvatar(channel)
-        }
     }
 
     protected fun setupTabLayout(tabLayout: TabLayout, viewPager: ViewPager2) {
@@ -363,11 +352,27 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected fun getMembersType(): MemberTypeEnum {
         return if (::channel.isInitialized) {
-            when (channel.channelType) {
-                Private, Direct -> MemberTypeEnum.Member
-                Public -> MemberTypeEnum.Subscriber
+            when (channel.getChannelType()) {
+                Private, Direct, Group -> MemberTypeEnum.Member
+                Public, Broadcast -> MemberTypeEnum.Subscriber
             }
         } else MemberTypeEnum.Member
+    }
+
+    open fun setChannelDetails(channel: SceytChannel) {
+        with(binding ?: return) {
+            val myRole = channel.userRole
+            val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
+
+            icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
+
+            setChannelTitle(channel)
+            setChannelMembersByRoleButtons(channel)
+            setPresenceOrMembers(channel)
+            setChannelDescription(channel)
+            setChannelAvatar(channel)
+            setChannelAdditionalInfoFragment(channel)
+        }
     }
 
     open fun setActivityContentView() {
@@ -377,11 +382,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onMembersClick(channel: SceytChannel) {
-        binding ?: return
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-            addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, getMembersType()))
+            val fragment = getChannelMembersFragment(channel, getMembersType())
+            addToBackStack(fragment.TAG_NAME)
+            replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
     }
 
@@ -389,8 +394,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-            addToBackStack(ChannelMembersFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getChannelMembersFragment(channel, MemberTypeEnum.Admin))
+            val fragment = getChannelMembersFragment(channel, MemberTypeEnum.Admin)
+            addToBackStack(fragment.TAG_NAME)
+            replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
     }
 
@@ -398,26 +404,40 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         supportFragmentManager.commit {
             setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
-            addToBackStack(EditChannelFragment::class.java.simpleName)
-            replace(R.id.rootFrameLayout, getEditChannelFragment(channel))
+            val fragment = getEditChannelFragment(channel)
+            addToBackStack(fragment.TAG_NAME)
+            replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
+        }
+    }
+
+    open fun onAvatarClick(channel: SceytChannel) {
+        val icon = channel.iconUrl
+        if (!icon.isNullOrBlank()) {
+            val title = if (channel.isDirect()) {
+                val user = channel.getFirstMember()?.user
+                if (user != null) SceytKitConfig.userNameBuilder?.invoke(user)
+                        ?: user.getPresentableName() else null
+            } else channel.subject
+
+            SceytPhotoPreviewActivity.launchActivity(this, icon, title)
         }
     }
 
     open fun onClearHistoryClick(channel: SceytChannel) {
-        val descId: Int = when (channel.channelType) {
+        val descId: Int = when (channel.getChannelType()) {
             Direct -> R.string.sceyt_clear_direct_history_desc
-            Private -> R.string.sceyt_clear_private_chat_history_desc
-            Public -> R.string.sceyt_clear_public_chat_history_desc
+            Private, Group -> R.string.sceyt_clear_private_chat_history_desc
+            Public, Broadcast -> R.string.sceyt_clear_public_chat_history_desc
         }
         showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
-            clearHistory(channel.channelType == Public)
+            clearHistory(channel.isPublic())
         })
     }
 
     open fun onLeaveChatClick(channel: SceytChannel) {
         val titleId: Int
         val descId: Int
-        when (channel.channelType) {
+        when (channel.getChannelType()) {
             Private -> {
                 titleId = R.string.sceyt_leave_group_title
                 descId = R.string.sceyt_leave_group_desc
@@ -436,7 +456,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
-        val peer = (channel as? SceytDirectChannel)?.peer ?: return
+        val peer = channel.getFirstMember() ?: return
         if (block) {
             showSceytDialog(this, R.string.sceyt_block_user_title,
                 R.string.sceyt_block_user_desc, R.string.sceyt_block, positiveCb = {
@@ -448,13 +468,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onDeleteChatClick(channel: SceytChannel) {
         val titleId: Int
         val descId: Int
-        when (channel.channelType) {
-            Private -> {
+        when (channel.getChannelType()) {
+            Private, Group -> {
                 titleId = R.string.sceyt_delete_group_title
                 descId = R.string.sceyt_delete_group_desc
             }
 
-            Public -> {
+            Public, Broadcast -> {
                 titleId = R.string.sceyt_delete_channel_title
                 descId = R.string.sceyt_delete_channel_desc
             }
@@ -469,6 +489,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         })
     }
 
+    open fun onStartChatCallClick(channel: SceytChannel) {
+        if (!channel.isDirect()) return
+        val peer = channel.getFirstMember() ?: return
+        viewModel.findOrCreateChat(peer.user)
+    }
+
     open fun onVideoCallClick(channel: SceytChannel) {
     }
 
@@ -481,13 +507,16 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onAddMember(data: ChannelMembersEventData) {
     }
 
+    open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
+    }
+
     open fun onMoreClick(channel: SceytChannel) {
         if (channel.isGroup) {
             GroupChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onGroupChatMoreActionClick)
             }.show()
         } else
-            DirectChatActionsDialog.newInstance(this, (channel as SceytDirectChannel)).apply {
+            DirectChatActionsDialog.newInstance(this, channel, showStartChatIcon).apply {
                 setChooseTypeCb(::onDirectChatMoreActionClick)
             }.show()
     }
@@ -508,6 +537,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             BlockUser -> onBlockUnBlockUserClick(channel, true)
             UnBlockUser -> onBlockUnBlockUserClick(channel, false)
             Delete -> onDeleteChatClick(channel)
+            DirectChatActionsDialog.ActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
+            DirectChatActionsDialog.ActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
         }
     }
 
@@ -549,9 +580,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onBlockUnblockUser(users: List<User>) {
-        val peer = (channel as SceytDirectChannel).peer
+        val peer = channel.getFirstMember()
         users.find { user -> user.id == peer?.id }?.let { user ->
-            (channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
+            peer?.user = user
         }
     }
 
@@ -604,6 +635,21 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    private fun setChannelMembersByRoleButtons(channel: SceytChannel) {
+        binding ?: return
+        val fragment = getChannelMembersByRoleFragment(channel).also {
+            it.setClickActionsListener { actionsEnum ->
+                when (actionsEnum) {
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(channel)
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(channel)
+                }
+            }
+        }
+        supportFragmentManager.commit(allowStateLoss = true) {
+            replace(R.id.frame_layout_members_by_role, fragment, fragment.TAG_NAME)
+        }
+    }
+
     open fun setPresenceOrMembers(channel: SceytChannel) {
         with(binding ?: return) {
             if (channel.isPeerDeleted()) {
@@ -611,9 +657,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 subTitleToolbar.isVisible = false
                 return
             }
-            val title: String = when (channel.channelType) {
+            val title: String = when (channel.getChannelType()) {
                 Direct -> {
-                    val member = (channel as? SceytDirectChannel)?.peer ?: return
+                    val member = channel.getFirstMember() ?: return
                     if (member.user.presence?.state == PresenceState.Online) {
                         getString(R.string.sceyt_online)
                     } else {
@@ -625,15 +671,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                     }
                 }
 
-                Private -> {
-                    val memberCount = (channel as SceytGroupChannel).memberCount
+                Private, Group -> {
+                    val memberCount = channel.memberCount
                     if (memberCount > 1)
                         getString(R.string.sceyt_members_count, memberCount)
                     else getString(R.string.sceyt_member_count, memberCount)
                 }
 
-                Public -> {
-                    val memberCount = (channel as SceytGroupChannel).memberCount
+                Public, Broadcast -> {
+                    val memberCount = channel.memberCount
                     if (memberCount > 1)
                         getString(R.string.sceyt_subscribers_count, memberCount)
                     else getString(R.string.sceyt_subscriber_count, memberCount)
@@ -657,21 +703,18 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun setChannelDescription(channel: SceytChannel) {
-        with(binding ?: return) {
-            if (channel is SceytDirectChannel) {
-                val status = channel.peer?.user?.presence?.status
-                        ?: SceytKitConfig.presenceStatusText
-                if (status.isNotNullOrBlank()) {
-                    tvTitle.text = getString(R.string.sceyt_about)
-                    tvDescription.text = status
-                } else groupChannelDescription.isVisible = false
-            } else {
-                if (channel.label.isNotNullOrBlank()) {
-                    tvTitle.text = getString(R.string.sceyt_description)
-                    tvDescription.text = channel.label
-                    groupChannelDescription.isVisible = true
-                } else groupChannelDescription.isVisible = false
-            }
+        binding ?: return
+        val fragment = getChannelDescriptionFragment(channel)
+        supportFragmentManager.commit(allowStateLoss = true) {
+            replace(R.id.frame_layout_description, fragment, fragment.TAG_NAME)
+        }
+    }
+
+    open fun setChannelAdditionalInfoFragment(channel: SceytChannel) {
+        binding ?: return
+        val fragment = getChannelAdditionalInfoFragment(channel) ?: return
+        supportFragmentManager.commit(allowStateLoss = true) {
+            replace(R.id.frame_layout_additional_info, fragment, fragment.TAG_NAME)
         }
     }
 
@@ -690,11 +733,20 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
 
     //Buttons
-    open fun getInfoButtonsDirectChatFragment(channel: SceytChannel) = InfoButtonsDirectChatFragment.newInstance(channel)
+    open fun getInfoButtonsDirectChatFragment(channel: SceytChannel, showOpenChatButton: Boolean) = InfoButtonsDirectChatFragment.newInstance(channel, showOpenChatButton)
 
     open fun getInfoButtonsPrivateChatFragment(channel: SceytChannel) = InfoButtonsPrivateChatFragment.newInstance(channel)
 
     open fun getInfoButtonsPublicChannelFragment(channel: SceytChannel) = InfoButtonsPublicChannelFragment.newInstance(channel)
+
+    //Description
+    open fun getChannelDescriptionFragment(channel: SceytChannel) = InfoDescriptionFragment.newInstance(channel)
+
+    //Members by role buttons
+    open fun getChannelMembersByRoleFragment(channel: SceytChannel) = InfoMembersByRoleButtonsFragment.newInstance(channel)
+
+    //Additional info
+    open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
 
     open fun onPageStateChange(pageState: PageState) {
         if (pageState is PageState.StateError) {
@@ -708,9 +760,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         return (binding?.appbar?.height ?: 0)
     }
 
+    open fun getRootFragmentId(): Int = R.id.rootFrameLayout
+
     override fun finish() {
         super.finish()
-        overridePendingTransition(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+        overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
     private fun SceytActivityConversationInfoBinding.setupStyle() {
@@ -720,12 +774,14 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        const val SHOW_OPEN_CHAT_BUTTON = "SHOW_OPEN_CHAT_BUTTON"
 
-        fun newInstance(context: Context, channel: SceytChannel) {
+        fun newInstance(context: Context, channel: SceytChannel, showOpenChatButton: Boolean = false) {
             context.launchActivity<ConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
+                putExtra(SHOW_OPEN_CHAT_BUTTON, showOpenChatButton)
             }
-            context.asActivity().overridePendingTransition(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
     }
 }

@@ -1,98 +1,21 @@
 package com.sceyt.sceytchatuikit.data
 
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.channel.*
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.channels.*
+import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
-import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
-
-fun Channel.toSceytUiChannel(): SceytChannel {
-    if (this is GroupChannel) {
-        return SceytGroupChannel(
-            id = id,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            unreadMessageCount = unreadMessageCount,
-            unreadMentionCount = unreadMentionCount,
-            unreadReactionCount = unreadReactionCount,
-            lastMessage = lastMessage?.toSceytUiMessage(true),
-            label = label,
-            metadata = metadata,
-            muted = muted(),
-            muteExpireDate = muteExpireDate(),
-            markedUsUnread = markedAsUnread(),
-            channelType = getChannelType(this),
-            subject = subject,
-            avatarUrl = avatarUrl,
-            channelUrl = getChannelUrl(),
-            members = lastActiveMembers.map { it.toSceytMember() },
-            memberCount = memberCount,
-            lastDeliveredMessageId = lastDeliveredMessageId,
-            lastReadMessageId = lastReadMessageId,
-            messagesDeletionDate = messagesDeletionDate,
-            role = myRole(),
-            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
-            userMessageReactions = getUserMessageReactions()?.toList()
-        )
-    } else {
-        this as DirectChannel
-        return SceytDirectChannel(
-            id = id,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            unreadMessageCount = unreadMessageCount,
-            unreadMentionCount = unreadMentionCount,
-            unreadReactionCount = unreadReactionCount,
-            lastMessage = lastMessage?.toSceytUiMessage(false),
-            label = label,
-            metadata = metadata,
-            muted = muted(),
-            markedUsUnread = markedAsUnread(),
-            peer = peer?.toSceytMember(),
-            lastDeliveredMessageId = lastDeliveredMessageId,
-            lastReadMessageId = lastReadMessageId,
-            channelType = getChannelType(this),
-            messagesDeletionDate = messagesDeletionDate,
-            lastMessages = lastMessages?.map { it.toSceytUiMessage() },
-            userMessageReactions = getUserMessageReactions()?.toList()
-        )
-    }
-}
-
-fun SceytChannel.toGroupChannel(): GroupChannel {
-    return when (channelType) {
-        ChannelTypeEnum.Private -> {
-            this as SceytGroupChannel
-            PrivateChannel(
-                id, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
-                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
-        }
-        ChannelTypeEnum.Public -> {
-            this as SceytGroupChannel
-            PublicChannel(id, channelUrl, subject, metadata, avatarUrl,
-                label, createdAt, updatedAt, members.map { it.toMember() }.toTypedArray(),
-                lastMessage?.toMessage(), unreadMessageCount, unreadMentionCount, unreadReactionCount, memberCount, muted, 0,
-                markedUsUnread, lastDeliveredMessageId, lastReadMessageId, messagesDeletionDate, null,
-                lastMessages?.map { it.toMessage() }?.toTypedArray(), userMessageReactions?.toTypedArray())
-        }
-        else -> throw RuntimeException("Channel is direct channel")
-    }
-}
 
 fun Member.toSceytMember() = SceytMember(
     role = role,
@@ -103,15 +26,8 @@ fun SceytMember.toMember(): Member {
     return Member(role, user)
 }
 
-fun GroupChannel.getChannelUrl(): String {
-    return if (this is PublicChannel)
-        uri
-    else ""
-}
-
 fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float = 0f) = SceytAttachment(
     id = id,
-    tid = tid,
     messageTid = messageTid,
     messageId = messageId,
     userId = userId,
@@ -124,6 +40,7 @@ fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
     filePath = filePath,
     transferState = transferState,
     progressPercent = progress,
+    originalFilePath = filePath
 )
 
 
@@ -137,7 +54,7 @@ fun SceytAttachment.toAttachment(): Attachment = Attachment(
     url ?: "",
     createdAt,
     userId,
-    tid,
+    0,
     filePath ?: "",
     false,
 )
@@ -160,15 +77,19 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     message = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
     metadata = draftMessageEntity.metadata,
-    mentionUsers = users?.map { it.toUser() }
+    mentionUsers = mentionUsers?.map { it.toUser() },
+    replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
+    isReply = draftMessageEntity.isReplyMessage ?: false
 )
 
-fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?) = DraftMessage(
+fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: SceytMessage?) = DraftMessage(
     chatId = chatId,
     message = message,
     createdAt = createdAt,
     metadata = metadata,
-    mentionUsers = mentionUsers
+    mentionUsers = mentionUsers,
+    replyOrEditMessage = replyMessage,
+    isReply = isReplyMessage ?: false
 )
 
 fun User.copy() = User(

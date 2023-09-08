@@ -8,6 +8,7 @@ import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.toTransferData
@@ -72,10 +73,11 @@ class AttachmentViewHolderHelper(itemView: View) {
             loadBlurThumb(blurredThumb, imageView)
     }
 
-    fun updateTransferData(data: TransferData, item: AttachmentDataItem): Boolean {
+    fun updateTransferData(data: TransferData, item: AttachmentDataItem, isValidThumb: (thumbData: ThumbData?) -> Boolean): Boolean {
         if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
         if (data.state == TransferState.ThumbLoaded) {
-            fileItem.thumbPath = data.filePath
+            if (isValidThumb(data.thumbData))
+                fileItem.thumbPath = data.filePath
         } else {
             fileItem.file.updateWithTransferData(data)
             transferData = data

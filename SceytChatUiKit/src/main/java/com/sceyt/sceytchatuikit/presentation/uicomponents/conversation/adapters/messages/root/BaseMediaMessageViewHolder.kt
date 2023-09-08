@@ -19,7 +19,8 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.root.AttachmentViewHolderHelper
@@ -33,9 +34,9 @@ abstract class BaseMediaMessageViewHolder(
         val view: View,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)? = null,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(view, messageListeners, displayedListener, senderNameBuilder) {
+) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null
@@ -44,6 +45,7 @@ abstract class BaseMediaMessageViewHolder(
     }
     private val minSize = maxSize / 3
     protected var isAttachedToWindow = true
+    private var addedLister = false
 
     @CallSuper
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
@@ -61,7 +63,7 @@ abstract class BaseMediaMessageViewHolder(
         viewHolderHelper.transferData?.let {
             loadingProgressView.release(it.progressPercent)
             updateState(it, true)
-            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
+            if (it.filePath.isNullOrBlank() && it.state != PendingDownload && it.state != PauseDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
     }
@@ -131,6 +133,9 @@ abstract class BaseMediaMessageViewHolder(
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
         isAttachedToWindow = true
+        viewHolderHelper.transferData?.let {
+            loadingProgressView.getProgressWithState(it.state, it.progressPercent)
+        }
     }
 
     override fun onViewDetachedFromWindow() {
@@ -139,8 +144,10 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     private fun setListener() {
+        if (addedLister) return
+        addedLister = true
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-            if (viewHolderHelper.updateTransferData(it, fileItem))
+            if (viewHolderHelper.updateTransferData(it, fileItem, ::isValidThumb))
                 updateState(it)
         }
     }
@@ -165,7 +172,7 @@ abstract class BaseMediaMessageViewHolder(
                     var newDefaultSize = defaultSize
 
                     // If the width of the image is less than 80% of the default size, then we can increase the default size by 20%
-                    if (coefficientWidth <= 0.8 )
+                    if (coefficientWidth <= 0.8)
                         newDefaultSize = (defaultSize * 1.2).toInt()
 
                     val w = (newDefaultSize * coefficient).toInt()

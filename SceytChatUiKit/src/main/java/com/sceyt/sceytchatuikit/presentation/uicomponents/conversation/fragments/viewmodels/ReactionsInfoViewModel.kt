@@ -3,9 +3,9 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
@@ -21,8 +21,8 @@ import org.koin.core.component.inject
 class ReactionsInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageReactionsMiddleWare by inject<PersistenceReactionsLogic>()
 
-    private val _loadReactIonsLiveData = MutableLiveData<PaginationResponse<Reaction>>()
-    val loadReactIonsLiveData: LiveData<PaginationResponse<Reaction>> = _loadReactIonsLiveData
+    private val _loadReactIonsLiveData = MutableLiveData<PaginationResponse<SceytReaction>>()
+    val loadReactIonsLiveData: LiveData<PaginationResponse<SceytReaction>> = _loadReactIonsLiveData
 
 
     fun getReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
@@ -39,9 +39,9 @@ class ReactionsInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    suspend fun initDbResponse(response: PaginationResponse.DBResponse<Reaction>, cashedList: List<ReactedUserItem>?): List<ReactedUserItem> {
+    suspend fun initDbResponse(response: PaginationResponse.DBResponse<SceytReaction>, cashedList: List<ReactedUserItem>?): List<ReactedUserItem> {
         return withContext(Dispatchers.IO) {
-            val currentList = arrayListOf<Reaction>()
+            val currentList = arrayListOf<SceytReaction>()
             if (response.offset > 0)
                 cashedList?.forEach { item ->
                     if (item is ReactedUserItem.Item)
@@ -57,7 +57,7 @@ class ReactionsInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    suspend fun initServerResponse(response: PaginationResponse.ServerResponse<Reaction>): List<ReactedUserItem> {
+    suspend fun initServerResponse(response: PaginationResponse.ServerResponse<SceytReaction>): List<ReactedUserItem> {
         return withContext(Dispatchers.IO) {
             val data = initResponseData(response.cacheData, response.hasNext)
             withContext(Dispatchers.Main) {
@@ -66,7 +66,7 @@ class ReactionsInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    private fun initResponseData(reactions: List<Reaction>, hasNext: Boolean): List<ReactedUserItem> {
+    private fun initResponseData(reactions: List<SceytReaction>, hasNext: Boolean): List<ReactedUserItem> {
         var list: List<ReactedUserItem> = reactions.map { ReactedUserItem.Item(it) }
         if (hasNext)
             list = list.toArrayList().apply { add(ReactedUserItem.LoadingMore) }

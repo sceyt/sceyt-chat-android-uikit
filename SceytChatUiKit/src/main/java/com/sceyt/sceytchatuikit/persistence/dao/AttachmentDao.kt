@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -39,46 +40,43 @@ abstract class AttachmentDao {
         return LoadNearData(oldest + newMessages, hasNext = hasNext, hasPrev)
     }
 
+    @Query("select * from AttachmentPayLoad where messageTid in (:tid)")
+    abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadEntity>
+
+    @Query("select * from AttachmentEntity where type =:type and url <> ''")
+    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
+
     @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
     abstract suspend fun updateAttachmentIdAndMessageId(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
 
     @Query("update AttachmentPayLoad set progressPercent =:progress, transferState =:state where messageTid =:tid")
-    abstract fun updateAttachmentTransferDataByMsgTid(tid: Long, progress: Float, state: TransferState)
+    abstract suspend fun updateAttachmentTransferDataByMsgTid(tid: Long, progress: Float, state: TransferState)
 
     @Transaction
-    open fun updateAttachmentAndPayLoad(transferData: TransferData) {
+    open suspend fun updateAttachmentAndPayLoad(transferData: TransferData) {
         updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
         updateAttachmentPayLoadByMsgTid(transferData.messageTid, transferData.filePath, transferData.url,
             transferData.progressPercent, transferData.state)
     }
 
     @Transaction
-    open fun updateAttachmentFilePathAndMetadata(tid: Long, filePath: String?, fileSize: Long, metadata: String?) {
+    open suspend fun updateAttachmentFilePathAndMetadata(tid: Long, filePath: String?, fileSize: Long, metadata: String?) {
         updateAttachmentFilePathByMsgTid(tid, filePath, fileSize, metadata)
         updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
     }
 
     @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid and type !=:ignoreType")
-    abstract fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
+    abstract suspend fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
 
     @Query("update AttachmentPayLoad set filePath =:filePath, url =:url," +
             "progressPercent= :progress, transferState =:state  where messageTid =:tid")
-    abstract fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
+    abstract suspend fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
 
     @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata " +
             "where messageTid =:msgTid and type !=:ignoreType")
-    abstract fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long,
-                                                  metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
+    abstract suspend fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long,
+                                                          metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
 
     @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
-    abstract fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
-
-    @Query("select * from AttachmentEntity  where type =:type and url <> ''")
-    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
-
-    @Query("update AttachmentEntity set filePath = '' where messageTid in (:messageTid)")
-    abstract fun markNotDownloadedFileAttachments(messageTid: List<Long>)
-
-    @Query("update AttachmentPayLoad set filePath = '',progressPercent = 0, transferState =:transferState where messageTid in (:messageTid)")
-    abstract fun markNorDownloadedFileAttachmentsPayLoad(messageTid: List<Long>, transferState: TransferState = TransferState.PendingDownload)
+    abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
 }

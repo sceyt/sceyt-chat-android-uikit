@@ -234,9 +234,9 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun markAsRead(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markAsDisplayed(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).markMessagesAsRead(id, object : MessageMarkCallback {
+            ChannelOperator.build(channelId).markMessagesAsDisplayed(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     continuation.safeResume(SceytResponse.Success(result))
                 }
@@ -249,9 +249,9 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun markAsDelivered(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markAsReceived(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).markMessagesAsDelivered(id, object : MessageMarkCallback {
+            ChannelOperator.build(channelId).markMessagesAsReceived(id, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     continuation.safeResume(SceytResponse.Success(result))
                 }

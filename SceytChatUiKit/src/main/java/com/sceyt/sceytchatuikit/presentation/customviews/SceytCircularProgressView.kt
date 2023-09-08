@@ -18,6 +18,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.dpToPxAsFloat
+import com.sceyt.sceytchatuikit.extensions.inNotNanOrZero
 import com.sceyt.sceytchatuikit.extensions.scaleAndAlphaAnim
 import kotlin.math.max
 import kotlin.math.min
@@ -236,7 +237,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     fun release(withProgress: Float? = null) {
-        progress = max(withProgress ?: 0f, minProgress)
+        progress = max(withProgress?.inNotNanOrZero() ?: 0f, minProgress)
+        if (progress.isNaN()) progress = 0f
         angle = calculateAngle(progress)
         transferring = true
         if (rotateAnimEnabled) rotate()
@@ -244,7 +246,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     fun setProgress(@FloatRange(from = 0.0, to = 100.0) newProgress: Float) {
-        progress = max(newProgress, minProgress)
+        progress = max(newProgress.inNotNanOrZero(), minProgress)
         transferring = true
         drawProgress(calculateAngle(progress))
     }
@@ -270,6 +272,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setRotateAnimEnabled(enabled: Boolean) {
         rotateAnimEnabled = enabled
+        if (!enabled)
+            rotateAnim?.cancel()
         invalidate()
     }
 
@@ -285,6 +289,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setTransferring(transferring: Boolean) {
         this.transferring = transferring
+        if (!transferring)
+            rotateAnim?.cancel()
         invalidate()
     }
 
@@ -318,6 +324,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             if (isVisible) {
                 goneAnim = scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
                     super.setVisibility(GONE)
+                    rotateAnim?.cancel()
                 }
             }
         }
@@ -330,6 +337,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             else setGoneWithAnim()
         } else {
             super.setVisibility(visibility)
+            if (visibility == GONE)
+                rotateAnim?.cancel()
             drawingProgressAnimEndCb = null
         }
     }

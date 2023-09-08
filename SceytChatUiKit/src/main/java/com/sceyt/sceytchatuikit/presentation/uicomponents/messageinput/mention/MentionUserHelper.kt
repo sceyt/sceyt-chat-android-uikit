@@ -21,9 +21,9 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-
 object MentionUserHelper {
-    private var userNameBuilder = SceytKitConfig.userNameBuilder
+    var userNameBuilder = SceytKitConfig.userNameBuilder
+        private set
 
     fun initMentionMetaData(body: String, mentionUsers: List<Mention>): String {
         if (body.isEmpty() || mentionUsers.isEmpty()) return ""
@@ -37,7 +37,7 @@ object MentionUserHelper {
 
     fun buildWithMentionedUsers(context: Context, body: String, metaData: String?,
                                 mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytKitConfig.sceytColorAccent,
-                                enableClick: Boolean): SpannableString {
+                                mentionClickListener: ((String) -> Unit)? = null): SpannableString {
         val data = getMentionData(metaData) ?: return SpannableString(body)
         val newBody = SpannableStringBuilder(body)
 
@@ -45,9 +45,10 @@ object MentionUserHelper {
             data.sortedByDescending { it.loc }.forEach {
                 val name = setNewBodyWithName(mentionUsers, newBody, it)
 
-                if (enableClick) {
+                if (mentionClickListener != null) {
                     val clickableSpan = object : ClickableSpan() {
                         override fun onClick(textView: View) {
+                            mentionClickListener(it.id)
                         }
 
                         override fun updateDrawState(ds: TextPaint) {

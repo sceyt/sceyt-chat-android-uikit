@@ -11,15 +11,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 import com.sceyt.sceytchatuikit.presentation.common.isPeerBlocked
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.ShareableChannelsAdapter
@@ -32,7 +31,6 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected val channelsViewModel: ChannelsViewModel by viewModels()
     protected var channelsAdapter: ShareableChannelsAdapter? = null
     private val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this) }
-    protected val selectedChannels = mutableSetOf<Long>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,9 +95,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
         val filtered = data.filter {
-            ((it.channelType == ChannelTypeEnum.Public && (it.getMyRole()?.name != RoleTypeEnum.Owner.toString() &&
-                    it.getMyRole()?.name != RoleTypeEnum.Admin.toString()))
-                    || ((it.isPeerDeleted() || it.isPeerBlocked())))
+            ((it.isPublic() && (it.userRole != RoleTypeEnum.Owner.toString() &&
+                    it.userRole != RoleTypeEnum.Admin.toString())) || ((it.isPeerDeleted() || it.isPeerBlocked())))
         }
 
         return data.minus(filtered.toSet())
@@ -131,6 +128,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun onSearchQueryChanged(query: String) {
         channelsViewModel.getChannels(0, query)
     }
+
+    protected open val selectedChannels get() = channelsViewModel.selectedChannels
 
     open fun finishSharingAction() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)

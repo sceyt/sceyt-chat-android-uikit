@@ -32,14 +32,26 @@ interface ChannelDao {
     suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where role !=:ignoreRole " +
+    @Query("select * from channels where userRole !=:ignoreRole and (not pending or lastMessageTid != 0) " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: RoleTypeEnum = RoleTypeEnum.None): List<ChannelDb>
+    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: String = RoleTypeEnum.None.toString()): List<ChannelDb>
 
     @Transaction
-    @Query("select * from channels where subject LIKE '%' || :query || '%' " +
+    @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0) " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    fun getChannelsByQuery(limit: Int, offset: Int, query: String): List<ChannelDb>
+    suspend fun getChannelsBySubject(limit: Int, offset: Int, query: String): List<ChannelDb>
+
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @Transaction
+    @Query("select * from channels " +
+            "join UserChatLink as link on link.chat_id = channels.chat_id " +
+            "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directChannelType " +
+            "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
+            "or (type =:directChannelType and link.user_id in (:userIds))) " +
+            "group by channels.chat_id " +
+            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
+    suspend fun getChannelsByQueryAndUserIds(query: String, userIds: List<String>, limit: Int, offset: Int, onlyMine: Boolean,
+                                             directChannelType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
 
     @Transaction
     @RawQuery
@@ -62,19 +74,23 @@ interface ChannelDao {
         return getChannelsById(links.map { it.chatId })
     }
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:channelTypeEnum")
-    suspend fun getDirectChannel(peerId: String, channelTypeEnum: ChannelTypeEnum = ChannelTypeEnum.Direct): ChannelDb?
+    suspend fun getDirectChannel(peerId: String, channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
 
-    @Query("select chat_id from channels where chat_id not in (:ids)")
+    @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
 
     @Query("select chat_id from channels")
     suspend fun getAllChannelsIds(): List<Long>
 
+    @Query("select lastMessageTid from channels where chat_id in (:ids)")
+    suspend fun getChannelsLastMessageTIds(ids: List<Long>): List<Long>
+
     @Transaction
-    @Query("select sum(unreadMessageCount) from channels")
+    @Query("select sum(newMessageCount) from channels")
     fun getTotalUnreadCountAsFlow(): Flow<Int?>
 
     @Query("select count(chat_id) from channels")
@@ -90,16 +106,16 @@ interface ChannelDao {
     suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
 
     @Query("update channels set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
-            "lastReadMessageId =:lastMessageId where chat_id= :channelId")
+            "lastDisplayedMessageId =:lastMessageId where chat_id= :channelId")
     suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
 
-    @Query("update channels set unreadMessageCount =:count, markedUsUnread = 0 where chat_id= :channelId")
+    @Query("update channels set newMessageCount =:count, unread = 0 where chat_id= :channelId")
     suspend fun updateUnreadCount(channelId: Long, count: Int)
 
     @Query("update channels set memberCount =:count where chat_id= :channelId")
     suspend fun updateMemberCount(channelId: Long, count: Int)
 
-    @Query("update channels set muted =:muted, muteExpireDate =:muteUntil where chat_id =:channelId")
+    @Query("update channels set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
     @Query("delete from channels where chat_id =:channelId")

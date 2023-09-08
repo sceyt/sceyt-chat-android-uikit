@@ -10,8 +10,13 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPublicChannelBinding
-import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.parcelable
+import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.extensions.setDrawableTop
+import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -72,7 +77,7 @@ class InfoButtonsPublicChannelFragment : Fragment() {
     }
 
     private fun determinateState() {
-        val myRole = channel.getMyRole()
+        val myRole = channel.userRole
         val isMember = myRole != null
         with(binding) {
             if (!isMember) {
@@ -87,7 +92,7 @@ class InfoButtonsPublicChannelFragment : Fragment() {
             join.isVisible = false
             binding.muteUnMute.isVisible = true
 
-            val enabledActions = myRole?.name == RoleTypeEnum.Owner.toString() || myRole?.name == "admin"
+            val enabledActions = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
             more.isVisible = enabledActions
             add.isVisible = enabledActions
             leave.isVisible = !enabledActions

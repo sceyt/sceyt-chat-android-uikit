@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">SceytChatDemo</string>
+
+    <string name="login_title">Getting Started</string>
+    <string name="login_subtitle">Just enter your username, click connect button and start</string>
+    <string name="username">Username</string>
+    <string name="connect">connect</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="channels">Channels</string>
+    <string name="profile">Profile</string>
+    <string name="my_profile">My Profile</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="new_channel">New Channel</string>
+    <string name="make_channel_private">Make channel private</string>
+    <string name="make_channel_private_info">By making channel private, only selected members have acess to read or connect to chis channel</string>
+    <string name="label">Label</string>
+    <string name="enter_a_label">Enter a label</string>
+    <string name="uri">URI</string>
+    <string name="enter_channel_uri">Enter channel URI</string>
+    <string name="metadata">Metadata</string>
+    <string name="enter_a_metadata">Enter a metadata</string>
+    <string name="users">Users</string>
+    <string name="change_role">Change role</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="delete_message">Delete message</string>
+    <string name="display_name">Display name</string>
+    <string name="enter_display_name">Enter display name</string>
+    <string name="enter_username">Enter username</string>
+    <string name="waiting_for_network_title">Waiting for network…</string>
+    <string name="connecting_title">Connecting…</string>
+    <string name="save">Save</string>
+    <string name="edit">Edit</string>
+    <string name="dark_theme">Dark Theme</string>
+    <string name="sign_out_title">Sign out?</string>
+    <string name="sign_out_desc">Are you sure you want to sign out?</string>
+    <string name="new_group">New group</string>
+
+</resources>
