@@ -24,9 +24,9 @@ class IncAttachmentsMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder) {
+) : BaseMsgViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
@@ -40,6 +40,14 @@ class IncAttachmentsMsgViewHolder(
             root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
+            }
+
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
         }
     }
@@ -78,7 +86,7 @@ class IncAttachmentsMsgViewHolder(
                     setFilesAdapter(message)
 
                 if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply)
+                    setReplyMessageContainer(message, binding.viewReply, false)
 
                 if (item.message.canShowAvatarAndName)
                     avatar.setOnClickListener {
@@ -87,6 +95,10 @@ class IncAttachmentsMsgViewHolder(
             }
         }
     }
+
+    override val selectMessageView get() = binding.selectView
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)
@@ -110,6 +122,10 @@ class IncAttachmentsMsgViewHolder(
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
         filedAdapter?.onItemDetached()
+    }
+
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
 
     private fun SceytItemIncAttachmentsMessageBinding.setMessageItemStyle() {

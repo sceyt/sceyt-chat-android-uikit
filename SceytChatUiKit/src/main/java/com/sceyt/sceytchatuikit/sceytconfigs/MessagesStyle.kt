@@ -39,6 +39,9 @@ object MessagesStyle {
     @ColorRes
     var dateSeparatorItemTextColor = R.color.sceyt_color_gray_400
 
+    @ColorRes
+    var autoLinkTextColor = R.color.sceyt_auto_link_color
+
     @LayoutRes
     var emptyState: Int = R.layout.sceyt_messages_empty_state
 
@@ -78,6 +81,9 @@ object MessagesStyle {
     @ColorRes
     var selfReactionBorderColor = R.color.sceyt_color_divider
 
+    @DrawableRes
+    var swipeReplyIcon: Int = R.drawable.sceyt_is_reply_swipe
+
     internal fun updateWithAttributes(typedArray: TypedArray): MessagesStyle {
         incBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor, incBubbleColor)
         outBubbleColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, outBubbleColor)
@@ -89,6 +95,7 @@ object MessagesStyle {
         replyMessageLineColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiReplyMessageLineColor, replyMessageLineColor)
         dateSeparatorItemBackground = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackground, dateSeparatorItemBackground)
         dateSeparatorItemTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor, dateSeparatorItemTextColor)
+        autoLinkTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiAutoLinkTextColor, autoLinkTextColor)
         sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameSenderMessageDistance, sameSenderMsgDistance)
         differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentSenderMessageDistance, differentSenderMsgDistance)
         messageEditedText = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageEditedText, messageEditedText)
@@ -100,6 +107,7 @@ object MessagesStyle {
         fileAttachmentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiFileAttachmentIcon, fileAttachmentIcon)
         selfReactionBackgroundColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBackgroundColor, selfReactionBackgroundColor)
         selfReactionBorderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBorderColor, selfReactionBorderColor)
+        swipeReplyIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSwipeReplyIcon, swipeReplyIcon)
         return this
     }
 }

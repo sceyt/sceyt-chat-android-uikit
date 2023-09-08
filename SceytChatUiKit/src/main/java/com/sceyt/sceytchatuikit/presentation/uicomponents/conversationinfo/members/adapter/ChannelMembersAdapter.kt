@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.viewholders.BaseMemberViewHolder
@@ -62,8 +63,11 @@ class ChannelMembersAdapter(
     fun addNewItemsToStart(items: List<MemberItem>?) {
         if (items.isNullOrEmpty()) return
 
-        members.addAll(0, items)
-        notifyItemRangeInserted(0, items.size)
+        items.minus(ArrayList(members).toSet())
+            .takeIf { it.isNotEmpty() }?.let {
+                members.addAll(0, it)
+                notifyItemRangeInserted(0, it.size)
+            }
     }
 
     fun notifyUpdate(data: List<MemberItem>, showMoreIconChanged: Boolean = false) {
@@ -71,7 +75,7 @@ class ChannelMembersAdapter(
             val myDiffUtil = MemberDiffUtil(members, data, showMoreIconChanged)
             val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
             productDiffResult.dispatchUpdatesTo(this)
-            members = data as ArrayList
+            members = data.toArrayList()
         } catch (ex: java.lang.IllegalStateException) {
             Log.e(TAG, ex.message.toString())
         }

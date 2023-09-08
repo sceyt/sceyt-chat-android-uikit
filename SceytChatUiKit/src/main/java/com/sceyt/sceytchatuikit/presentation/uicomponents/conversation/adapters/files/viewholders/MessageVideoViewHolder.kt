@@ -7,8 +7,22 @@ import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
@@ -61,7 +75,7 @@ class MessageVideoViewHolder(
     }
 
     private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         val imageView = binding.videoViewController.getImageView()
@@ -70,44 +84,55 @@ class MessageVideoViewHolder(
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
+
             PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
                 binding.videoViewController.showPlayPauseButtons(false)
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             Downloading -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
-            Uploading -> {
+
+            Uploading, Preparing, WaitingToUpload -> {
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
                 binding.videoViewController.showPlayPauseButtons(false)
             }
+
             Downloaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
                 // initializePlayer(fileItem.file.filePath)
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
+
             Uploaded -> {
                 binding.videoViewController.showPlayPauseButtons(true)
                 //initializePlayer(fileItem.file.filePath)
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
+
             PauseDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             ErrorDownload -> {
                 binding.videoViewController.showPlayPauseButtons(false)
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
+
             FilePathChanged -> {
-                requestThumb()
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
             }
+
             ThumbLoaded -> {
-                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
             }
         }
     }
@@ -122,6 +147,8 @@ class MessageVideoViewHolder(
     }
 
     override fun getThumbSize() = Size(1080, 1080)
+
+    override fun needThumbFor() = ThumbFor.ConversationInfo
 
     private fun setListener() {
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)

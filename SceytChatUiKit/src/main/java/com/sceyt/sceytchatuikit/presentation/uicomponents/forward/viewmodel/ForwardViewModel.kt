@@ -18,7 +18,7 @@ import org.koin.core.component.inject
 class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
     private val messagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
 
-    fun sendForwardMessage(vararg channelIds: Long, messages: List<SceytMessage>) = callbackFlow {
+    fun sendForwardMessage(vararg channelIds: Long, markOwnMessageAsForwarded: Boolean, messages: List<SceytMessage>) = callbackFlow {
         trySend(State.Loading)
         channelIds.forEach { channelId ->
             val messagesToSend = mutableListOf<Message>()
@@ -27,18 +27,21 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                     .setBody(it.body)
                     .setTid(ClientWrapper.generateTid())
                     .setType(it.type)
-                    .setForwardingMessageId(it.id)
+                    .apply {
+                        if (markOwnMessageAsForwarded || it.incoming)
+                            setForwardingMessageId(it.id)
+                    }
                     .setAttachments(initAttachments(it.attachments).toTypedArray())
                     .setMetadata(it.metadata)
                     .setMentionedUserIds(it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
                             ?: arrayOf())
-                    .setReplyInThread(it.replyInThread)
+                    //.setReplyInThread(it.replyInThread)
                     .build()
 
                 messagesToSend.add(message)
             }
 
-            messagesMiddleWare.sendFrowardMessages(channelId, messagesToSend)
+            messagesMiddleWare.sendFrowardMessages(channelId, *messagesToSend.toTypedArray())
         }
         trySend(State.Finish)
         awaitClose()

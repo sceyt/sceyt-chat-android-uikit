@@ -10,11 +10,12 @@ data class MessageItemPayloadDiff(
         val replyContainerChanged: Boolean,
         val reactionsChanged: Boolean,
         val showAvatarAndNameChanged: Boolean,
-        val filesChanged: Boolean
+        val filesChanged: Boolean,
+        val selectionChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
-                || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
+                || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged || selectionChanged
     }
 
     companion object {
@@ -28,13 +29,27 @@ data class MessageItemPayloadDiff(
             replyContainerChanged = true,
             reactionsChanged = true,
             showAvatarAndNameChanged = true,
-            filesChanged = true
+            filesChanged = true,
+            selectionChanged = true
+        )
+        val DEFAULT_FALSE = MessageItemPayloadDiff(
+            edited = false,
+            bodyChanged = false,
+            statusChanged = false,
+            avatarChanged = false,
+            nameChanged = false,
+            replyCountChanged = false,
+            replyContainerChanged = false,
+            reactionsChanged = false,
+            showAvatarAndNameChanged = false,
+            filesChanged = false,
+            selectionChanged = false
         )
     }
 
     override fun toString(): String {
         return "edited: $edited, bodyChanged: $bodyChanged, statusChanged: $statusChanged, avatarChanged: $avatarChanged, " +
                 "nameChanged: $nameChanged, replyCountChanged: $replyCountChanged, reactionsChanged: $reactionsChanged, " +
-                "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged"
+                "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged, selectionChanged: $selectionChanged"
     }
 }

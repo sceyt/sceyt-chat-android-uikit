@@ -8,13 +8,14 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.extensions.dpToPxAsFloat
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 
 class SceytToReplyLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : View(context, attrs, defStyleAttr) {
     private var path = Path()
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val strokeWidth = 5f
+    private val strokeWidth = dpToPxAsFloat(1.8f)
     private var isToLeft = false
     private var strokeColor = context.getCompatColor(R.color.sceyt_color_gray_200)
     private var connectedViewTopId: Int

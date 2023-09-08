@@ -70,18 +70,19 @@
                         android:layout_marginTop="3dp"
                         android:gravity="center"
                         android:textColor="@color/sceyt_color_gray_800"
-                        android:textSize="13sp"
+                        android:textSize="15sp"
                         app:layout_constraintEnd_toEndOf="@+id/avatar"
                         app:layout_constraintStart_toStartOf="@+id/avatar"
                         app:layout_constraintTop_toBottomOf="@+id/subject"
                         tools:text="78 members" />
 
-                    <FrameLayout
+                    <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/layout_buttons"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="30dp"
-                        app:layout_constraintTop_toBottomOf="@+id/tvPresenceOrMembers" />
+                        app:layout_constraintTop_toBottomOf="@+id/tvPresenceOrMembers"
+                        tools:layout="@layout/sceyt_info_page_layout_buttons_direct_channel" />
 
                     <View
                         android:id="@+id/divider1"
@@ -91,48 +92,19 @@
                         android:background="@color/sceyt_color_input"
                         app:layout_constraintTop_toBottomOf="@+id/layout_buttons" />
 
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/tvTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginTop="16dp"
-                        android:fontFamily="@font/roboto_medium"
-                        android:includeFontPadding="false"
-                        android:text="@string/sceyt_description"
-                        android:textColor="@color/sceyt_color_gray_800"
-                        android:textSize="13sp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/divider1" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/tvDescription"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="16sp"
-                        app:layout_constrainedWidth="true"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/tvTitle"
-                        tools:text="Channel for planning annual meetings" />
-
-                    <View
-                        android:id="@+id/divider2"
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/frame_layout_description"
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="16dp"
-                        android:background="@color/sceyt_color_input"
-                        app:layout_constraintTop_toBottomOf="@+id/tvDescription" />
-
-                    <androidx.constraintlayout.widget.Group
-                        android:id="@+id/group_channel_description"
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:constraint_referenced_ids="divider3,tvTitle,tvDescription" />
+                        app:layout_constraintTop_toBottomOf="@+id/divider1"
+                        tools:layout="@layout/sceyt_fragment_info_description" />
+
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/frame_layout_members_by_role"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintTop_toBottomOf="@+id/frame_layout_description"
+                        tools:layout="@layout/sceyt_fragment_info_members_by_role" />
 
                     <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/tvLink"
@@ -145,7 +117,7 @@
                         android:gravity="center_vertical"
                         app:layout_constraintEnd_toStartOf="@+id/icQr"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/divider2"
+                        app:layout_constraintTop_toBottomOf="@+id/frame_layout_members_by_role"
                         tools:text="sceyt.com/join/tkngt56-VG-DI..." />
 
                     <androidx.appcompat.widget.AppCompatImageView
@@ -163,66 +135,21 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:visibility="gone"
-                        app:constraint_referenced_ids="divider2,tvLink,icQr" />
+                        app:constraint_referenced_ids="divider3,tvLink,icQr" />
 
                     <View
                         android:id="@+id/divider3"
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
-                        android:layout_marginTop="16dp"
                         android:background="@color/sceyt_color_input"
                         app:layout_constraintTop_toBottomOf="@+id/tvLink" />
 
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/members"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:background="?selectableItemBackground"
-                        android:drawableStart="@drawable/sceyt_ic_members"
-                        android:drawablePadding="16dp"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="6dp"
-                        android:text="@string/sceyt_members"
-                        android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="16sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/divider3" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/admins"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:background="?selectableItemBackground"
-                        android:drawableStart="@drawable/sceyt_ic_admin"
-                        android:drawablePadding="16dp"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="6dp"
-                        android:text="@string/sceyt_admins"
-                        android:textColor="@color/sceyt_color_text_themed"
-                        android:textSize="16sp"
-                        android:visibility="gone"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/members" />
-
-                    <View
-                        android:id="@+id/divider4"
+                    <FrameLayout
+                        android:id="@+id/frame_layout_additional_info"
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@color/sceyt_color_input"
-                        app:layout_constraintTop_toBottomOf="@+id/admins" />
-
-                    <androidx.constraintlayout.widget.Group
-                        android:id="@+id/group_channel_members"
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:constraint_referenced_ids="divider4,members" />
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/divider3" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

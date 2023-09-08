@@ -27,7 +27,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivSelect"
-            setMediaCheckedState="@{data.selected}"
+            setGalleryItemCheckedState="@{data.selected}"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:layout_margin="7dp"

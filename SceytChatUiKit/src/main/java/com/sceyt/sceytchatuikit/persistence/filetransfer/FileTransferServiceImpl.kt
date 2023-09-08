@@ -1,17 +1,22 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
-import android.app.Application
-import android.util.Size
+import android.content.Context
 import androidx.work.WorkManager
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransferLogic
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
-internal class FileTransferServiceImpl(private var application: Application,
+internal class FileTransferServiceImpl(private var context: Context,
                                        private var fileTransferLogic: FileTransferLogic) : FileTransferService {
     private var tasksMap = ConcurrentHashMap<String, TransferTask>()
 
@@ -37,8 +42,8 @@ internal class FileTransferServiceImpl(private var application: Application,
             fileTransferLogic.resumeLoad(attachment, state)
         }
 
-        override fun getThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
-            fileTransferLogic.getAttachmentThumb(messageTid, attachment, size)
+        override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
+            fileTransferLogic.getAttachmentThumb(messageTid, attachment, thumbData)
         }
     }
 
@@ -64,15 +69,15 @@ internal class FileTransferServiceImpl(private var application: Application,
     }
 
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-        val workInfo = WorkManager.getInstance(application).getWorkInfosByTag(messageTid.toString())
-        if ((state == PauseUpload || state == ErrorUpload) && (workInfo.get().isEmpty() || workInfo.isCancelled) )
-            SendAttachmentWorkManager.schedule(application, messageTid, null)
+        val workInfo = WorkManager.getInstance(context).getWorkInfosByTag(messageTid.toString())
+        if ((state == PauseUpload || state == ErrorUpload) && (workInfo.get().isEmpty() || workInfo.isCancelled))
+            SendAttachmentWorkManager.schedule(context, messageTid, null)
         else
             listeners.resume(messageTid, attachment, state)
     }
 
-    override fun getThumb(messageTid: Long, attachment: SceytAttachment, size: Size) {
-        listeners.getThumb(messageTid, attachment, size)
+    override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
+        listeners.getThumb(messageTid, attachment, thumbData)
     }
 
     override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) {
@@ -108,11 +113,19 @@ fun interface ProgressUpdateCallback {
     fun onProgress(date: TransferData)
 }
 
+fun interface PreparingCallback {
+    fun onPreparing(date: TransferData)
+}
+
+fun interface ResumePauseCallback {
+    fun onResumePause(date: TransferData)
+}
+
 fun interface UpdateFileLocationCallback {
     fun onUpdateFileLocation(path: String)
 }
 
 fun interface ThumbCallback {
-    fun onThumb(path: String)
+    fun onThumb(path: String, thumbData: ThumbData)
 }
 

@@ -3,8 +3,6 @@ package com.sceyt.sceytchatuikit.imagepicker.adapter
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.ImageView
-import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.databinding.SceytItemGalleryImageBinding
 import com.sceyt.sceytchatuikit.databinding.SceytItemGalleryVideoBinding
@@ -12,22 +10,9 @@ import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryImageView
 import com.sceyt.sceytchatuikit.imagepicker.adapter.viewholders.GalleryVideoViewHolder
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
-import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 
 class GalleryMediaAdapter(private var clickListener: MediaClickListener) : RecyclerView.Adapter<BaseViewHolder<MediaItem>>() {
     private var currentList = arrayListOf<MediaItem>()
-
-    companion object {
-        @BindingAdapter("setMediaCheckedState")
-        @JvmStatic
-        fun setMediaCheckedState(image: ImageView, isChecked: Boolean) {
-            if (isChecked) {
-                image.setImageResource(GalleryPickerStyle.checkedStateIcon)
-            } else {
-                image.setImageResource(GalleryPickerStyle.unCheckedStateIcon)
-            }
-        }
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MediaItem> {
         return when (viewType) {

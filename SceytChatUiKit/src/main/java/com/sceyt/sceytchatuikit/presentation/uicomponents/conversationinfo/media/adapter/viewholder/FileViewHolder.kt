@@ -45,7 +45,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     }
 
     private fun updateState(data: TransferData) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         /* when (data.state) {
              TransferState.PendingUpload, TransferState.PauseUpload -> {

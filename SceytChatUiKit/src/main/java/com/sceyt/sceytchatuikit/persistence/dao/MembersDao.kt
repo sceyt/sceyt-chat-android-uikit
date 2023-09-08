@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChanelMemberDb
@@ -12,22 +13,26 @@ interface MembersDao {
     @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id  where chat_id =:channelId " +
             "order by user_id limit :limit offset :offset")
     suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id  where chat_id =:channelId " +
             "and role=:role order by user_id limit :limit offset :offset")
     suspend fun getChannelMembersWithRole(channelId: Long, limit: Int, offset: Int, role: String): List<ChanelMemberDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from UserChatLink join users on UserChatLink.user_id = users.user_id and (firstName like :name || '%'" +
             "or lastName like :name || '%' or (firstName || ' ' || lastName) like :name || '%') " +
             "where chat_id =:channelId")
     suspend fun getChannelMembersByDisplayName(channelId: Long, name: String): List<ChanelMemberDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from UserChatLink as links join users on links.user_id = users.user_id  where chat_id =:channelId " +
             "and links.user_id in (:ids) order by user_id")
@@ -52,4 +57,7 @@ interface MembersDao {
         }
         updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
     }
+
+    @Query("select user_id from UserChatLink where user_id in (:ids) and chat_id =:channelId")
+    fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String>
 }

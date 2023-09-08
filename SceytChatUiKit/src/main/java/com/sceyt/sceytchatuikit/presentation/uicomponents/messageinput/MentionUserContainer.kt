@@ -17,14 +17,15 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.MaxHeightLinearLayoutManager
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.metions.UserViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.metions.MentionUserViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.metions.UsersAdapter
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
 class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
     private var mentionUsersAdapter: UsersAdapter? = null
-    private var mentionUserAnimation: ValueAnimator? = null
+    private var showAnimation: ValueAnimator? = null
+    private var hideAnimation: ValueAnimator? = null
     private var userClickListener: UsersAdapter.ClickListener? = null
 
     var recyclerView: RecyclerView? = null
@@ -33,13 +34,14 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
     fun initWithMessageInputView(view: MessageInputView): MentionUserContainer {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         addView(RecyclerView(context).apply {
-            layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0).apply {
                 gravity = Gravity.BOTTOM
                 setMargins(0, 0, 0, view.height)
             }
             background = ContextCompat.getDrawable(context, R.drawable.sceyt_bg_mention_users)
             layoutManager = MaxHeightLinearLayoutManager(context, (screenHeightPx() * 0.4f).toInt())
             recyclerView = this
+            isVisible = false
         })
         return this
     }
@@ -48,7 +50,7 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
         if (users.isEmpty() && mentionUsersAdapter == null) return
 
         if (mentionUsersAdapter == null) {
-            mentionUsersAdapter = UsersAdapter(users.toArrayList(), UserViewHolderFactory(context) {
+            mentionUsersAdapter = UsersAdapter(users.toArrayList(), MentionUserViewHolderFactory(context) {
                 userClickListener?.onClick(it)
                 hide()
             })
@@ -61,22 +63,29 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
             }
         } else mentionUsersAdapter?.notifyUpdate(users)
 
+        if (users.isNotEmpty()) {
+            show()
+        } else hide()
+    }
+
+    private fun show() {
+        if (showAnimation?.isRunning == true) return
         with(recyclerView ?: return) {
-            if (users.isNotEmpty()) {
-                mentionUserAnimation?.cancel()
-                val fromHeight = if (height <= 1) 1 else height
-                mentionUserAnimation = ViewUtil.expandHeight(this, from = fromHeight, duration = 300)
-                isVisible = true
-            } else hide()
+            hideAnimation?.cancel()
+            val fromHeight = if (height <= 1 || !isVisible) 1 else height
+            showAnimation = ViewUtil.expandHeight(this, from = fromHeight, duration = 200)
+            isVisible = true
         }
     }
 
     private fun hide() {
+        if (hideAnimation?.isRunning == true) return
         with(recyclerView ?: return) {
-            mentionUserAnimation?.cancel()
-            mentionUserAnimation = ViewUtil.collapseHeight(this, to = 0, duration = 200) {
+            showAnimation?.cancel()
+            hideAnimation = ViewUtil.collapseHeight(this, to = 0, duration = 200) {
                 isVisible = false
                 mentionUsersAdapter = null
+                hideAnimation = null
             }
         }
     }

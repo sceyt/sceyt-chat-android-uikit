@@ -8,8 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.Reaction
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentReactedUsersBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
@@ -23,7 +23,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
     private lateinit var binding: SceytFragmentReactedUsersBinding
     private val viewModel: ReactionsInfoViewModel by inject()
     private var usersAdapter: ReactedUsersAdapter? = null
-    private var clickListener: ((Reaction) -> Unit)? = null
+    private var clickListener: ((SceytReaction) -> Unit)? = null
     private lateinit var key: String
     private var messageId: Long = 0
     private val loafMoreDebounce by lazy { DebounceHelper(100) }
@@ -58,12 +58,14 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
                         }
                     }
                 }
+
                 is PaginationResponse.ServerResponse -> {
                     lifecycleScope.launch {
                         val data = viewModel.initServerResponse(it)
                         setOrUpdateUsersAdapter(data)
                     }
                 }
+
                 is PaginationResponse.Nothing -> return@observe
             }
         }
@@ -101,7 +103,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
             usersAdapter?.submitList(reactions)
     }
 
-    fun setClickListener(listener: (Reaction) -> Unit) {
+    fun setClickListener(listener: (SceytReaction) -> Unit) {
         clickListener = listener
     }
 
@@ -111,7 +113,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
         else null
     }
 
-    fun update(){
+    fun update() {
         viewModel.getReactions(messageId, 0, key)
     }
 

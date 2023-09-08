@@ -8,24 +8,28 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntit
 interface ChatUsersReactionDao {
 
     @Transaction
-    suspend fun replaceChannelUserReactions(reactionScores: List<ChatUserReactionEntity>) {
-        deleteChannelsUserReactions(reactionScores.map { it.channelId })
-        insertChannelUserReactions(reactionScores)
+    suspend fun replaceChannelUserReactions(reaction: List<ChatUserReactionEntity>) {
+        deleteChannelsUserReactions(reaction.map { it.channelId })
+        insertChannelUserReactions(reaction)
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChannelUserReactions(reactionScores: List<ChatUserReactionEntity>)
+    suspend fun insertChannelUserReactions(reaction: List<ChatUserReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChannelUserReaction(reactionScores: ChatUserReactionEntity)
+    suspend fun insertChannelUserReaction(reaction: ChatUserReactionEntity)
 
     @Transaction
     @Query("select * from ChatUserReactionEntity where channelId =:channelId")
     suspend fun getChannelUserReactions(channelId: Long): List<ChatUserReactionDb>
 
-    @Query("delete from ChatUserReactionEntity where channelId in(:channelIds)")
+    @Query("delete from ChatUserReactionEntity where channelId in (:channelIds)")
     suspend fun deleteChannelsUserReactions(channelIds: List<Long>)
 
-    @Query("delete from ChatUserReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId and channelId =:channelId")
+    @Query("delete from ChatUserReactionEntity where messageId =:messageId and reaction_key =:key " +
+            "and fromId =:fromId and channelId =:channelId")
     suspend fun deleteChannelUserReaction(channelId: Long, messageId: Long, key: String?, fromId: String?)
+
+    @Query("delete from ChatUserReactionEntity where messageId =:messageId and channelId =:channelId")
+    suspend fun deleteChannelMessageUserReaction(channelId: Long, messageId: Long)
 }

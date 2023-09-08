@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
 import android.content.Context
 import android.graphics.Typeface
+import android.text.Annotation
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -14,68 +15,87 @@ import androidx.annotation.ColorRes
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
+import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-
 object MentionUserHelper {
-    private var userNameBuilder = SceytKitConfig.userNameBuilder
+    var userNameBuilder = SceytKitConfig.userNameBuilder
+        private set
 
-    fun initMentionMetaData(body: String, mentionUsers: List<ObjectDataIndexed<MentionUserData>>): String {
+    fun initMentionMetaData(body: String, mentionUsers: List<Mention>): String {
         if (body.isEmpty() || mentionUsers.isEmpty()) return ""
         val items = mutableListOf<MentionUserMetaDataPayLoad>()
         mentionUsers.forEach {
-            val user = it.token
-            items.add(MentionUserMetaDataPayLoad(user.id, it.start, it.end - it.start))
+            val userId = it.recipientId
+            items.add(MentionUserMetaDataPayLoad(userId, it.start, it.length))
         }
         return Gson().toJson(items)
     }
 
     fun buildWithMentionedUsers(context: Context, body: String, metaData: String?,
                                 mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytKitConfig.sceytColorAccent,
-                                enableClick: Boolean): SpannableString {
+                                mentionClickListener: ((String) -> Unit)? = null): SpannableString {
         val data = getMentionData(metaData) ?: return SpannableString(body)
         val newBody = SpannableStringBuilder(body)
 
-        data.sortedByDescending { it.loc }.forEach {
-            val name = setNewBodyWithName(mentionUsers, newBody, it)
-            newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
-                it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return try {
+            data.sortedByDescending { it.loc }.forEach {
+                val name = setNewBodyWithName(mentionUsers, newBody, it)
 
-            if (enableClick) {
-                val clickableSpan = object : ClickableSpan() {
-                    override fun onClick(textView: View) {
-                        //todo: implement click action
-                    }
+                if (mentionClickListener != null) {
+                    val clickableSpan = object : ClickableSpan() {
+                        override fun onClick(textView: View) {
+                            mentionClickListener(it.id)
+                        }
 
-                    override fun updateDrawState(ds: TextPaint) {
-                        super.updateDrawState(ds)
-                        ds.isUnderlineText = false
+                        override fun updateDrawState(ds: TextPaint) {
+                            ds.color = context.getCompatColor(colorId)
+                            ds.isUnderlineText = false
+                        }
                     }
-                }
-                newBody.setSpan(clickableSpan, it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    newBody.setSpan(clickableSpan, it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                } else
+                    newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
+                        it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
+            SpannableString.valueOf(newBody)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            SpannableString.valueOf(body)
         }
-
-        return SpannableString.valueOf(newBody)
     }
 
     fun buildOnlyNamesWithMentionedUsers(body: String, metaData: String?,
                                          mentionUsers: Array<User>?): SpannableString {
         if (metaData.isNullOrBlank()) return SpannableString(body)
 
-        val data = getMentionData(metaData) ?: return SpannableString(body)
+        return try {
+            val data = getMentionData(metaData) ?: return SpannableString(body)
+            val newBody = SpannableStringBuilder(body)
+            data.sortedByDescending { it.loc }.forEach {
+                val name = setNewBodyWithName(mentionUsers, newBody, it)
+                newBody.setSpan(StyleSpan(Typeface.BOLD),
+                    it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            SpannableString.valueOf(newBody)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            SpannableString.valueOf(body)
+        }
+    }
+
+    fun updateBodyWithUsers(body: String, metaData: String?, mentionUsers: Array<User>?): String {
+        if (metaData.isNullOrBlank()) return body
+
+        val data = getMentionData(metaData) ?: return body
         val newBody = SpannableStringBuilder(body)
         data.sortedByDescending { it.loc }.forEach {
-            val name = setNewBodyWithName(mentionUsers, newBody, it)
-            newBody.setSpan(StyleSpan(Typeface.BOLD),
-                it.loc, it.loc + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setNewBodyWithName(mentionUsers, newBody, it)
         }
-        return SpannableString.valueOf(newBody)
+        return newBody.toString()
     }
 
     fun containsMentionsUsers(message: SceytMessage): Boolean {
@@ -90,14 +110,14 @@ object MentionUserHelper {
         }
     }
 
-    fun getAsObjectDataIndexed(metaData: String?, mentionUsers: Array<User>?): List<ObjectDataIndexed<MentionUserData>> {
-        val list = arrayListOf<ObjectDataIndexed<MentionUserData>>()
+    fun getMentionsIndexed(metaData: String?, mentionUsers: Array<User>?): List<Mention> {
+        val list = arrayListOf<Mention>()
         val data = getMentionData(metaData) ?: return list
 
         data.forEach { entry ->
             val user = mentionUsers?.find { it.id == entry.id } ?: User(entry.id)
-            val name = "@${userNameBuilder?.invoke(user) ?: user.getPresentableName()}"
-            list.add(ObjectDataIndexed(entry.loc, entry.loc + name.length, MentionUserData(SceytMember(user))))
+            val name = userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            list.add(Mention(entry.id, name, entry.loc, entry.len))
         }
         return list
     }
@@ -108,7 +128,7 @@ object MentionUserHelper {
         var name = mentionUser?.let { user ->
             userNameBuilder?.invoke(user) ?: user.getPresentableName()
         } ?: item.id
-        name = "@$name"
+        name = "@$name".notAutoCorrectable()
 
         val end = item.loc + item.len
         if (end > newBody.length)
@@ -133,5 +153,14 @@ object MentionUserHelper {
 
     fun setCustomUserNameBuilder(userNameBuilder: (User) -> String) {
         this.userNameBuilder = userNameBuilder
+    }
+
+    fun Annotation.getValueData(): MentionAnnotationValue? {
+        return try {
+            Gson().fromJson(value, MentionAnnotationValue::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

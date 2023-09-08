@@ -2,9 +2,21 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="10dp">
+    android:paddingStart="0dp"
+    android:paddingEnd="12dp">
+
+    <View
+        android:id="@+id/selectView"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/sceyt_custom_radiobutton_view"
+        android:clickable="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
         android:id="@+id/toReplyLine"
@@ -24,9 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:background="@drawable/sceyt_bg_out_message"
-        android:maxWidth="@dimen/bodyMaxWidth"
-        android:minWidth="@dimen/bodyMaxWidth">
+        android:background="@drawable/sceyt_bg_out_message">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvForwarded"
@@ -43,18 +53,17 @@
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:visibility="visible" />
 
         <ViewStub
             android:id="@+id/viewReply"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
@@ -69,15 +78,14 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
-            android:autoLink="phone|web|email"
+            android:textAlignment="viewStart"
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Lore ipsum  is the correct text which"
             tools:visibility="visible" />
 

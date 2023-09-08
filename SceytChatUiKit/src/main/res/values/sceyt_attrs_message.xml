@@ -35,6 +35,9 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <attr name="sceytUiAutoLinkTextColor" format="reference" />
+
+
         <!--Distance between messages-->
         <attr name="sceytUiSameSenderMessageDistance" format="dimension" />
         <attr name="sceytUiDifferentSenderMessageDistance" format="dimension" />
@@ -47,6 +50,7 @@
         <attr name="sceytUiSelfReactionBackgroundColor" format="reference" />
         <attr name="sceytUiSelfReactionBorderColor" format="reference" />
 
+        <attr name="sceytUiSwipeReplyIcon" format="reference" />
 
     </declare-styleable>
 </resources>

@@ -13,25 +13,6 @@ sealed class MessageListItem {
     object LoadingPrevItem : MessageListItem()
     object LoadingNextItem : MessageListItem()
 
-    override fun equals(other: Any?): Boolean {
-        return when {
-            other == null -> false
-            other !is MessageListItem -> false
-            other is MessageItem && this is MessageItem -> {
-                other.message == message
-            }
-            other is DateSeparatorItem && this is DateSeparatorItem -> {
-                other.createdAt == createdAt && other.msgTid == msgTid
-            }
-            other is UnreadMessagesSeparatorItem && this is UnreadMessagesSeparatorItem -> {
-                other.msgId == msgId
-            }
-            other is LoadingPrevItem && this is LoadingPrevItem -> true
-            other is LoadingNextItem && this is LoadingNextItem -> true
-            else -> false
-        }
-    }
-
     fun getMessageCreatedAt(): Long {
         return when (this) {
             is MessageItem -> message.createdAt
@@ -42,9 +23,15 @@ sealed class MessageListItem {
         }
     }
 
-    var highlighted = false
-
-    override fun hashCode(): Int {
-        return javaClass.hashCode()
+    fun getItemId(): Long {
+        return when (this) {
+            is MessageItem -> message.id
+            is DateSeparatorItem -> hashCode().toLong()
+            is UnreadMessagesSeparatorItem -> hashCode().toLong()
+            is LoadingPrevItem -> hashCode().toLong()
+            is LoadingNextItem -> hashCode().toLong()
+        }
     }
+
+    var highlighted = false
 }

@@ -8,10 +8,12 @@ import android.widget.FrameLayout
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.sceytchatuikit.databinding.SceytRecordedVoicePresenterBinding
+import com.sceyt.sceytchatuikit.extensions.TAG_REF
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
 import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
@@ -39,6 +41,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                         isShowing = false
                         listener?.onDeleteVoiceRecord()
                     }
+
                     playVoiceRecord.id -> {
                         listener?.onPlayVoiceRecord()
 
@@ -52,11 +55,11 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                         }
 
                         AudioPlayerHelper.init(file.path, object : OnAudioPlayer {
-                            override fun onInitialized() {
+                            override fun onInitialized(alreadyInitialized: Boolean, currentPlayer: AudioPlayer, filePath: String) {
                                 AudioPlayerHelper.toggle(file.path)
                             }
 
-                            override fun onProgress(position: Long, duration: Long) {
+                            override fun onProgress(position: Long, duration: Long, filePath: String) {
                                 val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
                                 root.post {
                                     waveformSeekBar.progress = seekBarProgress
@@ -64,26 +67,30 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                                 }
                             }
 
-                            override fun onSeek(position: Long) {
+                            override fun onSeek(position: Long, filePath: String) {
                             }
 
-                            override fun onToggle(playing: Boolean) {
+                            override fun onToggle(playing: Boolean, filePath: String) {
                                 root.post { setPlayButtonIcon(playing, playVoiceRecord) }
                             }
 
-                            override fun onStop() {
+                            override fun onStop(filePath: String) {
                                 root.post {
                                     setPlayButtonIcon(false, playVoiceRecord)
                                     waveformSeekBar.progress = 0f
                                 }
                             }
 
-                            override fun onSpeedChanged(speed: Float) {
+                            override fun onPaused(filePath: String?) {
+                                root.post { setPlayButtonIcon(false, playVoiceRecord) }
                             }
 
-                            override fun onError() {
+                            override fun onSpeedChanged(speed: Float, filePath: String) {
                             }
-                        })
+
+                            override fun onError(filePath: String) {
+                            }
+                        }, TAG_REF)
                     }
                     icSendMessage.id -> {
                         AudioPlayerHelper.stop(file.path)

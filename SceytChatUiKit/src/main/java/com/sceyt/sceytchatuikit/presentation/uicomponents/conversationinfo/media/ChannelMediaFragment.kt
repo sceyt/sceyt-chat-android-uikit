@@ -13,7 +13,9 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelMediaBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.isLandscape
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
@@ -35,7 +37,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected lateinit var channel: SceytChannel
     protected var binding: SceytFragmentChannelMediaBinding? = null
     protected var mediaAdapter: ChannelMediaAdapter? = null
-    protected val mediaType = listOf("image", "video")
+    protected open val mediaType = listOf("image", "video")
     protected var pageStateView: PageStateView? = null
     protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
 
@@ -55,7 +57,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.getParcelable(CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(CHANNEL))
     }
 
     private fun initViewModel() {
@@ -87,7 +89,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         })
     }
 
-    open fun onInitialMediaList(list: List<ChannelFileItem>) {
+    protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setNeedMediaDataCallback { data ->
@@ -99,8 +101,9 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 })
             })
             with((binding ?: return).rvFiles) {
+                setHasFixedSize(true)
                 adapter = mediaAdapter
-                layoutManager = GridLayoutManager(requireContext(), 3).also {
+                layoutManager = GridLayoutManager(requireContext(), getSpanCount()).also {
                     it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                         override fun getSpanSize(position: Int): Int {
                             return when (mediaAdapter?.getItemViewType(position)) {
@@ -123,21 +126,31 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
-    open fun onMediaClick(item: ChannelFileItem) {
+    protected open fun getSpanCount(): Int {
+        return if (requireContext().isLandscape()) {
+            6
+        } else 3
+    }
+
+    protected open fun onMediaClick(item: ChannelFileItem) {
         item.getData()?.let { data ->
             SceytMediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id, true)
         }
     }
 
-    open fun onMoreMediaList(list: List<ChannelFileItem>) {
+    protected open fun onMoreMediaList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
     }
 
-    open fun onPageStateChange(pageState: PageState) {
+    protected open fun onPageStateChange(pageState: PageState) {
         pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
     }
 
-    protected fun loadInitialMediaList() {
+    protected open fun loadInitialMediaList() {
+        if (channel.pending) {
+            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
+            return
+        }
         viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
     }
 

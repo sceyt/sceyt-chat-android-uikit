@@ -19,4 +19,5 @@ interface PersistenceMembersMiddleWare {
     suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>>
     suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember>
     suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember>
+    suspend fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String>
 }

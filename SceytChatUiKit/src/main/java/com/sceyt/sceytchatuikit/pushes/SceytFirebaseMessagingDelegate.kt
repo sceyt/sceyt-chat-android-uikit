@@ -1,26 +1,27 @@
 package com.sceyt.sceytchatuikit.pushes
 
-import android.app.Application
-import android.util.Log
+import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.message.ReactionScore
+import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_FCM_TOKEN
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl.Companion.KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import org.koin.core.component.inject
 
 object SceytFirebaseMessagingDelegate : SceytKoinComponent {
-    private val application: Application by inject()
+    private val context: Context by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val preferences: SceytSharedPreference by inject()
     private val firebaseMessaging: FirebaseMessaging by lazy { FirebaseMessaging.getInstance() }
@@ -42,12 +43,12 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     private fun asyncGetDeviceToken(onToken: (token: String?) -> Unit) {
-        if (FirebaseApp.getApps(application).size > 0) {
+        if (FirebaseApp.getApps(context).size > 0) {
             firebaseMessaging.token.addOnCompleteListener {
                 if (it.isSuccessful) {
                     onToken(it.result)
                 } else
-                    Log.e(this@SceytFirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
+                    SceytLog.e(this@SceytFirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
             }
         } else onToken(null)
     }
@@ -58,11 +59,11 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
             override fun onSuccess() {
                 preferences.setString(KEY_FCM_TOKEN, fcmToken)
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
-                Log.i(this@SceytFirebaseMessagingDelegate.TAG, "push token successfully registered")
+                SceytLog.i(this@SceytFirebaseMessagingDelegate.TAG, "push token successfully registered")
             }
 
             override fun onError(e: SceytException) {
-                Log.e(this@SceytFirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
+                SceytLog.e(this@SceytFirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
             }
         })
     }
@@ -97,15 +98,15 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): RemoteMessageData {
-        val user = getUserFromPushJson(remoteMessage.data["user"])
-        val channel = getChannelFromPushJson(remoteMessage.data["channel"], user)?.toSceytUiChannel()
-        val message = getMessageBodyFromPushJson(remoteMessage.data["message"], channel?.id, user)?.toSceytUiMessage()
-        val reactionScore = getReactionScoreFromRemoteMessage(remoteMessage)
-        return RemoteMessageData(channel, message, user, reactionScore)
+        val user = getUserFromPushJson(remoteMessage)
+        val channel = getChannelFromPushJson(remoteMessage)?.toSceytUiChannel()
+        val message = getMessageBodyFromPushJson(remoteMessage, channel?.id, user)?.toSceytUiMessage()
+        val reaction = getReactionFromRemoteMessage(remoteMessage, message?.id, user)
+        return RemoteMessageData(channel, message, user, reaction)
     }
 
-    fun getReactionScoreFromRemoteMessage(remoteMessage: RemoteMessage): ReactionScore? {
-        return getReactionScoreFromPushJson(remoteMessage.data["reaction"])
+    fun getReactionFromRemoteMessage(remoteMessage: RemoteMessage, id: Long?, user: User?): SceytReaction? {
+        return getReactionFromPushJson(remoteMessage.data["reaction"], id, user)
     }
 
     @Throws(IllegalStateException::class)

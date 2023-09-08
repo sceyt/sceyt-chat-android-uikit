@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listener
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClearChatClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CloseReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.JoinClickListener
@@ -15,21 +16,22 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListeners {
     private var defaultListeners: ClickListeners = view
     private var sendMsgClickListener: SendMsgClickListener? = null
-    private var sendAttachmentClickListener: SendAttachmentClickListener? = null
+    private var addAttachmentClickListener: SendAttachmentClickListener? = null
     private var voiceClickListener: VoiceClickListener? = null
     private var voiceLongClickListener: VoiceLongClickListener? = null
     private var closeReplyMessageViewClickListener: CloseReplyMessageViewClickListener? = null
     private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
     private var joinClickListener: JoinClickListener? = null
+    private var clearChatClickListener: ClearChatClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners.onSendMsgClick(view)
         sendMsgClickListener?.onSendMsgClick(view)
     }
 
-    override fun onSendAttachmentClick(view: View) {
-        defaultListeners.onSendAttachmentClick(view)
-        sendAttachmentClickListener?.onSendAttachmentClick(view)
+    override fun onAddAttachmentClick(view: View) {
+        defaultListeners.onAddAttachmentClick(view)
+        addAttachmentClickListener?.onAddAttachmentClick(view)
     }
 
     override fun onVoiceClick(view: View) {
@@ -57,22 +59,28 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
         joinClickListener?.onJoinClick()
     }
 
+    override fun onClearChatClick() {
+        defaultListeners.onClearChatClick()
+        clearChatClickListener?.onClearChatClick()
+    }
+
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
             is ClickListeners -> {
                 sendMsgClickListener = listener
-                sendAttachmentClickListener = listener
+                addAttachmentClickListener = listener
                 voiceClickListener = listener
                 voiceLongClickListener = listener
                 closeReplyMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
+                clearChatClickListener = listener
             }
             is SendMsgClickListener -> {
                 sendMsgClickListener = listener
             }
             is SendAttachmentClickListener -> {
-                sendAttachmentClickListener = listener
+                addAttachmentClickListener = listener
             }
             is VoiceClickListener -> {
                 voiceClickListener = listener
@@ -88,6 +96,9 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
             }
             is JoinClickListener -> {
                 joinClickListener = listener
+            }
+            is ClearChatClickListener -> {
+                clearChatClickListener = listener
             }
         }
     }

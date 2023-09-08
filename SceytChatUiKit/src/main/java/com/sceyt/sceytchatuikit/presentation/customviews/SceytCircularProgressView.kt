@@ -10,12 +10,16 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.Animation
+import android.view.animation.AnimationSet
 import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.extensions.dpToPxAsFloat
+import com.sceyt.sceytchatuikit.extensions.inNotNanOrZero
+import com.sceyt.sceytchatuikit.extensions.scaleAndAlphaAnim
 import kotlin.math.max
 import kotlin.math.min
 
@@ -42,7 +46,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var centerIcon: Drawable? = null
     private var enableTrack = true
     private var rotateAnimEnabled = true
-    private var trackThickness = 9f
+    private var enableProgressDownAnimation = false
+    private var trackThickness = dpToPxAsFloat(3.2f)
     private var roundedProgress = true
     private var trackColor = "#1A21CFB9".toColorInt()
     private var progressColor = "#17BCA7".toColorInt()
@@ -54,6 +59,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     private var transferring: Boolean = true
     private var animatingToAngle = angle
     private var drawingProgressAnimEndCb: ((Boolean) -> Unit)? = null
+    private var visibleAnim: AnimationSet? = null
+    private var goneAnim: AnimationSet? = null
 
     init {
         attrs?.let {
@@ -63,12 +70,15 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             minProgress = a.getFloat(R.styleable.SceytCircularProgressView_minProgress, minProgress)
             progress = a.getFloat(R.styleable.SceytCircularProgressView_progress, minProgress)
             roundedProgress = a.getBoolean(R.styleable.SceytCircularProgressView_roundedProgress, roundedProgress)
-            trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_trackThickness, trackThickness.toInt()).toFloat()
             centerIcon = a.getDrawable(R.styleable.SceytCircularProgressView_centerIcon)
             rotateAnimEnabled = a.getBoolean(R.styleable.SceytCircularProgressView_rotateAnimEnabled, rotateAnimEnabled)
+            enableProgressDownAnimation = a.getBoolean(R.styleable.SceytCircularProgressView_enableProgressDownAnimation, enableProgressDownAnimation)
             iconTintColor = a.getColor(R.styleable.SceytCircularProgressView_iconTint, iconTintColor)
             bgColor = a.getColor(R.styleable.SceytCircularProgressView_backgroundColor, 0)
             iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.SceytCircularProgressView_iconSizeInPercent, iconSizeInPercent))
+            val trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_trackThickness, 0)
+            if (trackThickness > 0)
+                this.trackThickness = trackThickness.toFloat()
             a.recycle()
         }
 
@@ -149,7 +159,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     private fun drawProgress(newAngel: Float) {
-        if (newAngel != angle) {
+        if (newAngel != angle && !checkIdProgressDownAndDraw(newAngel)) {
             animatingToAngle = newAngel
             if ((updateProgressAnim == null || updateProgressAnim?.isRunning != true)) {
                 updateProgressAnim = ValueAnimator.ofFloat(angle, newAngel).apply {
@@ -171,6 +181,16 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             }
         }
         rotate()
+    }
+
+    private fun checkIdProgressDownAndDraw(newAngel: Float): Boolean {
+        if (!enableProgressDownAnimation && newAngel < angle) {
+            updateProgressAnim?.cancel()
+            angle = newAngel
+            invalidate()
+            return true
+        }
+        return false
     }
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -217,7 +237,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     fun release(withProgress: Float? = null) {
-        progress = max(withProgress ?: 0f, minProgress)
+        progress = max(withProgress?.inNotNanOrZero() ?: 0f, minProgress)
+        if (progress.isNaN()) progress = 0f
         angle = calculateAngle(progress)
         transferring = true
         if (rotateAnimEnabled) rotate()
@@ -225,7 +246,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     }
 
     fun setProgress(@FloatRange(from = 0.0, to = 100.0) newProgress: Float) {
-        progress = max(newProgress, minProgress)
+        progress = max(newProgress.inNotNanOrZero(), minProgress)
         transferring = true
         drawProgress(calculateAngle(progress))
     }
@@ -251,6 +272,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setRotateAnimEnabled(enabled: Boolean) {
         rotateAnimEnabled = enabled
+        if (!enabled)
+            rotateAnim?.cancel()
         invalidate()
     }
 
@@ -266,6 +289,8 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setTransferring(transferring: Boolean) {
         this.transferring = transferring
+        if (!transferring)
+            rotateAnim?.cancel()
         invalidate()
     }
 
@@ -283,9 +308,39 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun getProgressAnim() = updateProgressAnim
 
+    private fun setVisibleWithAnim() {
+        goneAnim?.cancel()
+        if (visibleAnim == null || visibleAnim?.hasStarted() != true || visibleAnim?.hasEnded() == true) {
+            if (!isVisible) {
+                super.setVisibility(VISIBLE)
+                visibleAnim = scaleAndAlphaAnim(0.5f, 1f, duration = 100)
+            }
+        }
+    }
+
+    private fun setGoneWithAnim() {
+        visibleAnim?.cancel()
+        if (goneAnim == null || goneAnim?.hasStarted() != true || goneAnim?.hasEnded() == true) {
+            if (isVisible) {
+                goneAnim = scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
+                    super.setVisibility(GONE)
+                    rotateAnim?.cancel()
+                }
+            }
+        }
+    }
+
     override fun setVisibility(visibility: Int) {
-        super.setVisibility(visibility)
-        drawingProgressAnimEndCb = null
+        if (isAttachedToWindow) {
+            if (visibility == VISIBLE)
+                setVisibleWithAnim()
+            else setGoneWithAnim()
+        } else {
+            super.setVisibility(visibility)
+            if (visibility == GONE)
+                rotateAnim?.cancel()
+            drawingProgressAnimEndCb = null
+        }
     }
 
     override fun setBackgroundColor(color: Int) {

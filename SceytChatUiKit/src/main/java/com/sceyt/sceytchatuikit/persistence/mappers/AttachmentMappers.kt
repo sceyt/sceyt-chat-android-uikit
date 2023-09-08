@@ -1,23 +1,29 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
 import android.graphics.Bitmap
-import android.util.Log
 import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.decodeByteArrayToBitmap
+import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeFirstPart
+import com.sceyt.sceytchatuikit.extensions.toByteArraySafety
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataFromJson
+import com.sceyt.sceytchatuikit.shared.utils.BitmapUtil
+import com.sceyt.sceytchatuikit.shared.utils.ThumbHash
 import org.json.JSONObject
 
 fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId: Long) = AttachmentDb(
@@ -27,22 +33,21 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         messageTid = messageTid,
         channelId = channelId,
         userId = userId,
-        tid = tid,
         name = name,
         type = type,
         createdAt = createdAt,
         metadata = metadata,
         fileSize = fileSize,
         url = url,
-        filePath = filePath), null
+        filePath = filePath,
+        originalFilePath = originalFilePath), null
 )
-
 
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
+        val isLink = type == AttachmentTypeEnum.Link.value()
         return SceytAttachment(
             id = id,
-            tid = tid,
             messageId = messageId,
             messageTid = messageTid,
             userId = userId,
@@ -51,20 +56,20 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             metadata = metadata,
             fileSize = fileSize,
             createdAt = createdAt,
-            url = payLoad?.url ?: url,
-            filePath = payLoad?.filePath ?: filePath,
-            transferState = payLoad?.transferState,
-            progressPercent = payLoad?.progressPercent)
+            url = if (isLink) url else payLoad?.url ?: url,
+            filePath = if (isLink) null else payLoad?.filePath ?: filePath,
+            transferState = if (isLink) TransferState.PendingDownload else payLoad?.transferState,
+            progressPercent = if (isLink) 0f else payLoad?.progressPercent,
+            originalFilePath = if (isLink) null else originalFilePath)
     }
 }
 
-
-fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
+fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
     with(attachmentEntity) {
-        return Attachment.Builder(filePath ?: "", url ?: "", type)
+        val isLink = type == AttachmentTypeEnum.Link.value()
+        return Attachment.Builder(if (isLink) "" else filePath ?: "", url ?: "", type)
             .setMetadata(metadata ?: "")
             .setName(name)
-            .withTid(tid)
             .setUpload(upload)
             .build()
     }
@@ -72,21 +77,21 @@ fun AttachmentDb.toSdkAttachment(upload: Boolean = true): Attachment {
 
 fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPayLoadEntity {
     return with(attachmentEntity) {
+        val isLink = type == AttachmentTypeEnum.Link.value()
         AttachmentPayLoadEntity(
             messageTid = messageTid,
             transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == DeliveryStatus.Pending
-                    && messageStatus.forwardingDetailsDb == null)
+                    && messageStatus.forwardingDetailsDb == null && !isLink)
                 TransferState.PendingUpload else TransferState.PendingDownload,
             progressPercent = 0f,
             url = url,
-            filePath = filePath)
+            filePath = if (isLink) null else filePath)
     }
 }
 
-fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: TransferState): TransferData {
+fun AttachmentPayLoadEntity.toTransferData(default: TransferState): TransferData {
     return TransferData(
         messageTid = messageTid,
-        attachmentTid = attachmentTid,
         state = transferState ?: default,
         progressPercent = 0f,
         url = url,
@@ -97,13 +102,27 @@ fun AttachmentPayLoadEntity.toTransferData(attachmentTid: Long, default: Transfe
 fun SceytAttachment.toTransferData(): TransferData? {
     return TransferData(
         messageTid = messageTid,
-        attachmentTid = tid,
         progressPercent = (progressPercent ?: 0).toFloat(),
         state = transferState ?: return null,
         filePath = filePath,
         url = url
+    ).withPrettySizes(fileSize)
+}
+
+fun SceytAttachment.toTransferData(transferState: TransferState,
+                                   progress: Float = progressPercent ?: 0f): TransferData {
+    return TransferData(
+        messageTid = messageTid,
+        progressPercent = progress,
+        state = transferState,
+        filePath = filePath,
+        url = url
     )
 }
+
+fun FileChecksumEntity.toFileChecksumData() = FileChecksumData(
+    checksum, resizedFilePath, url, metadata, fileSize
+)
 
 fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     var size: Size? = null
@@ -117,25 +136,42 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
             AttachmentTypeEnum.File.value(), AttachmentTypeEnum.Link.value() -> {
                 return AttachmentDataFromJson()
             }
+
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
-                blurredThumbBitmap = jsonObject.getFromJsonObject(SceytConstants.Thumb)?.toByteArraySafety()?.decodeByteArrayToBitmap()
+                blurredThumbBitmap = getThumbFromMetadata(metadata)
 
                 val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
                 val height = jsonObject.getFromJsonObject(SceytConstants.Height)?.toIntOrNull()
                 if (width != null && height != null)
                     size = Size(width, height)
             }
+
             AttachmentTypeEnum.Voice.value() -> audioMetadata = getMetadataFromAttachment()
         }
 
         if (type == AttachmentTypeEnum.Video.value() || type == AttachmentTypeEnum.Voice.value())
             duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
 
-    } catch (ex: Exception) {
-        Log.i(TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
+    } catch (_: Exception) {
     }
 
     return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
+}
+
+fun getThumbFromMetadata(metadata: String?): Bitmap? {
+    metadata ?: return null
+    var blurredThumbBitmap: Bitmap? = null
+    val bytes = metadata.getInfoFromMetadataByKey(SceytConstants.Thumb)?.toByteArraySafety()
+    try {
+        val image = ThumbHash.thumbHashToRGBA(bytes)
+        blurredThumbBitmap = BitmapUtil.bitmapFromRgba(image.width, image.height, image.rgba)
+    } catch (_: Exception) {
+    }
+
+    if (blurredThumbBitmap == null && bytes != null)
+        blurredThumbBitmap = bytes.decodeByteArrayToBitmap()
+
+    return blurredThumbBitmap
 }
 
 fun SceytAttachment.getMetadataFromAttachment(): AudioMetadata {
@@ -164,7 +200,6 @@ fun String?.getInfoFromMetadataByKey(key: String): String? {
         val jsonObject = JSONObject(this ?: return null)
         return jsonObject.getFromJsonObject(key)
     } catch (ex: Exception) {
-        Log.i(this?.TAG, "Couldn't get data from attachment metadata with reason ${ex.message}")
         return null
     }
 }

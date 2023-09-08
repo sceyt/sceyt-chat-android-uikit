@@ -49,6 +49,10 @@ sealed interface MessageClickListeners {
         fun onAttachmentLongClick(view: View, item: FileListItem)
     }
 
+    fun interface MentionClickListener : MessageClickListeners {
+        fun onMentionClick(view: View, userId: String)
+    }
+
     fun interface AttachmentLoaderClickListener : MessageClickListeners {
         fun onAttachmentLoaderClick(view: View, item: FileListItem)
     }
@@ -59,6 +63,10 @@ sealed interface MessageClickListeners {
 
     fun interface ScrollToDownClickListener : MessageClickListeners {
         fun onScrollToDownClick(view: ScrollToDownView)
+    }
+
+    fun interface MultiSelectClickListener : MessageClickListeners {
+        fun onMultiSelectClick(view: View, message: SceytMessage)
     }
 
     /** Use this if you want to implement all callbacks */
@@ -74,6 +82,8 @@ sealed interface MessageClickListeners {
             ReactionLongClickListener,
             AttachmentClickListener,
             AttachmentLongClickListener,
+            MentionClickListener,
             ScrollToDownClickListener,
-            AttachmentLoaderClickListener
+            AttachmentLoaderClickListener,
+            MultiSelectClickListener
 }

@@ -21,5 +21,11 @@ public interface AudioPlayer {
 
     void setPlaybackSpeed(float speed);
 
+    float getPlaybackSpeed();
+
     String getFilePath();
+
+    boolean isPlaying();
+
+    void addEventListener(AudioPlayerHelper.OnAudioPlayer event, String tag, String filePath);
 }

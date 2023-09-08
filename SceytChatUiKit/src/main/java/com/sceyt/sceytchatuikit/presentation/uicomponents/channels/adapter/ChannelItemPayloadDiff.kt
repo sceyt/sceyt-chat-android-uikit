@@ -37,5 +37,21 @@ data class ChannelItemPayloadDiff(
             membersChanged = true,
             metadataUpdated = true
         )
+
+        val DEFAULT_FALSE = ChannelItemPayloadDiff(
+            subjectChanged = false,
+            avatarViewChanged = false,
+            lastMessageChanged = false,
+            lastMessageStatusChanged = false,
+            unreadCountChanged = false,
+            muteStateChanged = false,
+            onlineStateChanged = false,
+            markedUsUnreadChanged = false,
+            lastReadMsdChanged = false,
+            peerBlockedChanged = false,
+            typingStateChanged = false,
+            membersChanged = false,
+            metadataUpdated = false
+        )
     }
 }

@@ -53,7 +53,7 @@
         android:paddingVertical="12dp"
         app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage">
 
-        <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionCompletionView
+        <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionSupportEditText
             android:id="@+id/messageInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -63,7 +63,7 @@
             android:hint="@string/sceyt_message"
             android:includeFontPadding="false"
             android:inputType="textMultiLine|textCapSentences"
-            android:maxLines="3"
+            android:maxLines="6"
             android:minHeight="24dp"
             android:textColor="@color/sceyt_color_black_themed"
             android:textColorHint="@color/sceyt_color_hint"
@@ -101,16 +101,16 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/viewTop" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnJoin"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_gallery_item_default_color"
+        android:fontFamily="@font/roboto_medium"
         android:gravity="center"
-        android:paddingVertical="16dp"
+        android:paddingVertical="15dp"
         android:text="@string/sceyt_join"
         android:textAllCaps="false"
         android:textColor="@color/sceyt_color_accent"
@@ -120,6 +120,23 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/viewTop" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/btnClearChat"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/sceyt_bg_ripple"
+        android:fontFamily="@font/roboto_medium"
+        android:gravity="center"
+        android:paddingVertical="15dp"
+        android:text="@string/sceyt_clear_chat"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/mediumTextSize"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <include
         android:id="@+id/layoutCloseInput"

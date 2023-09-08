@@ -8,6 +8,7 @@ import android.os.Parcelable
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.sceytchatuikit.extensions.*
@@ -56,7 +57,7 @@ open class SceytShareActivity : SceytShareableActivity() {
             }
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
                 val uris = intent.parcelableArrayList<Uri>(Intent.EXTRA_STREAM)
-                if (uris != null && uris.isNotEmpty()) {
+                if (!uris.isNullOrEmpty()) {
                     if (uris.size > 20)
                         customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
                     for (uri in uris.take(20)) {
@@ -122,7 +123,11 @@ open class SceytShareActivity : SceytShareableActivity() {
         }
     }
 
-    override fun getRV() = binding.rvChannels
+    override fun getRV(): RecyclerView? {
+        return if (::binding.isInitialized)
+            binding.rvChannels
+        else null
+    }
 
     override fun onChannelClick(channelItem: ChannelListItem.ChannelItem): Boolean {
         return super.onChannelClick(channelItem).also {

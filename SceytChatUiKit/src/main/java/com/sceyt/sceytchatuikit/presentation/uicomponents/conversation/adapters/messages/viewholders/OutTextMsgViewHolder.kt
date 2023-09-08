@@ -18,8 +18,8 @@ class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?
-) : BaseMsgViewHolder(binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?
+) : BaseMsgViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder) {
 
     init {
         with(binding) {
@@ -32,6 +32,14 @@ class OutTextMsgViewHolder(
             root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
+            }
+
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
         }
     }
@@ -50,8 +58,8 @@ class OutTextMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {
-                    setMessageBody(messageBody, message)
-                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
+                    setMessageBody(messageBody, message, false)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.replyCountChanged)
@@ -66,10 +74,14 @@ class OutTextMsgViewHolder(
         }
     }
 
+    override val selectMessageView get() = binding.selectView
+
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
         with(context) {
             layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 }

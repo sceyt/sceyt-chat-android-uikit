@@ -17,7 +17,7 @@ data class SceytMember(
     val fullName: String
         get() = "${user.firstName} ${user.lastName}".trim()
 
-    val avatarUrl: String
+    val avatarUrl: String?
         get() = user.avatarURL
 
     val id: String get() = user.id

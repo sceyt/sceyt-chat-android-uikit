@@ -10,12 +10,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytDirectChannel
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -27,7 +28,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.genMemberBy
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -116,6 +116,21 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return null
     }
 
+    internal fun channelUpdatedWithDiff(channel: SceytChannel, diff: ChannelItemPayloadDiff) {
+        channelsRV.getChannelIndexed(channel.id)?.let { pair ->
+            val channelItem = pair.second
+            channelItem.channel = channel
+            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+        }
+    }
+
+    fun replaceChannel(first: Long, second: SceytChannel) {
+        channelsRV.getChannelIndexed(first)?.let { pair ->
+            val channelItem = pair.second
+            channelItem.channel = second.clone()
+        }
+    }
+
     internal fun onTyping(data: ChannelTypingEventData) {
         channelsRV.getChannelIndexed(data.channel.id)?.let { pair ->
             val channelItem = pair.second
@@ -135,9 +150,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun userBlocked(data: List<User>?) {
         data?.forEach { user ->
             channelsRV.getChannels()?.find {
-                it.channel is SceytDirectChannel && (it.channel as SceytDirectChannel).peer?.id == user.id
+                it.channel.isDirect() && it.channel.getFirstMember()?.id == user.id
             }?.let {
-                (it.channel as SceytDirectChannel).peer = genMemberBy(user).toSceytMember()
+                it.channel.getFirstMember()?.user = user
             }
         }
     }

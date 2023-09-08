@@ -13,6 +13,10 @@ sealed interface InputEventsListener {
         fun onMentionUsersListener(query: String)
     }
 
+    fun interface MultiselectModeListener : InputEventsListener {
+        fun onMultiselectModeListener(isMultiselectMode: Boolean)
+    }
+
     /** Use this if you want to implement all callbacks */
-    interface InputEventListeners : InputStateListener, MentionUsersListener
+    interface InputEventListeners : InputStateListener, MentionUsersListener, MultiselectModeListener
 }
