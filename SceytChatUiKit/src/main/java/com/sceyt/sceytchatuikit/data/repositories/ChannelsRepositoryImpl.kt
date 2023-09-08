@@ -232,7 +232,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
-        return Builder(channelData.channelType.getString())
+        return Builder(channelData.channelType)
             .withMembers(channelData.members)
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)
@@ -424,17 +424,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
             }
 
-            when (data.channelType) {
-                ChannelTypeEnum.Private, ChannelTypeEnum.Direct -> {
-                    ChannelOperator.build(channelId).updateChannel("", data.newSubject, data.metadata,
-                        data.avatarUrl ?: "", channelCallback)
-                }
-
-                ChannelTypeEnum.Public -> {
-                    ChannelOperator.build(channelId).updateChannel(data.channelUri, data.newSubject, data.metadata,
-                        data.avatarUrl ?: "", channelCallback)
-                }
-            }
+            ChannelOperator.build(channelId).updateChannel(data.channelUri ?: "",
+                data.newSubject ?: "", data.metadata ?: "",
+                data.avatarUrl ?: "", channelCallback)
         }
     }
 

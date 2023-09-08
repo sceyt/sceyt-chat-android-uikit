@@ -5,6 +5,6 @@ data class EditChannelData(
         val metadata: String?,
         var avatarUrl: String?,
         val channelUri: String?,
-        val channelType: ChannelTypeEnum,
+        val channelType: String,
         val avatarEdited: Boolean
 )

@@ -20,7 +20,9 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Direct
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
@@ -168,13 +170,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 }
             }
 
-            Private -> {
+            Private, Group -> {
                 getInfoButtonsPrivateChatFragment(channel).also {
                     it.setClickActionsListener(::onGroupButtonClick)
                 }
             }
 
-            Public -> {
+            Public, Broadcast -> {
                 getInfoButtonsPublicChannelFragment(channel).also {
                     it.setClickActionsListener(::onPublicButtonClick)
                 }
@@ -351,8 +353,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected fun getMembersType(): MemberTypeEnum {
         return if (::channel.isInitialized) {
             when (channel.getChannelType()) {
-                Private, Direct -> MemberTypeEnum.Member
-                Public -> MemberTypeEnum.Subscriber
+                Private, Direct, Group -> MemberTypeEnum.Member
+                Public, Broadcast -> MemberTypeEnum.Subscriber
             }
         } else MemberTypeEnum.Member
     }
@@ -424,8 +426,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onClearHistoryClick(channel: SceytChannel) {
         val descId: Int = when (channel.getChannelType()) {
             Direct -> R.string.sceyt_clear_direct_history_desc
-            Private -> R.string.sceyt_clear_private_chat_history_desc
-            Public -> R.string.sceyt_clear_public_chat_history_desc
+            Private, Group -> R.string.sceyt_clear_private_chat_history_desc
+            Public, Broadcast -> R.string.sceyt_clear_public_chat_history_desc
         }
         showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
             clearHistory(channel.isPublic())
@@ -467,12 +469,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         val titleId: Int
         val descId: Int
         when (channel.getChannelType()) {
-            Private -> {
+            Private, Group -> {
                 titleId = R.string.sceyt_delete_group_title
                 descId = R.string.sceyt_delete_group_desc
             }
 
-            Public -> {
+            Public, Broadcast -> {
                 titleId = R.string.sceyt_delete_channel_title
                 descId = R.string.sceyt_delete_channel_desc
             }
@@ -669,14 +671,14 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                     }
                 }
 
-                Private -> {
+                Private, Group -> {
                     val memberCount = channel.memberCount
                     if (memberCount > 1)
                         getString(R.string.sceyt_members_count, memberCount)
                     else getString(R.string.sceyt_member_count, memberCount)
                 }
 
-                Public -> {
+                Public, Broadcast -> {
                     val memberCount = channel.memberCount
                     if (memberCount > 1)
                         getString(R.string.sceyt_subscribers_count, memberCount)

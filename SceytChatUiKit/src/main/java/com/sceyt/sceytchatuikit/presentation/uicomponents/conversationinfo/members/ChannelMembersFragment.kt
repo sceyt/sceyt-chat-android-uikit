@@ -19,7 +19,9 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnu
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Direct
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
@@ -312,12 +314,12 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         val titleId: Int
         val descId: Int
         when (channel.getChannelType()) {
-            Private -> {
+            Private, Group -> {
                 titleId = R.string.sceyt_remove_member_title
                 descId = R.string.sceyt_remove_member_desc
             }
 
-            Public -> {
+            Public, Broadcast -> {
                 titleId = R.string.sceyt_remove_subscriber_title
                 descId = R.string.sceyt_remove_subscriber_desc
             }

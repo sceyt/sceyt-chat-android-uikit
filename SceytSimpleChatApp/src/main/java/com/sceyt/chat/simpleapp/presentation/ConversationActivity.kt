@@ -1,4 +1,4 @@
-package com.sceyt.chat.sceytsimplechatapp.presentation
+package com.sceyt.chat.simpleapp.presentation
 
 import android.content.Context
 import android.os.Bundle
@@ -6,7 +6,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.sceyt.chat.sceytsimplechatapp.databinding.ActivityConversationBinding
+import com.sceyt.chat.simpleapp.databinding.ActivityConversationBinding
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.parcelable

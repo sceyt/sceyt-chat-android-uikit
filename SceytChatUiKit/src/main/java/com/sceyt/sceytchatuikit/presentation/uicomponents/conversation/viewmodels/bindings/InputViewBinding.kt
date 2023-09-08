@@ -181,8 +181,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         override fun clearChat() {
             val descId: Int = when (channel.getChannelType()) {
                 ChannelTypeEnum.Direct -> R.string.sceyt_clear_direct_history_desc
-                ChannelTypeEnum.Private -> R.string.sceyt_clear_private_chat_history_desc
-                ChannelTypeEnum.Public -> R.string.sceyt_clear_public_chat_history_desc
+                ChannelTypeEnum.Private, ChannelTypeEnum.Group -> R.string.sceyt_clear_private_chat_history_desc
+                ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> R.string.sceyt_clear_public_chat_history_desc
             }
             SceytDialog.showSceytDialog(messageInputView.context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
                 clearHistory(channel.isPublic())
