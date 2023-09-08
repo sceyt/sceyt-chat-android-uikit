@@ -421,6 +421,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             else
                 updateItem(it.first, it.second, oldMessage.diff(message))
         }
+
+        // Check reply message to update
+        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.parentMessage?.id == updateMessage.id }?.let {
+            val message = (it.second as MessageItem).message
+            val oldMessage = message.clone()
+            message.parentMessage?.updateMessage(updateMessage)
+            updateItem(it.first, it.second, oldMessage.diff(message))
+        }
     }
 
     internal fun forceDeleteMessageByTid(tid: Long) {

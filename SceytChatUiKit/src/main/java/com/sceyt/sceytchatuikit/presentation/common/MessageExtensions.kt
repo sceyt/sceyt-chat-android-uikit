@@ -109,7 +109,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user,
+        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
+                || parentMessage?.state != other.parentMessage?.state,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
@@ -126,7 +127,8 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user,
+        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
+                || parentMessage?.state != other.parentMessage?.state,
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
