@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -13,8 +12,20 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -28,9 +39,9 @@ class IncFileMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
+        userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, senderNameBuilder, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -43,6 +54,14 @@ class IncFileMsgViewHolder(
             root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
+            }
+
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
 
             viewHandleClick.setOnClickListener {
@@ -62,12 +81,10 @@ class IncFileMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
-        viewHolderHelper.bind(fileItem)
         setFileDetails(fileItem.file)
 
         with(binding) {
-            val message = item.message
+            val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
             val body = message.body.trim()
@@ -88,10 +105,10 @@ class IncFileMsgViewHolder(
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
+                setReplyMessageContainer(message, binding.viewReply, false)
 
             if (diff.filesChanged)
-                initAttachment(false)
+                initAttachment()
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
@@ -103,6 +120,10 @@ class IncFileMsgViewHolder(
         }
     }
 
+    override val selectMessageView get() = binding.selectView
+
+    override val layoutBubbleConfig get() = Pair(binding.root, false)
+
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {
             tvFileName.text = file.name
@@ -110,35 +131,48 @@ class IncFileMsgViewHolder(
         }
     }
 
-    override fun updateState(data: TransferData, isOnBind: Boolean) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+    private fun setProgress(data: TransferData) {
+        if (!data.isCalculatedLoadedSize()) return
+        val text = "${data.fileLoadedSize} • ${data.fileTotalSize}"
+        binding.tvFileSize.text = text
+    }
 
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        super.updateState(data, isOnBind)
         when (data.state) {
-            TransferState.PendingUpload -> {
+            Uploaded, Downloaded -> {
+                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+                binding.tvFileSize.text = data.fileTotalSize
+                        ?: fileItem.file.fileSize.toPrettySize()
+            }
+
+            PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
-            TransferState.PendingDownload -> {
+
+            PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
-            TransferState.Downloading, TransferState.Uploading -> {
+
+            Downloading, Uploading, Preparing, WaitingToUpload -> {
+                binding.icFile.setImageResource(0)
+                setProgress(data)
+            }
+
+            ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
-            TransferState.Uploaded, TransferState.Downloaded -> {
-                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
-            }
-            TransferState.ErrorUpload, TransferState.ErrorDownload, TransferState.PauseDownload, TransferState.PauseUpload -> {
-                binding.icFile.setImageResource(0)
-            }
-            TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
+
+            FilePathChanged, ThumbLoaded -> return
         }
     }
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    override val layoutDetails: ConstraintLayout
-        get() = binding.layoutDetails
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+    }
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
         with(context) {

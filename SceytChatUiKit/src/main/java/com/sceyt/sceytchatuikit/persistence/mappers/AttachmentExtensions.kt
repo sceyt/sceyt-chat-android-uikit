@@ -1,29 +1,22 @@
 package com.sceyt.sceytchatuikit.persistence.mappers
 
-import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.util.Size
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.toBase64
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
+import com.sceyt.sceytchatuikit.shared.utils.BitmapUtil
 import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import com.sceyt.sceytchatuikit.shared.utils.ThumbHash
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
-
-fun getMessageTypeFromAttachments(body: String?, vararg attachments: Attachment): String {
-    if (attachments.isNotEmpty() && attachments.size == 1) {
-        return if (attachments[0].type.isEqualsVideoOrImage())
-            MessageTypeEnum.Media.value()
-        else MessageTypeEnum.File.value()
-    }
-    return if (body.isLink()) MessageTypeEnum.Link.value() else MessageTypeEnum.Text.value()
-}
 
 fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?, duration: Long?): String? {
     return try {
@@ -40,7 +33,7 @@ fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?,
         }
         obj.toString()
     } catch (t: Throwable) {
-        Log.e(TAG, "Could not parse malformed JSON: \"" + currentMetadata.toString() + "\"")
+        SceytLog.e(TAG, "Could not parse malformed JSON: \"" + currentMetadata.toString() + "\"")
         null
     }
 }
@@ -59,8 +52,8 @@ fun SceytAttachment.upsertSizeMetadata(size: Size?) {
     }
 }
 
-fun SceytAttachment.addAttachmentMetadata(application: Application) {
-    getBlurredBytesAndSizeToAsString(application, filePath, type)?.let {
+fun SceytAttachment.addAttachmentMetadata(context: Context) {
+    getBlurredBytesAndSizeToAsString(context, filePath, type)?.let {
         metadata = it
     } ?: run { metadata = "" }
 }
@@ -74,17 +67,21 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
             when (type) {
                 AttachmentTypeEnum.Image.value() -> {
                     size = FileResizeUtil.getImageSizeOriented(Uri.parse(path))
-                    FileResizeUtil.getImageThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
+                    FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
+                        val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
                         base64String = bytes.toBase64()
                     }
                 }
+
                 AttachmentTypeEnum.Video.value() -> {
                     size = FileResizeUtil.getVideoSizeOriented(path)
                     durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
-                    FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 10f)?.let { bytes ->
+                    FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f)?.let { bm ->
+                        val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
                         base64String = bytes.toBase64()
                     }
                 }
+
                 else -> return null
             }
             createMetadata(null, base64String, size, durationMilliSec)
@@ -98,11 +95,13 @@ fun getBlurredBytesAndSizeToAsString(context: Context, filePath: String?, type: 
 fun getDimensions(type: String, path: String): Size? {
     return when (type) {
         AttachmentTypeEnum.Image.value() -> {
-            FileResizeUtil.getImageSize(Uri.parse(path))
+            FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
         }
+
         AttachmentTypeEnum.Video.value() -> {
             FileResizeUtil.getVideoSize(path)
         }
+
         else -> return null
     }
 }
@@ -112,7 +111,6 @@ fun SceytAttachment.existThumb(): Boolean {
         val jsonObject = JSONObject(metadata ?: return false)
         jsonObject.getString(SceytConstants.Thumb).isNotNullOrBlank()
     } catch (ex: Exception) {
-        Log.i("MetadataReader", "Couldn't get data from attachment metadata with reason ${ex.message}")
         false
     }
 }

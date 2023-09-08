@@ -1,13 +1,13 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class OutDeletedMsgViewHolder(
         private val binding: SceytItemOutDeletedMessageBinding
@@ -31,6 +31,10 @@ class OutDeletedMsgViewHolder(
             }
         }
     }
+
+    override val enableReply = false
+
+    override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutDeletedMessageBinding.setMessageItemStyle() {
         with(context) {

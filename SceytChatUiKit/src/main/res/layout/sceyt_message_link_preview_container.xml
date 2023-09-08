@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="12dp">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/previewImage"
@@ -26,6 +27,7 @@
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold"
+        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toTopOf="@+id/tvLinkDesc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/previewImage"
@@ -40,8 +42,10 @@
         android:maxLines="3"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/smallTextSize"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvLinkTitle"
-        tools:text="Link preview info description" />
+        tools:text="Link preview info descriptiondescriptiondescriptiondescriptiondescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

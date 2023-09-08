@@ -2,40 +2,63 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 
 import android.app.Application
 import android.text.Editable
-import android.util.Log
+import android.view.Menu
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.SceytSyncManager
-import com.sceyt.sceytchatuikit.data.channeleventobserver.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytGroupChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.ReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.toFileListItem
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceReactionsMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -45,28 +68,38 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.mentionsrc.TokenCompleteTextView.ObjectDataIndexed
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import kotlin.math.min
 
 class MessageListViewModel(
-        private val conversationId: Long,
-        internal val replyInThread: Boolean = false,
-        internal var channel: SceytChannel,
+        var conversationId: Long,
+        val replyInThread: Boolean = false,
+        var channel: SceytChannel,
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
-    private val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
-    private val persistenceAttachmentsMiddleWare: PersistenceAttachmentsMiddleWare by inject()
+    internal val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
-    private val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
+    private val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
+    internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
+    internal val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()
     private val application: Application by inject()
     private val syncManager: SceytSyncManager by inject()
@@ -74,14 +107,16 @@ class MessageListViewModel(
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
+    internal val placeToSavePathsList = mutableSetOf<String>()
+    internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
 
-    private val isGroup = channel.channelType != ChannelTypeEnum.Direct
+    private val isGroup = channel.isGroup
 
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
 
-    private val _messageEditedDeletedLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
-    val messageEditedDeletedLiveData: LiveData<SceytResponse<SceytMessage>> = _messageEditedDeletedLiveData
+    private val _messageForceDeleteLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
+    val messageForceDeleteLiveData: LiveData<SceytResponse<SceytMessage>> = _messageForceDeleteLiveData
 
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
@@ -99,10 +134,12 @@ class MessageListViewModel(
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
-    val onNewThreadMessageFlow: Flow<SceytMessage>
+
+    //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
-    val onOutGoingThreadMessageFlow: Flow<SceytMessage>
+
+    // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onTransferUpdatedLiveData: LiveData<TransferData>
 
 
@@ -124,12 +161,14 @@ class MessageListViewModel(
 
     init {
         onNewMessageFlow = persistenceMessageMiddleWare.getOnMessageFlow()
-            .filter { it.first.id == channel.id && it.second.replyInThread == replyInThread }
+            .filter { it.first.id == channel.id /*&& it.second.replyInThread == replyInThread*/ }
             .mapNotNull { initMessageInfoData(it.second) }
 
+        /*
+       // todo reply in thread
         onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
-            .filter { it.first.id == channel.id && it.second.replyInThread }
-            .mapNotNull { initMessageInfoData(it.second) }
+              .filter { it.first.id == channel.id && it.second.replyInThread }
+              .mapNotNull { initMessageInfoData(it.second) }*/
 
         onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
             .filter { it.channel.id == channel.id }
@@ -144,19 +183,28 @@ class MessageListViewModel(
             .filter { it.channel.id == channel.id }
             .map { it.channel }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             ChannelEventsObserver.onChannelMembersEventFlow
                 .filter { it.channel.id == channel.id }
                 .collect(::onChannelMemberEvent)
         }
 
+        ChannelsCache.pendingChannelCreatedFlow
+            .filter { it.first == channel.id }
+            .onEach { data ->
+                val newChannelId = data.second.id
+                channel.id = newChannelId
+                conversationId = newChannelId
+                channel.pending = false
+            }.launchIn(viewModelScope)
+
         onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
 
         onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
-            .filter { it.channelId == channel.id && !it.replyInThread }
+            .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }
 
-        onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
-            .filter { it.channelId == channel.id && it.replyInThread }
+        /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
+            .filter { it.channelId == channel.id && it.replyInThread }*/
 
         onTransferUpdatedLiveData = FileTransferHelper.onTransferUpdatedLiveData
     }
@@ -168,7 +216,7 @@ class MessageListViewModel(
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey).collect {
+            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey = loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -191,11 +239,13 @@ class MessageListViewModel(
         }
     }
 
-    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData) {
-        setPagingLoadingStarted(LoadNear, true)
+    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
+        setPagingLoadingStarted(LoadNear)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread, loadKey).collect { response ->
+            val limit = min(50, MESSAGES_LOAD_SIZE * 2)
+            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread,
+                limit, loadKey, ignoreServer = ignoreServer).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
@@ -204,10 +254,11 @@ class MessageListViewModel(
     }
 
     fun loadNewestMessages(loadKey: LoadKeyData) {
-        setPagingLoadingStarted(LoadNear, true)
+        setPagingLoadingStarted(LoadNewest)
 
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread, loadKey, true).collect { response ->
+            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread,
+                loadKey = loadKey, ignoreDb = false).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
                 }
@@ -230,11 +281,13 @@ class MessageListViewModel(
                         response.data.isEmpty(), showError = false)
                 }
             }
+
             is PaginationResponse.ServerResponse -> {
                 _loadMessagesFlow.value = response
                 notifyPageStateWithResponse(response.data, response.offset > 0,
                     response.cacheData.isEmpty(), showError = false)
             }
+
             else -> return
         }
         pagingResponseReceived(response)
@@ -250,8 +303,8 @@ class MessageListViewModel(
         _onEditMessageCommandLiveData.postValue(message)
     }
 
-    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
-        messageActionBridge.showMessageActions(event.message, event.popupWindow)
+    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions): Menu? {
+        return messageActionBridge.showMessageActions(event.message)
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
@@ -270,56 +323,48 @@ class MessageListViewModel(
         val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending
                 && !item.sceytMessage.isForwarded)
             PendingUpload else PendingDownload
-        val transferData = TransferData(
-            item.sceytMessage.tid, item.file.tid, item.file.progressPercent ?: 0f,
-            item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
 
         when (val state = item.file.transferState ?: return) {
-            PendingUpload, ErrorUpload, FilePathChanged -> {
-                transferData.state = Uploading
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
+            PendingUpload, ErrorUpload -> {
                 SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
             }
+
             PendingDownload, ErrorDownload -> {
-                transferData.state = Downloading
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
             }
+
             PauseDownload -> {
-                transferData.state = Downloading
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
                 else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
-
             }
+
             PauseUpload -> {
-                transferData.state = Uploading
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.sceytMessage.tid, item.file, state)
-                else SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
-            }
-            Uploading -> {
-                transferData.state = PauseUpload
-                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
-                viewModelScope.launch(Dispatchers.IO) {
-                    persistenceAttachmentsMiddleWare.updateAttachmentWithTransferData(transferData)
+                else {
+                    // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
+                    // not start uploading.
+                    viewModelScope.launch(Dispatchers.IO) {
+                        persistenceAttachmentMiddleWare.updateTransferDataByMsgTid(TransferData(
+                            item.sceytMessage.tid, item.file.progressPercent
+                                    ?: 0f, Uploading, item.file.filePath, item.file.url))
+                    }
+
+                    SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id, ExistingWorkPolicy.REPLACE)
                 }
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
-            Downloading -> {
-                transferData.state = PauseDownload
+
+            Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
                 fileTransferService.pause(item.sceytMessage.tid, item.file, state)
-                viewModelScope.launch(Dispatchers.IO) {
-                    persistenceAttachmentsMiddleWare.updateAttachmentWithTransferData(transferData)
-                }
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
+
             Uploaded, Downloaded, ThumbLoaded -> {
-                transferData.state = state
+                val transferData = TransferData(
+                    item.sceytMessage.tid, item.file.progressPercent ?: 0f,
+                    item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
         }
@@ -327,15 +372,15 @@ class MessageListViewModel(
 
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey)
-            notifyPageStateWithResponse(response)
+            val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey, 1)
+            notifyPageStateWithResponse(response, showError = false)
         }
     }
 
-    fun deleteReaction(message: SceytMessage, scoreKey: String) {
+    fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey)
-            notifyPageStateWithResponse(response)
+            val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey, isPending)
+            notifyPageStateWithResponse(response, showError = false)
         }
     }
 
@@ -343,11 +388,8 @@ class MessageListViewModel(
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
-                if (result is SendMessageResult.Response) {
-                    if (result.response is SceytResponse.Error) {
-                        // Implement logic if you want to show failed status
-                        Log.e("sendMessage", "send message error-> ${result.response.message}")
-                    }
+                if (result is SendMessageResult.Error) {
+                    // Implement logic if you want to show failed status
                 }
             }
         }
@@ -361,15 +403,20 @@ class MessageListViewModel(
 
     fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.editMessage(channel.id, message)
-            _messageEditedDeletedLiveData.postValue(response)
+            persistenceMessageMiddleWare.editMessage(channel.id, message)
         }
     }
 
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
-            _messageEditedDeletedLiveData.postValue(response)
+            _messageForceDeleteLiveData.postValue(response)
+        }
+    }
+
+    fun deleteMessages(message: List<SceytMessage>, onlyForMe: Boolean) {
+        message.forEach {
+            deleteMessage(it, onlyForMe)
         }
     }
 
@@ -386,9 +433,9 @@ class MessageListViewModel(
         }
     }
 
-    fun updateDraftMessage(text: Editable?, mentionUsers: List<ObjectDataIndexed<MentionUserData>>) {
+    fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(), mentionUsers)
+            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(), mentionUsers, replyOrEditMessage, isReply)
         }
     }
 
@@ -402,7 +449,11 @@ class MessageListViewModel(
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
-            _channelLiveData.postValue(response)
+            // If response is Error, try to get channel from db.
+            if (response is SceytResponse.Error)
+                persistenceChanelMiddleWare.getChannelFromDb(channelId)?.let {
+                    _channelLiveData.postValue(SceytResponse.Success(it))
+                } ?: _channelLiveData.postValue(response)
         }
     }
 
@@ -415,11 +466,15 @@ class MessageListViewModel(
 
     fun loadChannelMembersIfNeeded() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (channel is SceytGroupChannel) {
-                val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
-                if ((channel as SceytGroupChannel).memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
-                    persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
-            }
+            val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+            if (channel.memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+                persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
+        }
+    }
+
+    fun clearHistory(forEveryOne: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceChanelMiddleWare.clearHistory(channel.id, forEveryOne)
         }
     }
 
@@ -434,6 +489,7 @@ class MessageListViewModel(
         withContext(Dispatchers.Default) {
             var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
             data.forEachIndexed { index, sceytMessage ->
+                sceytMessage.isSelected = selectedMessagesMap.containsKey(sceytMessage.tid)
                 var prevMessage = compareMessage
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
@@ -475,12 +531,37 @@ class MessageListViewModel(
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
-        return message.reactionScores?.map {
-            ReactionItem.Reaction(ReactionData(it.key, it.score,
-                message.selfReactions?.find { reaction ->
-                    reaction.key == it.key && reaction.user.id == SceytKitClient.myId
-                } != null), message)
-        }?.sortedBy { it.reaction.key }
+        val pendingReactions = message.pendingReactions
+        val reactionItems = message.reactionTotals?.map {
+            ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
+                message.userReactions?.find { reaction ->
+                    reaction.key == it.key && reaction.user?.id == SceytKitClient.myId
+                } != null), message, false)
+        }?.toMutableList()
+
+        if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
+            pendingReactions.forEach { pendingReaction ->
+                reactionItems.find { it.reaction.key == pendingReaction.key }?.let { item ->
+                    if (pendingReaction.isAdd) {
+                        item.reaction.score += pendingReaction.score
+                        item.reaction.containsSelf = true
+                        item.isPending = true
+                    } else {
+                        item.reaction.score -= pendingReaction.score
+                        if (item.reaction.score <= 0)
+                            reactionItems.remove(item)
+                        else {
+                            item.reaction.containsSelf = false
+                            item.isPending = false
+                        }
+                    }
+                } ?: run {
+                    if (pendingReaction.isAdd)
+                        reactionItems.add(ReactionItem.Reaction(SceytReactionTotal(pendingReaction.key, pendingReaction.score, true), message, true))
+                }
+            }
+        }
+        return reactionItems?.sortedBy { it.reaction.key }
     }
 
     private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
@@ -494,35 +575,9 @@ class MessageListViewModel(
         return if (prevMessage == null)
             isGroup
         else {
-            val sameSender = prevMessage.from?.id == sceytMessage.from?.id
+            val sameSender = prevMessage.user?.id == sceytMessage.user?.id
             isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
                     || prevMessage.type == MessageTypeEnum.System.value())
-        }
-    }
-
-    internal fun onMessageCommandEvent(event: MessageCommandEvent) {
-        when (event) {
-            is MessageCommandEvent.DeleteMessage -> {
-                deleteMessage(event.message, event.onlyForMe)
-            }
-            is MessageCommandEvent.EditMessage -> {
-                prepareToEditMessage(event.message)
-            }
-            is MessageCommandEvent.ShowHideMessageActions -> {
-                prepareToShowMessageActions(event)
-            }
-            is MessageCommandEvent.Reply -> {
-                prepareToReplyMessage(event.message)
-            }
-            is MessageCommandEvent.ScrollToDown -> {
-                prepareToScrollToNewMessage()
-            }
-            is MessageCommandEvent.ScrollToReplyMessage -> {
-                prepareToScrollToReplyMessage(event.message)
-            }
-            is MessageCommandEvent.AttachmentLoaderClick -> {
-                prepareToPauseOrResumeUpload(event.item)
-            }
         }
     }
 
@@ -531,8 +586,9 @@ class MessageListViewModel(
             is ReactionEvent.AddReaction -> {
                 addReaction(event.message, event.scoreKey)
             }
+
             is ReactionEvent.RemoveReaction -> {
-                deleteReaction(event.message, event.scoreKey)
+                deleteReaction(event.message, event.scoreKey, event.isPending)
             }
         }
     }
@@ -545,9 +601,10 @@ class MessageListViewModel(
                     fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
                 }
             }
+
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.getThumb(attachment.messageTid, attachment, data.size)
+                    fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
         }
@@ -558,26 +615,28 @@ class MessageListViewModel(
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
-        val sceytMembers = eventData.members.map { member -> member.toSceytMember() }
-        val channelMembers = (channel as SceytGroupChannel).members.toMutableList()
+        val sceytMembers = eventData.members
+        val channelMembers = channel.members?.toMutableList() ?: arrayListOf()
 
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers)
-                (channel as SceytGroupChannel).apply {
+                channel.apply {
                     members = channelMembers
                     memberCount += sceytMembers.size
                 }
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
+
             ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers)
-                (channel as SceytGroupChannel).apply {
+                channel.apply {
                     members = channelMembers
                     memberCount -= sceytMembers.size
                 }
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
+
             else -> return
         }
     }

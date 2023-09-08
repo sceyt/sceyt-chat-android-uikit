@@ -7,11 +7,12 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
-import android.text.method.LinkMovementMethod
+import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
-import android.widget.RelativeLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -22,6 +23,8 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -30,14 +33,16 @@ import com.bumptech.glide.Glide
 import com.google.android.flexbox.*
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.models.user.UserActivityStatus
+import com.sceyt.chat.models.user.UserState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.sceytchatuikit.extensions.*
-import com.sceyt.sceytchatuikit.persistence.constants.SceytConstants
-import com.sceyt.sceytchatuikit.persistence.mappers.getInfoFromMetadataByKey
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
@@ -63,22 +68,37 @@ import kotlin.math.min
 abstract class BaseMsgViewHolder(private val view: View,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
-                                 private val senderNameBuilder: ((User) -> String)? = null)
+                                 private val userNameBuilder: ((User) -> String)? = null)
     : RecyclerView.ViewHolder(view) {
 
     protected val context: Context by lazy { view.context }
+    protected val bubbleMaxWidth by lazy { getBubbleMaxWidth(context) }
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     protected var recyclerViewReactions: RecyclerView? = null
-    protected var bodyMaxWidth = context.resources.getDimensionPixelSize(com.sceyt.sceytchatuikit.R.dimen.bodyMaxWidth)
     protected lateinit var messageListItem: MessageListItem
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
+    private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
+    open val selectMessageView: View? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         messageListItem = item
+        setMaxWidth()
+        if (diff.selectionChanged || diff.statusChanged)
+            selectableAnimHelper.doOnBind(selectMessageView, item)
         if (messageListItem.highlighted)
             highlight()
+    }
+
+    /** The Pair's param ViewGroup is layout bubble, the param Boolean when true, that mean the
+     *  layout bubble with will resize depend reactions. */
+    open val layoutBubbleConfig: Pair<ViewGroup, Boolean>? = null
+
+    protected val layoutBubble get() = layoutBubbleConfig?.first
+
+    protected open fun setMaxWidth() {
+        (layoutBubble?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
     fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
@@ -100,20 +120,38 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-        if (::messageListItem.isInitialized)
+        if (::messageListItem.isInitialized) {
             displayedListener?.invoke(messageListItem)
+            selectableAnimHelper.doOnAttach(selectMessageView, messageListItem)
+        }
     }
 
     private var reactionsAdapter: ReactionsAdapter? = null
 
-    protected fun setMessageBody(messageBody: TextView, message: SceytMessage) {
-        if (!MentionUserHelper.containsMentionsUsers(message))
-            messageBody.text = message.body.trim()
-        else {
-            messageBody.movementMethod = LinkMovementMethod.getInstance()
-            messageBody.text = MentionUserHelper.buildWithMentionedUsers(context, message.body.trim(),
-                message.metadata, message.mentionedUsers, enableClick = true)
+    protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
+                                 checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
+        val bodyText = message.body.trim()
+        val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
+            bodyText
+        } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
+            message.metadata, message.mentionedUsers) {
+            messageListeners?.onMentionClick(messageBody, it)
         }
+
+        setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
+        messageBody.setText(text, TextView.BufferType.SPANNABLE)
+    }
+
+    private fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, checkLinks: Boolean, isLinkViewHolder: Boolean) {
+        if (isLinkViewHolder || (checkLinks && bodyText.extractLinks().isNotEmpty())) {
+            messageBody.autoLinkMask = Linkify.WEB_URLS
+            return
+        }
+        if (bodyText.isValidEmail()) {
+            messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
+            return
+        }
+        messageBody.autoLinkMask = 0
     }
 
     @SuppressLint("SetTextI18n")
@@ -137,7 +175,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         message.setConversationMessageDateAndStatusIcon(messageDate, dateText, isEdited)
     }
 
-    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub) {
+    protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
         if (!message.isReplied) {
             viewStub.isVisible = false
             return
@@ -149,8 +187,8 @@ abstract class BaseMsgViewHolder(private val view: View,
                 it.view.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replyMessageLineColor))
             }
         with(replyMessageContainerBinding ?: return) {
-            val parent = message.parent
-            tvName.text = getSenderName(parent?.from)
+            val parent = message.parentMessage
+            tvName.text = getSenderName(parent?.user)
             if (parent?.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
                 tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_gray_400))
@@ -167,17 +205,10 @@ abstract class BaseMsgViewHolder(private val view: View,
                 icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
-                        val path = attachment?.filePath
-                        val placeHolder = attachment?.metadata.getInfoFromMetadataByKey(SceytConstants.Thumb).toByteArraySafety()
-                            ?.decodeByteArrayToBitmap()?.toDrawable(context.resources)?.mutate()
-                        Glide.with(itemView.context)
-                            .load(path)
-                            .placeholder(placeHolder)
-                            .error(placeHolder)
-                            .override(imageAttachment.width, imageAttachment.height)
-                            .into(imageAttachment)
+                        loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
                         true
                     }
+
                     attachment?.type == AttachmentTypeEnum.Voice.value() -> {
                         icMsgBodyStartIcon.setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_voice)?.apply {
                             if (message.incoming)
@@ -186,6 +217,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                         })
                         false
                     }
+
                     attachment?.type == AttachmentTypeEnum.Link.value() -> false
                     else -> {
                         imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
@@ -193,21 +225,64 @@ abstract class BaseMsgViewHolder(private val view: View,
                     }
                 }
             }
-            root.isVisible = true
+            with(root) {
+                if (calculateWith) {
+                    layoutParams.width = LayoutParams.WRAP_CONTENT
+                    (layoutParams as ConstraintLayout.LayoutParams).matchConstraintMaxWidth = bubbleMaxWidth
+                    measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth ?: 0)
+                    if (measuredWidth < bubbleMeasuredWidth)
+                        layoutParams.width = bubbleMeasuredWidth
+                }
+                isVisible = true
 
-            root.setOnClickListener {
-                (messageListItem as? MessageListItem.MessageItem)?.let { item ->
-                    messageListeners?.onReplyMessageContainerClick(it, item)
+                setOnClickListener {
+                    (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                        messageListeners?.onReplyMessageContainerClick(it, item)
+                    }
+                }
+
+                setOnLongClickListener {
+                    (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                        messageListeners?.onMessageLongClick(it, item)
+                    }
+                    return@setOnLongClickListener true
                 }
             }
         }
+    }
+
+    private fun loadReplyMessageImageOrObserveToDownload(attachment: SceytAttachment?, imageAttachment: ImageView) {
+        attachment ?: return
+        val path = attachment.filePath
+        val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
+
+        fun loadImage(filePath: String?) {
+            Glide.with(itemView.context)
+                .load(filePath)
+                .placeholder(placeHolder)
+                .error(placeHolder)
+                .override(imageAttachment.width, imageAttachment.height)
+                .into(imageAttachment)
+        }
+
+        if (path.isNullOrBlank()) {
+            imageAttachment.setImageDrawable(placeHolder)
+            FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
+                if (it.state == TransferState.Downloaded && it.messageTid == attachment.messageTid) {
+                    attachment.filePath = it.filePath
+                    loadImage(it.filePath)
+                }
+            }
+        } else loadImage(path)
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
         if (!message.isGroup) return
 
         if (message.canShowAvatarAndName) {
-            val user = message.from
+            val user = message.user
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
                 avatarView.setImageUrl(null, UserStyle.deletedUserAvatar)
@@ -227,18 +302,16 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     /** @param layoutDetails when not null, that mean layout details will resize with reactions. */
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
-                                       viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null): RecyclerView? {
+                                       viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
 
         if (reactions.isNullOrEmpty()) {
             reactionsAdapter = null
             rvReactionsViewStub.isVisible = false
-            layoutDetails?.layoutParams?.width = ViewGroup.LayoutParams.WRAP_CONTENT
-            return null
+            layoutDetails?.layoutParams?.width = LayoutParams.WRAP_CONTENT
+            return
         }
 
-
-        //if (reactionsAdapter == null) {
         reactionsAdapter = ReactionsAdapter(
             ReactionViewHolderFactory(itemView.context, messageListeners)).also {
             it.submitList(reactions)
@@ -249,15 +322,13 @@ abstract class BaseMsgViewHolder(private val view: View,
                 recyclerViewReactions = it as RecyclerView
             }
 
-        with(recyclerViewReactions ?: return null) {
+        with(recyclerViewReactions ?: return) {
             setRecycledViewPool(viewPool)
             itemAnimator = DefaultItemAnimator().also {
                 it.moveDuration = 0
                 it.removeDuration = 0
                 it.addDuration = 200
             }
-            /* if (itemDecorationCount == 0)
-                 addItemDecoration(RecyclerItemOffsetDecoration(0, 4, 8, 4))*/
 
             layoutManager = FlexboxLayoutManager(context).apply {
                 flexDirection = FlexDirection.ROW
@@ -265,51 +336,29 @@ abstract class BaseMsgViewHolder(private val view: View,
                 alignItems = AlignItems.FLEX_START
                 justifyContent = JustifyContent.FLEX_START
             }
-
             adapter = reactionsAdapter
-
         }
-        /*  } else {
-              (recyclerViewReactions?.layoutManager as? FlexboxLayoutManager)?.justifyContentForReactions(
-                  item.message.incoming, reactions.size.plus(1)
-              )
-              reactionsAdapter?.submitList(reactions)
-          }*/
         recyclerViewReactions?.isVisible = true
-        initWidthsDependReactions(recyclerViewReactions, layoutDetails, item.message)
-
-        return recyclerViewReactions
+        initWidthsDependReactions(recyclerViewReactions, layoutDetails)
     }
 
-    protected fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?, message: SceytMessage) {
+    protected fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?) {
         if (layoutDetails == null || rvReactions == null) return
 
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
         layoutDetails.measure(View.MeasureSpec.UNSPECIFIED, 0)
+        val margin = dpToPx(8f)
 
         when {
-            rvReactions.measuredWidth > layoutDetails.measuredWidth -> {
-                layoutDetails.layoutParams.width = min((rvReactions.measuredWidth + dpToPx(8f)), bodyMaxWidth)
-                if (message.incoming.not())
-                    (rvReactions.layoutParams as RelativeLayout.LayoutParams).apply {
-                        if (message.incoming) {
-                            addRule(RelativeLayout.ALIGN_START, R.id.layoutDetails)
-                            removeRule(RelativeLayout.ALIGN_PARENT_END)
-                        } else {
-                            removeRule(RelativeLayout.ALIGN_START)
-                            addRule(RelativeLayout.ALIGN_PARENT_END)
-                            addRule(RelativeLayout.ALIGN_START, R.id.layoutDetails)
-                        }
-                        marginEnd = dpToPx(8f)
-                    }
+            rvReactions.measuredWidth + margin > layoutDetails.measuredWidth -> {
+                val newWidth = min((rvReactions.measuredWidth + margin), bubbleMaxWidth)
+                layoutDetails.layoutParams.width = newWidth
+                rvReactions.layoutParams.width = newWidth - margin
             }
+
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {
-                layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                (rvReactions.layoutParams as RelativeLayout.LayoutParams).apply {
-                    addRule(RelativeLayout.ALIGN_START, R.id.layoutDetails)
-                    removeRule(RelativeLayout.ALIGN_PARENT_END)
-                    marginEnd = 0
-                }
+                rvReactions.layoutParams.width = LayoutParams.WRAP_CONTENT
+                layoutDetails.layoutParams.width = LayoutParams.WRAP_CONTENT
             }
         }
     }
@@ -352,39 +401,49 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected fun setBodyTextPosition(currentView: TextView, nextView: View, parentLayout: ConstraintLayout, maxWidth: Int) {
-        currentView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val currentViewWidth = currentView.measuredWidth
-        nextView.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val nextViewWidth = nextView.measuredWidth
-
-        val body = currentView.text.toString()
-        val constraintLayout: ConstraintLayout = parentLayout
+    protected fun setBodyTextPosition(bodyTextView: TextView, dateView: View, parentLayout: ConstraintLayout) {
+        bodyTextView.minWidth = 0
+        bodyTextView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+        val currentViewWidth = bodyTextView.measuredWidth
+        dateView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+        val nextViewWidth = dateView.measuredWidth
+        val px12 = dpToPx(12f) // bodyTextView end margins
+        val px8 = dpToPx(8f) // bodyTextView bottom margins
+        val px5 = dpToPx(5f) // bodyTextView top margins
+        val body = bodyTextView.text.toString()
         val constraintSet = ConstraintSet()
-        constraintSet.clone(constraintLayout)
+        constraintSet.clone(parentLayout)
 
-        constraintSet.clear(currentView.id, ConstraintSet.END)
-        constraintSet.clear(currentView.id, ConstraintSet.BOTTOM)
+        constraintSet.clear(bodyTextView.id, ConstraintSet.END)
+        constraintSet.clear(bodyTextView.id, ConstraintSet.BOTTOM)
 
-        if (currentViewWidth + nextViewWidth > maxWidth) {
-            constraintSet.connect(currentView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, dpToPx(12f))
+        // Calculate maxWidth when dateView and bodyTextView are in the same line
+        val maxWidthWithDate = bubbleMaxWidth - (bodyTextView.marginStart + dateView.marginEnd)
 
-            currentView.paint.getStaticLayout(body, currentView.includeFontPadding, maxWidth).apply {
+        // If messageBody + dateView + px12 (margins) > maxWidthWithDate, then set messageBody to endOf parentLayout,
+        // else set messageBody to endOf dateView
+        if (currentViewWidth + nextViewWidth + px12 > maxWidthWithDate) {
+            constraintSet.connect(bodyTextView.id, ConstraintSet.END, parentLayout.id, ConstraintSet.END, px12)
+            // Calculate lines like bodyTextView end connected to parentLayout end
+            val maxWidthWithoutDate = bubbleMaxWidth - (bodyTextView.marginStart + px12)
+            bodyTextView.paint.getStaticLayout(body, bodyTextView.includeFontPadding, maxWidthWithoutDate).apply {
                 if (lineCount > 1) {
                     val bodyIsRtl = body.isRtl()
                     val appIsRtl = context.isRtl()
-                    if (getLineMax(lineCount - 1) + nextViewWidth < maxWidth && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
-                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
+                    val reqMinWidth = getLineMax(lineCount - 1) + nextViewWidth + px12
+                    if (reqMinWidth < maxWidthWithDate && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {
+                        bodyTextView.minWidth = reqMinWidth.toInt()
+                        constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
                     } else
-                        constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
+                        constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, dateView.id, ConstraintSet.TOP, px5)
                 } else
-                    constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, nextView.id, ConstraintSet.TOP, dpToPx(5f))
+                    constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, dateView.id, ConstraintSet.TOP, px5)
             }
         } else {
-            constraintSet.connect(currentView.id, ConstraintSet.END, nextView.id, ConstraintSet.START, dpToPx(12f))
-            constraintSet.connect(currentView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, dpToPx(8f))
+            constraintSet.connect(bodyTextView.id, ConstraintSet.END, dateView.id, ConstraintSet.START, px12)
+            constraintSet.connect(bodyTextView.id, ConstraintSet.BOTTOM, parentLayout.id, ConstraintSet.BOTTOM, px8)
         }
-        constraintSet.applyTo(constraintLayout)
+        constraintSet.applyTo(parentLayout)
     }
 
     private fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
@@ -394,22 +453,34 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private fun getSenderName(user: User?): String {
         user ?: return ""
-        return senderNameBuilder?.invoke(user) ?: user.getPresentableNameCheckDeleted(context)
+        return userNameBuilder?.invoke(user) ?: user.getPresentableNameCheckDeleted(context)
     }
 
     private fun isDeletedUser(user: User?): Boolean {
-        return user?.activityState == UserActivityStatus.Deleted
+        return user?.activityState == UserState.Deleted
+    }
+
+    private fun getBubbleMaxWidth(context: Context): Int {
+        return (context.screenPortraitWidthPx() * 0.77f).toInt()
     }
 
     fun getMessageItem(): MessageListItem? {
         return if (::messageListItem.isInitialized) messageListItem else null
     }
 
-    fun highlight() {
+    open fun setSelectableState() {
+        selectableAnimHelper.setSelectableState(selectMessageView, messageListItem)
+    }
+
+    open fun cancelSelectableState() {
+        selectableAnimHelper.cancelSelectableState(selectMessageView, messageListItem)
+    }
+
+    open fun highlight() {
         highlightAnim?.cancel()
         val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         view.setBackgroundColor(colorFrom)
-        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.7 * 255).toInt())
+        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.3 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT
         highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFro, colorTo)
         highlightAnim?.duration = 2000
@@ -417,4 +488,6 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.start()
         highlightAnim?.doOnEnd { messageListItem.highlighted = false }
     }
+
+    open val enableReply = true
 }

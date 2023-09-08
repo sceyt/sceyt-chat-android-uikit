@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
 import com.sceyt.sceytchatuikit.shared.utils.ViewEnabledUtils
 import kotlinx.coroutines.*
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
@@ -48,6 +49,11 @@ fun dpToPx(dp: Float): Int {
     return (dp * density).roundToInt()
 }
 
+fun dpToPxAsFloat(dp: Float): Float {
+    val density = Resources.getSystem().displayMetrics.density
+    return dp * density
+}
+
 fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 
 fun View.screenHeightPx() = resources.displayMetrics.heightPixels
@@ -56,14 +62,11 @@ fun Context.screenWidthPx() = resources.displayMetrics.widthPixels
 
 fun Context.screenHeightPx() = resources.displayMetrics.heightPixels
 
+fun Context.screenPortraitWidthPx() = min(screenWidthPx(), screenHeightPx())
+
 fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
 
 fun EditText.setMultiLineCapSentencesAndSendAction() {
-    imeOptions = EditorInfo.IME_ACTION_SEND
-    setRawInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-}
-
-fun EditText.removeFucus() {
     imeOptions = EditorInfo.IME_ACTION_SEND
     setRawInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
 }
@@ -90,7 +93,7 @@ fun View.invokeSuspendInLifecycle(
 
 fun View.getLifecycleScope() = findViewTreeLifecycleOwner()?.lifecycleScope
 
-fun EditText.setTextAndMoveSelectionEnd(text: String?) {
+fun EditText.setTextAndMoveSelectionEnd(text: CharSequence?) {
     text?.let {
         setText(text)
         setSelection(text.length)

@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.imagepicker
 
-import android.Manifest
 import android.content.ContentUris
 import android.content.res.ColorStateList
 import android.content.res.Configuration
@@ -10,7 +9,6 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,14 +27,24 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.sceytchatuikit.BR
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytGaleryMediaPickerBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
+import com.sceyt.sceytchatuikit.extensions.dismissSafety
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getOrientation
+import com.sceyt.sceytchatuikit.extensions.getPermissionsForMangeStorage
+import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 
@@ -45,6 +53,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
     private val selectedMedia = mutableSetOf<MediaModel>()
     private var selectedMediaPaths = mutableSetOf<String>()
+    private var requestedSelectionMediaPaths = mutableSetOf<String>()
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
     private var maxSelectCount: Int = GalleryPickerStyle.maxSelectCount
@@ -54,27 +63,34 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (requireContext().hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
-        } else {
-            requireContext().checkAndAskPermissions(initPermissionLauncher {
-                if (it) {
-                    LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
-                }
-            }, Manifest.permission.READ_EXTERNAL_STORAGE)
+
+        checkPermissions {
+            if (it) LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
         }
 
         savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
             selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
         } ?: run {
             arguments?.getStringArray(STATE_SELECTION)?.let {
-                selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
+                requestedSelectionMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
             }
         }
 
         arguments?.getInt(MAX_SELECTION_COUNT)?.let {
             maxSelectCount = it
         }
+    }
+
+    private fun checkPermissions(callBack: (Boolean) -> Unit) {
+        val resultLauncher = initPermissionLauncher {
+            if (it) callBack.invoke(true)
+        }
+
+        val permissions = getPermissionsForMangeStorage()
+        val hasAccess = requireContext().checkAndAskPermissions(resultLauncher, *permissions)
+
+        if (hasAccess)
+            callBack.invoke(true)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -217,7 +233,14 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     }
 
     private fun checkSelectedItems(mediaItem: MediaItem): Boolean {
-        val contains = selectedMediaPaths.contains(mediaItem.media.realPath)
+        val realPath = mediaItem.media.realPath
+        var contains = selectedMediaPaths.contains(realPath)
+
+        if (!contains && requestedSelectionMediaPaths.contains(realPath)) {
+            contains = true
+            selectedMediaPaths.add(realPath)
+        }
+
         if (contains) selectedMedia.add(mediaItem.media)
         return contains
     }
@@ -271,9 +294,10 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                 if (data.isNotEmpty())
                     trySend(data)
 
-                channel.close()
             } catch (ex: Exception) {
-                Log.i(this@GalleryMediaPicker.TAG, ex.message.toString())
+                SceytLog.e(this@GalleryMediaPicker.TAG, ex.message.toString())
+            } finally {
+                withContext(Dispatchers.Main) { setCounter() }
                 channel.close()
             }
         }

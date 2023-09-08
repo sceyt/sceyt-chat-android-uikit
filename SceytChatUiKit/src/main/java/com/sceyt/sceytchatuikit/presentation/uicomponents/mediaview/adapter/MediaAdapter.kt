@@ -1,10 +1,13 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter
 
-import android.media.MediaPlayer
+import android.content.Context
+import android.os.PowerManager
 import android.view.ViewGroup
+import androidx.media3.common.Player
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.sceytchatuikit.extensions.keepScreenOn
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 
@@ -12,7 +15,9 @@ class MediaAdapter(
         private var attachments: ArrayList<MediaItem>,
         private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
 ) : RecyclerView.Adapter<BaseFileViewHolder<MediaItem>>() {
-    private var mediaPlayers = mutableListOf<MediaPlayer>()
+    private var mediaPlayers = mutableListOf<Player>()
+    private var wakeLock: PowerManager.WakeLock? = null
+    var shouldPlayVideoPath: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
@@ -50,8 +55,7 @@ class MediaAdapter(
         val myDiffUtil = MediaDiffUtil(attachments, data)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
-        this.attachments.clear()
-        this.attachments.addAll(data)
+        attachments = data.toArrayList()
     }
 
     fun addPrevItems(data: List<MediaItem>) {
@@ -77,7 +81,24 @@ class MediaAdapter(
         mediaPlayers.forEach { it.pause() }
     }
 
-    fun addMediaPlayer(mediaPlayer: MediaPlayer) {
-        mediaPlayers.add(mediaPlayer)
+    fun releaseAllPlayers() {
+        mediaPlayers.forEach { it.release() }
+    }
+
+    fun addMediaPlayer(mediaPlayer: Player?) {
+        mediaPlayer?.let { mediaPlayers.add(it) }
+    }
+
+    fun initWakeLock(context: Context) {
+        if (wakeLock == null)
+            wakeLock = context.keepScreenOn()
+
+        if (wakeLock?.isHeld == false)
+            wakeLock?.acquire(30 * 60 * 1000L /*30 minutes*/)
+    }
+
+    fun releaseWakeLock() {
+        if (wakeLock?.isHeld == true)
+            wakeLock?.release()
     }
 }

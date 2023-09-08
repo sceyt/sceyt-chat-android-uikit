@@ -10,7 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import kotlinx.coroutines.flow.Flow
 
-internal interface PersistenceMembersLogic {
+interface PersistenceMembersLogic {
     suspend fun onChannelMemberEvent(data: ChannelMembersEventData)
     suspend fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData)
     suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel>
@@ -23,4 +23,5 @@ internal interface PersistenceMembersLogic {
     suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>>
     suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember>
     suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember>
+    suspend fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String>
 }

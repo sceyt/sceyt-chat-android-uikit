@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview
 
-import android.Manifest
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,19 +18,33 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytActivityMediaBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
+import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
+import com.sceyt.sceytchatuikit.extensions.getMimeType
+import com.sceyt.sceytchatuikit.extensions.getPermissionsForMangeStorage
+import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.sceytchatuikit.extensions.initPermissionLauncher
+import com.sceyt.sceytchatuikit.extensions.isFirstItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.parcelable
+import com.sceyt.sceytchatuikit.extensions.saveToGallery
+import com.sceyt.sceytchatuikit.extensions.serializable
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaFilesViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.videoview.OnMediaClickCallback
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.viewmodel.MediaViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -48,6 +61,7 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     private val mediaTypes = listOf(AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value())
     private var mediaAdapter: MediaAdapter? = null
     private var currentItem: MediaItem? = null
+    private var openedWithAttachment: SceytAttachment? = null
     private var reversed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +78,11 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     override fun onPause() {
         super.onPause()
         mediaAdapter?.pauseAllVideos()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaAdapter?.releaseAllPlayers()
     }
 
     private fun getDataFromIntent() {
@@ -83,21 +102,25 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
                                 mediaAdapter?.addNextItems(data.reversed())
                             } else mediaAdapter?.addPrevItems(data)
                         }
+
                         LoadNext -> {
                             if (reversed) {
                                 mediaAdapter?.addPrevItems(data.reversed())
                             } else mediaAdapter?.addNextItems(data)
                         }
+
                         LoadNear -> setOrUpdateMediaAdapter(data)
                         else -> return@onEach
                     }
                 }
+
                 is PaginationResponse.ServerResponse -> {
                     if (it.hasDiff) {
                         val data = viewModel.mapToMediaItem(it.cacheData)
                         setOrUpdateMediaAdapter(data)
                     }
                 }
+
                 else -> return@onEach
             }
 
@@ -120,8 +143,10 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initPageWithData() {
-        val attachment = intent?.extras?.getParcelable<SceytAttachment>(KEY_ATTACHMENT)
-        val user = intent?.extras?.getSerializable(KEY_USER) as User?
+        val attachment = intent?.extras?.parcelable<SceytAttachment>(KEY_ATTACHMENT).also {
+            openedWithAttachment = it
+        }
+        val user = intent?.extras?.serializable(KEY_USER) as? User
 
         if (attachment == null) {
             viewModel.loadPrevAttachments(channelId, 0, false, mediaTypes, 0)
@@ -168,18 +193,12 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun toggleFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
-            WindowInsetsControllerCompat(
-                window,
-                binding.root,
-            ).apply {
+            WindowInsetsControllerCompat(window, binding.root).apply {
                 hide(WindowInsetsCompat.Type.systemBars())
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
-            WindowInsetsControllerCompat(
-                window,
-                binding.root,
-            ).apply {
+            WindowInsetsControllerCompat(window, binding.root).apply {
                 show(WindowInsetsCompat.Type.systemBars())
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
@@ -196,6 +215,8 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
 
                 it.setClickListener { onMediaClick() }
             })
+            if (openedWithAttachment?.type == AttachmentTypeEnum.Video.value())
+                mediaAdapter?.shouldPlayVideoPath = openedWithAttachment?.filePath
 
             binding.rvMedia.apply {
                 adapter = mediaAdapter
@@ -217,6 +238,7 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
                             mediaAdapter?.getData()?.getOrNull(position)?.let {
                                 loadMediaDetail(it)
                             }
+                            mediaAdapter?.shouldPlayVideoPath = null
                         }
                     }
                 })
@@ -276,9 +298,11 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
             when (it) {
                 ActionDialog.Action.Save -> {
                     fileToSaveAfterPermission = file
-                    if (checkAndAskPermissions(requestPermissionLauncher, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                    val permissions = getPermissionsForMangeStorage()
+                    if (checkAndAskPermissions(requestPermissionLauncher, *permissions))
                         save(file)
                 }
+
                 ActionDialog.Action.Share -> share(file)
                 ActionDialog.Action.Forward -> forward(file)
             }

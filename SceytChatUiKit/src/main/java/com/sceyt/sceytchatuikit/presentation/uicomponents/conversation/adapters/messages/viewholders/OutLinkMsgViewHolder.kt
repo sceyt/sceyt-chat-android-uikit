@@ -20,8 +20,8 @@ class OutLinkMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        senderNameBuilder: ((User) -> String)?
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, senderNameBuilder = senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, userNameBuilder = userNameBuilder) {
 
     init {
         with(binding) {
@@ -34,6 +34,14 @@ class OutLinkMsgViewHolder(
             root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
+            }
+
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
         }
     }
@@ -52,8 +60,8 @@ class OutLinkMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {
-                    setMessageBody(messageBody, message)
-                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
+                    setMessageBody(messageBody, message, checkLinks = true, isLinkViewHolder = true)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.replyCountChanged)
@@ -69,6 +77,10 @@ class OutLinkMsgViewHolder(
             }
         }
     }
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+
+    override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         with(context) {

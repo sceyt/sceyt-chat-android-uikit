@@ -7,8 +7,10 @@ import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.sceyt_listeners.MessageListener
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.toSceytUiChannel
+import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -74,12 +76,12 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
 
             override fun onReactionAdded(message: Message?, reaction: Reaction?) {
                 if (message == null || reaction == null) return
-                eventManager.onReactionAdded(message.toSceytUiMessage(), reaction)
+                eventManager.onReactionAdded(message.toSceytUiMessage(), reaction.toSceytReaction())
             }
 
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
                 if (message == null || reaction == null) return
-                eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction)
+                eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction.toSceytReaction())
             }
 
             override fun onMessageComposing(p0: String?, p1: String?) {
@@ -107,12 +109,12 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
         onMessageEditedOrDeletedFlow_.tryEmit(message)
     }
 
-    override fun onReactionAdded(message: SceytMessage, reaction: Reaction) {
-        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.ADD))
+    override fun onReactionAdded(message: SceytMessage, reaction: SceytReaction) {
+        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.Add))
     }
 
-    override fun onReactionDeleted(message: SceytMessage, reaction: Reaction) {
-        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.REMOVE))
+    override fun onReactionDeleted(message: SceytMessage, reaction: SceytReaction) {
+        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.Remove))
     }
 
     fun setCustomListener(listener: MessageEventManagerImpl) {

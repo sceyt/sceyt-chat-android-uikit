@@ -3,9 +3,8 @@ package com.sceyt.sceytchatuikit.data.models.channels
 data class EditChannelData(
         val newSubject: String?,
         val metadata: String?,
-        val label: String?,
         var avatarUrl: String?,
-        val channelUrl: String?,
-        val channelType: ChannelTypeEnum,
+        val channelUri: String?,
+        val channelType: String,
         val avatarEdited: Boolean
 )

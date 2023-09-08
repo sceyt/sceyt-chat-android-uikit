@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.*
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.M
@@ -15,9 +16,12 @@ import android.widget.Toast
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import com.sceyt.sceytchatuikit.R
 import java.io.File
+import java.io.Serializable
 
 fun Any?.isNull() = this == null
 
@@ -31,6 +35,11 @@ inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
 inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
     SDK_INT >= 33 -> getParcelable(key, T::class.java)
     else -> @Suppress("DEPRECATION") getParcelable(key) as? T
+}
+
+inline fun <reified T : Serializable> Bundle.serializable(key: String): T? = when {
+    SDK_INT >= 33 -> getSerializable(key, T::class.java)
+    else -> @Suppress("DEPRECATION") getSerializable(key) as? T
 }
 
 inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? = when {
@@ -53,6 +62,10 @@ fun Application.isAppOnForeground(): Boolean {
         }
     }
     return false
+}
+
+fun isAppOnForeground(): Boolean {
+    return ProcessLifecycleOwner.get().lifecycle.currentState == Lifecycle.State.RESUMED
 }
 
 fun Context.getOrientation(): Int {
@@ -83,25 +96,38 @@ fun Activity.isKeyboardOpen(): Boolean {
     return (heightDiff3 > dpToPx(200f))
 }
 
-fun customToastSnackBar(view: View?, message: String) {
+fun customToastSnackBar(view: View?, message: String?, maxLines: Int = 5) {
     try {
-        view?.let {
-            Snackbar.make(it, message, Snackbar.LENGTH_LONG).show()
-        }
+        if (view != null && !message.isNullOrBlank())
+            Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setTextMaxLines(maxLines)
+                .show()
     } catch (ex: Exception) {
-        Toast.makeText(view?.context, message, Toast.LENGTH_SHORT).show()
+        view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
     }
 }
 
 fun Activity.customToastSnackBar(message: String?) {
     try {
         findViewById<View>(android.R.id.content)?.let {
-            message?.let { it1 -> Snackbar.make(it, it1, Snackbar.LENGTH_LONG).show() }
+            customToastSnackBar(it, message)
         }
     } catch (ex: Exception) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        if (!isFinishing)
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
+
+fun Fragment.customToastSnackBar(message: String?) {
+    try {
+        if (isAdded)
+            customToastSnackBar(view, message)
+        else Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    } catch (ex: Exception) {
+        view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
+    }
+}
+
 
 fun Fragment.setBundleArguments(init: Bundle.() -> Unit = {}): Fragment {
     arguments = Bundle().apply { init() }
@@ -142,21 +168,28 @@ fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 fun Activity.recreateWithoutAnim() {
     finish()
     startActivity(intent)
-    overridePendingTransition(0, 0)
+    overrideTransitions(0, 0,false)
 }
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
 
-fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
-    window.statusBarColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
+fun Context.isLandscape(): Boolean {
+    return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+}
 
-    if (Build.VERSION.SDK_INT >= M) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
+    val themeColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
+    window.statusBarColor = themeColor
+    if (isDark)
+        window.navigationBarColor = themeColor
+
+    if (SDK_INT >= M) {
+        if (SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.setSystemBarsAppearance(
                 if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             )
-        } else if (Build.VERSION.SDK_INT >= M) {
+        } else if (SDK_INT >= M) {
             val wic = WindowInsetsControllerCompat(window, window.decorView)
             wic.isAppearanceLightStatusBars = !isDark
         }
@@ -170,6 +203,16 @@ fun Activity.statusBarBackgroundColor(color: Int) {
 inline fun <reified T> Any.castSafety(): T? {
     return if (this is T)
         this else null
+}
+
+@Suppress("DEPRECATION")
+fun Context.keepScreenOn(): PowerManager.WakeLock {
+    return (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+        newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "myApp:proximity_wakelock").apply {
+            acquire(10 * 60 * 1000L /*10 minutes*/)
+        }
+    }
 }
 
 inline fun activityLifecycleCallbacks(

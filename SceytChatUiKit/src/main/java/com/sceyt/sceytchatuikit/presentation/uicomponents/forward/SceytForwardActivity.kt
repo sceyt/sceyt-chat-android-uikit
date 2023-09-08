@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.sceytchatuikit.extensions.launchActivity
@@ -49,12 +50,12 @@ open class SceytForwardActivity : SceytShareableActivity() {
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
         btnForward.setOnClickListener {
-            onForwardClick()
+            onForwardClick(true)
         }
     }
 
-    protected fun sendForwardMessage() {
-        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), forwardMessages)
+    protected fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {
+        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), markOwnMessageAsForwarded, forwardMessages)
             .onEach {
                 when (it) {
                     ForwardViewModel.State.Loading -> SceytLoader.showLoading(this@SceytForwardActivity)
@@ -78,7 +79,11 @@ open class SceytForwardActivity : SceytShareableActivity() {
         }
     }
 
-    override fun getRV() = binding.rvChannels
+    override fun getRV(): RecyclerView? {
+        return if (::binding.isInitialized)
+            binding.rvChannels
+        else null
+    }
 
     override fun onChannelClick(channelItem: ChannelListItem.ChannelItem): Boolean {
         return super.onChannelClick(channelItem).also {
@@ -86,8 +91,9 @@ open class SceytForwardActivity : SceytShareableActivity() {
         }
     }
 
-    protected open fun onForwardClick() {
-        sendForwardMessage()
+    @Suppress("SameParameterValue")
+    protected open fun onForwardClick(markOwnMessageAsForwarded: Boolean) {
+        sendForwardMessage(markOwnMessageAsForwarded)
     }
 
     override fun finishSharingAction() {

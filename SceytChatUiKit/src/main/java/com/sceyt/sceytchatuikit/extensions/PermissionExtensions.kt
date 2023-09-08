@@ -39,6 +39,24 @@ fun Fragment.hasPermissions(vararg permission: String): Boolean {
 }
 
 @TargetApi(Build.VERSION_CODES.M)
+fun Context.permissionIgnored(permission: String): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+    if (hasPermissions(permission)) return false
+    return !asActivity().shouldShowRequestPermissionRationale(permission)
+}
+
+@TargetApi(Build.VERSION_CODES.M)
+fun Context.oneOfPermissionsIgnored(vararg permission: String): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+    if (hasPermissions(*permission)) return false
+
+    permission.forEach {
+        if (!asActivity().shouldShowRequestPermissionRationale(it)) return true
+    }
+    return false
+}
+
+@TargetApi(Build.VERSION_CODES.M)
 fun Context.hasOneOfPermissions(vararg permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
     for (per in permission) {
@@ -96,4 +114,11 @@ fun Context.checkDeniedOneOfPermissions(vararg permissions: String): Boolean {
 fun Context.hasLocationPermission(): Boolean {
     val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
     return hasOneOfPermissions(*permissions)
+}
+
+fun getPermissionsForMangeStorage(): Array<String> {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+    } else
+        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 }

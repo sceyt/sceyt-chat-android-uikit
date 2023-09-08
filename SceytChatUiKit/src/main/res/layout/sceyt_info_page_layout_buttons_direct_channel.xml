@@ -6,20 +6,18 @@
     android:gravity="center">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/video"
+        android:id="@+id/chat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="10dp"
         android:background="?selectableItemBackgroundBorderless"
-        android:drawableTop="@drawable/sceyt_ic_video_24"
+        android:drawableTop="@drawable/sceyt_ic_chat_24"
         android:drawablePadding="10dp"
         android:gravity="center"
         android:minWidth="50dp"
-        android:text="@string/sceyt_video_small_case"
+        android:text="@string/sceyt_chat"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="13sp"
-        android:visibility="visible"
-        app:iconSize="@dimen/_34sdp" />
+        android:textSize="13sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/audio"
@@ -34,6 +32,22 @@
         android:text="@string/sceyt_audio"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="13sp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/video"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:drawableTop="@drawable/sceyt_ic_video_24"
+        android:drawablePadding="10dp"
+        android:gravity="center"
+        android:minWidth="50dp"
+        android:text="@string/sceyt_video_small_case"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="13sp"
+        android:visibility="visible"
+        app:iconSize="@dimen/_34sdp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/muteUnMute"

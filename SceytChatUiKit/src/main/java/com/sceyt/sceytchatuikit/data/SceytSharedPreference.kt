@@ -1,6 +1,6 @@
 package com.sceyt.sceytchatuikit.data
 
-internal interface SceytSharedPreference {
+interface SceytSharedPreference {
     fun setUserId(id: String?)
     fun getUserId(): String?
     fun getString(key: String): String?

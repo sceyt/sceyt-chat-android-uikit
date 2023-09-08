@@ -7,7 +7,21 @@ import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -56,25 +70,30 @@ class MessageFileViewHolder(
     }
 
     private fun updateState(data: TransferData) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem)) return
+        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
         when (data.state) {
             PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
-            Downloading, Uploading -> {
+
+            Downloading, Uploading, Preparing, WaitingToUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             Uploaded, Downloaded -> {
                 binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
             }
+
             ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
                 binding.icFile.setImageResource(0)
             }
+
             FilePathChanged, ThumbLoaded -> return
         }
     }

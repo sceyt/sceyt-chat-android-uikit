@@ -5,20 +5,20 @@ import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.withResumed
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.presentation.common.getMyRole
 import com.sceyt.sceytchatuikit.presentation.common.isPeerBlocked
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.ShareableChannelsAdapter
@@ -31,7 +31,6 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected val channelsViewModel: ChannelsViewModel by viewModels()
     protected var channelsAdapter: ShareableChannelsAdapter? = null
     private val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this) }
-    protected val selectedChannels = mutableSetOf<Long>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,34 +52,40 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         val filteredData = filterOnlyAppropriateChannels(response.data)
-        val data = channelsViewModel.mapToChannelItem(data = filteredData, hasNext = response.hasNext)
+        val data = channelsViewModel.mapToChannelItem(data = filteredData,
+            hasNext = response.hasNext,
+            includeDirectChannelsWithDeletedPeers = false)
         if (response.offset == 0) {
             setChannelsList(data)
         } else addNewChannels(data)
     }
 
     protected open fun setChannelsList(data: List<ChannelListItem>) {
-        val rv = getRV() ?: return
-        setSelectedItems(data)
-        if (channelsAdapter == null || rv.adapter !is ShareableChannelsAdapter) {
-            channelsAdapter = ShareableChannelsAdapter(data.toMutableList(), viewHolderFactory.also {
-                it.setChannelClickListener(::onChannelClick)
-            }).also { channelsAdapter = it }
-            with(rv) {
-                adapter = channelsAdapter
-                layoutManager = LinearLayoutManager(this@SceytShareableActivity)
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && channelsViewModel.canLoadNext())
-                            channelsViewModel.getChannels(channelsAdapter?.getSkip()
-                                    ?: 0, channelsViewModel.searchQuery,
-                                LoadKeyData(value = channelsAdapter?.getChannels()?.lastOrNull()?.channel?.id
-                                        ?: 0))
+        lifecycleScope.launch {
+            lifecycle.withResumed {
+                val rv = getRV() ?: return@withResumed
+                setSelectedItems(data)
+                if (channelsAdapter == null || rv.adapter !is ShareableChannelsAdapter) {
+                    channelsAdapter = ShareableChannelsAdapter(data.toMutableList(), viewHolderFactory.also {
+                        it.setChannelClickListener(::onChannelClick)
+                    }).also { channelsAdapter = it }
+                    with(rv) {
+                        adapter = channelsAdapter
+                        layoutManager = LinearLayoutManager(this@SceytShareableActivity)
+                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                                super.onScrolled(recyclerView, dx, dy)
+                                if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && channelsViewModel.canLoadNext())
+                                    channelsViewModel.getChannels(channelsAdapter?.getSkip()
+                                            ?: 0, channelsViewModel.searchQuery,
+                                        LoadKeyData(value = channelsAdapter?.getChannels()?.lastOrNull()?.channel?.id
+                                                ?: 0))
+                            }
+                        })
                     }
-                })
+                } else channelsAdapter?.notifyUpdate(data, rv)
             }
-        } else channelsAdapter?.notifyUpdate(data, rv)
+        }
     }
 
     protected open fun addNewChannels(data: List<ChannelListItem>) {
@@ -90,9 +95,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
         val filtered = data.filter {
-            ((it.channelType == ChannelTypeEnum.Public && (it.getMyRole()?.name != RoleTypeEnum.Owner.toString() &&
-                    it.getMyRole()?.name != RoleTypeEnum.Admin.toString()))
-                    || ((it.isPeerDeleted() || it.isPeerBlocked())))
+            ((it.isPublic() && (it.userRole != RoleTypeEnum.Owner.toString() &&
+                    it.userRole != RoleTypeEnum.Admin.toString())) || ((it.isPeerDeleted() || it.isPeerBlocked())))
         }
 
         return data.minus(filtered.toSet())
@@ -124,6 +128,8 @@ open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun onSearchQueryChanged(query: String) {
         channelsViewModel.getChannels(0, query)
     }
+
+    protected open val selectedChannels get() = channelsViewModel.selectedChannels
 
     open fun finishSharingAction() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)

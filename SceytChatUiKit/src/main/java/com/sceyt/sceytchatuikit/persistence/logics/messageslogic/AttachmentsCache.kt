@@ -54,8 +54,8 @@ class AttachmentsCache {
     fun getSorted(desc: Boolean = true): List<SceytAttachment> {
         synchronized(lock) {
             val data = if (desc)
-                cachedAttachments.values.sortedByDescending { it.createdAt }
-            else cachedAttachments.values.sortedBy { it.createdAt }
+                cachedAttachments.values.sortedByDescending { it.id }
+            else cachedAttachments.values.sortedBy { it.id }
             return data.map { it.clone() }
         }
     }
@@ -94,7 +94,8 @@ class AttachmentsCache {
         messages.forEach {
             if (!detectedDiff) {
                 val old = cachedAttachments[it.messageTid]
-                detectedDiff = old?.diffBetweenServerData(it)?.hasDifference() ?: includeNotExistToDiff
+                detectedDiff = old?.diffBetweenServerData(it)?.hasDifference()
+                        ?: includeNotExistToDiff
             }
             cachedAttachments[it.messageTid] = it
         }

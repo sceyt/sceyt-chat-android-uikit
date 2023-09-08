@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingHorizontal="10dp">
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/selectView"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/sceyt_custom_radiobutton_view"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
-        android:layout_alignTop="@+id/layoutDetails"
+        android:layout_marginStart="12dp"
         android:layout_marginEnd="8dp"
+        android:background="?selectableItemBackgroundBorderless"
         android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@+id/selectView"
+        app:layout_constraintTop_toTopOf="@+id/layoutDetails"
+        app:layout_goneMarginStart="12dp"
         app:sceytAvatarViewTextSize="15sp"
         tools:sceytAvatarViewFullName="Ar"
         tools:visibility="visible" />
@@ -20,25 +33,31 @@
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
         android:id="@+id/toReplyLine"
         android:layout_width="10dp"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/layoutDetails"
-        android:layout_alignTop="@+id/layoutDetails"
-        android:layout_alignBottom="@+id/tvReplyCount"
+        android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="9dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/tvReplyCount"
+        app:layout_constraintStart_toStartOf="@+id/layoutDetails"
+        app:layout_constraintTop_toTopOf="@+id/layoutDetails"
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/avatar"
-        android:background="@drawable/sceyt_bg_inc_message">
+        android:layout_marginStart="8dp"
+        android:background="@drawable/sceyt_bg_inc_message"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/avatar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginStart="12dp">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
@@ -48,11 +67,11 @@
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Henry Willian"
             tools:visibility="visible" />
 
@@ -71,18 +90,17 @@
             android:textColor="@color/sceyt_color_accent"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvUserName"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:visibility="visible" />
 
         <ViewStub
             android:id="@+id/viewReply"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
@@ -90,7 +108,7 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
+            tools:visibility="visible" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytClickableTextView
             android:id="@+id/messageBody"
@@ -98,15 +116,14 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
-            android:autoLink="phone|web|email"
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth"
             tools:text="Lore ipsum  is the correct text which"
             tools:visibility="visible" />
 
@@ -128,10 +145,10 @@
             android:id="@+id/loadProgress"
             android:layout_width="@dimen/messageProgressSize"
             android:layout_height="@dimen/messageProgressSize"
-            android:padding="3dp"
+            android:padding="1dp"
             android:visibility="gone"
             app:backgroundColor="@color/sceyt_progress_bg_color"
-            app:iconSizeInPercent="70"
+            app:iconSizeInPercent="65"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -162,29 +179,34 @@
         android:id="@+id/tvReplyCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/rvReactions"
         android:layout_marginStart="2dp"
-        android:layout_toEndOf="@+id/toReplyLine"
         android:includeFontPadding="false"
         android:paddingVertical="4dp"
         android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/tinyTextSize"
         android:visibility="gone"
-        tools:text="34 reply" />
+        app:layout_constraintStart_toEndOf="@+id/toReplyLine"
+        app:layout_constraintTop_toBottomOf="@+id/rvReactions"
+        tools:text="34 reply"
+        tools:visibility="visible" />
 
     <ViewStub
         android:id="@+id/rvReactions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/layoutDetails"
         android:layout_marginStart="3dp"
         android:layout_marginTop="-5dp"
         android:layout_marginBottom="2dp"
-        android:layout_toEndOf="@+id/avatar"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:orientation="horizontal"
-        android:paddingTop="4dp"
         android:visibility="gone"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="@id/layoutDetails"
+        app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
+        app:layout_constraintVertical_bias="0"
         tools:visibility="visible" />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

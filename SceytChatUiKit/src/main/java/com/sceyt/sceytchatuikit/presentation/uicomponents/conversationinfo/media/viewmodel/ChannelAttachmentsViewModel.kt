@@ -51,8 +51,10 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
                     initPaginationDbResponse(response)
                 }
             }
+
             is PaginationResponse.ServerResponse ->
                 initPaginationServerResponse(response)
+
             else -> return
         }
         pagingResponseReceived(response)
@@ -77,6 +79,7 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
                 } else if (response.hasPrev.not())
                     _loadMoreFilesFlow.tryEmit(emptyList())
             }
+
             is SceytResponse.Error -> {
                 if (hasNextDb.not())
                     _loadMoreFilesFlow.tryEmit(emptyList())
@@ -117,9 +120,10 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
                     fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
                 }
             }
+
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.getThumb(attachment.messageTid, attachment, data.size)
+                    fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
         }

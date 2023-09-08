@@ -17,7 +17,8 @@ dependencyResolutionManagement {
         maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "SceytUiKit"
+rootProject.name = "SceytDemoApp"
 
-include ':app'
+include ':SceytDemoApp'
 include ':SceytChatUiKit'
+include ':SceytSimpleChatApp'

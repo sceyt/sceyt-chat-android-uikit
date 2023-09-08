@@ -2,11 +2,31 @@ package com.sceyt.sceytchatuikit.di
 
 import android.content.Context
 import androidx.room.Room
+import com.sceyt.sceytchatuikit.BuildConfig
 import com.sceyt.sceytchatuikit.SceytSyncManager
 import com.sceyt.sceytchatuikit.data.SceytSharedPreference
 import com.sceyt.sceytchatuikit.data.SceytSharedPreferenceImpl
-import com.sceyt.sceytchatuikit.data.repositories.*
-import com.sceyt.sceytchatuikit.persistence.*
+import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
+import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepositoryImpl
+import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
+import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepositoryImpl
+import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
+import com.sceyt.sceytchatuikit.data.repositories.MessagesRepositoryImpl
+import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
+import com.sceyt.sceytchatuikit.data.repositories.ProfileRepositoryImpl
+import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepository
+import com.sceyt.sceytchatuikit.data.repositories.ReactionsRepositoryImpl
+import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
+import com.sceyt.sceytchatuikit.data.repositories.UsersRepositoryImpl
+import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceMiddleWareImpl
+import com.sceyt.sceytchatuikit.persistence.PersistenceReactionsMiddleWare
+import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.SceytDatabase
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferServiceImpl
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
@@ -37,39 +57,52 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewm
 import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateChatViewModel
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateServiceImpl
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 
 internal val appModules = module {
     single<SceytSharedPreference> { SceytSharedPreferenceImpl(get()) }
     single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
-    single { SceytSyncManager(get(), get()) }
+    single { SceytSyncManager(get(), get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
 
     fun provideDatabase(context: Context): SceytDatabase {
-        return if (enableDatabase)
+        val builder = if (enableDatabase)
             Room.databaseBuilder(context, SceytDatabase::class.java, "sceyt_ui_kit_database")
-                .fallbackToDestructiveMigration()
-                .allowMainThreadQueries()
-                .build()
-        else {
-            Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java).build()
-        }
+        else
+            Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
+
+        return builder
+            .fallbackToDestructiveMigration()
+            .allowMainThreadQueries()
+            .build()
     }
 
     single { provideDatabase(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().messageDao() }
+    single { get<SceytDatabase>().attachmentsDao() }
     single { get<SceytDatabase>().draftMessageDao() }
     single { get<SceytDatabase>().membersDao() }
     single { get<SceytDatabase>().userDao() }
     single { get<SceytDatabase>().reactionDao() }
     single { get<SceytDatabase>().channelUsersReactionDao() }
     single { get<SceytDatabase>().pendingMarkersDao() }
-    single { get<SceytDatabase>().attachmentsDao() }
+    single { get<SceytDatabase>().pendingReactionDao() }
+    single { get<SceytDatabase>().pendingMessageStateDao() }
+    single { get<SceytDatabase>().fileChecksumDao() }
 
     single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
@@ -79,10 +112,10 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
     factory<PersistenceUsersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
-    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get()) }
-    factory<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
+    factory<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
@@ -110,9 +143,42 @@ internal val viewModelModule = module {
         MessageListViewModel(params.get(), params.get(), params.get())
     }
     viewModel { ChannelAttachmentsViewModel() }
-    viewModel { ChannelMembersViewModel(get()) }
+    viewModel { ChannelMembersViewModel(get(), get()) }
     viewModel { CreateChatViewModel() }
     viewModel { ConversationInfoViewModel() }
     viewModel { ChannelsViewModel() }
     viewModel { ReactionsInfoViewModel() }
 }
+
+
+@OptIn(DelicateCoroutinesApi::class)
+internal val coroutineModule = module {
+    single {
+        CoroutineExceptionHandler { _, throwable ->
+            if (BuildConfig.DEBUG)
+                SceytLog.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
+        }
+    }
+    single<CoroutineScope> { GlobalScope }
+    single(qualifier = named(CoroutineContextType.Ui)) { providesUiContext(get()) }
+    single(qualifier = named(CoroutineContextType.Disk)) { providesDiskContext(get()) }
+    single(qualifier = named(CoroutineContextType.Network)) { providesNetworkContext(get()) }
+    single(qualifier = named(CoroutineContextType.Computation)) { providesComputationContext(get()) }
+    single(qualifier = named(CoroutineContextType.Database)) { providesDatabaseContext(get()) }
+}
+
+private fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
+        Dispatchers.Main + exceptionHandler
+
+private fun providesDiskContext(exceptionHandler: CoroutineExceptionHandler) =
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
+
+fun providesNetworkContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+        Dispatchers.IO + exceptionHandler
+
+fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+        Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
+
+fun providesDatabaseContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
+

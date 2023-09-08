@@ -17,8 +17,8 @@ abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
                                      view: View,
                                      messageListeners: MessageClickListeners.ClickListeners? = null,
                                      displayListItem: ((MessageListItem) -> Unit)? = null,
-                                     senderNameBuilder: ((User) -> String)? = null)
-    : BaseMsgViewHolder(view, messageListeners, displayListItem, senderNameBuilder) {
+                                     userNameBuilder: ((User) -> String)? = null)
+    : BaseMsgViewHolder(view, messageListeners, displayListItem, userNameBuilder) {
 
     fun loadLinkPreview(message: MessageListItem.MessageItem, layoutLinkPreview: SceytMessageLinkPreviewContainerBinding, messageBody: TextView) {
         if (message.linkPreviewData == null) {

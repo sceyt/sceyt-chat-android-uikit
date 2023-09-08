@@ -64,7 +64,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
 
                 launch(Dispatchers.IO) {
                     messagesMiddleWare.sendMessageAsFlow(channelId, message).collect {
-                        if (it is SendMessageResult.Response || it is SendMessageResult.StartedSendingAttachment) {
+                        if (it.isServerResponse() || it is SendMessageResult.StartedSendingAttachment) {
                             val resultCount = count.addAndGet(1)
 
                             if (resultCount == channelIds.size)
@@ -85,18 +85,14 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
 
         withContext(Dispatchers.IO) {
             val paths = getPathFromFile(*uris.toTypedArray()).toMutableList()
-            val resizedPaths = paths.map { path ->
-                checkAndResizeMessageFile(application, path)
-            }
 
             channelIds.forEach { channelId ->
-                val attachments = resizedPaths.map { data ->
-                    val fileName = File(data.originalFilePath).name
-                    val path = data.resizedPath
+                val attachments = paths.map { path ->
+                    val fileName = File(path).name
                     Attachment.Builder(path, "", getAttachmentType(path).value())
                         .setName(fileName)
                         .withTid(ClientWrapper.generateTid())
-                        .setFileSize(getFileSize(data.resizedPath))
+                        .setFileSize(getFileSize(path))
                         .setUpload(false)
                         .build()
                 }

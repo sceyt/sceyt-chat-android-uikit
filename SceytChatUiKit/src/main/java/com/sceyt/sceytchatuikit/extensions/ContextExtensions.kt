@@ -1,7 +1,11 @@
 package com.sceyt.sceytchatuikit.extensions
 
 import android.app.Activity
-import android.content.*
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
@@ -26,12 +30,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.*
+import java.util.Locale
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -84,6 +88,7 @@ fun Context.asComponentActivity(): ComponentActivity {
                 baseContext as ComponentActivity
             else throw RuntimeException("Context should be ComponentActivity but was $this")
         }
+
         else -> throw RuntimeException("Context should be ComponentActivity but was $this")
     }
 }
@@ -96,6 +101,7 @@ fun Context.maybeComponentActivity(): ComponentActivity? {
                 baseContext as ComponentActivity
             else null
         }
+
         else -> null
     }
 }
@@ -108,6 +114,7 @@ fun Context.asActivity(): Activity {
                 baseContext as Activity
             else throw RuntimeException("Context should be Activity but was $this")
         }
+
         else -> throw RuntimeException("Context should be Activity but was $this")
     }
 }
@@ -120,6 +127,7 @@ fun Context.asFragmentActivity(): FragmentActivity {
                 baseContext as FragmentActivity
             else throw RuntimeException("Context should be FragmentActivity but was $this")
         }
+
         else -> throw RuntimeException("Context should be FragmentActivity but was $this")
     }
 }
@@ -203,21 +211,21 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
             urlConnection.connectTimeout = timeout
             urlConnection.connect()
             return urlConnection.responseCode == 200
-        } catch (e: IOException) {
-            Log.e("internetConnection", e.message.toString())
+        } catch (e: Exception) {
+            SceytLog.e("internetConnection", e.message.toString())
         }
     }
     return false
 }
 
-
+@Suppress("DEPRECATION")
 fun Context.hasActiveNetwork(): Boolean {
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         val capability = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
         capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
     } else {
-        connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo!!.isConnected
+        connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo?.isConnected == true
     }
 }
 

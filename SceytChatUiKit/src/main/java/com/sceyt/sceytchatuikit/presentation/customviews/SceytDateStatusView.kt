@@ -203,6 +203,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun getStaticLayout(): StaticLayout {
         val textWidth = textPaint.measureText(stringBuilder.toString()).toInt()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -210,9 +211,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                 .setLineSpacing(0f, 1f)
                 .setIncludePad(false).build()
-        } else {
-            StaticLayout(stringBuilder, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
-        }
+        } else StaticLayout(stringBuilder, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
     }
 
     /** For center vertical text date when icon is bigger */

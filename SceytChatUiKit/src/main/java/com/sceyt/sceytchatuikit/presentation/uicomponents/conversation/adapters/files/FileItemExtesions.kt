@@ -7,34 +7,20 @@ import android.widget.Toast
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
+import com.sceyt.sceytchatuikit.extensions.getMimeType
 import java.io.File
-
-
-fun SceytAttachment.getFileFromMetadata(): File? {
-    val path = filePath ?: return null
-    try {
-        return File(path)
-    } catch (_: Exception) {
-    }
-    return null
-}
 
 fun SceytAttachment.openFile(context: Context) {
     try {
-        val fileName = name
         var uri: Uri? = null
-        val loadedFile = File(context.filesDir, fileName)
+        val loadedFile = File(filePath ?: "")
         if (loadedFile.exists()) {
             uri = context.getFileUriWithProvider(loadedFile)
-        } else {
-            getFileFromMetadata()?.let {
-                uri = context.getFileUriWithProvider(it)
-            }
         }
 
         if (uri != null) {
             val intent = Intent(Intent.ACTION_VIEW)
-                .setData(uri)
+                .setDataAndType(uri, getMimeType(filePath) ?: "*/*")
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             context.startActivity(intent)
 

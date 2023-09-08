@@ -2,10 +2,9 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -15,17 +14,16 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.databinding.SceytVideoControllerViewBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 
 
 class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
-    private val playPauseItem: ImageView
+    private var binding: SceytVideoControllerViewBinding
     private var playDrawable: Drawable?
     private var pauseDrawable: Drawable?
-    private var imageThumb: ShapeableImageView? = null
     private var isPlaying = false
     private var isEnded = false
     private var isInitializesPlayer = false
@@ -38,7 +36,8 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private var cornerSize = 0
 
     init {
-        setBackgroundColor(Color.TRANSPARENT)
+        binding = SceytVideoControllerViewBinding.inflate(LayoutInflater.from(context), this, true)
+
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytVideoControllerView)
         showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerShowPlayPause, showPlayPauseButton)
         playPauseButtonSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytVideoControllerPlayPauseSize, playPauseButtonSize)
@@ -53,29 +52,32 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         val enablePlayPauseClick = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerEnablePlayPauseClick, true)
         a.recycle()
 
-        playPauseItem = ImageView(context).apply {
-            background = context.getCompatDrawable(R.drawable.sceyt_bg_play_pause_button)
-            layoutParams = LayoutParams(playPauseButtonSize, playPauseButtonSize).also {
-                it.gravity = Gravity.CENTER
-                setPadding(10, 10, 10, 10)
-            }
-            isVisible = showPlayPauseButton
-        }
-        playPauseItem.setImageDrawable(playDrawable)
-        addView(playPauseItem)
+        binding.setupStyle()
 
         if (enablePlayPauseClick)
             setOnClickListeners()
     }
 
+    private fun SceytVideoControllerViewBinding.setupStyle() {
+        playPauseItem.apply {
+            layoutParams.width = playPauseButtonSize
+            layoutParams.height = playPauseButtonSize
+            playPauseItem.setImageDrawable(playDrawable)
+            isVisible = showPlayPauseButton
+        }
+        imageThumb.apply {
+            shapeAppearanceModel = shapeAppearanceModel.withCornerSize(cornerSize.toFloat())
+        }
+    }
+
     private fun setOnClickListeners() {
-        playPauseItem.setOnClickListener {
+        binding.playPauseItem.setOnClickListener {
             if (playerView == null) return@setOnClickListener
             playerView?.isVisible = true
 
             if (isPlaying) {
                 player?.pause()
-                playPauseItem.setImageDrawable(playDrawable)
+                binding.playPauseItem.setImageDrawable(playDrawable)
                 onPlayPauseClick?.invoke(it, false)
             } else {
                 if (!isInitializesPlayer)
@@ -84,7 +86,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                     player?.seekTo(0)
                 player?.prepare()
                 player?.play()
-                playPauseItem.setImageDrawable(pauseDrawable)
+                binding.playPauseItem.setImageDrawable(pauseDrawable)
                 onPlayPauseClick?.invoke(it, true)
             }
             isPlaying = !isPlaying
@@ -111,18 +113,20 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
                         when (state) {
                             Player.STATE_IDLE -> {
                                 isEnded = false
-                                imageThumb?.isVisible = true
+                                binding.imageThumb.isVisible = true
                             }
+
                             Player.STATE_BUFFERING -> {}
                             Player.STATE_READY -> {
-                                imageThumb?.isVisible = false
+                                binding.imageThumb.isVisible = false
                                 isEnded = false
                             }
+
                             Player.STATE_ENDED -> {
                                 isEnded = true
                                 isPlaying = false
-                                playPauseItem.setImageDrawable(playDrawable)
-                                imageThumb?.isVisible = true
+                                binding.playPauseItem.setImageDrawable(playDrawable)
+                                binding.imageThumb.isVisible = true
                             }
                         }
                     }
@@ -139,36 +143,22 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
 
     private fun setInitialState() {
         isPlaying = false
-        imageThumb?.isVisible = true
-        playPauseItem.setImageDrawable(playDrawable)
-    }
-
-    private fun checkAndAddImage() {
-        if (imageThumb == null) {
-            imageThumb = ShapeableImageView(context).also {
-                it.scaleType = ImageView.ScaleType.CENTER_CROP
-                if (cornerSize > 0)
-                    it.shapeAppearanceModel = it.shapeAppearanceModel.withCornerSize(cornerSize.toFloat())
-            }
-            addView(imageThumb, 0)
-        }
+        binding.imageThumb.isVisible = true
+        binding.playPauseItem.setImageDrawable(playDrawable)
     }
 
     fun setImageThumb(drawable: Drawable?) {
-        checkAndAddImage()
-        imageThumb?.setImageDrawable(drawable)
-        imageThumb?.isVisible = true
+        binding.imageThumb.setImageDrawable(drawable)
+        binding.imageThumb.isVisible = true
     }
 
     fun getImageView(): ImageView {
-        checkAndAddImage()
-        return imageThumb!!
+        return binding.imageThumb
     }
 
     fun setBitmapImageThumb(bitmap: Bitmap?) {
-        checkAndAddImage()
-        imageThumb?.setImageBitmap(bitmap)
-        imageThumb?.isVisible = true
+        binding.imageThumb.setImageBitmap(bitmap)
+        binding.imageThumb.isVisible = true
     }
 
     fun setPlayerViewAndPath(playerView: PlayerView?, mediaPath: String?) {
@@ -178,7 +168,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
 
     fun showPlayPauseButtons(show: Boolean) {
         showPlayPauseButton = show
-        playPauseItem.isVisible = show
+        binding.playPauseItem.isVisible = show
     }
 
     fun setPlayPauseClickListener(listener: (view: View, play: Boolean) -> Unit) {
@@ -194,8 +184,8 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
 
     fun pause() {
         player?.pause()
-        playPauseItem.setImageDrawable(playDrawable)
+        binding.playPauseItem.setImageDrawable(playDrawable)
     }
 
-    fun getPlayPauseImageView() = playPauseItem
+    fun getPlayPauseImageView() = binding.playPauseItem
 }

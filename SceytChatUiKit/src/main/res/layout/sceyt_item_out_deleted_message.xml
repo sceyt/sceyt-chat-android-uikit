@@ -3,8 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:paddingHorizontal="10dp"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingStart="0dp"
+    android:paddingEnd="12dp">
+
+    <View
+        android:id="@+id/selectView"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="center_vertical"
+        android:alpha=".3"
+        android:background="@drawable/sceyt_custom_radiobutton_view"
+        android:clickable="false"
+        android:visibility="gone" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutDetails"
@@ -17,8 +28,8 @@
             android:id="@+id/messageBody"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="8dp"
             android:layout_marginHorizontal="12dp"
+            android:layout_marginVertical="8dp"
             android:text="@string/sceyt_message_was_deleted"
             android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/mediumTextSize"
@@ -26,8 +37,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toStartOf="@+id/messageDate"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="@dimen/bodyMaxWidth" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"

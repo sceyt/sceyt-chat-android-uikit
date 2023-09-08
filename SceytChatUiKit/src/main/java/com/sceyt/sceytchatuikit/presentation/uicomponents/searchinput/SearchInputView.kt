@@ -21,6 +21,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SearchInputViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 
@@ -83,7 +85,9 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
 
         binding.root.setOnLongClickListener {
-            appDatabase.clearAllTables()
+            GlobalScope.launch {
+                appDatabase.clearAllTables()
+            }
             Toast.makeText(context, "Database was cleared", Toast.LENGTH_SHORT).show()
             return@setOnLongClickListener false
         }

@@ -5,6 +5,15 @@ Sceyt Chat UIKit is a collection of customizable UI components that allows devel
 With Sceyt Chat UIKit, developers can customize the look and feel of their chat interface to match the branding and design of their messaging application. The components are built to be easy to use and integrate seamlessly with the Sceyt Chat SDK for Android.
 
 In addition to the UI components, the Sceyt Chat UIKit also includes pre-built functionality such as typing indicators, read receipts, message reactions and many more. This helps to streamline the development process, allowing developers to focus on building a great user experience rather than on implementing basic chat functionality.
+
+## Repository Overview
+
+- **SceytChatUiKit:** Inside this folder, you'll find a collection of open-source components ready for building and customizing your future applications.
+
+- **SceytSimpleChatApp:** Explore this directory to experience a straightforward app that utilizes SceytChatUiKit. It serves as a basic example application, demonstrating how to get started with SceytUIKIt. It includes code for initiating one-on-one chats and sending your very first message. For in-depth information, please refer to our [simple chat app creation guide](https://docs.sceyt.com/chat/).
+
+- **SceytDemoApp:** Inside the SceytDemoApp folder, you'll discover a fully functional chat application with a range of additional features and components. Similar to SceytSimpleChatApp, this app also harnesses the power of SceytChatUiKit for extended functionality and customization options.
+
 ## Table of contents
 
 * [Requirements](#requirements)
@@ -39,7 +48,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```python
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.1.0'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.0'
 }
 ```
 

@@ -21,8 +21,8 @@ class IncLinkMsgViewHolder(
         linkPreview: LinkPreviewHelper,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        senderNameBuilder: ((User) -> String)?,
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, senderNameBuilder) {
+        userNameBuilder: ((User) -> String)?,
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, userNameBuilder) {
 
     init {
         with(binding) {
@@ -35,6 +35,14 @@ class IncLinkMsgViewHolder(
             root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
                 return@setOnLongClickListener true
+            }
+
+            messageBody.doOnLongClick {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+            }
+
+            messageBody.doOnClickWhenNoLink {
+                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
             }
         }
     }
@@ -53,8 +61,8 @@ class IncLinkMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {
-                    setMessageBody(messageBody, message)
-                    setBodyTextPosition(messageBody, messageDate, layoutDetails, bodyMaxWidth)
+                    setMessageBody(messageBody, message, checkLinks = true, isLinkViewHolder = true)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
@@ -78,6 +86,10 @@ class IncLinkMsgViewHolder(
             }
         }
     }
+
+    override val selectMessageView get() = binding.selectView
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {
         with(context) {
