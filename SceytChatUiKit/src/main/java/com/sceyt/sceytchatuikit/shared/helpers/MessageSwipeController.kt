@@ -27,7 +27,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
     private lateinit var mView: View
     private var swipeBack = false
     private var dX: Float = 0f
-    private var maxAcceptableExpand = context.screenWidthPx() * 0.3
+    private var maxAcceptableExpand = context.screenWidthPx() * 0.22
     private var enableSwipe: Boolean = true
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
@@ -69,7 +69,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
         // if swipe more than maxAcceptableExpand, then slow down the swipe
         if (dX > maxAcceptableExpand) {
             val diff = dX - this.dX
-            newDx = this.dX + diff * 0.2f
+            newDx = this.dX + diff * 0.3f
         } else
             this.dX = dX
 
@@ -83,7 +83,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
         recyclerView.setOnTouchListener { _, event ->
             swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP
             if (swipeBack) {
-                if (abs(mView.translationX) >= maxAcceptableExpand)
+                if (abs(mView.translationX) >= maxAcceptableExpand * 0.85)
                     swipeControllerActions.showReplyUI(viewHolder.bindingAdapterPosition)
             }
             false
@@ -94,7 +94,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
         if (currentItemViewHolder == null) {
             return
         }
-        val scale = min(1f, dX * 0.003f)
+        val scale = min(1f, dX * 0.0045f)
         val alpha = min(255f, 255 * scale).toInt()
 
         shareRound.alpha = alpha
