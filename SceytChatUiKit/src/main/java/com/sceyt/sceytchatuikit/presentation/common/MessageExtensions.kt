@@ -132,7 +132,7 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
-        filesChanged = attachments.equalsIgnoreNull(other.attachments).not(),
+        filesChanged = attachments?.map { it.id }?.sortedBy { it }.equalsIgnoreNull(other.attachments?.map { it.id }?.sortedBy { it }).not(),
         selectionChanged = isSelected != other.isSelected
     )
 }
