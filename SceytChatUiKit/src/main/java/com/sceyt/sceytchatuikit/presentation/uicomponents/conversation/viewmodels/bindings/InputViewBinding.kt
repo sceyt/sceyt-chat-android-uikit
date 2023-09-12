@@ -24,6 +24,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageIn
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
@@ -153,8 +154,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
-            this@bind.updateDraftMessage(text, mentionUserIds, replyOrEditMessage, isReply)
+        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+            this@bind.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
         }
 
         override fun mention(query: String) {

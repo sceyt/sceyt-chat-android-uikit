@@ -79,7 +79,8 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     metadata = draftMessageEntity.metadata,
     mentionUsers = mentionUsers?.map { it.toUser() },
     replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
-    isReply = draftMessageEntity.isReplyMessage ?: false
+    isReply = draftMessageEntity.isReplyMessage ?: false,
+    styleRanges = draftMessageEntity.styleRanges
 )
 
 fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: SceytMessage?) = DraftMessage(
@@ -89,7 +90,8 @@ fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: S
     metadata = metadata,
     mentionUsers = mentionUsers,
     replyOrEditMessage = replyMessage,
-    isReply = isReplyMessage ?: false
+    isReply = isReplyMessage ?: false,
+    styleRanges = styleRanges
 )
 
 fun User.copy() = User(

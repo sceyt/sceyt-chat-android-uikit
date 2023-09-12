@@ -40,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMess
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -215,8 +216,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
-        channelLogic.updateDraftMessage(channelId, message, mentionUsers, replyOrEditMessage, isReply)
+                                            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+        channelLogic.updateDraftMessage(channelId, message, mentionUsers, styling, replyOrEditMessage, isReply)
     }
 
     override fun getTotalUnreadCount(): Flow<Int> {
