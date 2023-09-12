@@ -86,6 +86,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.MessageStyler
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -160,7 +162,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             setUpStyle()
             setOnClickListeners()
-            addMentionUserListener()
+            addInoutListeners()
             determineInputState()
             addInputTextWatcher()
             post { onStateChanged(inputState) }
@@ -194,7 +196,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun updateDraftMessage() {
         val replyOrEditMessage = replyMessage ?: editMessage
         val isReply = replyMessage != null
-        messageInputActionCallback?.updateDraftMessage(binding.messageInput.text, binding.messageInput.mentions, replyOrEditMessage, isReply)
+        with(binding.messageInput) {
+            messageInputActionCallback?.updateDraftMessage(text, mentions, styling, replyOrEditMessage, isReply)
+        }
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
@@ -227,7 +231,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun addMentionUserListener() {
+    private fun addInoutListeners() {
         binding.messageInput.setInlineQueryChangedListener(object : InlineQueryChangedListener {
             override fun onQueryChanged(inlineQuery: InlineQuery) {
                 when (inlineQuery) {
@@ -240,6 +244,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
         })
+
+        binding.messageInput.setStylingChangedListener(::updateDraftMessage)
     }
 
     private fun sendMessage() {
@@ -287,7 +293,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         if (withMentionedUsers) {
             val data = getMentionUsersAndMetadata()
-            message.metadata = data.first
+            message.metadata = Gson().toJson(Meta(data.first, binding.messageInput.styling))
             message.mentionedUsers = data.second
         }
 
@@ -676,6 +682,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         var body = SpannableString(draftMessage.message)
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
+            draftMessage.styleRanges?.let {
+                body = MessageStyler.appendStyle(body.toString(), it.toArrayList())
+            }
+
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
                 body = MentionAnnotation.setMentionAnnotations(body, data)
@@ -817,7 +827,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
-        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean)
+        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?,
+                               replyOrEditMessage: SceytMessage?, isReply: Boolean)
+
         fun mention(query: String)
         fun join()
         fun clearChat()

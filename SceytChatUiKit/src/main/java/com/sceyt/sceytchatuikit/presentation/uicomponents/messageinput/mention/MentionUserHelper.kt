@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.Meta
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 object MentionUserHelper {
@@ -35,10 +36,10 @@ object MentionUserHelper {
         return Gson().toJson(items)
     }
 
-    fun buildWithMentionedUsers(context: Context, body: String, metaData: String?,
+    fun buildWithMentionedUsers(context: Context, body: SpannableString, metaData: String?,
                                 mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytKitConfig.sceytColorAccent,
                                 mentionClickListener: ((String) -> Unit)? = null): SpannableString {
-        val data = getMentionData(metaData) ?: return SpannableString(body)
+        val data = getMentionData(metaData) ?: return body
         val newBody = SpannableStringBuilder(body)
 
         return try {
@@ -71,10 +72,10 @@ object MentionUserHelper {
     fun buildOnlyNamesWithMentionedUsers(body: String, metaData: String?,
                                          mentionUsers: Array<User>?): SpannableString {
         if (metaData.isNullOrBlank()) return SpannableString(body)
-
+        val spannableBody = MessageBodyStyleHelper.buildWithStyle(body.trim(), metaData)
         return try {
-            val data = getMentionData(metaData) ?: return SpannableString(body)
-            val newBody = SpannableStringBuilder(body)
+            val data = getMentionData(metaData) ?: return spannableBody
+            val newBody = SpannableStringBuilder(spannableBody)
             data.sortedByDescending { it.loc }.forEach {
                 val name = setNewBodyWithName(mentionUsers, newBody, it)
                 newBody.setSpan(StyleSpan(Typeface.BOLD),
@@ -139,12 +140,25 @@ object MentionUserHelper {
         return name
     }
 
-    fun getMentionData(metadata: String?): List<MentionUserMetaDataPayLoad>? {
+   /* fun getMentionData(metadata: String?): List<MentionUserMetaDataPayLoad>? {
         if (metadata.isNullOrBlank()) return null
 
         return try {
             val empMapType = object : TypeToken<List<MentionUserMetaDataPayLoad>>() {}.type
             return Gson().fromJson(metadata, empMapType)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }*/
+
+    fun getMentionData(metadata: String?): List<MentionUserMetaDataPayLoad>? {
+        if (metadata.isNullOrBlank()) return null
+
+        return try {
+            val empMapType = object : TypeToken<List<MentionUserMetaDataPayLoad>>() {}.type
+            val data =  Gson().fromJson(metadata, Meta::class.java)
+            return Gson().fromJson(data.mention, empMapType)
         } catch (e: Exception) {
             e.printStackTrace()
             null

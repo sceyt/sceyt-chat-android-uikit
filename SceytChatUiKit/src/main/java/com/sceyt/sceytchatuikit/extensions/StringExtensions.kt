@@ -176,3 +176,11 @@ fun String.toSha256(): Long {
     val bigInt = BigInteger(1, digest)
     return bigInt.toLong()
 }
+
+fun Char.isVisuallyEmpty(): Boolean {
+    return Character.isWhitespace(this) || hashSetOf('\u200E',  // left-to-right mark
+        '\u200F',  // right-to-left mark
+        '\u2007',  // figure space
+        '\u200B',  // zero-width space
+        '\u2800').contains(this) // braille blank
+}

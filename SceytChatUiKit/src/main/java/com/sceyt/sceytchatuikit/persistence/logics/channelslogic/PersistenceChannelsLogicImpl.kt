@@ -77,6 +77,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManag
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
@@ -738,13 +739,13 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+                                            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         val draftMessage = if (message.isNullOrBlank()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
             null
         } else {
             val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
-                MentionUserHelper.initMentionMetaData(message, mentionUsers), replyOrEditMessage?.id, isReply)
+                MentionUserHelper.initMentionMetaData(message, mentionUsers), replyOrEditMessage?.id, isReply, styling)
             val links = mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) }
             draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
             draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) }, replyOrEditMessage)

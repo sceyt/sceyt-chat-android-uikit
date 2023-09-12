@@ -56,6 +56,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -130,10 +131,10 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                  checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
-        val bodyText = message.body.trim()
+        val spannableBody = MessageBodyStyleHelper.buildWithStyle(message.body.trim(), message.metadata)
         val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
-            bodyText
-        } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
+            spannableBody
+        } else MentionUserHelper.buildWithMentionedUsers(context, spannableBody,
             message.metadata, message.mentionedUsers) {
             messageListeners?.onMentionClick(messageBody, it)
         }
