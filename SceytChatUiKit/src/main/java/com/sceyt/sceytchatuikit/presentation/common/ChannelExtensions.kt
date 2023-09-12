@@ -58,13 +58,11 @@ fun SceytChannel.getFirstMember(): SceytMember? {
     return members?.firstOrNull { it.id != myId }
 }
 
-fun ChannelTypeEnum?.isGroup() = this == ChannelTypeEnum.Private || this == ChannelTypeEnum.Public
-
-fun ChannelTypeEnum?.isDirect() = this == ChannelTypeEnum.Private || this == ChannelTypeEnum.Public
+fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
 fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
 
-fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString()
+fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString() || type == ChannelTypeEnum.Group.getString()
 
-fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString()
+fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString() || type == ChannelTypeEnum.Broadcast.getString()
 
