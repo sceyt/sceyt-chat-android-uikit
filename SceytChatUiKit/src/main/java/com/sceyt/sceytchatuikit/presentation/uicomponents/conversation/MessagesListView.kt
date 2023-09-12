@@ -412,7 +412,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 pageStateView?.updateState(PageState.StateEmpty())
             return
         }
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
+        val data = messagesRV.getData() ?: return
+        data.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.updateMessage(updateMessage)
@@ -423,11 +424,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         // Check reply message to update
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.parentMessage?.id == updateMessage.id }?.let {
-            val message = (it.second as MessageItem).message
-            val oldMessage = message.clone()
-            message.parentMessage?.updateMessage(updateMessage)
-            updateItem(it.first, it.second, oldMessage.diff(message))
+        data.filter { it is MessageItem && it.message.parentMessage?.id == updateMessage.id }.forEach { item ->
+            data.findIndexed { it is MessageItem && it.message.id == (item as MessageItem).message.id }?.let {
+                val message = (it.second as MessageItem).message
+                val oldMessage = message.clone()
+                message.parentMessage?.updateMessage(updateMessage)
+                updateItem(it.first, it.second, oldMessage.diff(message))
+            }
         }
     }
 
