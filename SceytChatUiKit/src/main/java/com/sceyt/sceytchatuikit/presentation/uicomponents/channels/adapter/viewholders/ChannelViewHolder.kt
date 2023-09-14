@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
+import com.sceyt.sceytchatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
@@ -153,7 +154,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setSpannableString(MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, message.metadata, message.mentionedUsers))
+                .setSpannableString(MentionUserHelper.buildOnlyNamesWithMentionedUsers(message))
                 .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
@@ -206,7 +207,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val draft = context.getString(R.string.sceyt_draft)
             val text = SpannableStringBuilder("$draft: ").apply {
                 append(MentionUserHelper.buildOnlyNamesWithMentionedUsers(
-                    draftMessage.message.toString(), draftMessage.metadata, draftMessage.mentionUsers?.toTypedArray()))
+                    draftMessage.message.toString(), draftMessage.metadata, draftMessage.mentionUsers?.toTypedArray(),
+                    draftMessage.styleRanges?.map { it.toBodyAttribute() }))
                 setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             textView.text = text

@@ -26,7 +26,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.i
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryReplacement
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.MessageStyler
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.StyleType
 
 
@@ -77,12 +77,12 @@ class MentionSupportEditText : AppCompatEditText {
                     setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 })
                 menu.add(0, R.id.sceyt_monospace, largestOrder, SpannableString(context.getString(R.string.sceyt_monospace)).apply {
-                    setSpan(TypefaceSpan(MessageStyler.MONOSPACE), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(TypefaceSpan(BodyStyler.MONOSPACE), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 })
                 text?.let {
                     val start = selectionStart
                     val end = selectionEnd
-                    if (MessageStyler.hasStyling(it, start, end))
+                    if (BodyStyler.hasStyling(it, start, end))
                         menu.add(0, R.id.sceyt_clear_formatting, largestOrder, context.getString(R.string.sceyt_clear_formatting))
                 }
                 return true
@@ -121,9 +121,9 @@ class MentionSupportEditText : AppCompatEditText {
         }
         clearComposingText()
         if (style != null) {
-            MessageStyler.toggleStyle(style, text, start, end)
+            BodyStyler.toggleStyle(style, text, start, end)
         } else {
-            MessageStyler.clearStyling(text, start, end)
+            BodyStyler.clearStyling(text, start, end)
         }
         Selection.setSelection(getText(), end)
         stylingChangedListener?.onStylingChanged()
@@ -172,11 +172,11 @@ class MentionSupportEditText : AppCompatEditText {
 
     fun hasStyling(): Boolean {
         val trimmed: CharSequence = text?.trim() ?: return false
-        return trimmed is Spanned && MessageStyler.hasStyling(trimmed)
+        return trimmed is Spanned && BodyStyler.hasStyling(trimmed)
     }
 
     val styling: List<BodyStyleRange>?
-        get() =  MessageStyler.getStyling(text)
+        get() =  BodyStyler.getStyling(text)
 
     private fun changeSelectionForPartialMentions(spanned: Spanned, selectionStart: Int, selectionEnd: Int): Boolean {
         val annotations = spanned.getSpans(0, spanned.length, Annotation::class.java)

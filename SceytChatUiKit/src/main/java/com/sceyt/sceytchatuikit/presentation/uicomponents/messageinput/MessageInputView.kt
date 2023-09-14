@@ -57,6 +57,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
+import com.sceyt.sceytchatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
@@ -87,7 +88,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.MessageStyler
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -288,12 +289,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             .setType("text")
             .setBody(body)
             .setCreatedAt(System.currentTimeMillis())
+            .setBodyAttributes(binding.messageInput.styling?.map { it.toBodyAttribute() }?.toTypedArray())
             .initRelyMessage()
             .build()
 
         if (withMentionedUsers) {
             val data = getMentionUsersAndMetadata()
-            message.metadata = Gson().toJson(Meta(data.first, binding.messageInput.styling))
+            message.metadata = data.first
             message.mentionedUsers = data.second
         }
 
@@ -631,7 +633,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutImage.isVisible = false
                 tvName.text = getString(R.string.sceyt_edit_message)
                 tvMessageBody.text = if (message.isTextMessage())
-                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message)
                 else message.getShowBody(context)
             }
             if (!initWithDraft)
@@ -661,7 +663,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
                 tvMessageBody.text = if (message.isTextMessage())
-                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message)
                 else message.getShowBody(context)
             }
 
@@ -683,7 +685,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
             draftMessage.styleRanges?.let {
-                body = MessageStyler.appendStyle(body.toString(), it.toArrayList())
+                body = BodyStyler.appendStyle(body.toString(), it.toArrayList())
             }
 
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {

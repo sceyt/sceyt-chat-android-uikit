@@ -131,7 +131,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                  checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
-        val spannableBody = MessageBodyStyleHelper.buildWithStyle(message.body.trim(), message.metadata)
+        val spannableBody = MessageBodyStyleHelper.buildWithAttributes(message.body.trim(), message.bodyAttributes)
         val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
             spannableBody
         } else MentionUserHelper.buildWithMentionedUsers(context, spannableBody,

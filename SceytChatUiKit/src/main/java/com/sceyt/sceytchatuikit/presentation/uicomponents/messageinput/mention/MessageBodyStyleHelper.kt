@@ -1,30 +1,19 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
 import android.text.SpannableString
-import com.google.gson.Gson
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.Meta
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.MessageStyler
+import com.sceyt.chat.models.message.BodyAttribute
+import com.sceyt.sceytchatuikit.persistence.mappers.toBodyStyleRange
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 
 object MessageBodyStyleHelper {
 
-    fun buildWithStyle(body: String, metaData: String?): SpannableString {
-        val data = getStyleRanges(metaData) ?: return SpannableString(body)
+    fun buildWithAttributes(body: String, attribute: List<BodyAttribute>?): SpannableString {
+        attribute ?: return SpannableString(body)
         return try {
-            MessageStyler.appendStyle(body, data)
+            BodyStyler.appendStyle(body, attribute.mapNotNull { it.toBodyStyleRange() })
         } catch (e: Exception) {
             e.printStackTrace()
             SpannableString.valueOf(body)
-        }
-    }
-
-    private fun getStyleRanges(metaData: String?): List<BodyStyleRange>? {
-        metaData ?: return null
-        return try {
-            val data = Gson().fromJson(metaData, Meta::class.java)
-            data.style
-        } catch (e: Exception) {
-            null
         }
     }
 }
