@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "a7081c2809e8c1fde0f56081f0ce411b",
+    "identityHash": "825757227895323e2ec802e26cbe323e",
     "entities": [
       {
         "tableName": "channels",
@@ -384,7 +384,7 @@
       },
       {
         "tableName": "messages",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tid` INTEGER NOT NULL, `message_id` INTEGER, `channelId` INTEGER NOT NULL, `body` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `incoming` INTEGER NOT NULL, `isTransient` INTEGER NOT NULL, `silent` INTEGER NOT NULL, `deliveryStatus` INTEGER NOT NULL, `state` INTEGER NOT NULL, `fromId` TEXT, `markerCount` TEXT, `mentionedUsersIds` TEXT, `parentId` INTEGER, `replyCount` INTEGER NOT NULL, `displayCount` INTEGER NOT NULL, `autoDeleteAt` INTEGER, `unList` INTEGER NOT NULL, `messageId` INTEGER, `userId` TEXT, `hops` INTEGER, PRIMARY KEY(`tid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tid` INTEGER NOT NULL, `message_id` INTEGER, `channelId` INTEGER NOT NULL, `body` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `incoming` INTEGER NOT NULL, `isTransient` INTEGER NOT NULL, `silent` INTEGER NOT NULL, `deliveryStatus` INTEGER NOT NULL, `state` INTEGER NOT NULL, `fromId` TEXT, `markerCount` TEXT, `mentionedUsersIds` TEXT, `parentId` INTEGER, `replyCount` INTEGER NOT NULL, `displayCount` INTEGER NOT NULL, `autoDeleteAt` INTEGER, `bodyAttribute` TEXT, `unList` INTEGER NOT NULL, `messageId` INTEGER, `userId` TEXT, `hops` INTEGER, PRIMARY KEY(`tid`))",
         "fields": [
           {
             "fieldPath": "tid",
@@ -504,6 +504,12 @@
             "fieldPath": "autoDeleteAt",
             "columnName": "autoDeleteAt",
             "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bodyAttribute",
+            "columnName": "bodyAttribute",
+            "affinity": "TEXT",
             "notNull": false
           },
           {
@@ -1636,7 +1642,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a7081c2809e8c1fde0f56081f0ce411b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '825757227895323e2ec802e26cbe323e')"
     ]
   }
 }

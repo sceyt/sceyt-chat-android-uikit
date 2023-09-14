@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class BodyStyleRange(
-        val loc: Int,
-        val len: Int,
+        val offset: Int,
+        val length: Int,
         val style: StyleType
 ) : Parcelable

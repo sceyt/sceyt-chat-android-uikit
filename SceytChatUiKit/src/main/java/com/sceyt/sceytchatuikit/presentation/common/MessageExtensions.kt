@@ -4,7 +4,6 @@ import android.content.Context
 import android.text.SpannableString
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
@@ -67,7 +66,7 @@ fun SceytMessage.getShowBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, metadata, mentionedUsers)
+            MentionUserHelper.buildOnlyNamesWithMentionedUsers(this)
         }
 
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)

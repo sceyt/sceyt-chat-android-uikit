@@ -210,13 +210,20 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun onFcmMessage(data: RemoteMessageData) {
         val dataChannel = data.channel ?: return
         val dataMessage = data.message ?: return
-        //Update channel last message if channel exist
-        channelDao.getChannelById(dataChannel.id)?.let {
-            channelDao.updateLastMessage(it.channelEntity.id, dataMessage.id, dataMessage.createdAt)
-        } ?: run {
+
+        val channel: SceytChannel
+        val channelDb = channelDao.getChannelById(dataChannel.id)
+        if (channelDb != null) {
+            channel = channelDb.toChannel()
+            channel.lastMessage = dataMessage
+            channelDao.updateLastMessage(channelDb.channelEntity.id, dataMessage.id, dataMessage.createdAt)
+        } else {
             // Insert channel from push data
             channelDao.insertChannel(dataChannel.toChannelEntity())
+            channel = dataChannel
         }
+        fillChannelsNeededInfo(channel)
+        channelsCache.upsertChannel(channel)
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {

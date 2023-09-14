@@ -11,8 +11,8 @@ import android.text.style.ForegroundColorSpan
 import androidx.core.text.getSpans
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.isVisuallyEmpty
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.MessageStyler
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.MessageStyler.isSupportedStyle
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler.isSupportedStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 
@@ -82,7 +82,7 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
                     val styleEnd = s.getSpanEnd(style)
                     if (styleEnd == editEnd && styleStart < styleEnd) {
                         s.removeSpan(style)
-                        s.setSpan(style, styleStart, newEnd, MessageStyler.SPAN_FLAGS)
+                        s.setSpan(style, styleStart, newEnd, BodyStyler.SPAN_FLAGS)
                     } else if (styleStart >= styleEnd) {
                         s.removeSpan(style)
                     }

@@ -14,7 +14,7 @@ import java.lang.Integer.min
 /**
  * Helper for parsing and applying styles. Most notably with [StyleType].
  */
-object MessageStyler {
+object BodyStyler {
     const val MONOSPACE = "monospace"
     const val SPAN_FLAGS = Spanned.SPAN_EXCLUSIVE_INCLUSIVE
 
@@ -189,10 +189,10 @@ object MessageStyler {
         try {
             list.forEach {
                 when (it.style) {
-                    StyleType.Bold -> spannableString.setSpan(boldStyle(), it.loc, it.loc + it.len, SPAN_FLAGS)
-                    StyleType.Italic -> spannableString.setSpan(italicStyle(), it.loc, it.loc + it.len, SPAN_FLAGS)
-                    StyleType.Strikethrough -> spannableString.setSpan(strikethroughStyle(), it.loc, it.loc + it.len, SPAN_FLAGS)
-                    StyleType.Monospace -> spannableString.setSpan(monoStyle(), it.loc, it.loc + it.len, SPAN_FLAGS)
+                    StyleType.Bold -> spannableString.setSpan(boldStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
+                    StyleType.Italic -> spannableString.setSpan(italicStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
+                    StyleType.Strikethrough -> spannableString.setSpan(strikethroughStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
+                    StyleType.Monospace -> spannableString.setSpan(monoStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
                 }
             }
         } catch (e: Exception) {
