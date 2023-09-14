@@ -85,6 +85,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionAnnotation
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
@@ -316,11 +317,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun checkIsEditingMessage(messageBody: String): Boolean {
         editMessage?.let { message ->
-            if (message.body.trim() == messageBody.trim()) {
-                cancelReply()
-                reset()
-                return true
-            }
             val linkAttachment = getLinkAttachmentFromBody()?.toSceytAttachment(message.tid, TransferState.Uploaded)
             message.body = messageBody
 
@@ -332,6 +328,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             val data = getMentionUsersAndMetadata()
             message.metadata = data.first
             message.mentionedUsers = data.second
+            message.bodyAttributes = binding.messageInput.styling?.map { it.toBodyAttribute() }
 
             cancelReply {
                 messageInputActionCallback?.sendEditMessage(message)
@@ -608,7 +605,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun initInputWithEditMessage(message: SceytMessage) {
         with(binding) {
-            var body = SpannableString(message.body)
+            var body = MessageBodyStyleHelper.buildWithAttributes(message.body, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(message.metadata, message.mentionedUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
@@ -633,7 +630,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutImage.isVisible = false
                 tvName.text = getString(R.string.sceyt_edit_message)
                 tvMessageBody.text = if (message.isTextMessage())
-                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message)
+                    MessageBodyStyleHelper.buildWithMentionsAndAttributes(message)
                 else message.getShowBody(context)
             }
             if (!initWithDraft)
@@ -663,7 +660,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
                 tvMessageBody.text = if (message.isTextMessage())
-                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message)
+                    MessageBodyStyleHelper.buildWithMentionsAndAttributes(message)
                 else message.getShowBody(context)
             }
 

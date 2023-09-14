@@ -96,6 +96,7 @@ data class SceytMessage(var id: Long,
         messageReactions = message.messageReactions
         files = message.files?.map { it.sceytMessage = this; it }
         pendingReactions = message.pendingReactions
+        bodyAttributes = message.bodyAttributes
     }
 
     public override fun clone(): SceytMessage {

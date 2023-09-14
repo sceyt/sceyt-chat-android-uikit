@@ -14,7 +14,6 @@ import android.view.View
 import androidx.annotation.ColorRes
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -69,13 +68,8 @@ object MentionUserHelper {
         }
     }
 
-    fun buildOnlyNamesWithMentionedUsers(message: SceytMessage): SpannableString {
-        return buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers, message.bodyAttributes)
-    }
-
-    fun buildOnlyNamesWithMentionedUsers(body: String, metaData: String?,
-                                         mentionUsers: Array<User>?, attributes: List<BodyAttribute>?): SpannableString {
-        val spannableBody = MessageBodyStyleHelper.buildWithAttributes(body.trim(), attributes)
+    fun buildOnlyNamesWithMentionedUsers(spannableBody: SpannableString, metaData: String?,
+                                         mentionUsers: Array<User>?): SpannableString {
         if (metaData.isNullOrBlank()) return spannableBody
         return try {
             val data = getMentionData(metaData) ?: return spannableBody

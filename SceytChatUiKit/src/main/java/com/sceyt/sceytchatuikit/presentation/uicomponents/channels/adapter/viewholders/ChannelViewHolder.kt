@@ -34,7 +34,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
@@ -154,7 +154,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setSpannableString(MentionUserHelper.buildOnlyNamesWithMentionedUsers(message))
+                .setSpannableString(MessageBodyStyleHelper.buildWithMentionsAndAttributes(message))
                 .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
@@ -206,8 +206,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         return if (draftMessage != null) {
             val draft = context.getString(R.string.sceyt_draft)
             val text = SpannableStringBuilder("$draft: ").apply {
-                append(MentionUserHelper.buildOnlyNamesWithMentionedUsers(
-                    draftMessage.message.toString(), draftMessage.metadata, draftMessage.mentionUsers?.toTypedArray(),
+                append(MessageBodyStyleHelper.buildWithMentionsAndAttributes(draftMessage.message.toString(),
+                    draftMessage.metadata, draftMessage.mentionUsers?.toTypedArray(),
                     draftMessage.styleRanges?.map { it.toBodyAttribute() }))
                 setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
