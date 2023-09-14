@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import java.io.File
@@ -66,7 +66,7 @@ fun SceytMessage.getShowBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MentionUserHelper.buildOnlyNamesWithMentionedUsers(this)
+            MessageBodyStyleHelper.buildWithMentionsAndAttributes(this)
         }
 
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
@@ -103,7 +103,7 @@ fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
 internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
-        bodyChanged = body != other.body,
+        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
@@ -121,7 +121,7 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
 internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
-        bodyChanged = body != other.body,
+        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
