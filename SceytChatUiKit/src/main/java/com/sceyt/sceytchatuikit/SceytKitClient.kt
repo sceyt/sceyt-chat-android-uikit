@@ -77,8 +77,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     }
 
     @JvmStatic
-    fun connect(token: String, userName: String) {
-        preferences.setUserId(userName.lowercase())
+    fun connect(token: String) {
         getChatClient()?.connect(token)
     }
 
