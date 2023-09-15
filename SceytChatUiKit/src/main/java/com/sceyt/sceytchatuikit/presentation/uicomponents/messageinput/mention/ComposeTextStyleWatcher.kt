@@ -40,7 +40,7 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
     override fun afterTextChanged(s: Editable) {
         // Set mention spans
         s.getSpans<Annotation>(0, s.length).forEach {
-            if (it.key == "mention")
+            if (it.key == MentionUserHelper.MENTION)
                 s.setSpan(ForegroundColorSpan(context.getCompatColor(SceytKitConfig.sceytColorAccent)), s.getSpanStart(it), s.getSpanEnd(it), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 

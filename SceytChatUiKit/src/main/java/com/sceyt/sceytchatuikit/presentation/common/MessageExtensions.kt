@@ -66,7 +66,7 @@ fun SceytMessage.getShowBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildWithMentionsAndAttributes(this)
+            MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
         }
 
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)

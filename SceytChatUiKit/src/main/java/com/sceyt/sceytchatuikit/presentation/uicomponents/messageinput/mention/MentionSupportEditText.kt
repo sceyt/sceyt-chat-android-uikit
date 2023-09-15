@@ -176,7 +176,7 @@ class MentionSupportEditText : AppCompatEditText {
     }
 
     val styling: List<BodyStyleRange>?
-        get() =  BodyStyler.getStyling(text)
+        get() =  BodyStyler.getStyling(text?.trim())
 
     private fun changeSelectionForPartialMentions(spanned: Spanned, selectionStart: Int, selectionEnd: Int): Boolean {
         val annotations = spanned.getSpans(0, spanned.length, Annotation::class.java)

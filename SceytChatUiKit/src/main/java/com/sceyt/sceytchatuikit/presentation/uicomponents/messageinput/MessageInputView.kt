@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
+import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
@@ -89,7 +90,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -290,17 +290,26 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             .setType("text")
             .setBody(body)
             .setCreatedAt(System.currentTimeMillis())
-            .setBodyAttributes(binding.messageInput.styling?.map { it.toBodyAttribute() }?.toTypedArray())
             .initRelyMessage()
-            .build()
 
         if (withMentionedUsers) {
-            val data = getMentionUsersAndMetadata()
-            message.metadata = data.first
-            message.mentionedUsers = data.second
+            val data = getMentionUsersAndAttributes()
+            message.setMentionedUsers(data.second)
+            message.setBodyAttributes(data.first.toTypedArray())
         }
 
-        return message
+        return message.build()
+    }
+
+    private fun initBodyAttributes(styling: List<BodyStyleRange>?, mentions: List<Mention>?): List<BodyAttribute> {
+        val attributes = styling?.map { it.toBodyAttribute() }?.toArrayList() ?: arrayListOf()
+
+        if (!mentions.isNullOrEmpty()) {
+            MentionUserHelper.initMentionAttributes(binding.messageInput.text.toString(), mentions)?.let {
+                attributes.addAll(it)
+            }
+        }
+        return attributes
     }
 
     private fun Message.MessageBuilder.initRelyMessage(): Message.MessageBuilder {
@@ -325,10 +334,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     message.attachments = arrayOf(linkAttachment)
                 else message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
 
-            val data = getMentionUsersAndMetadata()
-            message.metadata = data.first
+            val data = getMentionUsersAndAttributes()
             message.mentionedUsers = data.second
-            message.bodyAttributes = binding.messageInput.styling?.map { it.toBodyAttribute() }
+            message.bodyAttributes = data.first
 
             cancelReply {
                 messageInputActionCallback?.sendEditMessage(message)
@@ -342,16 +350,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun getMentionUsersAndMetadata(): Pair<String?, Array<User>?> {
-        val mentionedUsers = binding.messageInput.mentions
-        if (mentionedUsers.isEmpty())
-            return Pair("", null)
-        var metadata: String
-        MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
-            metadata = it
+    private fun getMentionUsersAndAttributes(): Pair<List<BodyAttribute>, Array<User>> {
+        val bodyAttributes = arrayListOf<BodyAttribute>()
+        var mentionUsers = arrayOf<User>()
+        val mentions = binding.messageInput.mentions
+        val styling = binding.messageInput.styling
+        val attributes = initBodyAttributes(styling, mentions)
+        if (attributes.isNotEmpty()) {
+            bodyAttributes.addAll(attributes)
+            mentionUsers = mentions.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
         }
-        val mentionedUsersData = mentionedUsers.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
-        return Pair(metadata, mentionedUsersData)
+        return Pair(bodyAttributes, mentionUsers)
     }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
@@ -605,11 +614,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun initInputWithEditMessage(message: SceytMessage) {
         with(binding) {
-            var body = MessageBodyStyleHelper.buildWithAttributes(message.body, message.bodyAttributes)
+            var body = SpannableString(message.body)
             if (!message.mentionedUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(message.metadata, message.mentionedUsers)
+                val data = MentionUserHelper.getMentionsIndexed(message.bodyAttributes, message.mentionedUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
+            body = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(body, message.bodyAttributes)
             messageInput.setText(body)
             messageInput.text?.let { text -> messageInput.setSelection(text.length) }
             context.showSoftInput(messageInput)
@@ -630,7 +640,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutImage.isVisible = false
                 tvName.text = getString(R.string.sceyt_edit_message)
                 tvMessageBody.text = if (message.isTextMessage())
-                    MessageBodyStyleHelper.buildWithMentionsAndAttributes(message)
+                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
                 else message.getShowBody(context)
             }
             if (!initWithDraft)
@@ -660,7 +670,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
                 tvMessageBody.text = if (message.isTextMessage())
-                    MessageBodyStyleHelper.buildWithMentionsAndAttributes(message)
+                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
                 else message.getShowBody(context)
             }
 
@@ -681,12 +691,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         var body = SpannableString(draftMessage.message)
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
-            draftMessage.styleRanges?.let {
-                body = BodyStyler.appendStyle(body.toString(), it.toArrayList())
-            }
+            body = MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, body.toString(),
+                draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes)
 
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
+                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers.toTypedArray())
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)
