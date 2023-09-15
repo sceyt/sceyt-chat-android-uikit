@@ -76,22 +76,20 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     chatId = draftMessageEntity.chatId,
     message = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
-    metadata = draftMessageEntity.metadata,
     mentionUsers = mentionUsers?.map { it.toUser() },
     replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
     isReply = draftMessageEntity.isReplyMessage ?: false,
-    styleRanges = draftMessageEntity.styleRanges
+    bodyAttributes = draftMessageEntity.styleRanges
 )
 
 fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: SceytMessage?) = DraftMessage(
     chatId = chatId,
     message = message,
     createdAt = createdAt,
-    metadata = metadata,
     mentionUsers = mentionUsers,
     replyOrEditMessage = replyMessage,
     isReply = isReplyMessage ?: false,
-    styleRanges = styleRanges
+    bodyAttributes = styleRanges
 )
 
 fun User.copy() = User(

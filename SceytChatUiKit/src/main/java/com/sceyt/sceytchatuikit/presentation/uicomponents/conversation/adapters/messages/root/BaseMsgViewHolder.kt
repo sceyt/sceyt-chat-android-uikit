@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.SpannableString
 import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
@@ -131,14 +132,14 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                  checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
-        val spannableBody = MessageBodyStyleHelper.buildWithAttributes(message.body.trim(), message.bodyAttributes)
-        val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
-            spannableBody
-        } else MentionUserHelper.buildWithMentionedUsers(context, spannableBody,
-            message.metadata, message.mentionedUsers) {
-            messageListeners?.onMentionClick(messageBody, it)
-        }
+        var text = SpannableString.valueOf(message.body.trim())
+        if (!message.mentionedUsers.isNullOrEmpty())
+            text = MentionUserHelper.buildWithMentionedUsers(context, message.body,
+                message.bodyAttributes, message.mentionedUsers) {
+                messageListeners?.onMentionClick(messageBody, it)
+            }
 
+        text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
         setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
         messageBody.setText(text, TextView.BufferType.SPANNABLE)
     }

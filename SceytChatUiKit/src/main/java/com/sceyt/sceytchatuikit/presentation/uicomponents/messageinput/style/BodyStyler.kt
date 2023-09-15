@@ -183,8 +183,7 @@ object BodyStyler {
         }
     }
 
-    fun appendStyle(body: String, list: List<BodyStyleRange>?): SpannableString {
-        list ?: return SpannableString(body)
+    fun appendStyle(body: CharSequence, list: List<BodyStyleRange>): SpannableString {
         val spannableString = SpannableString(body)
         try {
             list.forEach {

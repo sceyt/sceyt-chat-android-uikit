@@ -9,7 +9,6 @@ import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.persistence.extensions.toEnum
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 
 class MessageConverter {
     @TypeConverter
@@ -48,27 +47,6 @@ class MessageConverter {
 
         val gson = Gson()
         val type = object : TypeToken<List<MarkerTotal>>() {}.type
-        return gson.toJson(obj, type)
-    }
-
-    @TypeConverter
-    fun stringToBodyStyleRange(json: String?): List<BodyStyleRange>? {
-        json ?: return null
-        val type = object : TypeToken<List<BodyStyleRange>>() {}.type
-        return try {
-            Gson().fromJson(json, type)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    @TypeConverter
-    fun bodyStyleRangeToString(obj: List<BodyStyleRange>?): String? {
-        if (obj == null)
-            return null
-
-        val gson = Gson()
-        val type = object : TypeToken<List<BodyStyleRange>>() {}.type
         return gson.toJson(obj, type)
     }
 
