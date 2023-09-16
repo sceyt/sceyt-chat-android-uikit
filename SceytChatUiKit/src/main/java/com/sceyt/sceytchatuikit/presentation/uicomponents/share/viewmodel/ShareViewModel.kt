@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
@@ -15,11 +14,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getFileSize
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
-import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
-import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
@@ -28,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.io.File
@@ -119,35 +113,6 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
 
         trySend(State.Finish)
         awaitClose()
-    }
-
-    data class ResizeFileInfo(
-            var resizedPath: String,
-            val originalFilePath: String,
-            val type: AttachmentTypeEnum
-    )
-
-    private suspend fun checkAndResizeMessageFile(context: Context, path: String) = suspendCancellableCoroutine { continuation ->
-        val type = getAttachmentType(path)
-        val data = ResizeFileInfo(path, path, type)
-        when (type.value()) {
-            AttachmentTypeEnum.Image.value() -> {
-                val result = resizeImage(context, path, 1080)
-                if (result.isSuccess && result.getOrNull().isNotNullOrBlank())
-                    data.resizedPath = result.getOrThrow()
-
-                continuation.safeResume(data)
-            }
-            AttachmentTypeEnum.Video.value() -> {
-                transcodeVideo(context, path) { result ->
-                    if (result.isSuccess && result.getOrNull().isNotNullOrBlank())
-                        data.resizedPath = result.getOrThrow()
-
-                    continuation.safeResume(data)
-                }
-            }
-            else -> continuation.safeResume(data)
-        }
     }
 
     private fun getPathFromFile(vararg uris: Uri): List<String> {
