@@ -169,5 +169,10 @@
     <string name="sceyt_un_mute_">Unmute</string>
     <string name="sceyt_rich_max_message_select_count">You can select up to %1$s messages.</string>
     <string name="sceyt_clear_chat">Clear Chat</string>
+    <string name="sceyt_bold">Bold</string>
+    <string name="sceyt_italic">Italic</string>
+    <string name="sceyt_strikethrough">Strikethrough</string>
+    <string name="sceyt_monospace">Monospace</string>
+    <string name="sceyt_clear_formatting">Clear formatting</string>
 
 </resources>

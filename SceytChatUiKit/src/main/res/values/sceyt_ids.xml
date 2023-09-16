@@ -28,4 +28,12 @@
     <item name="sceyt_change_role" type="id" />
     <item name="sceyt_kick_member" type="id" />
     <item name="sceyt_block_and_kick_member" type="id" />
+
+    <!-- Message body styling action ids-->
+    <item name="sceyt_bold" type="id" />
+    <item name="sceyt_italic" type="id" />
+    <item name="sceyt_strikethrough" type="id" />
+    <item name="sceyt_monospace" type="id" />
+    <item name="sceyt_clear_formatting" type="id" />
+
 </resources>
