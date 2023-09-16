@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 import android.content.Context
 import android.text.Editable
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -90,6 +91,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
@@ -251,14 +253,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun sendMessage() {
-        val messageBody = binding.messageInput.text.toString().trim()
-        if (messageBody.isEmpty() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
+        val body = binding.messageInput.text
+        if (body.isNullOrBlank() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
             if (isEditingMessage())
                 customToastSnackBar(this, context.getString(R.string.sceyt_empty_message_body_message))
             return
         }
-
-        if (!checkIsEditingMessage(messageBody)) {
+        val replacedBody = replaceBodyMentions(body)
+        if (!checkIsEditingMessage(replacedBody)) {
             cancelReply {
                 val link = getLinkAttachmentFromBody()
                 if (allAttachments.isNotEmpty()) {
@@ -268,7 +270,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                         val message = if (index == 0) {
                             if (link != null)
                                 attachments = attachments.plus(link)
-                            buildMessage(messageBody, attachments, true)
+                            buildMessage(replacedBody, attachments, true)
                         } else buildMessage("", attachments, false)
 
                         messages.add(message)
@@ -276,29 +278,41 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     messageInputActionCallback?.sendMessages(messages)
                 } else {
                     val attachment = if (link != null) arrayOf(link) else arrayOf()
-                    messageInputActionCallback?.sendMessage(buildMessage(messageBody, attachment, true))
+                    messageInputActionCallback?.sendMessage(buildMessage(replacedBody, attachment, true))
                 }
                 reset()
             }
         }
     }
 
-    private fun buildMessage(body: String, attachments: Array<Attachment>, withMentionedUsers: Boolean): Message {
+    private fun buildMessage(body: CharSequence, attachments: Array<Attachment>, withMentionedUsers: Boolean): Message {
         val message = Message.MessageBuilder()
             .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
             .setType("text")
-            .setBody(body)
+            .setBody(body.toString())
             .setCreatedAt(System.currentTimeMillis())
             .initRelyMessage()
 
         if (withMentionedUsers) {
-            val data = getMentionUsersAndAttributes()
+            val data = getMentionUsersAndAttributes(body)
             message.setMentionedUsers(data.second)
             message.setBodyAttributes(data.first.toTypedArray())
         }
 
         return message.build()
+    }
+
+    private fun replaceBodyMentions(body: CharSequence?): SpannableStringBuilder {
+        val newBody = SpannableStringBuilder(body?.trim() ?: return SpannableStringBuilder())
+        val mentions = binding.messageInput.mentions
+        if (mentions.isEmpty()) return newBody
+        mentions.sortedByDescending { it.start }.forEach { mention ->
+            val replaceText = "@${mention.recipientId.notAutoCorrectable()}"
+            newBody.replace(mention.start, mention.start + mention.length, replaceText)
+        }
+
+        return newBody
     }
 
     private fun initBodyAttributes(styling: List<BodyStyleRange>?, mentions: List<Mention>?): List<BodyAttribute> {
@@ -324,17 +338,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return this
     }
 
-    private fun checkIsEditingMessage(messageBody: String): Boolean {
+    private fun checkIsEditingMessage(messageBody: CharSequence): Boolean {
         editMessage?.let { message ->
             val linkAttachment = getLinkAttachmentFromBody()?.toSceytAttachment(message.tid, TransferState.Uploaded)
-            message.body = messageBody
+            message.body = messageBody.toString()
 
             if (linkAttachment != null)
                 if (message.attachments.isNullOrEmpty())
                     message.attachments = arrayOf(linkAttachment)
                 else message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
 
-            val data = getMentionUsersAndAttributes()
+            val data = getMentionUsersAndAttributes(messageBody)
             message.mentionedUsers = data.second
             message.bodyAttributes = data.first
 
@@ -350,11 +364,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun getMentionUsersAndAttributes(): Pair<List<BodyAttribute>, Array<User>> {
+    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, Array<User>> {
         val bodyAttributes = arrayListOf<BodyAttribute>()
         var mentionUsers = arrayOf<User>()
-        val mentions = binding.messageInput.mentions
-        val styling = binding.messageInput.styling
+        val mentions = MentionAnnotation.getMentionsFromAnnotations(body)
+        val styling = BodyStyler.getStyling(body)
         val attributes = initBodyAttributes(styling, mentions)
         if (attributes.isNotEmpty()) {
             bodyAttributes.addAll(attributes)
@@ -614,12 +628,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun initInputWithEditMessage(message: SceytMessage) {
         with(binding) {
-            var body = SpannableString(message.body)
+            var body = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(message.body, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(message.bodyAttributes, message.mentionedUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
-            body = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(body, message.bodyAttributes)
             messageInput.setText(body)
             messageInput.text?.let { text -> messageInput.setSelection(text.length) }
             context.showSoftInput(messageInput)
@@ -749,6 +762,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getEventListeners() = eventListeners
 
+    @SuppressWarnings("WeakerAccess")
     fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
         if (isRecording()) {
             SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording,
@@ -759,6 +773,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         } else onConfirm()
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun createAttachmentWithPaths(vararg filePath: String, metadata: String = "", attachmentType: String? = null): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
         for (path in filePath) {
@@ -789,6 +804,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         addAttachments(attachments)
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun reset(clearInput: Boolean = true) {
         if (clearInput)
             binding.messageInput.text = null
@@ -801,11 +817,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateDraftMessage()
     }
 
+    @Suppress("Unused")
     fun disableInputWithMessage(message: String, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
         disabledInputByGesture = true
         hideInputWithMessage(message, startIcon)
     }
 
+    @Suppress("unused")
     fun enableInput() {
         disabledInputByGesture = false
         if (!isInputHidden)
@@ -816,16 +834,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.messageInput.setMentionValidator(validator)
     }
 
+    @Suppress("unused")
     fun enableDisableMention(enable: Boolean) {
         enableMention = enable
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun stopRecording() {
         voiceMessageRecorderView?.forceStopRecording()
     }
 
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
 
+    @SuppressWarnings("WeakerAccess")
     fun isRecording() = voiceMessageRecorderView?.isRecording == true
 
     fun getComposedMessage() = binding.messageInput.text
@@ -855,6 +876,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners = listener
     }
 
+    @Suppress("unused")
     fun setEventListener(listener: InputEventsListener) {
         eventListeners.setListener(listener)
     }
@@ -863,6 +885,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         eventListeners = listener
     }
 
+    @Suppress("unused")
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
         selectFileTypePopupClickListeners = listener
     }

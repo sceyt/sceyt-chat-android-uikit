@@ -133,13 +133,14 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                  checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
         var text = SpannableString.valueOf(message.body.trim())
-        if (!message.mentionedUsers.isNullOrEmpty())
-            text = MentionUserHelper.buildWithMentionedUsers(context, message.body,
-                message.bodyAttributes, message.mentionedUsers) {
-                messageListeners?.onMentionClick(messageBody, it)
-            }
-
-        text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
+        if (!message.bodyAttributes.isNullOrEmpty()) {
+            text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
+            if (!message.mentionedUsers.isNullOrEmpty())
+                text = MentionUserHelper.buildWithMentionedUsers(context, text,
+                    message.bodyAttributes, message.mentionedUsers) {
+                    messageListeners?.onMentionClick(messageBody, it)
+                }
+        }
         setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
         messageBody.setText(text, TextView.BufferType.SPANNABLE)
     }
