@@ -107,7 +107,7 @@ class MentionSupportEditText : AppCompatEditText {
     fun handleFormatText(@IdRes id: Int): Boolean {
         val text = text ?: return false
         if (id != R.id.sceyt_bold && id != R.id.sceyt_italic && id != R.id.sceyt_strikethrough
-                && id != R.id.sceyt_monospace  && id != R.id.sceyt_clear_formatting) {
+                && id != R.id.sceyt_monospace && id != R.id.sceyt_clear_formatting) {
             return false
         }
         val start = selectionStart
@@ -168,7 +168,7 @@ class MentionSupportEditText : AppCompatEditText {
     }
 
     val mentions: List<Mention>
-        get() = MentionAnnotation.getMentionsFromAnnotations(text)
+        get() = MentionAnnotation.getMentionsFromAnnotations(text?.trim())
 
     fun hasStyling(): Boolean {
         val trimmed: CharSequence = text?.trim() ?: return false
@@ -176,7 +176,7 @@ class MentionSupportEditText : AppCompatEditText {
     }
 
     val styling: List<BodyStyleRange>?
-        get() =  BodyStyler.getStyling(text?.trim())
+        get() = BodyStyler.getStyling(text?.trim())
 
     private fun changeSelectionForPartialMentions(spanned: Spanned, selectionStart: Int, selectionEnd: Int): Boolean {
         val annotations = spanned.getSpans(0, spanned.length, Annotation::class.java)
