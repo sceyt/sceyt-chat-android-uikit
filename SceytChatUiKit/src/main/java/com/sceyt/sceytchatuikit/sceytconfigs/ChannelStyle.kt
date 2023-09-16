@@ -64,27 +64,6 @@ object ChannelStyle {
 
     var channelDateFormat = ChannelDateFormatter()
 
-    /*internal constructor(context: Context) : this(
-        titleColor = context.getCompatColor(R.color.colorFontDark),
-        lastMessageTextColor = context.getCompatColor(R.color.colorFontGray),
-        unreadCountColor = context.getCompatColor(R.color.colorAccent)
-    )*/
-
-    /* internal constructor(context: Context, typedArray: TypedArray) : this(
-         titleColor = typedArray.getResourceId(
-             R.styleable.ChannelListView_sceytUiChannelTitleTextColor,
-             R.color.colorFontDark
-         ),
-         lastMessageTextColor = typedArray.getColor(
-             R.styleable.ChannelListView_sceytUiLastMessageTextColor,
-             context.getCompatColor(R.color.colorFontGray)
-         ),
-         unreadCountColor = typedArray.getColor(
-             R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor,
-             context.getCompatColor(R.color.colorAccent)
-         )
-     )*/
-
 
     internal fun updateWithAttributes(typedArray: TypedArray): ChannelStyle {
         backgroundColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelListBackgroundColor, backgroundColor)

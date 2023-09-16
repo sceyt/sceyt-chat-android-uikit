@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.converters
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
@@ -46,6 +47,27 @@ class MessageConverter {
 
         val gson = Gson()
         val type = object : TypeToken<List<MarkerTotal>>() {}.type
+        return gson.toJson(obj, type)
+    }
+
+    @TypeConverter
+    fun stringToBodyAttribute(json: String?): List<BodyAttribute>? {
+        json ?: return null
+        val type = object : TypeToken<List<BodyAttribute>>() {}.type
+        return try {
+            Gson().fromJson(json, type)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    @TypeConverter
+    fun bodyAttributeToString(obj: List<BodyAttribute>?): String? {
+        if (obj == null)
+            return null
+
+        val gson = Gson()
+        val type = object : TypeToken<List<BodyAttribute>>() {}.type
         return gson.toJson(obj, type)
     }
 }

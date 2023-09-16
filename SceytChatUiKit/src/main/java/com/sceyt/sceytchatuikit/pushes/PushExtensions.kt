@@ -50,7 +50,7 @@ fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, u
                 ?: 0,
             0L, true, transient, false, deliveryStatus, state,
             user, attachmentArray.toTypedArray(), null, null, null, null,
-            null, parentMessage, 0, 0, 0, forwardingDetails)
+            null, parentMessage, 0, 0, 0, forwardingDetails, null)
     } catch (e: Exception) {
         e.printStackTrace()
         null

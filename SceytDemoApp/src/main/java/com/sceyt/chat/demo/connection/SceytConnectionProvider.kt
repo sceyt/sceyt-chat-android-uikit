@@ -43,7 +43,7 @@ class SceytConnectionProvider(
                     chatClientConnectionInterceptor.getChatToken(SceytKitClient.myId.toString())?.let { token ->
                         if (application.isAppOnForeground()) {
                             SceytLog.i(Tag, "onTokenExpired, will connect with new token: ${token.take(8)}")
-                            SceytKitClient.connect(token, SceytKitClient.myId.toString())
+                            SceytKitClient.connect(token)
                         }
                     } ?: run {
                         SceytLog.i(Tag, "connectChatClient failed because ChatClient token is null. Called in onTokenExpired")
@@ -62,7 +62,7 @@ class SceytConnectionProvider(
                                 SceytLog.e(Tag, "$Tag update chatSdk Token failed, will connect, error: $errorMessage")
                                 if (application.isAppOnForeground()) {
                                     SceytLog.i(Tag, "$Tag onTokenWillExpire, will connect with new token: ${token.take(8)}")
-                                    SceytKitClient.connect(token, SceytKitClient.myId.toString())
+                                    SceytKitClient.connect(token)
                                 }
                             } else
                                 SceytLog.i(Tag, "$Tag updateToken success")
@@ -108,12 +108,12 @@ class SceytConnectionProvider(
 
             if (!sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
-                SceytKitClient.connect(sceytToken, userId.toString())
+                SceytKitClient.connect(sceytToken)
             } else {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token.")
                 chatClientConnectionInterceptor.getChatToken(userId.toString())?.let { token ->
                     SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
-                    SceytKitClient.connect(token, userId.toString())
+                    SceytKitClient.connect(token)
                 } ?: run {
                     SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in connectChatClient")
                 }
@@ -121,8 +121,6 @@ class SceytConnectionProvider(
             isConnecting.set(false)
         }
     }
-
-
 
     private fun observeToAppLifecycle() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(LifecycleEventObserver { _, event ->
@@ -143,15 +141,17 @@ class SceytConnectionProvider(
     private fun observeToConnectionState() {
         scope.launch {
             ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
-                if (it.state == ConnectionState.Failed || (it.state == ConnectionState.Disconnected && it.exception != null)) {
-                    SceytLog.e(Tag, "observeToConnectionState state is ${it.state} exception: ${it.exception?.message}")
-                    preference.setToken(null)
-                    chatClientConnectionInterceptor.getChatToken(SceytKitClient.myId.toString())?.let { token ->
-                        SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: $token")
-                        SceytKitClient.connect(token, SceytKitClient.myId.toString())
-                    } ?: run {
-                        SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in observeToConnectionState")
+                when (it.state) {
+                    ConnectionState.Failed -> SceytLog.e(Tag, "${it.exception?.message}")
+                    ConnectionState.Disconnected -> {
+                        if (it.exception?.code == 1021) {
+                            SceytLog.i(Tag, "disconnected, reason ${it.exception?.message}, clear old token because of 1021 error")
+                            preference.setToken(null)
+                        } else
+                            SceytLog.i(Tag, "$Tag disconnected ${it.exception?.message}")
                     }
+
+                    else -> Unit
                 }
             }
         }

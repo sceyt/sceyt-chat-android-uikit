@@ -4,7 +4,6 @@ import android.content.Context
 import android.text.SpannableString
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
@@ -16,7 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import java.io.File
@@ -67,7 +66,7 @@ fun SceytMessage.getShowBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, metadata, mentionedUsers)
+            MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
         }
 
         attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
@@ -104,7 +103,7 @@ fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
 internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
-        bodyChanged = body != other.body,
+        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
@@ -122,7 +121,7 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
 internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
-        bodyChanged = body != other.body,
+        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
         statusChanged = deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
@@ -132,7 +131,7 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
-        filesChanged = attachments.equalsIgnoreNull(other.attachments).not(),
+        filesChanged = attachments?.map { it.id }?.sortedBy { it }.equalsIgnoreNull(other.attachments?.map { it.id }?.sortedBy { it }).not(),
         selectionChanged = isSelected != other.isSelected
     )
 }

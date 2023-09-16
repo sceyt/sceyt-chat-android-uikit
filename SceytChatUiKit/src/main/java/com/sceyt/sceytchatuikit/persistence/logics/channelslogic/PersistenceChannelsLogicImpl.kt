@@ -62,6 +62,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.createPendingDirectChannelData
+import com.sceyt.sceytchatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
@@ -76,7 +77,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
@@ -209,13 +210,20 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun onFcmMessage(data: RemoteMessageData) {
         val dataChannel = data.channel ?: return
         val dataMessage = data.message ?: return
-        //Update channel last message if channel exist
-        channelDao.getChannelById(dataChannel.id)?.let {
-            channelDao.updateLastMessage(it.channelEntity.id, dataMessage.id, dataMessage.createdAt)
-        } ?: run {
+
+        val channel: SceytChannel
+        val channelDb = channelDao.getChannelById(dataChannel.id)
+        if (channelDb != null) {
+            channel = channelDb.toChannel()
+            channel.lastMessage = dataMessage
+            channelDao.updateLastMessage(channelDb.channelEntity.id, dataMessage.id, dataMessage.createdAt)
+        } else {
             // Insert channel from push data
             channelDao.insertChannel(dataChannel.toChannelEntity())
+            channel = dataChannel
         }
+        fillChannelsNeededInfo(channel)
+        channelsCache.upsertChannel(channel)
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
@@ -738,13 +746,17 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+                                            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         val draftMessage = if (message.isNullOrBlank()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
             null
         } else {
+            val attributes = mentionUsers.map { it.toBodyAttribute() }.toMutableList()
+            styling?.let {
+                attributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+            }
             val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
-                MentionUserHelper.initMentionMetaData(message, mentionUsers), replyOrEditMessage?.id, isReply)
+                replyOrEditMessage?.id, isReply, attributes)
             val links = mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) }
             draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
             draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) }, replyOrEditMessage)

@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import kotlinx.coroutines.flow.Flow
 
@@ -53,7 +54,7 @@ interface PersistenceChannelsLogic {
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
     suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                   replyOrEditMessage: SceytMessage?, isReply: Boolean)
+                                   styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean)
 
     suspend fun getChannelsCountFromDb(): Int
     fun getTotalUnreadCount(): Flow<Int>

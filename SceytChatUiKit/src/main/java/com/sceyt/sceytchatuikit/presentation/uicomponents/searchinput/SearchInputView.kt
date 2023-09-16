@@ -30,8 +30,6 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
     : FrameLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
         SearchInputEventListeners.EventListeners, SceytKoinComponent {
 
-    private val appDatabase: SceytDatabase by inject()
-
     private companion object {
         private const val TYPING_DEBOUNCE_MS = 300L
     }
@@ -80,12 +78,14 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
                     hideSoftInput()
                     true
                 }
+
                 else -> false
             }
         }
 
         binding.root.setOnLongClickListener {
             GlobalScope.launch {
+                val appDatabase: SceytDatabase by inject()
                 appDatabase.clearAllTables()
             }
             Toast.makeText(context, "Database was cleared", Toast.LENGTH_SHORT).show()
@@ -144,7 +144,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         eventListeners = listener
     }
 
-    fun clearSearchAndFocus(){
+    fun clearSearchAndFocus() {
         binding.input.setText("")
         binding.input.clearFocus()
     }
