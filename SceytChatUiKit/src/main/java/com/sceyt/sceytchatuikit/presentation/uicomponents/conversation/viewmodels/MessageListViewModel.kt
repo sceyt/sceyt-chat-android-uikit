@@ -26,7 +26,6 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewe
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
@@ -371,6 +370,7 @@ class MessageListViewModel(
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey, 1)
@@ -378,6 +378,7 @@ class MessageListViewModel(
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey, isPending)
@@ -385,14 +386,9 @@ class MessageListViewModel(
         }
     }
 
-
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
-                if (result is SendMessageResult.Error) {
-                    // Implement logic if you want to show failed status
-                }
-            }
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect()
         }
     }
 
@@ -408,6 +404,7 @@ class MessageListViewModel(
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)

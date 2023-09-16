@@ -37,6 +37,7 @@ ext {
     flex_box_version = "3.0.0"
 
     live_event_version = '1.2.0'
+    live_data_ktx_version = '2.6.2'
 
     glide_version = '4.16.0'
     glide_compiler_version = '4.12.0'
@@ -97,6 +98,7 @@ ext {
             lifecycleRuntime      : "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version",
             lifecycleViewModel    : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",
             lottie                : "com.airbnb.android:lottie:$lottie_version",
+            liveDataKtx           : "androidx.lifecycle:lifecycle-livedata-ktx:$live_data_ktx_version",
             liveEvent             : "com.github.hadilq.liveevent:liveevent:$live_event_version",
             lightCompressor       : "com.github.AbedElazizShe:LightCompressor:$light_compressor_version",
             voley                 : "com.android.volley:volley:$voley_version",
