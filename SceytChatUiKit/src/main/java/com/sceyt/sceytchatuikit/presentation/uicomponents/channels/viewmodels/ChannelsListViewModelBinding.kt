@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -105,7 +106,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
-        if (lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED)
+        if (!lifecycleOwner.isResumed())
             needToUpdateChannelsAfterResume[data.channel.id] = data
 
         lifecycleOwner.lifecycleScope.launch {
@@ -144,7 +145,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     ChannelsCache.pendingChannelCreatedFlow.onEach { data ->
         channelsListView.replaceChannel(data.first, data.second)
-        if (lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED) {
+        if (!lifecycleOwner.isResumed()) {
             newAddedChannelJobs[data.first]?.let {
                 it.cancel()
                 newAddedChannelJobs.remove(data.first)
@@ -155,7 +156,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
         channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
-        if (lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED) {
+        if (!lifecycleOwner.isResumed()) {
             val pendingUpdate = needToUpdateChannelsAfterResume[channel.id]
             if (pendingUpdate != null) {
                 pendingUpdate.channel = channel

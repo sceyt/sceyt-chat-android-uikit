@@ -92,6 +92,7 @@ dependencies {
     api supportDependencies.coreKtx
     api supportDependencies.sceytSdk
     api supportDependencies.lifecycleRuntime
+    api supportDependencies.liveDataKtx
     api supportDependencies.liveEvent
     api supportDependencies.glide
     api supportDependencies.glideTransformations

@@ -22,6 +22,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.isResumed
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
@@ -50,8 +52,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     clearPreparingThumbs()
 
     val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
+    val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
-    /** Send pending markers and pending messages when lifecycle come back onResume state,
+    /** Send pending markers, pending messages and update attachments transfer states when lifecycle come back onResume state,
      * Also set update current chat Id in ChannelsCache*/
     viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -61,6 +64,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     pendingDisplayMsgIds.clear()
                 }
                 sendPendingMessages()
+            }
+            messagesListView.post {
+                if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
+                    needToUpdateTransferAfterOnResume.values.forEach { data ->
+                        messagesListView.updateProgress(data, true)
+                    }
+                    needToUpdateTransferAfterOnResume.clear()
+                }
             }
         }
     }
@@ -356,7 +367,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
                 return
 
-            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            if (lifecycleOwner.isResumed()) {
                 pendingDisplayMsgIds.add(message.id)
                 sendDisplayedHelper.submit {
                     markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
@@ -391,11 +402,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(viewModelScope)
 
-    onTransferUpdatedLiveData.observe(lifecycleOwner) { data ->
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            messagesListView.updateProgress(data)
+    onTransferUpdatedLiveData.asFlow().onEach {
+        viewModelScope.launch(Dispatchers.Default) {
+            if (lifecycleOwner.isResumed()) {
+                messagesListView.updateProgress(it, false)
+            } else
+                needToUpdateTransferAfterOnResume[it.messageTid] = it
         }
-    }
+    }.launchIn(viewModelScope)
 
     onChannelEventFlow.onEach {
         when (it.eventType) {
