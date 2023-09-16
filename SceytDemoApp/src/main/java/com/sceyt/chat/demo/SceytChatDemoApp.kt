@@ -40,8 +40,8 @@ class SceytChatDemoApp : Application() {
         ChatClient.setEnableNetworkChangeDetection(true)
         chatClient = SceytUIKitInitializer(this).initialize(
             clientId = UUID.randomUUID().toString(),
-            appId = "8lwox2ge93",
-            host = "https://us-ohio-api.sceyt.com/",
+            appId = BuildConfig.APP_ID,
+            host = BuildConfig.HOST,
             enableDatabase = true)
 
         SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(
