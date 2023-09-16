@@ -487,9 +487,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateProgress(data: TransferData) {
+    internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
         val messages = messagesRV.getData() ?: return
-        ArrayList(messages).find { item -> item is MessageItem && item.message.tid == data.messageTid }?.let {
+        ArrayList(messages).findIndexed {item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
                     attachment.messageTid == data.messageTid
@@ -515,6 +515,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 attachment.updateWithTransferData(data)
                 foundAttachmentFile?.file?.updateWithTransferData(data)
             }
+
+            if (updateRecycler)
+                updateItem(index, it, MessageItemPayloadDiff.DEFAULT_FALSE.copy(filesChanged = true))
         }
     }
 
