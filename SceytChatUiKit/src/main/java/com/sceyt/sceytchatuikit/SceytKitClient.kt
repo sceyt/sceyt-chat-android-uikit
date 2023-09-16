@@ -76,11 +76,12 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         setListener()
     }
 
-    fun connect(token: String, userName: String) {
-        preferences.setUserId(userName)
+    @JvmStatic
+    fun connect(token: String) {
         getChatClient()?.connect(token)
     }
 
+    @JvmStatic
     fun updateToken(token: String, listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
         ChatClient.updateToken(token, object : ActionCallback {
             override fun onSuccess() {
@@ -93,10 +94,12 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         })
     }
 
+    @JvmStatic
     fun reconnect() {
         getChatClient()?.reconnect()
     }
 
+    @JvmStatic
     fun disconnect() {
         getChatClient()?.disconnect()
     }
@@ -153,26 +156,36 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     private fun getChatClient(): ChatClient? = ChatClient.getClient()
 
+    @JvmStatic
     fun getConnectionService() = connectionStateService
 
+    @JvmStatic
     fun getChannelsMiddleWare() = persistenceChannelsMiddleWare
 
+    @JvmStatic
     fun getMessagesMiddleWare() = persistenceMessagesMiddleWare
 
+    @JvmStatic
     fun getAttachmentsMiddleWare() = persistenceAttachmentsMiddleWare
 
+    @JvmStatic
     fun getMembersMiddleWare() = persistenceMembersMiddleWare
 
+    @JvmStatic
     fun getUserMiddleWare() = persistenceUsersMiddleWare
 
+    @JvmStatic
     fun getSyncManager() = sceytSyncManager
 
+    @JvmStatic
     fun getFileTransferService() = filesTransferService
 
+    @JvmStatic
     fun addListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
         listenersMap[key] = listener
     }
 
+    @JvmStatic
     fun clearData() {
         globalScope.launch(Dispatchers.IO) {
             database.clearAllTables()
@@ -181,6 +194,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         }
     }
 
+    @JvmStatic
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
         clearData()
         WorkManager.getInstance(context).cancelAllWork()

@@ -1,94 +1,84 @@
-## Android Chat Messaging Tutorial
+# Sceyt Chat SimpleApp
 
-**Creating a Project**
+A simple Android app to demonstrate the Sceyt Chat Android UI Kit in its most basic and intuitive form. This repository serves as a practical starting point for those looking to integrate or understand the capabilities of the UI components in a chat application.
 
-- Select the Empty Views Activity template
-- Select your language - Kotlin (recommended) or Java
-- Set the Minimum SDK to 21 (or higher)
+ ## Table of contents
 
-![](https://us-ohio-api.sceyt.com/user/api/v1/files/8lwox2ge93/ceb344bc4d2cb7107545f22db66396af491890e0af0ced69321d150e927d27dec5e784296212b66b3e2f4c291877/Screenshot%202023-09-06%20at%2015.01.58.png )
+* [Creating a new Android Project](#creating-a-new-android-project)
+* [Project Setup and Configuration](#project-setup-and-configuration)
+* [Initialize Sceyt Chat Android UI Kit](#initialize-sceyt-chat-android-ui-kit)
+* [Creating a Chat Experience](#creating-a-chat-experience)
+* [Customization](#customization)
 
+* [License](#license)
 
-Our SDKs are available from MavenCentral, with some of our dependencies being hosted on Jitpack.
-Update your repositories in the settings.gradle file like so:
+## Creating a new Android Project
 
-```plaintext
+**Prerequisites**
+
+- Android Studio installed on your system.
+- An active internet connection for downloading dependencies.
+
+1. Open Android Studio and create a new project.
+2. For the purpose of this demo, select the "Empty Views Activity" template.
+3. Name your project and package.
+4. Select your preferred language - Kotlin (recommended) or Java.
+5. Set the Minimum SDK to 21 (or higher).
+
+![](https://us-ohio-api.sceyt.com/user/api/v1/files/8lwox2ge93/a77357ab56193de54fec5ceda269255c61c89231f5854c352e0192441d12e4f3f1960ec2e280b9ac1d4c86ea9dd0/Screenshot%202023-09-08%20at%2012.37.12.png)
+
+## Project Setup and Configuration
+
+**Adding MavenCentral and JitPack Repositories**
+
+1. Open the settings.gradle.
+2. In the **allprojects** section, update the repositories block with **MavenCentral** and **JitPack**:
+
+```scss
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
+        // Other repositories if any
     }
 }
 ```
 
-First, we'll enable [View Binding](https://developer.android.com/topic/libraries/view-binding) and
-[Data Binding](https://developer.android.com/topic/libraries/data-binding). Next, we're going to add
-the [SceytChat SDK](https://github.com/sceyt/sceyt-chat-android-uikit) to our project dependencies.
-Open up the app module's build.gradle script and make the following changes:
+**Enabling Data and View Binding**
 
-
-**Initialize Sceyt**
+1. Open the build.gradle (Module: app).
+2. Inside the **'android'** block, add the sections for both **'dataBinding'** and **'viewBinding'**:
 
 ```groovy
-plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-}
-
 android {
-    namespace 'com.sceytsimple'
-    compileSdk 33
-
-    defaultConfig {
-        applicationId "com.sceytsimple"
-        minSdk 21
-        targetSdk 33
-        versionCode 1
-        versionName "1.0"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-                targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    // Enable ViewBinding
+    ...
     buildFeatures {
         viewBinding true
+        dataBinding true
     }
-
-    // Enable DataBinding
-    dataBinding{
-        enabled = true
-    }
-}
-
-dependencies {
-    //Sceyt Chat
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.1.0'
-
-    implementation 'androidx.core:core-ktx:1.10.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }
 ```
 
-To initialize Sceyt, add following code in your Application class.
+**Adding Sceyt Chat Android UI Kit**
 
+Next, add the [Sceyt Chat Android UI Kit](https://github.com/sceyt/sceyt-chat-android-uikit) in the app module's build.gradle file and sync:
 
-Note if you are using dependency injection [Koin](https://insert-koin.io/), please initialize Sceyt after initializing Koin.
+```groovy
+dependencies {
+    ...
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.1'
+}
+```
+## Initialize Sceyt Chat Android UI Kit
+
+To initialize the UI Kit, add the following code in your Application class with the following parameters:
+
+- `clientId` - a unique identifier for your client
+- `appId` - your application id
+- `host` - your application API URL
+- `enableDatabase` - specifies whether to enable the local database for caching data
 
 ```kotlin
 import android.app.Application
@@ -107,49 +97,25 @@ class MyApplication : Application() {
             enableDatabase = true)
     }
 }
-
-
 ```
-We are initializing Sceyt with the following parameters:
-1. clientId - a unique identifier for your client
-2. appId - your application id
-3. host - the host of your Sceyt backend
-4. enableDatabase - whether to enable the local database for caching data
+> **Note:** If you're utilizing the [Koin](https://insert-koin.io/) dependency injection, ensure you initialize Sceyt after the Koin initialization. Incorrect sequencing can lead to unexpected behavior or runtime errors.
 
-
-Make sure that your application class defined in your AndroidManifest.xml like:
+Make sure that your application class defined in your AndroidManifest.xml:
 
 ```xml
 <application
-    android:allowBackup="true"
-    android:dataExtractionRules="@xml/data_extraction_rules"
-    android:fullBackupContent="@xml/backup_rules"
-    android:icon="@mipmap/ic_launcher"
-    android:label="@string/app_name"
-    android:roundIcon="@mipmap/ic_launcher_round"
-    android:supportsRtl="true"
-    
+    ...
     android:name=".MyApplication"
-    
-    android:theme="@style/Theme.SceytSimple"
-    tools:targetApi="31">
-    <activity
-        android:name=".MainActivity"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-    </activity>
+    ...
+    >
 </application>
 ```
 
-**Displaying a List of Channels**
+**Displaying Channel List**
 
 Sceyt provides a low-level client, and convenient UI components to help you quickly build your messaging interface. In this section, we'll be using the UI components to quickly display a channel list.
 
-First, open up activity_main.xml, and change the contents of the file to the following to display a full screen ChannelsListView:
+First, open the `activity_main.xml`, and change the contents of the file to the following to display a full screen `ChannelsListView`:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -173,7 +139,7 @@ First, open up activity_main.xml, and change the contents of the file to the fol
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
-Next, open up MainActivity and replace the file's contents with the following code:
+Next, open the `MainActivity` and replace the file's contents with the following code:
 
 ```kotlin
 class MainActivity : AppCompatActivity() {
@@ -187,7 +153,7 @@ class MainActivity : AppCompatActivity() {
             binding = it
         }.root)
 
-        // Step 1 - Connect Sceyt chat client
+        // Step 1 - Connect the Sceyt chat client with the token and user
         SceytKitClient.connect("token", "testUser1")
 
         // Step 2 - Connect the ChannelsViewModel to the ChannelsListView
@@ -199,20 +165,19 @@ class MainActivity : AppCompatActivity() {
 }
 ```
 
-Let's have a quick look at the source code shown above:
-
-1. We created connect method which connects getting token using getTokenByUserName method and then connecting to Sceyt using SceytKitClient.connect method.
-2. We bind our ChannelsListView to the ChannelsViewModel by calling the bind function.
+> **Note:** To generate your own token you can use the token generator following this link: https://docs.sceyt.com/chat/api/application/
 
 
 ## Creating a Chat Experience
 
-Next, let's create Conversation page.
+Next, let's create a chat conversation screen.
 
 Create a new Empty Views Activity _(New -> Activity -> Empty Views Activity)_ and name it `ConversationActivity`.
-   > **_Note:_** Make sure that `ConversationActivity` is added to your manifest.
-   > 
-Open up activity_conversation.xml and change the layout to the following:
+
+> **Note:** Make sure that `ConversationActivity` is added to your manifest.
+
+Open the `activity_conversation.xml` and change the layout to the following:
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -247,7 +212,9 @@ Open up activity_conversation.xml and change the layout to the following:
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
-Next, replace the code in `ConversationActivity` with this code:
+
+After, replace the code in `ConversationActivity` with this following:
+
 ```kotlin
 import android.content.Context
 import android.os.Bundle
@@ -314,15 +281,43 @@ class ConversationActivity : AppCompatActivity() {
 }
 ```
 
-Lastly, we want to launch `ConversationActivity` when you tap a channel in the channel list. 
-Open `MainActivity` and replace the TODO in the `setChannelClickListener` with the following code:
+Lastly, launch the `ConversationActivity` when you tap a channel in the list. Open `MainActivity` and replace the TODO in the `setChannelClickListener` with the following code:
 
 ```kotlin
 binding.channelsListView.setChannelClickListener(ChannelClickListeners.ChannelClickListener {
     ConversationActivity.newInstance(this, it.channel)
 })
 ```
-The `ConversationActivity` will be launched when you tap a channel in the channel list, and
-the interface will look like this:
+The `ConversationActivity` will be launched when you tap a channel in the channel list.
 
-<img height="420" src="https://us-ohio-api.sceyt.com/user/api/v1/files/8lwox2ge93/24ea7c09bad476edce5e1a1e3ea8115c53dfc53215b4971d456e3c61778c10c0c6528d8f1d7e5fc925e9dcee46a2/Screenshot_20230906_190932.png" width="200"/>
+## Customization
+
+There are two ways to customize the Channel list:
+1. Using `XML attributes`.
+2. Using `ChannelStyle`.
+
+To customize channels list using `XML attributes` you need to add your custom attributes to `ChannelsListView` in your layout file.
+
+For example, if you want to change the background color of the channels list, you can add the following attribute to your `ChannelsListView`:
+
+```xml
+  <com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
+        android:id="@+id/channelsListView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        
+        app:sceytUiChannelListBackgroundColor="@color/colorAccent" />
+```
+
+To customize channels list using `ChannelStyle` you need to update properties of `ChannelStyle` object.
+
+For example, if you want to change the background color of the channels list, you can do it like this:
+
+```kotlin
+  ChannelStyle.backgroundColor = R.color.purple_200
+```
+> **Note:** Make sure you need to update `ChannelStyle` before binding `ChannelsListView` to `ChannelsViewModel`.

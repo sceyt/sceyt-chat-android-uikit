@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import com.sceyt.sceytchatuikit.R
@@ -65,7 +66,7 @@ fun Application.isAppOnForeground(): Boolean {
 }
 
 fun isAppOnForeground(): Boolean {
-    return ProcessLifecycleOwner.get().lifecycle.currentState == Lifecycle.State.RESUMED
+    return ProcessLifecycleOwner.get().isResumed()
 }
 
 fun Context.getOrientation(): Int {
@@ -214,6 +215,8 @@ fun Context.keepScreenOn(): PowerManager.WakeLock {
         }
     }
 }
+
+fun LifecycleOwner.isResumed() = lifecycle.currentState == Lifecycle.State.RESUMED
 
 inline fun activityLifecycleCallbacks(
         crossinline onActivityCreated: (activity: Activity, savedInstanceState: Bundle?) -> Unit = { _, _ -> },

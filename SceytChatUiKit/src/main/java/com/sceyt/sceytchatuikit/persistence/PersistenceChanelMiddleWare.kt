@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceChanelMiddleWare {
@@ -40,7 +41,7 @@ interface PersistenceChanelMiddleWare {
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                   replyOrEditMessage: SceytMessage?, isReply: Boolean)
+                                   styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean)
 
     fun getTotalUnreadCount(): Flow<Int>
 }
