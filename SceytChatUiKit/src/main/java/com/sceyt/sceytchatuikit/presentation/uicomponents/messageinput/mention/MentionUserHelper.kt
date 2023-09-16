@@ -25,8 +25,8 @@ object MentionUserHelper {
     var userNameBuilder = SceytKitConfig.userNameBuilder
         private set
 
-    fun initMentionAttributes(body: String, mentionUsers: List<Mention>): List<BodyAttribute>? {
-        if (body.isEmpty() || mentionUsers.isEmpty()) return null
+    fun initMentionAttributes(mentionUsers: List<Mention>): List<BodyAttribute>? {
+        if (mentionUsers.isEmpty()) return null
         val items = mutableListOf<BodyAttribute>()
         mentionUsers.forEach {
             items.add(BodyAttribute(MENTION, it.start, it.length, it.recipientId))

@@ -136,7 +136,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
     var mentionJob: Job? = null
 
-    messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
+    messageInputView.setInputActionCallback(object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
             this@bind.sendMessage(message)
         }
@@ -191,7 +191,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                 selectedMessagesMap.clear()
             })
         }
-    }
+    })
 }
 
 @Suppress("unused")

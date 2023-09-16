@@ -89,7 +89,7 @@ fun String?.toByteArraySafety(): ByteArray? {
     }
 }
 
-fun String?.extractLinks(): Array<String> {
+fun CharSequence?.extractLinks(): Array<String> {
     if (this.isNullOrBlank() || isValidEmail()) return emptyArray()
     val links = ArrayList<String>()
     val m = Patterns.WEB_URL.matcher(this)
@@ -105,7 +105,7 @@ fun String?.isValidUrl(context: Context): Boolean {
     return Linkify.addLinks(TextView(context).apply { text = this@isValidUrl }, Linkify.WEB_URLS)
 }
 
-fun String?.isValidEmail(): Boolean {
+fun CharSequence?.isValidEmail(): Boolean {
     this ?: return false
     val emailRegex = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
     return emailRegex.matches(this)
