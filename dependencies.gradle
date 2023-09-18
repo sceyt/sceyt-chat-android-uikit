@@ -48,7 +48,7 @@ ext {
     ion_version = "3.1.0"
 
     kotlin_version = '1.6.10'
-    koin_version = '3.5.0'
+    koin_version = '3.4.3'
 
     legacy_version = '1.0.0'
     lifecycle_version = '2.6.2'
