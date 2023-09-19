@@ -56,6 +56,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
     private var clientUserId: String? = null
 
+    @JvmStatic
     val myId
         get() = clientUserId ?: preferences.getUserId().also {
             clientUserId = it
