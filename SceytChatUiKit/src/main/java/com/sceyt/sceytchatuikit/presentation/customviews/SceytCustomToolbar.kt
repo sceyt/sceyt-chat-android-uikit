@@ -10,6 +10,7 @@ import androidx.annotation.ColorRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytCustomToolbarBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class SceytCustomToolbar @JvmOverloads constructor(
         context: Context,
@@ -21,6 +22,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
     private var navigationIconId = R.drawable.sceyt_ic_arrow_back
     private var menuIconId: Int = 0
     private var title = ""
+    private var iconsTint = context.getCompatColor(SceytKitConfig.sceytColorAccent)
 
     init {
         if (attrs != null) {
@@ -28,6 +30,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
             navigationIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_navigationIcon, navigationIconId)
             menuIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_menuIcon, menuIconId)
             title = typedArray.getString(R.styleable.SceytCustomToolbar_title) ?: title
+            iconsTint = typedArray.getColor(R.styleable.SceytCustomToolbar_iconsTint, iconsTint)
             typedArray.recycle()
         }
 
@@ -38,6 +41,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
         binding = SceytCustomToolbarBinding.inflate(LayoutInflater.from(context), this, true)
         binding.tvTitle.text = title
         binding.icBack.setImageResource(navigationIconId)
+        setIconsTintByColor(iconsTint)
         if (menuIconId != 0)
             setMenuIcon(menuIconId)
     }
@@ -69,6 +73,11 @@ class SceytCustomToolbar @JvmOverloads constructor(
     fun setIconsTint(@ColorRes colorId: Int) {
         binding.icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
         binding.icMenuIcon.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
+    }
+
+    fun setIconsTintByColor(color: Int) {
+        binding.icBack.imageTintList = ColorStateList.valueOf(color)
+        binding.icMenuIcon.imageTintList = ColorStateList.valueOf(color)
     }
 
     fun setNavigationIconClickListener(listener: () -> Unit) {
