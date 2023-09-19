@@ -85,6 +85,7 @@
         <attr name="title" format="string" />
         <attr name="navigationIcon" format="reference" />
         <attr name="menuIcon" format="reference" />
+        <attr name="iconsTint" format="color|reference" />
     </declare-styleable>
 
     <declare-styleable name="ScalableVideoView">
