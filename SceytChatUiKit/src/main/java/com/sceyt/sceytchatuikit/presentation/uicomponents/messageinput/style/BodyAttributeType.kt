@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style
 
 enum class BodyAttributeType {
-    Bold, Italic, Strikethrough, Monospace, Mention;
+    Bold, Italic, Strikethrough, Monospace, Underline, Mention;
 
     override fun toString(): String {
         return when (this) {
@@ -9,6 +9,7 @@ enum class BodyAttributeType {
             Italic -> "italic"
             Strikethrough -> "strikethrough"
             Monospace -> "monospace"
+            Underline -> "underline"
             Mention -> "mention"
         }
     }

@@ -8,6 +8,7 @@ import android.text.style.CharacterStyle
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.TypefaceSpan
+import android.text.style.UnderlineSpan
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -36,6 +37,11 @@ object BodyStyler {
     @JvmStatic
     fun monoStyle(): CharacterStyle {
         return TypefaceSpan(MONOSPACE)
+    }
+
+    @JvmStatic
+    fun underlineStyle(): CharacterStyle {
+        return UnderlineSpan()
     }
 
     @JvmStatic
@@ -164,6 +170,7 @@ object BodyStyler {
 
                         is StrikethroughSpan -> StyleType.Strikethrough
                         is TypefaceSpan -> StyleType.Monospace
+                        is UnderlineSpan -> StyleType.Underline
                         else -> null
                     }
 
@@ -192,6 +199,7 @@ object BodyStyler {
                     StyleType.Italic -> spannableString.setSpan(italicStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
                     StyleType.Strikethrough -> spannableString.setSpan(strikethroughStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
                     StyleType.Monospace -> spannableString.setSpan(monoStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
+                    StyleType.Underline -> spannableString.setSpan(underlineStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
                 }
             }
         } catch (e: Exception) {
@@ -203,7 +211,7 @@ object BodyStyler {
     private fun Any.isSupportedCharacterStyle(): Boolean {
         return when (this) {
             is StyleSpan -> style == Typeface.ITALIC || style == Typeface.BOLD
-            is StrikethroughSpan -> true
+            is StrikethroughSpan, is UnderlineSpan -> true
             is TypefaceSpan -> family == MONOSPACE
             else -> false
         }
@@ -221,6 +229,7 @@ object BodyStyler {
             is StyleSpan -> (this.style == Typeface.ITALIC && style == StyleType.Italic) || (this.style == Typeface.BOLD && style == StyleType.Bold)
             is StrikethroughSpan -> style == StyleType.Strikethrough
             is TypefaceSpan -> this.family == MONOSPACE && style == StyleType.Monospace
+            is UnderlineSpan -> style == StyleType.Underline
             else -> false
         }
     }
@@ -237,6 +246,7 @@ object BodyStyler {
 
             is StrikethroughSpan -> strikethroughStyle()
             is TypefaceSpan -> monoStyle()
+            is UnderlineSpan -> underlineStyle()
             else -> throw IllegalArgumentException("Provided text contains unsupported spans")
         }
     }
@@ -247,6 +257,7 @@ object BodyStyler {
             StyleType.Italic -> italicStyle()
             StyleType.Strikethrough -> strikethroughStyle()
             StyleType.Monospace -> monoStyle()
+            StyleType.Underline -> underlineStyle()
         }
     }
 

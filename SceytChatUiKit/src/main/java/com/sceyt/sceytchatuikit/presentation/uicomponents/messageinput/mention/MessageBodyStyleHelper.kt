@@ -69,6 +69,7 @@ object MessageBodyStyleHelper {
                     StyleType.Italic -> spannableString.setSpan(BodyStyler.italicStyle(), it.offset, it.offset + it.length, BodyStyler.SPAN_FLAGS)
                     StyleType.Strikethrough -> spannableString.setSpan(BodyStyler.strikethroughStyle(), it.offset, it.offset + it.length, BodyStyler.SPAN_FLAGS)
                     StyleType.Monospace -> spannableString.setSpan(BodyStyler.monoStyle(), it.offset, it.offset + it.length, BodyStyler.SPAN_FLAGS)
+                    StyleType.Underline -> spannableString.setSpan(BodyStyler.monoStyle(), it.offset, it.offset + it.length, BodyStyler.SPAN_FLAGS)
                     null -> return@forEach
                 }
             }
