@@ -19,13 +19,14 @@ class SceytCustomToolbar @JvmOverloads constructor(
 
     private lateinit var binding: SceytCustomToolbarBinding
     private var navigationIconId = R.drawable.sceyt_ic_arrow_back
+    private var menuIconId: Int = 0
     private var title = ""
 
     init {
         if (attrs != null) {
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SceytCustomToolbar)
-            navigationIconId =
-                    typedArray.getResourceId(R.styleable.SceytCustomToolbar_navigationIcon, navigationIconId)
+            navigationIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_navigationIcon, navigationIconId)
+            menuIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_menuIcon, menuIconId)
             title = typedArray.getString(R.styleable.SceytCustomToolbar_title) ?: title
             typedArray.recycle()
         }
@@ -37,14 +38,27 @@ class SceytCustomToolbar @JvmOverloads constructor(
         binding = SceytCustomToolbarBinding.inflate(LayoutInflater.from(context), this, true)
         binding.tvTitle.text = title
         binding.icBack.setImageResource(navigationIconId)
+        if (menuIconId != 0)
+            setMenuIcon(menuIconId)
+    }
+
+    private fun setMenuIcon(resId: Int) {
+        binding.icMenuIcon.setImageResource(resId)
+        binding.icMenuIcon.visibility = View.VISIBLE
     }
 
     val navigationIcon get() = binding.icBack
 
-    fun initRightMenu(resId: Int, listener: () -> Unit) {
-        binding.imvRightMenu.setImageResource(resId)
-        binding.imvRightMenu.visibility = View.VISIBLE
-        binding.imvRightMenu.setOnClickListener { listener.invoke() }
+    val menuIcon get() = binding.icMenuIcon
+
+    fun initMenuIconWithClickListener(resId: Int, listener: () -> Unit) {
+        setMenuIcon(resId)
+        setMenuIconClickListener(listener)
+    }
+
+    fun initNavigationIconWithClickListener(resId: Int, listener: () -> Unit) {
+        binding.icBack.setImageResource(resId)
+        setNavigationIconClickListener(listener)
     }
 
     fun setTitle(title: String?) {
@@ -54,6 +68,14 @@ class SceytCustomToolbar @JvmOverloads constructor(
 
     fun setIconsTint(@ColorRes colorId: Int) {
         binding.icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
-        binding.imvRightMenu.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
+        binding.icMenuIcon.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
+    }
+
+    fun setNavigationIconClickListener(listener: () -> Unit) {
+        binding.icBack.setOnClickListener { listener.invoke() }
+    }
+
+    fun setMenuIconClickListener(listener: () -> Unit) {
+        binding.icMenuIcon.setOnClickListener { listener.invoke() }
     }
 }

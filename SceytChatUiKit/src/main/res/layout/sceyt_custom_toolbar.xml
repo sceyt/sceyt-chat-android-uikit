@@ -32,16 +32,16 @@
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/bigTextSize"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imvRightMenu"
+        app:layout_constraintEnd_toStartOf="@+id/icMenuIcon"
         app:layout_constraintStart_toEndOf="@+id/icBack"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Title" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/imvRightMenu"
+        android:id="@+id/icMenuIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="15dp"
+        android:layout_marginEnd="12dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
