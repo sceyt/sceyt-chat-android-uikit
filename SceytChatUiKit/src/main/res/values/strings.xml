@@ -173,6 +173,7 @@
     <string name="sceyt_italic">Italic</string>
     <string name="sceyt_strikethrough">Strikethrough</string>
     <string name="sceyt_monospace">Monospace</string>
+    <string name="sceyt_underline">Underline</string>
     <string name="sceyt_clear_formatting">Clear formatting</string>
 
 </resources>

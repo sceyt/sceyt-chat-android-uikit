@@ -12,6 +12,7 @@ import android.text.TextUtils
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.TypefaceSpan
+import android.text.style.UnderlineSpan
 import android.util.AttributeSet
 import android.util.Log
 import android.view.ActionMode
@@ -79,6 +80,9 @@ class MentionSupportEditText : AppCompatEditText {
                 menu.add(0, R.id.sceyt_monospace, largestOrder, SpannableString(context.getString(R.string.sceyt_monospace)).apply {
                     setSpan(TypefaceSpan(BodyStyler.MONOSPACE), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 })
+                menu.add(0, R.id.sceyt_underline, largestOrder, SpannableString(context.getString(R.string.sceyt_underline)).apply {
+                    setSpan(UnderlineSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                })
                 text?.let {
                     val start = selectionStart
                     val end = selectionEnd
@@ -106,18 +110,16 @@ class MentionSupportEditText : AppCompatEditText {
 
     fun handleFormatText(@IdRes id: Int): Boolean {
         val text = text ?: return false
-        if (id != R.id.sceyt_bold && id != R.id.sceyt_italic && id != R.id.sceyt_strikethrough
-                && id != R.id.sceyt_monospace && id != R.id.sceyt_clear_formatting) {
-            return false
-        }
         val start = selectionStart
         val end = selectionEnd
-        var style: StyleType? = null
-        when (id) {
-            R.id.sceyt_bold -> style = StyleType.Bold
-            R.id.sceyt_italic -> style = StyleType.Italic
-            R.id.sceyt_strikethrough -> style = StyleType.Strikethrough
-            R.id.sceyt_monospace -> style = StyleType.Monospace
+        val style: StyleType? = when (id) {
+            R.id.sceyt_bold -> StyleType.Bold
+            R.id.sceyt_italic -> StyleType.Italic
+            R.id.sceyt_strikethrough -> StyleType.Strikethrough
+            R.id.sceyt_monospace -> StyleType.Monospace
+            R.id.sceyt_underline -> StyleType.Underline
+            R.id.sceyt_clear_formatting -> null
+            else -> return false
         }
         clearComposingText()
         if (style != null) {
@@ -144,6 +146,7 @@ class MentionSupportEditText : AppCompatEditText {
         cursorPositionChangedListener?.onCursorPositionChanged(selectionStart, selectionEnd)
     }
 
+    @Suppress("unused")
     fun setCursorPositionChangedListener(listener: CursorPositionChangedListener?) {
         cursorPositionChangedListener = listener
     }
@@ -160,6 +163,7 @@ class MentionSupportEditText : AppCompatEditText {
         stylingChangedListener = listener
     }
 
+    @Suppress("unused")
     fun hasMentions(): Boolean {
         val text = text
         return if (text != null) {
@@ -170,6 +174,7 @@ class MentionSupportEditText : AppCompatEditText {
     val mentions: List<Mention>
         get() = MentionAnnotation.getMentionsFromAnnotations(text?.trim())
 
+    @Suppress("unused")
     fun hasStyling(): Boolean {
         val trimmed: CharSequence = text?.trim() ?: return false
         return trimmed is Spanned && BodyStyler.hasStyling(trimmed)
@@ -235,6 +240,7 @@ class MentionSupportEditText : AppCompatEditText {
         replaceText(createReplacementToken(displayName, recipientId), false)
     }
 
+    @Suppress("unused")
     fun replaceText(replacement: InlineQueryReplacement) {
         replaceText(replacement.toCharSequence(context), replacement.keywordSearch)
     }

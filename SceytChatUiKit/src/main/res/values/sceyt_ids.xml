@@ -34,6 +34,7 @@
     <item name="sceyt_italic" type="id" />
     <item name="sceyt_strikethrough" type="id" />
     <item name="sceyt_monospace" type="id" />
+    <item name="sceyt_underline" type="id" />
     <item name="sceyt_clear_formatting" type="id" />
 
 </resources>
