@@ -86,6 +86,7 @@
         <attr name="navigationIcon" format="reference" />
         <attr name="menuIcon" format="reference" />
         <attr name="iconsTint" format="color|reference" />
+        <attr name="enableDivider" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="ScalableVideoView">
