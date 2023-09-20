@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.ColorRes
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytCustomToolbarBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -23,6 +23,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
     private var menuIconId: Int = 0
     private var title = ""
     private var iconsTint = context.getCompatColor(SceytKitConfig.sceytColorAccent)
+    private var enableDivider = true
 
     init {
         if (attrs != null) {
@@ -31,6 +32,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
             menuIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_menuIcon, menuIconId)
             title = typedArray.getString(R.styleable.SceytCustomToolbar_title) ?: title
             iconsTint = typedArray.getColor(R.styleable.SceytCustomToolbar_iconsTint, iconsTint)
+            enableDivider = typedArray.getBoolean(R.styleable.SceytCustomToolbar_enableDivider, enableDivider)
             typedArray.recycle()
         }
 
@@ -39,8 +41,11 @@ class SceytCustomToolbar @JvmOverloads constructor(
 
     private fun setupViews() {
         binding = SceytCustomToolbarBinding.inflate(LayoutInflater.from(context), this, true)
-        binding.tvTitle.text = title
-        binding.icBack.setImageResource(navigationIconId)
+        with(binding) {
+            tvTitle.text = title
+            icBack.setImageResource(navigationIconId)
+            underline.isVisible = enableDivider
+        }
         setIconsTintByColor(iconsTint)
         if (menuIconId != 0)
             setMenuIcon(menuIconId)
@@ -48,7 +53,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
 
     private fun setMenuIcon(resId: Int) {
         binding.icMenuIcon.setImageResource(resId)
-        binding.icMenuIcon.visibility = View.VISIBLE
+        binding.icMenuIcon.isVisible = true
     }
 
     val navigationIcon get() = binding.icBack

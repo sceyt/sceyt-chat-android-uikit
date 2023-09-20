@@ -13,6 +13,7 @@ import android.view.View
 import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.annotation.ColorRes
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
@@ -169,7 +170,7 @@ fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 fun Activity.recreateWithoutAnim() {
     finish()
     startActivity(intent)
-    overrideTransitions(0, 0,false)
+    overrideTransitions(0, 0, false)
 }
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
@@ -178,11 +179,13 @@ fun Context.isLandscape(): Boolean {
     return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
-fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
-    val themeColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
-    window.statusBarColor = themeColor
+fun Activity.statusBarIconsColorWithBackground(isDark: Boolean,
+                                               @ColorRes statusBarColor: Int = R.color.sceyt_color_status_bar,
+                                               @ColorRes navigationBarColor: Int = R.color.sceyt_color_status_bar) {
+
+    window.statusBarColor = getCompatColorByTheme(statusBarColor, isDark)
     if (isDark)
-        window.navigationBarColor = themeColor
+        window.navigationBarColor = getCompatColorByTheme(navigationBarColor, true)
 
     if (SDK_INT >= M) {
         if (SDK_INT >= Build.VERSION_CODES.R) {
