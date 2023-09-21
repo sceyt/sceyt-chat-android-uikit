@@ -32,7 +32,7 @@ data class MessageEntity(
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
-        var markerCount: List<MarkerTotal>?,
+        val markerCount: List<MarkerTotal>?,
         var mentionedUsersIds: List<String>?,
         var parentId: Long?,
         var replyCount: Long,
