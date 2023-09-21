@@ -153,7 +153,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setSpannableString(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message))
+                .setSpannableString(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(body, message.mentionedUsers, message.bodyAttributes))
                 .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
