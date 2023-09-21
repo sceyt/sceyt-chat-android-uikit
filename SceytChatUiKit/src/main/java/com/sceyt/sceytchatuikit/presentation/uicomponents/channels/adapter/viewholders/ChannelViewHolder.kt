@@ -38,7 +38,6 @@ import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import okhttp3.internal.lowercase
 import java.text.NumberFormat
 import java.util.*
 
