@@ -55,7 +55,6 @@ ext {
     lottie_version = '6.1.0'
     light_compressor_version = '1.0.1'
 
-    voley_version = '1.2.1'
     vanniktech_google_emoji_version = '0.17.0'
 
     ok_http_version = '5.0.0-alpha.8'
@@ -101,7 +100,6 @@ ext {
             liveDataKtx           : "androidx.lifecycle:lifecycle-livedata-ktx:$live_data_ktx_version",
             liveEvent             : "com.github.hadilq.liveevent:liveevent:$live_event_version",
             lightCompressor       : "com.github.AbedElazizShe:LightCompressor:$light_compressor_version",
-            voley                 : "com.android.volley:volley:$voley_version",
             vanniktechGoogleEmoji : "com.vanniktech:emoji-google:$vanniktech_google_emoji_version",
             material              : "com.google.android.material:material:$material_version",
             moshiConverter        : "com.squareup.retrofit2:converter-moshi:$moshi_converter_version",
