@@ -100,7 +100,6 @@ dependencies {
     api supportDependencies.firebaseBom
     api supportDependencies.firebaseMessaging
     api supportDependencies.okHttp
-    api supportDependencies.voley
     annotationProcessor supportDependencies.roomCompiler
     kapt supportDependencies.roomCompiler
     api supportDependencies.roomRuntime
