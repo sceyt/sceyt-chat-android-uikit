@@ -99,7 +99,6 @@ dependencies {
     api supportDependencies.ion
     api supportDependencies.firebaseBom
     api supportDependencies.firebaseMessaging
-    api supportDependencies.okHttp
     annotationProcessor supportDependencies.roomCompiler
     kapt supportDependencies.roomCompiler
     api supportDependencies.roomRuntime
