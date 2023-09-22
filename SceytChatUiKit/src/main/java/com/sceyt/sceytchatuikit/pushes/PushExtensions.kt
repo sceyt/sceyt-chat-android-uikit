@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
-fun getMessageBodyFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
+fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
     channelId ?: return null
     return try {
         val messageJson = remoteMessage.data["message"]
