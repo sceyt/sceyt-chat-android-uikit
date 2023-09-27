@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
 import android.text.Annotation
@@ -20,6 +21,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.annotation.IdRes
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.text.getSpans
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher.MentionValidator
@@ -29,6 +31,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.i
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.StyleType
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.UnderlineTextSpan
 
 
 class MentionSupportEditText : AppCompatEditText {
@@ -105,6 +108,31 @@ class MentionSupportEditText : AppCompatEditText {
             }
 
             override fun onDestroyActionMode(mode: ActionMode) {}
+        }
+    }
+
+    override fun onTextContextMenuItem(id: Int): Boolean {
+        when (id) {
+            android.R.id.paste -> {
+                // Replace underline spans to our UnderlineTextSpan
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                val clipData = clipboard?.primaryClip
+                if (clipData != null && clipData.itemCount > 0) {
+                    val textToPaste = clipData.getItemAt(0).text
+                    (textToPaste as? SpannableString)?.getSpans<UnderlineSpan>(0, textToPaste.length)?.forEach { span ->
+                        val start = textToPaste.getSpanStart(span)
+                        val end = textToPaste.getSpanEnd(span)
+                        textToPaste.setSpan(UnderlineTextSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        textToPaste.removeSpan(span)
+                    } ?: run {
+                        return super.onTextContextMenuItem(id)
+                    }
+                    append(textToPaste)
+                }
+                return true
+            }
+
+            else -> return super.onTextContextMenuItem(id)
         }
     }
 
