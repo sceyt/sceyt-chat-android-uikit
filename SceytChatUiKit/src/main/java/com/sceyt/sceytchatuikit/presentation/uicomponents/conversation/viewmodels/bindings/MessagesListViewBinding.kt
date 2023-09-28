@@ -346,16 +346,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onNewOutGoingMessageFlow.onEach {
         if (hasNext || hasNextDb) return@onEach
-        viewModelScope.launch {
-            val initMessage = mapToMessageListItem(
-                data = arrayListOf(it),
-                hasNext = false,
-                hasPrev = false,
-                compareMessage = messagesListView.getLastMessage()?.message)
+        val initMessage = mapToMessageListItem(
+            data = arrayListOf(it),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = messagesListView.getLastMessage()?.message)
 
-            messagesListView.addNewMessages(*initMessage.toTypedArray())
-            messagesListView.updateViewState(PageState.Nothing)
-        }
+        messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.updateViewState(PageState.Nothing)
     }.launchIn(viewModelScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
@@ -426,7 +424,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     onOutGoingMessageStatusFlow.onEach {
-        messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
+        viewModelScope.launch {
+            messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
+        }
     }.launchIn(viewModelScope)
 
     joinLiveData.observe(lifecycleOwner) {
