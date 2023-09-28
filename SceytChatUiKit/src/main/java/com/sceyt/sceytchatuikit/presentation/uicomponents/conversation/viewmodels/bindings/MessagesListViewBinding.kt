@@ -388,7 +388,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     // todo reply in thread
-    /*  onNewThreadMessageFlow.onEach {
+    /*
+    onNewThreadMessageFlow.onEach {
           messagesListView.updateReplyCount(it)
       }.launchIn(viewModelScope)
 
