@@ -100,17 +100,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        launch(Dispatchers.IO) {
-            messagesLogic.onMessageStatusChangeEvent(data)
-            channelLogic.onMessageStatusChangeEvent(data)
-        }
+        launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
+        launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch(Dispatchers.IO) {
-            messagesLogic.onMessage(data)
-            channelLogic.onMessage(data)
-        }
+        launch(Dispatchers.IO) { messagesLogic.onMessage(data) }
+        launch(Dispatchers.IO) { channelLogic.onMessage(data) }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
@@ -118,10 +114,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
-        launch(Dispatchers.IO) {
-            messagesLogic.onMessageEditedOrDeleted(sceytMessage)
-            channelLogic.onMessageEditedOrDeleted(sceytMessage)
-        }
+        launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
+        launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
