@@ -207,7 +207,7 @@ internal class PersistenceMessagesLogicImpl(
                     it.data?.let { messages ->
                         val updatedMessages = saveMessagesToDb(messages)
                         messagesCache.upsertMessages(conversationId, *updatedMessages.toTypedArray())
-                        markChannelMessagesAsDelivered(conversationId, messages)
+                        checkAndMarkChannelMessagesAsDelivered(conversationId, messages)
                     }
                 }
                 trySend(it)
@@ -638,6 +638,13 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
+    private fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+        // Mark messages as received
+        launch(Dispatchers.IO) {
+            checkAndMarkChannelMessagesAsDelivered(channelId, messages)
+        }
+    }
+
     private suspend fun getMessagesDbByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
                                                 offset: Int, limit: Int, loadKey: LoadKeyData): PaginationResponse.DBResponse<SceytMessage> {
         var hasNext = false
@@ -671,7 +678,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.addAll(channelId, messages, false)
 
         // Mark messages as received
-        markChannelMessagesAsDelivered(channelId, messages)
+        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -741,7 +748,7 @@ internal class PersistenceMessagesLogicImpl(
         if (forceHasDiff) hasDiff = true
 
         // Mark messages as received
-        markChannelMessagesAsDelivered(channelId, messages)
+        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.ServerResponse(
             data = response, cacheData = messagesCache.getSorted(channelId),
@@ -867,7 +874,7 @@ internal class PersistenceMessagesLogicImpl(
         return tIds
     }
 
-    private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+    private suspend fun checkAndMarkChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         val notDisplayedMessages = messages.filter {
             it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value() } != true
         }
