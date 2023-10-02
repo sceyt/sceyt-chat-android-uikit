@@ -163,7 +163,7 @@ open class MessageViewHolderFactory(context: Context) {
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return LoadingMoreMessagesViewHolder(
-            SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
+            SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false), displayedListener
         )
     }
 

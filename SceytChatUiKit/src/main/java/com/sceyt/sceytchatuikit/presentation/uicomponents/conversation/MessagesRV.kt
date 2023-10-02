@@ -76,16 +76,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
         }
-
-        addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
-                val lastPos = getLastVisibleItemPosition()
-                checkScrollDown(lastPos)
-                checkNeedLoadPrev(-1)
-                checkNeedLoadNext(1)
-            }, 80)
-        }
     }
 
     private fun checkNeedLoadPrev(dy: Int) {

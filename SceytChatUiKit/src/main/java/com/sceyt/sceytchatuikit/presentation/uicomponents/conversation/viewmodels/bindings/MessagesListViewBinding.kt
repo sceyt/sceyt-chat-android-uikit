@@ -360,19 +360,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         checkEnableDisableActions(it)
     }
 
-    fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
-        (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
-            if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
-                return
+    fun checkStateAndMarkAsRead(messageItem: MessageListItem.MessageItem) {
+        val message = messageItem.message
+        if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
+            return
 
-            if (lifecycleOwner.isResumed()) {
-                pendingDisplayMsgIds.add(message.id)
-                sendDisplayedHelper.submit {
-                    markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
-                    pendingDisplayMsgIds.clear()
-                }
-            } else pendingDisplayMsgIds.add(message.id)
-        }
+        if (lifecycleOwner.isResumed()) {
+            pendingDisplayMsgIds.add(message.id)
+            sendDisplayedHelper.submit {
+                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                pendingDisplayMsgIds.clear()
+            }
+        } else pendingDisplayMsgIds.add(message.id)
     }
 
     onNewMessageFlow.onEach {
@@ -553,7 +552,25 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setMessageDisplayedListener {
-        checkStateAndMarkAsRead(it)
+        when (it) {
+            is MessageListItem.MessageItem -> checkStateAndMarkAsRead(it)
+            is MessageListItem.LoadingNextItem -> {
+                if (canLoadNext()) {
+                    val messageId = messagesListView.getLastMessage()?.message?.id ?: 0
+                    val offset = messagesListView.getData()?.size ?: 0
+                    loadNextMessages(messageId, offset)
+                }
+            }
+
+            is MessageListItem.LoadingPrevItem -> {
+                if (canLoadPrev()) {
+                    val messageId = messagesListView.getFirstMessage()?.message?.id ?: 0
+                    val offset = messagesListView.getData()?.size ?: 0
+                    loadPrevMessages(messageId, offset)
+                }
+            }
+            else -> return@setMessageDisplayedListener
+        }
     }
 }
 
