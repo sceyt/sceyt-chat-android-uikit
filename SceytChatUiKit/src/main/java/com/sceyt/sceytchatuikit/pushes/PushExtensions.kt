@@ -12,6 +12,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
+import com.sceyt.sceytchatuikit.extensions.getStringOrNull
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
@@ -169,13 +170,5 @@ private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
     } catch (e: Exception) {
         e.printStackTrace()
         MessageState.Unmodified
-    }
-}
-
-private fun JSONObject.getStringOrNull(key: String): String? {
-    return try {
-        getString(key)
-    } catch (e: Exception) {
-        null
     }
 }
