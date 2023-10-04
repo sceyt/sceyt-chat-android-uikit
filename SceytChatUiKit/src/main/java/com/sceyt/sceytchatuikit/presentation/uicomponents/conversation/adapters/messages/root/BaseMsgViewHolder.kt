@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
-import android.text.SpannableString
 import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
@@ -132,7 +131,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                  checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
-        var text = SpannableString.valueOf(message.body.trim())
+        var text: CharSequence = message.body.trim()
         if (!message.bodyAttributes.isNullOrEmpty()) {
             text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty())

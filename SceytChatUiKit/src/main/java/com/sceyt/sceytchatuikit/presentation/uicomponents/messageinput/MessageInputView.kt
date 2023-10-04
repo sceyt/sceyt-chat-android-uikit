@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
 import android.text.Editable
-import android.text.SpannableString
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -564,7 +563,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun setDraftMessage(draftMessage: DraftMessage?) {
         if (draftMessage == null || draftMessage.message.isNullOrEmpty())
             return
-        var body = SpannableString(draftMessage.message)
+        var body: CharSequence = draftMessage.message
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
             body = MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, body.toString(),
