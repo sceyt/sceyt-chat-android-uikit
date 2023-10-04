@@ -33,6 +33,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                     }
                     .setAttachments(initAttachments(it.attachments).toTypedArray())
                     .setMetadata(it.metadata)
+                    .setBodyAttributes(it.bodyAttributes?.toTypedArray() ?: emptyArray())
                     .setMentionedUserIds(it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
                             ?: arrayOf())
                     //.setReplyInThread(it.replyInThread)
