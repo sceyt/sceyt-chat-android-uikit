@@ -1,8 +1,11 @@
 package com.sceyt.sceytchatuikit.pushes
 
 import com.google.firebase.messaging.RemoteMessage
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
@@ -34,6 +37,7 @@ fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user:
         val deliveryStatus = getDeliveryStatusFromPushJson(messageJsonObject)
         val state = getStateFromPushJson(messageJsonObject)
         val forwardingDetails = getForwardingDetailsFromPushJson(messageJsonObject)
+        val bodyAttributes = getBodyAttributesFromPushJson(messageJsonObject)
         val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
         val attachmentArray = ArrayList<Attachment>()
@@ -51,7 +55,7 @@ fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user:
                 ?: 0,
             0L, true, transient, false, deliveryStatus, state,
             user, attachmentArray.toTypedArray(), null, null, null, null,
-            null, parentMessage, 0, 0, 0, forwardingDetails, null)
+            null, parentMessage, 0, 0, 0, forwardingDetails, bodyAttributes.toTypedArray())
     } catch (e: Exception) {
         e.printStackTrace()
         null
@@ -170,5 +174,17 @@ private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
     } catch (e: Exception) {
         e.printStackTrace()
         MessageState.Unmodified
+    }
+}
+
+private fun getBodyAttributesFromPushJson(jsonObject: JSONObject): List<BodyAttribute> {
+    return try {
+        val bodyAttributes = jsonObject.getString("body_attributes")
+        val typeToken = object : TypeToken<List<BodyAttribute>>() {}.type
+        val bodyAttributesList: List<BodyAttribute> = Gson().fromJson(bodyAttributes, typeToken)
+        bodyAttributesList
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
     }
 }
