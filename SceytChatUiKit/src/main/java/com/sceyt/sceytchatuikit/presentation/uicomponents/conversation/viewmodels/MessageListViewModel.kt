@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -468,8 +469,13 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
             if (channel.memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
-                persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
+                loadChannelMembers(0, null).collect()
         }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    fun loadChannelMembers(offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
+        return persistenceMembersMiddleWare.loadChannelMembers(channel.id, offset, role)
     }
 
     fun clearHistory(forEveryOne: Boolean) {

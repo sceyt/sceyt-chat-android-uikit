@@ -218,7 +218,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.getTotalUnreadCount()
     }
 
-    override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
+    override fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         return membersLogic.loadChannelMembers(channelId, offset, role)
     }
 
