@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style
 
 import android.graphics.Typeface
 import android.text.Spannable
-import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.CharacterStyle
 import android.text.style.StrikethroughSpan
@@ -187,24 +186,6 @@ object BodyStyler {
             is CharacterStyle -> isSupportedCharacterStyle()
             else -> false
         }
-    }
-
-    fun appendStyle(body: CharSequence, list: List<BodyStyleRange>): SpannableString {
-        val spannableString = SpannableString(body)
-        try {
-            list.forEach {
-                when (it.style) {
-                    StyleType.Bold -> spannableString.setSpan(boldStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Italic -> spannableString.setSpan(italicStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Strikethrough -> spannableString.setSpan(strikethroughStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Monospace -> spannableString.setSpan(monoStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Underline -> spannableString.setSpan(underlineStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return spannableString
     }
 
     private fun Any.isSupportedCharacterStyle(): Boolean {
