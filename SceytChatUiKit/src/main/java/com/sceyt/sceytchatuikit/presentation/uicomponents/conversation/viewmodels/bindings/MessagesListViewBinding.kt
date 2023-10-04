@@ -178,10 +178,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
-                    val newMessages = mapToMessageListItem(data = response.cacheData,
+                    val dataToMap = if (response.dbResultWasEmpty) {
+                        response.data.data ?: return
+                    } else response.cacheData
+
+                    val newMessages = mapToMessageListItem(data = dataToMap,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev)
-                    messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+
+                    if (response.dbResultWasEmpty) {
+                        if (response.loadType == LoadNext)
+                            messagesListView.addNextPageMessages(newMessages)
+                        else messagesListView.addPrevPageMessages(newMessages)
+                    } else
+                        messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
@@ -569,6 +579,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     loadPrevMessages(messageId, offset)
                 }
             }
+
             else -> return@setMessageDisplayedListener
         }
     }

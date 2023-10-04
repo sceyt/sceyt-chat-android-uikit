@@ -104,7 +104,7 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
     return MessageItemPayloadDiff(
         edited = state != other.state,
         bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
-        statusChanged = deliveryStatus != other.deliveryStatus,
+        statusChanged = !incoming && deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
@@ -113,7 +113,7 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
-        filesChanged = attachments.equalsIgnoreNull(other.attachments).not(),
+        filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
     )
 }
@@ -122,7 +122,7 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
     return MessageItemPayloadDiff(
         edited = state != other.state,
         bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
-        statusChanged = deliveryStatus != other.deliveryStatus,
+        statusChanged = !incoming && deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
@@ -131,7 +131,7 @@ internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDi
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
-        filesChanged = attachments?.map { it.id }?.sortedBy { it }.equalsIgnoreNull(other.attachments?.map { it.id }?.sortedBy { it }).not(),
+        filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
     )
 }

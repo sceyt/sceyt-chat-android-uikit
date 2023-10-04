@@ -36,7 +36,8 @@ sealed class PaginationResponse<T> {
             var hasNext: Boolean,
             var hasPrev: Boolean,
             var loadType: LoadType,
-            var ignoredDb: Boolean
+            var ignoredDb: Boolean,
+            var dbResultWasEmpty: Boolean = false
     ) : PaginationResponse<T>()
 
 

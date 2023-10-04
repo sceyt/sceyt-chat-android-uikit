@@ -625,13 +625,17 @@ internal class PersistenceMessagesLogicImpl(
         return callbackFlow {
             if (offset == 0) messagesCache.clear()
 
+            var dbResultWasEmpty = true
             // Load from database
-            if (!ignoreDb)
-                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, limit, loadKey))
+            if (!ignoreDb) {
+                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, limit, loadKey).also {
+                    dbResultWasEmpty = it.data.isEmpty()
+                })
+            }
             // Load from server
             if (!ignoreServer)
-                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, limit, replyInThread,
-                    loadKey, ignoreDb))
+                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset,
+                    limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty))
 
             channel.close()
             awaitClose()
@@ -686,7 +690,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
                                                     offset: Int, limit: Int, replyInThread: Boolean,
                                                     loadKey: LoadKeyData = LoadKeyData(value = lastMessageId),
-                                                    ignoreDb: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
+                                                    ignoreDb: Boolean, dbResultWasEmpty: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         var hasDiff: Boolean
@@ -753,7 +757,7 @@ internal class PersistenceMessagesLogicImpl(
         return PaginationResponse.ServerResponse(
             data = response, cacheData = messagesCache.getSorted(channelId),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
-            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
+            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb, dbResultWasEmpty = dbResultWasEmpty)
     }
 
     private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadEntity>) {
