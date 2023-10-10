@@ -22,6 +22,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
     private var navigationIconId = R.drawable.sceyt_ic_arrow_back
     private var menuIconId: Int = 0
     private var title = ""
+    private var titleColor = context.getCompatColor(R.color.sceyt_color_black)
     private var iconsTint = context.getCompatColor(SceytKitConfig.sceytColorAccent)
     private var enableDivider = true
 
@@ -32,6 +33,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
             menuIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_menuIcon, menuIconId)
             title = typedArray.getString(R.styleable.SceytCustomToolbar_title) ?: title
             iconsTint = typedArray.getColor(R.styleable.SceytCustomToolbar_iconsTint, iconsTint)
+            titleColor = typedArray.getColor(R.styleable.SceytCustomToolbar_titleTextColor, titleColor)
             enableDivider = typedArray.getBoolean(R.styleable.SceytCustomToolbar_enableDivider, enableDivider)
             typedArray.recycle()
         }
@@ -42,7 +44,10 @@ class SceytCustomToolbar @JvmOverloads constructor(
     private fun setupViews() {
         binding = SceytCustomToolbarBinding.inflate(LayoutInflater.from(context), this, true)
         with(binding) {
-            tvTitle.text = title
+            tvTitle.apply {
+                setTextColor(titleColor)
+                text = title
+            }
             icBack.setImageResource(navigationIconId)
             underline.isVisible = enableDivider
         }
