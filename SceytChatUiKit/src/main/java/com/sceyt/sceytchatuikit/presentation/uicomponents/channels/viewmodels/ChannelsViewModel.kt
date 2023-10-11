@@ -12,7 +12,6 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
-import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -25,7 +24,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
@@ -112,25 +110,23 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         pagingResponseReceived(response)
     }
 
-    internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
-                                          includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
-        return suspendCancellableCoroutine {
+    internal fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
+                                  includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
 
-            val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
-            else data?.filter { channel -> !channel.isPeerDeleted() }
-                    ?: emptyList()
+        val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
+        else data?.filter { channel -> !channel.isPeerDeleted() }
+                ?: emptyList()
 
-            if (filteredChannels.isEmpty())
-                it.safeResume(emptyList())
+        if (filteredChannels.isEmpty())
+            return emptyList()
 
-            val channelItems: List<ChannelListItem>
-            channelItems = filteredChannels.map { item -> ChannelListItem.ChannelItem(item) }
+        val channelItems: List<ChannelListItem>
+        channelItems = filteredChannels.map { item -> ChannelListItem.ChannelItem(item) }
 
-            if (hasNext)
-                (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+        if (hasNext)
+            (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
 
-            it.safeResume(channelItems)
-        }
+        return channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {
