@@ -58,14 +58,14 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
+    fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         if (response.offset == 0) {
             channelsListView.setChannelsList(mapToChannelItem(data = response.data, hasNext = response.hasNext))
         } else
             channelsListView.addNewChannels(mapToChannelItem(data = response.data, hasNext = response.hasNext))
     }
 
-    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytChannel>) {
+    fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytChannel>) {
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
@@ -80,13 +80,11 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
         }
     }
 
-    suspend fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
-        viewModelScope.launch {
-            when (response) {
-                is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-                is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
-                else -> return@launch
-            }
+    fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
+        when (response) {
+            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
+            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
+            else -> return
         }
     }
 
