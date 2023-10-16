@@ -18,8 +18,7 @@ import com.sceyt.sceytchatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.sceytchatuikit.extensions.processEmojiCompat
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import java.math.BigInteger
-import java.security.MessageDigest
+import kotlin.math.abs
 
 
 class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -102,10 +101,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun getAvatarRandomColor(): Int {
         val colors = SceytKitConfig.avatarColors
-        val md = MessageDigest.getInstance("MD5")
-        val name = fullName ?: ""
-        val h = BigInteger(1, md.digest(name.toByteArray(Charsets.UTF_16))).toString(16).padStart(32, '0').takeLast(6)
-        return colors[Integer.valueOf(h, 16) % colors.size].toColorInt()
+        return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
     }
 
     @Suppress("DEPRECATION")

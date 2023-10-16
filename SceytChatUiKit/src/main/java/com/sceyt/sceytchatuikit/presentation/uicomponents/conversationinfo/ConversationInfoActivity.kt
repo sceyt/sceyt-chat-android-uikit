@@ -230,7 +230,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         when (clickActionsEnum) {
             ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
             ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
-            ClickActionsEnum.Call -> onAudioCallClick(channel)
+            ClickActionsEnum.AudioCall -> onAudioCallClick(channel)
             ClickActionsEnum.VideoCall -> onVideoCallClick(channel)
             ClickActionsEnum.More -> onMoreClick(channel)
         }

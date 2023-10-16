@@ -3,7 +3,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 import android.content.Context
 import android.graphics.Typeface
 import android.text.Annotation
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
@@ -36,9 +35,9 @@ object MentionUserHelper {
 
     fun buildWithMentionedUsers(context: Context, body: CharSequence, attributes: List<BodyAttribute>?,
                                 mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytKitConfig.sceytColorAccent,
-                                mentionClickListener: ((String) -> Unit)? = null): SpannableString {
+                                mentionClickListener: ((String) -> Unit)? = null): CharSequence {
         val data = attributes?.filter { it.type == MENTION }
-                ?: return SpannableString.valueOf(body)
+                ?: return body
 
         val newBody = SpannableStringBuilder(body)
 
@@ -62,15 +61,15 @@ object MentionUserHelper {
                     newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
                         it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
-            SpannableString.valueOf(newBody)
+            newBody
         } catch (e: Exception) {
             e.printStackTrace()
-            SpannableString.valueOf(body)
+            body
         }
     }
 
-    fun buildOnlyBoldNamesWithMentionedUsers(spannableBody: SpannableString, attributes: List<BodyAttribute>?,
-                                             mentionUsers: Array<User>?): SpannableString {
+    fun buildOnlyBoldNamesWithMentionedUsers(spannableBody: CharSequence, attributes: List<BodyAttribute>?,
+                                             mentionUsers: Array<User>?): CharSequence {
         return try {
             val data = attributes?.filter { it.type == MENTION } ?: return spannableBody
             val newBody = SpannableStringBuilder(spannableBody)
@@ -79,7 +78,7 @@ object MentionUserHelper {
                 newBody.setSpan(StyleSpan(Typeface.BOLD),
                     it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
-            SpannableString.valueOf(newBody)
+            newBody
         } catch (e: Exception) {
             e.printStackTrace()
             spannableBody

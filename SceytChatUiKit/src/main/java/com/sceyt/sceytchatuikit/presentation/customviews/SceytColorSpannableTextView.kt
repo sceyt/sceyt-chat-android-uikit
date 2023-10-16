@@ -43,7 +43,7 @@ class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, at
             return this
         }
 
-        fun setSpannableString(text: SpannableString): BuildSpannable {
+        fun setSpannableString(text: CharSequence): BuildSpannable {
             spanString = SpannableString(text)
             return this
         }

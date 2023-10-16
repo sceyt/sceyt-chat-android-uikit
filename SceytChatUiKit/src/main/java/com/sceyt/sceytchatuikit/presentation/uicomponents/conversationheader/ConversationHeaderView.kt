@@ -138,6 +138,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
         if (replyInThread) {
             with(titleTextView) {

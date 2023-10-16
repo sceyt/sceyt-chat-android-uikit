@@ -42,7 +42,7 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
 
 
     private val onOutGoingMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
-        extraBufferCapacity = 5,
+        extraBufferCapacity = 50,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
 
@@ -122,8 +122,8 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
         eventManager.setDefaultListeners(this)
     }
 
-    fun emitOutgoingMessage(sceytMessage: SceytMessage) {
-        onOutGoingMessageFlow_.tryEmit(sceytMessage)
+    suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {
+        onOutGoingMessageFlow_.emit(sceytMessage)
     }
 
     fun emitOutgoingMessageSent(channelId: Long, message: SceytMessage) {

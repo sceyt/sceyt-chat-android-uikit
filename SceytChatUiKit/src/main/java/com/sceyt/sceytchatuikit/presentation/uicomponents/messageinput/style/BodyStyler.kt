@@ -2,13 +2,11 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style
 
 import android.graphics.Typeface
 import android.text.Spannable
-import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.CharacterStyle
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.TypefaceSpan
-import android.text.style.UnderlineSpan
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -41,7 +39,7 @@ object BodyStyler {
 
     @JvmStatic
     fun underlineStyle(): CharacterStyle {
-        return UnderlineSpan()
+        return UnderlineTextSpan()
     }
 
     @JvmStatic
@@ -153,7 +151,7 @@ object BodyStyler {
     @JvmStatic
     fun getStyling(text: CharSequence?): List<BodyStyleRange>? {
         return if (text is Spanned) {
-            text.getSpans(0, text.length, Object::class.java)
+            text.getSpans(0, text.length, Any::class.java)
                 .filter { s -> s.isSupportedStyle() }
                 .mapNotNull { span ->
                     val spanStart = text.getSpanStart(span)
@@ -170,7 +168,7 @@ object BodyStyler {
 
                         is StrikethroughSpan -> StyleType.Strikethrough
                         is TypefaceSpan -> StyleType.Monospace
-                        is UnderlineSpan -> StyleType.Underline
+                        is UnderlineTextSpan -> StyleType.Underline
                         else -> null
                     }
 
@@ -190,28 +188,10 @@ object BodyStyler {
         }
     }
 
-    fun appendStyle(body: CharSequence, list: List<BodyStyleRange>): SpannableString {
-        val spannableString = SpannableString(body)
-        try {
-            list.forEach {
-                when (it.style) {
-                    StyleType.Bold -> spannableString.setSpan(boldStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Italic -> spannableString.setSpan(italicStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Strikethrough -> spannableString.setSpan(strikethroughStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Monospace -> spannableString.setSpan(monoStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                    StyleType.Underline -> spannableString.setSpan(underlineStyle(), it.offset, it.offset + it.length, SPAN_FLAGS)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return spannableString
-    }
-
     private fun Any.isSupportedCharacterStyle(): Boolean {
         return when (this) {
             is StyleSpan -> style == Typeface.ITALIC || style == Typeface.BOLD
-            is StrikethroughSpan, is UnderlineSpan -> true
+            is StrikethroughSpan, is UnderlineTextSpan -> true
             is TypefaceSpan -> family == MONOSPACE
             else -> false
         }
@@ -229,7 +209,7 @@ object BodyStyler {
             is StyleSpan -> (this.style == Typeface.ITALIC && style == StyleType.Italic) || (this.style == Typeface.BOLD && style == StyleType.Bold)
             is StrikethroughSpan -> style == StyleType.Strikethrough
             is TypefaceSpan -> this.family == MONOSPACE && style == StyleType.Monospace
-            is UnderlineSpan -> style == StyleType.Underline
+            is UnderlineTextSpan -> style == StyleType.Underline
             else -> false
         }
     }
@@ -246,7 +226,7 @@ object BodyStyler {
 
             is StrikethroughSpan -> strikethroughStyle()
             is TypefaceSpan -> monoStyle()
-            is UnderlineSpan -> underlineStyle()
+            is UnderlineTextSpan -> underlineStyle()
             else -> throw IllegalArgumentException("Provided text contains unsupported spans")
         }
     }

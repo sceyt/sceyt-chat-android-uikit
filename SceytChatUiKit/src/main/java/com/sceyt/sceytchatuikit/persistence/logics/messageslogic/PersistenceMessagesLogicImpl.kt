@@ -207,7 +207,7 @@ internal class PersistenceMessagesLogicImpl(
                     it.data?.let { messages ->
                         val updatedMessages = saveMessagesToDb(messages)
                         messagesCache.upsertMessages(conversationId, *updatedMessages.toTypedArray())
-                        markChannelMessagesAsDelivered(conversationId, messages)
+                        checkAndMarkChannelMessagesAsDelivered(conversationId, messages)
                     }
                 }
                 trySend(it)
@@ -625,16 +625,27 @@ internal class PersistenceMessagesLogicImpl(
         return callbackFlow {
             if (offset == 0) messagesCache.clear()
 
+            var dbResultWasEmpty = true
             // Load from database
-            if (!ignoreDb)
-                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, limit, loadKey))
+            if (!ignoreDb) {
+                trySend(getMessagesDbByLoadType(loadType, conversationId, messageId, offset, limit, loadKey).also {
+                    dbResultWasEmpty = it.data.isEmpty()
+                })
+            }
             // Load from server
             if (!ignoreServer)
-                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset, limit, replyInThread,
-                    loadKey, ignoreDb))
+                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset,
+                    limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty))
 
             channel.close()
             awaitClose()
+        }
+    }
+
+    private fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+        // Mark messages as received
+        launch(Dispatchers.IO) {
+            checkAndMarkChannelMessagesAsDelivered(channelId, messages)
         }
     }
 
@@ -671,7 +682,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.addAll(channelId, messages, false)
 
         // Mark messages as received
-        markChannelMessagesAsDelivered(channelId, messages)
+        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -679,7 +690,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
                                                     offset: Int, limit: Int, replyInThread: Boolean,
                                                     loadKey: LoadKeyData = LoadKeyData(value = lastMessageId),
-                                                    ignoreDb: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
+                                                    ignoreDb: Boolean, dbResultWasEmpty: Boolean): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
         var hasDiff: Boolean
@@ -741,12 +752,12 @@ internal class PersistenceMessagesLogicImpl(
         if (forceHasDiff) hasDiff = true
 
         // Mark messages as received
-        markChannelMessagesAsDelivered(channelId, messages)
+        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.ServerResponse(
             data = response, cacheData = messagesCache.getSorted(channelId),
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
-            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
+            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb, dbResultWasEmpty = dbResultWasEmpty)
     }
 
     private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadEntity>) {
@@ -867,7 +878,7 @@ internal class PersistenceMessagesLogicImpl(
         return tIds
     }
 
-    private suspend fun markChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+    private suspend fun checkAndMarkChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         val notDisplayedMessages = messages.filter {
             it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value() } != true
         }
