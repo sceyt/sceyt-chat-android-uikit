@@ -117,13 +117,15 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     }
 
     fun addNextPageMessagesList(items: List<MessageListItem>) {
-        if (items.isEmpty()) return
-        val filteredItems = items.toSet().minus(messages.toSet())
         removeLoadingNext()
+        if (items.isEmpty()) return
+
+        val filteredItems = items.toSet().minus(messages.toSet())
         addNewMessages(filteredItems.toList())
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
+        removeLoadingNext()
         if (items.isEmpty()) return
         val filteredItems = items.toSet().minus(messages.toSet())
         if (filteredItems.isEmpty()) return

@@ -20,6 +20,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
@@ -53,12 +54,14 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             return
         }
 
-        launch {
+        launch(Dispatchers.IO) {
             syncIsInProcess = true
             syncResultData = SyncResultData()
             val result = getChannels()
-            syncResultCallbacks.forEach {
-                it(Result.success(result))
+            withContext(Dispatchers.Main) {
+                syncResultCallbacks.forEach {
+                    it(Result.success(result))
+                }
             }
             syncResultCallbacks.clear()
             syncIsInProcess = false
@@ -74,7 +77,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
     private suspend fun getChannels(): SyncResultData {
         return coroutineScope {
             suspendCancellableCoroutine { cont ->
-                launch {
+                launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
                     channelsMiddleWare.syncChannels(CHANNELS_LOAD_SIZE).collect {
                         when (it) {

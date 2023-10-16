@@ -4,11 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPrivateChannelBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.parcelable
+import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.extensions.setDrawableTop
+import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -46,8 +53,8 @@ class InfoButtonsPrivateChatFragment : Fragment() {
             }
         }
 
-        call.setOnClickListenerDisableClickViewForWhile {
-            buttonsListener?.invoke(ClickActionsEnum.Call)
+        audio.setOnClickListenerDisableClickViewForWhile {
+            buttonsListener?.invoke(ClickActionsEnum.AudioCall)
         }
 
         video.setOnClickListenerDisableClickViewForWhile {
@@ -68,11 +75,11 @@ class InfoButtonsPrivateChatFragment : Fragment() {
     }
 
     enum class ClickActionsEnum {
-        Call, VideoCall, Mute, UnMute, More
+        Mute, UnMute, VideoCall, AudioCall, More
     }
 
     private fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(muteUnMute, call, video, more),
+        setTextViewsDrawableColor(listOf(muteUnMute, audio, video, more),
             requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 

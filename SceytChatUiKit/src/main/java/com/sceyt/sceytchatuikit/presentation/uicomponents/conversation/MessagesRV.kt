@@ -7,12 +7,14 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
@@ -25,6 +27,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -78,13 +82,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
-                val lastPos = getLastVisibleItemPosition()
-                checkScrollDown(lastPos)
+            if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
+            context.asComponentActivity().lifecycleScope.launch {
+                delay(100)
                 checkNeedLoadPrev(-1)
                 checkNeedLoadNext(1)
-            }, 80)
+            }
         }
     }
 
