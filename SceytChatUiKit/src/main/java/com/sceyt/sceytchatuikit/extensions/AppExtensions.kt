@@ -70,6 +70,10 @@ fun isAppOnForeground(): Boolean {
     return ProcessLifecycleOwner.get().isResumed()
 }
 
+fun Context.isAppInDarkMode(): Boolean {
+    return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+}
+
 fun Context.getOrientation(): Int {
     return resources.configuration.orientation
 }
