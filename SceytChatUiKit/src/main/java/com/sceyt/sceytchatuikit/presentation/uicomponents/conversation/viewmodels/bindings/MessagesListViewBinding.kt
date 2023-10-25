@@ -187,7 +187,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         hasPrev = response.hasPrev)
 
                     if (response.dbResultWasEmpty) {
-                        if (response.loadType == LoadNext)
+                        if (response.loadType == LoadNext || response.loadType == LoadNewest)
                             messagesListView.addNextPageMessages(newMessages)
                         else messagesListView.addPrevPageMessages(newMessages)
                     } else
