@@ -54,8 +54,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
-    /** Send pending markers, pending messages and update attachments transfer states when lifecycle come back onResume state,
-     * Also set update current chat Id in ChannelsCache*/
+    /** Send pending markers, pending messages and update attachments transfer states when
+     * lifecycle come back onResume state. */
     viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (ConnectionEventsObserver.connectionState == ConnectionState.Connected) {
