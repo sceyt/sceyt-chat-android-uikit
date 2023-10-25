@@ -169,6 +169,10 @@ fun String.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
 }
 
+fun CharSequence.removeSpaces(): CharSequence {
+    return replace(" ".toRegex(), "")
+}
+
 fun String.toSha256(): Long {
     val bytes = toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-256")
