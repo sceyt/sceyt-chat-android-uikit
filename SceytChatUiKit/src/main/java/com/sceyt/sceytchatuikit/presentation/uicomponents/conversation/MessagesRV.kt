@@ -95,10 +95,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
         if (firstVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
-            val firstItem = mAdapter.getFirstMessageItem()
             if (firstVisiblePosition == 0) {
                 if (!richToStartInvoked) {
                     val skip = mAdapter.getSkip()
+                    val firstItem = mAdapter.getFirstMessageItem()
                     richToStartInvoked = true
                     richToPrefetchDistanceToLoadPrevInvoked = true
                     richToStartListener?.invoke(skip, firstItem)
@@ -108,7 +108,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             if (!richToPrefetchDistanceToLoadPrevInvoked) {
                 richToPrefetchDistanceToLoadPrevInvoked = true
-                needLoadPrevMessagesListener?.invoke(mAdapter.getSkip(), firstItem)
+                needLoadPrevMessagesListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstMessageItem())
             }
         } else richToPrefetchDistanceToLoadPrevInvoked = false
     }
@@ -119,12 +119,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         checkScrollDown(lastVisiblePosition)
 
         if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
-            val lastSentItem = mAdapter.getLastMessageBy {
-                it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
-            }
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
                 if (!richToEndInvoked) {
                     val skip = mAdapter.getSkip()
+                    val lastSentItem = getLastSentItem()
                     richToEndInvoked = true
                     richToPrefetchDistanceToLoadNextInvoked = true
                     richToEndListener?.invoke(skip, lastSentItem)
@@ -134,9 +132,13 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             if (!richToPrefetchDistanceToLoadNextInvoked) {
                 richToPrefetchDistanceToLoadNextInvoked = true
-                needLoadNextMessagesListener?.invoke(mAdapter.getSkip(), lastSentItem)
+                needLoadNextMessagesListener?.invoke(mAdapter.getSkip(), getLastSentItem())
             }
         } else richToPrefetchDistanceToLoadNextInvoked = false
+    }
+
+    private fun getLastSentItem() = mAdapter.getLastMessageBy {
+        it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
     }
 
     private fun checkScrollDown(lastVisiblePosition: Int) {
