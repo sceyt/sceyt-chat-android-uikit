@@ -83,7 +83,7 @@ fun View.hasNotAnimation(): Boolean {
 
 fun View.scaleViewOut(startScale: Float, endScale: Float, duration: Long = 200,
                       pivotX: Float = 0.5f, pivotY: Float = 0.5f,
-                      finishedListener: ((Animation?) -> Unit) = { }) {
+                      finishedListener: ((Animation?) -> Unit) = { }): Animation {
     val anim: Animation = ScaleAnimation(
         startScale, endScale,  // Start and end values for the X axis scaling
         startScale, endScale,  // Start and end values for the Y axis scaling
@@ -93,11 +93,12 @@ fun View.scaleViewOut(startScale: Float, endScale: Float, duration: Long = 200,
     anim.duration = duration
     anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
     startAnimation(anim)
+    return anim
 }
 
 fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 200,
                            pivotX: Float = 0.5f, pivotY: Float = 0.5f,
-                           finishedListener: ((Animation?) -> Unit) = { }) {
+                           finishedListener: ((Animation?) -> Unit) = { }): Animation {
     val anim: Animation = ScaleAnimation(
         startScale, endScale,  // Start and end values for the X axis scaling
         startScale, endScale,  // Start and end values for the Y axis scaling
@@ -107,6 +108,7 @@ fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 
     anim.duration = duration
     anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
     startAnimation(anim)
+    return anim
 }
 
 fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 200, finishedListener: ((Animation?) -> Unit) = { }): AnimationSet {
