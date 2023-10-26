@@ -258,7 +258,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      * Returns the inner [RecyclerView] that is used to display a list of channel list items.
      * @return The inner [RecyclerView] with channels.
      */
-    fun getChannelsRv(): RecyclerView = channelsRV
+    fun getChannelsRv() = channelsRV
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
