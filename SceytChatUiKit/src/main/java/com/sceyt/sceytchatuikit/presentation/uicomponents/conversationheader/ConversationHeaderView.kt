@@ -136,6 +136,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         title.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.titleColor))
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
+        toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -426,6 +427,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             addedMenu = menu
         }
     }
+
+    fun getToolbarMenu() = binding.headerToolbar.menu
 
     fun enableDisableToShowPresence(enable: Boolean) {
         enablePresence = enable

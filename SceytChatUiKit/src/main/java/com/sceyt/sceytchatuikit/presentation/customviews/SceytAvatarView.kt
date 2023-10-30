@@ -47,16 +47,19 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     override fun draw(canvas: Canvas) {
-        super.draw(canvas)
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
             if (defaultAvatarResId == 0) {
                 setImageResource(0)
                 drawBackgroundColor(canvas)
                 drawName(canvas)
-            } else
+            } else {
+                if (avatarBackgroundColor != 0)
+                    drawBackgroundColor(canvas)
                 loadDefaultImage()
+            }
         }
+        super.draw(canvas)
     }
 
     private fun drawName(canvas: Canvas) {
