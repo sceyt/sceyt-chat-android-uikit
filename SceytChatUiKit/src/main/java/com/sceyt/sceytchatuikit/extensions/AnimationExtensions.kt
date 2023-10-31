@@ -29,9 +29,9 @@ fun View.changeAlphaWithAnim(toAlpha: Float, animDuration: Long, endListener: ()
         }, onAnimationCancel = {
             endListener.invoke()
         }))
-        .duration = animDuration
+        .setDuration(animDuration)
+        .start()
 }
-
 
 fun View.startScaleAnimOut(duration: Long, fromScaleX: Float = 0f, fromScaleY: Float = 0f, finishedListener: (() -> Unit)? = null) {
     val scaleDownX = ObjectAnimator.ofFloat(this, "scaleX", fromScaleX, 1f)
