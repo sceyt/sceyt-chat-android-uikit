@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
@@ -7,6 +7,7 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StyleRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.pxToDp
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.ChannelDateFormatter
 
 object ChannelStyle {
