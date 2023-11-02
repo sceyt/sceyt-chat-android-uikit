@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMediaDateBinding
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter.Companion.MEDIA_DATE_PATTERN
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -10,6 +11,6 @@ class ChannelMediaDateViewHolder(private val binding: SceytItemChannelMediaDateB
 
     override fun bind(item: ChannelFileItem) {
         val createdAt = (item as? ChannelFileItem.MediaDate)?.data?.attachment?.createdAt ?: return
-        binding.tvDate.text = DateTimeUtil.convertDateToString(Date(createdAt), "MMMM dd")
+        binding.tvDate.text = DateTimeUtil.convertDateToString(Date(createdAt), MEDIA_DATE_PATTERN)
     }
 }
